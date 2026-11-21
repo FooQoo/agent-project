@@ -69,4 +69,17 @@ describe('useConnectionController', () => {
     expect(result.current.ready).toBe(true);
     expect(result.current.devices).toEqual([device]);
   });
+
+  it('stops saving after a failed save once the status is read, though devices never arrive', async () => {
+    api.getConnection.mockResolvedValue(snapshot());
+    api.getDevices.mockReturnValue(new Promise(() => {}));
+    api.saveSettings.mockRejectedValue(new Error('down'));
+    const { result } = renderHook(() => useConnectionController(true));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    await act(async () => {
+      await result.current.connect({ token: '', save: false, domain: '' });
+    });
+    expect(result.current.saving).toBe(false);
+    expect(result.current.error).not.toBeNull();
+  });
 });

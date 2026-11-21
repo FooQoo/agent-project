@@ -69,11 +69,11 @@ export function useConnectionController(open: boolean, projectId: string | null 
   useEffect(() => {
     if (Array.isArray(deviceList) && !savingRef.current) setDevices(deviceList);
   }, [devicesUpdatedAt]);
+  // Only the status is awaited: a stalled device read must never keep a save pending. The device
+  // list is refreshed on its own and applies when it arrives.
   const refresh = useCallback(async () => {
-    const [result] = await Promise.all([
-      refetch({ cancelRefetch: false }),
-      refetchDevices({ cancelRefetch: false }),
-    ]);
+    void refetchDevices({ cancelRefetch: false });
+    const result = await refetch({ cancelRefetch: false });
     if (result.data) setSnapshot(result.data);
   }, [refetch, refetchDevices]);
 
