@@ -33,7 +33,17 @@ export default defineConfig(({ mode }) => {
       ...(demo ? [mockBrowser({ token: 'demo-token', noBuildId: true })] : []),
     ],
     resolve: {
-      alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        // The sample data the mock plugin provides in the page; a unit test replaces it with a stub.
+        ...(process.env.VITEST
+          ? {
+              'virtual:agboard-mock-seed': fileURLToPath(
+                new URL('./test/support/mockSeed.ts', import.meta.url),
+              ),
+            }
+          : {}),
+      },
     },
     server: {
       host: '127.0.0.1',
