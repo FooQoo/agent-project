@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ProjectId } from '../../shared/api/contracts';
+import { queryKeys } from '../../shared/data/core/query-keys';
+import { useReadClient } from '../../shared/data/react';
+import { useWrite } from '../../shared/data/react/use-write';
 import {
   ResidentRequestError,
   getModels,
@@ -33,11 +36,9 @@ const problemOf = (cause: unknown): ResidentProblem =>
  * Restart and the auto-start checkbox. A request in flight disables the controls.
  */
 export function useResidentController(projectId: ProjectId) {
-  const { snapshot, failed, refresh } = useResidentSession(projectId, DIALOG_POLL_MS);
+  const { snapshot, failed } = useResidentSession(projectId, DIALOG_POLL_MS);
   const [chosen, setChosen] = useState<Choice | null>(null);
   const [models, setModels] = useState<Models | null>(null);
-  const [pending, setPending] = useState<Pending>(null);
-  const [savingAuto, setSavingAuto] = useState(false);
   const [problem, setProblem] = useState<ResidentProblem | null>(null);
   const [launchProblem, setLaunchProblem] = useState<ResidentProblem | null>(null);
 
@@ -59,79 +60,73 @@ export function useResidentController(projectId: ProjectId) {
     void loadModels();
   }, [loadModels]);
 
+  // What follows a write: the sessions are read again at once (a read that is running is joined),
+  // and the footer and the entry row are told. The write stays pending until the read is back.
+  const client = useReadClient();
   const changed = useCallback(async () => {
-    await refresh();
+    await client.invalidateQueries(
+      { queryKey: queryKeys.residentSessions(projectId), exact: true },
+      { cancelRefetch: false },
+    );
     notifyResidentChanged();
-  }, [refresh]);
+  }, [client, projectId]);
 
-  /** Saves the auto-start choice when it is on, so it keeps following the chosen tool and model. */
-  const followAutoStart = useCallback(
-    async (next: Choice) => {
-      setSavingAuto(true);
-      setProblem(null);
-      try {
-        await saveAutoStart(projectId, { enabled: true, ...next });
-        await changed();
-      } catch (cause) {
-        setProblem(problemOf(cause));
-      } finally {
-        setSavingAuto(false);
-      }
-    },
-    [projectId, changed],
-  );
+  const launch = useWrite<unknown, { tool: SessionTool; model: string }>({
+    mutationKey: ['resident-launch', projectId],
+    mutationFn: ({ tool: next, model }) => launchSession(projectId, next, model),
+    onError: (cause) => setLaunchProblem(problemOf(cause)),
+    onSettled: changed,
+  });
+  const stopping = useWrite<unknown>({
+    mutationKey: ['resident-stop', projectId],
+    mutationFn: () => stopSession(projectId),
+    onError: (cause) => setProblem(problemOf(cause)),
+    onSettled: changed,
+  });
+  const autoStartWrite = useWrite<unknown, Parameters<typeof saveAutoStart>[1]>({
+    mutationKey: ['resident-autostart', projectId],
+    mutationFn: (input) => saveAutoStart(projectId, input),
+    onSuccess: changed,
+    onError: (cause) => setProblem(problemOf(cause)),
+  });
+  const pending: Pending = launch.isPending ? 'starting' : stopping.isPending ? 'stopping' : null;
+  const savingAuto = autoStartWrite.isPending;
 
   const autoStart = health ? autoStartIsOn(health.autoStart, projectId) : false;
+
+  /** Saves the auto-start choice when it is on, so it keeps following the chosen tool and model. */
+  const followAutoStart = (next: Choice) => {
+    setProblem(null);
+    autoStartWrite.mutate({ enabled: true, ...next });
+  };
 
   const choose = (next: Choice) => {
     setChosen(next);
     setLaunchProblem(null);
-    if (autoStart) void followAutoStart(next);
+    if (autoStart) followAutoStart(next);
   };
 
-  const start = async () => {
-    if (!choice || pending) return;
+  const start = () => {
+    if (!choice || launch.isWriting() || stopping.isWriting()) return;
     setChosen(choice);
-    setPending('starting');
     setLaunchProblem(null);
     setProblem(null);
-    try {
-      await launchSession(projectId, choice.tool, choice.model);
-    } catch (cause) {
-      setLaunchProblem(problemOf(cause));
-    }
-    await changed();
-    setPending(null);
+    launch.mutate({ tool: choice.tool, model: choice.model });
   };
 
-  const stop = async () => {
-    if (pending) return;
+  const stop = () => {
+    if (launch.isWriting() || stopping.isWriting()) return;
     // The choice stays what it was after the session is gone.
     if (choice) setChosen(choice);
-    setPending('stopping');
     setProblem(null);
-    try {
-      await stopSession(projectId);
-    } catch (cause) {
-      setProblem(problemOf(cause));
-    }
-    await changed();
-    setPending(null);
+    stopping.mutate();
   };
 
-  const setAutoStart = async (enabled: boolean) => {
+  const setAutoStart = (enabled: boolean) => {
     if (!choice) return;
     if (enabled) return followAutoStart(choice);
-    setSavingAuto(true);
     setProblem(null);
-    try {
-      await saveAutoStart(projectId, { enabled: false });
-      await changed();
-    } catch (cause) {
-      setProblem(problemOf(cause));
-    } finally {
-      setSavingAuto(false);
-    }
+    autoStartWrite.mutate({ enabled: false });
   };
 
   const checkAgain = async () => {
@@ -163,9 +158,9 @@ export function useResidentController(projectId: ProjectId) {
     problem,
     chooseTool: (next: SessionTool) => choose({ tool: next, model: '' }),
     chooseModel: (model: string) => choice && choose({ ...choice, model }),
-    start: () => void start(),
-    stop: () => void stop(),
-    setAutoStart: (enabled: boolean) => void setAutoStart(enabled),
+    start,
+    stop,
+    setAutoStart,
     checkAgain: () => void checkAgain(),
   };
 }

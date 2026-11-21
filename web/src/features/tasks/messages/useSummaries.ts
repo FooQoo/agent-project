@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import type { ProjectId } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/data/core/query-keys';
 import { useReadQuery } from '@/shared/data/react';
+import { useWrite } from '@/shared/data/react/use-write';
 import type { ChangedEvent } from '@/shared/data/api/contracts';
 import type { PeriodicSummary, SummariesApi } from './model/messages';
 
@@ -42,21 +43,29 @@ export function useSummaries(
   });
   const read = query.data ?? (query.isError ? [] : null);
 
-  const dismiss = useCallback(
-    (summaryId: string) => {
-      if (!api) return;
+  // Hidden before the server answers; a refusal brings the summary back.
+  const dismissWrite = useWrite<unknown, string>({
+    mutationKey: ['summary-dismiss', projectId],
+    mutationFn: (summaryId) => (api as SummariesApi).dismiss(projectId, summaryId),
+    onMutate: (summaryId) => {
       setDismissFailed(false);
       setHidden((current) => new Set(current).add(summaryId));
-      api.dismiss(projectId, summaryId).catch(() => {
-        setHidden((current) => {
-          const next = new Set(current);
-          next.delete(summaryId);
-          return next;
-        });
-        setDismissFailed(true);
-      });
     },
-    [api, projectId],
+    onError: (_error, summaryId) => {
+      setHidden((current) => {
+        const next = new Set(current);
+        next.delete(summaryId);
+        return next;
+      });
+      setDismissFailed(true);
+    },
+  });
+  const { mutate } = dismissWrite;
+  const dismiss = useCallback(
+    (summaryId: string) => {
+      if (api) mutate(summaryId);
+    },
+    [api, mutate],
   );
 
   const summaries = useMemo(

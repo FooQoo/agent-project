@@ -6,6 +6,7 @@ import { splitFrontmatter } from '@/shared/markdown/frontmatter';
 import { resolveRelativeImage } from '@/shared/markdown/resolveRelativeImage';
 import { RichMarkdownEditor } from '@/shared/rich-editor/RichMarkdownEditor';
 import { Button } from '@/shared/ui/button';
+import { useWrite } from '@/shared/data/react/use-write';
 import { docsAssetUrl, openDocs } from '../api/docsApi';
 import { resolveDocsLink } from '../model/docsLink';
 import {
@@ -59,8 +60,6 @@ export function DocsDialogContainer({
   // The chosen file and how it shows, fixed when it is chosen: a file deleted afterwards keeps it.
   const [selected, setSelected] = useState<{ path: string; viewer: DocsViewer } | null>(null);
   const [listWidth, setListWidth] = useState<number>(DOCS_LIST_WIDTH.default);
-  const [openFolderFailed, setOpenFolderFailed] = useState(false);
-  const [openFileFailed, setOpenFileFailed] = useState<string | null>(null);
   // The document in which a link to no listed file was chosen; the notice shows while it is open.
   const [linkMissingIn, setLinkMissingIn] = useState<string | null>(null);
   // Raised when an open image may have changed, so it is fetched again.
@@ -104,16 +103,23 @@ export function DocsDialogContainer({
     [selectedPath, tree.nodes, selectFile],
   );
 
-  const openFolder = useCallback(() => {
-    setOpenFolderFailed(false);
-    openDocs(projectId).catch(() => setOpenFolderFailed(true));
-  }, [projectId]);
-
+  // Opening is a write of the server's computer: a refusal shows the notice until the next try.
+  const folderWrite = useWrite<void, undefined>({
+    mutationKey: ['docs-open-folder'],
+    mutationFn: () => openDocs(projectId),
+  });
+  const fileWrite = useWrite<void, string>({
+    mutationKey: ['docs-open-file'],
+    mutationFn: (path) => openDocs(projectId, path),
+  });
+  const { mutate: mutateFolder } = folderWrite;
+  const { mutate: mutateFile } = fileWrite;
+  const openFolder = useCallback(() => mutateFolder(undefined), [mutateFolder]);
   const openFile = useCallback(() => {
-    if (selectedPath === null) return;
-    setOpenFileFailed(null);
-    openDocs(projectId, selectedPath).catch(() => setOpenFileFailed(selectedPath));
-  }, [projectId, selectedPath]);
+    if (selectedPath !== null) mutateFile(selectedPath);
+  }, [selectedPath, mutateFile]);
+  const openFolderFailed = folderWrite.isError;
+  const openFileFailed = fileWrite.isError ? fileWrite.variables : null;
 
   const file = document.file;
   const split = useMemo(() => splitFrontmatter(file?.content ?? ''), [file]);

@@ -8,6 +8,14 @@ const saved = (patch: Partial<NotificationSettings>): NotificationSettings => ({
   ...patch,
 });
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((r) => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
 describe('useNotificationSettings', () => {
   it('loads the saved value and keeps a saved choice', async () => {
     const load = vi.fn().mockResolvedValue(DEFAULT_NOTIFICATION_SETTINGS);
@@ -45,5 +53,29 @@ describe('useNotificationSettings', () => {
     const load = vi.fn().mockRejectedValue(new Error('no'));
     const { result } = renderHook(() => useNotificationSettings(load, vi.fn()));
     await waitFor(() => expect(result.current.state.status).toBe('failed'));
+  });
+
+  it('saves one at a time in order and shows only the last result', async () => {
+    const load = vi.fn().mockResolvedValue(DEFAULT_NOTIFICATION_SETTINGS);
+    const first = deferred<NotificationSettings>();
+    const save = vi
+      .fn()
+      .mockReturnValueOnce(first.promise)
+      .mockResolvedValueOnce(saved({ revision: 9 }));
+    const { result } = renderHook(() => useNotificationSettings(load, save));
+    await waitFor(() => expect(result.current.state.status).toBe('ready'));
+    act(() =>
+      result.current.change({ kinds: { ...DEFAULT_NOTIFICATION_SETTINGS.kinds, history: true } }),
+    );
+    act(() =>
+      result.current.change({ kinds: { ...DEFAULT_NOTIFICATION_SETTINGS.kinds, history: false } }),
+    );
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+    first.resolve(saved({ revision: 5 }));
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+    await waitFor(() => {
+      const { state } = result.current;
+      expect(state.status === 'ready' && state.settings.revision).toBe(9);
+    });
   });
 });

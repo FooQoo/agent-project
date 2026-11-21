@@ -20,10 +20,18 @@ import type {
 } from './ui/connectionTypes';
 import { queryKeys } from '../../shared/data/core/query-keys';
 import { useReadQuery } from '../../shared/data/react';
+import { useWrite } from '../../shared/data/react/use-write';
 import { qrDataUrl } from './qr';
 import { isProjectIdValue, phoneUrl } from './phoneUrl';
 
 const POLL_MS = 1500;
+
+/** What a write of the dialog does; one at a time. */
+type ConnectionWrite =
+  | { kind: 'connect'; draft: ConnectionDraft; token: string; snapshot: ConnectionSnapshot }
+  | { kind: 'stop' }
+  | { kind: 'token' }
+  | { kind: 'device'; id: string };
 
 /**
  * The state behind the connection dialog: it reads the status from the local API, saves the
@@ -35,9 +43,7 @@ export function useConnectionController(open: boolean, projectId: string | null 
   const [devices, setDevices] = useState<RegisteredDevice[]>([]);
   const transientRef = useRef(false);
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const savingRef = useRef(false);
 
   // The status and the devices are two reads: a slow or failed device list never holds back the
   // status. When the list cannot be read the dialog keeps what it showed.
@@ -63,16 +69,18 @@ export function useConnectionController(open: boolean, projectId: string | null 
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: every finished read applies, changed or not.
   useEffect(() => {
-    if (read && !savingRef.current) setSnapshot(read);
+    if (read && !write.isPending) setSnapshot(read);
   }, [dataUpdatedAt]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: every finished read applies, changed or not.
   useEffect(() => {
-    if (Array.isArray(deviceList) && !savingRef.current) setDevices(deviceList);
+    if (Array.isArray(deviceList) && !write.isPending) setDevices(deviceList);
   }, [devicesUpdatedAt]);
   // Only the status is awaited: a stalled device read must never keep a save pending. The device
   // list is refreshed on its own and applies when it arrives.
   const refresh = useCallback(async () => {
-    void refetchDevices({ cancelRefetch: false });
+    void refetchDevices({ cancelRefetch: false }).then((read) => {
+      if (Array.isArray(read.data)) setDevices(read.data);
+    });
     const result = await refetch({ cancelRefetch: false });
     if (result.data) setSnapshot(result.data);
   }, [refetch, refetchDevices]);
@@ -112,9 +120,55 @@ export function useConnectionController(open: boolean, projectId: string | null 
     [t],
   );
 
+  // One write at a time: a second submit while one is on its way is dropped. A failure says why;
+  // after a failed save only the status is read again (the device list is never awaited).
+  const write = useWrite<void, ConnectionWrite>({
+    mutationKey: ['connection-write'],
+    mutationFn: async (op) => {
+      if (op.kind === 'stop') setSnapshot(await stopConnection());
+      else if (op.kind === 'token') setSnapshot(await deleteSavedToken());
+      else if (op.kind === 'device') setDevices(await deleteDevice(op.id));
+      else {
+        const { draft, token, snapshot: base } = op;
+        let next = await saveSettings({
+          enabled: true,
+          revision: base.revision,
+          // The environment variable decides when it is set, so the field is not sent then.
+          ...(base.domainEnv ? {} : { domain: draft.domain.trim() }),
+        });
+        setSnapshot(next);
+        const running =
+          next.status === 'starting' || next.status === 'ready' || next.status === 'reconnecting';
+        // A new token always restarts; otherwise a saved change has already restarted a live tunnel.
+        if (token || !running)
+          next = await startConnection(
+            token || null,
+            Boolean(token) && draft.save && base.keychainAvailable,
+          );
+        setSnapshot(next);
+      }
+      if (op.kind === 'stop' || op.kind === 'connect') setEditing(false);
+    },
+    onMutate: () => setError(null),
+    onError: async (cause, op) => {
+      setError(messageOf(cause));
+      // The server may hold newer settings after a conflict; show what is really saved.
+      if (op.kind === 'connect') await refresh();
+      // The device may already be gone; show what is really registered.
+      else if (op.kind === 'device')
+        try {
+          setDevices(await getDevices());
+        } catch {
+          // Left as it was.
+        }
+    },
+  });
+  const { mutate, isWriting } = write;
+  const saving = write.isPending;
+
   const connect = useCallback(
-    async (draft: ConnectionDraft) => {
-      if (savingRef.current) return;
+    (draft: ConnectionDraft) => {
+      if (isWriting()) return;
       if (!snapshot) {
         setError(t('monitorConnectionPc.error.unreachable'));
         return;
@@ -125,93 +179,21 @@ export function useConnectionController(open: boolean, projectId: string | null 
         setError(t('monitorConnectionPc.error.tokenRequired'));
         return;
       }
-      savingRef.current = true;
-      setSaving(true);
-      setError(null);
-      try {
-        let next = await saveSettings({
-          enabled: true,
-          revision: snapshot.revision,
-          // The environment variable decides when it is set, so the field is not sent then.
-          ...(snapshot.domainEnv ? {} : { domain: draft.domain.trim() }),
-        });
-        setSnapshot(next);
-        const running =
-          next.status === 'starting' || next.status === 'ready' || next.status === 'reconnecting';
-        // A new token always restarts; otherwise a saved change has already restarted a live tunnel.
-        if (token || !running)
-          next = await startConnection(
-            token || null,
-            Boolean(token) && draft.save && snapshot.keychainAvailable,
-          );
-        setSnapshot(next);
-        setEditing(false);
-      } catch (cause) {
-        setError(messageOf(cause));
-        // The server may hold newer settings after a conflict; show what is really saved.
-        savingRef.current = false;
-        await refresh();
-      } finally {
-        savingRef.current = false;
-        setSaving(false);
-      }
+      mutate({ kind: 'connect', draft, token, snapshot });
     },
-    [snapshot, t, messageOf, refresh],
+    [snapshot, t, isWriting, mutate],
   );
-
-  const stop = useCallback(async () => {
-    if (savingRef.current) return;
-    savingRef.current = true;
-    setSaving(true);
-    setError(null);
-    try {
-      setSnapshot(await stopConnection());
-      setEditing(false);
-    } catch (cause) {
-      setError(messageOf(cause));
-    } finally {
-      savingRef.current = false;
-      setSaving(false);
-    }
-  }, [messageOf]);
-
-  const removeToken = useCallback(async () => {
-    if (savingRef.current) return;
-    savingRef.current = true;
-    setSaving(true);
-    setError(null);
-    try {
-      setSnapshot(await deleteSavedToken());
-    } catch (cause) {
-      setError(messageOf(cause));
-    } finally {
-      savingRef.current = false;
-      setSaving(false);
-    }
-  }, [messageOf]);
-
+  const stop = useCallback(() => {
+    if (!isWriting()) mutate({ kind: 'stop' });
+  }, [isWriting, mutate]);
+  const removeToken = useCallback(() => {
+    if (!isWriting()) mutate({ kind: 'token' });
+  }, [isWriting, mutate]);
   const removeRegisteredDevice = useCallback(
-    async (id: string) => {
-      if (savingRef.current) return;
-      savingRef.current = true;
-      setSaving(true);
-      setError(null);
-      try {
-        setDevices(await deleteDevice(id));
-      } catch (cause) {
-        setError(messageOf(cause));
-        // The device may already be gone; show what is really registered.
-        try {
-          setDevices(await getDevices());
-        } catch {
-          // Left as it was.
-        }
-      } finally {
-        savingRef.current = false;
-        setSaving(false);
-      }
+    (id: string) => {
+      if (!isWriting()) mutate({ kind: 'device', id });
     },
-    [messageOf],
+    [isWriting, mutate],
   );
 
   const savedDomain = snapshot?.settings.domain ?? '';

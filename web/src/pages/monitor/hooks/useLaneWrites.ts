@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnName, ProjectId } from '../../../shared/api/contracts';
 import { moveFailureNotice } from '../../../features/tasks/api/lifecycle';
+import { useWrite } from '../../../shared/data/react/use-write';
 import { useLaneMove } from '../../../features/tasks/useLaneMove';
 import type { MonitorTask, MonitorWrites } from '../contracts';
 import type { useLaneOverlay } from './useLaneOverlay';
@@ -46,25 +47,33 @@ export function useLaneWrites({
     if (!writes) return;
     await move(item.task.id, item.task.taskStatus, target);
   };
+  const archive = useWrite<unknown, number>({
+    mutationKey: ['phone-archive'],
+    mutationFn: (id) => (writes ? writes.archive(projectId as ProjectId, id) : Promise.resolve()),
+    onSuccess: (_result, id) => {
+      overlay.hide([id]);
+      closePending();
+      onWritten?.();
+    },
+  });
   const archiveOne = async (item: MonitorTask) => {
     try {
-      await writes?.archive(projectId as ProjectId, item.task.id);
+      await archive.mutateAsync(item.task.id);
+      return true;
     } catch {
       return false;
     }
-    overlay.hide([item.task.id]);
-    closePending();
-    onWritten?.();
-    return true;
   };
+  // The Done lane's archive reads the project again whether or not it went through.
+  const archiveDoneLane = useWrite<unknown, number[]>({
+    mutationKey: ['phone-archive-done'],
+    mutationFn: (ids) =>
+      writes ? writes.archiveDone(projectId as ProjectId, ids) : Promise.resolve(),
+    onSuccess: (_result, ids) => overlay.hide(ids),
+    onSettled: () => onWritten?.(),
+  });
   const archiveAll = async () => {
-    try {
-      const ids = doneItems.map((item) => item.task.id);
-      await writes?.archiveDone(projectId as ProjectId, ids);
-      overlay.hide(ids);
-    } finally {
-      onWritten?.();
-    }
+    await archiveDoneLane.mutateAsync(doneItems.map((item) => item.task.id));
     closePending();
   };
   return { moveNow, archiveOne, archiveAll, notice, dismissNotice };

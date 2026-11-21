@@ -5,7 +5,7 @@ import type { AppControllerModel, AppWorkspaceActions } from './contracts';
 import { WriteError, moveTask } from './api';
 import { useDialogSubmit, useReorder } from './useBoardWrites';
 import { moveFailureNotice } from '../features/tasks/api/lifecycle';
-import { epicApi } from '../features/epics/editor/epicApi';
+import { useEpicWrites } from '../features/epics/editor/epicApi';
 import { groupTasks } from '../features/tasks/model/board';
 import type { ColumnName, ProjectId } from '../shared/api/contracts';
 import { useLaneMove } from '../features/tasks/useLaneMove';
@@ -59,6 +59,7 @@ export function useAppActions(model: AppControllerModel) {
   });
 
   const reorder = useReorder(refreshProject);
+  const epicWrites = useEpicWrites(refreshProject);
 
   const workspace: AppWorkspaceActions = {
     onSelectProject: (projectId) => {
@@ -119,12 +120,12 @@ export function useAppActions(model: AppControllerModel) {
     onDeleteEpic: async () => {
       const epic = model.selectedEpic;
       if (!epic || !activeId) return;
-      await epicApi(activeId, epic.id, () => refreshProject(activeId)).remove();
+      await epicWrites(activeId, epic.id).remove();
     },
     onFinalizeEpic: async () => {
       const epic = model.selectedEpic;
       if (!epic || !activeId) return;
-      await epicApi(activeId, epic.id, () => refreshProject(activeId)).leaveDraft();
+      await epicWrites(activeId, epic.id).leaveDraft();
     },
     onRetryEpics: () => {
       if (archiveVisible) model.archive.reload();
@@ -236,9 +237,7 @@ export function useAppActions(model: AppControllerModel) {
   const operationProjectId = session.operation?.projectId;
   const epicApiForOperation =
     session.dialog?.kind === 'epic' && operationProjectId
-      ? epicApi(operationProjectId, session.dialog.epic.id, () =>
-          refreshProject(operationProjectId),
-        )
+      ? epicWrites(operationProjectId, session.dialog.epic.id)
       : undefined;
 
   return {

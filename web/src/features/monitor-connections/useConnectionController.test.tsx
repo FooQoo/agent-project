@@ -1,12 +1,14 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ConnectionSnapshot, RegisteredDevice } from './api';
+import { ConnectionRequestError, type ConnectionSnapshot, type RegisteredDevice } from './api';
 
 const api = vi.hoisted(() => ({
   getConnection: vi.fn(),
   getDevices: vi.fn(),
   saveSettings: vi.fn(),
   startConnection: vi.fn(),
+  stopConnection: vi.fn(),
+  removeDevice: vi.fn(),
 }));
 
 vi.mock('./api', async (importOriginal) => ({
@@ -42,6 +44,14 @@ const device: RegisteredDevice = {
   lastSeenAt: '2026-01-01T00:00:00Z',
 };
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((r) => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
 describe('useConnectionController', () => {
   it('applies the status and connects while the device list never arrives', async () => {
     api.getConnection.mockResolvedValue(snapshot());
@@ -51,10 +61,9 @@ describe('useConnectionController', () => {
     const { result } = renderHook(() => useConnectionController(true));
     await waitFor(() => expect(result.current.ready).toBe(true));
     expect(result.current.devices).toEqual([]);
-    await act(async () => {
-      await result.current.connect({ token: '', save: false, domain: '' });
-    });
-    expect(api.saveSettings).toHaveBeenCalled();
+    act(() => result.current.connect({ token: '', save: false, domain: '' }));
+    await waitFor(() => expect(api.saveSettings).toHaveBeenCalled());
+    await waitFor(() => expect(result.current.saving).toBe(false));
     expect(result.current.error).toBeNull();
   });
 
@@ -76,10 +85,55 @@ describe('useConnectionController', () => {
     api.saveSettings.mockRejectedValue(new Error('down'));
     const { result } = renderHook(() => useConnectionController(true));
     await waitFor(() => expect(result.current.ready).toBe(true));
-    await act(async () => {
-      await result.current.connect({ token: '', save: false, domain: '' });
+    act(() => result.current.connect({ token: '', save: false, domain: '' }));
+    await waitFor(() => expect(result.current.saving).toBe(false));
+    expect(api.saveSettings).toHaveBeenCalled();
+    expect(result.current.error).not.toBeNull();
+  });
+
+  it('drops a second submit while a save is on its way', async () => {
+    api.getConnection.mockResolvedValue(snapshot());
+    api.getDevices.mockResolvedValue([]);
+    const gate = deferred<ConnectionSnapshot>();
+    api.saveSettings.mockReturnValue(gate.promise);
+    api.startConnection.mockResolvedValue(snapshot({ status: 'ready' }));
+    const { result } = renderHook(() => useConnectionController(true));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    act(() => {
+      result.current.connect({ token: '', save: false, domain: '' });
+      result.current.connect({ token: '', save: false, domain: '' });
     });
+    await waitFor(() => expect(result.current.saving).toBe(true));
+    gate.resolve(snapshot({ status: 'ready', revision: 2 }));
+    await waitFor(() => expect(result.current.saving).toBe(false));
+    expect(api.saveSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the fixed message of a refused stop and applies the stopped status on success', async () => {
+    api.getConnection.mockResolvedValue(snapshot({ status: 'ready' }));
+    api.getDevices.mockResolvedValue([]);
+    api.stopConnection
+      .mockRejectedValueOnce(new ConnectionRequestError(500, 'start_failed'))
+      .mockResolvedValueOnce(snapshot({ status: 'disabled' }));
+    const { result } = renderHook(() => useConnectionController(true));
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    act(() => result.current.stop());
+    await waitFor(() => expect(result.current.error).not.toBeNull());
     expect(result.current.saving).toBe(false);
+    act(() => result.current.stop());
+    await waitFor(() => expect(result.current.status).toBe('disabled'));
+    expect(result.current.error).toBeNull();
+  });
+
+  it('reads the devices again after a failed removal', async () => {
+    api.getConnection.mockResolvedValue(snapshot());
+    api.getDevices.mockResolvedValue([device]);
+    api.removeDevice.mockRejectedValue(new ConnectionRequestError(404, 'device_not_found'));
+    const { result } = renderHook(() => useConnectionController(true));
+    await waitFor(() => expect(result.current.devices).toEqual([device]));
+    api.getDevices.mockResolvedValue([]);
+    act(() => result.current.removeDevice('d1'));
+    await waitFor(() => expect(result.current.devices).toEqual([]));
     expect(result.current.error).not.toBeNull();
   });
 });

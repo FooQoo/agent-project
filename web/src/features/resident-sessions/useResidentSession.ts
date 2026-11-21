@@ -45,6 +45,5 @@ export function useResidentSession(projectId: ProjectId | null, intervalMs: numb
   return {
     snapshot: projectId === null ? null : (query.data ?? null),
     failed: projectId !== null && query.isError,
-    refresh,
   };
 }

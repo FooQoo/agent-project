@@ -2,6 +2,7 @@ import { AcceptanceTabView } from '../../../features/tasks/detail/AcceptanceTabV
 import { HistoryTimeline } from '../../../features/tasks/history/HistoryTimeline';
 import type { Problem } from '../../../shared/api/contracts';
 import { useTaskDetail } from '../../../shared/data/react';
+import { useWrite } from '../../../shared/data/react/use-write';
 import { ResultsTab } from '../../../features/tasks/results/ResultsTab';
 import type { MonitorReadResolvers, MonitorTask } from '../contracts';
 import { attachmentResolver } from './attachment-resolver';
@@ -51,11 +52,14 @@ export function TaskAcceptanceTab({
 }: TabProps & { resolvers: MonitorReadResolvers }) {
   const detail = useTaskDetail(item.projectId, item.task.id);
   const save = resolvers.setAcceptance;
+  // A refusal rejects to the checkbox, which shows it; a save that went through reads the Detail again.
+  const condition = useWrite<unknown, { conditionId: string; done: boolean }>({
+    mutationFn: ({ conditionId, done }) =>
+      save ? save(item.projectId, item.task.id, conditionId, done) : Promise.resolve(),
+    onSuccess: () => void detail.refresh(),
+  });
   const toggle = save
-    ? async (conditionId: string, done: boolean) => {
-        await save(item.projectId, item.task.id, conditionId, done);
-        void detail.refresh();
-      }
+    ? (conditionId: string, done: boolean) => condition.mutateAsync({ conditionId, done })
     : undefined;
   return (
     <MonitorSection snapshot={detail.document} onRetry={() => void detail.refresh()}>
