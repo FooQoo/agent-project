@@ -62,7 +62,7 @@ describe('monitor detail drawer', () => {
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText('Todo work item 1')).toBeTruthy();
     expect(within(dialog).getAllByRole('tab')).toHaveLength(5);
-    expect(within(dialog).getByRole('status', { name: 'Loading details…' })).toBeTruthy();
+    expect(await within(dialog).findByRole('status', { name: 'Loading details…' })).toBeTruthy();
     expect(await within(dialog).findByText('Work')).toBeTruthy();
     expect(within(dialog).queryByRole('status', { name: 'Loading details…' })).toBeNull();
     expect(dialog.querySelector('.monitor-document')).toBeTruthy();
