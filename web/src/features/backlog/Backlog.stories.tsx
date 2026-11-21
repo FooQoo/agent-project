@@ -103,9 +103,47 @@ export const SelectionDrawer: Story = {
     // The page behind stays usable: a tap on it does not close the drawer.
     await userEvent.click(within(canvasElement).getByRole('button', { name: /behind the drawer/ }));
     await expect(drawer).toBeVisible();
+    // The two buttons are the same size.
+    const [cancel, send] = [
+      within(drawer).getByRole('button', { name: 'Cancel' }),
+      within(drawer).getByRole('button', { name: 'Send to Todo (2)' }),
+    ];
+    await expect(cancel.getBoundingClientRect().width).toBeCloseTo(
+      send.getBoundingClientRect().width,
+      0,
+    );
+    await expect(cancel.getBoundingClientRect().height).toBeCloseTo(
+      send.getBoundingClientRect().height,
+      0,
+    );
     await userEvent.click(within(drawer).getByRole('button', { name: 'Send to Todo (2)' }));
     await expect(args.onSend).toHaveBeenCalledOnce();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Cancel' }));
     await expect(args.onCancel).toHaveBeenCalledOnce();
+  },
+};
+
+/** A long count in a narrow drawer: the label is cut, and the two buttons keep the same size. */
+export const SelectionDrawerLongCount: Story = {
+  args: { count: 128 },
+  globals: { width: 'phone' },
+  render: (args) => (
+    <BacklogSheet open count={args.count} onCancel={args.onCancel} onSend={args.onSend} />
+  ),
+  play: async () => {
+    const drawer = await within(document.body).findByRole('region', {
+      name: 'Send selected cards',
+    });
+    const buttons = within(drawer).getAllByRole('button');
+    const cancel = buttons[buttons.length - 2] as HTMLElement;
+    const send = buttons[buttons.length - 1] as HTMLElement;
+    await expect(cancel.getBoundingClientRect().width).toBeCloseTo(
+      send.getBoundingClientRect().width,
+      0,
+    );
+    await expect(cancel.getBoundingClientRect().height).toBeCloseTo(
+      send.getBoundingClientRect().height,
+      0,
+    );
   },
 };

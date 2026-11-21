@@ -219,15 +219,23 @@ body:has(.backlog-sheet) .phone-nav {
 
 .backlog-sheet__actions {
   display: grid;
-  /* The send button carries the count and the lane name, so it takes the wider share. */
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  /* The two buttons are the same size: equal columns, and both keep their fixed height. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   padding: 2px 16px 12px;
 }
 
 .backlog-sheet__actions > button {
   min-width: 0;
-  white-space: normal;
+  white-space: nowrap;
+}
+
+/* A long label (a large count, a narrow phone) is cut with an ellipsis instead of wrapping, so the
+   two buttons never differ in height. */
+.backlog-sheet__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .backlog-send__scope {
