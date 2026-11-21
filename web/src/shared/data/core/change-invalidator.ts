@@ -1,22 +1,19 @@
-// Turns an SSE `changed` event into the least cache invalidation that is still safe. It marks
-// sections stale in the store and reports what the scheduler should fetch; it fetches nothing.
+// Turns an SSE `changed` event into the least cache invalidation that is still safe: whether the
+// Summary must be read again. It fetches nothing. A Detail is refetched by the new Summary (it
+// names the versions), so a document or history change of a Detail that is cached asks for one too.
 // A missed event, a new server instance or an event it does not know makes the whole cache
 // untrusted: the Summary and every Detail go stale until a new Summary says which still match.
 import type { ProjectId } from '../../api/contracts';
 import type { Change, ChangedEvent, DetailSection, Facet, Summary } from '../api/contracts';
-import type { ResourceStore } from './resource-store';
-import type { ResetReason, ResourceKey } from './types';
+import type { DetailVersionOf, ResetReason, ResourceKey } from './types';
 
 export interface Invalidation {
   reset: ResetReason | null;
   /** The Summary of the event's project needs a new fetch. */
   summary: boolean;
-  /** Cached sections that changed. Includes a section being fetched, whose response is now old. */
-  stale: Array<{ key: ResourceKey; section: DetailSection }>;
-  removed: ResourceKey[];
 }
 
-const NONE = (): Invalidation => ({ reset: null, summary: false, stale: [], removed: [] });
+const NONE = (): Invalidation => ({ reset: null, summary: false });
 
 const FACETS: readonly Facet[] = ['summary', 'document', 'history', 'deleted'];
 const FOR_RESOURCE: Record<string, readonly Facet[]> = {
@@ -34,16 +31,15 @@ export function changesRequest(event: ChangedEvent): boolean {
 export interface InvalidatorOptions {
   /** Events of other projects are ignored. */
   isActiveProject(projectId: ProjectId): boolean;
+  /** Whether the cache holds a query for the section of a Detail. */
+  hasDetail(key: ResourceKey, section: DetailSection): boolean;
 }
 
 export class ChangeInvalidator {
   private instanceId: string | null = null;
   private seq: number | null = null;
 
-  constructor(
-    private readonly store: ResourceStore,
-    private readonly options: InvalidatorOptions,
-  ) {}
+  constructor(private readonly options: InvalidatorOptions) {}
 
   /** The sequence check alone. Tells why the cache can no longer be trusted, or null. */
   observe(event: ChangedEvent): ResetReason | null {
@@ -76,8 +72,7 @@ export class ChangeInvalidator {
 
   /** The cache can no longer be trusted. */
   reset(reason: ResetReason): Invalidation {
-    this.store.markAllStale();
-    return { reset: reason, summary: true, stale: [], removed: [] };
+    return { reset: reason, summary: true };
   }
 
   /** A new connection: the sequence of the old one says nothing about the new one. */
@@ -99,18 +94,12 @@ export class ChangeInvalidator {
     if (facets.has('summary')) out.summary = true;
     if (facets.has('deleted')) {
       out.summary = true;
-      if (this.store.cachedKeys(projectId).some((k) => k.kind === key.kind && k.id === key.id)) {
-        this.store.remove(key);
-        out.removed.push(key);
-      }
       return;
     }
     for (const section of ['document', 'history'] as const) {
       if (!facets.has(section)) continue;
       if (key.kind === 'epic' && section === 'history') continue;
-      if (this.store.getSection(key, section).data === null) continue;
-      this.store.markStale(key, section);
-      out.stale.push({ key, section });
+      if (this.options.hasDetail(key, section)) out.summary = true;
     }
   }
 }
@@ -130,7 +119,7 @@ export function contradictsSummary(
   recorded: readonly ChangedEvent[],
   previous: Summary | null,
   next: Summary,
-  store: ResourceStore,
+  versionOf: DetailVersionOf,
 ): boolean {
   for (const event of recorded) {
     if (event.projectId !== next.project.id) continue;
@@ -156,9 +145,9 @@ export function contradictsSummary(
           : { kind: 'epic', projectId: event.projectId, id: String(change.id) };
       for (const section of ['document', 'history'] as const) {
         if (!facets.includes(section)) continue;
-        const cached = store.getSection(key, section);
+        const cached = versionOf(key, section);
         const versions = entry.detailVersions as Partial<Record<DetailSection, string>>;
-        if (cached.data !== null && cached.version === versions[section]) return true;
+        if (cached !== null && cached === versions[section]) return true;
       }
     }
   }

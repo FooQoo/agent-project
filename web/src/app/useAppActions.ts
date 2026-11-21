@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { openWhenLoaded } from './openWhenLoaded';
 import type { AppControllerModel, AppWorkspaceActions } from './contracts';
 import { WriteError, editTask, editTaskMultipart, moveTask, reorderTask } from './api';
 import { moveFailureNotice } from '../features/tasks/api/lifecycle';
@@ -75,9 +76,9 @@ export function useAppActions(model: AppControllerModel) {
     onOpenEpic: (epicId) => {
       const epic = model.boardData?.epics.find((item) => item.id === epicId);
       if (!epic || !isProjectId(activeId)) return;
-      void model.loadEpic(activeId, epic).then((loaded) => {
-        if (loaded) model.openDialog({ kind: 'epic', epic: loaded });
-      });
+      openWhenLoaded(model.loadEpic(activeId, epic), (loaded) =>
+        model.openDialog({ kind: 'epic', epic: loaded }),
+      );
     },
     onMove: (task, column) => {
       if (!isProjectId(activeId) || session.operation !== null) return;
@@ -113,9 +114,9 @@ export function useAppActions(model: AppControllerModel) {
     onEditEpic: () => {
       const epic = model.selectedEpic;
       if (!epic || !isProjectId(activeId)) return;
-      void model.loadEpic(activeId, epic).then((loaded) => {
-        if (loaded) model.openDialog({ kind: 'epic', epic: loaded });
-      });
+      openWhenLoaded(model.loadEpic(activeId, epic), (loaded) =>
+        model.openDialog({ kind: 'epic', epic: loaded }),
+      );
     },
     onDeleteEpic: async () => {
       const epic = model.selectedEpic;
@@ -135,9 +136,9 @@ export function useAppActions(model: AppControllerModel) {
       const card = archiveVisible ? archivedSelected : model.selected;
       if (!card || !isProjectId(activeId)) return;
       const archived = archiveVisible;
-      void model.loadTask(activeId, card).then((task) => {
-        if (task) model.openDialog({ kind: 'edit', task, archived });
-      });
+      openWhenLoaded(model.loadTask(activeId, card), (task) =>
+        model.openDialog({ kind: 'edit', task, archived }),
+      );
     },
     onTaskChanged: () => {
       if (activeId) refreshProject(activeId);

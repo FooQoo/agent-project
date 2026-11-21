@@ -19,6 +19,9 @@ export type ResourceKey =
 /** Where one section of a resource stands in the cache. */
 export type SectionState = 'absent' | 'loading' | 'ready' | 'stale' | 'refreshing' | 'error';
 
+/** The version of a Detail section the cache holds, or null. */
+export type DetailVersionOf = (key: ResourceKey, section: DetailSection) => string | null;
+
 export interface DetailRequest {
   resource: ResourceKey;
   sections: DetailSection[];
@@ -96,13 +99,6 @@ export interface SectionSnapshot<S extends DetailSection = DetailSection> {
   partial: SectionDataMap[S] | null;
   version: string | null;
   error: Error | null;
-  pinned: boolean;
-  bytes: number;
-}
-
-export interface ResourceSnapshot {
-  document: SectionSnapshot<'document'>;
-  history: SectionSnapshot<'history'>;
 }
 
 export interface SummarySnapshot {

@@ -1,16 +1,6 @@
-// The cache limits of the data core's Details, in one place. Measure before changing them; there
-// is no TTL. The Summary is kept by the query client.
-const MIB = 1024 * 1024;
-
-export const LIMITS = {
-  taskDetail: { count: 60, bytes: 8 * MIB },
-  epicDetail: { count: 20, bytes: 4 * MIB },
-} as const;
-
+// Timings and counts of the data core, in one place. Measure before changing them.
 /** How long a change is collected before the fetches start. */
 export const REFRESH_WINDOW_MS = 150;
-/** Background fetches that may run at once. */
-export const BACKGROUND_CONCURRENCY = 2;
 /** A connection with no sign of life for this long is dropped and reopened. */
 export const HEARTBEAT_DEADLINE_MS = 45_000;
 export const RETRY_DELAYS_MS = [1_000, 2_000, 5_000, 10_000, 30_000] as const;

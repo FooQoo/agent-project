@@ -11,15 +11,15 @@ import { MAX_REFETCH_ATTEMPTS, REFRESH_WINDOW_MS } from './limits';
 import type { PresentationGate } from './presentation-gate';
 import { SUMMARY_GC_TIME_MS } from './query-client';
 import { queryKeys } from './query-keys';
-import type { ResourceStore } from './resource-store';
-import type { DataAdapter, SectionState, SummarySnapshot } from './types';
+import type { DataAdapter, DetailVersionOf, SectionState, SummarySnapshot } from './types';
 
 type Waiters = Array<() => void>;
 
 export interface SummaryReaderOptions {
   client: QueryClient;
   adapter: DataAdapter;
-  store: ResourceStore;
+  /** The version of a Detail section the cache holds, to compare a response with a notification. */
+  versionOf: DetailVersionOf;
   gate: PresentationGate;
   /** A new Summary is in the cache. `immediate` is false for a refetch the gate could hold. */
   onCommit(projectId: ProjectId, summary: Summary, immediate: boolean): void;
@@ -46,7 +46,7 @@ const noop = () => {};
 export class SummaryReader {
   private readonly client: QueryClient;
   private readonly adapter: DataAdapter;
-  private readonly store: ResourceStore;
+  private readonly versionOf: DetailVersionOf;
   private readonly gate: PresentationGate;
   private readonly onCommit: SummaryReaderOptions['onCommit'];
   private readonly windowMs: number;
@@ -72,7 +72,7 @@ export class SummaryReader {
   constructor(options: SummaryReaderOptions) {
     this.client = options.client;
     this.adapter = options.adapter;
-    this.store = options.store;
+    this.versionOf = options.versionOf;
     this.gate = options.gate;
     this.onCommit = options.onCommit;
     this.windowMs = options.windowMs ?? REFRESH_WINDOW_MS;
@@ -254,7 +254,7 @@ export class SummaryReader {
       }
       if (
         attempt + 1 < MAX_REFETCH_ATTEMPTS &&
-        contradictsSummary(recorded, previous, summary, this.store)
+        contradictsSummary(recorded, previous, summary, this.versionOf)
       )
         continue;
       this.lastImmediate.set(projectId, (this.background.get(projectId) ?? 0) === 0);

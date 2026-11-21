@@ -1,22 +1,22 @@
-import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import type { ProjectId } from '../../api/contracts';
 import type { DetailSection } from '../api/contracts';
 import type { ResourceKey, SectionSnapshot } from '../core/types';
 import { useDataCore } from './provider';
+import { useDetailSection } from './use-detail-section';
 
-const NONE: ResourceKey = { kind: 'task', projectId: '', id: 0 };
 const ALL: DetailSection[] = ['document', 'history'];
 
 export interface UseTaskDetailResult {
   document: SectionSnapshot<'document'>;
   history: SectionSnapshot<'history'>;
-  /** Fetches the cached sections again now; the presentation hold does not delay it. */
+  /** Fetches the sections again now; the presentation hold does not delay it. */
   refresh(): Promise<void>;
 }
 
 /**
- * A task's Detail. Only `sections` are fetched; the task stays in the cache while this is
- * mounted and may be dropped afterwards.
+ * A task's Detail. Only `sections` are read, each by its own query; a change of the task that
+ * the Summary shows reads the open ones again.
  */
 export function useTaskDetail(
   projectId: ProjectId,
@@ -29,15 +29,16 @@ export function useTaskDetail(
     [projectId, id],
   );
   const wanted = sections.join(',');
+  const document = useDetailSection(key, 'document', sections.includes('document'));
+  const history = useDetailSection(key, 'history', sections.includes('history'));
   // biome-ignore lint/correctness/useExhaustiveDependencies: `wanted` stands for `sections`
-  useEffect(() => (key ? core.openDetail(key, sections) : undefined), [core, key, wanted]);
-  const snapshot = useSyncExternalStore(core.store.subscribe, () =>
-    core.store.getResource(key ?? NONE),
-  );
+  useEffect(() => {
+    if (key) core.details.open(key, sections);
+  }, [core, key, wanted]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: `wanted` stands for `sections`
   const refresh = useCallback(
-    () => (key ? core.refreshDetail(key, sections) : Promise.resolve()),
+    () => (key ? core.details.fetch(key, sections) : Promise.resolve()),
     [core, key, wanted],
   );
-  return { document: snapshot.document, history: snapshot.history, refresh };
+  return { document, history, refresh };
 }

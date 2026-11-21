@@ -284,7 +284,7 @@ describe('which project is shown', () => {
       'Could not restore the task. Try again.',
     );
     expect(screen.getByRole('heading', { level: 2, name: 'Retry restore' })).toBeTruthy();
-    expect(screen.getByText('Keep this content visible')).toBeTruthy();
+    expect(await screen.findByText('Keep this content visible')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Retry restore/ })).toBeTruthy();
 
     fail = false;

@@ -3,15 +3,27 @@ import { QueryObserver } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DataCore } from './data-core';
 import type { VisibilitySource } from './event-connection';
-import { changed, doc, FakeAdapter, hist, P, summaryOf, task, taskStream } from './test-support';
+import {
+  changed,
+  FakeAdapter,
+  P,
+  sectionOf,
+  seedDetail,
+  showDetail,
+  summaryOf,
+  task,
+  taskStream,
+} from './test-support';
 
 let adapter: FakeAdapter;
 let core: DataCore;
 const visible: VisibilitySource = { hidden: () => false, subscribe: () => () => {} };
 const settle = (ms = 0) => vi.advanceTimersByTimeAsync(ms);
+/** A task whose Detail is whole and on screen. */
 const seed = (id: number) => {
-  core.store.commit(task(id), 'document', doc('old'), 'd1');
-  core.store.commit(task(id), 'history', hist('a'), 'h1');
+  seedDetail(core.queryClient, task(id), 'document', 'd1');
+  seedDetail(core.queryClient, task(id), 'history', 'h1', 'a');
+  showDetail(core.queryClient, core.details, task(id));
 };
 const sv = (version = 'sv1', docs: Record<number, string> = { 1: 'd1' }) =>
   summaryOf(
@@ -100,39 +112,39 @@ describe('reconnecting', () => {
     await settle(1_000);
     expect(adapter.opened).toBe(2);
     adapter.handlers?.onOpen?.();
-    expect(core.store.getSection(task(1), 'document').state).toBe('stale');
+    expect(sectionOf(core.queryClient, task(1), 'document').invalidated).toBe(true);
     await settle(150);
     expect(adapter.summaryCalls).toHaveLength(2);
     adapter.summaryCalls[1]?.resolve(sv('sv2', { 1: 'd5' }));
     await settle(150);
     expect(adapter.streamCalls.map((c) => c.request.sections)).toEqual([['document']]);
-    expect(core.store.getSection(task(1), 'history').state).toBe('ready');
+    expect(sectionOf(core.queryClient, task(1), 'history').invalidated).toBe(false);
   });
 });
 
 describe('Details on screen', () => {
-  it('pins and loads what is opened, and unpins when it is closed', async () => {
+  it('reads the sections that are shown in one request', async () => {
     core.start();
     adapter.handlers?.onOpen?.();
-    const close = core.openDetail(task(1), ['document', 'history']);
-    expect(core.store.getSection(task(1), 'document').pinned).toBe(true);
-    expect(adapter.streamCalls).toHaveLength(1);
+    showDetail(core.queryClient, core.details, task(1));
+    await settle(0);
+    expect(adapter.streamCalls.map((c) => c.request.sections)).toEqual([['document', 'history']]);
     adapter.streamCalls[0]?.respond(taskStream(1, { document: 'd1', history: 'h1' }));
     await settle(0);
-    expect(core.store.getSection(task(1), 'document').state).toBe('ready');
-    close();
-    expect(core.store.getSection(task(1), 'document').pinned).toBe(false);
+    expect(sectionOf(core.queryClient, task(1), 'document')).toMatchObject({ version: 'd1' });
+    expect(sectionOf(core.queryClient, task(1), 'history')).toMatchObject({ version: 'h1' });
   });
 
-  it('loads only the sections that are asked for and are not whole yet', async () => {
-    core.store.commit(task(1), 'document', doc(), 'd1');
-    core.openDetail(task(1), ['document', 'history']);
+  it('reads only the sections that are shown and are not whole yet', async () => {
+    seedDetail(core.queryClient, task(1), 'document', 'd1');
+    showDetail(core.queryClient, core.details, task(1));
+    await settle(0);
     expect(adapter.streamCalls.map((c) => c.request.sections)).toEqual([['history']]);
   });
 
-  it('does not fetch a section that is whole', () => {
+  it('does not read a section that is whole', async () => {
     seed(1);
-    core.openDetail(task(1), ['document']);
+    await settle(0);
     expect(adapter.streamCalls).toHaveLength(0);
   });
 
@@ -145,11 +157,11 @@ describe('Details on screen', () => {
     seed(1);
     unwatch();
     expect(core.getSummary(P).state).toBe('stale');
-    expect(core.store.getSection(task(1), 'document').state).toBe('stale');
+    expect(sectionOf(core.queryClient, task(1), 'document').invalidated).toBe(true);
     show();
     adapter.summaryCalls[1]?.resolve(sv('sv1', { 1: 'd1' }));
     await settle(0);
-    expect(core.store.getSection(task(1), 'document').state).toBe('ready');
+    expect(sectionOf(core.queryClient, task(1), 'document').invalidated).toBe(false);
     expect(adapter.streamCalls).toHaveLength(0);
   });
 });
@@ -169,6 +181,10 @@ describe('the presentation hold', () => {
     expect(adapter.streamCalls).toHaveLength(0);
     release();
     await settle(3_150);
+    // The Summary is read once, and it names what to read of the Detail.
+    expect(adapter.summaryCalls).toHaveLength(2);
+    adapter.summaryCalls[1]?.resolve(sv('sv2', { 1: 'd2' }));
+    await settle(0);
     expect(adapter.streamCalls.map((c) => c.request.sections)).toEqual([['document']]);
   });
 

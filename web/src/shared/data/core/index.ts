@@ -8,9 +8,9 @@ export {
   EventConnection,
   type VisibilitySource,
 } from './event-connection';
-export { LIMITS } from './limits';
 export { COOLDOWN_MS, PresentationGate } from './presentation-gate';
 export { RefreshScheduler } from './refresh-scheduler';
-export { keyOf, ResourceStore, type StoreLimits } from './resource-store';
+export { type DetailEntry, sectionSnapshot } from './detail-snapshot';
+export { DetailReader } from './detail-reader';
 export { type DetailResult, ndjsonEvents, readDetail, StreamRejected } from './stream-reader';
 export type * from './types';
