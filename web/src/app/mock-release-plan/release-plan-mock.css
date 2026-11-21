@@ -1,0 +1,619 @@
+/*
+ * Styles of the release plan mock (a throwaway sketch for Storybook only). It reuses the product's
+ * tokens and its card, lane, modal and drawer classes, and adds only what the new screens need.
+ */
+
+.rp-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: var(--stable-vh, 100svh);
+  background: var(--r-bg);
+}
+
+.rp-app > .board {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.rp-board {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rp-board > .board__lanes {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* ---- Bar: the filter (what you see) and the current version (a project setting), kept apart ---- */
+
+.rp-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  flex: none;
+}
+
+.rp-bar__filter,
+.rp-bar__current {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rp-bar__count {
+  font-size: 12px;
+  color: var(--r-muted);
+}
+
+.rp-bar__current {
+  padding: 4px 4px 4px 12px;
+  border: 1px dashed var(--r-border);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--r-text2);
+}
+
+.rp-bar__current[data-set="true"] svg {
+  color: var(--r-accent);
+}
+
+.rp-bar__current svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.rp-bar__value {
+  font-size: 13px;
+  color: var(--r-text);
+}
+
+.rp-bar__current[data-set="false"] .rp-bar__value {
+  color: var(--r-muted);
+  font-weight: 500;
+}
+
+.rp-bar[data-variant="phone"] {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0 12px;
+}
+
+.rp-bar[data-variant="phone"] .rp-bar__filter {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.rp-bar[data-variant="phone"] .rp-bar__count {
+  text-align: right;
+}
+
+.rp-bar[data-variant="phone"] .rp-bar__current {
+  justify-content: space-between;
+  padding: 6px 6px 6px 12px;
+}
+
+.rp-bar[data-variant="phone"] .rp-bar__label {
+  flex: 1 1 auto;
+}
+
+.rp-filter {
+  gap: 6px;
+}
+
+.rp-filter svg {
+  width: 14px;
+  height: 14px;
+}
+
+.rp-bar[data-variant="phone"] .rp-filter {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.rp-bar[data-variant="phone"] .rp-filter .rp-filter__value {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.rp-filter__name {
+  color: var(--r-muted);
+  font-weight: 400;
+}
+
+.rp-filter__value {
+  font-weight: 600;
+}
+
+/* ---- Card version tag ---- */
+
+.rp-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.rp-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--r-border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--r-text2);
+  white-space: nowrap;
+}
+
+.rp-tag svg {
+  width: 11px;
+  height: 11px;
+  flex: none;
+}
+
+.rp-tag[data-kind="current"] {
+  border-color: var(--r-accent);
+  background: var(--r-accent-soft);
+  color: var(--r-text);
+}
+
+.rp-tag[data-kind="none"] {
+  border-style: dashed;
+  font-weight: 500;
+  color: var(--r-muted);
+}
+
+.rp-tag__mark {
+  padding-left: 6px;
+  border-left: 1px solid var(--r-accent);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--r-accent);
+}
+
+.rp-epic {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--rp-epic) 18%, transparent);
+  color: var(--r-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ---- Notice, empty states ---- */
+
+.rp-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  padding: 12px 14px;
+  border: 1px solid var(--r-pend-bd);
+  border-radius: 10px;
+  background: var(--r-pend-bg);
+  color: var(--r-pend-tx);
+}
+
+.rp-notice > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.rp-notice__text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.rp-notice__text span {
+  color: var(--r-text2);
+}
+
+.main-phone .rp-notice,
+.monitor-shell .rp-notice {
+  flex-direction: column;
+  align-items: stretch;
+  margin: 0 12px;
+}
+
+.monitor-shell .rp-notice > svg {
+  display: none;
+}
+
+.rp-empty {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 200px;
+  padding: 24px;
+  border: 1px dashed var(--r-border);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--r-text2);
+}
+
+.rp-empty > svg {
+  width: 28px;
+  height: 28px;
+  color: var(--r-muted);
+}
+
+.rp-empty strong {
+  font-size: 15px;
+  color: var(--r-text);
+}
+
+.rp-empty .btn,
+.rp-empty button {
+  margin-top: 8px;
+}
+
+.monitor-shell .rp-empty {
+  flex: none;
+  margin: 0 12px;
+}
+
+.rp-lane-empty {
+  margin: 8px 0;
+  padding: 16px 8px;
+  border: 1px dashed var(--r-border);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--r-muted);
+}
+
+.rp-phone-lane {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 0 12px 12px;
+  overflow-y: auto;
+}
+
+/* ---- Menu and option rows ---- */
+
+.rp-opt {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.rp-opt__label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.rp-opt__hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--r-muted);
+  white-space: normal;
+}
+
+.rp-menu {
+  min-width: 300px;
+}
+
+.rp-eyebrow {
+  margin: 8px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--r-muted);
+}
+
+/* ---- Surfaces (modal and sheet) ---- */
+
+.modal.rp-modal {
+  width: 640px;
+  gap: 16px;
+  max-height: calc(var(--stable-vh, 100svh) - 48px);
+}
+
+.rp-surface__body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.rp-surface__footer {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobile-drawer.rp-sheet[data-slot="drawer-popup"] {
+  max-height: calc(var(--stable-vh, 100svh) - 56px);
+}
+
+.rp-sheet .rp-surface__body {
+  flex: 1 1 auto;
+  padding: 4px 16px 12px;
+}
+
+.rp-sheet .rp-surface__footer {
+  padding: 10px 16px 18px;
+  border-top: 1px solid var(--r-border);
+  background: var(--r-surface);
+}
+
+.rp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rp-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rp-section__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--r-text);
+}
+
+.rp-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--r-text2);
+}
+
+.rp-note--info {
+  color: var(--r-muted);
+}
+
+/* Whose change it is: the project (solid) or one task (outlined). */
+.rp-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rp-scope svg {
+  width: 12px;
+  height: 12px;
+}
+
+.rp-scope[data-scope="project"] {
+  background: var(--r-accent);
+  color: var(--r-on-accent);
+}
+
+.rp-scope[data-scope="task"] {
+  border: 1px solid var(--r-border);
+  color: var(--r-text2);
+}
+
+.rp-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rp-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--r-border);
+  border-radius: 10px;
+  background: var(--r-surface);
+  cursor: pointer;
+}
+
+.rp-option > button {
+  margin-top: 2px;
+}
+
+.rp-option[data-checked="true"] {
+  border-color: var(--r-accent);
+  background: var(--r-accent-soft);
+}
+
+.rp-option[data-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.rp-pills {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 8px;
+}
+
+.rp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* biome-ignore lint/plugin: a version pill, not a button size; the mock fixes it at 34px */
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--r-border);
+  border-radius: 999px;
+  background: var(--r-surface);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rp-pill[data-checked="true"] {
+  border-color: var(--r-accent);
+  background: var(--r-accent-soft);
+}
+
+.rp-pill .rp-pill__radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.rp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rp-chips .rp-card-row {
+  margin: 0;
+}
+
+.rp-epic-link {
+  padding-top: 16px;
+  border-top: 1px solid var(--r-border);
+}
+
+.rp-epic-link > button {
+  align-self: flex-start;
+}
+
+/* ---- Bulk change ---- */
+
+.rp-targets {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--r-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.rp-target {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  background: var(--r-surface);
+}
+
+.rp-target + .rp-target {
+  border-top: 1px solid var(--r-border);
+}
+
+.rp-target[data-state="change"] {
+  background: var(--r-accent-soft);
+}
+
+.rp-target[data-state="off"] .rp-target__title {
+  color: var(--r-muted);
+}
+
+.rp-target__label {
+  display: flex;
+  flex: 1 1 220px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.rp-target__id {
+  color: var(--r-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-target__change {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 28px;
+  font-size: 12px;
+  color: var(--r-text2);
+}
+
+.rp-target__change strong {
+  color: var(--r-text);
+}
+
+.rp-from {
+  color: var(--r-muted);
+}
+
+.rp-target[data-state="change"] .rp-from {
+  text-decoration: line-through;
+}
+
+.rp-same {
+  padding: 1px 6px;
+  border: 1px solid var(--r-border);
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.rp-summary {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--r-accent-soft);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--r-text);
+}
+
+.rp-summary[data-empty="true"] {
+  background: transparent;
+  border: 1px dashed var(--r-border);
+  font-weight: 500;
+  color: var(--r-muted);
+}
+
+.rp-menu .menu__label {
+  padding: 8px 12px 2px;
+}
+
+.rp-sibling {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}

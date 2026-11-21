@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "owner": "U9",
+  "files": [
+    {
+      "file": "app/mock-release-plan/ReleasePlanScreen.tsx",
+      "exports": [
+        {
+          "name": "ReleasePlanScreen",
+          "stories": [
+            {
+              "id": "mocks-releaseplan-desktop--board-all",
+              "states": ["all versions", "card version tags"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-desktop--filter-current",
+              "states": ["current filter"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-desktop--filter-specific-version",
+              "states": ["specific version filter"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-releaseplan-desktop--filter-unplanned",
+              "states": ["unplanned filter"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-releaseplan-desktop--filter-zero-results",
+              "states": ["zero results"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-desktop--no-current-version",
+              "states": ["no current version"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-desktop--filter-menu-open",
+              "states": ["filter menu"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-desktop--filter-menu-no-current",
+              "states": ["filter menu, no current"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-desktop--detail-version-picker",
+              "states": ["task version picker"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-desktop--detail-no-current",
+              "states": ["picker, no current"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-releaseplan-desktop--project-current-version",
+              "states": ["project current version"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-desktop--epic-bulk-confirm",
+              "states": ["bulk change targets and count"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-desktop--epic-bulk-all-tasks",
+              "states": ["bulk change, every task"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-releaseplan-desktop--try-it",
+              "states": ["interactive"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-desktop--board-ja-dark",
+              "states": ["ja dark"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-releaseplan-phone--board-all",
+              "states": ["phone bar and lanes"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-phone--filter-current",
+              "states": ["phone current filter"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-releaseplan-phone--filter-sheet",
+              "states": ["phone filter sheet"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-phone--filter-sheet-no-current",
+              "states": ["phone filter sheet, no current"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-phone--filter-zero-results",
+              "states": ["phone zero results"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-releaseplan-phone--no-current-version",
+              "states": ["phone no current version"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-phone--detail-version-picker",
+              "states": ["phone version picker sheet"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-phone--project-current-version",
+              "states": ["phone current version sheet"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-phone--epic-bulk-confirm",
+              "states": ["phone bulk change sheet"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-releaseplan-phone--board-ja-dark",
+              "states": ["phone ja dark"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/mock-release-plan/EpicBulk.tsx",
+      "exports": [
+        {
+          "name": "EpicBulk",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        }
+      ]
+    },
+    {
+      "file": "app/mock-release-plan/FilterControls.tsx",
+      "exports": [
+        {
+          "name": "FilterButton",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        },
+        {
+          "name": "FilterSheet",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        }
+      ]
+    },
+    {
+      "file": "app/mock-release-plan/ProjectSettings.tsx",
+      "exports": [
+        {
+          "name": "ProjectSettings",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        }
+      ]
+    },
+    {
+      "file": "app/mock-release-plan/TaskDetail.tsx",
+      "exports": [
+        {
+          "name": "TaskDetail",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        }
+      ]
+    },
+    {
+      "file": "app/mock-release-plan/Parts.tsx",
+      "exports": [
+        {
+          "name": "OptionRow",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        },
+        {
+          "name": "OptionText",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        },
+        {
+          "name": "PillRow",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        },
+        {
+          "name": "ScopeBadge",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        },
+        {
+          "name": "Surface",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        },
+        {
+          "name": "VersionTag",
+          "stories": [],
+          "exclusion": "Drawn only inside ReleasePlanScreen; its Stories show it."
+        }
+      ]
+    }
+  ]
+}
