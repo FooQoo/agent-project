@@ -1,7 +1,7 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { changed, FakeAdapter, P, summaryOf, task, taskStream } from '../core/test-support';
+import { changed, FakeAdapter, P, summaryOf, taskStream } from '../core/test-support';
 import type { VisibilitySource } from '../core/event-connection';
 import { DataProvider, useDataCore } from './provider';
 import { useEpicDetail } from './use-epic-detail';
@@ -122,7 +122,7 @@ describe('useSummary', () => {
 });
 
 describe('useTaskDetail', () => {
-  it('loads the sections it is asked for, pins them, and unpins on unmount', async () => {
+  it('loads the sections it is asked for, in one request', async () => {
     const view = render(wrap(<TaskView id={4} />));
     await tick();
     expect(adapter.streamCalls.map((c) => c.request.sections)).toEqual([['document', 'history']]);
@@ -158,21 +158,54 @@ describe('useTaskDetail', () => {
     expect(adapter.streamCalls).toHaveLength(0);
   });
 
-  it('pins while mounted', async () => {
-    let seen: ReturnType<typeof useDataCore> | null = null;
-    function Probe() {
-      seen = useDataCore();
-      return <TaskView id={4} sections={['document']} />;
+  it('follows a change of the task into the screen, reading only the section that changed', async () => {
+    function Both() {
+      const { history } = useTaskDetail(P, 4);
+      return (
+        <>
+          <SummaryView project={P} />
+          <p data-testid="history">{history.data?.items.map((i) => i.reason).join(',') ?? '-'}</p>
+        </>
+      );
     }
-    const view = render(wrap(<Probe />));
+    render(wrap(<Both />));
     await tick();
-    expect(seen !== null && (seen as ReturnType<typeof useDataCore>).store.isPinned(task(4))).toBe(
-      true,
-    );
-    view.unmount();
-    expect(seen !== null && (seen as ReturnType<typeof useDataCore>).store.isPinned(task(4))).toBe(
-      false,
-    );
+    adapter.handlers?.onOpen?.();
+    await tick();
+    await act(async () => {
+      adapter.summaryCalls[0]?.resolve(
+        summaryOf([{ id: 4, document: 'd1', history: 'h1' }], 'sv1'),
+      );
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await act(async () => {
+      adapter.streamCalls[0]?.respond(
+        taskStream(4, { document: 'd1', history: 'h1' }, { reasons: ['made'] }),
+      );
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByTestId('history').textContent).toBe('made');
+    await act(async () => {
+      adapter.handlers?.onChanged(changed(1, [{ resource: 'task', id: 4, facets: ['history'] }]));
+      await vi.advanceTimersByTimeAsync(150);
+    });
+    await act(async () => {
+      adapter.summaryCalls[1]?.resolve(
+        summaryOf([{ id: 4, document: 'd1', history: 'h2' }], 'sv2'),
+      );
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(adapter.streamCalls.map((c) => c.request.sections)).toEqual([
+      ['document', 'history'],
+      ['history'],
+    ]);
+    await act(async () => {
+      adapter.streamCalls[1]?.respond(
+        taskStream(4, { history: 'h2' }, { reasons: ['made', 'moved'] }),
+      );
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByTestId('history').textContent).toBe('made,moved');
   });
 });
 

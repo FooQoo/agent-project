@@ -83,7 +83,8 @@ describe('DetailPanel', () => {
     );
     await screen.findByText(/Line one/);
     const panel = screen.getByRole('tabpanel');
-    expect(panel.querySelectorAll('br')).toHaveLength(2);
+    // What has arrived is shown as plain text first; the whole document is drawn a moment later.
+    await waitFor(() => expect(panel.querySelectorAll('br')).toHaveLength(2));
     expect(panel.querySelector('strong')?.textContent).toBe('two');
     expect(panel.textContent).toContain('<b>three</b>');
     expect(container.querySelector('b')).toBeNull();

@@ -1,22 +1,20 @@
-// The data core as one object: the store, the gate, the scheduler and the connection, wired
+// The data core as one object: the readers, the gate, the scheduler and the connection, wired
 // together. A framework binding (React) needs only this and an adapter.
 import type { QueryClient } from '@tanstack/react-query';
 import type { ProjectId } from '../../api/contracts';
-import type { ChangedEvent, DetailSection } from '../api/contracts';
+import type { ChangedEvent } from '../api/contracts';
 import { ChangeInvalidator } from './change-invalidator';
+import { DetailReader } from './detail-reader';
 import { type ConnectionState, EventConnection, type VisibilitySource } from './event-connection';
 import { PresentationGate } from './presentation-gate';
 import { createQueryClient } from './query-client';
-import { reconcile } from './reconcile';
 import { RefreshScheduler } from './refresh-scheduler';
-import { ResourceStore, type StoreLimits } from './resource-store';
 import { SummaryReader } from './summary-reader';
-import type { DataAdapter, ResourceKey, SummarySnapshot } from './types';
+import type { DataAdapter, SummarySnapshot } from './types';
 
 export interface DataCoreOptions {
   adapter: DataAdapter;
-  limits?: StoreLimits;
-  /** The query client that holds the Summary; one is made when none is given. */
+  /** The query client that holds the Summaries and the Details; one is made when none is given. */
   queryClient?: QueryClient;
   visibility?: VisibilitySource;
   /** The build ID of the server's `ready` event. */
@@ -26,9 +24,9 @@ export interface DataCoreOptions {
 }
 
 export class DataCore {
-  readonly store: ResourceStore;
   readonly queryClient: QueryClient;
   readonly summary: SummaryReader;
+  readonly details: DetailReader;
   readonly gate: PresentationGate;
   readonly scheduler: RefreshScheduler;
   readonly connection: EventConnection;
@@ -39,27 +37,32 @@ export class DataCore {
   private readonly stateListeners = new Set<() => void>();
 
   constructor(options: DataCoreOptions) {
-    this.store = new ResourceStore(options.limits);
     this.gate = new PresentationGate();
     this.queryClient = options.queryClient ?? createQueryClient();
+    this.details = new DetailReader({
+      client: this.queryClient,
+      adapter: options.adapter,
+      gate: this.gate,
+      loadSummary: (projectId) => this.summary.load(projectId, true),
+    });
     this.summary = new SummaryReader({
       client: this.queryClient,
       adapter: options.adapter,
-      store: this.store,
+      versionOf: (key, section) => this.details.versionOf(key, section),
       gate: this.gate,
-      // The Details the new Summary names are compared with the cache.
+      // The Details the new Summary names other versions of are read again.
       onCommit: (projectId, summary, immediate) =>
-        reconcile(this.scheduler, projectId, summary, immediate),
+        this.details.reconcile(projectId, summary, immediate),
     });
-    const invalidator = new ChangeInvalidator(this.store, {
+    const invalidator = new ChangeInvalidator({
       isActiveProject: (id) => this.watched.has(id),
+      hasDetail: (key, section) => this.details.has(key, section),
     });
     this.scheduler = new RefreshScheduler({
-      adapter: options.adapter,
-      store: this.store,
       gate: this.gate,
       invalidator,
       summary: this.summary,
+      details: this.details,
       watchedProjects: () => [...this.watched.keys()],
     });
     this.connection = new EventConnection({
@@ -136,7 +139,10 @@ export class DataCore {
   watchProject(projectId: ProjectId): () => void {
     this.watched.set(projectId, (this.watched.get(projectId) ?? 0) + 1);
     // A read cancelled when the screen left restores the state from before it, without the stale mark.
-    if (this.left.delete(projectId)) this.summary.markStale(projectId);
+    if (this.left.delete(projectId)) {
+      this.summary.markStale(projectId);
+      this.details.markStale(projectId);
+    }
     let ended = false;
     return () => {
       if (ended) return;
@@ -162,33 +168,9 @@ export class DataCore {
     return this.scheduler.loadSummary(projectId, { immediate: true });
   }
 
-  /**
-   * A screen shows a Detail. It stays in the cache while shown, and the sections that are not
-   * whole yet are fetched. Returns the function that ends it.
-   */
-  openDetail(key: ResourceKey, sections: DetailSection[]): () => void {
-    const unpin = this.store.pin(key);
-    this.store.touch(key);
-    const missing = sections.filter((s) => {
-      const state = this.store.getSection(key, s).state;
-      return state === 'absent' || state === 'error' || state === 'stale';
-    });
-    if (missing.length > 0) void this.scheduler.loadDetail(key, missing, { immediate: true });
-    return unpin;
-  }
-
-  /** A person asked for the Detail again. */
-  refreshDetail(key: ResourceKey, sections?: DetailSection[]): Promise<void> {
-    const cached = this.store.cachedSections(key);
-    const wanted = sections ?? (cached.length > 0 ? cached : (['document', 'history'] as const));
-    return this.scheduler.loadDetail(key, [...wanted], { immediate: true });
-  }
-
   /** Nobody follows this project's notifications now, so what it holds may be out of date. */
   private markProjectStale(projectId: ProjectId): void {
     this.summary.markStale(projectId);
-    for (const key of this.store.cachedKeys(projectId)) {
-      for (const section of this.store.cachedSections(key)) this.store.markStale(key, section);
-    }
+    this.details.markStale(projectId);
   }
 }

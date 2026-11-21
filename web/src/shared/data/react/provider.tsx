@@ -15,20 +15,19 @@ export function DataProvider({ children, core: given, ...options }: DataProvider
   // The callbacks may be new on every render; the core calls the latest ones.
   const latest = useRef(options);
   latest.current = options;
-  const { adapter, limits, visibility, queryClient } = options;
+  const { adapter, visibility, queryClient } = options;
   const core = useMemo(
     () =>
       given ??
       new DataCore({
         adapter,
-        limits,
         visibility,
         queryClient,
         onReady: (build) => latest.current.onReady?.(build),
         onPreferences: (payload) => latest.current.onPreferences?.(payload),
         onConnectionState: (state) => latest.current.onConnectionState?.(state),
       }),
-    [given, adapter, limits, visibility, queryClient],
+    [given, adapter, visibility, queryClient],
   );
   useEffect(() => {
     if (given) return undefined;

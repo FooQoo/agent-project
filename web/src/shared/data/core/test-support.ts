@@ -217,3 +217,53 @@ export const changed = (
   projectId = P,
   instanceId = 'i1',
 ): Changed => ({ instanceId, seq, projectId, changes });
+
+// ---- Details in a query client
+
+import { type QueryClient, QueryObserver } from '@tanstack/react-query';
+import type { DetailReader } from './detail-reader';
+import type { DetailEntry } from './detail-snapshot';
+import { queryKeys } from './query-keys';
+import type { DetailSection } from '../api/contracts';
+
+/** Puts a whole version of a section in the cache, as a read that ended would. */
+export function seedDetail(
+  client: QueryClient,
+  key: ResourceKey,
+  section: DetailSection,
+  version: string,
+  text = 'old',
+): void {
+  const entry: DetailEntry = {
+    data: section === 'document' ? doc(text) : hist(text),
+    version,
+  };
+  client.setQueryData(queryKeys.detail(key, section), entry);
+}
+
+/** What a screen showing a Detail does: its queries are active. Returns the function that closes it. */
+export function showDetail(
+  client: QueryClient,
+  details: DetailReader,
+  key: ResourceKey,
+  sections: readonly DetailSection[] = ['document', 'history'],
+): () => void {
+  const stops = sections.map((section) =>
+    new QueryObserver(client, details.options(key, section)).subscribe(() => {}),
+  );
+  details.open(key, sections);
+  return () => {
+    for (const stop of stops) stop();
+  };
+}
+
+/** The versions a client holds of a task's sections, and whether each is marked as out of date. */
+export function sectionOf(client: QueryClient, key: ResourceKey, section: DetailSection) {
+  const state = client.getQueryState<DetailEntry>(queryKeys.detail(key, section));
+  return {
+    version: state?.data?.version ?? null,
+    invalidated: state?.isInvalidated ?? false,
+    fetching: state?.fetchStatus === 'fetching',
+    status: state?.status ?? 'absent',
+  };
+}

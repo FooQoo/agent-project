@@ -99,7 +99,7 @@ describe('chapters of the description', () => {
     const { container } = renderPanel(makeTask({ id: 50, description: `Intro\n\n${SECTIONED}` }));
     expect(container.querySelector('.md-chapter__number')).toBeNull();
     expect(await screen.findByRole('heading', { level: 3, name: 'Goal' })).toBeTruthy();
-    expect(screen.getByText('one')).toBeTruthy();
+    expect(await screen.findByText('one')).toBeTruthy();
     expect(screen.getByText('first')).toBeTruthy();
     expect(screen.getByText('Intro')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Goal/ })).toBeNull();

@@ -63,13 +63,13 @@ The `seq` grows by one for each `changed` within one `instanceId`. The `instance
 
 A client keeps one Summary per project. The Summary is built from the index projection, so reading it reads no file. A request whose `If-None-Match` matches the `version` gets `304` with no body.
 
-A Detail (a task's body and history, or an epic's document) is read only when a card or an epic is opened, and only for the sections the screen shows. The Detail arrives as NDJSON. The client commits it as a whole version only after the `complete` line, and discards a stream that ends without it.
+A Detail (a task's body and history, or an epic's document) is read only when a card or an epic is opened, and only for the sections the screen shows. The Detail arrives as NDJSON. The client commits it as a whole version only after the `complete` line, and discards a stream that ends without it. The document and the history of one task are separate sections of the cache, but they are read in one request when both are needed.
 
 When a `changed` event arrives, the client does the following:
 
-- It reads the Summary again for the project.
-- It marks the sections the facets name as outdated, and fetches again only the open ones.
-- It keeps the sections that the event does not name.
+- It reads the Summary again for the project. A change of `document` or `history` of a Detail it holds asks for this too, because the Summary names the version of each section.
+- It compares the new Summary with each cached Detail section. A section whose version differs is read again (only if a screen shows it; otherwise it is marked as outdated and read when it is opened), and only that section.
+- It keeps the sections that the Summary shows unchanged.
 
 A `changed` that arrives while the Summary is being fetched may describe a change the response does not include yet. The client fetches again if the response does not show that change: its `version` is the same as before, or there was no earlier Summary to compare with, as on the first load. It asks at most three times in all.
 

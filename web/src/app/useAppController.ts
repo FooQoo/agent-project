@@ -140,9 +140,9 @@ export function useAppController(initial: AppInitial | undefined): AppController
       // open, so it is read again too; an archived card is not in it and keeps the one given.
       // The Summary goes first: reading it drops the Details of cards it no longer lists.
       await core.refreshSummary(projectId);
-      await core.refreshDetail(key, ['document']);
-      const loaded = core.store.getResource(key).document.data;
-      if (loaded === null) return null;
+      await core.details.fetch(key, ['document']);
+      const loaded = core.details.entry(key, 'document')?.data;
+      if (loaded === undefined) return null;
       const summary = core.getSummary(projectId).data;
       const listed = summary?.tasks.find((item) => item.id === card.id);
       return taskForEditor(listed ? toTaskSummary(listed, summary?.epics ?? []) : card, loaded);
@@ -162,9 +162,9 @@ export function useAppController(initial: AppInitial | undefined): AppController
   const loadEpic = useCallback(
     async (projectId: ProjectId, epic: Epic): Promise<Epic | null> => {
       const key: ResourceKey = { kind: 'epic', projectId, id: epic.id };
-      await core.refreshDetail(key, ['document']);
-      const loaded = core.store.getResource(key).document.data;
-      return loaded === null ? null : epicForEditor(epic, loaded);
+      await core.details.fetch(key, ['document']);
+      const loaded = core.details.entry(key, 'document')?.data;
+      return loaded === undefined ? null : epicForEditor(epic, loaded);
     },
     [core],
   );
