@@ -1,7 +1,7 @@
 import { LayersIcon } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ProjectResourceResult } from '../../../features/projects/model/useProjectResource';
+import type { ProjectResourceResult } from '../../../features/projects/model/projectResource';
 import type { Epic, EpicTaskCounts as Counts } from '../../../shared/api/contracts';
 import { EpicBadge } from '../../../features/epics/label/EpicBadge';
 import { ListPane } from '../../../shared/ui/list-pane/ListPane';

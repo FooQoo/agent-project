@@ -91,7 +91,7 @@ describe('useDocument', () => {
     });
     expect(outcome).toBe('updated');
     expect(result.current.status).toBe('ready');
-    expect(result.current.file?.content).toBe('# Changed\n');
+    await waitFor(() => expect(result.current.file?.content).toBe('# Changed\n'));
 
     fetchMock.mockResolvedValueOnce(json({ error: { code: 'docs_not_found' } }, 404));
     await act(async () => {

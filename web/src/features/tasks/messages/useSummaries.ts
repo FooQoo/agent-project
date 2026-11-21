@@ -1,7 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { ProjectId } from '@/shared/api/contracts';
-import { useOptionalDataCore } from '@/shared/data/react';
+import { queryKeys } from '@/shared/data/core/query-keys';
+import { useReadQuery } from '@/shared/data/react';
+import type { ChangedEvent } from '@/shared/data/api/contracts';
 import type { PeriodicSummary, SummariesApi } from './model/messages';
+
+function changesSummaries(event: ChangedEvent): boolean {
+  return event.changes.some((c) => c.resource === 'messages' && c.facets.includes('summary'));
+}
 
 export interface SummariesController {
   /** The summaries not dismissed, newest first; empty until the first read arrives. */
@@ -25,39 +31,16 @@ export function useSummaries(
   api: SummariesApi | undefined,
   projectId: ProjectId,
 ): SummariesController {
-  const core = useOptionalDataCore();
-  const [read, setRead] = useState<readonly PeriodicSummary[] | null>(null);
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [dismissFailed, setDismissFailed] = useState(false);
-  // Only the newest read is applied, so a slow answer never replaces a newer list.
-  const reads = useRef(0);
-
-  const load = useCallback(() => {
-    if (!api) return;
-    const mine = ++reads.current;
-    api
-      .list(projectId)
-      .then((list) => {
-        if (mine === reads.current) setRead(list);
-      })
-      .catch(() => {
-        // The list stays as it was; the next change or opening reads it again.
-        if (mine === reads.current) setRead((current) => current ?? []);
-      });
-  }, [api, projectId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-  useEffect(() => {
-    if (!api || !core) return undefined;
-    return core.subscribeChanges((event) => {
-      if (event === null) return load();
-      if (event.projectId !== projectId) return;
-      if (event.changes.some((c) => c.resource === 'messages' && c.facets.includes('summary')))
-        load();
-    });
-  }, [api, core, projectId, load]);
+  // A failed read leaves the list as it was (empty at first); the next change or opening reads it again.
+  const query = useReadQuery({
+    queryKey: queryKeys.messageSummaries(projectId),
+    queryFn: () => (api as SummariesApi).list(projectId),
+    enabled: api !== undefined,
+    changedBy: (event) => event.projectId === projectId && changesSummaries(event),
+  });
+  const read = query.data ?? (query.isError ? [] : null);
 
   const dismiss = useCallback(
     (summaryId: string) => {

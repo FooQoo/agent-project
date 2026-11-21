@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ChangedEvent } from '@/shared/data/api/contracts';
 import type { DataCore } from '@/shared/data/core';
@@ -57,18 +57,23 @@ describe('useSummaries', () => {
       .mockResolvedValueOnce([summary('a')])
       .mockResolvedValue([summary('a'), summary('b')]);
     const { emit } = setup({ list, dismiss: vi.fn() });
-    await act(async () => {});
-    expect(screen.getByTestId('ids').textContent).toBe('a');
+    await waitFor(() => expect(screen.getByTestId('ids').textContent).toBe('a'));
+    // Only this query is read again, by a change that concerns it.
+    await emit({
+      ...event(['summary']),
+      changes: [{ resource: 'task', id: '1', facets: ['summary'] }],
+    });
+    expect(list).toHaveBeenCalledTimes(1);
     await emit(event(['summary']));
-    expect(screen.getByTestId('ids').textContent).toBe('a,b');
+    await waitFor(() => expect(screen.getByTestId('ids').textContent).toBe('a,b'));
     await emit(null);
-    expect(list).toHaveBeenCalledTimes(3);
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(3));
   });
 
   it('ignores the changes of another project', async () => {
     const list = vi.fn().mockResolvedValue([]);
     const { emit } = setup({ list, dismiss: vi.fn() });
-    await act(async () => {});
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
     await emit({ ...event(['summary']), projectId: 'other' });
     expect(list).toHaveBeenCalledTimes(1);
   });
@@ -76,7 +81,7 @@ describe('useSummaries', () => {
   it('hides a dismissed summary at once and brings it back when the server refuses', async () => {
     const dismiss = vi.fn().mockRejectedValue(new Error('no'));
     const { controller } = setup({ list: async () => [summary('a'), summary('b')], dismiss });
-    await act(async () => {});
+    await waitFor(() => expect(screen.getByTestId('ids').textContent).toBe('a,b'));
     await act(async () => controller().dismiss('a'));
     expect(dismiss).toHaveBeenCalledWith(PROJECT, 'a');
     expect(screen.getByTestId('ids').textContent).toBe('a,b');
@@ -86,7 +91,7 @@ describe('useSummaries', () => {
   it('keeps a dismissed summary hidden when the server accepts', async () => {
     const dismiss = vi.fn().mockResolvedValue({});
     const { controller } = setup({ list: async () => [summary('a'), summary('b')], dismiss });
-    await act(async () => {});
+    await waitFor(() => expect(screen.getByTestId('ids').textContent).toBe('a,b'));
     await act(async () => controller().dismiss('a'));
     expect(screen.getByTestId('ids').textContent).toBe('b');
     expect(controller().dismissFailed).toBe(false);

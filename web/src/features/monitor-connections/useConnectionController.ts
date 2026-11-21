@@ -18,6 +18,8 @@ import type {
   ConnectionStatus,
   TokenInfo,
 } from './ui/connectionTypes';
+import { queryKeys } from '../../shared/data/core/query-keys';
+import { useReadQuery } from '../../shared/data/react';
 import { qrDataUrl } from './qr';
 import { isProjectIdValue, phoneUrl } from './phoneUrl';
 
@@ -31,42 +33,53 @@ export function useConnectionController(open: boolean, projectId: string | null 
   const { t } = useTranslation();
   const [snapshot, setSnapshot] = useState<ConnectionSnapshot | null>(null);
   const [devices, setDevices] = useState<RegisteredDevice[]>([]);
-  const [loadFailed, setLoadFailed] = useState(false);
+  const transientRef = useRef(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const savingRef = useRef(false);
 
+  // The status and the devices are two reads: a slow or failed device list never holds back the
+  // status. When the list cannot be read the dialog keeps what it showed.
+  const query = useReadQuery({
+    queryKey: queryKeys.connection(),
+    queryFn: getConnection,
+    enabled: open || transientRef.current,
+    refetchIntervalMs: POLL_MS,
+  });
+  const devicesQuery = useReadQuery({
+    queryKey: queryKeys.connectionDevices(),
+    queryFn: getDevices,
+    enabled: open || transientRef.current,
+    refetchIntervalMs: POLL_MS,
+  });
+  const { refetch, data: read, dataUpdatedAt } = query;
+  const {
+    refetch: refetchDevices,
+    data: deviceList,
+    dataUpdatedAt: devicesUpdatedAt,
+  } = devicesQuery;
+  const loadFailed = query.isError;
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: every finished read applies, changed or not.
+  useEffect(() => {
+    if (read && !savingRef.current) setSnapshot(read);
+  }, [dataUpdatedAt]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: every finished read applies, changed or not.
+  useEffect(() => {
+    if (Array.isArray(deviceList) && !savingRef.current) setDevices(deviceList);
+  }, [devicesUpdatedAt]);
+  // Only the status is awaited: a stalled device read must never keep a save pending. The device
+  // list is refreshed on its own and applies when it arrives.
   const refresh = useCallback(async () => {
-    try {
-      const next = await getConnection();
-      if (savingRef.current) return;
-      setSnapshot(next);
-      setLoadFailed(false);
-    } catch {
-      setLoadFailed(true);
-      return;
-    }
-    // The list is secondary: when it cannot be read the dialog keeps what it showed.
-    try {
-      const list = await getDevices();
-      if (!savingRef.current && Array.isArray(list)) setDevices(list);
-    } catch {
-      // Left as it was.
-    }
-  }, []);
+    void refetchDevices({ cancelRefetch: false });
+    const result = await refetch({ cancelRefetch: false });
+    if (result.data) setSnapshot(result.data);
+  }, [refetch, refetchDevices]);
 
   const status: ConnectionStatus | null = snapshot?.status ?? null;
-  const transient = status === 'starting' || status === 'reconnecting' || status === 'stopping';
-  useEffect(() => {
-    if (!open) return;
-    void refresh();
-  }, [open, refresh]);
-  useEffect(() => {
-    if (!open && !transient) return;
-    const timer = window.setInterval(() => void refresh(), POLL_MS);
-    return () => window.clearInterval(timer);
-  }, [open, transient, refresh]);
+  transientRef.current =
+    status === 'starting' || status === 'reconnecting' || status === 'stopping';
 
   const messageOf = useCallback(
     (cause: unknown): string => {
