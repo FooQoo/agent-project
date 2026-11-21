@@ -116,6 +116,8 @@ impl FileStore {
                 next_task_id: 1,
                 default_epics_seeded: false,
                 next_question_id: 1,
+                versions: Vec::new(),
+                current_version: None,
             };
             io::write_json(
                 &layout::project_file(&temp),

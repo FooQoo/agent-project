@@ -89,6 +89,16 @@
 - 復元したタスクは、アーカイブしたときのレーンの末尾に、稼働状態Idleで置きます。アーカイブでは必ずIdleを保存するので、復元したタスクはアーカイブ時点の稼働状態になり、レーンとIdleの組み合わせは常に作業モデルで有効です。フォールバックは要りません。スマホのアーカイブ一覧も、PCと同じ`POST …/tasks/{id}/restore`で復元します。
 - 通常のスナップショット・`ls`・Hookは未アーカイブのタスクだけを返し、`show ID`はアーカイブ済みも表示します。アーカイブ済みへの書き込みは`task_archived`で失敗しますが、画像は読めます。アーカイブ一覧は`archivedAt`の新しい順で、同じ時刻ならタスクIDの大きいほうが先、読み取れる`archivedAt`のないタスクは最後です。`GET …/archive`は`sort_archived_newest_first`（`src/file_store/reader/snapshot.rs`）で並べ、Web UIも`sortArchivedNewestFirst`（`web/src/features/tasks/api/read.ts`）で同じ順に並べ直すため、PCの一覧とスマートフォンの一覧は同じ順序になります。
 
+## リリース予定の版
+
+プロジェクトは版の一覧を持ち、そのうち1つをカレントの版にでき、タスクは1つの版を予定として持てます。予定は任意です。予定のないタスクは予定がないままで、これらの項目がない古いファイルは版なし・予定なしとして読みます。プロジェクトは`project.json`に`versions`と`currentVersion`を、各タスクは`task.json`に`plannedVersion`とその変更の記録`plannedVersionChanges`を持ちます。項目と版の名前の形式は[リリース予定の版](../reference/files.md#planned-versions)を参照してください。
+
+- 各タスクの予定の版が正です。タスクごとにも、エピックの全タスクへまとめてでも設定でき、1つのエピックに異なる版のタスクが混在できます。
+- カレントの版を割り当てると、その時点の版の名前を保存します。あとでプロジェクトのカレントの版を変えても、タスクは動きません。
+- 変更は、前後の版と時刻を`plannedVersionChanges`と通常の履歴エントリ1件に記録するので、あとから「どのタスクがいつ版から外れたか」を読めます。すでにある版を設定し直しても何も変わらないため、再試行でエントリは増えません。
+- 操作（`set_task_planned_version`・`set_epic_planned_version`・`add_version`・`set_current_version`）は、他の書き込みと同じくプロジェクトの書き込みロックの下で動きます。版の設定で担当者・レーン・稼働状態・位置・完了条件が変わることはありません。アーカイブ済みのタスクには設定できず、AIは下書きとDoneのタスクを変更できません。
+- Summaryにはまだ含まれません。入口（CLIとボード）は、あとからこれらの項目を読み書きします。
+
 ## 並び順と日時
 
 - PCのボードとCLIでは、未着手と進行中はpositionの昇順、Doneはpositionの降順です。モバイルのDone一覧は`taskStatusChangedAt`の新しい順です。完了順を履歴から推測しません。APIの`tasks`はID順で、画面が表示用に並べ替えます。エピックはEPIC-ID順です。

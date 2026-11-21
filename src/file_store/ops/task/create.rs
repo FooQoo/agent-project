@@ -152,6 +152,8 @@ impl FileStore {
             results: Vec::new(),
             simple_request: None,
             onboarding_sample: None,
+            planned_version: None,
+            planned_version_changes: Vec::new(),
             history: vec![transition_event(Transition {
                 language,
                 kind: HistoryKind::Created,

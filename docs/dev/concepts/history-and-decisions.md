@@ -37,7 +37,7 @@ History is one timeline of work progress and every task operation. Each entry ha
 
 Extra fields such as an ID, kind, actor, or transition are rejected.
 
-- Create, lane move, run-state change, question, answer, withdrawal, reference change, draft toggle, epic change, archive, restore, a person checking or unchecking a condition, and automatic Done append history automatically. If a move or a state change omits the reason, the product generates one from the operation and the current state.
+- Create, lane move, run-state change, question, answer, withdrawal, reference change, draft toggle, epic change, planned version change, archive, restore, a person checking or unchecking a condition, and automatic Done append history automatically. If a move or a state change omits the reason, the product generates one from the operation and the current state.
 - Agents append a decision that changes no state but matters later with `agboard --project NAME history add ID [--reason TEXT | --reason-file PATH]`. The product assigns the time and refuses AI appends to drafts, archived tasks, and Done tasks. A blank reason is generated from the current lane and run state.
 - The board itself appends one entry when the resident agent stops on an error while it holds a task, and returns the task to idle in the same save. See [Push mode](./agents.md#push-mode).
 - `agboard result add` records a result delivered to the requester and appends one entry that names the version and the first line of the summary. A retry of a result that already exists appends nothing. Results themselves are stored in `task.json`, not in history; see [Files](../reference/files.md#results).

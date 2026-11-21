@@ -46,7 +46,24 @@ pub struct TaskFile {
     /// The guide's sample identity; absent for every ordinary card.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub onboarding_sample: Option<OnboardingSample>,
+    /// The version the task is planned for; `None` when it has no plan.
+    #[serde(default)]
+    pub planned_version: Option<String>,
+    /// Every change of `planned_version`, oldest first.
+    #[serde(default)]
+    pub planned_version_changes: Vec<PlannedVersionChange>,
     pub history: Vec<HistoryRecord>,
+}
+
+/// One change of a task's planned version: the version before and after, and when.
+/// `None` means no planned version.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PlannedVersionChange {
+    #[serde(with = "crate::clock::serde_utc")]
+    pub at: DateTime<Utc>,
+    pub from: Option<String>,
+    pub to: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -110,6 +127,12 @@ pub struct TaskMetadata {
     pub simple_request: Option<SimpleRequestMetadata>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub onboarding_sample: Option<OnboardingSample>,
+    /// Absent from files written before planned versions existed, and while the task has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub planned_version: Option<String>,
+    /// Absent until the planned version has changed once.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub planned_version_changes: Vec<PlannedVersionChange>,
 }
 
 impl From<&TaskFile> for TaskMetadata {
@@ -139,6 +162,8 @@ impl From<&TaskFile> for TaskMetadata {
             results: task.results.clone(),
             simple_request: task.simple_request.clone(),
             onboarding_sample: task.onboarding_sample.clone(),
+            planned_version: task.planned_version.clone(),
+            planned_version_changes: task.planned_version_changes.clone(),
         }
     }
 }
@@ -171,6 +196,8 @@ impl TaskMetadata {
             results: self.results,
             simple_request: self.simple_request,
             onboarding_sample: self.onboarding_sample,
+            planned_version: self.planned_version,
+            planned_version_changes: self.planned_version_changes,
             history,
         }
     }
@@ -232,5 +259,11 @@ pub struct TaskView {
     /// The guide's sample identity; absent for every ordinary card.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub onboarding_sample: Option<OnboardingSample>,
+    /// The version the task is planned for, as a concrete name; absent when it has no plan.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub planned_version: Option<String>,
+    /// Every change of the planned version, oldest first; absent when there is none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub planned_version_changes: Vec<PlannedVersionChange>,
     pub history: Vec<HistoryRecord>,
 }
