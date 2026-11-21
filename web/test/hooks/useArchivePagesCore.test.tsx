@@ -179,4 +179,20 @@ describe('useArchivePages with a data core', () => {
     await emit(null);
     await waitFor(() => expect(fetchPage).toHaveBeenCalledTimes(3));
   });
+
+  it('reads fresh when a change arrives during the first read, and shows only that result', async () => {
+    let release: (value: ArchivePage) => void = () => {};
+    fetchPage
+      .mockImplementationOnce(() => new Promise<ArchivePage>((resolve) => (release = resolve)))
+      .mockResolvedValueOnce(page(P1, [7], null, 1));
+    const { result, emit } = setup();
+    await waitFor(() => expect(fetchPage).toHaveBeenCalledTimes(1));
+    await emit(changed(P1));
+    await waitFor(() => expect(fetchPage).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(ids(result)).toEqual([7]));
+    // The stale read settles late and must not replace the fresh rows.
+    release(page(P1, [5], null, 1));
+    await act(async () => {});
+    expect(ids(result)).toEqual([7]);
+  });
 });

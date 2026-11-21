@@ -93,9 +93,17 @@ function useLiveArchive(client: QueryClient, projectId: ProjectId | null) {
       if (event !== null && event.projectId !== projectId) return;
       // Like the Summary, it waits while a modal is open. A read in progress is cancelled and
       // started again: the pages it would bring were cut at a cursor that is no longer current.
-      core.gate.submit(() => void client.invalidateQueries({ queryKey, exact: true }), {
-        key: 'archive',
-      });
+      core.gate.submit(
+        () => {
+          // With no rows yet TanStack joins a running read instead of restarting it, and its
+          // success would clear the invalidation, so a read that began before the change is
+          // cancelled outright and the refetch that follows starts from the current state.
+          void client
+            .cancelQueries({ queryKey, exact: true })
+            .then(() => client.invalidateQueries({ queryKey, exact: true }));
+        },
+        { key: 'archive' },
+      );
     });
   }, [core, client, projectId]);
 }
