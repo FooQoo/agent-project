@@ -57,14 +57,14 @@ The server never sends the data itself in the notification. It sends the names o
 ```mermaid
 flowchart LR
     Files[("Shared files")] --> Index["Index projection<br/>Summary and versions"]
-    Index --> Cache[("Browser cache<br/>Summary, Detail")]
+    Index --> Cache[("Query cache<br/>Summary, Detail")]
     Cache --> Screen["Board, monitor,<br/>detail panels"]
 ```
 
 - **Summary.** Every card and list row is drawn from the project's Summary. It holds no body text, so the board loads quickly, and a change to one task does not re-read the bodies of the other tasks.
 - **Detail.** The body, acceptance text, and history are read only when a card or an epic is opened. The browser stores each section by its version.
 - **SSE.** One `changed` event names the tasks, epics, and facets that changed, with an `instanceId` and a `seq`. A gap in `seq`, or a new `instanceId`, tells the browser to drop its cache and read the Summary again.
-- **Cache.** The browser holds the Summary of the last four projects and a limited number of Details, least recently used first. A change never updates the cache from the notification alone: the browser reads the data again.
+- **Cache.** The browser keeps what it reads in a [TanStack Query](https://tanstack.com/query) cache. Data stays fresh until a change notification says otherwise, and a query that no screen shows is dropped after 30 minutes (a Summary) or 5 minutes (a Detail). A change never updates the cache from the notification alone: the browser marks the affected queries stale and reads the data again.
 
 ### Remote access
 
