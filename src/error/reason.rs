@@ -114,6 +114,10 @@ impl AgboardError {
                 "Another change moved the task first. Check its current status and move it again."
                     .into()
             }
+            AgboardError::PlannedVersionChanged { .. } => {
+                "Another change set the planned version first. Read the task again and choose the version again."
+                    .into()
+            }
             AgboardError::ConfirmationRequired { .. } => {
                 "Run this command yourself in a terminal. Agents cannot delete tasks or projects, or replace a board."
                     .to_string()

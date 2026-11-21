@@ -180,6 +180,11 @@ pub enum AgboardError {
         id: i64,
         current: Column,
     },
+    /// A planned-version change expected the task to have a version it no longer has.
+    PlannedVersionChanged {
+        id: i64,
+        current: Option<String>,
+    },
     ConfirmationRequired {
         operation: String,
     },

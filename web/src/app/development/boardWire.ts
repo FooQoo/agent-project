@@ -42,7 +42,12 @@ export function questionOf(task: Task): SummaryQuestion | null {
 
 export function summaryOfBoard(board: Board): Summary {
   const summary: Summary = {
-    project: { id: board.project.id, name: board.project.name },
+    project: {
+      id: board.project.id,
+      name: board.project.name,
+      versions: [],
+      currentVersion: null,
+    },
     version: '',
     tasks: board.tasks.map((task) => {
       const entry: Summary['tasks'][number] = {
@@ -59,6 +64,7 @@ export function summaryOfBoard(board: Board): Summary {
           total: task.acceptance.length,
         },
         acceptanceError: task.acceptanceError,
+        plannedVersion: task.plannedVersion ?? null,
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
         pendingRequestId: task.pendingRequestId,

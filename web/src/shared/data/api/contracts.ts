@@ -22,6 +22,10 @@ export type DetailSection = 'document' | 'history';
 export interface SummaryProject {
   id: ProjectId;
   name: string;
+  /** The versions the project lists, in the order they were added. */
+  versions: string[];
+  /** The version new work is planned for; `null` when none is set. */
+  currentVersion: string | null;
 }
 
 export interface AcceptanceCount {
@@ -47,6 +51,8 @@ export interface SummaryTask {
   acceptance: AcceptanceCount;
   /** The conditions cannot be read from the frontmatter; the full text is then the body. */
   acceptanceError: boolean;
+  /** The version the task is planned for; `null` when unplanned. */
+  plannedVersion: string | null;
   /** When the task was created. */
   createdAt: string;
   updatedAt: string;

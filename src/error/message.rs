@@ -86,6 +86,9 @@ impl AgboardError {
             AgboardError::TaskStatusChanged { id, current } => {
                 format!("task #{id} is now {}.", current.as_str())
             }
+            AgboardError::PlannedVersionChanged { id, .. } => {
+                format!("the planned version of task #{id} changed.")
+            }
             AgboardError::ConfirmationRequired { operation } => {
                 format!("{operation} needs confirmation from a human.")
             }

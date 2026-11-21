@@ -19,6 +19,7 @@
         "total": 8
       },
       "acceptanceError": false,
+      "plannedVersion": null,
       "updatedAt": "2026-10-22T09:57:52Z",
       "pendingRequestId": null,
       "pendingReason": null,
@@ -46,6 +47,7 @@
         "total": 0
       },
       "acceptanceError": true,
+      "plannedVersion": null,
       "createdAt": "2026-10-22T09:58:00Z",
       "updatedAt": "2026-10-22T10:01:00Z",
       "pendingRequestId": "req-7",

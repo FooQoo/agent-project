@@ -126,7 +126,10 @@ fn check_summary(body: &str, project: &ProjectId) -> Summary {
             "messages"
         ])
     );
-    assert_eq!(keys(&value["project"]), set(&["id", "name"]));
+    assert_eq!(
+        keys(&value["project"]),
+        set(&["id", "name", "versions", "currentVersion"])
+    );
     for task in value["tasks"].as_array().unwrap() {
         assert_eq!(
             keys(task),
@@ -141,6 +144,7 @@ fn check_summary(body: &str, project: &ProjectId) -> Summary {
                 "epicId",
                 "acceptance",
                 "acceptanceError",
+                "plannedVersion",
                 "createdAt",
                 "updatedAt",
                 "pendingRequestId",

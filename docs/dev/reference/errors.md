@@ -12,7 +12,7 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `task_archived` | A write targets an archived task. | 1 | 409 |
 | `task_not_archived` | A delete or restore targets a task that is not archived. | 1 | 409 |
 | `task_is_draft` | An AI `edit`, `history add`, `mv`, or `state` targets a person's draft (`human`); or a person's `mv` to Todo, `epic send`, or send from the board targets one. The `reason` says to wait for the user to finalize it. | 1 | 409 |
-| `no_current_version` | `add`, `edit`, `ls`, or `progress` with `--current-version` runs in a project that has no current version. Nothing is saved. Set one with `version current VERSION`, or name a version. | 1 | n/a |
+| `no_current_version` | `add`, `edit`, `ls`, or `progress` with `--current-version` runs in a project that has no current version. Nothing is saved. Set one with `version current VERSION`, or name a version. The board API answers 422. | 1 | 422 |
 | `task_in_backlog` | An agent's `mv` or `state` targets a Backlog task. Only a person moves it out of the Backlog. | 1 | 409 |
 | `send_with_open_questions` | A person's `mv <id> todo`, `epic send`, or Web move to Todo targets a plan with open questions and no confirmation (`--force`, or `ack: true` in the API). Nothing is saved; the message lists the question IDs. After a confirmed send the question stays and the task is pending until it is answered. | 1 | 409 |
 | `epic_is_draft` | A CLI `epic edit`, or `epic edit --waves`, targets a person's draft epic; or a person sends an epic in a person's draft. | 1 | 409 |
@@ -43,6 +43,7 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `ai_only` | A person withdraws a question, asks one, or accepts a request or an answer. Only an agent can do these. | 1 | 403 |
 | `choice_unknown` | The answer names a choice that is not in the question. | 2 | 422 |
 | `task_status_changed` | A move named the status it started from (`fromStatus`), and the task is no longer in it. Nothing is written; the body adds `currentStatus`. | 1 | 409 |
+| `planned_version_changed` | A planned-version change named the version the page showed (`expectedPlannedVersion`), and the task has another one now. Nothing is written; the body adds `currentPlannedVersion`. | 1 | 409 |
 
 ## Projects, epics, and attachments
 

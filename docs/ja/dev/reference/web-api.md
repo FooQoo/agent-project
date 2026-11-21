@@ -21,6 +21,10 @@ ngrokの入口は、ボードのページと以下のルートを同じパスで
 | `POST /api/projects/{projectId}/tasks/{id}/send` | `{"ack"?: bool}`。人として、バックログのタスクを未着手の末尾へ送り、`{task, changed}`を返す。すでにバックログを出ているタスクは`changed: false`で何も書かないので、再試行しても安全。未回答の質問がある計画は、`ack: true`を付けるまで409 `send_with_open_questions`。人の下書きは409 `task_is_draft`、アーカイブ済みは409 `task_archived`。履歴に`A person sent the task to Todo.`を残す。CLIに送信のコマンドはなく、`agboard mv <id> todo --actor human [--force]`が同じ関数で同じ規則を適用する。 |
 | `POST /api/projects/{projectId}/epics/{epicId}/send` | `{"taskIds"?: [int], "ack"?: bool}`。人として、エピックのバックログのタスク（または`taskIds`だけ）を、全部成功か何も変えないかの一回の保存で送り、`{epic, sent, changed}`を返す。`sent`は移したタスクIDです。エピックの未完了のカードでない`taskId`は422 `invalid_value`。未回答の質問があれば`ack: true`が必要（409 `send_with_open_questions`）。人の下書きのエピックは409 `epic_is_draft`、下書きのタスクは409 `task_is_draft`。 |
 | `PUT /api/projects/{projectId}/tasks/{id}/acceptance/{condition}` | `{"done": true\|false}`で、条件を1件、人として設定する。版は送らず、ロックの中で最新の`TASK.md`を変え、その選択を優先する。`{task, changed}`を返す。アーカイブ済みのタスクは409 `task_archived`、存在しない条件は422 `invalid_argument`。 |
+| `GET`/`POST /api/projects/{projectId}/versions` | プロジェクトの版を読む、または版を登録する。`GET`はインデックスから`{versions, currentVersion}`を返す。`POST {"name"}`は同じ内容に`changed`を加えて返す。[予定の版](#planned-versions)を参照。 |
+| `PUT /api/projects/{projectId}/versions/current` | `{"version": string \| null}`でカレントの版を設定または解除する。まだ登録されていない版は登録する。`{versions, currentVersion, changed}`を返す。 |
+| `PUT /api/projects/{projectId}/tasks/{id}/planned-version` | 利用者として1つのタスクの予定の版を設定する。`{"choice": "named" \| "current" \| "unset", "version"?, "expectedPlannedVersion"?}`。`{task, changed}`を返す。古い`expectedPlannedVersion`は409 `planned_version_changed`。[予定の版](#planned-versions)を参照。 |
+| `POST /api/projects/{projectId}/epics/{epicId}/planned-version` | 利用者がチェックを残したエピックのタスクに予定の版を設定する。`dryRun`なら設定せずに結果だけ返す。`{changed, unchanged, skipped, skippedReasons, dryRun}`を返す。[予定の版](#planned-versions)を参照。 |
 | `PUT /api/projects/{projectId}/tasks/{id}/epic` | `{epicId: string \| null}`。未知のEPIC-IDは404 `epic_not_found`。 |
 | `POST /api/projects/{projectId}/tasks/{id}/move` | `taskStatus`、任意の`reason`、任意の`fromStatus`（利用者が移動を選んだときに画面が表示していた状態）。`fromStatus`があるとき、タスクがもうその状態にいなければ409 `task_status_changed`で、何も書かない。本文には今の状態の`currentStatus`を加えるので、画面はそれを表示し、利用者はそこからもう一度移動できる。ボードとスマホの画面は`reason`を送らず（サーバーが理由を生成します）、いつも`fromStatus`を送る。移動が拒否されたときは、カードはその列のままで、画面に短い通知を出す。人によるバックログのタスクの未着手への移動は送信です。DoingやDoneへの移動は通常のカードと同じく移動し、送信と同じ規則に従います。編集中のカードは422 `task_is_draft`、未回答の質問があれば、リクエストに`ack: true`を付けるまで409 `send_with_open_questions`です。エージェントの移動はこのルートでは行われず、CLIは`human_only`（未着手への移動）または`task_in_backlog`（DoingやDoneへの移動）で拒否します。 |
 | `POST /api/projects/{projectId}/tasks/{id}/agent-status` | 状態の規則の範囲で稼働状態を変える。画面から操作する機能はない。 |
@@ -59,17 +63,27 @@ ngrokの入口は、ボードのページと以下のルートを同じパスで
 | `GET /api/health` | `ok`と`pid`。 |
 | `GET /api/monitor-connections`とその配下の経路 | ngrokのリモート接続。[リモート接続](#リモート接続)を参照。 |
 
+### 予定の版 {#planned-versions}
+
+ボードは、プロジェクトの版と、各タスクの予定の版を、次のルートで変更します。使うのは利用者だけなので、操作する主体は常に利用者です。ほかの書き込みと同じ書き込みガードを通り、入口のルートではパスコードのセッションの内側で提供します。保存される内容は[予定の版](./files.md#planned-versions)を参照してください。
+
+- **版。** `GET …/versions`と、版を変更する`POST`・`PUT`は、`versions`（登録順の版名）と`currentVersion`（未設定なら`null`）を返します。版名は1〜64文字で、空白や制御文字を含められず、日本語などのASCII以外の文字も使えます。それ以外は422 `invalid_value`です。1つのプロジェクトに登録できる版は200までです。登録済みの名前での`POST …/versions`や、すでに設定済みの値での`PUT …/versions/current`は何も変えず、`changed: false`を返します。
+- **1つのタスク。** `choice`は、`named`（プロジェクトが登録している`version`を併せて指定）、`current`（プロジェクトのカレントの版。名前で保存）、`unset`のいずれかです。`named`以外で`version`を付けた、`named`で`version`がない、登録されていない版、カレントの版がないのに`current`、はいずれも422です。アーカイブ済みのタスクは409 `task_archived`で、下書きやDoneのタスクは利用者なら変更できます。同じ値をもう一度指定すると`changed: false`で、履歴は書きません。
+- **競合。** `expectedPlannedVersion`は画面が表示していた予定の版で、なければ`null`です。タスクがもう別の版を持っているときは何も書かず、409 `planned_version_changed`を返します。`error`と並んで`currentPlannedVersion`が付くので、画面はそれを表示して読み直せます。この項目を省くと、最新のファイルに対して選択をそのまま保存します。
+- **1つのエピック。** `{"choice", "version"?, "scope": "unplanned-only" | "all", "taskIds": [int], "dryRun"?: bool}`。見るのは`taskIds`のタスクだけで、すべてそのエピックのタスクでなければなりません（そうでなければ422 `invalid_value`で、何も書きません）。画面は利用者がチェックを残した行を送ります。アーカイブ済みとDoneのタスクは、誰が指示しても飛ばします。公開済みの版は書き換えないためです。`unplanned-only`では、すでに版を持つタスクも飛ばします。`changed`・`unchanged`・`skipped`はタスクIDの一覧で、`skippedReasons`は飛ばした各IDを`archived`・`done`・`planned`に対応させます。タスクは1つずつ保存するので、途中で失敗すると前のタスクは変更されたままになり、再試行で残りを終えられます。
+- **プレビュー。** `dryRun: true`では、サーバーが同じ規則で判定して何も書かないので、`changed`は実際の要求で変わるタスクそのものです。画面はSummaryから自分で計算せずサーバーに尋ねるので、プレビューと書き込みが食い違うことはなく、直前の更新のあとに別のクライアントが変えたカードも正しく数えます。
+
 ### SummaryとDetail
 
 ボードは、プロジェクトを2段階で読みます。Summaryは、カードや一覧の行に表示する内容をまとめて返します。Detailは、カードやエピックを開いたときにだけ必要な内容をストリームで返します。同じ経路はngrokの入口からも合言葉のsessionの背後で提供します。[入口のルート](./remote-routes.md)を参照してください。パスのプロジェクトIDは読む対象の指定であり、アクセス権ではありません。
 
 以下の形は、`src/server/contracts/`のRustの型と、`tests/fixtures/data-layer/`のゴールデン例で固定します。RustとTypeScriptのテストは、同じゴールデン例を読みます。
 
-**Summary。** `GET …/summary`は、`project`（`id`・`name`）、`version`、`tasks`、`epics`、`questions`、`messages`、`problems`を返します。本文、完了条件の文章、履歴、エピックのドキュメント、画像のバイト列は含みません。応答はインデックスの投影から作るため、ファイルは読みません。アーカイブ済みのタスクは一覧に含めません（エピックの件数には数えます）。`version`は解析済みデータのハッシュで、`ETag`（`"<version>"`）にもなります。`If-None-Match`がこの値を指す要求（複数の値、弱い形式、`*`も一致）には、本文なしの`304`を返します。存在しないプロジェクトは404 `project_not_found`、形式の誤ったIDは422 `invalid_value`、`project.json`を読めないプロジェクトはそのファイルのエラーです。
+**Summary。** `GET …/summary`は、`project`（`id`・`name`・`versions`・`currentVersion`）、`version`、`tasks`、`epics`、`questions`、`messages`、`problems`を返します。本文、完了条件の文章、履歴、エピックのドキュメント、画像のバイト列は含みません。応答はインデックスの投影から作るため、ファイルは読みません。アーカイブ済みのタスクは一覧に含めません（エピックの件数には数えます）。`version`は解析済みデータのハッシュで、`ETag`（`"<version>"`）にもなります。`If-None-Match`がこの値を指す要求（複数の値、弱い形式、`*`も一致）には、本文なしの`304`を返します。存在しないプロジェクトは404 `project_not_found`、形式の誤ったIDは422 `invalid_value`、`project.json`を読めないプロジェクトはそのファイルのエラーです。
 
 | 項目 | フィールド |
 | --- | --- |
-| タスク | `id`（整数）、`title`、`taskStatus`、`agentStatus`、`assignee`、`draft`、`position`、`epicId`（なければ`null`）、`acceptance`（`done`・`total`）、`acceptanceError`、`createdAt`、`updatedAt`、`taskStatusChangedAt`、`agentStatusChangedAt`、`questionIds`、`openQuestionIds`、`pendingRequestId`、`pendingReason`、`pendingChoices`、`onboardingSample`（以前のリリースの案内が作ったカードのみ）、`detailVersions`（`document`・`history`）。名前はボードの`Task`と同じ。 |
+| タスク | `id`（整数）、`title`、`taskStatus`、`agentStatus`、`assignee`、`draft`、`position`、`epicId`（なければ`null`）、`acceptance`（`done`・`total`）、`acceptanceError`、`plannedVersion`（なければ`null`）、`createdAt`、`updatedAt`、`taskStatusChangedAt`、`agentStatusChangedAt`、`questionIds`、`openQuestionIds`、`pendingRequestId`、`pendingReason`、`pendingChoices`、`onboardingSample`（以前のリリースの案内が作ったカードのみ）、`detailVersions`（`document`・`history`）。名前はボードの`Task`と同じ。 |
 | エピック | `id`（文字列）、`name`、`color`、`draft`、`waves`（ウェーブごとにまとめたタスクID。例: `[[566],[572],[569,570,571]]`。定めなければ空）、`wavesError`（保存された順序を読めないため、`waves`は無視する）、`progress`（`todo`・`doing`・`done`・`archived`・`total`。0でなければ`backlog`も）、`detailVersions`（`document`）。 |
 | 質問 | 未回答の質問をID順に並べる。`id`・`title`（最初の空でない行からMarkdownの記号を除いたプレーンテキスト、200文字まで）・`recommendedChoiceId`・`referencedBy`（参照しているアーカイブ前のタスク）・`createdAt`。全文は`GET …/messages/{messageId}`で読む。 |
 | メッセージ | 未完了の質問と依頼を一つの形で、古い順（同時刻はID順）に並べる。`id`（`Q-<n>`）・`type`（`question`・`request`）・`from`・`to`（`ai`か`human`）・`turn`（次に動く側。`ai`・`human`、終わったものは`null`）・`title`・`createdAt`・`tasks`（関わるタスクの番号。依頼は持たない）・`epicId`（または`null`）。質問の`turn`は、未回答のあいだは`human`、回答済みでAIがまだ回答を受け取っていないあいだは`ai`で、その間も一覧に残る。依頼の`turn`は`ai`。回答をAIが受け取った質問、受け付け済みの依頼、取り下げたメッセージは含めないため、載っているメッセージには必ず`turn`がある。`questions`は、まだ読んでいる画面のために残す。 |
@@ -365,7 +379,7 @@ Web UIは、PCの一覧とスマートフォンのシートの両方で、一つ
 | 400 | 壊れたJSON、不正な`sections`クエリ（`invalid_sections`）、または不正なドキュメントのパス（`docs_path_invalid`）。 |
 | 403 | 保護に失敗した。または`ai_only`（人が質問を取り下げようとした）。 |
 | 404 | プロジェクト・タスク・エピック・メッセージがない。またはドキュメントのファイルがない。 |
-| 409 | `question_answered`・`question_withdrawn`・`message_closed`・`request_accepted`・`answer_accepted`・`question_open`・`request_withdrawn`・`task_status_changed`・`task_not_draft`・`invalid_state_for_draft`・`task_in_backlog`・`send_with_open_questions`・`task_is_draft`・`epic_is_draft`・`epic_in_use`・`epic_id_taken`・`task_not_archived`・`archive_targets_changed`。 |
+| 409 | `question_answered`・`question_withdrawn`・`message_closed`・`request_accepted`・`answer_accepted`・`question_open`・`request_withdrawn`・`task_status_changed`・`planned_version_changed`・`task_not_draft`・`invalid_state_for_draft`・`task_in_backlog`・`send_with_open_questions`・`task_is_draft`・`epic_is_draft`・`epic_in_use`・`epic_id_taken`・`task_not_archived`・`archive_targets_changed`。 |
 | 413 | 1 MiBを超える本文。または、上限を超えるドキュメントのファイル（`docs_too_large`）。 |
 | 415 | Markdownでないドキュメントのファイル、または提供しない形式の画像（`docs_not_markdown`・`docs_asset_type`）。 |
 | 422 | ID構文・入力・状態の規則の違反。UTF-8でないドキュメントのファイル（`docs_not_utf8`）。または、パス・項目・理由つきの正本ファイルの不備（`file_invalid`）。 |

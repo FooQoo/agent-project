@@ -62,6 +62,7 @@ export function toTaskSummary(task: SummaryTask, epics: readonly SummaryEpic[]):
     draft: task.draft,
     acceptance: { done: task.acceptance.done, total: task.acceptance.total },
     acceptanceError: task.acceptanceError,
+    plannedVersion: task.plannedVersion,
   };
   return card;
 }

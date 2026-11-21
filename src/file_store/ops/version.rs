@@ -4,7 +4,9 @@
 use chrono::{DateTime, Utc};
 
 use super::epic::read_epic_file;
-use super::version_names::{add_listed, resolve};
+use super::version_names::add_listed;
+pub(super) use super::version_names::resolve;
+use super::version_plan::EpicVersionScope;
 use super::{
     ensure_ai_task_not_done, lock_project, reason_or_default, save_project, save_task, stamp,
 };
@@ -31,15 +33,6 @@ pub enum VersionChoice {
     Current,
     /// A version the project lists.
     Named(String),
-}
-
-/// Which tasks of an epic a bulk change reaches.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EpicVersionScope {
-    /// Every task the actor may change.
-    All,
-    /// Only the tasks with no planned version; the others are skipped.
-    UnplannedOnly,
 }
 
 /// The outcome of setting one version on every task of an epic.
@@ -232,7 +225,7 @@ impl FileStore {
     }
 
     /// Put `target` on the task and record the change. Returns whether anything changed.
-    fn apply_version(
+    pub(super) fn apply_version(
         &self,
         project: &ProjectId,
         task: &mut TaskFile,

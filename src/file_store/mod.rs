@@ -38,10 +38,11 @@ use crate::domain::{Draft, ProjectId, ProjectMeta};
 use crate::error::AgboardError;
 use model::TaskView;
 pub use ops::{
-    Accepted, AnswerItem, AskInput, AskQuestion, EpicSent, EpicVersionScope, EpicVersionSet,
-    ImageChanges, MAX_RESULTS, ProjectVersions, RecordedResult, RequestImage, ResultInput,
-    SendRequestInput, VersionChoice,
+    Accepted, AnswerItem, AskInput, AskQuestion, EpicSent, EpicVersionSet, ImageChanges,
+    MAX_RESULTS, ProjectVersions, RecordedResult, RequestImage, ResultInput, SendRequestInput,
+    VersionChoice,
 };
+pub use ops::{EpicVersionPlan, EpicVersionScope, SkipReason};
 use reader::ProjectSnapshot;
 
 /// Optional TASK.md fields applied together to the latest stored Markdown.

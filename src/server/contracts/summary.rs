@@ -40,6 +40,10 @@ pub struct SummaryQuestion {
 pub struct SummaryProject {
     pub id: String,
     pub name: String,
+    /// The versions the project lists, in the order they were added.
+    pub versions: Vec<String>,
+    /// The version new work is planned for, when one is set.
+    pub current_version: Option<String>,
 }
 
 /// A task without `description`, `body`, `history` and the acceptance text.
@@ -57,6 +61,8 @@ pub struct SummaryTask {
     pub acceptance: AcceptanceCount,
     /// The conditions cannot be read from the frontmatter; the full text is then the body.
     pub acceptance_error: bool,
+    /// The version the task is planned for; `null` when unplanned.
+    pub planned_version: Option<String>,
     /// When the task was created.
     pub created_at: String,
     pub updated_at: String,

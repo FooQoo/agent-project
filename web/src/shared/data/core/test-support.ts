@@ -62,7 +62,7 @@ export function summaryOf(
   epics: Array<{ id: string; document: string }> = [],
 ): Summary {
   return {
-    project: { id: projectId, name: projectId },
+    project: { id: projectId, name: projectId, versions: [], currentVersion: null },
     version,
     tasks: tasks.map((t) => ({
       id: t.id,
@@ -75,6 +75,7 @@ export function summaryOf(
       epicId: null,
       acceptance: { done: 0, total: 0 },
       acceptanceError: false,
+      plannedVersion: null,
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
       pendingRequestId: null,

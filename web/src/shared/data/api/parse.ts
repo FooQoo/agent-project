@@ -31,6 +31,7 @@ const TASK_FIELDS = [
   'epicId',
   'acceptance',
   'acceptanceError',
+  'plannedVersion',
   'createdAt',
   'updatedAt',
   'pendingRequestId',
@@ -59,6 +60,7 @@ function parseTask(value: unknown, path: string): SummaryTask {
       total: int(acceptance.total, `${path}.acceptance.total`),
     },
     acceptanceError: bool(o.acceptanceError, `${path}.acceptanceError`),
+    plannedVersion: nullableStr(o.plannedVersion, `${path}.plannedVersion`),
     createdAt: str(o.createdAt, `${path}.createdAt`),
     updatedAt: str(o.updatedAt, `${path}.updatedAt`),
     pendingRequestId: nullableStr(o.pendingRequestId, `${path}.pendingRequestId`),
@@ -186,11 +188,13 @@ export function parseSummary(value: unknown): Summary {
     ['project', 'version', 'tasks', 'epics', 'problems'],
     ['questions', 'messages'],
   );
-  const project = exact(o.project, 'summary.project', ['id', 'name']);
+  const project = exact(o.project, 'summary.project', ['id', 'name', 'versions', 'currentVersion']);
   const summary: Summary = {
     project: {
       id: str(project.id, 'summary.project.id'),
       name: str(project.name, 'summary.project.name'),
+      versions: list(project.versions, 'summary.project.versions', str),
+      currentVersion: nullableStr(project.currentVersion, 'summary.project.currentVersion'),
     },
     version: str(o.version, 'summary.version'),
     tasks: list(o.tasks, 'summary.tasks', parseTask),

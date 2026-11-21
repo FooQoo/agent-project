@@ -23,13 +23,15 @@ mod task;
 mod text;
 mod version;
 mod version_names;
+mod version_plan;
 
 pub(in crate::file_store) use qa::migrate_legacy_locked;
 use qa::task_waits;
 pub use qa::{Accepted, AnswerItem, AskInput, AskQuestion, RequestImage, SendRequestInput};
 pub use send::EpicSent;
 pub use task::{ImageChanges, MAX_RESULTS, RecordedResult, ResultInput};
-pub use version::{EpicVersionScope, EpicVersionSet, ProjectVersions, VersionChoice};
+pub use version::{EpicVersionSet, ProjectVersions, VersionChoice};
+pub use version_plan::{EpicVersionPlan, EpicVersionScope, SkipReason};
 
 use self::history_event::{HistoryKind, Transition, reason_or_default, transition_event};
 use self::save::{save_task, save_task_text, save_task_with_markdown};

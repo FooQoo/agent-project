@@ -52,6 +52,7 @@ pub(crate) fn agboard_error_response(error: &AgboardError) -> Response {
         | AgboardError::QuestionOpen { .. }
         | AgboardError::RequestWithdrawn { .. }
         | AgboardError::TaskStatusChanged { .. }
+        | AgboardError::PlannedVersionChanged { .. }
         | AgboardError::TaskIsDraft { .. }
         | AgboardError::TaskInBacklog { .. }
         | AgboardError::EpicIsDraft { .. }
@@ -71,6 +72,7 @@ pub(crate) fn agboard_error_response(error: &AgboardError) -> Response {
         | AgboardError::ArchiveTargetsChanged => StatusCode::CONFLICT,
         AgboardError::InvalidArgument { .. }
         | AgboardError::InvalidValue { .. }
+        | AgboardError::NoCurrentVersion
         | AgboardError::FileInvalid { .. }
         | AgboardError::InvalidStateForColumn { .. }
         | AgboardError::InvalidStateForAssignee
