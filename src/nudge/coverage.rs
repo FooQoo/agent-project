@@ -112,7 +112,6 @@ pub const COMMANDS: &[(&str, Cover)] = &[
     ("show remote", READ_ONLY),
     ("skills", READ_ONLY),
     ("snapshot", READ_ONLY),
-    ("send", Rules(&["start-task"])),
     ("state", Rules(&["stale-running"])),
     ("stop", NoRule("pauses the server by a person's choice")),
     ("update", NoRule("installation by a person")),

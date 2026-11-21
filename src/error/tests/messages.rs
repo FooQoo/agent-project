@@ -38,7 +38,7 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "task #5 is in the Backlog and has not been sent to Todo.",
-            "Send it to Todo first (agboard send), then try again.",
+            "Send it to Todo first (agboard mv <id> todo --actor human), then try again.",
         ),
         (
             "epic E is a draft and read-only for the CLI.",

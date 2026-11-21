@@ -298,8 +298,9 @@ fn the_cli_and_the_api_name_the_unanswered_questions_and_the_summary_lists_messa
         &[
             "--project",
             "Demo",
-            "send",
+            "mv",
             "2",
+            "todo",
             "--actor",
             "human",
             "--json",
@@ -308,7 +309,7 @@ fn the_cli_and_the_api_name_the_unanswered_questions_and_the_summary_lists_messa
     assert_eq!((code, name.as_str()), (1, "send_with_open_questions"));
     let (_, _, err_text) = agboard(
         home.path(),
-        &["--project", "Demo", "send", "2", "--actor", "human"],
+        &["--project", "Demo", "mv", "2", "todo", "--actor", "human"],
     );
     assert!(err_text.contains("Q-1"), "{err_text}");
 
@@ -350,8 +351,9 @@ fn the_cli_and_the_api_name_the_unanswered_questions_and_the_summary_lists_messa
         &[
             "--project",
             "Demo",
-            "send",
+            "mv",
             "2",
+            "todo",
             "--actor",
             "human",
             "--json",

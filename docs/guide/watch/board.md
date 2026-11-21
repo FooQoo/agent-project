@@ -116,7 +116,7 @@ If a card you send, alone or in a group, still has an open question, a window (o
 
 You can also take a card back. Only you can do it, and only for a Todo card that has not been started: on the board, drag it onto the Backlog lane; on the phone, hold the card and swipe it to the right, then choose the Backlog button. The card becomes a Backlog plan again and agents stop treating it as work to pick up. A card that has been started, or one an agent tried to move, is refused, and the notice shows the reason the server gave.
 
-You can also send a plan from the command line: `agboard send <id> --actor human` for a card, or `agboard epic send <EPIC-ID> --actor human` for an epic (see [CLI](../reference/cli)). With open questions, the command is refused until you confirm it with `--force`. `agboard mv <id> doing --actor human` (or `done`) moves a Backlog card straight to that lane; it is refused while the card has an open question.
+You can also send a plan from the command line: `agboard mv <id> todo --actor human` for a card, or `agboard epic send <EPIC-ID> --actor human` for an epic (see [CLI](../reference/cli)). With open questions, the command is refused until you confirm it with `--force`. `agboard mv <id> doing --actor human` (or `done`) moves a Backlog card straight to that lane; it is refused while the card has an open question.
 
 ## Archive
 

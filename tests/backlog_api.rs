@@ -48,9 +48,8 @@ fn creating_in_the_backlog_and_sending_to_todo_are_different_operations() {
     );
     assert_eq!(execute["task"]["taskStatus"], "todo");
 
-    // The agent cannot take it out of the Backlog, by `send` or by `mv`.
+    // The agent cannot take it out of the Backlog by `mv`.
     for args in [
-        vec!["send", "1", "--actor", "ai", "--json"],
         vec![
             "mv", "1", "todo", "--actor", "ai", "--reason", "go", "--json",
         ],
@@ -59,15 +58,95 @@ fn creating_in_the_backlog_and_sending_to_todo_are_different_operations() {
         ],
     ] {
         let mut all = vec!["--project", "Demo"];
+        let to_todo = args[2] == "todo";
         all.extend(args);
         let (code, name) = json_error(home.path(), &all);
         assert_eq!(code, 1);
-        assert!(name == "human_only" || name == "task_in_backlog", "{name}");
+        let expected = if to_todo {
+            "human_only"
+        } else {
+            "task_in_backlog"
+        };
+        assert_eq!(name, expected);
     }
 
     // A person sends it; the card is at the end of Todo.
-    let sent = run(home.path(), &["send", "1", "--actor", "human"]);
+    let sent = run(home.path(), &["mv", "1", "todo", "--actor", "human"]);
     assert_eq!(sent["task"]["taskStatus"], "todo");
+}
+
+#[test]
+fn mv_to_todo_warns_about_an_open_question_until_the_person_forces_it() {
+    let home = tempfile::tempdir().unwrap();
+    let (code, _, err) = agboard(home.path(), &["project", "create", "Demo"]);
+    assert_eq!(code, 0, "{err}");
+    run(
+        home.path(),
+        &[
+            "add",
+            "Plan",
+            "--assignee",
+            "ai",
+            "--actor",
+            "ai",
+            "--backlog",
+        ],
+    );
+    let (code, _, err) = agboard(
+        home.path(),
+        &[
+            "--project",
+            "Demo",
+            "message",
+            "ask",
+            "--no-wait",
+            "--actor",
+            "ai",
+            "--task",
+            "1",
+            "--questions-json",
+            r#"{"questions":[{"body":"Which?"}]}"#,
+        ],
+    );
+    assert_eq!(code, 0, "{err}");
+
+    let (code, name) = json_error(
+        home.path(),
+        &[
+            "--project",
+            "Demo",
+            "mv",
+            "1",
+            "todo",
+            "--actor",
+            "human",
+            "--json",
+        ],
+    );
+    assert_eq!((code, name.as_str()), (1, "send_with_open_questions"));
+    // An agent cannot confirm the warning.
+    let (code, name) = json_error(
+        home.path(),
+        &[
+            "--project",
+            "Demo",
+            "mv",
+            "1",
+            "todo",
+            "--actor",
+            "ai",
+            "--force",
+            "--reason",
+            "go",
+            "--json",
+        ],
+    );
+    assert_eq!((code, name.as_str()), (1, "human_only"));
+    let moved = run(
+        home.path(),
+        &["mv", "1", "todo", "--actor", "human", "--force"],
+    );
+    assert_eq!(moved["task"]["taskStatus"], "todo");
 }
 
 #[test]

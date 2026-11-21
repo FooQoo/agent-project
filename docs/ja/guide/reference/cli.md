@@ -124,20 +124,20 @@ agboard --project "My project" epic edit LAUNCH --waves 3 1,2
 agboard --project "My project" add --title "Plan the launch" --assignee ai --actor ai --backlog --epic LAUNCH
 ```
 
-バックログは、まだ始めてはいけない確定済みの計画を置く場所です。エージェントは始めず、バックログのカードへのエージェントの`mv`と`state`は`task_in_backlog`（終了コード1）で失敗します。カードを未着手の末尾へ送れるのは人だけです。WebのUIにバックログのレーンと送信のボタンはまだないので、コマンドラインを使います。
+バックログは、まだ始めてはいけない確定済みの計画を置く場所です。エージェントは始めず、バックログのカードへのエージェントの`mv`と`state`は`task_in_backlog`（終了コード1）で失敗します。カードを未着手の末尾へ送れるのは人だけです。コマンドラインでは、カードを`todo`へ移して送ります。`send`という別のコマンドはありません。
 
 ```sh
-agboard --project "My project" send 12 --actor human
+agboard --project "My project" mv 12 todo --actor human
 agboard --project "My project" epic send LAUNCH --actor human
 agboard --project "My project" epic send LAUNCH --actor human --tasks 1,2
 ```
 
-`send`は1枚のカードを送ります。`epic send`は、エピック全体、または`--tasks`で指定したカードだけを、全部移すか何も移さないかの一回の保存で送ります。エージェントがどちらを実行しても`human_only`になります。すでにバックログを出たカードを送っても何も変わらないので、再試行しても安全です。ブラウザで人が編集中のカード（`draft: human`）は送れません（`task_is_draft`）。履歴には「人が Todo へ送りました。」と残ります。
+`mv <id> todo`は1枚のカードを送ります。バックログのカードをほかのレーンへ移すのも人の操作です。`epic send`は、エピック全体、または`--tasks`で指定したカードだけを、全部移すか何も移さないかの一回の保存で送ります。エージェントがどちらを実行しても`human_only`になります。すでにバックログを出たカードは、ほかのカードと同じように移ります。ブラウザで人が編集中のカード（`draft: human`）は送れません（`task_is_draft`）。履歴には「人が Todo へ送りました。」と残ります。
 
-計画に未回答の質問があると、送信は`send_with_open_questions`（終了コード1）で断られ、メッセージに質問のIDが並びます。`--force`を付けると、そのまま送ります。質問は未回答のまま残り、回答があるまでカードはPendingです。
+計画に未回答の質問があると、送信は`send_with_open_questions`（終了コード1）で断られ、メッセージに質問のIDが並びます。`mv`（または`epic send`）に`--force`を付けると、そのまま送ります。質問は未回答のまま残り、回答があるまでカードはPendingです。
 
 ```sh
-agboard --project "My project" send 12 --actor human --force
+agboard --project "My project" mv 12 todo --actor human --force
 ```
 
 人は、未着手の未着手のカード（Idleで成果なし）をバックログへ戻せます。エージェントが行うと`human_only`です。

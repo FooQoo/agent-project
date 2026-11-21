@@ -12,10 +12,10 @@
 | `task_archived` | アーカイブ済みのタスクへの書き込み。 | 1 | 409 |
 | `task_not_archived` | アーカイブされていないタスクの削除や復元。 | 1 | 409 |
 | `epic_is_draft` | CLIの`epic edit`、または`epic edit --waves`が人の下書きのエピックを対象にした。または、人の下書きのエピックを送ろうとした。 | 1 | 409 |
-| `task_is_draft` | AIの`edit`・`history add`・`mv`・`state`が人の下書き（`human`）を対象にした。または人の`send`が下書きを対象にした。`reason`は、ユーザーが確定するのを待つよう案内します。 | 1 | 409 |
+| `task_is_draft` | AIの`edit`・`history add`・`mv`・`state`が人の下書き（`human`）を対象にした。または人の`mv`による未着手への移動・`epic send`・ボードからの送信が下書きを対象にした。`reason`は、ユーザーが確定するのを待つよう案内します。 | 1 | 409 |
 | `task_in_backlog` | エージェントの`mv`・`state`が、バックログのタスクを対象にした。バックログから出せるのは人だけです。 | 1 | 409 |
-| `send_with_open_questions` | 人の`send`・`epic send`・Webでの未着手への移動が、未回答の質問がある計画を、確認なし（`--force`、APIでは`ack: true`）で対象にした。何も保存せず、メッセージに質問のIDを示す。確認して送ったあとも質問は残り、回答があるまでタスクはPendingです。 | 1 | 409 |
-| `human_only` | エージェントが依頼の取り下げ、または`send`・`epic send`・`mv ... backlog`を行おうとした。これを行えるのは人だけ。 | 1 | 403 |
+| `send_with_open_questions` | 人の`mv <id> todo`・`epic send`・Webでの未着手への移動が、未回答の質問がある計画を、確認なし（`--force`、APIでは`ack: true`）で対象にした。何も保存せず、メッセージに質問のIDを示す。確認して送ったあとも質問は残り、回答があるまでタスクはPendingです。 | 1 | 409 |
+| `human_only` | エージェントが依頼の取り下げ、またはバックログのカードへの`mv <id> todo`・`epic send`・`mv ... backlog`を行おうとした。これを行えるのは人だけ。 | 1 | 403 |
 | `task_not_draft` | 下書きでないタスクへのWebの編集。 | 1 | 409 |
 | `task_is_done` | DoneのタスクへのAIの変更。最終の成果がまだないDoneのタスクへの最初の`result add --final`だけは許可されます。 | 1 | 409 |
 | `acceptance_unmet` | 条件が未達成、またはfrontmatterが不正なタスクを、AIがDoneへ移そうとした。 | 2 | なし |
@@ -30,7 +30,7 @@
 | --- | --- | --- | --- |
 | `questions_unanswered` | 人の判断待ちのタスクを、エージェントがRunningにしようとした、またはDoneへ移そうとした。 | 1 | 409 |
 | `question_answered` | 回答が、すでに回答済みの質問を指している。何も保存せず、記録済みの質問を出力に含める。 | 1 | 409 |
-| `start_blocked_by_questions` | 互換性のために残しているコード。`send`はもう返さず、未回答の質問がある計画には`send_with_open_questions`を返します。 | 1 | 409 |
+| `start_blocked_by_questions` | 互換性のために残しているコード。送信はもう返さず、未回答の質問がある計画には`send_with_open_questions`を返します。 | 1 | 409 |
 | `question_withdrawn` | 回答が、取り下げられた質問を指している。何も保存しない。 | 1 | 409 |
 | `message_not_found` | 質問または依頼のIDがプロジェクトにない。 | 3 | 404 |
 | `message_closed` | 取り下げようとしたものが、すでに回答のある質問、または受け付け済みの依頼である。 | 1 | 409 |

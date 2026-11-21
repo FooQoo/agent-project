@@ -25,7 +25,7 @@ Find what you see, read the cause, and do what the last column says. The command
 | Error | Cause | What to do |
 | --- | --- | --- |
 | `task_is_draft` | The task is a person's draft; agents may not change it, and it cannot be sent. | Finalize the draft in the browser. The agent can work on other tasks meanwhile. |
-| `task_in_backlog` | The task is in the Backlog, which an agent may not move or run. | Send it to Todo yourself with `agboard send <id> --actor human`. |
+| `task_in_backlog` | The task is in the Backlog, which an agent may not move or run. | Send it to Todo yourself with `agboard mv <id> todo --actor human`. |
 | `send_with_open_questions` | You sent a plan that still has open questions. | Answer the questions, or send again with `--force`. |
 | `human_only` | An agent tried to withdraw a request. | A person withdraws a request. |
 | `epic_is_draft` | The epic is a draft; agents may not change its details or task order. | Wait for the person to save or discard the epic's draft, or ask them to finalize it. Attachments and task membership still work. |

@@ -266,6 +266,71 @@ fn a_card_a_person_is_editing_is_not_sent_and_the_edit_is_kept() {
     assert_eq!(task.draft, Some(Draft::Human));
 }
 
+/// The CLI's `mv <id> todo` is the send: the same rules, whoever moves.
+#[test]
+fn mv_from_the_backlog_to_todo_follows_the_rules_of_a_send() {
+    let f = fx();
+    let ctx = |actor| ChangeContext {
+        actor,
+        reason: String::new(),
+    };
+
+    // An agent is refused with human_only and nothing moves.
+    let plan = f.plan("Plan");
+    let refused = f
+        .store
+        .move_work_task(&f.project, plan, Column::Todo, ctx(Actor::Ai), now())
+        .unwrap_err();
+    assert_eq!(refused.code(), "human_only");
+    assert_eq!(f.lane(plan), Column::Backlog);
+
+    // A person sends it.
+    let moved = f
+        .store
+        .move_work_task(&f.project, plan, Column::Todo, ctx(Actor::Human), now())
+        .unwrap();
+    assert!(moved.changed);
+    assert_eq!(f.lane(plan), Column::Todo);
+
+    // An open question is refused until the person confirms with --force.
+    let asked = f.plan("Asked");
+    let q = qa::ask(&f.store, &f.project, &[asked], "Which way?", &[]);
+    let warned = f
+        .store
+        .move_work_task(&f.project, asked, Column::Todo, ctx(Actor::Human), now())
+        .unwrap_err();
+    assert_eq!(warned.code(), "send_with_open_questions");
+    assert_eq!(f.lane(asked), Column::Backlog);
+    f.store
+        .move_work_task_confirmed(&f.project, asked, Column::Todo, ctx(Actor::Human), now())
+        .unwrap();
+    assert_eq!(f.lane(asked), Column::Todo);
+    assert_eq!(
+        f.store.task(&f.project, asked).unwrap().open_question_ids,
+        vec![q.id.clone()]
+    );
+
+    // A card a person is editing is refused, even for a person.
+    let editing = f.plan("Editing");
+    f.store
+        .set_draft(&f.project, editing, Some(Draft::Human), false, now())
+        .unwrap();
+    let refused = f
+        .store
+        .move_work_task_confirmed(&f.project, editing, Column::Todo, ctx(Actor::Human), now())
+        .unwrap_err();
+    assert_eq!(refused.code(), "task_is_draft");
+    assert_eq!(f.lane(editing), Column::Backlog);
+
+    // Doing and Done stay closed to an agent, and a Todo card moves as before.
+    let other = f.plan("Other");
+    let refused = f
+        .store
+        .move_work_task(&f.project, other, Column::Doing, ctx(Actor::Ai), now())
+        .unwrap_err();
+    assert_eq!(refused.code(), "task_in_backlog");
+}
+
 #[test]
 fn an_epic_is_sent_whole_or_by_chosen_cards_and_a_failure_sends_nothing() {
     let f = fx();
@@ -357,7 +422,7 @@ fn nothing_leaves_the_backlog_by_a_move_or_a_run_state_except_a_persons_move() {
     );
     assert_eq!(
         go(Actor::Ai, Column::Todo).unwrap_err().code(),
-        "task_in_backlog"
+        "human_only"
     );
     let state = f.store.set_agent_status(
         &f.project,
@@ -409,12 +474,18 @@ fn an_agent_still_cannot_move_a_backlog_card_to_any_lane() {
             actor: Actor::Ai,
             reason: "go".into(),
         };
+        // Todo is the send, which only a person makes; the other lanes stay closed outright.
+        let code = if to == Column::Todo {
+            "human_only"
+        } else {
+            "task_in_backlog"
+        };
         let agent = f.store.move_work_task(&f.project, id, to, ctx(), now());
-        assert_eq!(agent.unwrap_err().code(), "task_in_backlog");
+        assert_eq!(agent.unwrap_err().code(), code);
         let user = f
             .store
             .move_work_task_for_user(&f.project, id, to, ctx(), now());
-        assert_eq!(user.unwrap_err().code(), "task_in_backlog");
+        assert_eq!(user.unwrap_err().code(), code);
     }
     assert_eq!(f.lane(id), Column::Backlog);
 }

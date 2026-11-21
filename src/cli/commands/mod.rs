@@ -15,7 +15,6 @@ pub mod project;
 pub mod remote;
 pub mod result;
 pub mod rm;
-pub mod send;
 pub mod serve;
 pub mod serve_auto;
 pub mod setup;

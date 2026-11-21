@@ -7,10 +7,9 @@
 use chrono::{DateTime, Utc};
 
 use super::super::FileStore;
-use super::super::frontmatter;
-use super::super::layout;
 use super::super::model::TaskView;
 use super::super::reader;
+use super::acceptance_check::ensure_acceptance_met;
 use super::send::{check_sender, open_questions};
 use super::{
     HistoryKind, Transition, ensure_ai_task_not_done, lane_end, lock_project, save_task, stamp,
@@ -21,42 +20,14 @@ use crate::domain::{
 };
 use crate::error::AgboardError;
 
-/// Who moves: an agent (drafts stay), a person, or a person who confirmed the open questions.
+/// Who moves: the CLI (drafts stay), the CLI with the open questions confirmed (`--force`), a
+/// person in the Web UI, or that person after confirming the open questions.
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum MoveMode {
     Agent,
+    AgentConfirmed,
     User,
     UserConfirmed,
-}
-
-/// An agent may move a task to Done only when its frontmatter reads and every
-/// condition is done. A person's move is never checked here.
-fn ensure_acceptance_met(
-    shared: &std::path::Path,
-    project: &ProjectId,
-    id: i64,
-) -> Result<(), AgboardError> {
-    let text = reader::read_body(shared, project, id)?;
-    let parsed = frontmatter::parse(&text);
-    if let Some(defect) = parsed.defects.into_iter().next() {
-        let path = layout::task_md(&layout::task_dir(&layout::project_dir(shared, project), id));
-        return Err(AgboardError::FileInvalid {
-            file: layout::shared_label(shared, &path),
-            field: defect.field,
-            reason: defect.reason,
-        });
-    }
-    let unmet: Vec<String> = parsed
-        .acceptance
-        .iter()
-        .filter(|item| !item.done)
-        .map(|item| item.id.clone())
-        .collect();
-    if unmet.is_empty() {
-        Ok(())
-    } else {
-        Err(AgboardError::AcceptanceUnmet { id, unmet })
-    }
 }
 
 impl FileStore {
@@ -70,6 +41,19 @@ impl FileStore {
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgboardError> {
         self.move_task(project, id, to, None, ctx, now, MoveMode::Agent)
+    }
+
+    /// [`FileStore::move_work_task`] after a person confirmed the open questions of a card
+    /// leaving the Backlog (`mv --force`).
+    pub fn move_work_task_confirmed(
+        &self,
+        project: &ProjectId,
+        id: i64,
+        to: Column,
+        ctx: ChangeContext,
+        now: DateTime<Utc>,
+    ) -> Result<Changed<TaskView>, AgboardError> {
+        self.move_task(project, id, to, None, ctx, now, MoveMode::AgentConfirmed)
     }
 
     /// The same move for a user in the Web UI: drafts can be moved.
@@ -131,8 +115,8 @@ impl FileStore {
         now: DateTime<Utc>,
         mode: MoveMode,
     ) -> Result<Changed<TaskView>, AgboardError> {
-        let block_drafts = mode == MoveMode::Agent;
-        let ack = mode == MoveMode::UserConfirmed;
+        let block_drafts = matches!(mode, MoveMode::Agent | MoveMode::AgentConfirmed);
+        let ack = matches!(mode, MoveMode::UserConfirmed | MoveMode::AgentConfirmed);
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
@@ -152,13 +136,15 @@ impl FileStore {
             return Err(draft_refusal(id, draft));
         }
         if task.task_status == Column::Backlog && to != Column::Backlog {
-            // Only a person leaves the Backlog; Todo is `send`. Doing and Done follow the
-            // rules of a send (editing, open questions), then move like any card.
+            // Only a person leaves the Backlog. A move to Todo is the send: the rules of
+            // `send_task_locked` (human only, editing, open questions) apply, and it is the one
+            // function the Web UI's send route calls too. Doing and Done follow the same rules,
+            // then move like any card.
+            if to == Column::Todo {
+                return self.send_task_locked(project, &project_dir, task, ctx.actor, ack, now);
+            }
             if ctx.actor != Actor::Human {
                 return Err(AgboardError::TaskInBacklog { id });
-            }
-            if to == Column::Todo {
-                return self.send_task_locked(project, &project_dir, task, Actor::Human, ack, now);
             }
             if task.draft == Some(Draft::Human) {
                 return Err(AgboardError::TaskIsDraft { id });

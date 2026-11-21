@@ -252,7 +252,7 @@ fn send(ctx: &mut Context, args: &EpicSendArgs) -> Result<Outcome, AgboardError>
     let id = EpicId::normalize(&args.id)?;
     let project = ctx.project_id()?;
     let actor = args.actor.actor();
-    let ack = super::send::ack_of(actor, args.force)?;
+    let ack = super::mv::ack_of(actor, args.force)?;
     let only = args.tasks.as_deref().map(parse_task_ids).transpose()?;
     let result = ctx
         .files

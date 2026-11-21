@@ -128,7 +128,7 @@ test('a draft is read-only for edit, mv, and state, and everything else still wo
   expect(show(13)).toMatchObject({ title: 'Changed by an agent', taskStatus: 'done' });
 });
 
-test('a plan in the Backlog takes AI edits and history but not mv, state, or send; a person sends it', async () => {
+test('a plan in the Backlog takes AI edits and history but not mv, state, or a move to Todo; a person moves it with mv', async () => {
   const id = nextTaskId(mainProject);
   agboardOk(mainProject, [
     'add',
@@ -149,12 +149,12 @@ test('a plan in the Backlog takes AI edits and history but not mv, state, or sen
   agboardOk(mainProject, ['history', 'add', String(id), '--reason', 'Refined the plan.']);
   expect(show(id)).toMatchObject({ title: 'Proposed again', taskStatus: 'backlog' });
 
-  // It cannot move, run, or send it, and nothing changes.
+  // It cannot move, run, or hand it to Todo, and nothing changes.
   const before = board();
   for (const [args, code] of [
     [['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Go.'], 'task_in_backlog'],
     [['state', String(id), 'running', '--actor', 'ai', '--reason', 'Go.'], 'task_in_backlog'],
-    [['send', String(id), '--actor', 'ai'], 'human_only'],
+    [['mv', String(id), 'todo', '--actor', 'ai', '--reason', 'Go.'], 'human_only'],
   ] as const) {
     const refused = agboard(mainProject, [...args, '--json']);
     expect(refused.code, args[0]).toBe(1);
@@ -162,8 +162,8 @@ test('a plan in the Backlog takes AI edits and history but not mv, state, or sen
   }
   expect(board()).toBe(before);
 
-  // A person sends it to Todo, and then the AI can work on it.
-  agboardOk(mainProject, ['send', String(id), '--actor', 'human']);
+  // A person moves it to Todo, and then the AI can work on it.
+  agboardOk(mainProject, ['mv', String(id), 'todo', '--actor', 'human']);
   expect(show(id).taskStatus).toBe('todo');
   agboardOk(mainProject, ['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Go.']);
   expect(show(id).taskStatus).toBe('doing');

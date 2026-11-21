@@ -46,7 +46,7 @@ impl AgboardError {
                 "Wait for the user to finalize it, then try again.".into()
             }
             AgboardError::TaskInBacklog { .. } => {
-                "Send it to Todo first (agboard send), then try again.".into()
+                "Send it to Todo first (agboard mv <id> todo --actor human), then try again.".into()
             }
             AgboardError::EpicIsDraft { .. } => {
                 "Wait for the user to finalize it, then try again.".into()
