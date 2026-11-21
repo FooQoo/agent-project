@@ -61,6 +61,10 @@ export class SummaryReader {
   >();
   /** Instructions the gate held back, by project. */
   private readonly held = new Map<ProjectId, Waiters>();
+  /** Counts the times the cache stopped being trusted (a reset); a read that began before one is old. */
+  private generation = 0;
+  /** The generation each running read began in, by project. */
+  private readonly began = new Map<ProjectId, number>();
   private readonly lastImmediate = new Map<ProjectId, boolean>();
   private readonly offCache: () => void;
   private disposed = false;
@@ -147,6 +151,16 @@ export class SummaryReader {
     void this.client.invalidateQueries({ queryKey, refetchType: 'none' });
   }
 
+  /**
+   * The cache can no longer be trusted (a missed event, a reconnect, a new server run): it is marked
+   * stale, and only a read that begins after this point may settle it. A read already running is
+   * restarted by the next instruction, since its response may predate changes nobody was told of.
+   */
+  reset(): void {
+    this.generation += 1;
+    this.markStale();
+  }
+
   /** The gate closed: instructions wait, and a refetch that only the gate may hold is cancelled. */
   hold(): void {
     for (const [projectId, { timer, waiters }] of this.windows) {
@@ -186,6 +200,11 @@ export class SummaryReader {
     this.held.clear();
   }
 
+  /** Whether the running read of a project (if any) began after the last reset. */
+  private isCurrent(projectId: ProjectId): boolean {
+    return (this.began.get(projectId) ?? this.generation) >= this.generation;
+  }
+
   private hold1(projectId: ProjectId, waiters: Waiters): void {
     this.held.set(projectId, [...(this.held.get(projectId) ?? []), ...waiters]);
   }
@@ -196,10 +215,15 @@ export class SummaryReader {
       return;
     }
     this.background.set(projectId, (this.background.get(projectId) ?? 0) + 1);
-    void this.client
-      // A read that is running is joined, not restarted: a notification that arrives while it runs
-      // is compared with its response (`read`), so rapid notifications cannot starve it.
-      .invalidateQueries({ queryKey: queryKeys.summary(projectId) }, { cancelRefetch: false })
+    const key = queryKeys.summary(projectId);
+    // A read that is running is joined, not restarted: a notification that arrives while it runs is
+    // compared with its response (`read`), so rapid notifications cannot starve it. One that began
+    // before a reset is cancelled first, because a reset has no notification to compare.
+    const cancelOld = this.isCurrent(projectId)
+      ? Promise.resolve()
+      : this.client.cancelQueries({ queryKey: key }, { revert: true });
+    void cancelOld
+      .then(() => this.client.invalidateQueries({ queryKey: key }, { cancelRefetch: false }))
       .catch(noop)
       .finally(() => {
         this.background.set(projectId, Math.max(0, (this.background.get(projectId) ?? 1) - 1));
@@ -215,6 +239,8 @@ export class SummaryReader {
    */
   private async read(projectId: ProjectId, signal: AbortSignal): Promise<Summary> {
     const previous = this.client.getQueryData<Summary>(queryKeys.summary(projectId)) ?? null;
+    const began = this.generation;
+    this.began.set(projectId, began);
     for (let attempt = 0; ; attempt += 1) {
       const recorded: ChangedEvent[] = [];
       const lists = this.recording.get(projectId) ?? new Set<ChangedEvent[]>();
@@ -232,6 +258,7 @@ export class SummaryReader {
       )
         continue;
       this.lastImmediate.set(projectId, (this.background.get(projectId) ?? 0) === 0);
+      if (this.began.get(projectId) === began) this.began.delete(projectId);
       return summary;
     }
   }

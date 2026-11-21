@@ -144,6 +144,22 @@ describe('rapid notifications', () => {
   });
 });
 
+describe('a reset during a read', () => {
+  it('is settled only by a read that began after it, and that read wins', async () => {
+    expect(adapter.summaryCalls).toHaveLength(1); // the first read is still on the way
+    core.scheduler.onReset('reconnected');
+    await settle(150);
+    // The running read began before the reset and may predate missed changes: it is restarted.
+    expect(adapter.summaryCalls[0]?.signal.aborted).toBe(true);
+    expect(adapter.summaryCalls).toHaveLength(2);
+    adapter.summaryCalls[0]?.resolve(summaryOf([], 'old')); // a late answer of the old read
+    await answer(1, 'new');
+    expect(core.getSummary(P)).toMatchObject({ state: 'ready', version: 'new' });
+    await settle(1_000);
+    expect(adapter.summaryCalls).toHaveLength(2);
+  });
+});
+
 describe('a screen that leaves during a read', () => {
   it('finds the Summary stale when it comes back, after the read was cancelled', async () => {
     core.dispose();

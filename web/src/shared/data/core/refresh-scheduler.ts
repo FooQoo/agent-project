@@ -168,7 +168,7 @@ export class RefreshScheduler implements SchedulerHost {
         if (this.summary.snapshot(projectId).data === null) continue;
         this.gate.submit(
           () => {
-            this.summary.markStale(projectId);
+            this.summary.reset();
             void this.loadSummary(projectId, { immediate: false });
           },
           { key: `first:${projectId}` },

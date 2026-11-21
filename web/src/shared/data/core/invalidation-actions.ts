@@ -20,7 +20,7 @@ function supersede(flight: Flight): void {
 export function resetCache(host: SchedulerHost, reason: ResetReason): void {
   if (host.disposed) return;
   host.invalidator.reset(reason);
-  host.summary.markStale();
+  host.summary.reset();
   for (const key of host.store.cachedKeys()) {
     for (const section of host.store.cachedSections(key)) markUnverified(host, key, section);
   }
