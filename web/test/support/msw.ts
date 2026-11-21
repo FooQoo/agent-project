@@ -11,9 +11,30 @@ export function useMockServer(server: MockServer, options?: MockHandlerOptions):
   mswServer.use(...mockHandlers(server, options));
 }
 
-/** A product request (`/api/` or `/__mock/`) that no handler answers is an error; others pass. */
+/** Product requests no handler answered during the current test, as `METHOD url`. */
+const unhandled: string[] = [];
+
+/**
+ * A product request (`/api/` or `/__mock/`) that no handler answers is an error, and it is
+ * recorded so the test that made it fails at its end even when the code under test caught the error.
+ */
 export const failOnUnhandledProductRequest: UnhandledFrameHandle = ({ frame, defaults }) => {
   if (frame.protocol !== 'http') return;
-  const { pathname } = new URL((frame.data as { request: Request }).request.url);
-  if (pathname.startsWith('/api/') || pathname.startsWith('/__mock/')) defaults.error();
+  const { request } = frame.data as { request: Request };
+  const { pathname } = new URL(request.url);
+  if (!pathname.startsWith('/api/') && !pathname.startsWith('/__mock/')) return;
+  unhandled.push(`${request.method} ${request.url}`);
+  defaults.error();
 };
+
+/** Clears the record and returns what it held. A test that expects such requests calls it. */
+export function takeUnhandledProductRequests(): string[] {
+  return unhandled.splice(0);
+}
+
+/** Throws when a product request went unanswered during the test; called after each test. */
+export function assertNoUnhandledProductRequests(): void {
+  const requests = takeUnhandledProductRequests();
+  if (requests.length > 0)
+    throw new Error(`Product requests no handler answered:\n${requests.join('\n')}`);
+}
