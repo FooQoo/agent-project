@@ -227,6 +227,30 @@ describe('Retry', () => {
   });
 });
 
+describe('refresh', () => {
+  it('rejects when the read fails, though the older document is still cached', async () => {
+    const close = openTask();
+    const refresh = core.details.refresh(task(1), ['document']);
+    const rejected = expect(refresh).rejects.toThrow('boom');
+    await settle(0);
+    adapter.streamCalls[0]?.fail(new Error('boom'));
+    await rejected;
+    // The query keeps what it held, which is why a caller cannot tell from the cache.
+    expect(core.details.entry(task(1), 'document')?.version).toBe('d1');
+    expect(sectionOf(core.queryClient, task(1), 'document').status).toBe('error');
+    close();
+  });
+
+  it('settles quietly through fetch, which leaves the failure in the query', async () => {
+    const close = openTask();
+    const fetched = core.details.fetch(task(1), ['document']);
+    await settle(0);
+    adapter.streamCalls[0]?.fail(new Error('boom'));
+    await expect(fetched).resolves.toBeUndefined();
+    close();
+  });
+});
+
 describe('closing and opening again', () => {
   it('reads fresh a Detail that changed while its read was cut short', async () => {
     const close = openTask();
