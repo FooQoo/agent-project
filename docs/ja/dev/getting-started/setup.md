@@ -55,7 +55,7 @@ just serve        # 保存されたボードとViteのHMR、Rustの監視(ポー
 pnpm --dir web dev --mode mock --port <port>
 ```
 
-サンプルデータは新しいデータ領域と同じ状態から始まります。最初にページを開くと[初回の案内](../../guide/quickstart.md#before-you-start-the-first-run-guide)が表示されます。案内はページの中で、ボードの一部ではないサンプルの依頼と計画を使って動きます。スキップもできます。完了またはスキップしたあとは、開発サーバーを再起動するか `POST /api/__mock/reset` でサンプルデータを戻すまで表示されません。
+サンプルデータは新しいデータ領域と同じ状態から始まります。最初にページを開くと[初回の案内](../../guide/quickstart.md#before-you-start-the-first-run-guide)が表示されます。案内はページの中で、ボードの一部ではないサンプルの依頼と計画を使って動きます。スキップもできます。完了またはスキップしたあとは、ページを再読み込みするか `POST /api/__mock/reset` でサンプルデータを戻すまで表示されません。サンプルデータのサーバーはページの中のService Workerの後ろで動くため、ページを読み込むたび、ブラウザのタブごとに、サンプルデータから始まります。
 
 手でCLIを試すときは、一時的なデータ領域を使います。
 
@@ -80,11 +80,11 @@ pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-board/demo/
 製品のビルドとの違いは次のとおりです。
 
 - ページは`/agent-board/demo/`から配信します。別のフォルダで配信するときは、ビルド時に`AGBOARD_DEMO_BASE`を指定します（例: `AGBOARD_DEMO_BASE=/demo/`）。
-- サンプルデータのサーバーはページの中で動きます。置き換えた`fetch`と`EventSource`が`/api/`へのリクエストとライブ更新をそこへ送り、添付画像もそこから`data:` URLとして返します。
+- サンプルデータのサーバーは、ページの中のService Worker（MSW）の後ろで動き、`/api/`へのリクエスト、ライブ更新、添付画像に応答します。ワーカーのスクリプトは`index.html`の隣に書き出します。Service Workerに対応しないブラウザでは、ボードの代わりにお知らせを表示します。
 - トークンは固定で、ビルドIDは空です。そのため新しいビルドを理由に再読み込みすることはありません。ページを再読み込みするとサンプルデータが元に戻り、初回の案内がもう一度表示されます。
 - パソコンが必要な機能は表示しません。対象は、プロジェクトのDocs（ファイルやフォルダを開くボタンを含む）、リモートアクセスの接続、貼り付けやドロップした画像の保存です。
 
-デモのコードは`web/src/app/development/demo/`にあり、Viteを`--mode demo`で動かしたときだけ読み込まれます。`pnpm --dir web build`の成果物には含まれず、`web/test/build-contract.test.ts`がそれを確かめます。仕組みと、公開されるときと同じ形でのテストの方法は[ブラウザのデモ](../concepts/demo.md)で説明しています。
+モックのコードは`web/src/app/development/mocks/`にあり、Viteを`--mode demo`または`--mode mock`で動かしたときだけ読み込まれます。`pnpm --dir web build`の成果物には含まれず、`web/test/build-contract.test.ts`がそれを確かめます。仕組みと、公開されるときと同じ形でのテストの方法は[ブラウザのデモ](../concepts/demo.md)で説明しています。
 
 ## Storybook
 
@@ -115,7 +115,9 @@ Storybookのビルドはアプリのビルドと分けています。Storybook�
 - **単体テスト**では、`web/test/setup.ts`が`setupServer()`を起動します。既定ではハンドラを持たず、どのハンドラも答えない`/api/`・`/__mock/`へのリクエストはテストを失敗させます。テストは`web/test/support/msw.ts`の`useMockServer(server)`でハンドラを追加し、テストの終了後に取り除かれます。Nodeとjsdomには`EventSource`がないため、セットアップが`eventsource`パッケージをグローバルとして入れます。これはストリームを`fetch`で読むので、MSWが応答できます。
 - **Storybook**ではブラウザ用のワーカーが動き、スクリプトは`web/.storybook/static/mockServiceWorker.js`です。Storyは`web/.storybook/support/msw.ts`の`useMockServer()`で同じハンドラを追加し、Storyの終了時に取り除かれます。どのハンドラも答えない`/api/`・`/__mock/`へのリクエストは失敗として記録され、そのリクエストを出したテストは終了時に失敗します。画像、ページ遷移、アセットのリクエストは通ります。
 
-`mockServiceWorker.js`は`pnpm --dir web exec msw init <フォルダ> --no-save`で生成します。`msw`パッケージは固定バージョンです。更新したときに再生成して、新しいファイルをコミットしてください。BiomeとCodeRabbitはこのファイルを対象外にします。
+- **サンプルデータモードとデモ**は、同じハンドラをページの中のService Workerの後ろで動かすので、サーバーなしで画面が動きます。[ブラウザのデモ](../concepts/demo.md#service-worker)を参照してください。`web/mock-browser.ts`が、インストール済みの`msw`パッケージから、開発サーバーではワーカーのスクリプトを配信し、デモのビルドでは書き出します。この2つのモードにスクリプトのコピーはありません。
+
+`web/.storybook/static/mockServiceWorker.js`は`pnpm --dir web exec msw init <フォルダ> --no-save`で生成します。`msw`パッケージは固定バージョンです。更新したときに再生成して、新しいファイルをコミットしてください。ワーカーとパッケージが食い違うとMSWが警告します。BiomeとCodeRabbitはこのファイルを対象外にします。
 
 Storyで使う架空の画像は`web/.storybook/static/`にあります。Storybookとテストはこのフォルダをルートから配信するため、Storyは設定なしに`/sample-attachment.png`のようなURLを使えます。
 

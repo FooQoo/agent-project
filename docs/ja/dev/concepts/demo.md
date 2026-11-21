@@ -8,23 +8,22 @@
 
 ```mermaid
 flowchart LR
-    Screens["ボードの画面<br/>(変更なし)"] -->|"fetch and EventSource"| Shim["デモの通信<br/>demo/transport.ts"]
-    Screens -->|"img src"| Images["画像の差し替え<br/>demo/images.ts"]
-    Shim --> Core["サンプルデータのサーバー<br/>mock-server/"]
-    Images --> Core
+    Screens["ボードの画面<br/>(変更なし)"] -->|"fetch, EventSource, img"| Worker["Service Worker<br/>MSW"]
+    Worker --> Handlers["MSWハンドラ<br/>mocks/handlers.ts"]
+    Handlers --> Core["サンプルデータのサーバー<br/>mock-server/"]
     Core --> Boards["ボードと案内<br/>(メモリ上)"]
 ```
 
-`app/entry/board.tsx`は`import.meta.env.MODE`を見ます。`demo`モードでは、まず`web/src/app/development/demo/install.ts`を読み込んで通信を差し替え、そのあとでボードを描画します。ほかのビルドはこの読み込みを通らないため、製品のビルドにデモのコードは含まれません。
+`app/entry/board.tsx`は`import.meta.env.MODE`を見ます。`demo`モードとサンプルデータモードでは、まず`web/src/app/development/mocks/start.ts`を読み込んでService Workerを起動し、そのあとでボードを描画します。ほかのビルドはこの読み込みを通らないため、製品のビルドにモックのコードは含まれません。`web/test/build-contract.test.ts`がそれを確かめます。
 
 ### サンプルデータのサーバー
 
-`web/src/app/development/mock-server/`は、メモリ上のボードから`agboard serve`と同じように`/api/*`に応答します。NodeのAPIを使わないので、次の2つの通信路で共有しています。
+`web/src/app/development/mock-server/`は、メモリ上のボードから`agboard serve`と同じように`/api/*`に応答します。NodeのAPIも独自の通信路も使いません。リクエストはMSWが運び、サンプルデータが必要なすべての場所で同じハンドラを使います。
 
-- `web/mock-api.ts`は、[サンプルデータモード](../getting-started/setup.md#開発)（`pnpm --dir web dev --mode mock`）でViteの開発サーバーの後ろに置きます。
-- デモは、ページの`fetch`と`EventSource`の後ろに置きます。
+- デモと[サンプルデータモード](../getting-started/setup.md#開発)（`pnpm --dir web dev --mode mock`）は、ページの中のService Workerを通します。
+- 単体テストは`setupServer()`、Storybookはブラウザ用のワーカーを通します。[モックハンドラ](../getting-started/setup.md#モックハンドラ)を参照してください。
 
-ボードは、サーバーが起動するたびに`web/test/fixtures/board.json`から作り直します。デモのビルドは、このフィクスチャをビルド時に`virtual:agboard-demo-seed`モジュールとして読み込みます（`web/demo-build.ts`）。デモは`demo: true`を渡すので、プロジェクトは`demo`という名前の1つだけで、ボードの未回答の質問はカード#12の1件から始まります。サンプルデータモードは、開発とテストのためにプロジェクト3つと未回答の質問3件を保ちます。
+ボードは、サーバーが起動するたび、つまりページを読み込むたびに`web/test/fixtures/board.json`から作り直します。ページは、このフィクスチャを`virtual:agboard-mock-seed`モジュールとして読み込みます。`web/mock-browser.ts`が、どちらのモードでもこのファイルからモジュールを作ります。デモは`demo: true`を渡すので、プロジェクトは`demo`という名前の1つだけで、ボードの未回答の質問はカード#12の1件から始まります。サンプルデータモードは、開発とテストのためにプロジェクト3つと未回答の質問3件を保ちます。
 
 読み取りに加えて、訪れた人ができる書き込みにも応答します。
 
@@ -34,15 +33,21 @@ flowchart LR
 
 変更はそれぞれSSEの`changed`イベントと同じ形で購読者に届くので、画面は本物のサーバーを相手にしたときと同じように更新されます。
 
-### fetchとEventSourceの差し替え
+### Service Worker
 
-`demo/transport.ts`は`window.fetch`と`window.EventSource`を置き換えます。
+`web/src/app/development/mocks/handlers.ts`は、サンプルデータのサーバーをMSWのハンドラに変えます。`/api/*`と`/__mock/*`向けの`http.all`ハンドラと、`sse('/api/events')`ハンドラが1つです。
 
-- ページと同じオリジンの`/api/`または`/__mock/`へのリクエストは`MockRequest`になり、サンプルデータのサーバーが応答します。それ以外はブラウザの`fetch`に渡します。
-- リクエストの本文はテキストとして読みます。マルチパートのフォームは、開発サーバーと同じく`metadata`フィールドだけを読みます。
-- 置き換えた`EventSource`は次のタスクで接続を開いて`ready`を送り、そのあとの変更は、それを起こした書き込みへの応答のあとに届けます。ネットワーク越しと同じ順序です。
+- リクエストは`MockRequest`になり、`MockServer.handle()`が応答します。リクエストの本文はテキストとして読みます。マルチパートのフォームは`metadata`フィールドだけを読みます。
+- `/api/events`のハンドラは`ready`を送り、そのあとの変更は、それを起こした書き込みへの応答のあとに届けます。ネットワーク越しと同じ順序です。ページがストリームを閉じると、サーバーの購読をやめます。
+- 画像の書き換えは要りません。添付画像や`/__mock/`のサンプル画像への`<img>`のリクエストも、Service Workerが応答します。
+- ページのクエリ（`location.search`）は、`?empty=1`や`?disconnect=1`のようなページのパラメーターとしてサーバーに渡します。
 
-画像は`fetch`を通りません。`demo/images.ts`がページを監視し、サーバーを指す`<img>`を、同じページ内のサーバーが返す`data:` URLに書き換えます。
+`web/src/app/development/mocks/browser.ts`は、最初の描画の前にワーカーを起動します。ボードの最初のリクエストにも応答できるようにするためです。
+
+- スクリプトはMSW自身の`mockServiceWorker.js`です。`web/mock-browser.ts`が、インストール済みの`msw`パッケージから、開発サーバーでは配信し、デモのビルドでは書き出します。そのため、デモ自身のフォルダ（`/agent-board/demo/mockServiceWorker.js`）に置かれ、コピーはコミットしません。ページは`import.meta.env.BASE_URL`でこれを登録するので、スコープはページのフォルダになり、GitHub Pagesに追加のヘッダーは要りません。
+- `/api/`はスコープの外のパスですが、ワーカーはページからのリクエストを横取りできます。スコープが決めるのは、ワーカーが制御するページであって、ワーカーが目にするリクエストのURLではないからです。`/agent-board/demo/`の外にあるドキュメントのページは制御されないので、サイトのほかの部分にワーカーは影響しません。
+- ハードリロード（Shift+リロード）で読み込んだページは、次の読み込みまでワーカーに制御されません。ワーカーの起動後もページが制御されていなければ、1回だけ再読み込みします（`sessionStorage`のフラグでループを防ぎます）。
+- Service Workerに対応しないブラウザ（Firefoxのプライベートウィンドウや、安全でないオリジンのページなど）では、ボードの代わりに短いお知らせを英語または日本語で表示します。デモに2つ目の通信路はありません。
 
 ### 初回の案内
 
@@ -52,7 +57,7 @@ flowchart LR
 
 ### 言語
 
-デモは、訪れた人のブラウザの言語で始まります。`demo/install.ts`が`demo/locale.ts`を通して`navigator.languages`の先頭を読み、`ja`で始まれば日本語、それ以外は英語にします。最初の画面を描く前にその言語を適用するので、画面と初回の案内はその言語で始まります。同じ言語を`locale`としてサンプルデータのサーバーにも渡します。
+デモは、訪れた人のブラウザの言語で始まります。`mocks/start.ts`が`mocks/locale.ts`を通して`navigator.languages`の先頭を読み、`ja`で始まれば日本語、それ以外は英語にします。最初の画面を描く前にその言語を適用するので、画面と初回の案内はその言語で始まります。同じ言語を`locale`としてサンプルデータのサーバーにも渡します。
 
 サンプルのボードは英語のフィクスチャから作ります。日本語で始めるときは、`mock-server/sampleJa.ts`が日本語の文に置き換えます。対象はカードのタイトルと説明、履歴、回答待ちの理由、選択肢、完了条件、エピック名、長いMarkdownの説明です。カードのID、レーン、状態は変わりません。サンプルデータモード（`pnpm --dir web dev --mode mock`）は`locale`を渡さないので、英語のままです。
 
@@ -91,7 +96,7 @@ cp -R web/dist-demo docs/.vitepress/dist/demo
 pnpm --dir e2e test:demo
 ```
 
-このスイート（`e2e/playwright.demo.config.ts`と`e2e/demo/`）は、`docs/.vitepress/dist/`を`vitepress preview`でポート8446（または`AGBOARD_DEMO_E2E_PORT`）から配信し、Chromiumで`/agent-board/demo/`を開きます。ドキュメントサイトのスイートと同じく、ボードがページの中にあるので、Rustのビルドも`AGBOARD_HOME`も要りません。確かめる内容は次のとおりです。
+このスイート（`e2e/playwright.demo.config.ts`と`e2e/demo/`）は、`docs/.vitepress/dist/`を`vitepress preview`でポート8446（または`AGBOARD_DEMO_E2E_PORT`）から配信し、Chromiumで`/agent-board/demo/`を開きます。ドキュメントサイトのスイートと同じく、ボードがページの中にあるので、Rustのビルドも`AGBOARD_HOME`も要りません。PlaywrightはService Workerを既定で許可し、デモはワーカーがページを制御するまでボードを描画しないので、テストに追加の待機は要りません。Playwrightの設定に`serviceWorkers`を入れないでください。確かめる内容は次のとおりです。
 
 - ページを開くと案内が始まり、「AI に依頼」でのサンプルの依頼の送信と質問への回答を含めて、PC幅でもスマホ幅でも最後まで進む
 - 案内のあと、カードを別のレーンにドラッグで移動できる

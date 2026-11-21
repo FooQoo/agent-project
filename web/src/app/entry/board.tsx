@@ -64,10 +64,13 @@ function render(): void {
     );
 }
 
-// The demo build answers the board's requests in the page; that is in place before the first one.
-if (import.meta.env.MODE === 'demo')
-  void import('../development/demo/install').then(({ installDemo }) => {
-    installDemo();
-    render();
+// The sample-data mode and the demo answer the board's requests in the page, through a Service
+// Worker that is started before the first request. A page that reloads to be controlled, or a
+// browser with no Service Worker, renders no board.
+if (serverless)
+  void import('../development/mocks/start').then(async ({ startMock }) => {
+    const root = document.getElementById('root');
+    if (!root) throw new Error('#root not found');
+    if (await startMock(import.meta.env.MODE === 'demo' ? 'demo' : 'mock', root)) render();
   });
 else render();

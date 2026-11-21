@@ -125,10 +125,10 @@ The main files and directories outside `src/` are:
 
 ### Browser demo
 
-- `web/src/app/development/mock-server/`: the sample-data server without Node APIs, shared by the sample-data mode (`web/mock-api.ts`) and the demo. `sampleJa.ts` holds the Japanese text of the sample boards.
-- `web/src/app/development/mocks/`: the MSW handlers over the sample-data server, shared by unit tests and Storybook (see [Mock handlers](../getting-started/setup.md#mock-handlers)).
-- `web/src/app/development/demo/`: the demo's start (`install.ts`), the `fetch` and `EventSource` replacement (`transport.ts`), and the image rewrite (`images.ts`), and the starting language (`locale.ts`).
-- `web/demo-build.ts`: the `demo` mode's Vite plugin, its base path, and the sample data it gives the page.
+- `web/src/app/development/mock-server/`: the sample-data server without Node APIs, shared by the sample-data mode, the demo, the unit tests, and Storybook. `sampleJa.ts` holds the Japanese text of the sample boards.
+- `web/src/app/development/mocks/`: the MSW handlers over the sample-data server (`handlers.ts`, `request.ts`), shared by the demo, the sample-data mode, the unit tests, and Storybook (see [Mock handlers](../getting-started/setup.md#mock-handlers)). `start.ts` starts the demo or sample-data mode in the page, `browser.ts` starts its Service Worker, and `locale.ts` decides the starting language.
+- `web/mock-browser.ts`: the Vite plugin of the `demo` and `mock` modes. It provides the sample data as a virtual module, serves or emits the worker script, and fills the page's placeholders.
+- `web/demo-build.ts`: the `demo` mode's base path and output folder.
 - `e2e/playwright.demo.config.ts` and `e2e/demo/`: the demo suite, run against the built documentation site. See [The browser demo](../concepts/demo.md).
 
 ## Technology choices

@@ -23,7 +23,7 @@
     "test",
     "vite.config.ts",
     "chunk-graph.ts",
-    "mock-api.ts",
+    "mock-browser.ts",
     "live-api.ts",
     "demo-build.ts"
   ],

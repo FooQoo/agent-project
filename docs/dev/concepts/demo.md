@@ -8,23 +8,22 @@ What a visitor sees is the [first-run guide](../../guide/quickstart.md#before-yo
 
 ```mermaid
 flowchart LR
-    Screens["Board screens<br/>(unchanged)"] -->|"fetch and EventSource"| Shim["Demo transport<br/>demo/transport.ts"]
-    Screens -->|"img src"| Images["Image rewrite<br/>demo/images.ts"]
-    Shim --> Core["Sample-data server<br/>mock-server/"]
-    Images --> Core
+    Screens["Board screens<br/>(unchanged)"] -->|"fetch, EventSource, img"| Worker["Service Worker<br/>MSW"]
+    Worker --> Handlers["MSW handlers<br/>mocks/handlers.ts"]
+    Handlers --> Core["Sample-data server<br/>mock-server/"]
     Core --> Boards["Boards and guide<br/>in memory"]
 ```
 
-`app/entry/board.tsx` checks `import.meta.env.MODE`. In the `demo` mode it first loads `web/src/app/development/demo/install.ts`, which puts the transport in place, and only then renders the board. Every other build skips that import, so the product build contains none of the demo code.
+`app/entry/board.tsx` checks `import.meta.env.MODE`. In the `demo` mode, and in the sample-data mode, it first loads `web/src/app/development/mocks/start.ts`, which starts the Service Worker, and only then renders the board. Every other build skips that import, so the product build contains none of the mock code, and `web/test/build-contract.test.ts` checks that.
 
 ### The sample-data server
 
-`web/src/app/development/mock-server/` answers `/api/*` the way `agboard serve` does, from boards held in memory. It uses no Node API, so two transports share it:
+`web/src/app/development/mock-server/` answers `/api/*` the way `agboard serve` does, from boards held in memory. It uses no Node API and no transport of its own. MSW carries requests to it, and the same handlers serve every place that needs the sample data:
 
-- `web/mock-api.ts` puts it behind the Vite dev server in the [sample-data mode](../getting-started/setup.md#development) (`pnpm --dir web dev --mode mock`).
-- The demo puts it behind the page's `fetch` and `EventSource`.
+- the demo and the [sample-data mode](../getting-started/setup.md#development) (`pnpm --dir web dev --mode mock`), through a Service Worker in the page
+- the unit tests, through `setupServer()`, and Storybook, through the browser worker, as described in [Mock handlers](../getting-started/setup.md#mock-handlers)
 
-The boards are made fresh from `web/test/fixtures/board.json` each time a server starts. The demo build reads that fixture at build time through the `virtual:agboard-demo-seed` module (`web/demo-build.ts`). The demo passes `demo: true`, so it has a single project named `demo`, and its board starts with one open question, on card #12. The sample-data mode keeps three projects and three open questions for development and tests.
+The boards are made fresh from `web/test/fixtures/board.json` each time a server starts, which is each page load. The page reads that fixture through the `virtual:agboard-mock-seed` module, which `web/mock-browser.ts` builds from the file in both modes. The demo passes `demo: true`, so it has a single project named `demo`, and its board starts with one open question, on card #12. The sample-data mode keeps three projects and three open questions for development and tests.
 
 Besides reads, the server handles the writes a visitor can make:
 
@@ -34,15 +33,21 @@ Besides reads, the server handles the writes a visitor can make:
 
 Each change is reported to subscribers in the shape of the SSE `changed` event, so the screens update as they would against a real server.
 
-### The fetch and EventSource shim
+### The Service Worker
 
-`demo/transport.ts` replaces `window.fetch` and `window.EventSource`:
+`web/src/app/development/mocks/handlers.ts` turns the sample-data server into MSW handlers: `http.all` handlers for `/api/*` and `/__mock/*`, and one `sse('/api/events')` handler.
 
-- A request to the page's own origin under `/api/` or `/__mock/` becomes a `MockRequest` and is answered by the sample-data server. Everything else goes to the browser's `fetch`.
-- A request body is read as text; for a multipart form, only its `metadata` field is read, as the dev server does.
-- The replacement `EventSource` opens on the next task, sends `ready`, and then delivers each change after the answer to the write that caused it, matching the order seen over the network.
+- A request becomes a `MockRequest` and is answered by `MockServer.handle()`. A request body is read as text; for a multipart form, only its `metadata` field is read.
+- The `/api/events` handler sends `ready` and then delivers each change after the answer to the write that caused it, matching the order seen over the network. It stops listening when the page closes the stream.
+- Pictures need no rewrite: the Service Worker answers `<img>` requests for an attachment or the sample picture under `/__mock/` too.
+- The page's query (`location.search`) is passed to the server as page parameters, such as `?empty=1` or `?disconnect=1`.
 
-Images do not go through `fetch`. `demo/images.ts` watches the page and rewrites any `<img>` that names the server into a `data:` URL answered by the same in-page server.
+`web/src/app/development/mocks/browser.ts` starts the worker before the first render, so the board's first request already has an answer:
+
+- The script is MSW's own `mockServiceWorker.js`. `web/mock-browser.ts` serves it from the installed `msw` package in the dev server and emits it into the demo build, so it sits in the demo's own folder, `/agent-board/demo/mockServiceWorker.js`, and no copy is committed. The page registers it with `import.meta.env.BASE_URL`, so its scope is the folder of the page and GitHub Pages needs no extra header.
+- The worker intercepts the page's requests to `/api/`, although that path is outside the scope: the scope limits which pages the worker controls, not which request URLs it sees. A documentation page outside `/agent-board/demo/` is not controlled, so the worker does not touch the rest of the site.
+- A page loaded by a hard reload (Shift+Reload) is not controlled until the next load. If the page is not controlled after the worker starts, it reloads once (a flag in `sessionStorage` prevents a loop).
+- A browser with no Service Worker support, such as a Firefox private window or a page on a non-secure origin, shows a short notice in English or Japanese instead of the board. The demo has no second transport.
 
 ### The first-run guide
 
@@ -52,7 +57,7 @@ The seen state lives only in memory. A new page is a new server, so the guide st
 
 ### Language
 
-The demo starts in the language of the visitor's browser. `demo/install.ts` reads the first entry of `navigator.languages` through `demo/locale.ts`: Japanese when it starts with `ja`, English otherwise. It applies that language before the first screen is drawn, so the screens and the first-run guide start in it, and passes it to the sample-data server as `locale`.
+The demo starts in the language of the visitor's browser. `mocks/start.ts` reads the first entry of `navigator.languages` through `mocks/locale.ts`: Japanese when it starts with `ja`, English otherwise. It applies that language before the first screen is drawn, so the screens and the first-run guide start in it, and passes it to the sample-data server as `locale`.
 
 The sample boards come from the English fixture. For a Japanese start, `mock-server/sampleJa.ts` puts Japanese words in their place: card titles and descriptions, history entries, waiting reasons, choices, acceptance conditions, the epic name, and the long Markdown description. The cards keep their IDs, lanes, and states. The sample-data mode (`pnpm --dir web dev --mode mock`) passes no `locale` and stays in English.
 
@@ -91,7 +96,7 @@ cp -R web/dist-demo docs/.vitepress/dist/demo
 pnpm --dir e2e test:demo
 ```
 
-The suite (`e2e/playwright.demo.config.ts` and `e2e/demo/`) serves `docs/.vitepress/dist/` with `vitepress preview` on port 8446, or on `AGBOARD_DEMO_E2E_PORT`, and opens `/agent-board/demo/` in Chromium. Like the documentation site suite, it needs no Rust build and no `AGBOARD_HOME`, because the board lives in the page. It checks that:
+The suite (`e2e/playwright.demo.config.ts` and `e2e/demo/`) serves `docs/.vitepress/dist/` with `vitepress preview` on port 8446, or on `AGBOARD_DEMO_E2E_PORT`, and opens `/agent-board/demo/` in Chromium. Like the documentation site suite, it needs no Rust build and no `AGBOARD_HOME`, because the board lives in the page. Playwright allows Service Workers by default, and the demo does not render its board until the worker controls the page, so the tests need no extra wait; keep `serviceWorkers` out of the Playwright config. It checks that:
 
 - the guide starts on page load and runs to the end, including sending its sample request in Ask AI and answering its question, at desktop width and at phone width
 - after the guide, a card can be dragged to another lane

@@ -3,9 +3,9 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { chunkGraph } from './chunk-graph.ts';
-import { DEMO_BASE, DEMO_OUT_DIR, demoBuild } from './demo-build.ts';
+import { DEMO_BASE, DEMO_OUT_DIR } from './demo-build.ts';
 import { liveApi, liveProxy } from './live-api.ts';
-import { mockApi } from './mock-api.ts';
+import { mockBrowser } from './mock-browser.ts';
 
 const TEST_FILES = ['src/**/*.test.{ts,tsx}', 'test/**/*.test.{ts,tsx}'];
 // In a VM context the jsdom window is the global object itself, and properties such as
@@ -28,9 +28,9 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       chunkGraph(),
-      ...(mode === 'mock' ? [mockApi()] : []),
       ...(mode === 'live' ? [liveApi(backendOrigin)] : []),
-      ...(demo ? [demoBuild()] : []),
+      ...(mode === 'mock' ? [mockBrowser({ token: 'mock-token' })] : []),
+      ...(demo ? [mockBrowser({ token: 'demo-token', noBuildId: true })] : []),
     ],
     resolve: {
       alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
