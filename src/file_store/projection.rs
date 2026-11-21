@@ -36,6 +36,8 @@ pub struct TaskSummaryFields {
     pub acceptance_total: u32,
     /// The conditions cannot be read from the frontmatter.
     pub acceptance_error: bool,
+    /// The version the task is planned for; `None` when unplanned.
+    pub planned_version: Option<String>,
     pub created_at: String,
     pub updated_at: String,
     pub pending_request_id: Option<String>,
@@ -114,6 +116,9 @@ pub struct QuestionSummary {
 pub struct Projection {
     pub project_id: String,
     pub project_name: String,
+    /// The project's versions and its current one.
+    pub versions: Vec<String>,
+    pub current_version: Option<String>,
     /// The version of the whole Summary (the archived tasks are not part of it).
     pub version: String,
     pub tasks: Vec<TaskProjection>,

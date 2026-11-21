@@ -175,6 +175,48 @@ fn events_pc_changed_has_the_project_the_changes_the_instance_and_a_growing_seq(
 }
 
 #[test]
+fn events_a_version_change_announces_the_project_and_a_planned_version_the_task() {
+    let _serial = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let home = support::home();
+    let project = project_of(home.path(), "monitor");
+    let server = common::Running::start(home.path());
+    let mut events = Stream::open(
+        server.addr,
+        "/api/events",
+        &format!("Host: {}\r\n", server.addr),
+    );
+
+    store(home.path())
+        .set_current_version(&project, Some("v1.8.0"))
+        .unwrap();
+    let listed = events.changed(WAIT).expect("the version change");
+    assert_eq!(listed.project_id, project.to_string());
+    let change = listed
+        .changes
+        .iter()
+        .find(|c| c.resource == ChangeResource::Project)
+        .expect("a project change");
+    assert_eq!(change.facets, vec![Facet::Summary]);
+
+    store(home.path())
+        .set_task_planned_version(
+            &project,
+            1,
+            &agent_board::file_store::VersionChoice::Current,
+            agent_board::domain::Actor::Human,
+            Utc::now(),
+        )
+        .unwrap();
+    let planned = events.changed(WAIT).expect("the planned version");
+    let task = planned
+        .changes
+        .iter()
+        .find(|c| c.resource == ChangeResource::Task && c.id == ChangeId::Task(1))
+        .expect("task 1");
+    assert!(task.facets.contains(&Facet::Summary), "{:?}", task.facets);
+}
+
+#[test]
 fn events_two_starts_have_different_instance_ids_and_each_starts_at_seq_one() {
     let _serial = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let home = support::home();

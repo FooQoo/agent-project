@@ -118,6 +118,10 @@ fn messages_and_reasons_follow_the_design_table() {
             "Another change moved the task first. Check its current status and move it again.",
         ),
         (
+            "the planned version of task #5 changed.",
+            "Another change set the planned version first. Read the task again and choose the version again.",
+        ),
+        (
             "deleting a task needs confirmation from a human.",
             "Run this command yourself in a terminal. Agents cannot delete tasks or projects, or replace a board.",
         ),

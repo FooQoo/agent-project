@@ -26,6 +26,8 @@ mod task_attachments;
 mod task_edit;
 mod task_multipart;
 mod tasks;
+mod version_plan;
+mod versions;
 
 use std::sync::Arc;
 
@@ -58,6 +60,8 @@ use task_attachments::*;
 use task_edit::*;
 use task_multipart::*;
 use tasks::*;
+use version_plan::{set_epic_version, set_task_version};
+use versions::{add_version, get_versions, set_current_version};
 
 const MAX_MULTIPART_BODY: usize = 52 * 1024 * 1024;
 
@@ -204,6 +208,22 @@ fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<
         .route(
             "/api/projects/{project_id}/epics/{epic_id}/send",
             post(send_epic),
+        )
+        .route(
+            "/api/projects/{project_id}/versions",
+            get(get_versions).post(add_version),
+        )
+        .route(
+            "/api/projects/{project_id}/versions/current",
+            put(set_current_version),
+        )
+        .route(
+            "/api/projects/{project_id}/tasks/{id}/planned-version",
+            put(set_task_version),
+        )
+        .route(
+            "/api/projects/{project_id}/epics/{epic_id}/planned-version",
+            post(set_epic_version),
         )
         .route(
             "/api/projects/{project_id}/tasks/{id}/acceptance/{condition}",

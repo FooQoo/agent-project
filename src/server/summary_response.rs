@@ -70,6 +70,8 @@ pub(crate) fn summary_of(projection: &Projection) -> Summary {
         project: SummaryProject {
             id: projection.project_id.clone(),
             name: projection.project_name.clone(),
+            versions: projection.versions.clone(),
+            current_version: projection.current_version.clone(),
         },
         version: projection.version.clone(),
         tasks: projection
@@ -92,6 +94,7 @@ pub(crate) fn summary_of(projection: &Projection) -> Summary {
                         total: f.acceptance_total,
                     },
                     acceptance_error: f.acceptance_error,
+                    planned_version: f.planned_version.clone(),
                     created_at: f.created_at.clone(),
                     updated_at: f.updated_at.clone(),
                     pending_request_id: f.pending_request_id.clone(),

@@ -82,6 +82,7 @@ function fixtureTask(id: number, status: ColumnName, long: boolean): FixtureTask
       epicId: id === 1 ? EPIC_ID : null,
       acceptance: { done: acceptance.filter((item) => item.done).length, total: acceptance.length },
       acceptanceError: false,
+      plannedVersion: null,
       createdAt: at,
       updatedAt: at,
       pendingRequestId: pending ? `request-${id}` : null,
@@ -145,6 +146,8 @@ export function createMonitorFixture(): MonitorFixture {
     summary: {
       project: {
         id: PROJECT_ID,
+        versions: [],
+        currentVersion: null,
         name: long
           ? `${PROJECT_NAME} project with an intentionally long name for one-line truncation`
           : PROJECT_NAME,

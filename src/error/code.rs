@@ -44,6 +44,7 @@ impl AgboardError {
             AgboardError::QuestionOpen { .. } => "question_open",
             AgboardError::RequestWithdrawn { .. } => "request_withdrawn",
             AgboardError::TaskStatusChanged { .. } => "task_status_changed",
+            AgboardError::PlannedVersionChanged { .. } => "planned_version_changed",
             AgboardError::ConfirmationRequired { .. } => "confirmation_required",
             AgboardError::FileError { .. } => "file_error",
             AgboardError::FileInvalid { .. } => "file_invalid",
