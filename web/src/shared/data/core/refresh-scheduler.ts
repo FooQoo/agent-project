@@ -161,7 +161,21 @@ export class RefreshScheduler implements SchedulerHost {
    * reconnect means events may have been missed, so the cache is read again.
    */
   connected(reconnect: boolean): void {
-    if (!reconnect) return;
+    if (!reconnect) {
+      // A Summary read before the first subscription (a page that started hidden, or with the
+      // stream down) may have missed a change: read it again. Normally none is held yet.
+      for (const projectId of this.watched()) {
+        if (this.summary.snapshot(projectId).data === null) continue;
+        this.gate.submit(
+          () => {
+            this.summary.markStale(projectId);
+            void this.loadSummary(projectId, { immediate: false });
+          },
+          { key: `first:${projectId}` },
+        );
+      }
+      return;
+    }
     this.invalidator.forgetSequence();
     this.gate.submit(() => resetCache(this, 'reconnected'), { key: 'reset' });
   }

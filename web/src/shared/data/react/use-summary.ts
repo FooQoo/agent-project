@@ -22,9 +22,11 @@ export function useSummary(projectId: ProjectId | null): UseSummaryResult {
     [core, projectId],
   );
   const canRead = useSyncExternalStore(core.subscribeState, () => core.canReadSummary);
+  // Once there is a Summary the query stays on, so the stream reopening never reads it past the gate.
+  const loaded = core.getSummary(projectId ?? '').data !== null;
   const query = useQuery<Summary, Error>({
     ...core.summary.options(projectId ?? ''),
-    enabled: projectId !== null && canRead,
+    enabled: projectId !== null && (canRead || loaded),
   });
   const refresh = useCallback(
     () => (projectId === null ? Promise.resolve() : core.refreshSummary(projectId)),

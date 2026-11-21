@@ -121,7 +121,10 @@ export class SummaryReader {
     if (this.disposed) return Promise.resolve();
     if (immediate) {
       this.background.delete(projectId);
-      return this.client.fetchQuery({ ...this.options(projectId), staleTime: 0 }).then(noop, noop);
+      // A person is waiting (Retry, a save): a failure shows at once, without background retries.
+      return this.client
+        .fetchQuery({ ...this.options(projectId), staleTime: 0, retry: false })
+        .then(noop, noop);
     }
     return new Promise((resolve) => {
       const open = this.windows.get(projectId);
@@ -194,7 +197,9 @@ export class SummaryReader {
     }
     this.background.set(projectId, (this.background.get(projectId) ?? 0) + 1);
     void this.client
-      .invalidateQueries({ queryKey: queryKeys.summary(projectId) })
+      // A read that is running is joined, not restarted: a notification that arrives while it runs
+      // is compared with its response (`read`), so rapid notifications cannot starve it.
+      .invalidateQueries({ queryKey: queryKeys.summary(projectId) }, { cancelRefetch: false })
       .catch(noop)
       .finally(() => {
         this.background.set(projectId, Math.max(0, (this.background.get(projectId) ?? 1) - 1));

@@ -126,6 +126,77 @@ describe('the presentation gate holds the instruction, not the fetch', () => {
   });
 });
 
+describe('rapid notifications', () => {
+  it('join the read that is running instead of restarting it, and are covered by its check', async () => {
+    await answer(0, 'sv1');
+    touch();
+    await settle(150);
+    expect(adapter.summaryCalls).toHaveLength(2);
+    touch();
+    await settle(150);
+    expect(adapter.summaryCalls).toHaveLength(2);
+    expect(adapter.summaryCalls[1]?.signal.aborted).toBe(false);
+    // The response is no newer than the notification that arrived meanwhile: it is read again.
+    await answer(1, 'sv1');
+    expect(adapter.summaryCalls).toHaveLength(3);
+    await answer(2, 'sv2');
+    expect(core.getSummary(P).version).toBe('sv2');
+  });
+});
+
+describe('a screen that leaves during a read', () => {
+  it('finds the Summary stale when it comes back, after the read was cancelled', async () => {
+    core.dispose();
+    adapter = new FakeAdapter();
+    core = new DataCore({ adapter, visibility: visible });
+    core.start();
+    adapter.handlers?.onOpen?.();
+    const leave = core.watchProject(P);
+    const first = core.refreshSummary(P);
+    await answer(0, 'sv1');
+    await first;
+    void core.refreshSummary(P);
+    leave();
+    // The cancelled read restores the state from before it, without the stale mark.
+    await core.queryClient.cancelQueries({ queryKey: queryKeys.summary(P) }, { revert: true });
+    core.watchProject(P);
+    expect(core.getSummary(P)).toMatchObject({ state: 'stale', version: 'sv1' });
+  });
+});
+
+describe('a Summary read before the first subscription', () => {
+  it('is read again when the subscription opens', async () => {
+    core.dispose();
+    adapter = new FakeAdapter();
+    core = new DataCore({ adapter, visibility: { hidden: () => true, subscribe: () => () => {} } });
+    core.start();
+    show();
+    await settle(0);
+    expect(adapter.summaryCalls).toHaveLength(1); // hidden tab: read without the stream
+    await answer(0, 'sv1');
+    core.scheduler.connected(false);
+    await settle(150);
+    expect(adapter.summaryCalls).toHaveLength(2);
+    await answer(1, 'sv2');
+    expect(core.getSummary(P).version).toBe('sv2');
+  });
+
+  it('is not read again when the first read waited for the subscription', async () => {
+    core.dispose();
+    adapter = new FakeAdapter();
+    core = new DataCore({ adapter, visibility: visible });
+    core.start();
+    show(); // waits: the stream is still connecting
+    await settle(0);
+    expect(adapter.summaryCalls).toHaveLength(0);
+    adapter.handlers?.onOpen?.();
+    await settle(0);
+    await answer(0, 'sv1');
+    await settle(1_000);
+    expect(adapter.summaryCalls).toHaveLength(1);
+  });
+});
+
 describe('a response against the notifications that arrived while it was fetched', () => {
   it('is read again when it shows no sign of the change', async () => {
     await answer(0, 'sv1');
@@ -155,6 +226,24 @@ describe('the query client', () => {
     expect(retry(0, Object.assign(new Error('gone'), { status: 404 }))).toBe(false);
     expect(retry(0, Object.assign(new Error('broken'), { status: 500 }))).toBe(true);
     expect(createQueryClient().getDefaultOptions().mutations?.retry).toBe(false);
+  });
+});
+
+describe('a read a person asked for', () => {
+  it('fails at once, without the retries of a background read', async () => {
+    const retrying = new DataCore({
+      adapter,
+      visibility: visible,
+      queryClient: createQueryClient({ retry: true }),
+    });
+    const before = adapter.summaryCalls.length;
+    const done = retrying.refreshSummary(P);
+    adapter.summaryCalls[before]?.reject(new Error('down'));
+    await done;
+    await settle(10_000);
+    expect(adapter.summaryCalls).toHaveLength(before + 1);
+    expect(retrying.getSummary(P).state).toBe('error');
+    retrying.dispose();
   });
 });
 

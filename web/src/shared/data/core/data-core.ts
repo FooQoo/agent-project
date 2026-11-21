@@ -34,6 +34,8 @@ export class DataCore {
   readonly connection: EventConnection;
   private readonly watched = new Map<ProjectId, number>();
   private readonly changeListeners = new Set<(event: ChangedEvent | null) => void>();
+  /** Projects whose last screen left: they read as stale again when watched, whatever a cancelled read restored. */
+  private readonly left = new Set<ProjectId>();
   private readonly stateListeners = new Set<() => void>();
 
   constructor(options: DataCoreOptions) {
@@ -133,6 +135,8 @@ export class DataCore {
    */
   watchProject(projectId: ProjectId): () => void {
     this.watched.set(projectId, (this.watched.get(projectId) ?? 0) + 1);
+    // A read cancelled when the screen left restores the state from before it, without the stale mark.
+    if (this.left.delete(projectId)) this.summary.markStale(projectId);
     let ended = false;
     return () => {
       if (ended) return;
@@ -143,6 +147,7 @@ export class DataCore {
         return;
       }
       this.watched.delete(projectId);
+      this.left.add(projectId);
       this.markProjectStale(projectId);
     };
   }
