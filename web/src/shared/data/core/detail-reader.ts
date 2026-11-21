@@ -14,7 +14,8 @@ import type { ProjectId } from '../../api/contracts';
 import type { DetailSection, DetailVersions, Summary } from '../api/contracts';
 import { DetailBatch } from './detail-batch';
 import { DetailPartials } from './detail-partials';
-import { entryOf, keyOfQuery, namedVersions } from './detail-summary';
+import { fetchNow, refreshUntilCurrent } from './detail-refresh';
+import { entryOf, keyOfQuery, namedVersions, outdatedSections } from './detail-summary';
 import type { DetailEntry } from './detail-snapshot';
 import { MAX_REFETCH_ATTEMPTS } from './limits';
 import type { PresentationGate } from './presentation-gate';
@@ -53,7 +54,7 @@ export class DetailReader {
     this.client = options.client;
     this.batch = new DetailBatch({
       adapter: options.adapter,
-      expected: (key, sections) => this.expected(key, sections),
+      expected: (key, sections) => namedVersions(this.trusted(key.projectId), key, sections),
       onPartial: (key, section, data) =>
         this.partials.set(hashKey(queryKeys.detail(key, section)), data),
     });
@@ -108,28 +109,30 @@ export class DetailReader {
 
   /**
    * Reads sections again now, past the gate and joining a read that is running. A person waits
-   * (Retry, an editor opening): a failure shows at once, without background retries. Settles when
-   * the reads end; what failed is in the query, and `refresh` is the one that reports it.
+   * (Retry, an editor opening): a failure shows at once, with no background retries, and is left
+   * in the query (`refresh` reports it).
    */
   fetch(key: ResourceKey, sections: readonly DetailSection[]): Promise<void> {
     return this.refresh(key, sections).catch(noop);
   }
 
   /**
-   * Like `fetch`, but rejects with the first failure. A query keeps the document it held when a
-   * read fails, so a caller that must not use an older one (an editor) cannot tell from the cache.
+   * Like `fetch`, but settles only with what the Summary names and rejects with a failed read, for
+   * a caller that must not use an older body (an editor): the cache keeps one after a failure, and
+   * may have joined a read of an older version.
    */
-  async refresh(key: ResourceKey, sections: readonly DetailSection[]): Promise<void> {
-    if (this.disposed) return;
-    const results = await Promise.allSettled(
-      sections.map((section) => {
-        const options = this.options(key, section);
-        this.background.delete(hashKey(options.queryKey));
-        return this.client.fetchQuery({ ...options, staleTime: 0, retry: false });
-      }),
-    );
-    const failed = results.find((result) => result.status === 'rejected');
-    if (failed) throw failed.reason;
+  refresh(key: ResourceKey, sections: readonly DetailSection[]): Promise<void> {
+    return refreshUntilCurrent(sections, {
+      disposed: () => this.disposed,
+      read: (pending) =>
+        fetchNow(
+          this.client,
+          pending.map((section) => this.options(key, section)),
+          (options) => this.background.delete(hashKey(options.queryKey)),
+        ),
+      outdated: () =>
+        outdatedSections(this.trusted(key.projectId), key, sections, (s) => this.versionOf(key, s)),
+    });
   }
 
   /**
@@ -289,11 +292,5 @@ export class DetailReader {
     } finally {
       if (this.began.get(hash) === began) this.began.delete(hash);
     }
-  }
-
-  /** The versions the Summary names, unless it is marked as not to be trusted. */
-  private expected(key: ResourceKey, sections: DetailSection[]): DetailVersions | undefined {
-    const summary = this.trusted(key.projectId);
-    return summary ? namedVersions(summary, key, sections) : undefined;
   }
 }

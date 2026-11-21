@@ -22,16 +22,29 @@ export function entryOf(summary: Summary, key: ResourceKey) {
     : summary.epics.find((e) => e.id === key.id);
 }
 
-/** The versions the Summary names for the given sections of a resource, if it lists it. */
+/** The versions a (trusted) Summary names for the sections of a resource, if it lists it. */
 export function namedVersions(
-  summary: Summary,
+  summary: Summary | null,
   key: ResourceKey,
   sections: readonly DetailSection[],
 ): DetailVersions | undefined {
-  const named = entryOf(summary, key)?.detailVersions as DetailVersions | undefined;
+  const named = (summary && entryOf(summary, key))?.detailVersions as DetailVersions | undefined;
   if (!named) return undefined;
   const versions: DetailVersions = {};
   for (const section of sections)
     if (named[section] !== undefined) versions[section] = named[section];
   return versions;
+}
+
+/** The sections whose held version is not the one the Summary names (none the Summary does not name). */
+export function outdatedSections(
+  summary: Summary | null,
+  key: ResourceKey,
+  sections: readonly DetailSection[],
+  held: (section: DetailSection) => string | null,
+): DetailSection[] {
+  const named = (summary && namedVersions(summary, key, sections)) ?? {};
+  return sections.filter(
+    (section) => named[section] !== undefined && named[section] !== held(section),
+  );
 }

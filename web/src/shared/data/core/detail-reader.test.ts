@@ -241,6 +241,31 @@ describe('refresh', () => {
     close();
   });
 
+  it('does not settle with an older version it joined once the Summary names a newer one', async () => {
+    const close = openTask();
+    const refresh = core.details.refresh(task(1), ['document']);
+    let settled = false;
+    void refresh.then(() => {
+      settled = true;
+    });
+    await settle(0);
+    expect(adapter.streamCalls).toHaveLength(1);
+    // The Summary now names a newer document while the older one is still being read.
+    note('document');
+    await settle(150);
+    await answerSummary(0, sv('sv2', 'd2'));
+    adapter.streamCalls[0]?.respond(taskStream(1, { document: 'd1' }, { text: 'old' }));
+    await settle(0);
+    expect(settled).toBe(false);
+    expect(core.details.entry(task(1), 'document')?.version).toBe('d1');
+    adapter.streamCalls[adapter.streamCalls.length - 1]?.respond(
+      taskStream(1, { document: 'd2' }, { text: 'new' }),
+    );
+    await refresh;
+    expect(core.details.entry(task(1), 'document')?.version).toBe('d2');
+    close();
+  });
+
   it('settles quietly through fetch, which leaves the failure in the query', async () => {
     const close = openTask();
     const fetched = core.details.fetch(task(1), ['document']);
