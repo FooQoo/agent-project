@@ -32,7 +32,7 @@ flowchart LR
 5. After a reload, the server compares the parsed data with the data before it. A save that changes nothing a Summary or Detail shows sends no event. A change set gets the next `seq` of this server run, and every open stream receives SSE `changed` with the changed resources and facets.
 
    A reload always reads the project's files again, even when they hash to the content version of the last read. The version cannot tell a read that mixed two states from a clean one: when a folder is deleted and written again while the read runs, the files can be back at the same version before the read finishes. A read that finds nothing new sends no event.
-6. There is no periodic polling anywhere.
+6. The server finds changes only by events, never by polling. The browser reads again only when a notification or a reconnect says so; the one exception is a screen that follows a live log, which reads on an interval while its tab is shown.
 
 ## Facets and change events
 
@@ -73,7 +73,9 @@ When a `changed` event arrives, the client does the following:
 
 A `changed` that arrives while the Summary is being fetched may describe a change the response does not include yet. The client fetches again if the response does not show that change: its `version` is the same as before, or there was no earlier Summary to compare with, as on the first load. It asks at most three times in all.
 
-A client that sees a gap in `seq`, a new `instanceId`, or an event it does not know drops the Summary and the related cached Details for the project, then reads the Summary again. A stream that has fallen too far behind gets `resync` (`{"instanceId", "seq"}`) instead of the events it missed, and the client does the same.
+A client that sees a gap in `seq`, a new `instanceId`, or an event it does not know marks the Summary and the cached Details as outdated, then reads the Summary again; each Detail is then settled by comparing its version with the new Summary. A stream that has fallen too far behind gets `resync` (`{"instanceId", "seq"}`) instead of the events it missed, and the client does the same.
+
+In the web UI the cache is a TanStack Query client, and a notification reaches it as an invalidation. The data core passes every `changed` event, and a reset or a reconnect as `null`, to the listeners of `subscribeChanges`. A read that is not the Summary or a Detail (the messages, the Docs file list, the saved settings) registers a `changedBy` check through `useReadQuery`: a matching event, or `null`, invalidates exactly that query. A reconnect always counts as a reset, because events may have been missed while the stream was down. How the web UI holds these invalidations while a panel is open is described in [Server and web UI](./server-and-ui.md#what-the-query-client-does-and-what-stays-custom).
 
 ## How agent waits use events
 
@@ -94,9 +96,9 @@ The board subscribes to `GET /api/events`, which carries every project. The phon
 - `preferences` after a saved language or theme change.
 - `docs` on the board's stream only, after a change in a project's `docs/` folder (see [The docs](#the-docs)).
 
-A connection that has sent nothing for 45 seconds is dropped and reopened, with growing pauses of 1, 2, 5, 10, and then 30 seconds. The browser lets go of the connection while its tab is hidden and opens it again when the tab becomes visible. Opening a connection also fetches the Summary, so a change made between the last fetch and the subscription is not missed.
+A connection that has sent nothing for 45 seconds is dropped and reopened, with growing pauses of 1, 2, 5, 10, and then 30 seconds. The browser lets go of the connection while its tab is hidden and opens it again when the tab becomes visible. The first read of a project waits until the connection reports `ready`, so a change made between the read and the subscription is not missed; after a reconnect, the cache is marked outdated and read again.
 
-The desktop UI shows a disconnected state while the stream is down. There is no periodic polling or reconciliation: a missed notification is caught when the connection opens again or the page reloads.
+The desktop UI shows a disconnected state while the stream is down. Nothing polls for changes: a missed notification is caught when the connection opens again, which marks the cache outdated, or when the page reloads.
 
 ## Web Push delivery
 
