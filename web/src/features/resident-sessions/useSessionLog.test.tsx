@@ -9,6 +9,9 @@ const reply = (body: unknown, ok = true) => ({
   json: async () => body,
 });
 
+// The query client hands its results to React on a timer, so a read ends only when timers run.
+const settle = () => act(async () => void (await vi.advanceTimersByTimeAsync(10)));
+
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
   cleanup();
@@ -21,7 +24,7 @@ describe('useSessionLog', () => {
     const fetchMock = vi.fn(async (_url: string) => reply(log('one')));
     vi.stubGlobal('fetch', fetchMock);
     const { result, unmount } = renderHook(() => useSessionLog('p1', 'codex', 2000));
-    await act(async () => {});
+    await settle();
     expect(result.current.data?.text).toBe('one');
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/sessions/log?tool=codex');
     await act(async () => {
@@ -52,15 +55,16 @@ describe('useSessionLog', () => {
       .mockRejectedValue(new Error('down'));
     vi.stubGlobal('fetch', fetchMock);
     const { result } = renderHook(() => useSessionLog('p1', 'codex', 2000));
-    await act(async () => {});
+    await settle();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
+    await settle();
     expect(result.current.failed).toBe(true);
     expect(result.current.data?.text).toBe('kept');
   });
 
-  it('reads nothing while the tab is hidden', async () => {
+  it('does not read again while the tab is hidden, and reads again when it is shown', async () => {
     const fetchMock = vi.fn(async () => reply(log('x')));
     vi.stubGlobal('fetch', fetchMock);
     const hidden = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
@@ -68,11 +72,28 @@ describe('useSessionLog', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(6000);
     });
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     hidden.mockReturnValue('visible');
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('starts from nothing for another tool', async () => {
+    const fetchMock = vi.fn(async (url: string) =>
+      reply(String(url).includes('tool=claude-code') ? log('claude') : log('codex')),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const { result, rerender } = renderHook(
+      ({ tool }: { tool: 'codex' | 'claude-code' }) => useSessionLog('p1', tool, 2000),
+      { initialProps: { tool: 'codex' } },
+    );
+    await settle();
+    expect(result.current.data?.text).toBe('codex');
+    rerender({ tool: 'claude-code' });
+    expect(result.current.data).toBeNull();
+    await settle();
+    expect(result.current.data?.text).toBe('claude');
   });
 });

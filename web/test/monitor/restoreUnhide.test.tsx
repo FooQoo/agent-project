@@ -7,15 +7,6 @@ import type { Lanes } from '../../src/pages/monitor/model/overlay';
 import { useLaneOverlay } from '../../src/pages/monitor/hooks/useLaneOverlay';
 import { useArchiveSheet } from '../../src/pages/monitor/hooks/useArchiveSheet';
 
-vi.mock('../../src/features/projects/model/useProjectResource', () => ({
-  useProjectResource: () => ({
-    data: undefined,
-    status: 'ready',
-    fetchFailed: false,
-    reload: vi.fn(),
-  }),
-}));
-
 const item = (id: number): MonitorTask => ({
   projectId: PROJECT_A.id,
   projectName: PROJECT_A.name,

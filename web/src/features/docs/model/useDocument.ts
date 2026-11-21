@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FetchError } from '@/shared/api/http';
 import type { ProjectId } from '@/shared/api/contracts';
-import { fetchDocsFile, type DocsFile } from '../api/docsApi';
+import { queryKeys } from '@/shared/data/core/query-keys';
+import { useReadClient, useReadQuery } from '@/shared/data/react';
+import { type DocsFile, fetchDocsFile } from '../api/docsApi';
 
 export type DocumentState =
   | { status: 'idle' | 'loading' | 'error'; file: null }
@@ -11,48 +13,49 @@ export type DocumentState =
 export type FileRefresh = 'updated' | 'unchanged' | 'deleted' | 'failed';
 
 /**
- * One file of the docs, fetched when `path` is chosen (nothing is fetched while it is null).
+ * One file of the docs, read when `path` is chosen (nothing is read while it is null).
  * `loadId` changes with every fresh load. `refresh` reads the file again without the loading
  * state, for a change made outside: the shown file is replaced only when its revision differs,
  * and is kept when the file is gone or the read fails.
  */
 export function useDocument(projectId: ProjectId, path: string | null) {
-  const [state, setState] = useState<DocumentState>({ status: 'idle', file: null });
+  const client = useReadClient();
   const [attempt, setAttempt] = useState(0);
-  const current = useRef(state);
-  current.current = state;
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is the reload trigger.
-  useEffect(() => {
-    if (path === null) {
-      setState({ status: 'idle', file: null });
-      return;
-    }
-    let current = true;
-    setState({ status: 'loading', file: null });
-    fetchDocsFile(projectId, path).then(
-      (file) => current && setState({ status: 'ready', file }),
-      () => current && setState({ status: 'error', file: null }),
-    );
-    return () => {
-      current = false;
-    };
-  }, [projectId, path, attempt]);
-
-  const reload = useCallback(() => setAttempt((value) => value + 1), []);
+  const query = useReadQuery(
+    {
+      queryKey: queryKeys.docsFile(projectId, path ?? ''),
+      queryFn: () => fetchDocsFile(projectId, path as string),
+      enabled: path !== null,
+    },
+    client,
+  );
+  const { refetch } = query;
+  const reload = useCallback(() => {
+    setAttempt((value) => value + 1);
+    void refetch({ cancelRefetch: false });
+  }, [refetch]);
   const refresh = useCallback(async (): Promise<FileRefresh> => {
     if (path === null) return 'unchanged';
+    const key = queryKeys.docsFile(projectId, path);
+    const shown = client.getQueryData<DocsFile>(key);
     try {
-      const file = await fetchDocsFile(projectId, path);
-      const shown = current.current.file;
-      if (shown === null || shown.path !== path || shown.revision === file.revision)
-        return 'unchanged';
-      setState({ status: 'ready', file });
-      return 'updated';
+      const file = await client.fetchQuery({
+        queryKey: key,
+        queryFn: () => fetchDocsFile(projectId, path),
+        staleTime: 0,
+        retry: false,
+      });
+      return shown === undefined || shown.revision === file.revision ? 'unchanged' : 'updated';
     } catch (cause) {
       return cause instanceof FetchError && cause.status === 404 ? 'deleted' : 'failed';
     }
-  }, [projectId, path]);
+  }, [client, projectId, path]);
+  const state: DocumentState =
+    path === null
+      ? { status: 'idle', file: null }
+      : query.data
+        ? { status: 'ready', file: query.data }
+        : { status: query.isError ? 'error' : 'loading', file: null };
   return {
     status: state.status,
     file: state.file,

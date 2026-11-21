@@ -44,7 +44,6 @@ describe('useProjects', () => {
 
     fake.projects = PROJECTS;
     act(() => result.current.reload());
-    expect(result.current.status).toBe('loading');
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(result.current.fetchFailed).toBe(false);
   });
@@ -74,33 +73,25 @@ describe('useProjects', () => {
     expect(result.current.projects[0]).toMatchObject({ id: PROJECT_A.id, name: 'renamed' });
   });
 
-  it('applies only the latest answer when answers arrive in reverse order', async () => {
+  it('joins the read that is running when asked again, and shows its answer', async () => {
     const first = deferred();
-    const second = deferred();
     let calls = 0;
     const fake = backend({
       gate: () => {
         calls += 1;
-        return calls === 1 ? first.promise : calls === 2 ? second.promise : undefined;
+        return calls === 1 ? first.promise : undefined;
       },
     });
-    fake.projects = [PROJECT_A];
     stubBackend(fake);
     const { result } = renderHook(() => useProjects());
-    fake.projects = PROJECTS;
     act(() => result.current.reload());
-
-    await act(async () => {
-      second.resolve();
-      await Promise.resolve();
-    });
-    await waitFor(() => expect(result.current.projects).toHaveLength(3));
-    fake.projects = [PROJECT_A];
+    act(() => result.current.reload());
     await act(async () => {
       first.resolve();
       await Promise.resolve();
     });
-    expect(result.current.projects).toHaveLength(3);
+    await waitFor(() => expect(result.current.projects).toHaveLength(3));
+    expect(calls).toBe(1);
   });
 
   it('survives a StrictMode remount', async () => {

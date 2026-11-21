@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { queryKeys } from '../../shared/data/core/query-keys';
+import { useReadQuery } from '../../shared/data/react';
 import { loadNotificationSettings, saveNotificationSettings } from './api';
 import type { NotificationSettings, NotificationSettingsPatch } from './model';
 
@@ -23,20 +25,21 @@ export function useNotificationSettings(
   const pending = useRef(0);
   const alive = useRef(true);
 
+  const query = useReadQuery({ queryKey: queryKeys.notificationSettings(), queryFn: load });
+  const { data, isError, dataUpdatedAt } = query;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: every finished read applies, changed or not.
+  useEffect(() => {
+    if (data) {
+      saved.current = data;
+      setState({ status: 'ready', settings: data, saveFailed: false });
+    } else if (isError) setState({ status: 'failed' });
+  }, [data, isError, dataUpdatedAt]);
   useEffect(() => {
     alive.current = true;
-    load().then(
-      (settings) => {
-        if (!alive.current) return;
-        saved.current = settings;
-        setState({ status: 'ready', settings, saveFailed: false });
-      },
-      () => alive.current && setState({ status: 'failed' }),
-    );
     return () => {
       alive.current = false;
     };
-  }, [load]);
+  }, []);
 
   const change = useCallback(
     (patch: NotificationSettingsPatch) => {

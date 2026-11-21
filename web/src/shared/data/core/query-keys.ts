@@ -15,4 +15,25 @@ export const queryKeys = {
     [key.kind, key.projectId, key.id, section] as const,
   /** Every Detail of a task or an epic of a project. */
   projectDetails: (projectId: ProjectId, kind: ResourceKey['kind']) => [kind, projectId] as const,
+  /** The list of projects. */
+  projects: () => ['projects'] as const,
+  /** The results of a task (they are not part of a Detail stream). */
+  taskResults: (projectId: ProjectId, taskId: number) =>
+    ['task-results', projectId, taskId] as const,
+  /** The periodic summaries of a project's messages. */
+  messageSummaries: (projectId: ProjectId) => ['message-summaries', projectId] as const,
+  /** One message of a project. */
+  message: (projectId: ProjectId, messageId: string) => ['message', projectId, messageId] as const,
+  /** The file list of a project's Docs. */
+  docsTree: (projectId: ProjectId) => ['docs-tree', projectId] as const,
+  /** One file of a project's Docs. */
+  docsFile: (projectId: ProjectId, path: string) => ['docs-file', projectId, path] as const,
+  /** The saved notification settings. */
+  notificationSettings: () => ['notification-settings'] as const,
+  /** The remote-access connection and its registered devices. */
+  connection: () => ['connection'] as const,
+  /** The resident sessions of a project. */
+  residentSessions: (projectId: ProjectId) => ['resident-sessions', projectId] as const,
+  /** The tail of a resident session's log. */
+  sessionLog: (projectId: ProjectId, tool: string) => ['session-log', projectId, tool] as const,
 };

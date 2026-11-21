@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback } from 'react';
 import { fetchProjects } from '../api';
 import type { Project } from '../../../shared/api/contracts';
+import { queryKeys } from '../../../shared/data/core/query-keys';
+import { useReadQuery } from '../../../shared/data/react';
 
 export interface UseProjectsResult {
   /** `loading` and `error` last until the first list arrives; a later failure keeps the old list. */
@@ -12,52 +14,21 @@ export interface UseProjectsResult {
   reload: () => void;
 }
 
-/** Loads the project list. Only the latest request is applied, including after a StrictMode remount. */
+const NONE: Project[] = [];
+
+/** The project list, read by its query. `reload` reads it again; a running read is joined. */
 export function useProjects(): UseProjectsResult {
-  const [state, setState] = useState<Omit<UseProjectsResult, 'reload'>>({
-    status: 'loading',
-    projects: [],
-    catalogVersion: null,
-    fetchFailed: false,
+  const query = useReadQuery({
+    queryKey: queryKeys.projects(),
+    queryFn: fetchProjects,
   });
-  const generation = useRef(0);
-
-  const load = useCallback(() => {
-    const mine = ++generation.current;
-    fetchProjects().then(
-      (list) => {
-        if (mine !== generation.current) return;
-        setState({
-          status: 'ready',
-          projects: list.projects,
-          catalogVersion: list.catalogVersion,
-          fetchFailed: false,
-        });
-      },
-      () => {
-        if (mine !== generation.current) return;
-        setState((previous) =>
-          previous.status === 'ready'
-            ? { ...previous, fetchFailed: true }
-            : { ...previous, status: 'error', fetchFailed: true },
-        );
-      },
-    );
-  }, []);
-
-  useEffect(() => {
-    load();
-    return () => {
-      generation.current++;
-    };
-  }, [load]);
-
-  const reload = useCallback(() => {
-    setState((previous) =>
-      previous.status === 'error' ? { ...previous, status: 'loading' } : previous,
-    );
-    load();
-  }, [load]);
-
-  return { ...state, reload };
+  const { refetch } = query;
+  const reload = useCallback(() => void refetch({ cancelRefetch: false }), [refetch]);
+  return {
+    status: query.data ? 'ready' : query.isError ? 'error' : 'loading',
+    projects: query.data?.projects ?? NONE,
+    catalogVersion: query.data?.catalogVersion ?? null,
+    fetchFailed: query.isError,
+    reload,
+  };
 }
