@@ -15,6 +15,8 @@ export const queryKeys = {
     [key.kind, key.projectId, key.id, section] as const,
   /** Every Detail of a task or an epic of a project. */
   projectDetails: (projectId: ProjectId, kind: ResourceKey['kind']) => [kind, projectId] as const,
+  /** The pages of a project's archive, read as one infinite query. */
+  archive: (projectId: ProjectId | '') => ['archive', projectId] as const,
   /** The list of projects. */
   projects: () => ['projects'] as const,
   /** The results of a task (they are not part of a Detail stream). */

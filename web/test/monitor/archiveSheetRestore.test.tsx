@@ -45,7 +45,7 @@ describe('restoring from the archive sheet', () => {
     await act(async () => {
       await result.current.onRestore?.(3);
     });
-    expect(ids(result)).toEqual([5]);
+    await waitFor(() => expect(ids(result)).toEqual([5]));
     expect(fetchArchive).toHaveBeenCalledTimes(1);
     expect(onRestored).toHaveBeenCalledWith(3);
     expect(onWritten).toHaveBeenCalledOnce();
@@ -69,6 +69,8 @@ describe('restoring from the archive sheet', () => {
       await result.current.onRestore?.(3);
     });
     rerender({ open: false });
+    // What was read is dropped once nothing shows it.
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
     fetchArchive.mockResolvedValue(response([5, 3]));
     rerender({ open: true });
     await waitFor(() => expect(fetchArchive).toHaveBeenCalledTimes(2));
