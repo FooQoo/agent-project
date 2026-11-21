@@ -52,6 +52,7 @@ pub(crate) fn agboard_error_response(error: &AgboardError) -> Response {
         | AgboardError::QuestionOpen { .. }
         | AgboardError::RequestWithdrawn { .. }
         | AgboardError::TaskStatusChanged { .. }
+        | AgboardError::PlannedVersionChanged { .. }
         | AgboardError::TaskIsDraft { .. }
         | AgboardError::TaskInBacklog { .. }
         | AgboardError::EpicIsDraft { .. }

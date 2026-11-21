@@ -30,6 +30,7 @@
         "document": "1a2b3c4d5e6f7081"
       },
       "acceptanceError": false,
+      "plannedVersion": null,
       "createdAt": "2026-10-22T09:45:32Z"
     },
     {
@@ -71,6 +72,7 @@
         "history": "ffeeddccbbaa9988"
       },
       "acceptanceError": false,
+      "plannedVersion": null,
       "createdAt": "2026-10-22T09:45:32Z"
     }
   ],

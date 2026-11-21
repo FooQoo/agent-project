@@ -130,6 +130,8 @@ export interface TaskSummary {
   acceptance: AcceptanceItem[] | AcceptanceCounts;
   /** The conditions cannot be read from the frontmatter. */
   acceptanceError?: boolean;
+  /** The version the card is planned for; `null` or absent when unplanned. */
+  plannedVersion?: string | null;
 }
 
 export interface Task {
@@ -141,6 +143,8 @@ export interface Task {
   body: string;
   acceptance: AcceptanceItem[];
   acceptanceError: boolean;
+  /** The version the task is planned for; `null` or absent when unplanned. */
+  plannedVersion?: string | null;
   assignee: Assignee;
   taskStatus: ColumnName;
   /** Time of the last real lane change; independent of later notes and edits. */

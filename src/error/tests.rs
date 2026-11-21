@@ -71,6 +71,10 @@ pub(super) fn all_errors() -> Vec<AgboardError> {
             id: 5,
             current: Column::Done,
         },
+        AgboardError::PlannedVersionChanged {
+            id: 5,
+            current: Some("v1".into()),
+        },
         AgboardError::ConfirmationRequired {
             operation: "deleting a task".into(),
         },
@@ -207,6 +211,7 @@ fn codes_and_exit_codes_follow_the_design_table() {
             ("request_withdrawn", 1),
             ("ai_only", 1),
             ("task_status_changed", 1),
+            ("planned_version_changed", 1),
             ("confirmation_required", 1),
             ("file_error", 1),
             ("file_invalid", 1),

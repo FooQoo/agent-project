@@ -38,6 +38,7 @@ fn task_fields(task: &TaskView) -> TaskSummaryFields {
         acceptance_done: task.acceptance.iter().filter(|item| item.done).count() as u32,
         acceptance_total: task.acceptance.len() as u32,
         acceptance_error: task.acceptance_error,
+        planned_version: task.planned_version.clone(),
         created_at: crate::clock::format_utc(task.created_at),
         updated_at: crate::clock::format_utc(task.updated_at),
         pending_request_id: task.pending_request_id.clone(),
@@ -209,6 +210,7 @@ pub fn project(shared: &Path, snapshot: &ProjectSnapshot) -> Projection {
         &qa_hash,
         &project_id,
         &snapshot.project.name,
+        (&snapshot.versions, &snapshot.current_version),
         tasks
             .iter()
             .filter(|task| !task.archived)
@@ -240,6 +242,8 @@ pub fn project(shared: &Path, snapshot: &ProjectSnapshot) -> Projection {
     Projection {
         project_id,
         project_name: snapshot.project.name.clone(),
+        versions: snapshot.versions.clone(),
+        current_version: snapshot.current_version.clone(),
         version,
         tasks,
         epics,

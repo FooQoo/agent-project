@@ -42,6 +42,7 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `ai_only` | A person withdraws a question, asks one, or accepts a request or an answer. Only an agent can do these. | 1 | 403 |
 | `choice_unknown` | The answer names a choice that is not in the question. | 2 | 422 |
 | `task_status_changed` | A move named the status it started from (`fromStatus`), and the task is no longer in it. Nothing is written; the body adds `currentStatus`. | 1 | 409 |
+| `planned_version_changed` | A planned-version change named the version the page showed (`expectedPlannedVersion`), and the task has another one now. Nothing is written; the body adds `currentPlannedVersion`. | 1 | 409 |
 
 ## Projects, epics, and attachments
 

@@ -42,6 +42,7 @@
 | `ai_only` | 人が質問の取り下げ、質問の作成、依頼や回答の受け付けをしようとした。これらを行えるのはAIだけ。 | 1 | 403 |
 | `choice_unknown` | 回答が、質問にない選択肢を指している。 | 2 | 422 |
 | `task_status_changed` | 移動が元の状態（`fromStatus`）を指定したが、タスクがもうその状態にいない。何も書かず、本文に`currentStatus`を加える。 | 1 | 409 |
+| `planned_version_changed` | 予定の版の変更が、画面が表示していた版（`expectedPlannedVersion`）を指定したが、タスクがもう別の版を持っている。何も書かず、本文に`currentPlannedVersion`を加える。 | 1 | 409 |
 
 ## プロジェクト・エピック・添付
 

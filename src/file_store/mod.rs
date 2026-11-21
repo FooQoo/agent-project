@@ -42,6 +42,7 @@ pub use ops::{
     MAX_RESULTS, ProjectVersions, RecordedResult, RequestImage, ResultInput, SendRequestInput,
     VersionChoice,
 };
+pub use ops::{EpicVersionPlan, EpicVersionScope, SkipReason};
 use reader::ProjectSnapshot;
 
 /// Optional TASK.md fields applied together to the latest stored Markdown.

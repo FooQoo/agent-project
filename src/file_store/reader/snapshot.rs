@@ -32,6 +32,12 @@ pub struct ProjectSnapshot {
     pub epics: Vec<EpicView>,
     pub tasks: Vec<TaskView>,
     pub problems: Vec<Problem>,
+    /// The project's versions and its current one. The board reads them; agents read them with
+    /// the version commands, so the snapshot JSON leaves them out.
+    #[serde(skip)]
+    pub versions: Vec<String>,
+    #[serde(skip)]
+    pub current_version: Option<String>,
     /// Every question of the project with its state, in ID order. Agents read them with
     /// `message ls` and `message show`, so the snapshot JSON leaves them out.
     #[serde(skip)]
@@ -103,6 +109,8 @@ pub(crate) fn read_snapshot_locked(
     let cursor = ChangeCursor::new(project_id.clone(), &version)?;
     let file = read_project_file(shared, project_id)?;
     let next_task_id = file.next_task_id;
+    let versions = file.versions.clone();
+    let current_version = file.current_version.clone();
     let project = meta_of(file);
     let mut tasks = Vec::new();
     let (epics, mut problems) = read_epics(shared, &project_dir);
@@ -137,6 +145,8 @@ pub(crate) fn read_snapshot_locked(
         epics,
         tasks,
         problems,
+        versions,
+        current_version,
         questions,
         requests,
     })

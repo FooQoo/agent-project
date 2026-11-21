@@ -193,7 +193,7 @@ impl FileStore {
     }
 
     /// Put `target` on the task and record the change. Returns whether anything changed.
-    fn apply_version(
+    pub(super) fn apply_version(
         &self,
         project: &ProjectId,
         task: &mut TaskFile,
@@ -230,7 +230,7 @@ impl FileStore {
 }
 
 /// The concrete version a choice stands for, checked against the project's list.
-fn resolve(
+pub(super) fn resolve(
     shared: &std::path::Path,
     project: &ProjectId,
     choice: &VersionChoice,
