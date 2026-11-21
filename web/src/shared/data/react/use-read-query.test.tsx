@@ -52,6 +52,17 @@ describe('useReadQuery', () => {
     await waitFor(() => expect(other).toHaveBeenCalledTimes(2));
   });
 
+  it('reads again on a reset, but not on an ordinary change, when it names no change filter', async () => {
+    const { wrapper, emit } = fakeCore();
+    const read = vi.fn(async () => 'list');
+    renderHook(() => useReadQuery({ queryKey: ['list'], queryFn: read }), { wrapper });
+    await waitFor(() => expect(read).toHaveBeenCalledTimes(1));
+    await emit(changed(P1));
+    expect(read).toHaveBeenCalledTimes(1);
+    await emit(null);
+    await waitFor(() => expect(read).toHaveBeenCalledTimes(2));
+  });
+
   it('joins a read that is running instead of starting another', async () => {
     const { wrapper, emit } = fakeCore();
     let release: (value: string) => void = () => {};

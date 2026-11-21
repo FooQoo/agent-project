@@ -18,7 +18,7 @@ export interface ReadQueryOptions<T> {
   queryKey: QueryKey;
   queryFn: () => Promise<T>;
   enabled?: boolean;
-  /** Whether a change notification makes this read stale. Without it no notification does. */
+  /** Whether a change notification makes this read stale. Without it only a reset (a lost stream) does. */
   changedBy?: (event: ChangedEvent) => boolean;
   /** Reads again this often while the tab is shown (a log that is followed). */
   refetchIntervalMs?: number;
@@ -45,16 +45,15 @@ export function useReadQuery<T>(
   const hash = JSON.stringify(queryKey);
   const changedBy = useRef(options.changedBy);
   changedBy.current = options.changedBy;
-  const follows = options.changedBy !== undefined;
   // biome-ignore lint/correctness/useExhaustiveDependencies: the key is compared by its hash.
   useEffect(() => {
-    if (!core || !follows) return undefined;
+    if (!core) return undefined;
     return core.subscribeChanges((event) => {
       // `null`: the stream can no longer be trusted. A read that is running is joined.
-      if (event === null || changedBy.current?.(event))
+      if (event === null || changedBy.current?.(event) === true)
         void client.invalidateQueries({ queryKey, exact: true }, { cancelRefetch: false });
     });
-  }, [core, client, hash, follows]);
+  }, [core, client, hash]);
   return useQuery<T, Error>(
     {
       queryKey,
