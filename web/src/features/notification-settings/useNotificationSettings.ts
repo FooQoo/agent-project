@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { queryKeys } from '../../shared/data/core/query-keys';
-import { useReadQuery } from '../../shared/data/react';
+import { useReadClient, useReadQuery } from '../../shared/data/react';
+import { useWrite } from '../../shared/data/react/use-write';
 import { loadNotificationSettings, saveNotificationSettings } from './api';
 import type { NotificationSettings, NotificationSettingsPatch } from './model';
+
+const WRITE_KEY = ['notification-settings-save'] as const;
 
 export type NotificationSettingsState =
   | { status: 'loading' }
@@ -21,9 +24,8 @@ export function useNotificationSettings(
 ) {
   const [state, setState] = useState<NotificationSettingsState>({ status: 'loading' });
   const saved = useRef<NotificationSettings | null>(null);
-  const queue = useRef<Promise<unknown>>(Promise.resolve());
-  const pending = useRef(0);
   const alive = useRef(true);
+  const client = useReadClient();
 
   const query = useReadQuery({ queryKey: queryKeys.notificationSettings(), queryFn: load });
   const { data, isError, dataUpdatedAt } = query;
@@ -41,6 +43,25 @@ export function useNotificationSettings(
     };
   }, []);
 
+  // The saves of one scope run one at a time, in the order they were made. A save that finishes
+  // while another is still waiting shows nothing yet; the last one decides what is shown.
+  const lastOne = () => client.isMutating({ mutationKey: WRITE_KEY }) <= 1;
+  const write = useWrite<NotificationSettings, NotificationSettingsPatch>({
+    mutationKey: WRITE_KEY,
+    scope: { id: WRITE_KEY[0] },
+    mutationFn: (patch) => save(patch),
+    onSuccess: (settings) => {
+      saved.current = settings;
+      if (alive.current && lastOne()) setState({ status: 'ready', settings, saveFailed: false });
+    },
+    onError: () => {
+      const last = saved.current;
+      if (alive.current && last && lastOne())
+        setState({ status: 'ready', settings: last, saveFailed: true });
+    },
+  });
+  const { mutate } = write;
+
   const change = useCallback(
     (patch: NotificationSettingsPatch) => {
       setState((current) =>
@@ -48,27 +69,9 @@ export function useNotificationSettings(
           ? { status: 'ready', settings: { ...current.settings, ...patch }, saveFailed: false }
           : current,
       );
-      pending.current += 1;
-      queue.current = queue.current.then(() =>
-        save(patch).then(
-          (settings) => {
-            pending.current -= 1;
-            saved.current = settings;
-            if (alive.current && pending.current === 0) {
-              setState({ status: 'ready', settings, saveFailed: false });
-            }
-          },
-          () => {
-            pending.current -= 1;
-            const last = saved.current;
-            if (alive.current && last && pending.current === 0) {
-              setState({ status: 'ready', settings: last, saveFailed: true });
-            }
-          },
-        ),
-      );
+      mutate(patch);
     },
-    [save],
+    [mutate],
   );
 
   return { state, change };

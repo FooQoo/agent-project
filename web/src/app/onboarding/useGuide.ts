@@ -3,6 +3,7 @@
 // parts take only props; the timers and the one request live here.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useWrite } from '../../shared/data/react/use-write';
 import { i18n } from '../../shared/i18n';
 import type { ProjectId } from '../../shared/api/contracts';
 import { type GuideOutcome, markGuideSeen, readGuide } from './api';
@@ -68,10 +69,17 @@ export function useGuide({
   });
 
   // Leaves the guide at once. A failed record must not hold the user: the guide is offered again.
-  const leave = useCallback((outcome: GuideOutcome | null) => {
-    setScreen({ kind: 'hidden' });
-    if (outcome) void markGuideSeen(outcome).catch(() => {});
-  }, []);
+  const { mutate: recordSeen } = useWrite<unknown, GuideOutcome>({
+    mutationKey: ['guide-seen'],
+    mutationFn: (outcome) => markGuideSeen(outcome),
+  });
+  const leave = useCallback(
+    (outcome: GuideOutcome | null) => {
+      setScreen({ kind: 'hidden' });
+      if (outcome) recordSeen(outcome);
+    },
+    [recordSeen],
+  );
 
   // A running card stays on screen for at least RUNNING_MIN_MS before its step can move on.
   useEffect(() => {

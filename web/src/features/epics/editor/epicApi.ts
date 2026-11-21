@@ -1,5 +1,7 @@
+import { useCallback } from 'react';
 import { addEpicAttachments, deleteEpic, deleteEpicAttachment, updateEpic } from '../api';
-import type { Epic } from '../../../shared/api/contracts';
+import type { Epic, ProjectId } from '../../../shared/api/contracts';
+import { useWrite } from '../../../shared/data/react/use-write';
 import type { EditorAttachment } from '../../../shared/ui/editor/attachmentTypes';
 
 /**
@@ -30,32 +32,46 @@ export interface EpicApi {
 }
 
 /**
- * The writes of one epic's dialog, bound to the project the dialog was opened in. `changed` runs
- * after each write that went through, so the board shows what was saved.
+ * The writes of epic dialogs. Each write is one mutation, so two at once are each tracked; after
+ * one that went through, `changed` runs with the project it was made in, so the board shows what
+ * was saved. Returns the writes of one epic, bound to the project the dialog was opened in.
  */
-export function epicApi(projectId: string, epicId: string, changed: () => void): EpicApi {
-  const done = async <T>(write: Promise<T>): Promise<T> => {
-    const result = await write;
-    changed();
-    return result;
-  };
-  return {
-    addImages: async (files, requestId) => {
-      await done(addEpicAttachments(projectId, epicId, files, requestId));
+export function useEpicWrites(changed: (projectId: ProjectId) => void) {
+  const { mutateAsync } = useWrite<
+    unknown,
+    { projectId: ProjectId; write: () => Promise<unknown> }
+  >({
+    mutationKey: ['epic-write'],
+    mutationFn: ({ write }) => write(),
+    onSuccess: (_result, { projectId }) => changed(projectId),
+  });
+  return useCallback(
+    (projectId: ProjectId, epicId: string): EpicApi => {
+      const done = async <T>(write: () => Promise<T>) =>
+        (await mutateAsync({ projectId, write })) as T;
+      return {
+        addImages: async (files, requestId) => {
+          await done(() => addEpicAttachments(projectId, epicId, files, requestId));
+        },
+        removeImage: async (attachmentId) => {
+          await done(() => deleteEpicAttachment(projectId, epicId, attachmentId));
+        },
+        saveWaves: async (waves) => {
+          await done(() => updateEpic(projectId, epicId, { waves }));
+        },
+        save: async (input) => {
+          await done(() => updateEpic(projectId, epicId, input));
+        },
+        enterDraft: async () =>
+          (await done(() => updateEpic(projectId, epicId, { draft: 'human' }))).epic,
+        leaveDraft: async () => {
+          await done(() => updateEpic(projectId, epicId, { draft: null }));
+        },
+        remove: async () => {
+          await done(() => deleteEpic(projectId, epicId));
+        },
+      };
     },
-    removeImage: async (attachmentId) => {
-      await done(deleteEpicAttachment(projectId, epicId, attachmentId));
-    },
-    saveWaves: async (waves) => {
-      await done(updateEpic(projectId, epicId, { waves }));
-    },
-    save: async (input) => {
-      await done(updateEpic(projectId, epicId, input));
-    },
-    enterDraft: async () => (await done(updateEpic(projectId, epicId, { draft: 'human' }))).epic,
-    leaveDraft: async () => {
-      await done(updateEpic(projectId, epicId, { draft: null }));
-    },
-    remove: () => done(deleteEpic(projectId, epicId)),
-  };
+    [mutateAsync],
+  );
 }

@@ -1,7 +1,8 @@
 import type { MutableRefObject } from 'react';
 import type { ProjectId } from '../../../shared/api/contracts';
-import { AskAiDialog } from './AskAiDialog';
+import { AskAiDialog, type AskAiInput } from './AskAiDialog';
 import type { PickerTask } from './pickerTasks';
+import { useWrite } from '../../../shared/data/react/use-write';
 import { sendMessageRequest } from './sendRequest';
 
 export interface AskAiProps {
@@ -28,6 +29,10 @@ export function AskAi({
   closeGuard,
   tasks,
 }: AskAiProps & { kind?: 'dialog' | 'sheet' }) {
+  const send = useWrite<void, AskAiInput>({
+    mutationKey: ['ask-ai', projectId],
+    mutationFn: (input) => sendMessageRequest(projectId, input),
+  });
   return (
     <AskAiDialog
       kind={kind}
@@ -36,7 +41,7 @@ export function AskAi({
       tasks={tasks}
       onClose={onClose}
       onSubmit={async (input) => {
-        await sendMessageRequest(projectId, input);
+        await send.mutateAsync(input);
         onSent?.();
       }}
     />

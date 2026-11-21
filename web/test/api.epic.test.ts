@@ -1,3 +1,4 @@
+import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   addEpicAttachments,
@@ -6,7 +7,7 @@ import {
   updateEpic,
   WriteError,
 } from '../src/app/api';
-import { epicApi } from '../src/features/epics/editor/epicApi';
+import { useEpicWrites } from '../src/features/epics/editor/epicApi';
 import type { EditorAttachment } from '../src/shared/ui/editor/attachmentTypes';
 
 const PROJECT = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
@@ -22,6 +23,11 @@ function stubFetch(status: number, body: unknown) {
 
 afterEach(() => vi.unstubAllGlobals());
 
+function apiFor(changed: () => void = () => {}) {
+  const { result } = renderHook(() => useEpicWrites(changed));
+  return result.current(PROJECT, 'FILE-SHARE');
+}
+
 describe('epic writes', () => {
   it('patches only the given fields of the epic', async () => {
     const fetchMock = stubFetch(200, { epic: EPIC, changed: true });
@@ -35,7 +41,7 @@ describe('epic writes', () => {
 
   it('saves the whole epic document as document, and its body as body', async () => {
     const fetchMock = stubFetch(200, { epic: EPIC, changed: true });
-    const api = epicApi(PROJECT, 'FILE-SHARE', () => {});
+    const api = apiFor();
     await api.save({
       name: 'File share',
       color: '#7C3AED',
@@ -58,7 +64,7 @@ describe('epic writes', () => {
 
   it('enters a draft with draft and takes it back with a discard', async () => {
     const fetchMock = stubFetch(200, { epic: { ...EPIC, draft: 'human' } });
-    const api = epicApi(PROJECT, 'FILE-SHARE', () => {});
+    const api = apiFor();
     expect((await api.enterDraft()).draft).toBe('human');
     await api.leaveDraft();
     const [first, second] = fetchMock.mock.calls;

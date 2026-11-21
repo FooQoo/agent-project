@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { CheckIcon, XIcon } from 'lucide-react';
 import { RadioGroup as RadioGroupPrimitive } from 'radix-ui';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog';
+import { useWrite } from '../../../shared/data/react/use-write';
 import { Surface } from '../../../shared/ui/surface/Surface';
 import { THEME_SWATCHES } from './themeSwatches';
 import { RadioGroup } from '@/shared/ui/radio-group';
@@ -19,6 +20,7 @@ import {
   markLocalChoice,
   savePreferences,
   type PreferencesEndpoint,
+  type PreferencesPatch,
 } from '../../../shared/preferences';
 import { selectLocale, type Locale, type LocaleStorageProvider } from '../../../shared/i18n';
 import {
@@ -112,6 +114,13 @@ export function SettingsDialog({
     return () => observer.disconnect();
   }, []);
 
+  // The save goes through `savePreferences`, which keeps the saves in the order they were chosen.
+  const saveChoice = useWrite<unknown, { endpoint: PreferencesEndpoint; patch: PreferencesPatch }>({
+    mutationFn: ({ endpoint, patch }) => savePreferences(endpoint, patch),
+    onSuccess: () => setSaveError(false),
+    onError: () => setSaveError(true),
+  });
+
   /** Shows the choice at once, then saves it; a failed save is shown in the dialog. */
   const save = (cached: boolean, patch: { locale?: Locale; theme?: Theme }) => {
     if (!preferencesEndpoint) {
@@ -119,10 +128,7 @@ export function SettingsDialog({
       setSaveError(!cached);
       return;
     }
-    savePreferences(preferencesEndpoint, patch).then(
-      () => setSaveError(false),
-      () => setSaveError(true),
-    );
+    saveChoice.mutate({ endpoint: preferencesEndpoint, patch });
   };
 
   const chooseTheme = (value: string) => {

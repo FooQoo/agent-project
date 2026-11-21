@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useWrite } from '../../shared/data/react/use-write';
 import { getPushStatus } from './api';
 import {
   pushView,
@@ -8,7 +9,7 @@ import {
   type PushSupport,
   type PushView,
 } from './state';
-import { disablePush, enablePush, hasBrowserSubscription } from './subscribe';
+import { disablePush, enablePush, hasBrowserSubscription, type EnableResult } from './subscribe';
 
 export interface PushController {
   view: PushView;
@@ -31,7 +32,6 @@ export function usePushNotifications(): PushController {
   const [permission, setPermission] = useState<PushPermission>(readPermission);
   const [status, setStatus] = useState<PushStatus | null>(null);
   const [publicKey, setPublicKey] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -50,27 +50,32 @@ export function usePushNotifications(): PushController {
     void refresh();
   }, [refresh]);
 
-  const enable = useCallback(() => {
-    if (publicKey === null || busy) return;
-    setBusy(true);
-    setFailed(false);
-    void enablePush(publicKey).then(async (result) => {
-      setFailed(result === 'failed');
-      await refresh();
-      setBusy(false);
-    });
-  }, [publicKey, busy, refresh]);
+  // A turn-on or turn-off finishes only once the status is read again, so `busy` covers both.
+  const enabling = useWrite<EnableResult, string>({
+    mutationKey: ['push-enable'],
+    mutationFn: (key) => enablePush(key),
+    onSuccess: (result) => setFailed(result === 'failed'),
+    onSettled: refresh,
+  });
+  const disabling = useWrite<boolean>({
+    mutationKey: ['push-disable'],
+    mutationFn: () => disablePush(),
+    onSuccess: (done) => setFailed(!done),
+    onSettled: refresh,
+  });
+  const busy = enabling.isPending || disabling.isPending;
 
-  const disable = useCallback(() => {
-    if (busy) return;
-    setBusy(true);
+  const enable = () => {
+    if (publicKey === null || enabling.isWriting() || disabling.isWriting()) return;
     setFailed(false);
-    void disablePush().then(async (done) => {
-      setFailed(!done);
-      await refresh();
-      setBusy(false);
-    });
-  }, [busy, refresh]);
+    enabling.mutate(publicKey);
+  };
+
+  const disable = () => {
+    if (enabling.isWriting() || disabling.isWriting()) return;
+    setFailed(false);
+    disabling.mutate();
+  };
 
   return {
     view: pushView(support, permission, status),

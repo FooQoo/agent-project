@@ -22,6 +22,7 @@ import {
 } from './model/messages';
 import type { MessagesPanelTarget } from './useMessagesPanel';
 import { useMessageDetail } from './useMessageDetail';
+import { useMessageWrites } from './useMessageWrites';
 import { useScrollToTop } from './useScrollToTop';
 import { useSummaries } from './useSummaries';
 import './messages.css';
@@ -81,8 +82,9 @@ export function MessagesSurface({
   const [fromList, setFromList] = useState(false);
   const [choiceId, setChoiceId] = useState<string | null>(null);
   const [text, setText] = useState('');
-  const [busy, setBusy] = useState(false);
   const images = useAttachmentState({ resolveStoredUrl: () => '' });
+  const writes = useMessageWrites(api, projectId);
+  const busy = writes.busy;
   const [failure, setFailure] = useState<'conflict' | 'gone' | 'failed' | 'withdraw' | null>(null);
 
   const listed = useMemo(
@@ -125,40 +127,31 @@ export function MessagesSurface({
 
   const send = async () => {
     if (!opened || !sendable) return;
-    setBusy(true);
     setFailure(null);
     try {
-      await api.answer(
-        projectId,
-        [
-          {
-            questionId: opened.id,
-            ...(choiceId !== null ? { choiceId } : {}),
-            ...(text.trim() !== '' ? { text } : {}),
-          },
-        ],
-        images.attachments,
-      );
+      const answers = [
+        {
+          questionId: opened.id,
+          ...(choiceId !== null ? { choiceId } : {}),
+          ...(text.trim() !== '' ? { text } : {}),
+        },
+      ];
+      if (!(await writes.answer(answers, images.attachments))) return;
       onChanged();
       show(null);
     } catch (error) {
       setFailure(failureKey(error));
-    } finally {
-      setBusy(false);
     }
   };
   const withdraw = async () => {
     if (!opened) return;
-    setBusy(true);
     setFailure(null);
     try {
-      await api.withdraw(projectId, opened.id);
+      if (!(await writes.withdraw(opened.id))) return;
       onChanged();
       show(null);
     } catch {
       setFailure('withdraw');
-    } finally {
-      setBusy(false);
     }
   };
 

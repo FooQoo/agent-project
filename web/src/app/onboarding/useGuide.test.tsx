@@ -98,7 +98,7 @@ describe('useGuide', () => {
     await waitFor(() => expect(result.current.screen.kind).toBe('welcome'));
     act(() => result.current.skip());
     expect(result.current.screen.kind).toBe('hidden');
-    expect(api.markGuideSeen).toHaveBeenCalledWith('skipped');
+    await waitFor(() => expect(api.markGuideSeen).toHaveBeenCalledWith('skipped'));
   });
 
   it('hides even when recording the outcome fails', async () => {
@@ -106,7 +106,7 @@ describe('useGuide', () => {
     const { result } = await started();
     act(() => result.current.exit());
     expect(result.current.screen.kind).toBe('hidden');
-    expect(api.markGuideSeen).toHaveBeenCalledWith('skipped');
+    await waitFor(() => expect(api.markGuideSeen).toHaveBeenCalledWith('skipped'));
   });
 
   it('runs every step on local cards and records completion', async () => {
@@ -171,7 +171,8 @@ describe('useGuide', () => {
 
     act(() => result.current.finish());
     expect(result.current.screen.kind).toBe('hidden');
-    expect(api.markGuideSeen).toHaveBeenCalledTimes(1);
+    // Under fake timers RTL's waitFor would never poll; vi.waitFor advances them.
+    await vi.waitFor(() => expect(api.markGuideSeen).toHaveBeenCalledTimes(1));
     expect(api.markGuideSeen).toHaveBeenCalledWith('completed');
   });
 
@@ -180,7 +181,7 @@ describe('useGuide', () => {
     act(() => result.current.sent());
     act(() => result.current.exit());
     expect(result.current.screen.kind).toBe('hidden');
-    expect(api.markGuideSeen).toHaveBeenCalledWith('skipped');
+    await waitFor(() => expect(api.markGuideSeen).toHaveBeenCalledWith('skipped'));
   });
 
   it('shows the welcome on "Try it" whatever the server says, and records nothing on exit', async () => {
