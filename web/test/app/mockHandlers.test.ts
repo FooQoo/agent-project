@@ -2,7 +2,11 @@
 // sample-data mode and the demo share.
 import { describe, expect, it } from 'vitest';
 import type { ChangedEvent } from '../../src/shared/data/api/contracts';
-import { useMockServer } from '../support/msw';
+import {
+  assertNoUnhandledProductRequests,
+  takeUnhandledProductRequests,
+  useMockServer,
+} from '../support/msw';
 import { boardOf, PROJECT, start, taskOf } from './mockServerCases';
 
 const TOKEN = { 'X-Agboard-Token': 'mock-token' };
@@ -71,6 +75,14 @@ describe('mock handlers: requests', () => {
 
   it('fails a product request that no handler answers', async () => {
     await expect(fetch('/api/projects', { headers: TOKEN })).rejects.toThrow();
+    expect(takeUnhandledProductRequests()).toEqual([expect.stringContaining('GET')]);
+  });
+
+  it('records the request even when the caller swallows the error, and the teardown fails it', async () => {
+    await fetch('/api/projects', { headers: TOKEN }).catch(() => undefined);
+    // What `test/setup.ts` runs after each test: without the opt-out above, this test would fail.
+    expect(() => assertNoUnhandledProductRequests()).toThrow('GET');
+    expect(takeUnhandledProductRequests()).toEqual([]);
   });
 });
 

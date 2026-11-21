@@ -1,5 +1,6 @@
+import { takeUnhandledProductRequests } from '../support/msw';
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import { makeTask, PROJECT_A } from '../fixtures';
 import type { MonitorTask, MonitorWrites } from '../../src/pages/monitor/contracts';
 import type { Lanes } from '../../src/pages/monitor/model/overlay';
@@ -33,6 +34,11 @@ function setup(restore: MonitorWrites['restore']) {
     return { overlay, sheet };
   });
 }
+
+// Opt-out of the unanswered product request check of `test/setup.ts`: The archive sheet reads its first page with the real `fetch`, which these tests do not stub; they are about the restore, not that read.
+afterEach(() => {
+  takeUnhandledProductRequests();
+});
 
 describe('restoring an archived task', () => {
   it('shows the task again at once, before any read omits it', async () => {

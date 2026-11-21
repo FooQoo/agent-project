@@ -1,3 +1,4 @@
+import { takeUnhandledProductRequests } from './support/msw';
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -57,6 +58,11 @@ afterEach(() => {
 
 const lane = (name: string) => screen.getByRole('region', { name });
 const taskButton = (title: string) => screen.getByRole('button', { name: new RegExp(title) });
+
+// Opt-out of the unanswered product request check of `test/setup.ts`: The app also reads `/api/remote/push` with the real `fetch`, which these tests do not stub; no test here is about that read.
+afterEach(() => {
+  takeUnhandledProductRequests();
+});
 
 describe('App', () => {
   it('shows Loading… first, then the board with its name in the header and the page title', async () => {
