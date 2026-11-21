@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { useWrite } from '../../shared/data/react/use-write';
 import type { ProjectId, TaskSummary } from '../../shared/api/contracts';
 import { type BacklogTarget, sendTask, withOpenQuestions } from './send';
 
@@ -62,21 +63,24 @@ export function useBacklogMove(
   const confirmed = useRef(false);
   const dismissNotice = useCallback(() => setNotice(null), []);
 
+  const mutation = useWrite<unknown, { id: number; ack: boolean; to: BacklogTarget }>({
+    mutationKey: ['backlog-move'],
+    mutationFn: ({ id, ack, to }) => sendTask(projectId as ProjectId, id, ack, to),
+    onMutate: ({ id, to }) => apply(id, to),
+    onSuccess: (_result, { id }) => settle(id),
+    onError: (cause, { id }) => {
+      revert(id);
+      setNotice(refusal(cause));
+    },
+    onSettled: onDone,
+  });
+  const { mutateAsync } = mutation;
   const run = useCallback(
     async (id: number, ack: boolean, to: BacklogTarget) => {
       if (projectId === null) return;
-      apply(id, to);
-      try {
-        await sendTask(projectId, id, ack, to);
-        settle(id);
-      } catch (cause) {
-        revert(id);
-        setNotice(refusal(cause));
-      } finally {
-        onDone();
-      }
+      await mutateAsync({ id, ack, to }).catch(() => {});
     },
-    [projectId, apply, settle, revert, onDone, refusal],
+    [projectId, mutateAsync],
   );
 
   const request = useCallback(
