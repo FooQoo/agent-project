@@ -72,7 +72,7 @@ pub struct EditArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "A draft task (draft: human or ai) is read-only for agents here: mv fails with task_is_draft (exit code 1). Wait for the user to finalize or start it.\n\nExamples:\n  agboard --project demo mv 12 doing --actor ai --reason \"Starting\"\n  agboard --project demo mv 12 done --actor ai --reason \"Finished\""
+    after_help = "A task a person is editing (draft: human) is read-only here: mv fails with task_is_draft (exit code 1). Wait for the user to finalize it.\n\nMoving a Backlog task to todo is how a plan is handed over to be worked on; saving, answering, and checking conditions never do. Only a person does it: an agent is refused with human_only. When a question about the task is still open, it is refused with send_with_open_questions until the person confirms with --force. A task that is not in the Backlog is moved like any other.\n\nExamples:\n  agboard --project demo mv 12 doing --actor ai --reason \"Starting\"\n  agboard --project demo mv 12 done --actor ai --reason \"Finished\"\n  agboard --project demo mv 12 todo --actor human\n  agboard --project demo mv 12 todo --actor human --force"
 )]
 pub struct MvArgs {
     /// ID of the task
@@ -81,6 +81,9 @@ pub struct MvArgs {
     pub column: ColumnArg,
     #[command(flatten)]
     pub change: ChangeArgs,
+    /// Hand over a Backlog task even though a question about it is open (a person only)
+    #[arg(long)]
+    pub force: bool,
 }
 
 #[derive(Args, Debug)]
@@ -101,21 +104,6 @@ pub struct StateArgs {
     /// Who is making this change
     #[arg(long, value_enum, required = true)]
     pub actor: ActorArg,
-}
-
-#[derive(Args, Debug)]
-#[command(
-    after_help = "Sending is the only operation that hands a plan over to be worked on; saving, answering, and checking conditions never do. Only a person sends a Backlog task: an agent is refused with human_only. When a question about the task is still open, the send is refused with send_with_open_questions until the person confirms with --force. A task that is not in the Backlog changes nothing. A task a person is editing is refused with task_is_draft.\n\nExamples:\n  agboard --project demo send 12 --actor human\n  agboard --project demo send 12 --actor human --force"
-)]
-pub struct SendArgs {
-    /// ID of the Backlog task to send to Todo
-    pub id: i64,
-    /// Who is making this change
-    #[arg(long, value_enum, required = true)]
-    pub actor: ActorArg,
-    /// Send even though a question about the task is open
-    #[arg(long)]
-    pub force: bool,
 }
 
 #[derive(Args, Debug)]

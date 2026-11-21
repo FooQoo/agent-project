@@ -6,6 +6,7 @@
 //! the body save cannot interleave with another writer. Direct editor saves
 //! do not take the lock.
 
+mod acceptance_check;
 mod agent;
 mod agent_stopped;
 

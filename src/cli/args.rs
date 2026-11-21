@@ -64,8 +64,6 @@ pub enum Command {
     Mv(MvArgs),
     /// Report a task's run state: idle or running
     State(StateArgs),
-    /// Send a Backlog plan to Todo
-    Send(SendArgs),
     /// Append a work note to a task history
     History(HistoryArgs),
     /// Ask the user questions, wait for the answers, and handle requests from the user
@@ -120,7 +118,6 @@ impl Command {
             Command::Edit(_) => "edit",
             Command::Mv(_) => "mv",
             Command::State(_) => "state",
-            Command::Send(_) => "send",
             Command::History(_) => "history",
             Command::Message(_) => "message",
             Command::Rm(_) => "rm",

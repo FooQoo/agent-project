@@ -113,7 +113,7 @@ When you ask an agent for work that is more than one task, it decides what you a
 
 1. **Questions about the plan.** The agent asks what it cannot settle itself, as ordinary questions with choices and a recommendation. A task that refers to an open question shows **Pending** until you answer.
 2. **Revisions.** The agent changes the epic and the tasks as your answers say, and asks more questions if something is still open.
-3. **Send.** Only you send a Backlog plan to Todo, with `agboard epic send <EPIC-ID> --actor human` for the epic or `agboard send <id> --actor human` for one task. An agent that tries gets `human_only`. If a question on one of the tasks is still open, the send is refused (`send_with_open_questions`) until you confirm it with `--force`. The history records "A person sent the task to Todo."
+3. **Send.** Only you send a Backlog plan to Todo, with `agboard epic send <EPIC-ID> --actor human` for the epic or `agboard mv <id> todo --actor human` for one task. An agent that tries gets `human_only`. If a question on one of the tasks is still open, the send is refused (`send_with_open_questions`) until you confirm it with `--force`. The history records "A person sent the task to Todo."
 4. **Work.** After the send, the agent works through the tasks in the epic's order without asking each time.
 
 After the start, the agent calls you only when:
@@ -188,7 +188,7 @@ Only the board on your own computer can start or stop these sessions. The phone 
 
 A draft a person is writing (`draft: "human"`) is read-only for agents: `edit`, `mv`, `state`, and `history add` fail with `task_is_draft`. Work on other tasks until the user finalizes it.
 
-A Backlog card is read-only for agents' moves: `mv` and `state` fail with `task_in_backlog`, while `edit` and `history add` work. An agent creates a Backlog card with `add --actor ai --backlog` only for a request for the plan; without `--backlog` its `add` creates an ordinary Todo task, also when it is for the user. Only a person sends a card to Todo (`send`, `epic send`); an agent's `send` and `epic send` fail with `human_only`.
+A Backlog card is read-only for agents' moves: `mv` and `state` fail with `task_in_backlog`, while `edit` and `history add` work. An agent creates a Backlog card with `add --actor ai --backlog` only for a request for the plan; without `--backlog` its `add` creates an ordinary Todo task, also when it is for the user. Only a person sends a card to Todo (`mv <id> todo`, `epic send`); an agent's `mv <id> todo` and `epic send` fail with `human_only`.
 
 On `AGBOARD_ERROR`, a missing project, a technical connection failure, or an unreadable board, report the problem and stop board-dependent changes until a valid progress table is available. A timeout or an interrupted wait does not answer or expire a question. For causes and fixes, see [Troubleshooting](../operations/troubleshooting).
 

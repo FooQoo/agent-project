@@ -571,8 +571,9 @@ fn a_backlog_plan_is_never_picked_by_task_wait_until_a_person_sends_it() {
         &[
             "--project",
             "Demo",
-            "send",
+            "mv",
             &draft.to_string(),
+            "todo",
             "--actor",
             "human",
         ],

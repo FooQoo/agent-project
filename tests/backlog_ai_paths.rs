@@ -131,7 +131,12 @@ fn an_ai_cannot_take_a_card_out_of_the_backlog_by_any_command() {
         let moved = f
             .store
             .move_work_task(&f.project, plan, to, ai("go"), now());
-        assert_eq!(moved.unwrap_err().code(), "task_in_backlog", "{to:?}");
+        let code = if to == Column::Todo {
+            "human_only"
+        } else {
+            "task_in_backlog"
+        };
+        assert_eq!(moved.unwrap_err().code(), code, "{to:?}");
     }
     for state in [RunState::Running, RunState::Idle] {
         let set = f

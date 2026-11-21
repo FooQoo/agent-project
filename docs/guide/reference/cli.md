@@ -123,20 +123,20 @@ An agent's `add` creates an ordinary Todo task. For a request for the plan only,
 agboard --project "My project" add --title "Plan the launch" --assignee ai --actor ai --backlog --epic LAUNCH
 ```
 
-The Backlog holds settled plans that must not be started yet. An agent never starts them, and its `mv` and `state` on a Backlog card fail with `task_in_backlog` (exit code 1). Only a person sends a card to Todo, at the end of the lane. The Web UI has no Backlog lane or send button yet, so use the command line:
+The Backlog holds settled plans that must not be started yet. An agent never starts them, and its `mv` and `state` on a Backlog card fail with `task_in_backlog` (exit code 1). Only a person sends a card to Todo, at the end of the lane. From the command line, send one card by moving it to `todo`; there is no separate `send` command:
 
 ```sh
-agboard --project "My project" send 12 --actor human
+agboard --project "My project" mv 12 todo --actor human
 agboard --project "My project" epic send LAUNCH --actor human
 agboard --project "My project" epic send LAUNCH --actor human --tasks 1,2
 ```
 
-`send` sends one card. `epic send` sends the whole epic, or only the cards given with `--tasks`, in one save that either moves all of them or none. An agent that runs either gets `human_only`. Sending a card that is already out of the Backlog changes nothing, so a retry is safe, and a card a person is editing in the browser (`draft: human`) cannot be sent (`task_is_draft`). The history records "A person sent the task to Todo."
+`mv <id> todo` sends one card; moving a card that is in the Backlog to any other lane is a person's move too. `epic send` sends the whole epic, or only the cards given with `--tasks`, in one save that either moves all of them or none. An agent that runs either gets `human_only`. A card that is already out of the Backlog is moved like any other card, and a card a person is editing in the browser (`draft: human`) cannot be sent (`task_is_draft`). The history records "A person sent the task to Todo."
 
-If the plan has open questions, the send is refused with `send_with_open_questions` (exit code 1) and the message lists the question IDs. Add `--force` to send anyway; the questions stay open and the card is pending until they are answered:
+If the plan has open questions, the send is refused with `send_with_open_questions` (exit code 1) and the message lists the question IDs. Add `--force` to `mv` (or `epic send`) to send anyway; the questions stay open and the card is pending until they are answered:
 
 ```sh
-agboard --project "My project" send 12 --actor human --force
+agboard --project "My project" mv 12 todo --actor human --force
 ```
 
 A person can take an unstarted Todo card (Idle, no results) back to the Backlog; an agent gets `human_only`:
