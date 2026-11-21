@@ -153,6 +153,8 @@ pub(crate) fn task_view(
         agent_status_changed_at: task.agent_status_changed_at,
         task_status_changed_at: task.task_status_changed_at,
         onboarding_sample: task.onboarding_sample,
+        planned_version: task.planned_version,
+        planned_version_changes: task.planned_version_changes,
         history: task.history,
     }
 }

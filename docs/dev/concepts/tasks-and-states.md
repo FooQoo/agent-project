@@ -90,6 +90,16 @@ The Backlog lane holds settled plans that must not be started yet; it means the 
 - Restoring places the task at the end of the lane it was archived from, with the run state Idle. Archiving always stores Idle, so a restored task has the run state it had at archive time, and the lane and Idle are always a valid pair under the work model; no fallback is needed. The phone's archive list restores through the same `POST …/tasks/{id}/restore` as the PC.
 - Normal snapshots, `ls`, and the hook return unarchived tasks only; `show ID` also shows archived ones. Writes to archived tasks fail with `task_archived`, but their images remain readable. The archive list is sorted by `archivedAt`, newest first, with the higher task ID first for equal times and tasks without a readable `archivedAt` last. `GET …/archive` sorts with `sort_archived_newest_first` (`src/file_store/reader/snapshot.rs`), and the web UI applies `sortArchivedNewestFirst` (`web/src/features/tasks/api/read.ts`) again, so the PC list and the phone's list share one order.
 
+## Planned versions
+
+A project can list versions and name one of them as its current version, and a task can be planned for one version. The plan is optional: a task without one stays without one, and old files without the fields read as no versions and no plans. The project keeps `versions` and `currentVersion` in `project.json`, and each task keeps `plannedVersion` and its trace `plannedVersionChanges` in `task.json`. See [Planned versions](../reference/files.md#planned-versions) for the fields and the format of a version name.
+
+- The planned version of each task is the source of truth. It is set per task or for every task of an epic in one call, and one epic can hold tasks of different versions.
+- Assigning the current version stores its name at that moment. Changing the project's current version later moves no task.
+- A change records the version before and after with its time, in `plannedVersionChanges` and as one ordinary history entry, so a later reader can tell which tasks left a version and when. Setting the version a task already has changes nothing, so a retry adds no entry.
+- The operations (`set_task_planned_version`, `set_epic_planned_version`, `add_version`, `set_current_version`) run under the project's write lock like other writes. Setting a version never changes the assignee, lane, run state, position, or acceptance conditions. It is refused on an archived task, and an AI cannot change a draft or Done task.
+- Not part of the Summary yet; the entry points (CLI and board) read and write these fields later.
+
 ## Ordering and time
 
 - On the desktop board and in the CLI, Todo and Doing sort by ascending position and Done by descending position. The mobile Done list sorts by `taskStatusChangedAt`, newest first. Completion order is never inferred from history. API `tasks` come in ID order; the UI sorts them for display. Epics sort by EPIC-ID.

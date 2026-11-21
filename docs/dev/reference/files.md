@@ -23,6 +23,7 @@ A task is one unit of work on the board. A task's state lives in `task.json`; it
 | `requestAnswers` | Answers recorded by earlier versions of Agent Board, kept as a record. Nothing adds to it. |
 | `archivedAt` | `null`, or the archive time. |
 | `attachments` | ID, name, size, MIME type, and creation time of each image. |
+| `plannedVersion`, `plannedVersionChanges` | The version the task is planned for, and every change of it. See [Planned versions](#planned-versions). |
 | `results` | The results delivered to the requester, oldest first (`[]` when none). See [Results](#results). |
 | `simpleRequest` | Legacy optional metadata `{requestId, payloadHash}` from older short-request submissions. New tasks do not write or use it. |
 | `createdAt`, `updatedAt` | Creation time; when read, the later of the `task.json` and `TASK.md` modification times. |
@@ -83,7 +84,7 @@ The data area is `.agent-board/` in the home directory on every OS, or a non-emp
 
 `docs/` holds the project's own Markdown documents, which the Docs dialog reads (see [Project docs](#project-docs)).
 
-`project.json` holds `formatVersion`, `id`, `name`, `createdAt`, `nextTaskId`, `nextQuestionId`, and `defaultEpicsSeeded`. `nextQuestionId` is the number of the next question; a file without it is read as `1`. The last one is `true` once the project has been offered the default epics `BUG` and `ENHANCEMENT`; it is written once, so a default epic that was deleted is not created again. A file without it is read as `false`. `epic.json` holds `formatVersion`, `id`, `name`, `color`, `isDraft`, `attachments`, `createdAt`, and `updatedAt`.
+`project.json` holds `formatVersion`, `id`, `name`, `createdAt`, `nextTaskId`, `nextQuestionId`, and `defaultEpicsSeeded`, and may hold `versions` and `currentVersion` (see [Planned versions](#planned-versions)). `nextQuestionId` is the number of the next question; a file without it is read as `1`. The last one is `true` once the project has been offered the default epics `BUG` and `ENHANCEMENT`; it is written once, so a default epic that was deleted is not created again. A file without it is read as `false`. `epic.json` holds `formatVersion`, `id`, `name`, `color`, `isDraft`, `attachments`, `createdAt`, and `updatedAt`.
 
 `EPIC.md` holds the epic's details in Markdown, frontmatter included. Its frontmatter may hold `waves`, the task order as a YAML list in which each item is one wave: a task ID (`566`) or task IDs joined by commas (`569,570,571`). The tasks of one wave can run in parallel, and a wave starts when every task of the earlier waves is Done. The API and `epic show --json` return the whole text as `document`, the text without frontmatter as `body`, and the parsed order as `waves` (a list of task ID lists).
 
@@ -133,6 +134,37 @@ history:
   - at: "2026-10-15T01:30:00Z"
     reason: "Verified the setup guide links and recorded the result in the task body."
 ---
+```
+
+### Planned versions {#planned-versions}
+
+A project lists the versions it plans work for, and a task may be planned for one of them. No screen or command sets them yet; the file store operations behind them are the only writers.
+
+- `project.json` may hold `versions`, the version names in the order they were added, and `currentVersion`, the project's current version. `currentVersion` is `null` or absent when none is set, and when set it is one of `versions`. Both are omitted while empty, so a project that never used versions keeps its file unchanged, and an older file without them reads as no versions. A project has at most 200 versions, and each project's list is its own: two projects can list the same name.
+- A version name is 1 to 64 characters with no whitespace or control characters. It is kept and compared exactly, so `v1.8.0` and `1.8.0` are two versions. No format such as semver is required.
+- `task.json` may hold `plannedVersion`, the name of one listed version, and `plannedVersionChanges`, the trace of every change, oldest first. A task has no plan until one is set; nothing assigns a version automatically, and the current version of the project never reaches a task by itself. The fields are omitted while empty, so a task that never had a plan keeps its file unchanged. They live in `task.json`, the file the app owns, and not in `TASK.md`, so editing the body cannot corrupt them.
+- Assigning the project's current version to a task stores that version's name at the moment of saving, never a reference to "current". Changing the current version of the project later moves no task.
+- Each real change appends one entry `{at, from, to}` to `plannedVersionChanges` (`null` means no plan) and one ordinary entry to the `TASK.md` history in the same save, such as `Changed planned version from v1.8.0 to v1.9.0.` The reason is English or Japanese by the same rule as other automatic entries (`リリース予定の版をv1.8.0からv1.9.0に変更しました。`; no plan reads `none` or `なし`). Setting the version a task already has is a no-op: nothing is saved, no history is added, and `updatedAt` does not move.
+- Every write runs under the project's write lock and saves with the atomic task save, after reading the latest files. A retry or a concurrent set of the same version therefore records one change. Setting every task of an epic saves each task on its own: it skips archived tasks (and, for an AI, drafts and Done tasks), leaves tasks that already have the version untouched, and reports which tasks changed, stayed, or were skipped. A failure part way leaves earlier tasks changed, and a retry finishes the rest.
+
+Moving a task from `v1.8.0` to `v1.9.0` changes only these parts of `task.json` and `TASK.md`:
+
+```diff
+   "updatedAt": "2026-10-06T03:00:00Z",
+-  "plannedVersion": "v1.8.0",
++  "plannedVersion": "v1.9.0",
+   "plannedVersionChanges": [
+     { "at": "2026-10-05T03:00:00Z", "from": null, "to": "v1.8.0" },
++    { "at": "2026-10-06T03:00:00Z", "from": "v1.8.0", "to": "v1.9.0" }
+   ]
+```
+
+```yaml
+history:
+  - at: "2026-10-05T03:00:00Z"
+    reason: "Changed planned version from none to v1.8.0."
+  - at: "2026-10-06T03:00:00Z"   # added
+    reason: "Changed planned version from v1.8.0 to v1.9.0."   # added
 ```
 
 ### Results {#results}

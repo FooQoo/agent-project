@@ -23,6 +23,7 @@ Agent Boardが保存するすべてのファイルを、項目と例とともに
 | `requestAnswers` | 以前のAgent Boardが記録した回答。記録として残し、新しくは追加しません。 |
 | `archivedAt` | `null`、またはアーカイブ日時。 |
 | `attachments` | 画像のID・名前・サイズ・MIME型・作成日時。 |
+| `plannedVersion`, `plannedVersionChanges` | タスクのリリース予定の版と、その変更の記録。[リリース予定の版](#planned-versions)を参照。 |
 | `results` | 依頼者に届けた成果。古いものから順に並び、ない場合は`[]`。[成果](#results)を参照。 |
 | `simpleRequest` | 過去の簡易依頼フォームが保存した任意のメタデータ`{requestId, payloadHash}`。新規タスクでは保存・利用しない。 |
 | `createdAt`・`updatedAt` | 作成日時と、取得時に`task.json`と`TASK.md`の更新日時の新しい方。 |
@@ -83,7 +84,7 @@ Agent Boardが保存するすべてのファイルを、項目と例とともに
 
 `docs/`には、プロジェクトのMarkdown文書を置きます。ドキュメントのダイアログがこれを読みます（[プロジェクトのドキュメント](#プロジェクトのドキュメント)を参照）。
 
-`project.json`は`formatVersion`・`id`・`name`・`createdAt`・`nextTaskId`・`nextQuestionId`・`defaultEpicsSeeded`を持ちます。`nextQuestionId`は次の質問の番号で、この項目がないファイルは`1`として読みます。`defaultEpicsSeeded`は、プロジェクトに既定のエピック`BUG`と`ENHANCEMENT`を用意済みのとき`true`になります。一度だけ書くので、削除された既定のエピックが作り直されることはありません。この項目がないファイルは`false`として読みます。`epic.json`は`formatVersion`・`id`・`name`・`color`・`isDraft`・`attachments`・`createdAt`・`updatedAt`を持ちます。
+`project.json`は`formatVersion`・`id`・`name`・`createdAt`・`nextTaskId`・`nextQuestionId`・`defaultEpicsSeeded`を持ち、`versions`と`currentVersion`を持つことがあります（[リリース予定の版](#planned-versions)を参照）。`nextQuestionId`は次の質問の番号で、この項目がないファイルは`1`として読みます。`defaultEpicsSeeded`は、プロジェクトに既定のエピック`BUG`と`ENHANCEMENT`を用意済みのとき`true`になります。一度だけ書くので、削除された既定のエピックが作り直されることはありません。この項目がないファイルは`false`として読みます。`epic.json`は`formatVersion`・`id`・`name`・`color`・`isDraft`・`attachments`・`createdAt`・`updatedAt`を持ちます。
 
 `EPIC.md`には、エピックの詳細をMarkdownで保存します。frontmatterを含み、frontmatterには作業順の`waves`を置けます。`waves`はYAMLのリストで、各項目が1つのウェーブです。項目はタスクID（`566`）、またはカンマでつないだタスクID（`569,570,571`）です。同じウェーブのタスクは並行して進められ、ウェーブは、その前のウェーブのタスクがすべてDoneになってから始まります。APIと`epic show --json`は、全文を`document`、frontmatterを除いた本文を`body`、解析した作業順を`waves`（タスクIDのリストのリスト）として返します。
 
@@ -133,6 +134,37 @@ history:
   - at: "2026-10-15T01:30:00Z"
     reason: "Verified the setup guide links and recorded the result in the task body."
 ---
+```
+
+### リリース予定の版 {#planned-versions}
+
+プロジェクトは作業を予定する版の一覧を持ち、タスクはそのうちの1つを予定の版として持てます。まだ画面やコマンドからは設定できず、その土台となるファイルストアの操作だけが書き込みます。
+
+- `project.json`は、追加した順の版の名前を並べた`versions`と、プロジェクトのカレントの版`currentVersion`を持つことがあります。`currentVersion`は未設定なら`null`か省略で、設定されていれば`versions`のどれかです。どちらも空の間は書かないので、版を使っていないプロジェクトのファイルは変わりません。これらがない古いファイルは、版なしとして読みます。1つのプロジェクトに載せられる版は200までで、一覧はプロジェクトごとに独立しているため、2つのプロジェクトが同じ名前の版を持てます。
+- 版の名前は1〜64文字で、空白文字と制御文字を含められません。名前はそのまま保存し、完全一致で比べます。`v1.8.0`と`1.8.0`は別の版で、semverなどの形式は要求しません。
+- `task.json`は、載せてある版のうち1つの名前`plannedVersion`と、変更の記録`plannedVersionChanges`（古いものから順）を持つことがあります。予定は設定するまでなく、版が自動で割り当てられることも、プロジェクトのカレントの版がタスクに及ぶこともありません。どちらも空の間は書かないので、予定を持ったことのないタスクのファイルは変わりません。アプリが所有する`task.json`に置き、`TASK.md`には置かないので、本文の編集で壊れることはありません。
+- プロジェクトのカレントの版をタスクに割り当てると、「カレント」への参照ではなく、保存した時点のその版の名前を保存します。あとでプロジェクトのカレントの版を変えても、タスクは動きません。
+- 実際に変わるたびに、`plannedVersionChanges`へ`{at, from, to}`（`null`は予定なし）を1件、同じ保存で`TASK.md`の履歴へ通常のエントリを1件追加します。たとえば`リリース予定の版をv1.8.0からv1.9.0に変更しました。`です。理由の言語は他の自動エントリと同じ規則で決まり、英語では`Changed planned version from v1.8.0 to v1.9.0.`となります。予定がない側は英語で`none`、日本語で`なし`と書きます。すでにある版を設定し直しても何も起きません。保存せず、履歴も増えず、`updatedAt`も動きません。
+- 書き込みはすべて、最新のファイルを読んだうえで、プロジェクトの書き込みロックの下でタスクのアトミックな保存として行います。そのため、同じ版の再試行や同時の設定は変更を1件だけ記録します。エピックの全タスクへの設定は、タスクごとに別々に保存します。アーカイブ済みのタスク（AIの場合は下書きとDoneのタスクも）は飛ばし、すでにその版のタスクには触れず、変更した・そのままだった・飛ばしたタスクを報告します。途中で失敗しても、先に変わったタスクはそのままで、再試行で残りが完了します。
+
+タスクを`v1.8.0`から`v1.9.0`へ移すと、`task.json`と`TASK.md`は次の部分だけが変わります。
+
+```diff
+   "updatedAt": "2026-10-06T03:00:00Z",
+-  "plannedVersion": "v1.8.0",
++  "plannedVersion": "v1.9.0",
+   "plannedVersionChanges": [
+     { "at": "2026-10-05T03:00:00Z", "from": null, "to": "v1.8.0" },
++    { "at": "2026-10-06T03:00:00Z", "from": "v1.8.0", "to": "v1.9.0" }
+   ]
+```
+
+```yaml
+history:
+  - at: "2026-10-05T03:00:00Z"
+    reason: "リリース予定の版をなしからv1.8.0に変更しました。"
+  - at: "2026-10-06T03:00:00Z"   # 追加
+    reason: "リリース予定の版をv1.8.0からv1.9.0に変更しました。"   # 追加
 ```
 
 ### 成果 {#results}
