@@ -312,9 +312,14 @@ export const DocumentLoading: Story = {
   parameters: { detailFixture: { stallAfter: 1 } },
   play: async ({ canvasElement }) => {
     const view = within(canvasElement);
-    expect(view.getByRole('heading', { level: 2, name: 'Parser notes' })).toBeInTheDocument();
-    expect(view.getByRole('tab', { name: 'Description', selected: true })).toBeInTheDocument();
-    expect(view.getByRole('status', { name: 'Loading details…' })).toBeInTheDocument();
+    // The panel starts reading in an effect, so the skeleton is waited for, not assumed.
+    expect(
+      await view.findByRole('heading', { level: 2, name: 'Parser notes' }),
+    ).toBeInTheDocument();
+    expect(
+      await view.findByRole('tab', { name: 'Description', selected: true }),
+    ).toBeInTheDocument();
+    expect(await view.findByRole('status', { name: 'Loading details…' })).toBeInTheDocument();
   },
 };
 

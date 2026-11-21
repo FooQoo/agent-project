@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { Change, ChangedEvent } from '../api/contracts';
 import { ChangeInvalidator } from './change-invalidator';
 import { ResourceStore } from './resource-store';
-import { doc, epic, hist, P, summaryOf, task } from './test-support';
+import { doc, epic, hist, P, task } from './test-support';
 
 let store: ResourceStore;
 let invalidator: ChangeInvalidator;
@@ -25,7 +25,6 @@ beforeEach(() => {
   store.commit(task(1), 'document', doc(), 'd1');
   store.commit(task(1), 'history', hist('a'), 'h1');
   store.commit(epic('E'), 'document', doc(), 'e1');
-  store.commitSummary(P, summaryOf([]));
 });
 
 describe('which sections go stale', () => {
@@ -107,7 +106,7 @@ describe('when the cache cannot be trusted', () => {
     expect(state()).toBe('ready');
   });
 
-  it('resets on a missing sequence number and marks the Summary and every Detail stale', () => {
+  it('resets on a missing sequence number and marks every Detail stale', () => {
     invalidator.handle(event([], 7));
     const result = invalidator.handle(event([], 9));
     expect(result.reset).toBe('seq-gap');
@@ -115,7 +114,6 @@ describe('when the cache cannot be trusted', () => {
     expect(state(task(1), 'document')).toBe('stale');
     expect(state(task(1), 'history')).toBe('stale');
     expect(state(epic('E'))).toBe('stale');
-    expect(store.getSummary(P).state).toBe('stale');
   });
 
   it('resets when the sequence goes back or repeats', () => {
@@ -160,7 +158,6 @@ describe('when the cache cannot be trusted', () => {
   it('reset() marks everything stale for a reason the connection found', () => {
     invalidator.reset('reconnected');
     expect(state()).toBe('stale');
-    expect(store.getSummary(P).state).toBe('stale');
   });
 });
 

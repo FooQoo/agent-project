@@ -4,7 +4,8 @@ import type { ChangedEvent, DetailSection } from '../api/contracts';
 import type { ChangeInvalidator } from './change-invalidator';
 import { keyOf, type ResourceStore } from './resource-store';
 import { StreamRejected } from './stream-reader';
-import type { DataAdapter, ResourceKey } from './types';
+import type { SummaryReader } from './summary-reader';
+import type { DataAdapter, ResourceKey, SummarySnapshot } from './types';
 
 export { keyOf };
 
@@ -12,9 +13,8 @@ export type Waiters = Array<() => void>;
 
 export interface Item {
   id: string;
-  kind: 'summary' | 'detail';
   projectId: ProjectId;
-  key: ResourceKey | null;
+  key: ResourceKey;
   sections: Set<DetailSection>;
   immediate: boolean;
   /** The window it was queued in has passed. */
@@ -26,9 +26,8 @@ export interface Item {
 
 export interface Flight {
   id: string;
-  kind: 'summary' | 'detail';
   projectId: ProjectId;
-  key: ResourceKey | null;
+  key: ResourceKey;
   sections: DetailSection[];
   immediate: boolean;
   attempt: number;
@@ -40,19 +39,15 @@ export interface Flight {
   requeue: boolean;
   /** The resource is gone: just stop. */
   cancelled: boolean;
-  /** Notifications that arrived while a Summary was fetched. */
-  recorded: ChangedEvent[];
 }
 
 export const detailId = (key: ResourceKey) => `d:${keyOf(key)}`;
-export const summaryId = (projectId: ProjectId) => `s:${projectId}`;
 export const toError = (e: unknown) => (e instanceof Error ? e : new Error(String(e)));
 export const aborted = () => new StreamRejected('aborted', 'outdated');
 
 export interface EnqueueRequest {
-  kind: 'summary' | 'detail';
   projectId: ProjectId;
-  key: ResourceKey | null;
+  key: ResourceKey;
   sections: Iterable<DetailSection>;
   immediate: boolean;
   waiters: Waiters;
@@ -63,6 +58,8 @@ export interface EnqueueRequest {
 export interface FlightHost {
   readonly adapter: DataAdapter;
   readonly store: ResourceStore;
+  /** What the query client holds for a project's Summary. */
+  getSummary(projectId: ProjectId): SummarySnapshot;
   /** Sections a notification outdated; the Summary does not yet say what version they have. */
   readonly unverified: Set<string>;
   readonly disposed: boolean;
@@ -78,6 +75,7 @@ export type { ChangedEvent };
 export interface SchedulerHost extends FlightHost {
   readonly flights: Map<string, Flight>;
   readonly queue: Map<string, Item>;
+  readonly summary: SummaryReader;
   readonly invalidator: ChangeInvalidator;
   watched(): Iterable<ProjectId>;
 }

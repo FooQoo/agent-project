@@ -1,9 +1,14 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type QueryClient, QueryObserver } from '@tanstack/react-query';
 import { ChangeInvalidator } from './change-invalidator';
 import { PresentationGate } from './presentation-gate';
+import { createQueryClient } from './query-client';
+import { queryKeys } from './query-keys';
+import { reconcile } from './reconcile';
 import { RefreshScheduler } from './refresh-scheduler';
 import { ResourceStore } from './resource-store';
+import { SummaryReader } from './summary-reader';
 import {
   changed,
   doc,
@@ -21,6 +26,7 @@ let adapter: FakeAdapter;
 let store: ResourceStore;
 let gate: PresentationGate;
 let scheduler: RefreshScheduler;
+let client: QueryClient;
 let seq = 0;
 
 beforeEach(() => {
@@ -29,21 +35,37 @@ beforeEach(() => {
   adapter = new FakeAdapter();
   store = new ResourceStore();
   gate = new PresentationGate();
+  client = createQueryClient({ retry: false });
   const watched = new Set([P]);
   const invalidator = new ChangeInvalidator(store, { isActiveProject: (id) => watched.has(id) });
+  const summary = new SummaryReader({
+    client,
+    adapter,
+    store,
+    gate,
+    onCommit: (projectId, data, immediate) => reconcile(scheduler, projectId, data, immediate),
+  });
   scheduler = new RefreshScheduler({
     adapter,
     store,
     gate,
     invalidator,
+    summary,
     watchedProjects: () => watched,
   });
 });
 afterEach(() => {
   scheduler.dispose();
+  client.clear();
   vi.useRealTimers();
 });
 
+/** A screen that shows the Summary: the query is active, so a notification refetches it. */
+const watch = (seeded: Parameters<typeof summaryOf>[0] | false = []) => {
+  if (seeded) client.setQueryData(queryKeys.summary(P), summaryOf(seeded, 'sv0'));
+  const observer = new QueryObserver(client, scheduler.summary.options(P));
+  return observer.subscribe(() => {});
+};
 const settle = (ms = 0) => vi.advanceTimersByTimeAsync(ms);
 const seed = (id: number, document = 'd1', history = 'h1', text = 'old') => {
   store.commit(task(id), 'document', doc(text), document);
@@ -63,7 +85,7 @@ describe('single-flight', () => {
     expect(adapter.summaryCalls).toHaveLength(1);
     adapter.summaryCalls[0]?.resolve(summaryOf([]));
     await Promise.all([a, b]);
-    expect(store.getSummary(P).state).toBe('ready');
+    expect(scheduler.getSummary(P).state).toBe('ready');
     expect(adapter.summaryCalls).toHaveLength(1);
   });
 
@@ -145,6 +167,7 @@ describe('partial data', () => {
 
 describe('notifications', () => {
   it('fetches nothing for a resource that is not cached', async () => {
+    watch();
     note(99, 'summary', 'document', 'history');
     await settle(5_000);
     expect(adapter.streamCalls).toHaveLength(0);
@@ -216,6 +239,7 @@ describe('notifications', () => {
 
   it('drops a deleted resource and asks for the Summary', async () => {
     seed(1);
+    watch();
     note(1, 'deleted');
     await settle(150);
     expect(store.getSection(task(1), 'document').state).toBe('absent');
@@ -303,23 +327,29 @@ describe('a notification during a fetch', () => {
 
   it('fetches the Summary again when a notification says more than the response does', async () => {
     seed(1);
-    store.commitSummary(P, summaryOf([{ id: 1, document: 'd1', history: 'h1' }], 'sv1'));
+    client.setQueryData(
+      queryKeys.summary(P),
+      summaryOf([{ id: 1, document: 'd1', history: 'h1' }], 'sv1'),
+    );
     const done = scheduler.loadSummary(P);
     note(1, 'document');
     adapter.summaryCalls[0]?.resolve(summaryOf([{ id: 1, document: 'd1', history: 'h1' }], 'sv1'));
     await settle(0);
     expect(adapter.summaryCalls).toHaveLength(2);
-    expect(store.getSummary(P).state).toBe('refreshing');
+    expect(scheduler.getSummary(P).state).toBe('refreshing');
     adapter.summaryCalls[1]?.resolve(summaryOf([{ id: 1, document: 'd2', history: 'h1' }], 'sv2'));
     await done;
     await settle(500);
     expect(adapter.streamCalls.map((c) => c.request.sections)).toEqual([['document']]);
-    expect(store.getSummary(P).version).toBe('sv2');
+    expect(scheduler.getSummary(P).version).toBe('sv2');
   });
 
   it('accepts a response that already shows the change', async () => {
     seed(1);
-    store.commitSummary(P, summaryOf([{ id: 1, document: 'd1', history: 'h1' }], 'sv1'));
+    client.setQueryData(
+      queryKeys.summary(P),
+      summaryOf([{ id: 1, document: 'd1', history: 'h1' }], 'sv1'),
+    );
     const done = scheduler.loadSummary(P);
     note(1, 'document');
     adapter.summaryCalls[0]?.resolve(summaryOf([{ id: 1, document: 'd2', history: 'h1' }], 'sv2'));
@@ -338,7 +368,7 @@ describe('a notification during a fetch', () => {
     expect(adapter.summaryCalls).toHaveLength(2);
     adapter.summaryCalls[1]?.resolve(summaryOf([{ id: 1, document: 'd1', history: 'h1' }], 'sv2'));
     await done;
-    expect(store.getSummary(P)).toMatchObject({ state: 'ready', version: 'sv2' });
+    expect(scheduler.getSummary(P)).toMatchObject({ state: 'ready', version: 'sv2' });
   });
 
   it('fetches again when a deleted resource is still in the response', async () => {
@@ -353,7 +383,7 @@ describe('a notification during a fetch', () => {
   });
 
   it('stops asking again after a few contradictions and keeps the last response', async () => {
-    store.commitSummary(P, summaryOf([], 'sv1'));
+    client.setQueryData(queryKeys.summary(P), summaryOf([], 'sv1'));
     const done = scheduler.loadSummary(P);
     for (let i = 0; i < 5; i++) {
       scheduler.onChanged(changed(++seq, [{ resource: 'project', id: P, facets: ['summary'] }]));
@@ -362,13 +392,16 @@ describe('a notification during a fetch', () => {
     }
     await done;
     expect(adapter.summaryCalls.length).toBeLessThanOrEqual(3);
-    expect(store.getSummary(P).state).toBe('ready');
+    expect(scheduler.getSummary(P).state).toBe('ready');
   });
 });
 
 describe('the version a stream must have', () => {
   it('discards a stream whose version is not the one the Summary named and tries again after a new Summary', async () => {
-    store.commitSummary(P, summaryOf([{ id: 5, document: 'd1', history: 'h1' }]));
+    client.setQueryData(
+      queryKeys.summary(P),
+      summaryOf([{ id: 5, document: 'd1', history: 'h1' }]),
+    );
     const done = scheduler.loadDetail(task(5), ['document']);
     adapter.streamCalls[0]?.respond(taskStream(5, { document: 'd9' }, { text: 'newer' }));
     await settle(0);
@@ -384,7 +417,10 @@ describe('the version a stream must have', () => {
 
   it('does not hold a section to the Summary version once a notification said it changed', async () => {
     seed(1);
-    store.commitSummary(P, summaryOf([{ id: 1, document: 'd1', history: 'h1' }]));
+    client.setQueryData(
+      queryKeys.summary(P),
+      summaryOf([{ id: 1, document: 'd1', history: 'h1' }]),
+    );
     note(1, 'document');
     await settle(150);
     adapter.streamCalls[0]?.respond(taskStream(1, { document: 'd2' }, { text: 'new' }));
@@ -398,11 +434,14 @@ describe('cannot be trusted', () => {
   it('after a missing sequence number marks everything stale and settles it with one Summary', async () => {
     seed(1);
     seed(2);
-    store.commitSummary(P, summaryOf([], 'sv1'));
+    watch([
+      { id: 1, document: 'd1', history: 'h1' },
+      { id: 2, document: 'd1', history: 'h1' },
+    ]);
     scheduler.onChanged(changed(1, [], 'other'));
     scheduler.onChanged(changed(3, [], 'other'));
     expect(store.getSection(task(1), 'document').state).toBe('stale');
-    expect(store.getSummary(P).state).toBe('stale');
+    expect(scheduler.getSummary(P).state).toBe('stale');
     await settle(150);
     expect(adapter.summaryCalls).toHaveLength(1);
     adapter.summaryCalls[0]?.resolve(
@@ -423,6 +462,7 @@ describe('cannot be trusted', () => {
 
   it('asks for the Summary again after a reconnect', async () => {
     seed(1);
+    watch(false);
     scheduler.connected(false);
     expect(adapter.summaryCalls).toHaveLength(1);
     adapter.summaryCalls[0]?.resolve(summaryOf([{ id: 1, document: 'd1', history: 'h1' }]));

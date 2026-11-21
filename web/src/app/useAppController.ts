@@ -143,7 +143,7 @@ export function useAppController(initial: AppInitial | undefined): AppController
       await core.refreshDetail(key, ['document']);
       const loaded = core.store.getResource(key).document.data;
       if (loaded === null) return null;
-      const summary = core.store.getSummary(projectId).data;
+      const summary = core.getSummary(projectId).data;
       const listed = summary?.tasks.find((item) => item.id === card.id);
       return taskForEditor(listed ? toTaskSummary(listed, summary?.epics ?? []) : card, loaded);
     },
@@ -153,7 +153,7 @@ export function useAppController(initial: AppInitial | undefined): AppController
   // last read failed), so a failed read is never taken for a card that left.
   const isTaskListed = useCallback(
     (projectId: ProjectId, id: number): boolean | null => {
-      const snapshot = core.store.getSummary(projectId);
+      const snapshot = core.getSummary(projectId);
       if (snapshot.data === null || snapshot.state === 'error') return null;
       return snapshot.data.tasks.some((item) => item.id === id);
     },

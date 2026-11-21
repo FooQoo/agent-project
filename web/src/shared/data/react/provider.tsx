@@ -1,4 +1,5 @@
 // Gives a React tree one data core: the store, the adapter's connection and the presentation gate.
+import { QueryClientProvider } from '@tanstack/react-query';
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef } from 'react';
 import { DataCore, type DataCoreOptions } from '../core/data-core';
 
@@ -14,7 +15,7 @@ export function DataProvider({ children, core: given, ...options }: DataProvider
   // The callbacks may be new on every render; the core calls the latest ones.
   const latest = useRef(options);
   latest.current = options;
-  const { adapter, limits, visibility } = options;
+  const { adapter, limits, visibility, queryClient } = options;
   const core = useMemo(
     () =>
       given ??
@@ -22,18 +23,23 @@ export function DataProvider({ children, core: given, ...options }: DataProvider
         adapter,
         limits,
         visibility,
+        queryClient,
         onReady: (build) => latest.current.onReady?.(build),
         onPreferences: (payload) => latest.current.onPreferences?.(payload),
         onConnectionState: (state) => latest.current.onConnectionState?.(state),
       }),
-    [given, adapter, limits, visibility],
+    [given, adapter, limits, visibility, queryClient],
   );
   useEffect(() => {
     if (given) return undefined;
     core.start();
     return () => core.stop();
   }, [core, given]);
-  return <Context.Provider value={core}>{children}</Context.Provider>;
+  return (
+    <QueryClientProvider client={core.queryClient}>
+      <Context.Provider value={core}>{children}</Context.Provider>
+    </QueryClientProvider>
+  );
 }
 
 export function useDataCore(): DataCore {

@@ -1,10 +1,9 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest';
 import { ResourceStore } from './resource-store';
-import { doc, epic, hist, P, summaryOf, task } from './test-support';
+import { doc, epic, hist, task } from './test-support';
 
 const small = {
-  summaryProjects: 2,
   taskDetail: { count: 3, bytes: 1_000_000 },
   epicDetail: { count: 2, bytes: 1_000_000 },
 };
@@ -94,52 +93,12 @@ describe('sections', () => {
     const store = new ResourceStore();
     store.commit(task(1), 'document', doc(), 'v1');
     store.commit(epic('E'), 'document', doc(), 'e1');
-    store.commitSummary(P, summaryOf([]));
     store.markAllStale();
     expect(store.getSection(task(1), 'document').state).toBe('stale');
     expect(store.getSection(epic('E'), 'document').state).toBe('stale');
-    expect(store.getSummary(P).state).toBe('stale');
     store.remove(task(1));
     expect(store.getSection(task(1), 'document').state).toBe('absent');
     expect(store.cachedKeys()).toEqual([epic('E')]);
-  });
-});
-
-describe('summary', () => {
-  it('commits a Summary and keeps it through a failed refresh', () => {
-    const store = new ResourceStore();
-    expect(store.getSummary(P).state).toBe('absent');
-    store.beginSummary(P);
-    expect(store.getSummary(P).state).toBe('loading');
-    store.commitSummary(P, summaryOf([], 'sv1'));
-    expect(store.getSummary(P)).toMatchObject({ state: 'ready', version: 'sv1' });
-    store.beginSummary(P);
-    expect(store.getSummary(P).state).toBe('refreshing');
-    store.failSummary(P, new Error('x'));
-    expect(store.getSummary(P)).toMatchObject({ state: 'stale' });
-    expect(store.getSummary(P).data?.version).toBe('sv1');
-  });
-
-  it('drops a Summary fetch without an error: back to what was held before', () => {
-    const store = new ResourceStore();
-    store.beginSummary(P);
-    store.discardSummary(P);
-    expect(store.getSummary(P).state).toBe('absent');
-    store.commitSummary(P, summaryOf([], 'sv1'));
-    store.beginSummary(P);
-    store.discardSummary(P);
-    expect(store.getSummary(P)).toMatchObject({ state: 'stale', version: 'sv1' });
-  });
-
-  it('keeps the Summary of at most the limit of projects, least recently used out', () => {
-    const store = new ResourceStore(small);
-    store.commitSummary('a', summaryOf([], 'v', 'a'));
-    store.commitSummary('b', summaryOf([], 'v', 'b'));
-    store.touchSummary('a');
-    store.commitSummary('c', summaryOf([], 'v', 'c'));
-    expect(store.getSummary('b').state).toBe('absent');
-    expect(store.getSummary('a').state).toBe('ready');
-    expect(store.getSummary('c').state).toBe('ready');
   });
 });
 

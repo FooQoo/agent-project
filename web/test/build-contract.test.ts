@@ -55,7 +55,9 @@ describe('board build', () => {
         /^(@codemirror\/|@lezer\/|micromark|mdast-|react-markdown)/.test(name),
       ),
     ).toEqual([]);
-    expect(packages.filter((name) => name.startsWith('@tanstack/'))).toEqual([]);
+    // TanStack Query reads the first Summary, so it loads at once; the virtual list waits.
+    expect(packages.filter((name) => name.startsWith('@tanstack/react-virtual'))).toEqual([]);
+    expect(packages).toContain('@tanstack/react-query');
   });
 });
 

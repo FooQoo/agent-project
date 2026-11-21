@@ -10,7 +10,7 @@ function expectedVersions(
   key: ResourceKey,
   sections: DetailSection[],
 ): DetailVersions | undefined {
-  const summary = host.store.getSummary(key.projectId);
+  const summary = host.getSummary(key.projectId);
   if (summary.state !== 'ready' || !summary.data) return undefined;
   const entry =
     key.kind === 'task'
@@ -85,7 +85,6 @@ function detailFailed(host: FlightHost, flight: Flight, error: unknown): void {
   if (flight.superseded || flight.requeue) {
     host.store.discardPartial(key, sections);
     host.enqueue({
-      kind: 'detail',
       projectId: key.projectId,
       key,
       sections,
@@ -105,7 +104,6 @@ function detailFailed(host: FlightHost, flight: Flight, error: unknown): void {
     const waiters = take();
     void host.loadSummary(key.projectId, { immediate: flight.immediate }).then(() =>
       host.enqueue({
-        kind: 'detail',
         projectId: key.projectId,
         key,
         sections,

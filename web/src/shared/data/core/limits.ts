@@ -1,9 +1,8 @@
-// The cache limits of the data core, in one place. Measure before changing them; there is no TTL.
+// The cache limits of the data core's Details, in one place. Measure before changing them; there
+// is no TTL. The Summary is kept by the query client.
 const MIB = 1024 * 1024;
 
 export const LIMITS = {
-  /** Summaries kept, one per project. */
-  summaryProjects: 4,
   taskDetail: { count: 60, bytes: 8 * MIB },
   epicDetail: { count: 20, bytes: 4 * MIB },
 } as const;

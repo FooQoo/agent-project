@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ChangedEvent } from '@/shared/data/api/contracts';
@@ -19,6 +20,7 @@ afterEach(cleanup);
 function setup(api: SummariesApi) {
   const listeners = new Set<(event: ChangedEvent | null) => void>();
   const core = {
+    queryClient: new QueryClient(),
     subscribeChanges: (listener: (event: ChangedEvent | null) => void) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
