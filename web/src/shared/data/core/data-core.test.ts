@@ -122,6 +122,21 @@ describe('reconnecting', () => {
   });
 });
 
+describe('reconnecting, for data read by its own route', () => {
+  it('tells the change listeners to read again after a reconnect, not at the first open', async () => {
+    const listener = vi.fn();
+    core.subscribeChanges(listener);
+    core.start();
+    adapter.handlers?.onOpen?.();
+    await settle(0);
+    expect(listener).not.toHaveBeenCalled();
+    adapter.handlers?.onClose?.();
+    await settle(1_000);
+    adapter.handlers?.onOpen?.();
+    expect(listener).toHaveBeenCalledWith(null);
+  });
+});
+
 describe('Details on screen', () => {
   it('reads the sections that are shown in one request', async () => {
     core.start();

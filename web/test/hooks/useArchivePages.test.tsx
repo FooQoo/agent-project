@@ -324,7 +324,7 @@ describe('useArchivePages', () => {
       expect(result.current.data?.tasks.map((task) => task.id)).not.toContain(60);
     });
 
-    it('runs one refresh at a time and follows up once for the updates that came meanwhile', async () => {
+    it('keeps the answer of the newest refresh when several are asked for in a row', async () => {
       const { backend, fetchMock } = withMany();
       const { result } = renderHook(() => useArchivePages(PROJECT_A.id));
       await waitFor(() => expect(result.current.status).toBe('ready'));
@@ -340,17 +340,22 @@ describe('useArchivePages', () => {
       const reads = () =>
         fetchMock.mock.calls.filter(([url]) => String(url).includes('/archive')).length;
       const before = reads();
-      act(() => {
-        result.current.reload();
-        result.current.reload();
-        result.current.reload();
-      });
-      expect(reads()).toBe(before + 1);
+      // The first read is held; the archive changes, and the next ask cancels it and reads again.
+      act(() => result.current.reload());
+      backend.archives = {
+        ...backend.archives,
+        [PROJECT_A.id]: many().filter((task) => task.id !== 119),
+      };
+      act(() => result.current.reload());
+      await waitFor(() => expect(result.current.data?.total).toBe(119));
       await act(async () => {
         gate.resolve();
         await Promise.resolve();
       });
-      await waitFor(() => expect(reads()).toBe(before + 2));
+      // The held, older answer never replaces the newer one.
+      expect(result.current.data?.total).toBe(119);
+      expect(result.current.data?.tasks.map((task) => task.id)).not.toContain(119);
+      expect(reads()).toBe(before + 2);
     });
 
     it('a superseded refresh of the old project never consumes the new project queued refresh', async () => {
@@ -409,6 +414,8 @@ describe('useArchivePages', () => {
 
       rerender({ id: null });
       expect(result.current.data).toBeNull();
+      // What was read is dropped once nothing shows it.
+      await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
       rerender({ id: PROJECT_A.id });
       await waitFor(() => expect(result.current.status).toBe('ready'));
       await act(async () => Promise.resolve());
@@ -436,7 +443,7 @@ describe('useArchivePages', () => {
       const { result } = renderHook(() => useArchivePages(PROJECT_A.id));
       await waitFor(() => expect(result.current.status).toBe('ready'));
       act(() => result.current.remove(120));
-      expect(result.current.data?.tasks[0]?.id).toBe(119);
+      await waitFor(() => expect(result.current.data?.tasks[0]?.id).toBe(119));
       expect(result.current.data?.total).toBe(119);
     });
 

@@ -76,7 +76,11 @@ export class DataCore {
         this.scheduler.onReset(reason);
         for (const listener of [...this.changeListeners]) listener(null);
       },
-      onConnected: (reconnect) => this.scheduler.connected(reconnect),
+      onConnected: (reconnect) => {
+        this.scheduler.connected(reconnect);
+        // Events may have been missed: data read by its own route must be read again.
+        if (reconnect) for (const listener of [...this.changeListeners]) listener(null);
+      },
       onReady: options.onReady,
       onPreferences: options.onPreferences,
       onState: (state) => {

@@ -130,7 +130,6 @@ export function useAppController(initial: AppInitial | undefined): AppController
     },
     [core],
   );
-  const reloadArchive = archive.reload;
   // The editors start from the whole text, so the Detail is read again just before they open (a
   // failed read rejects: the cache would still hold an older body, saved over the real one).
   const loadTask = useCallback(
@@ -169,29 +168,23 @@ export function useAppController(initial: AppInitial | undefined): AppController
     [core],
   );
 
-  // The lists the data core does not own are read again when the stream says they changed. The
-  // archive list waits like the Summary while a modal is open; the project list is not what a
-  // modal shows, so it does not wait.
+  // The project list is read again when the stream says it changed; it is not what a modal shows,
+  // so it does not wait. The archive follows the stream by itself (`useArchivePages`).
   const reloadProjectsRef = useRef(reloadProjects);
   reloadProjectsRef.current = reloadProjects;
-  const reloadArchiveRef = useRef(reloadArchive);
-  reloadArchiveRef.current = reloadArchive;
   useEffect(
     () =>
       adapter.subscribe((note) => {
         if (note.type === 'sync') {
           reloadProjectsRef.current();
-          core.gate.submit(() => reloadArchiveRef.current(), { key: 'archive' });
           return;
         }
         if (note.type === 'docs') return;
         const { event } = note;
         if (event.changes.some((change) => change.resource === 'project'))
           reloadProjectsRef.current();
-        if (event.projectId === activeRef.current)
-          core.gate.submit(() => reloadArchiveRef.current(), { key: 'archive' });
       }),
-    [adapter, core],
+    [adapter],
   );
 
   const { subscribeDocs, subscribeChanges } = useStreamSubscriptions(adapter, activeRef);
