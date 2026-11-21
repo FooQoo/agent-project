@@ -38,6 +38,11 @@ export const queryKeys = {
   connectionDevices: () => ['connection-devices'] as const,
   /** The resident sessions of a project. */
   residentSessions: (projectId: ProjectId) => ['resident-sessions', projectId] as const,
+  /** Whether this browser can take push notifications, as the PC and the browser report it. */
+  pushStatus: () => ['push-status'] as const,
+  /** The models a tool offers for a project's resident session. */
+  residentModels: (projectId: ProjectId, tool: string) =>
+    ['resident-models', projectId, tool] as const,
   /** The tail of a resident session's log. */
   sessionLog: (projectId: ProjectId, tool: string) => ['session-log', projectId, tool] as const,
 };

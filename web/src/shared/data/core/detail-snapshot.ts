@@ -8,14 +8,6 @@ export interface DetailEntry<S extends keyof SectionDataMap = keyof SectionDataM
   version: string;
 }
 
-export const ABSENT_SECTION: SectionSnapshot<never> = Object.freeze({
-  state: 'absent',
-  data: null,
-  partial: null,
-  version: null,
-  error: null,
-}) as SectionSnapshot<never>;
-
 export function sectionSnapshot<S extends keyof SectionDataMap>(query: {
   entry: DetailEntry<S> | undefined;
   fetching: boolean;

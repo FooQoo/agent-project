@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { queryKeys } from '../../shared/data/core/query-keys';
+import { useReadQuery } from '../../shared/data/react';
 import { useWrite } from '../../shared/data/react/use-write';
 import { getPushStatus } from './api';
 import {
@@ -30,25 +32,27 @@ function readPermission(): PushPermission {
 export function usePushNotifications(): PushController {
   const [support] = useState(readSupport);
   const [permission, setPermission] = useState<PushPermission>(readPermission);
-  const [status, setStatus] = useState<PushStatus | null>(null);
-  const [publicKey, setPublicKey] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
-  const refresh = useCallback(async () => {
-    try {
+  const query = useReadQuery<PushStatus>({
+    queryKey: queryKeys.pushStatus(),
+    queryFn: async () => {
       const next = await getPushStatus();
       // A subscription kept on the PC is only useful while the browser still holds its own.
       const held = next.subscribed === true ? await hasBrowserSubscription() : false;
-      setStatus({ ...next, subscribed: held });
-      setPublicKey(next.publicKey ?? null);
-    } catch {
-      setStatus(null);
-    }
-    setPermission(readPermission());
-  }, []);
+      return { ...next, subscribed: held };
+    },
+  });
+  const status = query.isError ? null : (query.data ?? null);
+  const publicKey = status?.publicKey ?? null;
+  const { refetch } = query;
+  const refresh = useCallback(async () => {
+    await refetch({ cancelRefetch: false });
+  }, [refetch]);
+  // The permission is read again each time a read of the status ends.
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (query.fetchStatus === 'idle') setPermission(readPermission());
+  }, [query.fetchStatus]);
 
   // A turn-on or turn-off finishes only once the status is read again, so `busy` covers both.
   const enabling = useWrite<EnableResult, string>({
