@@ -117,14 +117,18 @@ impl FileStore {
         })
     }
 
-    /// Check that `choice` can be stored now, without saving anything: a named version must be
-    /// listed, and `Current` needs a current version.
-    pub fn check_version_choice(
+    /// Turn `choice` into a concrete one without saving anything: `Current` becomes the current
+    /// version's name, and a named version must be listed. A listed version is never removed, so
+    /// storing the result later cannot fail for the version itself.
+    pub fn resolve_version_choice(
         &self,
         project: &ProjectId,
         choice: &VersionChoice,
-    ) -> Result<(), AgboardError> {
-        resolve(self.shared_dir(), project, choice).map(|_| ())
+    ) -> Result<VersionChoice, AgboardError> {
+        Ok(match resolve(self.shared_dir(), project, choice)? {
+            Some(name) => VersionChoice::Named(name),
+            None => VersionChoice::Unset,
+        })
     }
 
     /// Set or clear the version a task is planned for. `Current` stores the project's current

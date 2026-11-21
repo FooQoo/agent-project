@@ -426,3 +426,48 @@ fn the_root_version_flag_still_prints_the_binary_version() {
     );
     assert_eq!(code, 0, "{err}");
 }
+
+#[test]
+fn a_failed_version_change_in_edit_leaves_the_other_changes_unsaved() {
+    let home = tempfile::tempdir().unwrap();
+    demo(home.path());
+    let id = add(home.path(), "Old title", &[]).to_string();
+
+    // No current version: the title is not changed.
+    let (code, name) = fail(
+        home.path(),
+        &["edit", &id, "--title", "New title", "--current-version"],
+    );
+    assert_eq!((code, name.as_str()), (1, "no_current_version"));
+    assert_eq!(
+        run(home.path(), &["show", &id])["task"]["title"],
+        "Old title"
+    );
+
+    // A Done task refuses an agent's version change: the title is not changed either.
+    run(home.path(), &["version", "add", "v1.8.0"]);
+    plain(
+        home.path(),
+        &["mv", &id, "doing", "--actor", "ai", "--reason", "Go."],
+    );
+    plain(
+        home.path(),
+        &["mv", &id, "done", "--actor", "ai", "--reason", "Done."],
+    );
+    let (code, name) = fail(
+        home.path(),
+        &[
+            "edit",
+            &id,
+            "--title",
+            "New title",
+            "--planned-version",
+            "v1.8.0",
+        ],
+    );
+    assert_eq!((code, name.as_str()), (1, "task_is_done"));
+    assert_eq!(
+        run(home.path(), &["show", &id])["task"]["title"],
+        "Old title"
+    );
+}

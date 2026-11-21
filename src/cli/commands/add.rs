@@ -16,10 +16,10 @@ pub fn run(ctx: &mut Context, args: &AddArgs) -> Result<Outcome, AgboardError> {
     let project = ctx.project_id()?.clone();
     // The plan is resolved before the task is written, so a project with no current version
     // creates nothing.
-    let plan = args.plan.choice()?;
-    if let Some(choice) = &plan {
-        ctx.files.check_version_choice(&project, choice)?;
-    }
+    let plan = match args.plan.choice()? {
+        Some(choice) => Some(ctx.files.resolve_version_choice(&project, &choice)?),
+        None => None,
+    };
     let new = NewTask {
         title: args.title.clone(),
         description,
