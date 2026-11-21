@@ -1,6 +1,7 @@
 import { ArchiveRestoreIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useWrite } from '../../../shared/data/react/use-write';
 import { setAcceptance } from '../api/edit';
 import { noOperations, type OperationControls } from '../../../shared/lib/operations/operations';
 import type { ReactNode } from 'react';
@@ -210,11 +211,17 @@ function DetailBody({
   );
 
   // The person may check and uncheck conditions on any task that is not archived.
-  const toggleCondition = async (conditionId: string, done: boolean) => {
-    await setAcceptance(projectId, task.id, conditionId, done);
-    void detail.refresh();
-    onChanged?.();
-  };
+  // A refusal rejects to the checkbox, which shows it; a save that went through reads the
+  // Detail and the board again.
+  const condition = useWrite<unknown, { conditionId: string; done: boolean }>({
+    mutationFn: ({ conditionId, done }) => setAcceptance(projectId, task.id, conditionId, done),
+    onSuccess: () => {
+      void detail.refresh();
+      onChanged?.();
+    },
+  });
+  const toggleCondition = (conditionId: string, done: boolean) =>
+    condition.mutateAsync({ conditionId, done });
 
   return (
     <TaskDetailView

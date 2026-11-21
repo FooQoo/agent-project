@@ -213,7 +213,7 @@ describe('useBacklogMove', () => {
     expect(callbacks.apply).toHaveBeenCalledWith(1, 'todo');
     expect(callbacks.settle).not.toHaveBeenCalled();
     expect(callbacks.onDone).not.toHaveBeenCalled();
-    expect(postTask).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(postTask).toHaveBeenCalledTimes(1));
     expect(postTask.mock.calls[0]?.[0]).toBe(`/api/projects/${PROJECT}/tasks/1/send`);
     await act(async () => answer({}));
     await waitFor(() => expect(callbacks.onDone).toHaveBeenCalled());

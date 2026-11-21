@@ -1,26 +1,19 @@
-import { useRef, useState } from 'react';
 import type { ProjectId } from '../../../shared/api/contracts';
+import { useWrite } from '../../../shared/data/react/use-write';
 import { setDraft } from '../api/edit';
+
+const KEY = ['finalize-draft'] as const;
 
 /** Ends a person's draft of a card (the edit lock), one request at a time; a failure is kept to show. */
 export function useFinalizeDraft(projectId: ProjectId, taskId: number, onChanged?: () => void) {
-  const [draftSaving, setDraftSaving] = useState(false);
-  const [draftFailed, setDraftFailed] = useState(false);
-  const busy = useRef(false);
+  const mutation = useWrite({
+    mutationKey: KEY,
+    mutationFn: () => setDraft(projectId, taskId, null),
+    onSuccess: () => onChanged?.(),
+  });
   const finalizeDraft = async () => {
-    if (busy.current) return;
-    busy.current = true;
-    setDraftSaving(true);
-    setDraftFailed(false);
-    try {
-      await setDraft(projectId, taskId, null);
-      onChanged?.();
-    } catch {
-      setDraftFailed(true);
-    } finally {
-      busy.current = false;
-      setDraftSaving(false);
-    }
+    if (mutation.isWriting()) return;
+    await mutation.mutateAsync().catch(() => {});
   };
-  return { draftSaving, draftFailed, finalizeDraft };
+  return { draftSaving: mutation.isPending, draftFailed: mutation.isError, finalizeDraft };
 }

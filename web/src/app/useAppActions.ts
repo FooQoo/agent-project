@@ -2,12 +2,11 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { openWhenLoaded } from './openWhenLoaded';
 import type { AppControllerModel, AppWorkspaceActions } from './contracts';
-import { WriteError, editTask, editTaskMultipart, moveTask, reorderTask } from './api';
+import { WriteError, moveTask } from './api';
+import { useDialogSubmit, useReorder } from './useBoardWrites';
 import { moveFailureNotice } from '../features/tasks/api/lifecycle';
-import { sendMessageRequest } from '../features/messages/ask/sendRequest';
 import { epicApi } from '../features/epics/editor/epicApi';
 import { groupTasks } from '../features/tasks/model/board';
-import type { ActionDialogData } from '../features/tasks/model/actionData';
 import type { ColumnName, ProjectId } from '../shared/api/contracts';
 import { useLaneMove } from '../features/tasks/useLaneMove';
 import { useBacklogMove } from '../features/backlog/useBacklogMove';
@@ -59,6 +58,8 @@ export function useAppActions(model: AppControllerModel) {
     refusal: (cause) => moveFailureNotice(cause, t),
   });
 
+  const reorder = useReorder(refreshProject);
+
   const workspace: AppWorkspaceActions = {
     onSelectProject: (projectId) => {
       void setRequested(projectId, { history: 'push' });
@@ -100,10 +101,7 @@ export function useAppActions(model: AppControllerModel) {
       session.operation === null ? backlogSend.request(ids, undefined, to) : false,
     onReorder: (task, beforeId) => {
       if (!isProjectId(activeId)) return;
-      const projectId = activeId;
-      void reorderTask(projectId, task.id, beforeId)
-        .catch(() => {})
-        .finally(() => refreshProject(projectId));
+      reorder.mutate({ projectId: activeId, id: task.id, beforeId });
     },
     onArchiveDone: () => {
       if (!isProjectId(activeId) || session.operation !== null) return;
@@ -184,42 +182,7 @@ export function useAppActions(model: AppControllerModel) {
     },
   };
 
-  const submitDialog = useCallback(
-    async (data: ActionDialogData) => {
-      const dialog = session.dialog;
-      const operation = session.operation;
-      if (!dialog || !operation) return;
-      const projectId = operation.projectId;
-      if (dialog.kind === 'request') {
-        await sendMessageRequest(projectId, {
-          text: data.requestText ?? '',
-          attachments: data.attachments ?? [],
-        });
-        // The sent request is shown where it waits: the Messages list on "Your requests".
-        openMessages({ tab: 'fromYou' });
-      } else if (dialog.kind === 'edit') {
-        if (data.attachments || data.removedAttachmentIds?.length)
-          await editTaskMultipart(projectId, dialog.task.id, {
-            title: data.title,
-            description: data.description,
-            finalize: data.finalize,
-            requestId: data.requestId,
-            attachments: data.attachments ?? [],
-            removedAttachmentIds: data.removedAttachmentIds,
-          });
-        else
-          await editTask(projectId, dialog.task.id, {
-            title: data.title,
-            description: data.description,
-            body: data.body,
-            acceptance: data.acceptance,
-            finalize: data.finalize,
-          });
-      }
-      refreshProject(projectId);
-    },
-    [refreshProject, openMessages, session.dialog, session.operation],
-  );
+  const submitDialog = useDialogSubmit(session, refreshProject, openMessages);
 
   const confirmBulkArchive = useCallback(async () => {
     const bulkArchive = session.bulkArchive;

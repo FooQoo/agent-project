@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useLaneMove } from './useLaneMove';
 
@@ -29,7 +29,7 @@ describe('useLaneMove', () => {
     act(() => {
       done = move(7, 'todo', 'doing');
     });
-    expect(calls).toEqual(['apply 7 doing', 'write 7 todo>doing']);
+    await waitFor(() => expect(calls).toEqual(['apply 7 doing', 'write 7 todo>doing']));
     await act(async () => {
       answer();
       await done;
@@ -58,6 +58,7 @@ describe('useLaneMove', () => {
       void move(7, 'todo', 'doing');
       void move(7, 'doing', 'done');
     });
+    await waitFor(() => expect(write).toHaveBeenCalledTimes(1));
     expect(write).toHaveBeenCalledTimes(1);
   });
 });
