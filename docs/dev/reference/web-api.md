@@ -327,6 +327,17 @@ Failures use the usual error body. Their codes and statuses are in [Error codes]
 
 `epicId` and `attachments` are optional; omit the epic or use `null`, and use an empty attachments array when there are no images. A simple request accepts no `title`, `assignee`, `draft`, or `finalize` metadata. The server creates an AI-owned Todo task, wraps the original text in `## 元の依頼`, and derives the title from the first non-empty line (up to 100 Unicode characters). It validates and stages the task and its images under the project lock, then publishes them together by renaming the completed task directory. Every accepted submission creates a new task and returns `201 {"task": …}`; the server does not compare content to detect duplicates. A task created with its own metadata continues to use `POST /tasks` or the regular multipart metadata; it does not become a simple request.
 
+### Paging list endpoints
+
+A list endpoint that returns its results in parts chooses the paging style by how the screen shows them.
+
+| Screen | Style | Request and response |
+| --- | --- | --- |
+| Moves by page (page numbers, a "next page" button) | Offset | A start position and a count in, the rows of that range out. |
+| Infinite scroll that keeps appending rows | Cursor (keyset) | An opaque `cursor` in, a `nextCursor` out. |
+
+The archive list is an infinite scroll, on the PC and in the phone sheet, so it uses a cursor. See [Archive pages](#archive-pages) for why a keyset suits appending. No endpoint uses offset paging yet.
+
 ### Archive pages
 
 `GET /api/projects/{projectId}/archive` returns the archived tasks a page at a time, so a project with hundreds of them never sends them all at once.
@@ -341,7 +352,7 @@ Failures use the usual error body. Their codes and statuses are in [Error codes]
 | `nextCursor` | The cursor of the next page, or `null` after the last. |
 | `project`, `version` | The project and the version of the snapshot that answered. |
 
-The cursor is opaque to clients. It holds the last row's archive time and ID (URL-safe Base64 of `<nanoseconds>:<id>`), and the next page is every row that sorts after it. The cursor is a keyset, not an offset, so a task archived or restored between two reads never makes a row repeat or hides one: a newly archived task sorts before the cursor and shows up when the first page is read again, and a restored one simply leaves the rows after the cursor. Each page is read from the project's current snapshot.
+The cursor is opaque to clients. It holds the last row's archive time and ID (URL-safe Base64 of `<nanoseconds>:<id>`), and the next page is every row that sorts after it. The cursor is a keyset, not an offset, as [Paging list endpoints](#paging-list-endpoints) prescribes for an infinite scroll, so a task archived or restored between two reads never makes a row repeat or hides one: a newly archived task sorts before the cursor and shows up when the first page is read again, and a restored one simply leaves the rows after the cursor. Each page is read from the project's current snapshot.
 
 The web UI joins the pages with one hook, `useArchivePages` (`web/src/features/tasks/model/`), for both the PC list and the phone sheet. It appends each page, keeps a row once by ID, and asks for the next page when the last row enters the virtualized range. A live update reads the pages again from the newest one until they cover at least as many rows as were loaded, and swaps the whole list in one step; an answer to an older read is dropped, and updates that arrive during a refresh are coalesced into one more.
 
