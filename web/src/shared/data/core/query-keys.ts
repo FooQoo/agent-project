@@ -30,8 +30,10 @@ export const queryKeys = {
   docsFile: (projectId: ProjectId, path: string) => ['docs-file', projectId, path] as const,
   /** The saved notification settings. */
   notificationSettings: () => ['notification-settings'] as const,
-  /** The remote-access connection and its registered devices. */
+  /** The remote-access connection status. */
   connection: () => ['connection'] as const,
+  /** The devices registered for remote access, read apart from the status. */
+  connectionDevices: () => ['connection-devices'] as const,
   /** The resident sessions of a project. */
   residentSessions: (projectId: ProjectId) => ['resident-sessions', projectId] as const,
   /** The tail of a resident session's log. */

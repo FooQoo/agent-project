@@ -25,22 +25,6 @@ import { isProjectIdValue, phoneUrl } from './phoneUrl';
 
 const POLL_MS = 1500;
 
-interface ConnectionRead {
-  snapshot: ConnectionSnapshot;
-  /** Null when the list could not be read. */
-  devices: RegisteredDevice[] | null;
-}
-
-async function readConnection(): Promise<ConnectionRead> {
-  const snapshot = await getConnection();
-  try {
-    const list = await getDevices();
-    return { snapshot, devices: Array.isArray(list) ? list : null };
-  } catch {
-    return { snapshot, devices: null };
-  }
-}
-
 /**
  * The state behind the connection dialog: it reads the status from the local API, saves the
  * settings, starts and stops. The token goes straight to the start request and is kept nowhere.
@@ -55,30 +39,43 @@ export function useConnectionController(open: boolean, projectId: string | null 
   const [error, setError] = useState<string | null>(null);
   const savingRef = useRef(false);
 
-  // The status and the devices are one read. The list is secondary: when it cannot be read the
-  // dialog keeps what it showed.
+  // The status and the devices are two reads: a slow or failed device list never holds back the
+  // status. When the list cannot be read the dialog keeps what it showed.
   const query = useReadQuery({
     queryKey: queryKeys.connection(),
-    queryFn: readConnection,
+    queryFn: getConnection,
+    enabled: open || transientRef.current,
+    refetchIntervalMs: POLL_MS,
+  });
+  const devicesQuery = useReadQuery({
+    queryKey: queryKeys.connectionDevices(),
+    queryFn: getDevices,
     enabled: open || transientRef.current,
     refetchIntervalMs: POLL_MS,
   });
   const { refetch, data: read, dataUpdatedAt } = query;
+  const {
+    refetch: refetchDevices,
+    data: deviceList,
+    dataUpdatedAt: devicesUpdatedAt,
+  } = devicesQuery;
   const loadFailed = query.isError;
 
-  const apply = useCallback((result: ConnectionRead) => {
-    if (savingRef.current) return;
-    setSnapshot(result.snapshot);
-    if (result.devices) setDevices(result.devices);
-  }, []);
   // biome-ignore lint/correctness/useExhaustiveDependencies: every finished read applies, changed or not.
   useEffect(() => {
-    if (read) apply(read);
-  }, [dataUpdatedAt, apply]);
+    if (read && !savingRef.current) setSnapshot(read);
+  }, [dataUpdatedAt]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: every finished read applies, changed or not.
+  useEffect(() => {
+    if (Array.isArray(deviceList) && !savingRef.current) setDevices(deviceList);
+  }, [devicesUpdatedAt]);
   const refresh = useCallback(async () => {
-    const result = await refetch({ cancelRefetch: false });
-    if (result.data) apply(result.data);
-  }, [refetch, apply]);
+    const [result] = await Promise.all([
+      refetch({ cancelRefetch: false }),
+      refetchDevices({ cancelRefetch: false }),
+    ]);
+    if (result.data) setSnapshot(result.data);
+  }, [refetch, refetchDevices]);
 
   const status: ConnectionStatus | null = snapshot?.status ?? null;
   transientRef.current =
