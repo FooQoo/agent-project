@@ -24,6 +24,9 @@ impl AgboardError {
             }
             AgboardError::TaskArchived { .. } => "Restore the task before editing it.".into(),
             AgboardError::TaskNotArchived { .. } => "Only an archived task can be deleted here.".into(),
+            AgboardError::NoCurrentVersion => {
+                "Set one with \"version current <VERSION>\", or name a version.".into()
+            }
             AgboardError::ArchiveTargetsChanged => "Read the latest Done tasks and confirm the archive again.".into(),
             AgboardError::AttachmentNotFound { .. } => "The attachment does not belong to this task.".into(),
             AgboardError::AttachmentLimitExceeded => "A task may contain at most 20 images and 50 MiB in total.".into(),

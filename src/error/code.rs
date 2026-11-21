@@ -12,6 +12,7 @@ impl AgboardError {
             AgboardError::TaskNotFound { .. } => "task_not_found",
             AgboardError::TaskArchived { .. } => "task_archived",
             AgboardError::TaskNotArchived { .. } => "task_not_archived",
+            AgboardError::NoCurrentVersion => "no_current_version",
             AgboardError::ArchiveTargetsChanged => "archive_targets_changed",
             AgboardError::AttachmentNotFound { .. } => "attachment_not_found",
             AgboardError::AttachmentLimitExceeded => "attachment_limit_exceeded",

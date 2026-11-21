@@ -28,6 +28,9 @@ pub struct ProgressTask {
     pub task_status: Column,
     pub agent_status: RunState,
     pub draft: Option<crate::domain::Draft>,
+    /// The version the task is planned for; left out when it has none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub planned_version: Option<String>,
     pub task_path: PathBuf,
     pub acceptance: Count,
     pub acceptance_error: bool,

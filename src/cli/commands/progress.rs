@@ -5,22 +5,27 @@ use std::fmt::Write as _;
 
 use serde_json::json;
 
-use crate::cli::args::ProgressArgs;
+use crate::cli::args::ProgressCommandArgs;
 use crate::cli::{Context, Outcome};
 use crate::domain::{Assignee, Column, RunState};
 use crate::error::AgboardError;
 use crate::progress::{self, Include, Progress, ProgressTask};
 
-pub fn run(ctx: &Context, args: &ProgressArgs) -> Result<Outcome, AgboardError> {
-    let snapshot = ctx.files.board(ctx.project_id()?)?;
-    let mut table = progress::build_with(
+pub fn run(ctx: &Context, args: &ProgressCommandArgs) -> Result<Outcome, AgboardError> {
+    let project = ctx.project_id()?;
+    let filter = args
+        .version
+        .resolve(|| Ok(ctx.files.project_versions(project)?.current))?;
+    let snapshot = ctx.files.board(project)?;
+    let mut table = progress::build_filtered(
         &snapshot,
         ctx.files.shared_dir(),
         ctx.clock.now(),
         Include {
-            pending: args.include_pending,
-            done: args.include_done,
+            pending: args.progress.include_pending,
+            done: args.progress.include_done,
         },
+        filter.as_ref(),
     );
     table.locale = crate::server::preferences::saved_locale(ctx.files.shared_dir());
     Ok(Outcome {
@@ -104,9 +109,13 @@ fn write_task(out: &mut String, task: &ProgressTask) {
         None => "",
         Some(crate::domain::Draft::Human) => ", draft",
     };
+    let plan = task
+        .planned_version
+        .as_ref()
+        .map_or(String::new(), |version| format!(", plan {version}"));
     let _ = writeln!(
         out,
-        "  #{} {} [{assignee}, {column}, {state}{draft}] acceptance {}/{}",
+        "  #{} {} [{assignee}, {column}, {state}{draft}{plan}] acceptance {}/{}",
         task.id, task.title, task.acceptance.done, task.acceptance.total
     );
     if let Some(question) = &task.question {

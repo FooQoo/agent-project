@@ -20,6 +20,7 @@ impl AgboardError {
             AgboardError::TaskNotFound { id } => format!("task #{id} not found."),
             AgboardError::TaskArchived { id } => format!("task #{id} is archived."),
             AgboardError::TaskNotArchived { id } => format!("task #{id} is not archived."),
+            AgboardError::NoCurrentVersion => "the project has no current version.".into(),
             AgboardError::ArchiveTargetsChanged => "archive targets changed.".into(),
             AgboardError::AttachmentNotFound { id } => format!("attachment {id} not found."),
             AgboardError::AttachmentLimitExceeded => "attachment limits were exceeded.".into(),

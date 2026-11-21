@@ -15,6 +15,7 @@ Use the browser to review and edit work, and `agboard` for agent updates and pro
 | Move a task or report what an agent is doing | `mv`, `state` |
 | Record a decision that matters later | `history add` |
 | Change a task's text | `edit` |
+| Plan tasks for a release | `version`, `edit --planned-version`, `epic plan` |
 | Attach images | `attachment` |
 | Deliver a result to the requester | `result add`, `result ls` |
 | Group and order tasks | `epic`, `progress` |
@@ -157,6 +158,54 @@ agboard ls --all-projects --json
 ```
 
 `ls --all-projects` reads every project in name order, with complete task descriptions and history. Its `--column` and `--state` filters apply to every project; do not combine it with `--project`.
+
+## Plan tasks for a version {#plan-tasks-for-a-version}
+
+A project lists its versions and can name one of them as the current version. A task is planned for one version, or for none (unplanned). A version name is 1 to 64 characters with no whitespace, such as `v1.8.0`; it is kept and compared exactly.
+
+```sh
+agboard --project "My project" version add v1.9.0
+agboard --project "My project" version current v1.8.0
+agboard --project "My project" version current
+agboard --project "My project" version current --clear
+agboard --project "My project" version ls --json
+```
+
+`version current VERSION` lists the version when it is not listed yet and makes it current. Without an argument it shows the current version. Changing the current version moves no task: a task stores the version name it was given.
+
+Plan a card when you add it, or later:
+
+```sh
+agboard --project "My project" add "Fix the login bug" --assignee ai --actor ai --current-version
+agboard --project "My project" edit 15 --planned-version v1.9.0
+agboard --project "My project" edit 15 --current-version
+agboard --project "My project" edit 15 --unplanned
+```
+
+`--planned-version VERSION` needs a listed version (`version add`), `--current-version` stores the current version's name as it is now, and `--unplanned` removes the plan. The three exclude each other. When the project has no current version, `--current-version` fails with `no_current_version` (exit code 1) and changes nothing. Each real change is recorded in the card's history; planning a card for the version it already has changes nothing. An agent cannot change a Done card, a person's draft, or an archived card.
+
+Plan every card of an epic at once with `epic plan`:
+
+```sh
+agboard --project "My project" epic plan LAUNCH --planned-version v1.9.0
+agboard --project "My project" epic plan LAUNCH --current-version --only-unplanned
+agboard --project "My project" epic plan LAUNCH --unplanned
+```
+
+Each card is saved on its own, so a failure part way leaves the earlier cards changed and running the command again finishes the rest. The result counts the cards that were `changed`, `unchanged` (already had the version), and `skipped`, and names them. Archived cards, Done cards (they shipped), and cards a person is drafting are always skipped. With `--only-unplanned`, cards that already have a planned version are skipped too; `--unplanned` and `--only-unplanned` cannot be combined.
+
+Narrow `ls` and `progress` to one version:
+
+```sh
+agboard --project "My project" ls --current-version
+agboard --project "My project" ls --version v1.8.0 --epic LAUNCH --json
+agboard --project "My project" ls --unplanned --column todo
+agboard --project "My project" progress --version v1.8.0 --json
+```
+
+`--version VERSION`, `--current-version`, and `--unplanned` exclude each other, and combine with the other filters. `--current-version` with no current version fails with `no_current_version`; `ls --all-projects` takes `--version` and `--unplanned` but not `--current-version`, because each project has its own. Every task in the JSON carries its `plannedVersion` (left out when the task has none), and the text shows `[plan VERSION]`. The root `agboard --version` still prints the version of the program.
+
+A version filter only hides tasks. In `progress`, which tasks are ready for an agent is decided on the whole board first, so a task whose earlier-wave tasks are hidden by the filter is still not ready, and `nextTasks` holds the first three ready tasks that the filter keeps. Requests, answers, and epics to close are not narrowed.
 
 ## Projects
 

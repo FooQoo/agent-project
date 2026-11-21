@@ -11,15 +11,17 @@ mod answers;
 mod count;
 mod epic_close;
 mod final_result;
+mod narrow;
 mod next;
 mod requests;
+mod task_entry;
 mod text;
 mod types;
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
-use crate::domain::{Assignee, ChangeCursor, Column, ProjectMeta, ResultKind, RunState};
+use crate::domain::{ChangeCursor, Column, ProjectMeta, RunState};
 use crate::file_store::frontmatter;
 use crate::file_store::layout;
 use crate::file_store::model::{EpicView, TaskView};
@@ -85,6 +87,7 @@ pub use final_result::{FinalResultMissing, final_result_missing};
 pub(crate) use next::gated_by_waves;
 pub use next::{MAX_NEXT_TASKS, NextReason, NextTask};
 pub use requests::{ProgressRequest, open_requests};
+use task_entry::task_of;
 pub use types::{EpicToClose, ProgressEpic, ProgressTask};
 
 /// Build the table from one project's unarchived snapshot. `shared` is the
@@ -103,6 +106,20 @@ pub fn build_with(
     shared: &std::path::Path,
     fetched_at: DateTime<Utc>,
     include: Include,
+) -> Progress {
+    build_filtered(snapshot, shared, fetched_at, include, None)
+}
+
+/// [`build_with`] narrowed to the tasks `filter` keeps. The filter only hides: which tasks are
+/// ready is decided on the whole board first, so a task whose blockers are hidden does not become
+/// ready, and `nextTasks` holds the first ready tasks that the filter keeps. An epic left with no
+/// task is dropped. Requests, answers, epics to close, and reminders are not narrowed.
+pub fn build_filtered(
+    snapshot: &ProjectSnapshot,
+    shared: &std::path::Path,
+    fetched_at: DateTime<Utc>,
+    include: Include,
+    filter: Option<&crate::domain::VersionFilter>,
 ) -> Progress {
     let project_dir = layout::project_dir(shared, &snapshot.project.id);
     let listed = ordered_tasks(snapshot);
@@ -159,7 +176,9 @@ pub fn build_with(
         cursor: snapshot.cursor.clone(),
         locale: None,
         epics: groups,
-        next_tasks: next::next_tasks(&listed, snapshot, &project_dir),
+        next_tasks: next::next_tasks(&listed, snapshot, &project_dir, &|task| {
+            filter.is_none_or(|filter| filter.keeps(task.planned_version.as_deref()))
+        }),
         unassigned: unassigned
             .into_iter()
             .map(|task| task_of(task, &project_dir))
@@ -201,6 +220,9 @@ pub fn build_with(
         }),
     };
     table.reminders = crate::nudge::state_reminders(&table, fetched_at);
+    if let Some(filter) = filter {
+        narrow::narrow(&mut table, snapshot, filter);
+    }
     table
 }
 
@@ -265,36 +287,4 @@ fn rank(order: &[i64], id: i64) -> usize {
         .iter()
         .position(|listed| *listed == id)
         .unwrap_or(usize::MAX)
-}
-
-fn task_of(task: &TaskView, project_dir: &std::path::Path) -> ProgressTask {
-    ProgressTask {
-        id: task.id,
-        title: task.title.clone(),
-        assignee: task.assignee,
-        task_status: task.task_status,
-        agent_status: task.agent_status,
-        draft: task.draft,
-        task_path: layout::task_md(&layout::task_dir(project_dir, task.id)),
-        acceptance: count::count(&task.acceptance),
-        acceptance_error: task.acceptance_error,
-        last_activity_at: (task.assignee == Assignee::Ai && task.agent_status == RunState::Running)
-            .then(|| {
-                task.history
-                    .iter()
-                    .map(|entry| entry.at)
-                    .max()
-                    .map_or(task.agent_status_changed_at, |at| {
-                        at.max(task.agent_status_changed_at)
-                    })
-            }),
-        has_final_result: task.assignee == Assignee::Ai
-            && task.task_status == Column::Doing
-            && task.results.iter().any(|r| r.kind == ResultKind::Final),
-        question: if is_waiting(task) {
-            task.pending_reason.as_deref().map(text::short_question)
-        } else {
-            None
-        },
-    }
 }

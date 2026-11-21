@@ -54,6 +54,8 @@ pub enum AgboardError {
     TaskNotArchived {
         id: i64,
     },
+    /// A command asked for the project's current version, and the project has none.
+    NoCurrentVersion,
     ArchiveTargetsChanged,
     AttachmentNotFound {
         id: String,

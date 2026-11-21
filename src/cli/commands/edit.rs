@@ -20,6 +20,10 @@ pub fn run(ctx: &mut Context, args: &EditArgs) -> Result<Outcome, AgboardError> 
     if let Some(Some(id)) = &epic {
         ctx.files.epic(&project, id)?;
     }
+    let plan = args.plan.choice()?;
+    if let Some(choice) = &plan {
+        ctx.files.check_version_choice(&project, choice)?;
+    }
     let mut changed = false;
     let mut task = None;
     if args.title.is_some() || description.is_some() {
@@ -38,6 +42,17 @@ pub fn run(ctx: &mut Context, args: &EditArgs) -> Result<Outcome, AgboardError> 
             &project,
             args.id,
             target.as_ref(),
+            Actor::Ai,
+            ctx.clock.now(),
+        )?;
+        changed |= result.changed;
+        task = Some(result.value);
+    }
+    if let Some(choice) = &plan {
+        let result = ctx.files.set_task_planned_version(
+            &project,
+            args.id,
+            choice,
             Actor::Ai,
             ctx.clock.now(),
         )?;

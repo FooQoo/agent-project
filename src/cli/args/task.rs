@@ -8,6 +8,7 @@ use clap::Args;
 
 use super::enums::{ActorArg, AssigneeArg, ColumnArg, ReportStateArg, RunStateArg};
 use super::history::ChangeArgs;
+use super::version::{PlanArgs, VersionFilterArgs};
 use crate::error::{AgboardError, FileAction};
 
 /// The three mutually exclusive ways to give a description. On edit, the
@@ -29,7 +30,7 @@ pub struct InitArgs {}
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo add \"Write the setup guide\" --assignee ai --actor ai\n  agboard --project demo add \"Fix the login bug\" --desc \"Users cannot sign in on Safari\" --assignee ai --actor ai\n  agboard --project demo add \"Plan the release\" --desc-file notes.txt --assignee ai --actor ai\n  echo \"Details\" | agboard --project demo add \"Write the docs\" --desc - --assignee ai --actor ai"
+    after_help = "Examples:\n  agboard --project demo add \"Write the setup guide\" --assignee ai --actor ai\n  agboard --project demo add \"Fix the login bug\" --assignee ai --actor ai --current-version\n  agboard --project demo add \"Fix the login bug\" --desc \"Users cannot sign in on Safari\" --assignee ai --actor ai\n  agboard --project demo add \"Plan the release\" --desc-file notes.txt --assignee ai --actor ai\n  echo \"Details\" | agboard --project demo add \"Write the docs\" --desc - --assignee ai --actor ai"
 )]
 pub struct AddArgs {
     /// Title of the task (1 to 100 characters, one line)
@@ -48,11 +49,13 @@ pub struct AddArgs {
     /// Create the task in the Backlog: a settled plan that must not be started until a person sends it to Todo (for a request for the plan only)
     #[arg(long)]
     pub backlog: bool,
+    #[command(flatten)]
+    pub plan: PlanArgs,
 }
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "A task a person is drafting (draft: human) is read-only for agents: edit fails with task_is_draft (exit code 1) and changes nothing. Wait for the user to finalize it, then try again. A task you created with --backlog waits in the Backlog: you can edit it, and only a person sends it to Todo.\n\nExamples:\n  agboard --project demo edit 15 --title \"Write the install guide\"\n  agboard --project demo edit 15 --desc \"Steps for macOS and Linux\"\n  agboard --project demo edit 15 --desc \"\""
+    after_help = "A task a person is drafting (draft: human) is read-only for agents: edit fails with task_is_draft (exit code 1) and changes nothing. Wait for the user to finalize it, then try again. A task you created with --backlog waits in the Backlog: you can edit it, and only a person sends it to Todo.\n\nExamples:\n  agboard --project demo edit 15 --planned-version v1.9.0\n  agboard --project demo edit 15 --current-version\n  agboard --project demo edit 15 --unplanned\n  agboard --project demo edit 15 --title \"Write the install guide\"\n  agboard --project demo edit 15 --desc \"Steps for macOS and Linux\"\n  agboard --project demo edit 15 --desc \"\""
 )]
 pub struct EditArgs {
     /// ID of the task
@@ -68,6 +71,8 @@ pub struct EditArgs {
     /// Take the task out of its epic
     #[arg(long, conflicts_with = "epic")]
     pub clear_epic: bool,
+    #[command(flatten)]
+    pub plan: PlanArgs,
 }
 
 #[derive(Args, Debug)]
@@ -115,7 +120,7 @@ pub struct RmArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo ls\n  agboard --project demo ls --column doing\n  agboard --project demo ls --state pending --json\n  agboard ls --all-projects\n  agboard ls --all-projects --state pending --json"
+    after_help = "Examples:\n  agboard --project demo ls\n  agboard --project demo ls --column doing\n  agboard --project demo ls --state pending --json\n  agboard --project demo ls --current-version\n  agboard --project demo ls --version v1.8.0 --epic FILE-SHARE --json\n  agboard --project demo ls --unplanned\n  agboard ls --all-projects\n  agboard ls --all-projects --state pending --json"
 )]
 pub struct LsArgs {
     /// List the tasks of every project, read-only; do not give --project
@@ -130,6 +135,8 @@ pub struct LsArgs {
     /// Only list tasks in this epic (its EPIC-ID)
     #[arg(long, value_name = "EPIC-ID")]
     pub epic: Option<String>,
+    #[command(flatten)]
+    pub version: VersionFilterArgs,
 }
 
 #[derive(Args, Debug)]

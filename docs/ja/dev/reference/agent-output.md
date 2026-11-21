@@ -27,6 +27,7 @@
           "taskStatus": "todo",
           "agentStatus": "idle",
           "draft": null,
+          "plannedVersion": "v1.8.0",
           "acceptance": { "done": 0, "total": 3 },
           "acceptanceError": false,
           "taskPath": "…/tasks/98/TASK.md"
@@ -48,6 +49,7 @@
 ```
 
 - 既定では、人の判断待ちでない未着手と進行中のタスクだけが載ります。タスクはエピックごとに`waves`の順で並び、エピックのないタスクは`unassigned`に入ります。
+- 各タスクには割り当て先の版を示す`plannedVersion`が付きます。割り当てがなければ省かれます。`progress --version VERSION`、`--current-version`、`--unplanned`（hookには付きません）を付けると、`epics`・`unassigned`・`nextTasks`・`finalResultMissing`・`pending`・`done`を1つの版のタスクに絞ります。絞り込みは隠すだけです。着手できるかどうかはボード全体で先に決めるため、前のタスクが隠れても`nextTasks`にタスクが加わることはなく、絞り込みに合う着手可能なタスクの先頭3件が入ります。タスクがなくなったエピックは省かれ、`requests`・`answers`・`epicsToClose`・`reminders`は絞り込みません。
 - `nextTasks`は常に含まれ、今すぐ着手できるAI担当のタスクを最大3件並べます。各要素は`{ "id", "title", "epicId", "taskPath", "why" }`で、エピックのないタスクの`epicId`は`null`です。`why`は安定した値で、実行状態がIdleのDoingタスク（止まっている作業）は`resume`、実行状態がIdleの未着手タスクは`next_in_epic`です。Doingが先、次に未着手で、それぞれの中は進行表の順（エピックは表の順、エピック内は`waves`の順、エピックのないタスクは最後）です。バックログのタスク、人の下書き、PendingとRunningのタスク、人が担当のタスク、Doneやアーカイブのタスクも載らず、該当がなければ空配列です。同じエピックの前のウェーブに、アーカイブされておらずDoneでないタスクが残っている間は、その未着手のタスクは載りません。同じウェーブのタスクはまとめて載ります。それ以外の依存関係は`EPIC.md`の文章で書かれ、評価されないため、エージェントは着手前にエピックの文書を読みます。
 - `progress`と`hook`に`--include-pending`と`--include-done COUNT`を付けると、表に`pending`配列と`done`配列が加わります。`pending`は判断待ちの未着手・進行中のタスクをID順に並べ、それぞれに、IDが最も小さい未回答の質問を200文字までにした`question`が付きます。`done`は直近に完了したタスクを新しい順に`COUNT`件並べ、対象は未着手または進行中のタスクがまだあるエピックに限ります。オプションがなければどちらのフィールドもありません。
 - 人が質問に回答し、まだどのエージェントも回答を受け取っていない（`reply`に`acceptedAt`がない）とき、表に`answers`配列がID順で加わります。各要素は`{"id":"Q-12","title":"…","tasks":[21,22],"choiceId":"keep","choiceLabel":"Keep","text":null,"answeredAt":"2026-11-17T09:00:00Z"}`に、人が添えた画像の絶対パス`imagePaths`（なければ省略）を加えた形で、`title`は依頼のタイトルと同じ規則、`tasks`はその質問を参照しているアーカイブされていないタスク、`choiceId`・`choiceLabel`・`text`は該当する部分がなければ`null`です。選択肢のある質問にメモだけで答えた場合は、`choiceId`と`choiceLabel`が`null`で`text`が設定されます。該当する回答がなければフィールドはありません。エージェントは`message show`で全文を読み、`message accept`で受け取ります。

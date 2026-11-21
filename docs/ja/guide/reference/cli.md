@@ -15,6 +15,7 @@ title: CLIリファレンス
 | タスクを移す、エージェントの状態を報告する | `mv`、`state` |
 | 後で効く判断を記録する | `history add` |
 | タスクの本文を編集する | `edit` |
+| タスクをリリースに割り当てる | `version`、`edit --planned-version`、`epic plan` |
 | 画像を添付する | `attachment` |
 | 成果を依頼者に届ける | `result add`、`result ls` |
 | タスクをまとめて順序づける | `epic`、`progress` |
@@ -158,6 +159,54 @@ agboard ls --all-projects --json
 ```
 
 `ls --all-projects`は、全プロジェクトを名前順に読み、タスクの説明と履歴を完全な形で返します。`--column`と`--state`の絞り込みはすべてのプロジェクトに適用されます。`--project`とは組み合わせません。
+
+## タスクを版に割り当てる {#plan-tasks-for-a-version}
+
+プロジェクトは版の一覧を持ち、その1つを現在の版にできます。タスクは1つの版に割り当てるか、どの版にも割り当てません（未定）。版の名前は空白を含まない1〜64文字（例: `v1.8.0`）で、書いたとおりに保存し、比較します。
+
+```sh
+agboard --project "My project" version add v1.9.0
+agboard --project "My project" version current v1.8.0
+agboard --project "My project" version current
+agboard --project "My project" version current --clear
+agboard --project "My project" version ls --json
+```
+
+`version current VERSION`は、版が一覧にまだなければ追加して現在の版にします。引数なしでは現在の版を表示します。現在の版を変えても、どのタスクも動きません。タスクには指定した時点の版の名前が保存されます。
+
+カードは追加するときにも、あとからでも割り当てられます。
+
+```sh
+agboard --project "My project" add "Fix the login bug" --assignee ai --actor ai --current-version
+agboard --project "My project" edit 15 --planned-version v1.9.0
+agboard --project "My project" edit 15 --current-version
+agboard --project "My project" edit 15 --unplanned
+```
+
+`--planned-version VERSION`は一覧にある版（`version add`済み）が必要です。`--current-version`はその時点の現在の版の名前を保存し、`--unplanned`は割り当てを外します。3つは同時に指定できません。プロジェクトに現在の版がないときの`--current-version`は`no_current_version`（終了コード1）で失敗し、何も変更しません。実際に変わったときだけカードの履歴に記録し、すでにその版のカードに同じ版を割り当てても何も変わりません。エージェントは、Doneのカード、人の下書き、アーカイブされたカードを変更できません。
+
+エピックのカードをまとめて割り当てるには`epic plan`を使います。
+
+```sh
+agboard --project "My project" epic plan LAUNCH --planned-version v1.9.0
+agboard --project "My project" epic plan LAUNCH --current-version --only-unplanned
+agboard --project "My project" epic plan LAUNCH --unplanned
+```
+
+カードは1枚ずつ保存するため、途中で失敗すると先のカードは変更済みのままで、コマンドを再実行すれば残りが済みます。結果は、変更したカード（`changed`）、すでにその版だったカード（`unchanged`）、飛ばしたカード（`skipped`）の数と番号を返します。アーカイブされたカード、Doneのカード（出荷済み）、人が下書き中のカードは常に飛ばします。`--only-unplanned`を付けると、すでに版が割り当てられたカードも飛ばします。`--unplanned`と`--only-unplanned`は同時に指定できません。
+
+`ls`と`progress`は1つの版に絞り込めます。
+
+```sh
+agboard --project "My project" ls --current-version
+agboard --project "My project" ls --version v1.8.0 --epic LAUNCH --json
+agboard --project "My project" ls --unplanned --column todo
+agboard --project "My project" progress --version v1.8.0 --json
+```
+
+`--version VERSION`、`--current-version`、`--unplanned`は同時に指定できず、ほかの絞り込みと組み合わせられます。現在の版がないプロジェクトでの`--current-version`は`no_current_version`で失敗します。`ls --all-projects`は`--version`と`--unplanned`を受け付けますが、現在の版はプロジェクトごとに違うため`--current-version`は受け付けません。JSONのタスクには`plannedVersion`が付き（割り当てがなければ省かれます）、テキストでは`[plan VERSION]`と表示します。ルートの`agboard --version`は、これまでどおりプログラムのバージョンを表示します。
+
+版の絞り込みはタスクを隠すだけです。`progress`では、エージェントが着手できるタスクをボード全体で先に決めるので、前のウェーブのタスクが絞り込みで隠れていても、そのタスクは着手可能になりません。`nextTasks`には、絞り込みに合う着手可能なタスクの先頭3件が入ります。リクエスト、回答、閉じるエピックは絞り込みの対象外です。
 
 ## プロジェクト {#projects}
 

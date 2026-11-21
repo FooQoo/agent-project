@@ -33,6 +33,10 @@ fn messages_and_reasons_follow_the_design_table() {
             "Only AI-owned tasks in Doing can be running or pending.",
         ),
         (
+            "the project has no current version.",
+            "Set one with \"version current <VERSION>\", or name a version.",
+        ),
+        (
             "task #5 is a draft and read-only for agents.",
             "Wait for the user to finalize it, then try again.",
         ),

@@ -51,6 +51,10 @@ pub const COMMANDS: &[(&str, Cover)] = &[
         "epic send",
         NoRule("a person plans epics; nothing to forget"),
     ),
+    (
+        "epic plan",
+        NoRule("plans cards for a version; nothing to forget"),
+    ),
     ("history add", Rules(&["history"])),
     ("hook", NoRule("the hook itself; it runs the rules")),
     ("init", NoRule("one-time board setup")),
@@ -115,6 +119,12 @@ pub const COMMANDS: &[(&str, Cover)] = &[
     ("state", Rules(&["stale-running"])),
     ("stop", NoRule("pauses the server by a person's choice")),
     ("update", NoRule("installation by a person")),
+    ("version add", NoRule("lists a version; nothing to forget")),
+    (
+        "version current",
+        NoRule("a person or an agent sets the current version; nothing to forget"),
+    ),
+    ("version ls", READ_ONLY),
     ("wait", NoRule("the listener itself; it waits by design")),
     ("workspace", NoRule("sets up the folder a person works in")),
 ];

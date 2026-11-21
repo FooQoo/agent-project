@@ -63,6 +63,7 @@ pub(super) fn next_tasks(
     listed: &[&TaskView],
     snapshot: &ProjectSnapshot,
     project_dir: &std::path::Path,
+    keep: &dyn Fn(&TaskView) -> bool,
 ) -> Vec<NextTask> {
     let ready = |task: &&&TaskView| {
         task.assignee == Assignee::Ai
@@ -76,6 +77,7 @@ pub(super) fn next_tasks(
             .filter(ready)
             .filter(move |task| task.task_status == column)
             .filter(move |task| column != Column::Todo || !gated_by_waves(task, snapshot))
+            .filter(|task| keep(task))
             .map(move |task| (*task, why))
             .collect::<Vec<_>>()
     };
