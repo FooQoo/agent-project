@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import type { ProjectId } from '../../../shared/api/contracts';
 import type { ArchiveSheetData } from '../components/ArchiveListSheet';
 import type { MonitorWrites } from '../contracts';
+import { useWrite } from '../../../shared/data/react/use-write';
 import { useArchivePages } from '../../../features/tasks/model/useArchivePages';
 
 /**
@@ -19,18 +20,20 @@ export function useArchiveSheet(
 ): { archive?: ArchiveSheetData; onRestore?: (taskId: number) => Promise<void> } {
   const pages = useArchivePages(open && projectId ? (projectId as ProjectId) : null);
   const { remove } = pages;
-  const restore = useCallback(
-    async (taskId: number) => {
-      if (!writes) return;
-      try {
-        await writes.restore(projectId, taskId);
-        remove(taskId);
-        onRestored?.(taskId);
-      } finally {
-        onWritten?.();
-      }
+  // The list reads the project again whether or not the restore went through.
+  const restoreWrite = useWrite<unknown, number>({
+    mutationKey: ['phone-restore'],
+    mutationFn: (taskId) => (writes ? writes.restore(projectId, taskId) : Promise.resolve()),
+    onSuccess: (_result, taskId) => {
+      remove(taskId);
+      onRestored?.(taskId);
     },
-    [writes, projectId, onWritten, onRestored, remove],
+    onSettled: () => onWritten?.(),
+  });
+  const { mutateAsync } = restoreWrite;
+  const restore = useCallback(
+    async (taskId: number) => void (await mutateAsync(taskId)),
+    [mutateAsync],
   );
   if (!writes) return {};
   return {

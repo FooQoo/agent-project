@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { ProjectId } from '../../shared/api/contracts';
 import { queryKeys } from '../../shared/data/core/query-keys';
-import { useReadClient } from '../../shared/data/react';
+import { useReadClient, useReadQuery } from '../../shared/data/react';
 import { useWrite } from '../../shared/data/react/use-write';
 import {
   ResidentRequestError,
@@ -38,7 +38,6 @@ const problemOf = (cause: unknown): ResidentProblem =>
 export function useResidentController(projectId: ProjectId) {
   const { snapshot, failed } = useResidentSession(projectId, DIALOG_POLL_MS);
   const [chosen, setChosen] = useState<Choice | null>(null);
-  const [models, setModels] = useState<Models | null>(null);
   const [problem, setProblem] = useState<ResidentProblem | null>(null);
   const [launchProblem, setLaunchProblem] = useState<ResidentProblem | null>(null);
 
@@ -46,19 +45,23 @@ export function useResidentController(projectId: ProjectId) {
   const choice: Choice | null = chosen ?? (health ? initialChoice(health) : null);
   const tool = choice?.tool ?? null;
 
-  const loadModels = useCallback(async () => {
-    if (tool === null) return;
-    try {
-      const list = await getModels(projectId, tool);
-      setModels({ tool, options: list.models, reason: list.reason, problem: null });
-    } catch (cause) {
-      setModels({ tool, options: [], reason: null, problem: problemOf(cause) });
-    }
-  }, [projectId, tool]);
-
-  useEffect(() => {
-    void loadModels();
-  }, [loadModels]);
+  // The model list of the chosen tool. A failed read is not an error of the query: the dialog
+  // shows its reason (a CLI problem) and offers the default model only.
+  const modelsQuery = useReadQuery<Models>({
+    queryKey: queryKeys.residentModels(projectId, tool ?? ''),
+    queryFn: async () => {
+      const current = tool as SessionTool;
+      try {
+        const list = await getModels(projectId, current);
+        return { tool: current, options: list.models, reason: list.reason, problem: null };
+      } catch (cause) {
+        return { tool: current, options: [], reason: null, problem: problemOf(cause) };
+      }
+    },
+    enabled: tool !== null,
+  });
+  const models = modelsQuery.data ?? null;
+  const { refetch: loadModels } = modelsQuery;
 
   // What follows a write: the sessions are read again at once (a read that is running is joined),
   // and the footer and the entry row are told. The write stays pending until the read is back.
@@ -131,7 +134,7 @@ export function useResidentController(projectId: ProjectId) {
 
   const checkAgain = async () => {
     setLaunchProblem(null);
-    await loadModels();
+    await loadModels({ cancelRefetch: false });
   };
 
   // The CLI problem of the chosen tool: the model list says "not installed" before any launch, and a
