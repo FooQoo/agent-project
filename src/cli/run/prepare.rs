@@ -1,7 +1,9 @@
 //! Resolving the target project for a command and dispatching it to its
 //! handler, for the commands that work on a board.
 
-use crate::cli::args::{Cli, Command, EpicCommand, MessageCommand, ProjectCommand, ResultCommand};
+use crate::cli::args::{
+    Cli, Command, EpicCommand, MessageCommand, ProjectCommand, ResultCommand, VersionCommand,
+};
 use crate::cli::{Context, Env, Outcome, Target, commands};
 use crate::clock::SystemClock;
 use crate::domain::validate_project_name;
@@ -36,7 +38,8 @@ fn access(command: &Command) -> Access {
             EpicCommand::Add(_)
             | EpicCommand::Edit(_)
             | EpicCommand::Rm(_)
-            | EpicCommand::Send(_) => Access::ChangeProject,
+            | EpicCommand::Send(_)
+            | EpicCommand::Plan(_) => Access::ChangeProject,
         },
         Command::Project(args) => match args.command {
             ProjectCommand::Ls => Access::ReadCatalog,
@@ -52,6 +55,13 @@ fn access(command: &Command) -> Access {
         Command::Result(args) => match args.command {
             ResultCommand::Ls(_) => Access::ReadProject,
             ResultCommand::Add(_) => Access::ChangeProject,
+        },
+        Command::Version(args) => match args.command {
+            VersionCommand::Ls => Access::ReadProject,
+            VersionCommand::Current(ref current) if current.version.is_none() && !current.clear => {
+                Access::ReadProject
+            }
+            VersionCommand::Add(_) | VersionCommand::Current(_) => Access::ChangeProject,
         },
         Command::Init(_) => Access::ChangeOrCreateProject,
         Command::Add(_)
@@ -138,6 +148,7 @@ fn dispatch(ctx: &mut Context, command: &Command) -> Result<Outcome, AgboardErro
         Command::Snapshot(_) => commands::snapshot::run(ctx),
         Command::Workspace(_) => commands::workspace::run(ctx),
         Command::Progress(args) => commands::progress::run(ctx, args),
+        Command::Version(args) => commands::version::run(ctx, args),
         Command::Open(args) => commands::open::run(ctx, args),
         Command::Hook(_)
         | Command::Skills(_)

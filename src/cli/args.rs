@@ -12,6 +12,7 @@ mod project;
 mod result;
 mod task;
 mod validate;
+mod version;
 
 pub use self::agent::*;
 pub use self::attachment::*;
@@ -23,6 +24,7 @@ pub use self::project::*;
 pub use self::result::*;
 pub use self::task::*;
 pub use self::validate::*;
+pub use self::version::*;
 
 use std::ffi::OsString;
 
@@ -103,9 +105,11 @@ pub enum Command {
     Workspace(WorkspaceArgs),
     /// Show the tasks an agent can pick up, by epic in wave order
     #[command(
-        after_help = "Examples:\n  agboard progress\n  agboard progress --json\n  agboard progress --include-pending --include-done 5\n  agboard --project \"My project\" progress --json"
+        after_help = "A version option only narrows what is shown: which tasks are ready is decided on the whole board first, so hiding a task never makes another one ready. Requests, answers, and epics to close are not narrowed.\n\nExamples:\n  agboard progress\n  agboard progress --json\n  agboard progress --include-pending --include-done 5\n  agboard progress --current-version\n  agboard progress --version v1.8.0 --json\n  agboard progress --unplanned\n  agboard --project \"My project\" progress --json"
     )]
-    Progress(ProgressArgs),
+    Progress(ProgressCommandArgs),
+    /// List the project's versions, add one, or show, set, or clear the current version
+    Version(VersionArgs),
 }
 
 impl Command {
@@ -137,11 +141,12 @@ impl Command {
             Command::Update(_) => "update",
             Command::Workspace(_) => "workspace",
             Command::Progress(_) => "progress",
+            Command::Version(_) => "version",
         }
     }
 }
 
-pub const SUBCOMMAND_NAMES: [&str; 25] = [
+pub const SUBCOMMAND_NAMES: [&str; 26] = [
     "project",
     "init",
     "add",
@@ -164,6 +169,7 @@ pub const SUBCOMMAND_NAMES: [&str; 25] = [
     "wait",
     "workspace",
     "progress",
+    "version",
     "setup",
     "update",
     "skills",

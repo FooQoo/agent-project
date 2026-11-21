@@ -28,6 +28,7 @@ Commands:
   result     Record results for the requester, or list them
   snapshot Fetch the complete board and history
   progress Show active work in epic wave order
+  version List the project's versions, or show, set, or clear the current one
   hook    Add the current progress table to an agent hook
   skills  Print the instructions of the agent-board Skill
   wait    Wait for a board change or the next task

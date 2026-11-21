@@ -28,6 +28,13 @@ impl Cli {
                     command: Some(command.to_string()),
                 });
             }
+            // Each project has its own current version, so no one version stands for all.
+            (Command::Ls(args), None) if args.all_projects && args.version.current_version => {
+                return Err(AgboardError::InvalidArgument {
+                    message: "ls --all-projects does not take --current-version.".to_string(),
+                    command: Some(command.to_string()),
+                });
+            }
             (Command::Ls(args), None) if args.all_projects => {}
             // `serve` shows every project, so naming one is a mistake.
             (
@@ -95,10 +102,11 @@ impl Cli {
                     && args.description.desc.is_none()
                     && args.description.desc_file.is_none()
                     && args.epic.is_none()
-                    && !args.clear_epic =>
+                    && !args.clear_epic
+                    && args.plan.choice()?.is_none() =>
             {
                 Err(AgboardError::InvalidArgument {
-                    message: "nothing to change; give --title, --desc, --desc-file, --epic, or --clear-epic.".to_string(),
+                    message: "nothing to change; give --title, --desc, --desc-file, --epic, --clear-epic, --planned-version, --current-version, or --unplanned.".to_string(),
                     command: Some("edit".to_string()),
                 })
             }

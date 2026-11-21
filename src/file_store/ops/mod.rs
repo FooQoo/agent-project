@@ -22,6 +22,7 @@ mod send;
 mod task;
 mod text;
 mod version;
+mod version_names;
 mod version_plan;
 
 pub(in crate::file_store) use qa::migrate_legacy_locked;

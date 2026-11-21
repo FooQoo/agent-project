@@ -3,13 +3,17 @@ use crate::cli::{Context, Outcome};
 use crate::clock::{Clock, format_utc};
 use crate::file_store::model::TaskView;
 use crate::file_store::reader::AllSnapshots;
-use crate::{domain::Column, error::AgboardError};
+use crate::{
+    domain::{Column, VersionFilter},
+    error::AgboardError,
+};
 use serde_json::json;
 
 const COLUMNS: [Column; 4] = [Column::Backlog, Column::Todo, Column::Doing, Column::Done];
 
-fn keep(args: &LsArgs, task: &TaskView) -> bool {
-    args.column.is_none_or(|c| task.task_status == c.column())
+fn keep(args: &LsArgs, filter: Option<&VersionFilter>, task: &TaskView) -> bool {
+    filter.is_none_or(|filter| filter.keeps(task.planned_version.as_deref()))
+        && args.column.is_none_or(|c| task.task_status == c.column())
         && args
             .state
             .is_none_or(|s| task.agent_status == s.run_state())
@@ -24,12 +28,16 @@ pub fn run(ctx: &mut Context, args: &LsArgs) -> Result<Outcome, AgboardError> {
     if args.all_projects {
         return run_all_projects(ctx, args);
     }
+    let project = ctx.project_id()?;
+    let filter = args
+        .version
+        .resolve(|| Ok(ctx.files.project_versions(project)?.current))?;
     let tasks: Vec<TaskView> = ctx
         .files
-        .board(ctx.project_id()?)?
+        .board(project)?
         .tasks
         .into_iter()
-        .filter(|task| keep(args, task))
+        .filter(|task| keep(args, filter.as_ref(), task))
         .collect();
     let text = crate::cli::output::ls_text(&tasks, &COLUMNS);
     Ok(Outcome {
@@ -42,10 +50,13 @@ pub fn run(ctx: &mut Context, args: &LsArgs) -> Result<Outcome, AgboardError> {
 /// Every project's board from one read, with the filters applied to each
 /// project's tasks. A project with no matching task stays, with no tasks.
 fn run_all_projects(ctx: &mut Context, args: &LsArgs) -> Result<Outcome, AgboardError> {
+    let filter = args.version.resolve(|| Ok(None))?;
     let fetched_at = format_utc(ctx.clock.now());
     let mut all = ctx.files.all_snapshots()?;
     for project in &mut all.projects {
-        project.tasks.retain(|task| keep(args, task));
+        project
+            .tasks
+            .retain(|task| keep(args, filter.as_ref(), task));
     }
     Ok(all_projects_outcome(&fetched_at, &all))
 }

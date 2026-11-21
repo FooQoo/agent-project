@@ -4,10 +4,13 @@
 use chrono::{DateTime, Utc};
 
 use super::epic::read_epic_file;
+use super::version_names::add_listed;
+pub(super) use super::version_names::resolve;
+use super::version_plan::EpicVersionScope;
 use super::{
     ensure_ai_task_not_done, lock_project, reason_or_default, save_project, save_task, stamp,
 };
-use crate::domain::{Actor, Changed, Draft, MAX_VERSIONS, ProjectId, validate_version_name};
+use crate::domain::{Actor, Changed, Draft, ProjectId, validate_version_name};
 use crate::error::AgboardError;
 use crate::file_store::FileStore;
 use crate::file_store::model::{HistoryRecord, PlannedVersionChange, TaskFile, TaskView};
@@ -41,13 +44,6 @@ pub struct EpicVersionSet {
     pub unchanged: Vec<i64>,
     /// The tasks left alone: archived, or not changeable by the actor.
     pub skipped: Vec<i64>,
-}
-
-fn invalid(message: impl Into<String>) -> AgboardError {
-    AgboardError::InvalidArgument {
-        message: message.into(),
-        command: None,
-    }
 }
 
 impl FileStore {
@@ -114,6 +110,20 @@ impl FileStore {
         })
     }
 
+    /// Turn `choice` into a concrete one without saving anything: `Current` becomes the current
+    /// version's name, and a named version must be listed. A listed version is never removed, so
+    /// storing the result later cannot fail for the version itself.
+    pub fn resolve_version_choice(
+        &self,
+        project: &ProjectId,
+        choice: &VersionChoice,
+    ) -> Result<VersionChoice, AgboardError> {
+        Ok(match resolve(self.shared_dir(), project, choice)? {
+            Some(name) => VersionChoice::Named(name),
+            None => VersionChoice::Unset,
+        })
+    }
+
     /// Set or clear the version a task is planned for. `Current` stores the project's current
     /// version as it is now. Only a real change records a history entry and moves `updatedAt`;
     /// the same value again changes nothing. An AI cannot change an archived, draft, or Done
@@ -160,6 +170,27 @@ impl FileStore {
         actor: Actor,
         now: DateTime<Utc>,
     ) -> Result<EpicVersionSet, AgboardError> {
+        self.set_epic_planned_version_in_scope(
+            project,
+            epic,
+            choice,
+            EpicVersionScope::All,
+            actor,
+            now,
+        )
+    }
+
+    /// [`Self::set_epic_planned_version`] limited to `scope`. With `UnplannedOnly`, a task that
+    /// already has a planned version is skipped, whatever version it has.
+    pub fn set_epic_planned_version_in_scope(
+        &self,
+        project: &ProjectId,
+        epic: &EpicId,
+        choice: &VersionChoice,
+        scope: EpicVersionScope,
+        actor: Actor,
+        now: DateTime<Utc>,
+    ) -> Result<EpicVersionSet, AgboardError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         read_epic_file(shared, project, epic)?;
@@ -175,6 +206,7 @@ impl FileStore {
                 continue;
             }
             let blocked = task.archived_at.is_some()
+                || (scope == EpicVersionScope::UnplannedOnly && task.planned_version.is_some())
                 || (actor == Actor::Ai
                     && (task.draft == Some(Draft::Human)
                         || ensure_ai_task_not_done(&task, actor).is_err()));
@@ -227,40 +259,4 @@ impl FileStore {
         task.updated_at = at;
         Ok(true)
     }
-}
-
-/// The concrete version a choice stands for, checked against the project's list.
-pub(super) fn resolve(
-    shared: &std::path::Path,
-    project: &ProjectId,
-    choice: &VersionChoice,
-) -> Result<Option<String>, AgboardError> {
-    let file = reader::read_project_file(shared, project)?;
-    match choice {
-        VersionChoice::Unset => Ok(None),
-        VersionChoice::Current => file.current_version.map(Some).ok_or_else(|| {
-            invalid("The project has no current version. Set one, or name a version.")
-        }),
-        VersionChoice::Named(name) => {
-            let name = validate_version_name(name)?;
-            if file.versions.contains(&name) {
-                Ok(Some(name))
-            } else {
-                Err(invalid(format!(
-                    "The project has no version {name}. Add it first."
-                )))
-            }
-        }
-    }
-}
-
-fn add_listed(versions: &mut Vec<String>, name: &str) -> Result<bool, AgboardError> {
-    if versions.iter().any(|v| v == name) {
-        return Ok(false);
-    }
-    if versions.len() >= MAX_VERSIONS {
-        return Err(invalid("A project lists at most 200 versions."));
-    }
-    versions.push(name.to_owned());
-    Ok(true)
 }

@@ -27,6 +27,7 @@ The JSON that agents receive. The pieces are explained in [Agent integration](..
           "taskStatus": "todo",
           "agentStatus": "idle",
           "draft": null,
+          "plannedVersion": "v1.8.0",
           "acceptance": { "done": 0, "total": 3 },
           "acceptanceError": false,
           "taskPath": "…/tasks/98/TASK.md"
@@ -48,6 +49,7 @@ The JSON that agents receive. The pieces are explained in [Agent integration](..
 ```
 
 - Only Todo and Doing tasks that are not waiting for a person appear. Tasks are grouped by epic in `waves` order; tasks without an epic are in `unassigned`.
+- Each task carries `plannedVersion`, the version it is planned for; the field is left out when the task has none. `progress --version VERSION`, `--current-version`, or `--unplanned` (not the hook) narrows `epics`, `unassigned`, `nextTasks`, `finalResultMissing`, `pending`, and `done` to the tasks of one version. The filter only hides: readiness is decided on the whole board first, so `nextTasks` never gains a task because its blockers are hidden, and it holds the first three ready tasks the filter keeps. An epic with no remaining task is dropped; `requests`, `answers`, `epicsToClose`, and `reminders` are not narrowed.
 - `nextTasks` is always present and holds at most three AI tasks to pick up now: `{ "id", "title", "epicId", "taskPath", "why" }`. `epicId` is `null` for a task without an epic. `why` is a stable value: `resume` for a Doing task with an Idle run state (stalled work), `next_in_epic` for a Todo task with an Idle run state. Tasks in Doing come first, then Todo; within each group the order is the progress table's (epics in table order, each epic's `waves` order, tasks without an epic last). Backlog tasks, a person's drafts, Pending and Running tasks, human-owned tasks, and Done or archived tasks are never listed; the array is empty when none qualifies. A Todo task is not listed while a non-archived task of an earlier wave of its epic is not Done; the tasks of one wave are listed together. Other dependencies between tasks are prose in `EPIC.md` and are not evaluated, so an agent reads the epic document before starting one.
 - With `--include-pending` and `--include-done COUNT` (on `progress` and `hook`), the table also has a `pending` array and a `done` array. `pending` holds Todo and Doing tasks waiting for a decision, in ID order, each with a `question`: the open question with the smallest ID, up to 200 characters. `done` holds the `COUNT` most recently completed tasks, newest first, limited to epics that still have a Todo or Doing task. Without the options neither field is present.
 - When a person's request is open (not accepted and not withdrawn), the table has a `requests` array in ID order. Each entry is `{"id":"Q-3","createdAt":"…","title":"…"}`: `title` is the first non-empty line of the request as plain text, without Markdown marks (heading, list, and quote markers, emphasis, code, and links), up to 80 characters (longer ones end with `…`). Without an open request the field is absent. An agent reads the whole text with `message show` and takes the request with `message accept`.

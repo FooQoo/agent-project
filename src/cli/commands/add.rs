@@ -14,6 +14,12 @@ pub fn run(ctx: &mut Context, args: &AddArgs) -> Result<Outcome, AgboardError> {
         ctx.files.epic(ctx.project_id()?, id)?;
     }
     let project = ctx.project_id()?.clone();
+    // The plan is resolved before the task is written, so a project with no current version
+    // creates nothing.
+    let plan = match args.plan.choice()? {
+        Some(choice) => Some(ctx.files.resolve_version_choice(&project, &choice)?),
+        None => None,
+    };
     let new = NewTask {
         title: args.title.clone(),
         description,
@@ -31,6 +37,12 @@ pub fn run(ctx: &mut Context, args: &AddArgs) -> Result<Outcome, AgboardError> {
         task = ctx
             .files
             .set_task_epic(&project, task.id, Some(id), Actor::Ai, ctx.clock.now())?
+            .value;
+    }
+    if let Some(choice) = &plan {
+        task = ctx
+            .files
+            .set_task_planned_version(&project, task.id, choice, Actor::Ai, ctx.clock.now())?
             .value;
     }
     Ok(Outcome {

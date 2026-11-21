@@ -13,6 +13,7 @@
 | `task_not_archived` | アーカイブされていないタスクの削除や復元。 | 1 | 409 |
 | `epic_is_draft` | CLIの`epic edit`、または`epic edit --waves`が人の下書きのエピックを対象にした。または、人の下書きのエピックを送ろうとした。 | 1 | 409 |
 | `task_is_draft` | AIの`edit`・`history add`・`mv`・`state`が人の下書き（`human`）を対象にした。または人の`mv`による未着手への移動・`epic send`・ボードからの送信が下書きを対象にした。`reason`は、ユーザーが確定するのを待つよう案内します。 | 1 | 409 |
+| `no_current_version` | 現在の版がないプロジェクトで、`add`・`edit`・`ls`・`progress`に`--current-version`を付けた。何も保存しません。`version current VERSION`で設定するか、版の名前を指定します。ボードのAPIは422を返します。 | 1 | 422 |
 | `task_in_backlog` | エージェントの`mv`・`state`が、バックログのタスクを対象にした。バックログから出せるのは人だけです。 | 1 | 409 |
 | `send_with_open_questions` | 人の`mv <id> todo`・`epic send`・Webでの未着手への移動が、未回答の質問がある計画を、確認なし（`--force`、APIでは`ack: true`）で対象にした。何も保存せず、メッセージに質問のIDを示す。確認して送ったあとも質問は残り、回答があるまでタスクはPendingです。 | 1 | 409 |
 | `human_only` | エージェントが依頼の取り下げ、またはバックログのカードへの`mv <id> todo`・`epic send`・`mv ... backlog`を行おうとした。これを行えるのは人だけ。 | 1 | 403 |

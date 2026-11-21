@@ -24,6 +24,25 @@ pub fn validate_version_name(value: &str) -> Result<String, AgboardError> {
     Ok(value.to_owned())
 }
 
+/// Which tasks a version filter keeps.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum VersionFilter {
+    /// Tasks planned for exactly this version.
+    Planned(String),
+    /// Tasks with no planned version.
+    Unplanned,
+}
+
+impl VersionFilter {
+    /// Whether a task with this planned version is kept.
+    pub fn keeps(&self, planned: Option<&str>) -> bool {
+        match self {
+            VersionFilter::Planned(version) => planned == Some(version.as_str()),
+            VersionFilter::Unplanned => planned.is_none(),
+        }
+    }
+}
+
 fn invalid(reason: &str) -> AgboardError {
     AgboardError::InvalidValue {
         field: "version".into(),

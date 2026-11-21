@@ -119,6 +119,9 @@ pub fn ls_text(tasks: &[TaskView], columns: &[Column]) -> String {
             if let Some(epic) = &task.epic_id {
                 out.push_str(&format!(" [{epic}]"));
             }
+            if let Some(version) = &task.planned_version {
+                out.push_str(&format!(" [plan {version}]"));
+            }
             if task.assignee == crate::domain::Assignee::Ai && column == &Column::Doing {
                 out.push_str(&format!(
                     " [{}]",

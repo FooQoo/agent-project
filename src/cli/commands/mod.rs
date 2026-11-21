@@ -5,6 +5,7 @@ pub mod add;
 pub mod attachment;
 pub mod edit;
 pub mod epic;
+pub mod epic_plan;
 pub mod init;
 pub mod ls;
 pub mod message;
@@ -23,6 +24,7 @@ pub mod show;
 pub mod snapshot;
 pub mod state;
 pub mod stop;
+pub mod version;
 pub mod workspace;
 
 pub mod history;

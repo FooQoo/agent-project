@@ -72,6 +72,7 @@ pub(crate) fn agboard_error_response(error: &AgboardError) -> Response {
         | AgboardError::ArchiveTargetsChanged => StatusCode::CONFLICT,
         AgboardError::InvalidArgument { .. }
         | AgboardError::InvalidValue { .. }
+        | AgboardError::NoCurrentVersion
         | AgboardError::FileInvalid { .. }
         | AgboardError::InvalidStateForColumn { .. }
         | AgboardError::InvalidStateForAssignee

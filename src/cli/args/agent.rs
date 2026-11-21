@@ -22,6 +22,15 @@ pub struct ProgressArgs {
     pub include_done: usize,
 }
 
+/// The arguments of `progress`: the extra sections, and an optional version to narrow to.
+#[derive(Args, Debug, Clone, Default)]
+pub struct ProgressCommandArgs {
+    #[command(flatten)]
+    pub progress: ProgressArgs,
+    #[command(flatten)]
+    pub version: super::version::VersionFilterArgs,
+}
+
 /// `skills` prints the Agent Board Skill, or one of its topics.
 #[derive(Args, Debug)]
 #[command(

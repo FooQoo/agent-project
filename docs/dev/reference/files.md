@@ -138,7 +138,7 @@ history:
 
 ### Planned versions {#planned-versions}
 
-A project lists the versions it plans work for, and a task may be planned for one of them. No screen or command sets them yet; the file store operations behind them are the only writers.
+A project lists the versions it plans work for, and a task may be planned for one of them. Both the board and the CLI (`version`, `edit --planned-version`, `epic plan`) set them; the file store operations behind them are the only writers.
 
 - `project.json` may hold `versions`, the version names in the order they were added, and `currentVersion`, the project's current version. `currentVersion` is `null` or absent when none is set, and when set it is one of `versions`. Both are omitted while empty, so a project that never used versions keeps its file unchanged, and an older file without them reads as no versions. A project has at most 200 versions, and each project's list is its own: two projects can list the same name.
 - A version name is 1 to 64 characters with no whitespace or control characters. It is kept and compared exactly, so `v1.8.0` and `1.8.0` are two versions. No format such as semver is required.
