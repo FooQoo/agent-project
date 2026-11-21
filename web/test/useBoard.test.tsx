@@ -160,7 +160,7 @@ describe('useBoard', () => {
 
     fake.boards[PROJECT_A.id] = boardA;
     act(() => result.current.reload());
-    expect(result.current.status).toBe('loading');
+    // Query tells its observers on the next tick, so the retry may not show 'loading' at once.
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(2);
   });

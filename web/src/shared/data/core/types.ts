@@ -110,5 +110,4 @@ export interface SummarySnapshot {
   data: Summary | null;
   version: string | null;
   error: Error | null;
-  bytes: number;
 }

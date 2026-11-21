@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { QueryObserver } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DataCore } from './data-core';
 import type { VisibilitySource } from './event-connection';
@@ -18,6 +19,20 @@ const sv = (version = 'sv1', docs: Record<number, string> = { 1: 'd1' }) =>
     version,
   );
 
+/** What `useSummary` does: watches the project and reads its Summary once the core allows it. */
+const show = () => {
+  const unwatch = core.watchProject(P);
+  const options = () => ({ ...core.summary.options(P), enabled: core.canReadSummary });
+  const observer = new QueryObserver(core.queryClient, options());
+  const offState = core.subscribeState(() => observer.setOptions(options()));
+  const unsubscribe = observer.subscribe(() => {});
+  return () => {
+    unsubscribe();
+    offState();
+    unwatch();
+  };
+};
+
 beforeEach(() => {
   vi.useFakeTimers();
   adapter = new FakeAdapter();
@@ -31,7 +46,7 @@ afterEach(() => {
 describe('subscribe first, then fetch', () => {
   it('does not fetch the Summary before the subscription is open', async () => {
     core.start();
-    core.watchProject(P);
+    show();
     await settle(1_000);
     expect(adapter.opened).toBe(1);
     expect(adapter.summaryCalls).toHaveLength(0);
@@ -42,25 +57,25 @@ describe('subscribe first, then fetch', () => {
   it('fetches at once for a screen that mounts after the connection is open', async () => {
     core.start();
     adapter.handlers?.onOpen?.();
-    core.watchProject(P);
+    show();
     expect(adapter.summaryCalls).toHaveLength(1);
     adapter.summaryCalls[0]?.resolve(sv());
     await settle(0);
-    expect(core.store.getSummary(P).state).toBe('ready');
-    core.watchProject(P);
+    expect(core.getSummary(P).state).toBe('ready');
+    show();
     expect(adapter.summaryCalls).toHaveLength(1);
   });
 
   it('fetches without waiting when the connection could not open', async () => {
     core.start();
-    core.watchProject(P);
+    show();
     adapter.handlers?.onClose?.();
     expect(adapter.summaryCalls).toHaveLength(1);
   });
 
   it('records a notification that arrives during the first Summary fetch and checks it afterwards', async () => {
     core.start();
-    core.watchProject(P);
+    show();
     seed(1);
     adapter.handlers?.onOpen?.();
     adapter.handlers?.onChanged(changed(1, [{ resource: 'task', id: 1, facets: ['document'] }]));
@@ -76,7 +91,7 @@ describe('subscribe first, then fetch', () => {
 describe('reconnecting', () => {
   it('fetches the Summary again after a reconnect and settles the cache with it', async () => {
     core.start();
-    core.watchProject(P);
+    show();
     seed(1);
     adapter.handlers?.onOpen?.();
     adapter.summaryCalls[0]?.resolve(sv());
@@ -124,14 +139,14 @@ describe('Details on screen', () => {
   it('marks what a project left behind stale, since its notifications are ignored', async () => {
     core.start();
     adapter.handlers?.onOpen?.();
-    const unwatch = core.watchProject(P);
+    const unwatch = show();
     adapter.summaryCalls[0]?.resolve(sv());
     await settle(0);
     seed(1);
     unwatch();
-    expect(core.store.getSummary(P).state).toBe('stale');
+    expect(core.getSummary(P).state).toBe('stale');
     expect(core.store.getSection(task(1), 'document').state).toBe('stale');
-    core.watchProject(P);
+    show();
     adapter.summaryCalls[1]?.resolve(sv('sv1', { 1: 'd1' }));
     await settle(0);
     expect(core.store.getSection(task(1), 'document').state).toBe('ready');
@@ -143,7 +158,7 @@ describe('the presentation hold', () => {
   it('keeps the connection and applies nothing while a drawer is open', async () => {
     core.start();
     adapter.handlers?.onOpen?.();
-    core.watchProject(P);
+    show();
     adapter.summaryCalls[0]?.resolve(sv());
     await settle(0);
     seed(1);
@@ -165,7 +180,7 @@ describe('the presentation hold', () => {
     expect(adapter.summaryCalls).toHaveLength(1);
     adapter.summaryCalls[0]?.resolve(sv());
     await done;
-    expect(core.store.getSummary(P).state).toBe('ready');
+    expect(core.getSummary(P).state).toBe('ready');
   });
 });
 

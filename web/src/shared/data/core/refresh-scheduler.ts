@@ -1,7 +1,9 @@
-// Decides when the data core goes to the server. It merges the notifications of a short window,
-// joins requests for one resource into one fetch (single-flight), keeps background fetches to a
-// few at a time, and fetches the sections a notification touched and nothing else. A stream
-// becomes a whole version only through `ResourceStore.commit`, after `readDetail` accepted it.
+// Decides when the data core goes to the server for Details. It merges the notifications of a
+// short window, joins requests for one resource into one fetch (single-flight), keeps background
+// fetches to a few at a time, and fetches the sections a notification touched and nothing else. A
+// stream becomes a whole version only through `ResourceStore.commit`, after `readDetail` accepted
+// it. The Summary is read by `SummaryReader`; the scheduler passes it the notifications and the
+// gate's events, and asks it for a new Summary when a change calls for one.
 import type { ProjectId } from '../../api/contracts';
 import type { ChangedEvent, DetailSection } from '../api/contracts';
 import { type ChangeInvalidator, changesRequest } from './change-invalidator';
@@ -20,11 +22,10 @@ import {
   type Flight,
   type SchedulerHost,
   type Item,
-  summaryId,
 } from './refresh-types';
 import type { ResourceStore } from './resource-store';
-import { runSummary } from './summary-fetch';
-import type { DataAdapter, ResetReason, ResourceKey } from './types';
+import type { SummaryReader } from './summary-reader';
+import type { DataAdapter, ResetReason, ResourceKey, SummarySnapshot } from './types';
 
 const SECTION_ORDER: readonly DetailSection[] = ['document', 'history'];
 
@@ -33,6 +34,7 @@ export interface SchedulerOptions {
   store: ResourceStore;
   gate: PresentationGate;
   invalidator: ChangeInvalidator;
+  summary: SummaryReader;
   /** The projects whose Summary the screens are showing. */
   watchedProjects(): Iterable<ProjectId>;
   windowMs?: number;
@@ -52,6 +54,7 @@ export class RefreshScheduler implements SchedulerHost {
   readonly store: ResourceStore;
   private readonly gate: PresentationGate;
   readonly invalidator: ChangeInvalidator;
+  readonly summary: SummaryReader;
   readonly watched: () => Iterable<ProjectId>;
   private readonly windowMs: number;
   private readonly concurrency: number;
@@ -70,35 +73,31 @@ export class RefreshScheduler implements SchedulerHost {
     this.store = options.store;
     this.gate = options.gate;
     this.invalidator = options.invalidator;
+    this.summary = options.summary;
     this.watched = options.watchedProjects;
     this.windowMs = options.windowMs ?? REFRESH_WINDOW_MS;
     this.concurrency = options.concurrency ?? BACKGROUND_CONCURRENCY;
     this.offGate = this.gate.subscribe((event) => {
       if (event === 'held') holdBackground(this);
-      else this.pump();
+      else {
+        this.summary.release();
+        this.pump();
+      }
     });
   }
 
   // ---- requests
 
-  /** Fetches the Summary of a project, or joins the fetch that is already running. */
+  /**
+   * Reads the Summary of a project again, or joins the read that is running. A background one
+   * (not `immediate`) is an invalidation instruction: it waits for its window and for the gate.
+   */
   loadSummary(projectId: ProjectId, options: LoadOptions = {}): Promise<void> {
-    const immediate = options.immediate ?? true;
-    const flight = this.flights.get(summaryId(projectId));
-    if (flight && !this.queue.has(flight.id)) {
-      if (immediate) flight.immediate = true;
-      return new Promise((resolve) => flight.waiters.push(resolve));
-    }
-    return new Promise((resolve) =>
-      this.enqueue({
-        kind: 'summary',
-        projectId,
-        key: null,
-        sections: [],
-        immediate,
-        waiters: [resolve],
-      }),
-    );
+    return this.summary.load(projectId, options.immediate ?? true);
+  }
+
+  getSummary(projectId: ProjectId): SummarySnapshot {
+    return this.summary.snapshot(projectId);
   }
 
   /** Fetches sections of a Detail, or joins the fetch that already covers them. */
@@ -120,7 +119,6 @@ export class RefreshScheduler implements SchedulerHost {
       parts.push(
         new Promise((resolve) =>
           this.enqueue({
-            kind: 'detail',
             projectId: key.projectId,
             key,
             sections: missing,
@@ -141,11 +139,7 @@ export class RefreshScheduler implements SchedulerHost {
    */
   onChanged(event: ChangedEvent): void {
     const reason = this.invalidator.observe(event);
-    for (const flight of this.flights.values()) {
-      if (flight.kind === 'summary' && flight.projectId === event.projectId) {
-        flight.recorded.push(event);
-      }
-    }
+    this.summary.record(event);
     if (reason) {
       this.gate.submit(() => resetCache(this, reason), { key: 'reset' });
     } else {
@@ -162,12 +156,12 @@ export class RefreshScheduler implements SchedulerHost {
     this.gate.submit(() => resetCache(this, reason), { key: 'reset' });
   }
 
-  /** The subscription is open. Called before the first Summary and again after every reconnect. */
+  /**
+   * The subscription is open. The first Summary is read by the screen's query once this is so; a
+   * reconnect means events may have been missed, so the cache is read again.
+   */
   connected(reconnect: boolean): void {
-    if (!reconnect) {
-      for (const projectId of this.watched()) void this.loadSummary(projectId);
-      return;
-    }
+    if (!reconnect) return;
     this.invalidator.forgetSequence();
     this.gate.submit(() => resetCache(this, 'reconnected'), { key: 'reset' });
   }
@@ -175,6 +169,7 @@ export class RefreshScheduler implements SchedulerHost {
   dispose(): void {
     this.disposed = true;
     this.offGate();
+    this.summary.dispose();
     if (this.timer !== null) clearTimeout(this.timer);
     this.timer = null;
     for (const item of this.queue.values()) for (const w of item.waiters) w();
@@ -197,7 +192,7 @@ export class RefreshScheduler implements SchedulerHost {
       for (const w of request.waiters) w();
       return;
     }
-    const id = request.key ? detailId(request.key) : summaryId(request.projectId);
+    const id = detailId(request.key);
     let item = this.queue.get(id);
     if (item) {
       for (const s of request.sections) item.sections.add(s);
@@ -207,7 +202,6 @@ export class RefreshScheduler implements SchedulerHost {
     } else {
       item = {
         id,
-        kind: request.kind,
         projectId: request.projectId,
         key: request.key,
         sections: new Set(request.sections),
@@ -230,8 +224,7 @@ export class RefreshScheduler implements SchedulerHost {
   }
 
   private priority(item: Item): number {
-    if (item.kind === 'summary') return 0;
-    return item.key && this.store.isPinned(item.key) ? 1 : 2;
+    return this.store.isPinned(item.key) ? 0 : 1;
   }
 
   private pump(): void {
@@ -255,7 +248,6 @@ export class RefreshScheduler implements SchedulerHost {
     this.queue.delete(item.id);
     const flight: Flight = {
       id: item.id,
-      kind: item.kind,
       projectId: item.projectId,
       key: item.key,
       sections: SECTION_ORDER.filter((s) => item.sections.has(s)),
@@ -266,11 +258,9 @@ export class RefreshScheduler implements SchedulerHost {
       superseded: false,
       requeue: false,
       cancelled: false,
-      recorded: [],
     };
     this.flights.set(flight.id, flight);
-    const run = flight.kind === 'summary' ? runSummary(this, flight) : runDetail(this, flight);
-    void run.finally(() => this.finish(flight));
+    void runDetail(this, flight).finally(() => this.finish(flight));
   }
 
   private finish(flight: Flight): void {

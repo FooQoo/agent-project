@@ -3,10 +3,12 @@ import type { DetailSection } from '../api/contracts';
 import type { ResourceKey, ResourceSnapshot, SectionSnapshot } from './types';
 
 export interface StoreLimits {
-  summaryProjects: number;
   taskDetail: { count: number; bytes: number };
   epicDetail: { count: number; bytes: number };
 }
+
+/** Characters times two stands for the bytes a value takes. */
+export const sizeOf = (value: unknown): number => JSON.stringify(value).length * 2;
 
 export const SECTIONS: DetailSection[] = ['document', 'history'];
 

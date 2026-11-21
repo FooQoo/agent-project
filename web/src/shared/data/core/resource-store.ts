@@ -1,8 +1,8 @@
-// The cache of the data core: Summaries by project and Details by task or epic, one entry per
-// section. It knows nothing of the network. A section is whole only after `commit`; what a
+// The cache of the data core: Details by task or epic, one entry per section (the Summary is a
+// query of the query client). It knows nothing of the network. A section is whole only after `commit`; what a
 // running stream has received so far is `partial` and never becomes `data` on its own.
 import type { ProjectId } from '../../api/contracts';
-import type { DetailSection, Summary } from '../api/contracts';
+import type { DetailSection } from '../api/contracts';
 import { LIMITS } from './limits';
 import {
   ABSENT_RESOURCE,
@@ -10,16 +10,10 @@ import {
   keyOf,
   pickEviction,
   SECTIONS,
+  sizeOf,
   type StoreLimits,
 } from './store-parts';
-import { sizeOf, SummaryCache } from './summary-cache';
-import type {
-  ResourceKey,
-  ResourceSnapshot,
-  SectionDataMap,
-  SectionSnapshot,
-  SummarySnapshot,
-} from './types';
+import type { ResourceKey, ResourceSnapshot, SectionDataMap, SectionSnapshot } from './types';
 
 export { keyOf, type StoreLimits };
 
@@ -32,14 +26,12 @@ interface Record {
 export class ResourceStore {
   private readonly limits: StoreLimits;
   private readonly records = new Map<string, Record>();
-  private readonly summaries: SummaryCache;
   private readonly pins = new Map<string, number>();
   private readonly listeners = new Set<() => void>();
   private tick = 0;
 
   constructor(limits: StoreLimits = LIMITS) {
     this.limits = limits;
-    this.summaries = new SummaryCache(limits.summaryProjects);
   }
 
   // ---- subscription (for `useSyncExternalStore`)
@@ -53,43 +45,6 @@ export class ResourceStore {
 
   private emit(): void {
     for (const listener of [...this.listeners]) listener();
-  }
-
-  // ---- Summary: kept in a cache of its own, passed through here for one subscription
-
-  getSummary(projectId: ProjectId): SummarySnapshot {
-    return this.summaries.get(projectId);
-  }
-
-  beginSummary(projectId: ProjectId): void {
-    this.summaries.begin(projectId);
-    this.emit();
-  }
-
-  commitSummary(projectId: ProjectId, summary: Summary): void {
-    this.summaries.commit(projectId, summary);
-    this.emit();
-  }
-
-  failSummary(projectId: ProjectId, error: Error): void {
-    this.summaries.fail(projectId, error);
-    this.emit();
-  }
-
-  /** A Summary fetch was dropped without an error. */
-  discardSummary(projectId: ProjectId): void {
-    this.summaries.discard(projectId);
-    this.emit();
-  }
-
-  markSummaryStale(projectId: ProjectId): boolean {
-    const changed = this.summaries.markStale(projectId);
-    if (changed) this.emit();
-    return changed;
-  }
-
-  touchSummary(projectId: ProjectId): void {
-    this.summaries.touch(projectId);
   }
 
   // ---- Detail
@@ -226,7 +181,6 @@ export class ResourceStore {
   }
 
   markAllStale(): void {
-    this.summaries.markAllStale();
     for (const rec of this.records.values()) {
       for (const s of SECTIONS) {
         if (rec.snapshot[s].state === 'ready') this.patch(rec.key, s, { state: 'stale' });

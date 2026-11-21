@@ -20,12 +20,11 @@ function supersede(flight: Flight): void {
 export function resetCache(host: SchedulerHost, reason: ResetReason): void {
   if (host.disposed) return;
   host.invalidator.reset(reason);
+  host.summary.markStale();
   for (const key of host.store.cachedKeys()) {
     for (const section of host.store.cachedSections(key)) markUnverified(host, key, section);
   }
-  for (const flight of host.flights.values()) {
-    if (flight.kind === 'detail') supersede(flight);
-  }
+  for (const flight of host.flights.values()) supersede(flight);
   for (const projectId of host.watched()) void host.loadSummary(projectId, { immediate: false });
 }
 
@@ -45,7 +44,6 @@ export function applyInvalidation(
       supersede(flight);
     } else {
       host.enqueue({
-        kind: 'detail',
         projectId: key.projectId,
         key,
         sections: [section],
@@ -74,6 +72,7 @@ export function cancelDetail(host: SchedulerHost, key: ResourceKey): void {
 
 /** Something opened: background fetches stop and wait for the gate. */
 export function holdBackground(host: SchedulerHost): void {
+  host.summary.hold();
   for (const flight of host.flights.values()) {
     if (flight.immediate) continue;
     flight.requeue = true;
