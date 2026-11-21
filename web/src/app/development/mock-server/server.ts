@@ -34,8 +34,8 @@ export type {
 /**
  * The sample-data server: answers `/api/*` from boards held in memory, the way `agboard serve`
  * answers them, and reports each change as the SSE `changed` event would. It uses no Node API, so
- * the Vite dev server (`web/mock-api.ts`) and a page in a browser can both put it behind their own
- * transport. Only those adapters and the tests import it; the production build does not.
+ * MSW handlers (`../mocks/handlers.ts`) can carry requests to it in a page, in Storybook and in the
+ * unit tests. Only those and the tests import it; the production build does not.
  *
  * Page query parameters, passed as `MockRequest.page`: `empty`, `fail` and `slow` (the board of the
  * shown project), `projects=none` (no projects), `projectsFail=1` (the list fails), `disconnect`

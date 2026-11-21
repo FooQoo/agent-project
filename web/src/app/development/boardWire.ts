@@ -8,7 +8,7 @@ import type {
 
 /**
  * Sample-data and test helpers: the Summary and the Detail streams a server would write for a
- * board snapshot. Only the sample-data server (`mock-api.ts`) and the tests import this module;
+ * board snapshot. Only the sample-data server and the tests import this module;
  * the production build does not.
  */
 

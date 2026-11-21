@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import longMarkdown from '../fixtures/long-markdown.md?raw';
 import fixture from '../fixtures/board.json';
 import type { Board, Task } from '../../src/shared/api/contracts';
-import { browserLanguages, demoLocale } from '../../src/app/development/demo/locale';
+import { browserLanguages, demoLocale } from '../../src/app/development/mocks/locale';
 import { sampleBoards } from '../../src/app/development/mock-server/boards';
 import { createMockServer, SAMPLE_PROJECTS } from '../../src/app/development/mock-server/server';
 

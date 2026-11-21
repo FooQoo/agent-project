@@ -125,10 +125,10 @@
 
 ### ブラウザのデモ
 
-- `web/src/app/development/mock-server/`: Node APIを使わないサンプルデータのサーバー。サンプルデータモード（`web/mock-api.ts`）とデモで共有します。`sampleJa.ts`はサンプルのボードの日本語の文です。
-- `web/src/app/development/mocks/`: サンプルデータサーバーを包むMSWハンドラ。単体テストとStorybookで共有します（[モックハンドラ](../getting-started/setup.md#モックハンドラ)を参照）。
-- `web/src/app/development/demo/`: デモの開始（`install.ts`）、`fetch`と`EventSource`の差し替え（`transport.ts`）、画像の書き換え（`images.ts`）、始めの言語の判定（`locale.ts`）。
-- `web/demo-build.ts`: `demo`モードのViteプラグイン、ベースパス、ページに渡すサンプルデータ。
+- `web/src/app/development/mock-server/`: Node APIを使わないサンプルデータのサーバー。サンプルデータモード、デモ、単体テスト、Storybookで共有します。`sampleJa.ts`はサンプルのボードの日本語の文です。
+- `web/src/app/development/mocks/`: サンプルデータサーバーを包むMSWハンドラ（`handlers.ts`、`request.ts`）。デモ、サンプルデータモード、単体テスト、Storybookで共有します（[モックハンドラ](../getting-started/setup.md#モックハンドラ)を参照）。`start.ts`がページの中でデモまたはサンプルデータモードを開始し、`browser.ts`がそのService Workerを起動し、`locale.ts`が始めの言語を判定します。
+- `web/mock-browser.ts`: `demo`モードと`mock`モードのViteプラグイン。サンプルデータを仮想モジュールとして渡し、ワーカーのスクリプトを配信または書き出し、ページのプレースホルダーを埋めます。
+- `web/demo-build.ts`: `demo`モードのベースパスと出力フォルダ。
 - `e2e/playwright.demo.config.ts`と`e2e/demo/`: ビルド済みのドキュメントサイトを相手にするデモのスイート。[ブラウザのデモ](../concepts/demo.md)を参照してください。
 
 ## 採用技術
