@@ -131,8 +131,8 @@ export function useAppController(initial: AppInitial | undefined): AppController
     [core],
   );
   const reloadArchive = archive.reload;
-  // The editors start from the whole text, so the Detail is read again just before they open: a
-  // body that is still loading, or older than the file, would be saved over the real one.
+  // The editors start from the whole text, so the Detail is read again just before they open (a
+  // failed read rejects: the cache would still hold an older body, saved over the real one).
   const loadTask = useCallback(
     async (projectId: ProjectId, card: TaskSummary): Promise<Task | null> => {
       const key: ResourceKey = { kind: 'task', projectId, id: card.id };
@@ -140,7 +140,7 @@ export function useAppController(initial: AppInitial | undefined): AppController
       // open, so it is read again too; an archived card is not in it and keeps the one given.
       // The Summary goes first: reading it drops the Details of cards it no longer lists.
       await core.refreshSummary(projectId);
-      await core.details.fetch(key, ['document']);
+      await core.details.refresh(key, ['document']);
       const loaded = core.details.entry(key, 'document')?.data;
       if (loaded === undefined) return null;
       const summary = core.getSummary(projectId).data;
@@ -162,7 +162,7 @@ export function useAppController(initial: AppInitial | undefined): AppController
   const loadEpic = useCallback(
     async (projectId: ProjectId, epic: Epic): Promise<Epic | null> => {
       const key: ResourceKey = { kind: 'epic', projectId, id: epic.id };
-      await core.details.fetch(key, ['document']);
+      await core.details.refresh(key, ['document']);
       const loaded = core.details.entry(key, 'document')?.data;
       return loaded === undefined ? null : epicForEditor(epic, loaded);
     },

@@ -14,6 +14,7 @@ import type { ProjectId } from '../../api/contracts';
 import type { DetailSection, DetailVersions, Summary } from '../api/contracts';
 import { DetailBatch } from './detail-batch';
 import { DetailPartials } from './detail-partials';
+import { entryOf, keyOfQuery, namedVersions } from './detail-summary';
 import type { DetailEntry } from './detail-snapshot';
 import { MAX_REFETCH_ATTEMPTS } from './limits';
 import type { PresentationGate } from './presentation-gate';
@@ -30,22 +31,6 @@ export interface DetailReaderOptions {
   gate: PresentationGate;
   /** Reads the Summary of a project again now, past the gate. */
   loadSummary(projectId: ProjectId): Promise<void>;
-}
-
-function keyOfQuery(query: Query): { key: ResourceKey; section: DetailSection } {
-  const [kind, projectId, id, section] = query.queryKey as [
-    ResourceKey['kind'],
-    ProjectId,
-    number | string,
-    DetailSection,
-  ];
-  return { key: { kind, projectId, id } as ResourceKey, section };
-}
-
-function entryOf(summary: Summary, key: ResourceKey) {
-  return key.kind === 'task'
-    ? summary.tasks.find((t) => t.id === key.id)
-    : summary.epics.find((e) => e.id === key.id);
 }
 
 export class DetailReader {
@@ -124,17 +109,27 @@ export class DetailReader {
   /**
    * Reads sections again now, past the gate and joining a read that is running. A person waits
    * (Retry, an editor opening): a failure shows at once, without background retries. Settles when
-   * the reads end; what failed is in the query.
+   * the reads end; what failed is in the query, and `refresh` is the one that reports it.
    */
-  async fetch(key: ResourceKey, sections: readonly DetailSection[]): Promise<void> {
+  fetch(key: ResourceKey, sections: readonly DetailSection[]): Promise<void> {
+    return this.refresh(key, sections).catch(noop);
+  }
+
+  /**
+   * Like `fetch`, but rejects with the first failure. A query keeps the document it held when a
+   * read fails, so a caller that must not use an older one (an editor) cannot tell from the cache.
+   */
+  async refresh(key: ResourceKey, sections: readonly DetailSection[]): Promise<void> {
     if (this.disposed) return;
-    await Promise.all(
+    const results = await Promise.allSettled(
       sections.map((section) => {
         const options = this.options(key, section);
         this.background.delete(hashKey(options.queryKey));
-        return this.client.fetchQuery({ ...options, staleTime: 0, retry: false }).then(noop, noop);
+        return this.client.fetchQuery({ ...options, staleTime: 0, retry: false });
       }),
     );
+    const failed = results.find((result) => result.status === 'rejected');
+    if (failed) throw failed.reason;
   }
 
   /**
@@ -299,13 +294,6 @@ export class DetailReader {
   /** The versions the Summary names, unless it is marked as not to be trusted. */
   private expected(key: ResourceKey, sections: DetailSection[]): DetailVersions | undefined {
     const summary = this.trusted(key.projectId);
-    const named = summary
-      ? (entryOf(summary, key)?.detailVersions as DetailVersions | undefined)
-      : undefined;
-    if (!named) return undefined;
-    const versions: DetailVersions = {};
-    for (const section of sections)
-      if (named[section] !== undefined) versions[section] = named[section];
-    return versions;
+    return summary ? namedVersions(summary, key, sections) : undefined;
   }
 }
