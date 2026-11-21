@@ -102,11 +102,11 @@ export function BacklogSheet({
           {t('backlog.selected', { count })}
         </span>
         <Button type="button" variant="outline" disabled={busy} onClick={onCancel}>
-          {t('backlog.cancel')}
+          <span className="backlog-sheet__label">{t('backlog.cancel')}</span>
         </Button>
         <Button type="button" disabled={busy || count === 0} onClick={onSend}>
           <SendIcon aria-hidden="true" />
-          {t('backlog.send', { count })}
+          <span className="backlog-sheet__label">{t('backlog.send', { count })}</span>
         </Button>
       </div>
     </section>

@@ -30,7 +30,18 @@
           "stories": [
             {
               "id": "backlog-send--selection-drawer",
-              "states": ["selected count", "non-modal", "send", "cancel"],
+              "states": [
+                "selected count",
+                "non-modal",
+                "equal-size Cancel and Send buttons",
+                "send",
+                "cancel"
+              ],
+              "interaction": true
+            },
+            {
+              "id": "backlog-send--selection-drawer-long-count",
+              "states": ["long count", "label cut with an ellipsis", "equal-size buttons"],
               "interaction": true
             }
           ]
