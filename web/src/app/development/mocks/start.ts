@@ -35,8 +35,8 @@ export async function startMock(mode: 'mock' | 'demo', root: HTMLElement): Promi
 
 const NOTICES = {
   unsupported: {
-    en: 'This demo needs Service Workers, which this browser or window does not offer. Open the page in another browser, or outside a private window.',
-    ja: 'このデモにはService Workerが必要ですが、このブラウザまたはウィンドウでは使えません。別のブラウザか、プライベートウィンドウの外で開いてください。',
+    en: 'This demo needs Service Workers and streaming messages, which this browser or window does not offer. Open the page in a current browser, or outside a private window.',
+    ja: 'このデモにはService Workerとストリームの受け渡しが必要ですが、このブラウザまたはウィンドウでは使えません。最新のブラウザか、プライベートウィンドウの外で開いてください。',
   },
   failed: {
     en: 'The demo could not start: the browser did not accept its Service Worker. Reload the page, or open it in another browser.',

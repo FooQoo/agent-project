@@ -8,9 +8,31 @@ const RELOADED_FLAG = 'agboard.mockWorkerReloaded';
 /** What `startMockWorker` did: the page can render, it is reloading, or it cannot run. */
 export type MockWorkerState = 'ready' | 'reloading' | 'unsupported';
 
-/** Browsers with no Service Worker, or a page that is not a secure context, cannot run the mock. */
-export function supportsMockWorker(nav: { serviceWorker?: unknown }): boolean {
-  return nav.serviceWorker !== undefined;
+/**
+ * Whether the browser can post a `ReadableStream` to another context. MSW sends a response body to
+ * its worker as a transferred stream; without it MSW buffers the whole body first, so the endless
+ * `/api/events` response would never be sent and the board would never get `ready` or `changed`.
+ * This mirrors MSW's own check (Safari before 27 fails it).
+ */
+export function supportsStreamTransfer(): boolean {
+  try {
+    const stream = new ReadableStream({ start: (controller) => controller.close() });
+    new MessageChannel().port1.postMessage(stream, [stream]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Browsers with no Service Worker, a page that is not a secure context, or a browser that cannot
+ * transfer streams (Safari before 27) cannot run the mock.
+ */
+export function supportsMockWorker(
+  nav: { serviceWorker?: unknown },
+  canTransferStream: boolean = supportsStreamTransfer(),
+): boolean {
+  return nav.serviceWorker !== undefined && canTransferStream;
 }
 
 /**
