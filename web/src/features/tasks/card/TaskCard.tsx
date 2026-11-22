@@ -173,7 +173,10 @@ export function TaskCardView({
             <span className="card__open-question">{t('backlog.openQuestion')}</span>
           )}
           <span className="card__spacer" />
-          {showsState && <StatusLabel kind="agent" status={task.agentStatus} />}
+          <span className="card__side">
+            {showsState && <StatusLabel kind="agent" status={task.agentStatus} />}
+            <AcceptanceProgress task={task} />
+          </span>
         </span>
         <TaskCardContent task={task} showPendingReason={pending && showPendingReason}>
           {task.epic && renderEpic?.(task.epic)}
@@ -185,14 +188,8 @@ export function TaskCardView({
                 {renderVersion(task)}
               </span>
             )}
-            <span
-              className="card__updated"
-              title={t('card.updated', { date: formatShort(task.updatedAt) })}
-            >
-              {t('card.updated', { date: formatShort(task.updatedAt) })}
-            </span>
+            <span className="card__updated">{formatShort(task.updatedAt)}</span>
           </span>
-          <AcceptanceProgress task={task} />
         </span>
       </div>
       {children}

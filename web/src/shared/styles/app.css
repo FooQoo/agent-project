@@ -1028,33 +1028,37 @@ ol {
   color: var(--r-muted);
 }
 
-/* Keep the updated time and completion progress on opposite sides of the card footer. */
+/* The version tag and the date share the row; the date wraps below the tag when the lane is too narrow for both. */
 .card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card__when {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 4px 8px;
-}
-
-/* The version tag and the updated time share the left of the row. A narrow lane cuts the time short instead of wrapping the tag. */
-.card__when {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   min-width: 0;
 }
 
 .card__when .card__updated {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* The progress chip stays at the right edge, on its own line when the row is full. */
-.card__foot .acceptance-chip {
-  margin-left: auto;
+/* The agent status and the acceptance count stack at the right of the card's top row. */
+.card__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  align-self: flex-start;
+  gap: 4px;
+}
+
+.card__side:empty {
+  display: none;
 }
 
 /* ---- Touch screens: finger-sized controls (44px) ---- */

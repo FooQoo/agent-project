@@ -69,11 +69,13 @@ test('sets the current version from the header, plans a task and plans an epic i
 	await expect(headerMenu(page)).toHaveAccessibleName('Current version: Not set');
 	await expect(card(page, 'Plan A login screen').locator('.ver-tag')).toContainText('v1.8.0');
 	await expect(card(page, 'Plan C session').locator('.ver-tag')).toContainText('Unplanned');
-	// The tag shares the date row: it is at the left of "Updated", and the acceptance chip stays at the right.
+	// The tag shares the date row: it is at the left of the date, which has no "Updated" word. The acceptance
+	// chip is in the top row, not in the footer.
 	for (const title of ['Plan A login screen', 'Plan C session']) {
 		const foot = card(page, title).locator('.card__foot');
 		await expect(foot.locator('.ver-tag')).toHaveCount(1);
-		await expect(foot.locator('.card__updated')).toBeVisible();
+		await expect(foot.locator('.card__updated')).toHaveText(/^\d{2}\/\d{2} \d{2}:\d{2}$/);
+		await expect(foot.locator('.acceptance-chip')).toHaveCount(0);
 		const [tag, updated] = await Promise.all([foot.locator('.ver-tag').boundingBox(), foot.locator('.card__updated').boundingBox()]);
 		expect(tag!.x + tag!.width).toBeLessThanOrEqual(updated!.x);
 		expect(Math.abs(tag!.y + tag!.height / 2 - (updated!.y + updated!.height / 2))).toBeLessThan(6);
