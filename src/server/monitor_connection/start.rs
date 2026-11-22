@@ -7,10 +7,11 @@ use url::Url;
 
 use super::backend::{SharedListener, external_app, serve};
 use super::contracts::ConnectionStatus;
+use super::contracts::Provider;
 use super::lifecycle::{Inner, MonitorConnections};
 use super::router::{BackendPolicy, Gate, backend_router};
 use super::run::Run;
-use super::types::{FailureCode, MonitorReady, OpenRequest, StartError};
+use super::types::{FailureCode, MonitorReady, OpenRequest, Secret, StartError};
 use crate::server::monitor_auth::contracts::SESSION_MAX_AGE_SECS;
 use crate::server::monitor_auth::passcode::{Passcode, UnlockGate};
 use crate::server::monitor_auth::session::{SessionStore, system_clock};
@@ -23,7 +24,12 @@ impl MonitorConnections {
         self: &Arc<Self>,
         inner: &mut Inner,
     ) -> Result<oneshot::Receiver<Result<MonitorReady, FailureCode>>, StartError> {
-        let token = inner.token.clone().ok_or(StartError::TokenRequired)?;
+        let provider = inner.config.provider;
+        let token = match provider {
+            Provider::Ngrok => inner.token.clone().ok_or(StartError::TokenRequired)?,
+            // Tailscale needs no token.
+            Provider::Tailscale => Secret::new(""),
+        };
         let app = self
             .app
             .get()
@@ -56,6 +62,7 @@ impl MonitorConnections {
         inner.failure = None;
         inner.passcode = None;
         let request = OpenRequest {
+            provider,
             token,
             domain: self.domain.clone().or_else(|| inner.config.domain.clone()),
             backend: backend_url,

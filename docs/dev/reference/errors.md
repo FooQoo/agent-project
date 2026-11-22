@@ -113,6 +113,7 @@ These are returned by the `/api/monitor-connections` routes (see [Web API](./web
 | `start_failed` | The connection could not be started for an internal reason. | n/a | 500 |
 | `device_not_found` | The device id to unregister is not registered (for example it was removed already). | n/a | 404 |
 | `invalid_domain` | The domain in the settings is not a bare host name (a scheme, path, port, or wildcard was given). Nothing was saved. | n/a | 422 |
+| `invalid_provider` | The provider in the settings is not `ngrok` or `tailscale`. Nothing was saved. | n/a | 422 |
 | `invalid_value` | The token or the body breaks a rule (for example `save` without a token, or an unknown field). | n/a | 422 |
 
 On the command line, `serve --monitor ngrok` with a missing or invalid option exits 2 with `invalid_argument`; a connection that cannot start exits 1. The failure codes in the state object (`failure`) are listed in [Web API](./web-api.md#remote-connection).

@@ -10,7 +10,9 @@ use std::sync::Arc;
 use serde::Serialize;
 use url::Url;
 
-use super::contracts::{ConnectionStatus, EndpointError, PublicOrigin, open_endpoint};
+pub use super::connector::{RoutingConnector, SdkConnector};
+use super::contracts::{ConnectionStatus, Provider, PublicOrigin};
+pub use super::input::{parse_domain, parse_token};
 use super::keychain::{NoKeychain, OsKeychain, TokenVault};
 use crate::server::monitor_auth::passcode::Passcode;
 
@@ -44,34 +46,6 @@ pub struct MonitorEnv {
     pub domain: Option<String>,
 }
 
-/// A bare, lower-case host name, or `None` for anything else: a scheme, a path, a port,
-/// a wildcard, or spaces are not accepted, so a mistyped value never reaches ngrok.
-pub fn parse_domain(raw: &str) -> Option<String> {
-    let domain = raw.trim().to_ascii_lowercase();
-    let label_ok = |l: &str| {
-        !l.is_empty()
-            && l.len() <= 63
-            && !l.starts_with('-')
-            && !l.ends_with('-')
-            && l.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
-    };
-    (domain.len() <= 253 && domain.contains('.') && domain.split('.').all(label_ok))
-        .then_some(domain)
-}
-
-/// The longest ngrok token accepted.
-const MAX_TOKEN: usize = 512;
-
-/// An ngrok token as typed: trimmed, not empty, not too long, with no space or control
-/// character. The board's connection dialog and `agboard setup remote` both use this.
-pub fn parse_token(raw: &str) -> Option<Secret> {
-    let token = raw.trim();
-    (!token.is_empty()
-        && token.len() <= MAX_TOKEN
-        && !token.chars().any(|c| c.is_control() || c.is_whitespace()))
-    .then(|| Secret::new(token))
-}
-
 impl MonitorEnv {
     pub fn from_process() -> Self {
         let get = |name: &str| std::env::var(name).ok().filter(|v| !v.is_empty());
@@ -92,6 +66,14 @@ pub enum FailureCode {
     Internal,
     ConfigUnreadable,
     ConfigInvalid,
+    /// Tailscale is chosen but its command-line tool was not found.
+    TailscaleNotInstalled,
+    /// Tailscale is installed but not running or not logged in.
+    TailscaleNotLoggedIn,
+    /// HTTPS certificates are not enabled for the tailnet, so there is no `ts.net` address.
+    TailscaleHttpsDisabled,
+    /// `tailscale serve` did not accept the entrance.
+    TailscaleServeFailed,
 }
 
 impl FailureCode {
@@ -103,13 +85,19 @@ impl FailureCode {
             Self::Internal => "internal",
             Self::ConfigUnreadable => "config_unreadable",
             Self::ConfigInvalid => "config_invalid",
+            Self::TailscaleNotInstalled => "tailscale_not_installed",
+            Self::TailscaleNotLoggedIn => "tailscale_not_logged_in",
+            Self::TailscaleHttpsDisabled => "tailscale_https_disabled",
+            Self::TailscaleServeFailed => "tailscale_serve_failed",
         }
     }
 }
 
-/// What the connector needs. `token` is a secret. There is no Traffic Policy. Without a
-/// `domain` ngrok chooses the public address, and it differs at every start.
+/// What the connector needs. `token` is a secret and is empty for Tailscale, which needs none.
+/// There is no Traffic Policy. Without a `domain` ngrok chooses the public address, and it
+/// differs at every start; Tailscale ignores `domain`.
 pub struct OpenRequest {
+    pub provider: Provider,
     pub token: Secret,
     pub domain: Option<String>,
     pub backend: Url,
@@ -134,38 +122,7 @@ pub trait Connector: Send + Sync {
     fn open(&self, request: OpenRequest) -> OpenFuture;
 }
 
-pub struct SdkConnector;
-
-impl Connector for SdkConnector {
-    fn open(&self, request: OpenRequest) -> OpenFuture {
-        Box::pin(async move {
-            let endpoint = open_endpoint(
-                request.token.expose(),
-                request.backend,
-                request.domain.as_deref(),
-                None,
-            )
-            .await
-            .map_err(|e| {
-                // Diagnostic only: the reason ngrok gave. The error text never holds the token.
-                eprintln!("agboard: ngrok did not open the tunnel: {e}");
-                OpenFailure {
-                    code: match e {
-                        EndpointError::Connect(_) => FailureCode::ConnectFailed,
-                        EndpointError::Listen(_) => FailureCode::EndpointFailed,
-                        EndpointError::PublicUrl => FailureCode::PublicUrlInvalid,
-                    },
-                }
-            })?;
-            Ok(OpenedTunnel {
-                public: endpoint.public.clone(),
-                keep_alive: Box::new(endpoint),
-            })
-        })
-    }
-}
-
-/// How the built-in ngrok monitor connection is set up for one run.
+/// How the built-in monitor connection is set up for one run.
 #[derive(Clone)]
 pub struct MonitorOptions {
     /// Values from the process environment (the ngrok token).
@@ -187,7 +144,7 @@ impl MonitorOptions {
         Self {
             env,
             explicit,
-            connector: Arc::new(SdkConnector),
+            connector: Arc::new(RoutingConnector::new()),
             vault: Arc::new(OsKeychain),
             push_transport: Arc::new(crate::server::push_delivery::HttpTransport::new()),
         }
@@ -250,6 +207,7 @@ pub enum TokenSource {
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub enabled: bool,
+    pub provider: Provider,
     /// The saved domain; `None` when none is saved.
     pub domain: Option<String>,
 }
@@ -259,6 +217,8 @@ pub struct Settings {
 pub struct SettingsUpdate {
     pub enabled: bool,
     pub revision: u64,
+    /// `None` keeps the saved provider.
+    pub provider: Option<Provider>,
     /// `None` keeps the saved domain, `Some(None)` clears it, `Some(Some(d))` saves `d`.
     pub domain: Option<Option<String>>,
 }
@@ -271,7 +231,7 @@ pub enum UpdateError {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum StartError {
-    /// No ngrok token is held and none was given.
+    /// ngrok is chosen, no token is held and none was given.
     TokenRequired,
     /// The saved settings file could not be read; save the settings first.
     SettingsUnreadable,
@@ -286,30 +246,4 @@ pub enum StartError {
 pub enum ForgetError {
     /// The keychain is not usable, so the saved token cannot be removed.
     KeychainUnavailable,
-}
-
-#[cfg(test)]
-mod domain_tests {
-    use super::parse_domain;
-
-    #[test]
-    fn a_domain_is_a_bare_host_name() {
-        assert_eq!(
-            parse_domain(" My-App.ngrok-free.DEV ").as_deref(),
-            Some("my-app.ngrok-free.dev")
-        );
-        for bad in [
-            "",
-            "localhost",
-            "https://a.ngrok-free.dev",
-            "a.ngrok-free.dev/x",
-            "a.ngrok-free.dev:443",
-            "*.ngrok-free.dev",
-            "a..dev",
-            "-a.ngrok-free.dev",
-            "a b.dev",
-        ] {
-            assert_eq!(parse_domain(bad), None, "{bad}");
-        }
-    }
 }

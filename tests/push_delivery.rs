@@ -26,8 +26,8 @@ use support::home;
 mod harness;
 use harness::*;
 
-const SESSION: &str = "agboard_ngrok_session";
-const DEVICE: &str = "agboard_ngrok_device";
+const SESSION: &str = "agboard_remote_session";
+const DEVICE: &str = "agboard_remote_device";
 const ENDPOINT: &str = "https://web.push.apple.com/QGexample";
 
 struct Len(usize);

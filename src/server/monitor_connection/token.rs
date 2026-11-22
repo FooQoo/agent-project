@@ -195,6 +195,7 @@ fn snapshot_of(inner: &Inner, keychain_available: bool, domain_env: Option<&str>
         revision: inner.config.revision,
         settings: Settings {
             enabled: inner.config.enabled,
+            provider: inner.config.provider,
             domain: inner.config.domain.clone(),
         },
         domain_env: domain_env.map(str::to_string),

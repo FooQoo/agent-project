@@ -48,6 +48,7 @@ pub fn run(
                     .map(Some)
             },
             enabled: args.enabled,
+            provider: None,
             token: if args.token_stdin {
                 Some(read_token(stdin)?)
             } else {
@@ -134,6 +135,7 @@ pub fn apply_answers(
     let change = Change {
         domain,
         enabled: None,
+        provider: None,
         token,
     };
     if change.is_empty() {

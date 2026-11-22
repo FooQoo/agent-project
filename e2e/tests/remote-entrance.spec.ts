@@ -65,14 +65,14 @@ test('the phone shows no board until the passcode is entered, and a wrong one op
   await expect(page.getByRole('alert')).not.toContainText(/\d+ (tries|attempts)/);
   await expect(page.getByRole('article')).toHaveCount(0);
   expect(dataRequests).toEqual([]);
-  expect((await page.context().cookies()).filter((cookie) => cookie.name === 'agboard_ngrok_session')).toEqual([]);
+  expect((await page.context().cookies()).filter((cookie) => cookie.name === 'agboard_remote_session')).toEqual([]);
 
   // The right one opens the board, with the session cookie for the whole origin.
   await field.fill(entrance.passcode);
   await connect.click();
   await expect(page.getByRole('status')).toContainText('Connected');
   await expect(page.getByRole('article', { name: /Alpha pending review/ })).toBeVisible();
-  const session = (await page.context().cookies()).find((cookie) => cookie.name === 'agboard_ngrok_session');
+  const session = (await page.context().cookies()).find((cookie) => cookie.name === 'agboard_remote_session');
   expect(session).toMatchObject({ httpOnly: true, secure: true, sameSite: 'Lax', path: '/' });
 
   // Coming back with the cookie goes straight to the board.
@@ -124,10 +124,10 @@ test('a tablet-wide page through the entrance shows the PC board without the rem
 test('the old monitor addresses are not found, with or without a session, and nothing redirects', async ({ page }) => {
   await entrance.open(page, phoneUrl());
   await expect(page.getByRole('article', { name: /Alpha pending review/ })).toBeVisible();
-  const session = (await page.context().cookies()).find((cookie) => cookie.name === 'agboard_ngrok_session');
+  const session = (await page.context().cookies()).find((cookie) => cookie.name === 'agboard_remote_session');
   expect(session).toBeDefined();
   const bare = await playwrightRequest.newContext();
-  const signedIn = await playwrightRequest.newContext({ extraHTTPHeaders: { Cookie: `agboard_ngrok_session=${session!.value}` } });
+  const signedIn = await playwrightRequest.newContext({ extraHTTPHeaders: { Cookie: `agboard_remote_session=${session!.value}` } });
   for (const path of [
     '/monitor',
     '/monitor/',
@@ -291,7 +291,7 @@ test('nothing is read or answered without a session, and a replaced tunnel needs
     expect(response.headers()['set-cookie']).toBeUndefined();
   }
   const forged = await bare.post(`${base}/projects/${alpha}/messages/answers`, {
-    headers: { Cookie: 'agboard_ngrok_session=' + '0'.repeat(64), 'X-Agboard-Csrf': '0'.repeat(64) },
+    headers: { Cookie: 'agboard_remote_session=' + '0'.repeat(64), 'X-Agboard-Csrf': '0'.repeat(64) },
     data: { answers: [{ questionId: 'Q-1', text: 'forged' }] },
   });
   expect(forged.status()).toBe(401);
@@ -301,10 +301,10 @@ test('nothing is read or answered without a session, and a replaced tunnel needs
   await entrance.open(page, phoneUrl());
   await expect(page.getByRole('article', { name: /Alpha running one/ })).toBeVisible();
   const cookies = await page.context().cookies();
-  const session = cookies.find((cookie) => cookie.name === 'agboard_ngrok_session');
+  const session = cookies.find((cookie) => cookie.name === 'agboard_remote_session');
   expect(session).toBeDefined();
   const old = await playwrightRequest.newContext({
-    extraHTTPHeaders: { Cookie: `agboard_ngrok_session=${session!.value}` },
+    extraHTTPHeaders: { Cookie: `agboard_remote_session=${session!.value}` },
   });
   expect((await old.get(`${base}/projects/${alpha}/summary`)).status()).toBe(200);
   await entrance.rotate();
@@ -352,7 +352,7 @@ test('five wrong passcodes close the run, even to the right one, until the conne
   await expect(field).toBeDisabled();
   await expect(connect).toBeDisabled();
   await expect(page.getByRole('article')).toHaveCount(0);
-  expect((await page.context().cookies()).filter((cookie) => cookie.name === 'agboard_ngrok_session')).toEqual([]);
+  expect((await page.context().cookies()).filter((cookie) => cookie.name === 'agboard_remote_session')).toEqual([]);
 
   // Reloading does not help; starting the connection again does.
   await page.reload();

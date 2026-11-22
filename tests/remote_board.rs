@@ -227,7 +227,7 @@ fn a_write_needs_the_session_the_origin_the_fetch_metadata_and_the_csrf_token() 
     assert_eq!(good(&[("Origin", "https://evil.ngrok.app")]).status, 403);
     assert_eq!(good(&[("Sec-Fetch-Site", "cross-site")]).status, 403);
     assert_eq!(
-        good(&[("Cookie", "agboard_ngrok_session=nope")]).status,
+        good(&[("Cookie", "agboard_remote_session=nope")]).status,
         401
     );
     // The local page's token header is not a credential here.
@@ -327,7 +327,7 @@ fn without_a_session_every_api_and_the_event_stream_are_401() {
     let (status, _, _) = open_events(&server, None);
     assert_eq!(status, 401);
     // A cookie from nowhere and one the connection never issued are no session either.
-    for cookie in ["agboard_ngrok_session=0123456789", "other=1"] {
+    for cookie in ["agboard_remote_session=0123456789", "other=1"] {
         let reply = server.request("GET", "/api/projects", &[("Cookie", cookie)], "");
         assert_eq!(reply.status, 401, "{cookie}");
     }
@@ -368,7 +368,7 @@ fn the_cookie_is_issued_only_when_the_passcode_passes() {
     assert_eq!(granted.status, 200, "{}", granted.body);
     let cookie = granted.header("set-cookie").expect("a cookie");
     for part in [
-        "agboard_ngrok_session=",
+        "agboard_remote_session=",
         "; Secure",
         "; HttpOnly",
         "; SameSite=Lax",

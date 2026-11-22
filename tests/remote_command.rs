@@ -64,7 +64,7 @@ fn ready_connection_prints_the_state_the_project_address_and_the_passcode() {
     assert_eq!(
         out(&text),
         format!(
-            "ngrok: ready\nURL: {PUBLIC}/?project={id}\nPasscode: {passcode}\nProject: monitor\nEnabled: yes\nDomain: none (ngrok chooses an address at each start)\nToken: not saved (the keychain is not available here)\n"
+            "ngrok: ready\nURL: {PUBLIC}/?project={id}\nPasscode: {passcode}\nProject: monitor\nEnabled: yes\nProvider: ngrok\nDomain: none (ngrok chooses an address at each start)\nToken: not saved (the keychain is not available here)\n"
         )
     );
 
@@ -83,6 +83,7 @@ fn ready_connection_prints_the_state_the_project_address_and_the_passcode() {
             "passcode": passcode,
             "project": {"id": id, "name": "monitor"},
             "enabled": true,
+            "provider": "ngrok",
             "domain": null,
             "tokenSaved": false,
             "keychainAvailable": false,

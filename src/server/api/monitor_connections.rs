@@ -19,6 +19,7 @@ use serde::Deserialize;
 
 use crate::server::AppState;
 use crate::server::guard::{header_text, origin_allowed};
+use crate::server::monitor_connection::contracts::Provider;
 use crate::server::monitor_connection::lifecycle::{
     ForgetError, SettingsUpdate, Snapshot, StartError, UpdateError, parse_domain, parse_token,
 };
@@ -88,6 +89,22 @@ struct SettingsBody {
     /// Absent keeps the saved domain; an empty string clears it.
     #[serde(default)]
     domain: Option<String>,
+    /// `ngrok` or `tailscale`; absent keeps the saved provider.
+    #[serde(default)]
+    provider: Option<String>,
+}
+
+/// The provider a request asks to save: `None` keeps it.
+fn requested_provider(raw: Option<String>) -> Result<Option<Provider>, Box<Response>> {
+    let Some(text) = raw else { return Ok(None) };
+    Provider::parse(&text).map(Some).ok_or_else(|| {
+        Box::new(error_response(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "invalid_provider",
+            "the connection provider is not valid.",
+            "Use ngrok or tailscale.",
+        ))
+    })
 }
 
 /// The domain a request asks to save: `None` keeps it, `Some(None)` clears it.
@@ -122,9 +139,14 @@ pub(super) async fn put_ngrok_settings(
         Ok(domain) => domain,
         Err(r) => return *r,
     };
+    let provider = match requested_provider(body.provider) {
+        Ok(provider) => provider,
+        Err(r) => return *r,
+    };
     let result = state.monitor.update(SettingsUpdate {
         enabled: body.enabled,
         revision: body.revision,
+        provider,
         domain,
     });
     match result {

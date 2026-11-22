@@ -31,7 +31,7 @@ type Headers<'a> = Vec<(&'a str, &'a str)>;
 
 const EMAIL: &str = "owner@example.com";
 const WRONG_CODE: &str = "0000";
-const COOKIE: &str = "agboard_ngrok_session";
+const COOKIE: &str = "agboard_remote_session";
 
 fn fixture() -> tempfile::TempDir {
     let home = home();
@@ -347,7 +347,7 @@ fn forged_identity_headers_never_stand_in_for_a_session() {
         t.call(
             "GET",
             "/api/projects",
-            &[("Cookie", "agboard_ngrok_session=guess")],
+            &[("Cookie", "agboard_remote_session=guess")],
             ""
         )
         .status,

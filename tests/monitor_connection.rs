@@ -226,7 +226,7 @@ fn settings_use_revisions_validate_input_and_are_saved_privately() {
     assert_eq!(r.json()["revision"], 1);
     assert_eq!(
         r.json()["settings"],
-        json!({"enabled": true, "domain": null})
+        json!({"enabled": true, "provider": "ngrok", "domain": null})
     );
     assert_eq!(r.json()["status"], "needs_config");
     // a stale revision conflicts and changes nothing
@@ -250,7 +250,7 @@ fn settings_use_revisions_validate_input_and_are_saved_privately() {
         assert_eq!(r.status, 422, "{body}");
     }
     let settings = s.get()["settings"].clone();
-    assert_eq!(settings.as_object().unwrap().len(), 2);
+    assert_eq!(settings.as_object().unwrap().len(), 3);
     assert_eq!(s.get()["revision"], 2);
     let saved = ConfigStore::new(home.path()).load().unwrap();
     assert_eq!(saved.revision, 2);
@@ -613,6 +613,7 @@ fn a_retry_that_cannot_save_puts_back_the_token_an_earlier_pass_replaced() {
         ConfigStore::new(&dir)
             .save(&ConnectionConfig {
                 enabled: false,
+                provider: Default::default(),
                 revision: 1,
                 domain: None,
             })
@@ -640,6 +641,7 @@ fn a_saved_enabled_setting_is_restored_only_with_a_token() {
     ConfigStore::new(home.path())
         .save(&ConnectionConfig {
             enabled: true,
+            provider: Default::default(),
             revision: 4,
             domain: None,
         })
@@ -793,6 +795,7 @@ fn an_explicit_start_announces_after_it_is_up_and_overrides_a_saved_off_setting(
     ConfigStore::new(home.path())
         .save(&ConnectionConfig {
             enabled: false,
+            provider: Default::default(),
             revision: 2,
             domain: None,
         })
@@ -996,6 +999,7 @@ fn a_saved_token_restores_an_enabled_connection_at_startup() {
     ConfigStore::new(home.path())
         .save(&ConnectionConfig {
             enabled: true,
+            provider: Default::default(),
             revision: 1,
             domain: None,
         })
