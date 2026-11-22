@@ -152,13 +152,13 @@ A single command-line binary cannot carry a stapled ticket, so macOS checks the 
 
 ### Publish to Homebrew
 
-After the Release is published, `.github/workflows/homebrew-tap.yml` publishes the Formula by itself. `scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agboard.rb` renders the Formula from the published files and refuses a missing CPU, a wrong version, or a hash mismatch. The Formula selects the archive by CPU in `on_macos`, requires macOS 15 (`depends_on macos: :sequoia`), declares MIT, installs `agpj` into `bin` and the two license files into `pkgshare`, and has a `test do` block that checks `--version` and uses a temporary `AGPJ_HOME`.
+After the Release is published, `.github/workflows/homebrew-tap.yml` publishes the Formula by itself. `scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agpj.rb` renders the Formula from the published files and refuses a missing CPU, a wrong version, or a hash mismatch. The Formula selects the archive by CPU in `on_macos`, requires macOS 15 (`depends_on macos: :sequoia`), declares MIT, installs `agpj` into `bin` and the two license files into `pkgshare`, and has a `test do` block that checks `--version` and uses a temporary `AGPJ_HOME`.
 
 The workflow runs when a Release is published, and skips drafts and prereleases. It does these steps in order:
 
 1. Downloads the two archives and `SHA256SUMS` of the tag with `gh release download`.
 2. Renders the Formula, then runs `scripts/release/test-formula.sh` and `ruby -c` on macOS 15.
-3. Clones `FooQoo/homebrew-tap` over SSH, copies `Formula/agboard.rb`, and, only when the file changed, commits `agpj X.Y.Z` as `github-actions[bot]` and pushes it directly to the default branch.
+3. Clones `FooQoo/homebrew-tap` over SSH, copies `Formula/agpj.rb`, and, only when the file changed, commits `agpj X.Y.Z` as `github-actions[bot]` and pushes it directly to the default branch. It never writes `Formula/agboard.rb`, which stays pinned to the preserved v1.1.1, and the job stops if anything but `Formula/agpj.rb` changed.
 
 The job runs in the `homebrew-tap` Environment, which accepts only `v*` tags and holds the secret `HOMEBREW_TAP_DEPLOY_KEY`. The secret is a read-write deploy key of the tap repository; it is written to a temporary file with mode 0600 for the push and removed at the end of the job. SSH accepts only the pinned GitHub host key. The job has `contents: read` only, and no secret appears on a command line. `release.yml` does not take part.
 

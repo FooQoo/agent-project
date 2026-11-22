@@ -152,13 +152,13 @@ Storyで使う架空の画像は`web/.storybook/static/`にあります。Storyb
 
 ### Homebrewへの公開
 
-Releaseを公開すると、`.github/workflows/homebrew-tap.yml`がFormulaを自動で公開します。`scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agboard.rb`は、公開したファイルからFormulaを作り、CPUの欠け、版の違い、ハッシュの不一致を拒否します。Formulaは、`on_macos`でCPUごとにアーカイブを選び、macOS 15を要求し（`depends_on macos: :sequoia`）、MITを宣言し、`agpj`を`bin`へ、2つのライセンスファイルを`pkgshare`へインストールします。`test do`では、`--version`を確認し、一時的な`AGPJ_HOME`を使います。
+Releaseを公開すると、`.github/workflows/homebrew-tap.yml`がFormulaを自動で公開します。`scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agpj.rb`は、公開したファイルからFormulaを作り、CPUの欠け、版の違い、ハッシュの不一致を拒否します。Formulaは、`on_macos`でCPUごとにアーカイブを選び、macOS 15を要求し（`depends_on macos: :sequoia`）、MITを宣言し、`agpj`を`bin`へ、2つのライセンスファイルを`pkgshare`へインストールします。`test do`では、`--version`を確認し、一時的な`AGPJ_HOME`を使います。
 
 ワークフローはReleaseの公開時に動き、下書きとプレリリースは対象外です。次の順に進めます。
 
 1. `gh release download`で、そのタグの2つのアーカイブと`SHA256SUMS`を取得します。
 2. macOS 15でFormulaを作り、`scripts/release/test-formula.sh`と`ruby -c`で確認します。
-3. SSHで`FooQoo/homebrew-tap`をcloneし、`Formula/agboard.rb`をコピーします。ファイルが変わったときだけ、`github-actions[bot]`として`agpj X.Y.Z`をコミットし、既定ブランチへ直接pushします。
+3. SSHで`FooQoo/homebrew-tap`をcloneし、`Formula/agpj.rb`をコピーします。ファイルが変わったときだけ、`github-actions[bot]`として`agpj X.Y.Z`をコミットし、既定ブランチへ直接pushします。保存してあるv1.1.1に固定した`Formula/agboard.rb`は書き換えません。`Formula/agpj.rb`以外が変わった場合はジョブが止まります。
 
 ジョブは`homebrew-tap` Environmentで動きます。このEnvironmentは`v*`タグだけを受け付け、シークレット`HOMEBREW_TAP_DEPLOY_KEY`を持ちます。これはtapリポジトリの読み書きできるデプロイキーで、pushのあいだだけ権限0600の一時ファイルに書き、ジョブの最後に削除します。SSHは固定したGitHubのホスト鍵だけを受け入れます。権限は`contents: read`だけで、コマンドラインにシークレットは現れません。`release.yml`は関与しません。
 

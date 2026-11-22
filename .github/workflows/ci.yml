@@ -244,7 +244,7 @@ jobs:
       - name: Find the results folder
         if: failure()
         id: results
-        run: echo "dir=$(node -e "const c=require('node:crypto').createHash('sha256').update(process.cwd()).digest('hex').slice(0,8);console.log(require('node:path').join(require('node:os').tmpdir(),'agent-board-e2e-results-'+c))")" >> "$GITHUB_OUTPUT"
+        run: echo "dir=$(node -e "const c=require('node:crypto').createHash('sha256').update(process.cwd()).digest('hex').slice(0,8);console.log(require('node:path').join(require('node:os').tmpdir(),'agent-project-e2e-results-'+c))")" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: failure()
         with:

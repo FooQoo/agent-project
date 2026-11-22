@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the Homebrew Formula for one published Agent Board release.
+"""Render the Homebrew Formula for one published Agent Project release.
 
 Usage:
   render-formula.py --tag v1.0.0 --sums SHA256SUMS [--assets DIR] [--out FILE]

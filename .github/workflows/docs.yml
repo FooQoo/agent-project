@@ -2,7 +2,7 @@ name: Documentation site
 
 # Builds the documentation site and the browser demo, tests the demo, and publishes both to
 # GitHub Pages. The demo (web/dist-demo/) is served from demo/ inside the site, at
-# /agent-board/demo/, so a change to the web UI or the demo suite also rebuilds the site.
+# /agent-project/demo/, so a change to the web UI or the demo suite also rebuilds the site.
 
 on:
   pull_request:
@@ -78,7 +78,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/release/docs-release.mjs --github --repo "$GITHUB_REPOSITORY"
       - run: pnpm --dir docs build
-      # Writes web/dist-demo/ for the base /agent-board/demo/.
+      # Writes web/dist-demo/ for the base /agent-project/demo/.
       - run: pnpm --dir web build:demo
       # VitePress empties its output folder when it builds, so the demo is copied in
       # afterwards. A page or public file named demo would collide with it; stop instead
