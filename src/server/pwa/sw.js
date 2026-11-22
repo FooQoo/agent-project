@@ -11,7 +11,7 @@ self.addEventListener('push', (event) => {
   } catch {
     data = { body: event.data ? event.data.text() : '' };
   }
-  const title = typeof data.title === 'string' && data.title ? data.title : 'Agent Board';
+  const title = typeof data.title === 'string' && data.title ? data.title : 'Agent Project';
   const options = {
     body: typeof data.body === 'string' ? data.body : '',
     icon: '/logo.png',

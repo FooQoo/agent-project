@@ -2,7 +2,7 @@
 export const onboardingJa = {
   onboarding: {
     welcome: {
-      title: 'Agent Boardを体験しましょう',
+      title: 'Agent Project を体験しましょう',
       body: 'エージェントに依頼を送ると、計画づくりから質問、カードの完了までを任せられます。その流れを体験できます。',
       stepRequest: '「AI に依頼」で依頼を送る',
       stepAnswer: 'エージェントの質問に答える',

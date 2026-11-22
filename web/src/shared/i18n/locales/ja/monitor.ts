@@ -9,7 +9,7 @@ export const monitorJa = {
     cards: 'タスク',
     readOnly: '閲覧専用 · 取得した最新の状態',
     detailFooter: '閲覧専用 · {{time}}に取得',
-    drawerIdentity: 'Agent Board · #{{id}}',
+    drawerIdentity: 'Agent Project · #{{id}}',
     body: '本文',
     epic: 'エピック',
     epicLoading: 'エピックを読み込んでいます…',

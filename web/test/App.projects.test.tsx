@@ -92,7 +92,7 @@ describe('which project is shown', () => {
   it('puts the project name in the page title', async () => {
     renderApp(urlOf(PROJECT_B.id));
     await screen.findByText('Eight in knowledge');
-    expect(document.title).toBe('knowledge - Agent Board');
+    expect(document.title).toBe('knowledge - Agent Project');
   });
 
   it('switches from the menu with a pushed history entry and loads the new board', async () => {
@@ -165,7 +165,7 @@ describe('which project is shown', () => {
 
     await screen.findByRole('button', { name: 'renamed' });
     expect(screen.getByRole('heading', { level: 2, name: 'Eight in knowledge' })).toBeTruthy();
-    expect(document.title).toBe('renamed - Agent Board');
+    expect(document.title).toBe('renamed - Agent Project');
   });
 
   it('keeps the archive list and shared detail column in the app shell', async () => {

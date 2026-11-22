@@ -91,7 +91,7 @@ export function Header({
         <span className="header__logo">
           <img src={logoSrc} alt="" width="24" height="24" />
         </span>
-        <span>Agent Board</span>
+        <span>Agent Project</span>
       </h1>
       {projects !== null && (
         <>

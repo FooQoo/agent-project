@@ -25,7 +25,7 @@ const CARDS: Record<number, CardText> = {
     title: 'ボードの表示を確認する',
     body: '1280、800、480 px の幅でレイアウトを確認する。\n横スクロールが出ないかを見る。',
   },
-  14: { title: 'Windows 版をビルドする', body: 'Windows x64 向けに Agent Board をビルドする。' },
+  14: { title: 'Windows 版をビルドする', body: 'Windows x64 向けに Agent Project をビルドする。' },
   15: { title: 'セットアップガイドを書く', body: '' },
   16: { title: '空のボードの見た目を整える', body: '' },
 };

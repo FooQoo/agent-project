@@ -7,7 +7,7 @@ import { DocumentPane, type DocumentPaneProps } from './DocumentPane';
 
 const markdown = `## Purpose
 
-This document lists the main features and tasks of Agent Board.
+This document lists the main features and tasks of Agent Project.
 
 ## Main features
 

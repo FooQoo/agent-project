@@ -10,8 +10,8 @@ pub const SERVICE_WORKER: &str = include_str!("pwa/sw.js");
 
 /// The web app manifest: the board opens full screen from the home screen.
 pub const MANIFEST: &str = r##"{
-  "name": "Agent Board",
-  "short_name": "Agent Board",
+  "name": "Agent Project",
+  "short_name": "Agent Project",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

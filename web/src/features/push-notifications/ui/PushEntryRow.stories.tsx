@@ -55,7 +55,7 @@ export const Denied: Story = {
   args: { view: 'denied' },
   play: async ({ canvasElement }) => {
     await expect(
-      within(canvasElement).getByText(/open Settings, choose Agent Board/),
+      within(canvasElement).getByText(/open Settings, choose Agent Project/),
     ).toBeVisible();
     await expect(within(canvasElement).queryByRole('button')).toBeNull();
   },

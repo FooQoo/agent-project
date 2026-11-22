@@ -11,7 +11,7 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const FRONT = '---\ntitle: Tasks\nstatus: draft\n---\n';
 const FILE = {
   path: 'Product/Tasks.md',
-  content: `${FRONT}## Purpose\n\nThe main tasks of Agent Board.\n\n| Status | Meaning |\n| --- | --- |\n| Todo | Not started |\n`,
+  content: `${FRONT}## Purpose\n\nThe main tasks of Agent Project.\n\n| Status | Meaning |\n| --- | --- |\n| Todo | Not started |\n`,
   revision: 'sha256:1',
 };
 

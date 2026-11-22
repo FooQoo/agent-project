@@ -26,7 +26,7 @@ describe('monitor contracts and view', () => {
 
   it('renders passed view state without write controls', () => {
     render(<MonitorView {...props} />);
-    expect(screen.getByRole('heading', { name: 'Agent Board' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Agent Project' })).toBeTruthy();
     expect(screen.getByRole('status').textContent).toContain('Loading monitor');
     expect(screen.queryByRole('button', { name: 'Refresh' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'All Projects' })).toBeNull();

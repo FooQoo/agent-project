@@ -77,13 +77,13 @@ describe('App', () => {
 
     // The project name shows once the list is in; the board follows with its own request.
     await screen.findByText('agent-board');
-    expect(document.title).toBe('agent-board - Agent Board');
+    expect(document.title).toBe('agent-board - Agent Project');
     await screen.findByRole('region', { name: 'Todo' });
     expect(screen.getByRole('complementary', { name: 'Task details' })).toBeTruthy();
     expect(screen.getByRole('separator', { name: 'Resize task details' })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 1, name: 'Agent Board' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Agent Project' })).toBeTruthy();
     expect(screen.getByText('agent-board')).toBeTruthy();
-    expect(document.title).toBe('agent-board - Agent Board');
+    expect(document.title).toBe('agent-board - Agent Project');
     expect(screen.getByText('8 tasks')).toBeTruthy();
   });
 
