@@ -204,6 +204,14 @@ fn snapshot_of(inner: &Inner, keychain_available: bool, domain_env: Option<&str>
         keychain_available,
         keychain_token_saved: inner.keychain_saved == Some(true),
         failure: inner.failure,
+        active_provider: inner.run.as_ref().map(|run| run.provider).filter(|_| {
+            matches!(
+                inner.status,
+                ConnectionStatus::Starting
+                    | ConnectionStatus::Ready
+                    | ConnectionStatus::Reconnecting
+            )
+        }),
         // Only a connection that is up has a passcode worth showing.
         passcode: inner
             .passcode

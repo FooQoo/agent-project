@@ -35,6 +35,9 @@ export interface ConnectionSnapshot {
     /** The saved ngrok domain, or null when none is saved (ngrok then chooses the address). */
     domain: string | null;
   };
+  /** The provider of the connection that is starting, ready or reconnecting; null when none runs.
+   * It can differ from `settings.provider`, which is only what is saved. */
+  activeProvider: Provider | null;
   /** The domain from the AGBOARD_NGROK_DOMAIN environment variable; when set, it is the one used. */
   domainEnv: string | null;
   /** Whether a token is available: from the environment, this PC's secure storage or this run. */

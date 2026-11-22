@@ -114,6 +114,7 @@ impl MonitorConnections {
         })
         .abort_handle();
         inner.run = Some(Run {
+            provider,
             gate: run_gate,
             backend: refuser,
             opener,

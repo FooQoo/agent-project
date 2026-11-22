@@ -15,6 +15,7 @@ const idle: ConnectionSnapshot = {
   url: null,
   revision: 3,
   settings: { enabled: false, provider: 'ngrok', domain: null },
+  activeProvider: null,
   domainEnv: null,
   tokenConfigured: false,
   tokenSource: null,
@@ -84,6 +85,7 @@ function mockApi(
           provider: body.provider ?? snapshot.settings.provider,
           domain: body.domain || null,
         },
+        activeProvider: null,
         domainEnv: null,
       };
       return reply(200, snapshot);
@@ -195,6 +197,7 @@ const connected: ConnectionSnapshot = {
   url: phoneUrl,
   tokenConfigured: true,
   settings: { enabled: true, provider: 'ngrok', domain: null },
+  activeProvider: null,
   domainEnv: null,
   passcode,
 };
@@ -339,6 +342,7 @@ const savedToken: ConnectionSnapshot = {
   tokenSource: 'keychain',
   keychainTokenSaved: true,
   settings: { enabled: true, provider: 'ngrok', domain: null },
+  activeProvider: null,
   domainEnv: null,
 };
 

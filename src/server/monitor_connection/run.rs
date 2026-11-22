@@ -8,6 +8,8 @@ use tokio::task::AbortHandle;
 use super::router::{Gate, close_gate};
 
 pub(super) struct Run {
+    /// The provider this run was started with; it stays when the saved setting changes.
+    pub(super) provider: super::contracts::Provider,
     pub(super) gate: Gate,
     pub(super) backend: AbortHandle,
     pub(super) opener: AbortHandle,

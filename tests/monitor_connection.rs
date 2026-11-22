@@ -153,6 +153,7 @@ fn get_returns_only_non_secret_state_and_only_to_the_local_page() {
     assert_eq!(
         keys,
         [
+            "activeProvider",
             "domainEnv",
             "failure",
             "keychainAvailable",

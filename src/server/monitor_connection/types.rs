@@ -188,6 +188,9 @@ pub struct Snapshot {
     /// Whether a token is saved in the keychain (even if another one wins).
     pub keychain_token_saved: bool,
     pub failure: Option<FailureCode>,
+    /// The provider of the connection that is starting, ready or reconnecting; `null` when none
+    /// is running. It can differ from `settings.provider`, which is only what is saved.
+    pub active_provider: Option<Provider>,
     /// The passcode of the running connection, for the PC to show. Present only
     /// while the status is `ready`; a stopped or failed connection has none.
     #[serde(skip_serializing_if = "Option::is_none")]

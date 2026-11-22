@@ -145,10 +145,11 @@ export function useConnectionController(open: boolean, projectId: string | null 
         setSnapshot(next);
         const running =
           next.status === 'starting' || next.status === 'ready' || next.status === 'reconnecting';
-        // A new token or a changed provider always starts the connection, so the one that was
-        // running is replaced; otherwise a saved change has already restarted a live tunnel.
-        const providerChanged = draft.provider !== base.settings.provider;
-        if (token || providerChanged || !running)
+        // A new token always starts the connection. Otherwise it is started when none is running
+        // or when the one running is not the provider chosen: a save changes only what is stored,
+        // never a live connection, and a retry after a failed start must still replace it.
+        const providerChanged = draft.provider !== next.activeProvider;
+        if (token || !running || providerChanged)
           next = await startConnection(
             token || null,
             Boolean(token) && draft.save && base.keychainAvailable,
