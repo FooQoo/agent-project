@@ -581,7 +581,7 @@ test('create, move with a reason, answer, archive, and live updates work with a 
 
   // A task added from the CLI appears on the board.
   agboardOk(mainProject, ['add', 'Review the themes', '--assignee', 'ai', '--actor', 'human', `--desc=${taskBody('Check all 24 themes.')}`]);
-  const created = lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh} AI Review the themes Updated \\d\\d\\/\\d\\d \\d\\d:\\d\\d$`) });
+  const created = lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh} AI Review the themes \\d\\d\\/\\d\\d \\d\\d:\\d\\d$`) });
   await expect(created).toBeVisible();
   await expect(lane(page, 'Todo').getByText('4', { exact: true })).toBeVisible();
   await expect(page.getByRole('contentinfo')).toContainText('9 tasks');

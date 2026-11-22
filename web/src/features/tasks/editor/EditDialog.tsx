@@ -92,6 +92,8 @@ export function EditDialog({
   const flow = useSaveFlow({ onClose, onSavingChange });
   const requestId = useMultipartRequest();
   const readOnly = readOnlyReason !== undefined;
+  // The planned version stays open on an archived card; a running card holds it like the rest.
+  const planReadOnly = readOnly && readOnlyReason !== 'archived';
   // The planned version is saved by its own request, so it never makes the card a draft.
   const { save: planSave, pending: planPending, onPending: onPlanPending } = usePendingPlan();
 
@@ -174,7 +176,10 @@ export function EditDialog({
   // the draft is still to be sent, so Save and Retry stay available until it goes through.
   const [lastPending, setLastPending] = useState(false);
   const canSend =
-    lock.canSave || ((lastPending || planPending) && !readOnly && lock.problem === null && valid);
+    lock.canSave ||
+    (((lastPending && !readOnly) || (planPending && !planReadOnly)) &&
+      lock.problem === null &&
+      valid);
 
   const save = () => {
     if (!valid || !canSend || flow.busy.current) return;
@@ -269,7 +274,7 @@ export function EditDialog({
                   {renderEpicChip(task.epic)}
                 </div>
               )}
-              {renderPlan?.({ disabled: flow.saving || readOnly, onPending: onPlanPending })}
+              {renderPlan?.({ disabled: flow.saving || planReadOnly, onPending: onPlanPending })}
             </>
           ) : undefined
         }

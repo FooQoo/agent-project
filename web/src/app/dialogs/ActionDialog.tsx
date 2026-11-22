@@ -77,9 +77,14 @@ export function ActionDialog({
   plan?: boolean;
 }) {
   const taskPlan: RenderPlanField | undefined =
-    plan && projectId !== undefined && action.kind === 'edit' && !action.archived
+    plan && projectId !== undefined && action.kind === 'edit'
       ? (args) => (
-          <TaskPlanField projectId={projectId as ProjectId} taskId={action.task.id} {...args} />
+          <TaskPlanField
+            projectId={projectId as ProjectId}
+            taskId={action.task.id}
+            known={action.task.plannedVersion ?? null}
+            {...args}
+          />
         )
       : undefined;
   const epicPlan: RenderPlanField | undefined =

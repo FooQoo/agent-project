@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import type { ProjectId } from '../../../shared/api/contracts';
 import type { PlanFieldArgs } from '../../../shared/ui/editor/planField';
 import { type VersionChoice, setTaskPlannedVersion } from '../api/versions';
@@ -12,14 +12,20 @@ import { PlannedVersionPicker } from './PlannedVersionPicker';
 export function TaskPlanField({
   projectId,
   taskId,
+  known,
   disabled,
   onPending,
-}: PlanFieldArgs & { projectId: ProjectId; taskId: number }) {
+}: PlanFieldArgs & { projectId: ProjectId; taskId: number; known?: string | null }) {
   const { versions, current, tasks, refresh } = useProjectVersions(projectId);
-  const planned = tasks.find((task) => task.id === taskId)?.plannedVersion ?? null;
+  // An archived task is not in the Summary: the version the dialog opened with stands in for it,
+  // and a save replaces it with the version the server stored.
+  const [saved, setSaved] = useState<string | null | undefined>(undefined);
+  const listed = tasks.find((task) => task.id === taskId);
+  const planned = listed ? listed.plannedVersion : saved !== undefined ? saved : (known ?? null);
   const save = useCallback(
     async (choice: VersionChoice, expected: string | null) => {
-      await setTaskPlannedVersion(projectId, taskId, choice, expected);
+      const result = await setTaskPlannedVersion(projectId, taskId, choice, expected);
+      setSaved(result.task.plannedVersion ?? null);
       await refresh();
     },
     [projectId, taskId, refresh],

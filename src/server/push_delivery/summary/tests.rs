@@ -177,3 +177,61 @@ fn a_result_saved_just_before_the_end_of_a_window_is_in_its_summary() {
 
 mod schedule;
 mod window;
+
+#[test]
+fn recording_a_summary_dismisses_the_oldest_beyond_ten_and_keeps_every_line() {
+    use crate::domain::{Actor, Assignee, NewTask, ResultKind};
+    use crate::file_store::ResultInput;
+    use crate::file_store::notify::MAX_LISTED;
+    let root = tempfile::tempdir().unwrap();
+    let store = FileStore::open(&root.path().join("shared"));
+    let project = store.create_project("Alpha", at(0, 0)).unwrap().id;
+    let task = store
+        .create_task(
+            &project,
+            NewTask {
+                title: "T".into(),
+                description: String::new(),
+                assignee: Assignee::Ai,
+                actor: Actor::Human,
+                draft: None,
+            },
+            at(0, 0),
+        )
+        .unwrap()
+        .id;
+    // Ten summaries stored, then a new window with a result records the eleventh.
+    for n in 0..MAX_LISTED as u32 {
+        let to = at(1 + n, 0);
+        let mut s = summary(&["old"]);
+        s.id = format!("s-{}", to.format("%Y%m%dT%H%M%SZ"));
+        s.from = to - chrono::Duration::hours(1);
+        s.to = to;
+        store.append_summary(&project, &s).unwrap();
+    }
+    store
+        .add_result(
+            &project,
+            task,
+            ResultInput {
+                kind: ResultKind::Progress,
+                title: Some("New".into()),
+                summary: "New.".into(),
+                link: None,
+                images: Vec::new(),
+                key: None,
+                published: None,
+            },
+            at(11, 30),
+        )
+        .unwrap();
+    let tasks = store.snapshot(&project).unwrap().tasks;
+    record(&store, &project, &tasks, at(0, 0), at(12, 0))
+        .unwrap()
+        .unwrap();
+    let all = store.summaries(&project).unwrap();
+    assert_eq!(all.len(), MAX_LISTED + 1);
+    assert!(all.last().unwrap().dismissed);
+    assert_eq!(all.iter().filter(|s| s.dismissed).count(), 1);
+    assert_eq!(store.listed_summaries(&project).unwrap().len(), MAX_LISTED);
+}

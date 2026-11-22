@@ -120,7 +120,8 @@ impl Schedule {
 
 /// Write the summary of the window ending at `to` for one project. The window starts at the end
 /// of the newest stored summary, or at `floor` when the project has none, so a restart or a failed
-/// earlier write leaves no gap. `Ok(None)` when no result falls in it or the summary is already
+/// earlier write leaves no gap. After a new summary is stored, summaries beyond the newest
+/// ten are dismissed. `Ok(None)` when no result falls in it or the summary is already
 /// stored; `Err` when the write failed, so the caller retries the window.
 pub(super) fn record(
     store: &FileStore,
@@ -134,7 +135,14 @@ pub(super) fn record(
         return Ok(None);
     };
     match store.append_summary(project, &summary) {
-        Ok(stored) => Ok(stored.then_some(summary)),
+        Ok(stored) => {
+            if stored {
+                // Keep the list to its newest summaries. A failure here is not a failed window:
+                // the summary is stored, and the next one takes stock again.
+                let _ = store.take_stock_of_summaries(project);
+            }
+            Ok(stored.then_some(summary))
+        }
         Err(_) => Err(()),
     }
 }

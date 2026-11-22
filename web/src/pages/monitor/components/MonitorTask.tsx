@@ -77,10 +77,10 @@ export function MonitorTask({
           />
         )}
       </TaskCardContent>
-      <span className="monitor-card__plan">
-        <PlanTag planned={task.plannedVersion ?? null} />
-      </span>
       <span className="monitor-card__meta">
+        <span className="monitor-card__plan">
+          <PlanTag planned={task.plannedVersion ?? null} />
+        </span>
         <span className="monitor-card__time">
           {when
             ? formatShort(when)

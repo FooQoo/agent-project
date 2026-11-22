@@ -496,7 +496,7 @@ fn an_epic_can_hold_mixed_versions_and_a_bulk_set_reports_what_changed() {
 }
 
 #[test]
-fn archived_tasks_are_refused_alone_and_skipped_in_bulk() {
+fn archived_tasks_take_a_plan_alone_and_are_skipped_in_bulk() {
     let f = fixture();
     let epic = f.epic("REL");
     let a = f.task("A", Assignee::Ai);
@@ -508,10 +508,29 @@ fn archived_tasks_are_refused_alone_and_skipped_in_bulk() {
     }
     f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
     f.store.archive_task(&f.project, b.id, at(5)).unwrap();
+    // The plan is open on an archived task, for a person and for an AI, and it is recorded.
+    for (actor, version) in [(Actor::Human, "v1.8.0"), (Actor::Ai, "v1.7.0")] {
+        f.store.add_version(&f.project, version, at(5)).unwrap();
+        let view = f
+            .store
+            .set_task_planned_version(&f.project, b.id, &named(version), actor, at(6))
+            .unwrap();
+        assert!(view.changed);
+        assert_eq!(view.value.planned_version.as_deref(), Some(version));
+    }
+    let cleared = f
+        .store
+        .set_task_planned_version(&f.project, b.id, &VersionChoice::Unset, Actor::Ai, at(6))
+        .unwrap();
+    assert_eq!(cleared.value.planned_version, None);
     assert!(
-        f.store
-            .set_task_planned_version(&f.project, b.id, &named("v1.8.0"), Actor::Human, at(6))
-            .is_err()
+        cleared
+            .value
+            .history
+            .last()
+            .unwrap()
+            .reason
+            .starts_with("Changed planned version")
     );
     let result = f
         .store

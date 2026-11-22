@@ -10,10 +10,11 @@ Use this page when you ask an agent what a version delivered, what is left, or h
 
 Ask for a report of a version. The agent runs [`release doc`](../reference/cli#generate-a-release-document) for it, which writes `docs/release/VERSION.md`, and then writes the summary around the generated block.
 
-The generated block lists the cards planned for the version, those verified, those remaining, and those moved to another version, each with the card number and a pointer to `agboard show <id>`. Three points keep it honest:
+The generated block lists the cards planned for the version, those verified, those done without acceptance conditions, those remaining, and those moved to another version, each with the card number and a pointer to `agboard show <id>`. Three points keep it honest:
 
 - A card that left the version is found from its history and listed once, with where it went. Archived cards count.
-- Verified means the card has acceptance conditions and every one is done.
+- Verified means the card has acceptance conditions and every one is done. A Done card with no acceptance conditions is not verified and is not left in Remaining either: it is listed apart as done without acceptance conditions, because nothing says whether it met its goal.
+- Moved to another version lists every card that left the version, whether it went to a later version, an earlier one, or to no version; each line names where it went.
 - Published is a separate fact, described next.
 
 ### What counts as published
@@ -46,8 +47,9 @@ This block comes from a demo project in which one of the two verified cards has 
 
 - Planned: 2
 - Verified: 2
+- Done without acceptance conditions: 0
 - Remaining: 0
-- Moved to the next version: 1
+- Moved to another version: 1
 - Published (with a publication record): 1 / 2
 
 ### Planned
@@ -64,11 +66,15 @@ This block comes from a demo project in which one of the two verified cards has 
   - Source: `agboard show 5`, results 1, history entries 6
   - Result: Offline board cache done [final]
 
+### Done without acceptance conditions
+
+No done task lacks acceptance conditions.
+
 ### Remaining
 
 Nothing remains.
 
-### Moved to the next version
+### Moved to another version
 
 - #4 Merge conflicting edits on reconnect (todo; acceptance 1/2)
   - Source: `agboard show 4`, results 0, history entries 4

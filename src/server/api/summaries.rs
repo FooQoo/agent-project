@@ -13,8 +13,8 @@ use crate::server::AppState;
 use crate::server::response::{agboard_error_response, json_response};
 use crate::server::store::{parse_project_id, with_files};
 
-/// `GET …/summaries`: newest first. Dismissed summaries are left out unless the query has
-/// `dismissed=include`.
+/// `GET …/summaries`: newest first. Dismissed summaries are left out and at most ten are
+/// returned, unless the query has `dismissed=include`, which lists every line.
 pub(super) async fn list_summaries(
     State(state): State<Arc<AppState>>,
     Path(project): Path<String>,
@@ -25,16 +25,19 @@ pub(super) async fn list_summaries(
         Err(error) => return agboard_error_response(&error),
     };
     let include_dismissed = query.get("dismissed").is_some_and(|v| v == "include");
-    match with_files(&state, move |store| store.summaries(&project)).await {
-        Ok(mut summaries) => {
-            if !include_dismissed {
-                summaries.retain(|s| !s.dismissed);
-            }
-            json_response(
-                StatusCode::OK,
-                &serde_json::json!({ "summaries": summaries }),
-            )
+    let read = with_files(&state, move |store| {
+        if include_dismissed {
+            store.summaries(&project)
+        } else {
+            store.listed_summaries(&project)
         }
+    })
+    .await;
+    match read {
+        Ok(summaries) => json_response(
+            StatusCode::OK,
+            &serde_json::json!({ "summaries": summaries }),
+        ),
         Err(error) => agboard_error_response(&error),
     }
 }

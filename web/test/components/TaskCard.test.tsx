@@ -12,7 +12,7 @@ describe('Task', () => {
     render(<TaskCard task={fixtureTask(14)} selected={false} onSelect={noop} />);
     expect(screen.getByText('#14')).toBeTruthy();
     expect(screen.getByText('Prepare the Windows build')).toBeTruthy();
-    expect(screen.getByText('Updated 10/02 10:08')).toBeTruthy();
+    expect(screen.getByText('10/02 10:08')).toBeTruthy();
   });
 
   it('shows no run state for tasks in Todo or Done', () => {
@@ -26,14 +26,14 @@ describe('Task', () => {
       expect(screen.queryByText(label)).toBeNull();
   });
 
-  it('shows acceptance progress in the card footer', () => {
+  it('shows acceptance progress at the top right of the card, not in the footer', () => {
     const task = makeTask({
       id: 42,
       acceptance: [{ id: 'AC-1', text: 'Ready', done: false }],
     });
     const { container } = render(<TaskCard task={task} selected={false} onSelect={noop} />);
-    const footer = container.querySelector('.card__foot');
-    expect(footer?.querySelector('.acceptance-chip')).not.toBeNull();
+    expect(container.querySelector('.card__top .card__side .acceptance-chip')).not.toBeNull();
+    expect(container.querySelector('.card__foot .acceptance-chip')).toBeNull();
   });
 
   it('shows the run state badge for tasks in Doing', () => {
@@ -47,7 +47,7 @@ describe('Task', () => {
     expect(screen.getByText('Awaiting answer')).toBeTruthy();
   });
 
-  it('translates the column run state and update label without changing task input or time', async () => {
+  it('translates the column run state without changing task input or time', async () => {
     const task = makeTask({
       id: 40,
       title: 'Keep this title as entered',
@@ -58,12 +58,12 @@ describe('Task', () => {
     });
     try {
       render(<TaskCard task={task} selected={true} onSelect={noop} />);
-      expect(screen.getByText('Updated 10/02 10:08')).toBeTruthy();
+      expect(screen.getByText('10/02 10:08')).toBeTruthy();
       await act(async () => {
         await i18n.changeLanguage('ja');
       });
       expect(screen.getByText('回答待')).toBeTruthy();
-      expect(screen.getByText('更新 10/02 10:08')).toBeTruthy();
+      expect(screen.getByText('10/02 10:08')).toBeTruthy();
       expect(screen.getByText('Keep this title as entered')).toBeTruthy();
       expect(screen.getByText('Keep this waiting reason as entered')).toBeTruthy();
       expect(screen.getByRole('button').getAttribute('aria-current')).toBe('true');

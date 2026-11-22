@@ -1,9 +1,5 @@
 /* The Backlog lane, its selection mode, and the send confirmation. */
 
-.lane[data-column="backlog"] {
-  border-style: dashed;
-}
-
 .card[data-lane="backlog"] {
   border-style: dashed;
 }
