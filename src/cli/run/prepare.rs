@@ -63,6 +63,7 @@ fn access(command: &Command) -> Access {
             }
             VersionCommand::Add(_) | VersionCommand::Current(_) => Access::ChangeProject,
         },
+        Command::Release(_) => Access::ChangeProject,
         Command::Init(_) => Access::ChangeOrCreateProject,
         Command::Add(_)
         | Command::Attachment(_)
@@ -149,6 +150,7 @@ fn dispatch(ctx: &mut Context, command: &Command) -> Result<Outcome, AgboardErro
         Command::Workspace(_) => commands::workspace::run(ctx),
         Command::Progress(args) => commands::progress::run(ctx, args),
         Command::Version(args) => commands::version::run(ctx, args),
+        Command::Release(args) => commands::release::run(ctx, args),
         Command::Open(args) => commands::open::run(ctx, args),
         Command::Hook(_)
         | Command::Skills(_)

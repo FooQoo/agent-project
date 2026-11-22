@@ -173,6 +173,28 @@ agboard --project "My project" version ls --json
 
 A project's versions are the `*.md` files directly inside `docs/release/` of its [Docs](../watch/docs), listed newest first (`v1.10.0` before `v1.9.0`; `TEMPLATE.md` is the release template and is never a version). `version add VERSION` creates `docs/release/VERSION.md` as a copy of `docs/release/TEMPLATE.md` (a standard release-note template is written there first when it is missing) and never overwrites an existing file, so a version that already has its file is already listed. It also puts one card in the Backlog, owned by the AI, titled `Write the release notes for VERSION` (in Japanese when the board language is Japanese), for writing those notes: the work starts only after a person sends it to Todo, and adding the same version again issues no second card. Adding a version does not change the current version. You can also add a version by creating the file yourself. `version current VERSION` lists the version the same way when it is not listed yet and makes it current. Without an argument it shows the current version. If the current version's file is deleted later, the project reads as having no current version until the file returns. Changing the current version moves no task: a task stores the version name it was given.
 
+### Generate a release document {#generate-a-release-document}
+
+```sh
+agboard --project "My project" release doc --current-version
+agboard --project "My project" release doc --version v1.9.0
+```
+
+`release doc` writes the release document of one version to `docs/release/VERSION.md` in the project's [Docs](../watch/docs). It reads every card of the project, archived ones included, and groups them for that version:
+
+- **Planned**: the cards whose planned version is this version now.
+- **Verified**: planned cards that have acceptance conditions, all of them done.
+- **Remaining**: planned cards that are not verified yet.
+- **Moved to the next version**: cards that left this version. Their history holds a change of planned version away from it, and the section names where each one went.
+
+Each item names its card (`#12`), the number of results and history entries, and each result with its time and link, and points to `agboard show 12` for the original records. The last section, **Publication**, says that no item is published: Agent Board keeps no publication record yet, so nothing is marked as published.
+
+The document is safe to edit by hand. The generated part sits between the lines `<!-- agboard:generated:start -->` and `<!-- agboard:generated:end -->`. Generating again replaces only what is between them, so text above or below stays, and generating twice from the same board changes nothing. A file without those lines, such as the one `version add` creates from the template, keeps its text and gets the block added at the end. A file with a missing, repeated, or reversed marker line is refused with `release_doc_refused` and left as it was, as is a file that changes while it is generated. The file is saved in one step, so a failure never leaves half a document.
+
+`--version VERSION` generates for that version and lists it first when it is not listed, as `version add` does. `--current-version` uses the project's current version; with none set it fails with `no_current_version` (exit code 1) and writes nothing. Each version has its own file, so generating for another version adds a second document and leaves the first alone. Open the file from Docs in the board, where `docs/release/` shows the versions.
+
+Generating never publishes anything. It writes one file inside the project's shared folder, and sends nothing to GitHub or any other service.
+
 A card's planned version is the `plannedVersion` key in the frontmatter of its `TASK.md`, so you can also set or remove it by hand.
 
 Plan a card when you add it, or later:

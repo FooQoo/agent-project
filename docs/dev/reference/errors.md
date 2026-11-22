@@ -130,6 +130,7 @@ These are returned by the `/api/projects/{projectId}/docs/…` routes (see [Web 
 | `docs_not_markdown` | The file routes were given a name that does not end in `.md` or `.mdx`. | n/a | 415 |
 | `docs_asset_type` | The image route was given a file that is not PNG, JPEG, WebP, GIF, AVIF, or SVG. | n/a | 415 |
 | `docs_open_failed` | The open route could not open `docs/` or the file: the folder does not exist, or the program could not be started. The `reason` says which. | n/a | 500 |
+| `release_doc_refused` | `release doc` did not write the release document: its `agboard:generated` marker lines are not exactly one start line followed by one end line, the path is not a regular file, or the file changed while it was generated. The file is left as it was. Fix the markers or run the command again. | 1 | 409 |
 | `docs_too_large` | A file over 2 MiB, or an image over 10 MiB. | n/a | 413 |
 | `docs_not_utf8` | The file is not valid UTF-8 text. It is not changed. | n/a | 422 |
 

@@ -13,6 +13,7 @@ pub mod mv;
 pub mod open;
 pub mod progress;
 pub mod project;
+pub mod release;
 pub mod remote;
 pub mod result;
 pub mod rm;
