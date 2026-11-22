@@ -6,11 +6,11 @@ use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
-use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::file_store::FileStore;
-use agent_board::file_store::index::{ProjectEntry, ProjectIndex};
-use agent_board::file_store::projection::ChangeSet;
-use agent_board::file_store::watch::Watch;
+use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+use agent_project::file_store::FileStore;
+use agent_project::file_store::index::{ProjectEntry, ProjectIndex};
+use agent_project::file_store::projection::ChangeSet;
+use agent_project::file_store::watch::Watch;
 use chrono::{TimeZone, Utc};
 use tokio::sync::broadcast;
 

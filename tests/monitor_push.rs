@@ -10,7 +10,7 @@ mod support;
 
 use std::path::Path;
 
-use agent_board::file_store::FileStore;
+use agent_project::file_store::FileStore;
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD as B64;
 use serde_json::{Value, json};

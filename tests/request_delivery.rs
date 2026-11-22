@@ -103,7 +103,7 @@ fn the_hook_carries_the_open_requests() {
     project(home.path());
     let id = send(home.path(), "Fix the typo");
     let input = r#"{"hook_event_name":"SessionStart"}"#;
-    let out = agent_board::agent::hook::run(
+    let out = agent_project::agent::hook::run(
         "claude",
         &mut Cursor::new(input),
         &home.path().join("shared"),

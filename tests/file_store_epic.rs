@@ -4,11 +4,11 @@
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::model::{EpicUpdate, EpicView, NewEpic, TaskView};
-use agent_board::file_store::validate::EpicId;
+use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+use agent_project::error::AgboardError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::model::{EpicUpdate, EpicView, NewEpic, TaskView};
+use agent_project::file_store::validate::EpicId;
 use chrono::{TimeZone, Utc};
 
 fn at(day: u32) -> chrono::DateTime<Utc> {
@@ -367,7 +367,7 @@ fn an_agent_cannot_change_the_epic_of_an_archived_or_draft_task_but_a_human_can(
         .set_draft(
             &f.project,
             draft.id,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             at(5),
         )
@@ -398,7 +398,7 @@ fn a_draft_epic_is_refused_when_asked_and_a_draft_toggle_keeps_the_update_time()
             &f.project,
             &id,
             EpicUpdate {
-                draft: Some(Some(agent_board::domain::Draft::Human)),
+                draft: Some(Some(agent_project::domain::Draft::Human)),
                 ..EpicUpdate::default()
             },
             at(20),
@@ -485,7 +485,7 @@ fn update_changes_name_color_draft_and_document_and_refuses_a_broken_document() 
             EpicUpdate {
                 name: Some("Renamed".into()),
                 color: Some("#ff0000".into()),
-                draft: Some(Some(agent_board::domain::Draft::Human)),
+                draft: Some(Some(agent_project::domain::Draft::Human)),
                 document: Some(valid_document("Updated goal")),
                 refuse_if_draft: false,
             },
@@ -608,8 +608,8 @@ fn an_ai_cannot_change_epic_membership_after_a_task_is_done() {
         .move_work_task(
             &f.project,
             task.id,
-            agent_board::domain::Column::Done,
-            agent_board::domain::ChangeContext {
+            agent_project::domain::Column::Done,
+            agent_project::domain::ChangeContext {
                 actor: Actor::Ai,
                 reason: "Finished".into(),
             },

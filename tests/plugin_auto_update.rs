@@ -184,7 +184,10 @@ fn a_plugin_that_differs_is_reinstalled_in_the_background_from_the_next_session(
     assert!(notice.contains("next session"), "{notice}");
     assert!(!notice.contains("agboard update"), "{notice}");
     let state = fx.wait_finished("claude");
-    assert_eq!(state["hash"], agent_board::setup::auto_update::PLUGIN_HASH);
+    assert_eq!(
+        state["hash"],
+        agent_project::setup::auto_update::PLUGIN_HASH
+    );
     let log = fx.fakes.log("claude");
     assert!(
         log.iter().any(|l| l.starts_with("plugin install")),
@@ -323,7 +326,7 @@ fn a_recent_failure_is_not_retried_and_points_at_agboard_update() {
     fs::write(
         fx.state_file("claude"),
         serde_json::json!({
-            "hash": agent_board::setup::auto_update::PLUGIN_HASH,
+            "hash": agent_project::setup::auto_update::PLUGIN_HASH,
             "ok": false,
             "at": now,
         })
@@ -340,7 +343,7 @@ fn a_recent_failure_is_not_retried_and_points_at_agboard_update() {
     fs::write(
         fx.state_file("claude"),
         serde_json::json!({
-            "hash": agent_board::setup::auto_update::PLUGIN_HASH,
+            "hash": agent_project::setup::auto_update::PLUGIN_HASH,
             "ok": false,
             "at": now - 7 * 3600,
         })

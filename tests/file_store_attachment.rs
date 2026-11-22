@@ -4,14 +4,14 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent_board::domain::{
+use agent_project::domain::{
     Actor, Assignee, AttachmentInput, ChangeContext, Column, NewTask, ProjectId,
 };
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::layout;
-use agent_board::file_store::model::AttachmentOwner;
-use agent_board::file_store::validate::EpicId;
+use agent_project::error::AgboardError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::layout;
+use agent_project::file_store::model::AttachmentOwner;
+use agent_project::file_store::validate::EpicId;
 use chrono::{TimeZone, Utc};
 
 const MIB: usize = 1024 * 1024;
@@ -154,7 +154,7 @@ impl Fixture {
         self.store
             .create_epic(
                 &self.project,
-                agent_board::file_store::model::NewEpic {
+                agent_project::file_store::model::NewEpic {
                     id: text.into(),
                     name: "Epic".into(),
                     color: Some("#7C3AED".into()),
@@ -531,7 +531,7 @@ fn archived_and_draft_tasks_refuse_image_changes() {
         .set_draft(
             &f.project,
             draft,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             at(5),
         )

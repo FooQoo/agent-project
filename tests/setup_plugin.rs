@@ -116,7 +116,7 @@ fn setup_installs_the_plugin_from_the_release_tag_with_each_agents_commands() {
 }
 
 #[test]
-fn setup_trusts_only_the_agent_board_hooks_in_codex() {
+fn setup_trusts_only_the_agent_project_hooks_in_codex() {
     let fx = fixture(&["codex"]);
     let (code, json) = fx.json(&[], &["setup", "--agent", "codex", "--yes"]);
     assert_eq!(code, 0, "{json}");

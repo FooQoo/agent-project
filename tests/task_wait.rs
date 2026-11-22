@@ -10,8 +10,8 @@ use std::process::{Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::file_store::FileStore;
+use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+use agent_project::file_store::FileStore;
 use assert_cmd::Command as AssertCommand;
 use serde_json::Value;
 use tempfile::{TempDir, tempdir};
@@ -299,7 +299,7 @@ fn task_mode_selects_the_first_eligible_task_in_progress_order_without_writing()
                 description: "draft body".into(),
                 assignee: Assignee::Ai,
                 actor: Actor::Human,
-                draft: Some(agent_board::domain::Draft::Human),
+                draft: Some(agent_project::domain::Draft::Human),
             },
             chrono::Utc::now(),
         )

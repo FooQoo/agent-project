@@ -1,9 +1,9 @@
 //! Shape checks for shared files: the TASK.md frontmatter and its acceptance
 //! conditions, the answer inputs, and the formatVersion gate.
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::model::Choice;
-use agent_board::file_store::validate::{
+use agent_project::error::AgboardError;
+use agent_project::file_store::model::Choice;
+use agent_project::file_store::validate::{
     check_format_version, check_task_body, ensure_task_body, normalize_answer_text,
     normalize_choices, normalize_question, task_template,
 };

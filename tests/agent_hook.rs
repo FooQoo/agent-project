@@ -46,7 +46,7 @@ fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
     let input = br#"{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"ignored"}}"#;
     let mut cursor = Cursor::new(input);
     let result =
-        agent_board::agent::hook::run("claude", &mut cursor, &db_path, Some("Agent Board"))
+        agent_project::agent::hook::run("claude", &mut cursor, &db_path, Some("Agent Board"))
             .unwrap();
     let parsed: Value = serde_json::from_str(&result).unwrap();
     assert_eq!(
@@ -67,7 +67,7 @@ fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
     assert_eq!(snapshot["epics"].as_array().unwrap().len(), 0);
     assert_eq!(before, tree_of(&db_path));
     assert!(
-        agent_board::agent::hook::run(
+        agent_project::agent::hook::run(
             "codex",
             &mut Cursor::new(br#"{"hook_event_name":"PostToolUseFailure"}"#),
             &db_path,
@@ -83,19 +83,19 @@ fn hook_failure_is_bounded_and_does_not_create_a_missing_database() {
     let db_path = home.path().join("missing.db");
     let input = br#"{"hook_event_name":"SessionStart"}"#;
     let output =
-        agent_board::agent::hook::run("codex", &mut Cursor::new(input), &db_path, Some("demo"))
+        agent_project::agent::hook::run("codex", &mut Cursor::new(input), &db_path, Some("demo"))
             .unwrap();
     assert!(output.contains("AGBOARD_ERROR"));
     assert!(!db_path.exists());
     // A readable, unbound hook folder says nothing and creates nothing.
     assert!(
-        agent_board::agent::hook::run("codex", &mut Cursor::new(input), &db_path, None).is_none()
+        agent_project::agent::hook::run("codex", &mut Cursor::new(input), &db_path, None).is_none()
     );
     assert!(!db_path.exists());
     // Input that is not JSON is reported, whatever its size.
     let broken = vec![b'x'; 200_000];
     let output =
-        agent_board::agent::hook::run("claude", &mut Cursor::new(broken), &db_path, Some("demo"))
+        agent_project::agent::hook::run("claude", &mut Cursor::new(broken), &db_path, Some("demo"))
             .unwrap();
     assert!(output.contains("invalid_hook_input"));
     assert!(!db_path.exists());
@@ -127,8 +127,8 @@ fn task_body(text: &str) -> String {
 }
 
 fn board_with_descriptions(descriptions: &[String]) -> (tempfile::TempDir, std::path::PathBuf) {
-    use agent_board::domain::{Actor, Assignee, NewTask};
-    use agent_board::file_store::FileStore;
+    use agent_project::domain::{Actor, Assignee, NewTask};
+    use agent_project::file_store::FileStore;
     let home = tempdir().unwrap();
     let db_path = home.path().join("shared");
     let store = FileStore::open(&db_path);
@@ -157,7 +157,7 @@ fn board_with_descriptions(descriptions: &[String]) -> (tempfile::TempDir, std::
 
 fn hook_context(agent: &str, event: &str, db_path: &std::path::Path) -> String {
     let input = format!(r#"{{"hook_event_name":"{event}"}}"#);
-    let output = agent_board::agent::hook::run(
+    let output = agent_project::agent::hook::run(
         agent,
         &mut Cursor::new(input.into_bytes()),
         db_path,
@@ -232,7 +232,7 @@ fn hook_adds_the_progress_table_after_a_large_tool_result() {
     ] {
         let input = large_tool_result_input(event, None, 4 * 1024 * 1024);
         assert!(input.len() > 4 * 1024 * 1024);
-        let output = agent_board::agent::hook::run(
+        let output = agent_project::agent::hook::run(
             agent,
             &mut Cursor::new(input.into_bytes()),
             &db_path,
@@ -481,9 +481,9 @@ fn hook_reports_a_missing_nearest_project_and_never_uses_the_parent_bind() {
     create_project(home.path(), &root, "Alpha");
     create_project(home.path(), &nested, "Beta");
     std::fs::create_dir_all(nested.join("deeper")).unwrap();
-    let store = agent_board::file_store::FileStore::open(&home.path().join("shared"));
+    let store = agent_project::file_store::FileStore::open(&home.path().join("shared"));
     let beta = store
-        .project_by_name(&agent_board::domain::validate_project_name("Beta").unwrap())
+        .project_by_name(&agent_project::domain::validate_project_name("Beta").unwrap())
         .unwrap();
     store.delete_project(&beta.id).unwrap();
 

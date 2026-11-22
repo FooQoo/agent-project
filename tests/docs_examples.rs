@@ -13,7 +13,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent_board::cli::args::Cli;
+use agent_project::cli::args::Cli;
 use clap::CommandFactory;
 use clap::error::ErrorKind;
 

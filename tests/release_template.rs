@@ -5,10 +5,10 @@
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{Assignee, Column, ProjectId};
-use agent_board::file_store::FileStore;
-use agent_board::file_store::history_language::HistoryLanguage;
-use agent_board::file_store::releases::STANDARD_TEMPLATE as STANDARD_RELEASE_TEMPLATE;
+use agent_project::domain::{Assignee, Column, ProjectId};
+use agent_project::file_store::FileStore;
+use agent_project::file_store::history_language::HistoryLanguage;
+use agent_project::file_store::releases::STANDARD_TEMPLATE as STANDARD_RELEASE_TEMPLATE;
 use chrono::{DateTime, TimeZone, Utc};
 use serde_json::Value;
 
@@ -49,7 +49,7 @@ impl Fixture {
         self.dir().join("docs/release")
     }
 
-    fn tasks(&self) -> Vec<agent_board::file_store::model::TaskView> {
+    fn tasks(&self) -> Vec<agent_project::file_store::model::TaskView> {
         let ids: Vec<i64> = match fs::read_dir(self.dir().join("tasks")) {
             Ok(entries) => entries
                 .filter_map(Result::ok)
@@ -271,11 +271,11 @@ fn ac3_setting_the_current_version_keeps_the_task_counter() {
         .store
         .create_task(
             &f.project,
-            agent_board::domain::NewTask {
+            agent_project::domain::NewTask {
                 title: "Next".into(),
                 description: String::new(),
                 assignee: Assignee::Ai,
-                actor: agent_board::domain::Actor::Human,
+                actor: agent_project::domain::Actor::Human,
                 draft: None,
             },
             at(6),

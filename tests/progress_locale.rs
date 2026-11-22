@@ -15,7 +15,7 @@ const PREFS: &str =
 fn board() -> (TempDir, std::path::PathBuf) {
     let home = tempdir().unwrap();
     let shared = home.path().join("shared");
-    agent_board::file_store::FileStore::open(&shared)
+    agent_project::file_store::FileStore::open(&shared)
         .create_project("Agent Board", chrono::Utc::now())
         .unwrap();
     (home, shared)
@@ -29,7 +29,7 @@ fn save_prefs(home: &Path, text: &str) {
 
 fn hook_table(shared: &Path) -> Value {
     let input = r#"{"hook_event_name":"SessionStart"}"#;
-    let output = agent_board::agent::hook::run(
+    let output = agent_project::agent::hook::run(
         "claude",
         &mut Cursor::new(input.as_bytes().to_vec()),
         shared,

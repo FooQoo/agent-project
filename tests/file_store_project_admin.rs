@@ -7,10 +7,10 @@ use std::path::PathBuf;
 use std::sync::{Arc, Barrier, mpsc};
 use std::time::Duration;
 
-use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::lock::WriteLock;
+use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+use agent_project::error::AgboardError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::lock::WriteLock;
 use chrono::{TimeZone, Utc};
 
 fn now() -> chrono::DateTime<Utc> {

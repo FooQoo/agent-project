@@ -5,10 +5,10 @@ mod common;
 
 use std::path::{Path, PathBuf};
 
-use agent_board::domain::{Actor, Assignee, AttachmentInput, NewTask, ResultKind, TaskResult};
-use agent_board::error::AgboardError;
-use agent_board::file_store::model::AttachmentOwner;
-use agent_board::file_store::{FileStore, ResultInput};
+use agent_project::domain::{Actor, Assignee, AttachmentInput, NewTask, ResultKind, TaskResult};
+use agent_project::error::AgboardError;
+use agent_project::file_store::model::AttachmentOwner;
+use agent_project::file_store::{FileStore, ResultInput};
 use chrono::{TimeZone, Utc};
 use common::{demo_project, json_error, json_ok};
 use serde_json::Value;

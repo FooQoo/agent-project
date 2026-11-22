@@ -5,9 +5,9 @@
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
+use agent_project::error::AgboardError;
+use agent_project::file_store::FileStore;
 use chrono::{TimeZone, Utc};
 
 #[path = "support/qa.rs"]
@@ -62,9 +62,9 @@ impl Fixture {
 
     fn history(&self, id: i64) -> serde_json::Value {
         let markdown = fs::read_to_string(self.task_path(id).with_file_name("TASK.md")).unwrap();
-        let parsed = agent_board::file_store::history::parse_task(
+        let parsed = agent_project::file_store::history::parse_task(
             &markdown,
-            agent_board::file_store::history::ParseMode::Stored,
+            agent_project::file_store::history::ParseMode::Stored,
         );
         serde_json::to_value(parsed.history).unwrap()
     }
@@ -262,7 +262,7 @@ fn a_lane_move_keeps_the_open_question_and_a_person_can_move_a_waiting_task() {
     let question = fx.store.question(&fx.project, "Q-1").unwrap();
     assert_eq!(
         question.status,
-        agent_board::file_store::qa::QuestionStatus::Open
+        agent_project::file_store::qa::QuestionStatus::Open
     );
     let last = fx.history(id).as_array().unwrap().last().unwrap().clone();
     assert_eq!(last["reason"], "Verified");
@@ -304,7 +304,7 @@ fn a_draft_task_refuses_agent_moves_and_accepts_user_moves() {
         .set_draft(
             &fx.project,
             id,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             now(),
         )

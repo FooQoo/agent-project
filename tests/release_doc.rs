@@ -238,7 +238,7 @@ fn archived_tasks_are_included_and_a_named_unlisted_version_is_listed() {
             "Done",
         ],
     );
-    let store = agent_board::file_store::FileStore::open(&home.join("shared"));
+    let store = agent_project::file_store::FileStore::open(&home.join("shared"));
     let project = store.project_by_name("Demo").unwrap().id;
     store
         .archive_task(&project, id, chrono::Utc::now())

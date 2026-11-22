@@ -217,7 +217,7 @@ fn an_oversized_image_is_rejected_without_publishing_a_task() {
     let pid = project_id(home.path());
     let server = Running::start(home.path());
     let before = task_count(&server, &pid);
-    let too_large = vec![0; agent_board::domain::MAX_ATTACHMENT_BYTES + 1];
+    let too_large = vec![0; agent_project::domain::MAX_ATTACHMENT_BYTES + 1];
 
     let reply = send_images(&server, &pid, "Request", None, vec![too_large]);
     assert_eq!(reply.status, 422, "{}", reply.body);

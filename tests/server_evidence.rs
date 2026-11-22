@@ -5,8 +5,8 @@ mod common;
 
 use std::path::Path;
 
-use agent_board::domain::ProjectId;
-use agent_board::file_store::FileStore;
+use agent_project::domain::ProjectId;
+use agent_project::file_store::FileStore;
 use common::{Running, agboard, demo_project, json_error, json_ok, multipart, png};
 use serde_json::{Value, json};
 
@@ -184,7 +184,7 @@ fn a_person_may_add_images_to_a_draft_but_the_cli_may_not() {
         .set_draft(
             &pid.parse::<ProjectId>().unwrap(),
             1,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             chrono::Utc::now(),
         )

@@ -40,13 +40,13 @@ fn fixture_root(manifest_version: &str, lock_version: &str) -> tempfile::TempDir
     let dir = tempfile::tempdir().unwrap();
     fs::write(
         dir.path().join("Cargo.toml"),
-        format!("[package]\nname = \"agent-board\"\nversion = \"{manifest_version}\"\n"),
+        format!("[package]\nname = \"agent-project\"\nversion = \"{manifest_version}\"\n"),
     )
     .unwrap();
     fs::write(
         dir.path().join("Cargo.lock"),
         format!(
-            "version = 4\n\n[[package]]\nname = \"agent-board\"\nversion = \"{lock_version}\"\n"
+            "version = 4\n\n[[package]]\nname = \"agent-project\"\nversion = \"{lock_version}\"\n"
         ),
     )
     .unwrap();
@@ -97,7 +97,9 @@ fn package_metadata_is_mit_and_the_lockfile_names_the_same_version() {
     assert!(manifest.contains("license = \"MIT\""), "{manifest}");
     let lock = read("Cargo.lock");
     assert!(
-        lock.contains(&format!("name = \"agent-board\"\nversion = \"{version}\"")),
+        lock.contains(&format!(
+            "name = \"agent-project\"\nversion = \"{version}\""
+        )),
         "the lockfile names another version"
     );
 }

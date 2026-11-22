@@ -4,8 +4,8 @@ mod common;
 
 use std::str::FromStr;
 
-use agent_board::domain::{Actor, ChangeContext, Column, ProjectId};
-use agent_board::file_store::{FileStore, TaskTextParts, frontmatter::AcceptanceItem};
+use agent_project::domain::{Actor, ChangeContext, Column, ProjectId};
+use agent_project::file_store::{FileStore, TaskTextParts, frontmatter::AcceptanceItem};
 use chrono::{TimeZone, Utc};
 use common::{agboard, demo_project, json_ok};
 
@@ -46,7 +46,7 @@ fn body_only_draft_edit_uses_latest_markdown_acceptance_and_history() {
         .set_draft(
             &project,
             1,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             now,
         )
@@ -191,7 +191,7 @@ fn rejected_finalize_keeps_the_draft_body_and_history_unchanged() {
         .set_draft(
             &project,
             1,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             now,
         )
@@ -224,7 +224,10 @@ fn rejected_finalize_keeps_the_draft_body_and_history_unchanged() {
         )
         .unwrap_err();
     assert!(
-        matches!(error, agent_board::error::AgboardError::FileInvalid { .. }),
+        matches!(
+            error,
+            agent_project::error::AgboardError::FileInvalid { .. }
+        ),
         "{error:?}"
     );
     let after = files.task(&project, 1).unwrap();

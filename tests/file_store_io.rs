@@ -4,8 +4,8 @@
 use std::fs;
 use std::path::Path;
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::io::{write_atomic, write_json};
+use agent_project::error::AgboardError;
+use agent_project::file_store::io::{write_atomic, write_json};
 
 fn names(dir: &Path) -> Vec<String> {
     let mut names: Vec<String> = fs::read_dir(dir)

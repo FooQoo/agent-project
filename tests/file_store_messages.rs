@@ -7,10 +7,10 @@ mod qa;
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_board::error::AgboardError;
-use agent_board::file_store::qa::{AnswerVia, MessageView, QuestionStatus, RequestStatus};
-use agent_board::file_store::{
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
+use agent_project::error::AgboardError;
+use agent_project::file_store::qa::{AnswerVia, MessageView, QuestionStatus, RequestStatus};
+use agent_project::file_store::{
     Accepted, AnswerItem, AskInput, AskQuestion, FileStore, RequestImage, SendRequestInput,
 };
 use chrono::Utc;
@@ -107,7 +107,7 @@ impl Fixture {
         id: &str,
         choice: Option<&str>,
         text: Option<&str>,
-    ) -> Result<Vec<agent_board::file_store::qa::QuestionView>, AgboardError> {
+    ) -> Result<Vec<agent_project::file_store::qa::QuestionView>, AgboardError> {
         self.store.answer_questions(
             &self.project,
             vec![AnswerItem {
@@ -779,7 +779,7 @@ fn a_refused_ask_writes_nothing_and_reserves_no_number() {
                 description: String::new(),
                 assignee: Assignee::Ai,
                 actor: Actor::Human,
-                draft: Some(agent_board::domain::Draft::Human),
+                draft: Some(agent_project::domain::Draft::Human),
             },
             Utc::now(),
         )

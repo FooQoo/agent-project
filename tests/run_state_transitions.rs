@@ -2,12 +2,12 @@
 //! makes of the state, that a task that has run never goes back to idle, and that a person's
 //! task stays idle.
 
-use agent_board::domain::{
+use agent_project::domain::{
     Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState, check_state_change,
     state_after_move,
 };
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
+use agent_project::error::AgboardError;
+use agent_project::file_store::FileStore;
 use chrono::{TimeZone, Utc};
 
 fn now() -> chrono::DateTime<Utc> {

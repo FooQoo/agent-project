@@ -6,8 +6,8 @@ mod common;
 
 use std::path::Path;
 
-use agent_board::domain::ProjectId;
-use agent_board::file_store::FileStore;
+use agent_project::domain::ProjectId;
+use agent_project::file_store::FileStore;
 use common::{agboard, demo_project, json_error, json_ok, png};
 use serde_json::Value;
 
@@ -320,13 +320,13 @@ fn a_draft_epic_refuses_cli_edit_but_reads_and_member_work_still_work() {
     epic_add(home.path(), "FILE-SHARE", "File share", Some("#111111"));
     let store = FileStore::open(&home.path().join("shared"));
     let project = project_id(home.path());
-    let epic = agent_board::file_store::validate::EpicId::normalize("FILE-SHARE").unwrap();
+    let epic = agent_project::file_store::validate::EpicId::normalize("FILE-SHARE").unwrap();
     store
         .update_epic(
             &project,
             &epic,
-            agent_board::file_store::model::EpicUpdate {
-                draft: Some(Some(agent_board::domain::Draft::Human)),
+            agent_project::file_store::model::EpicUpdate {
+                draft: Some(Some(agent_project::domain::Draft::Human)),
                 ..Default::default()
             },
             chrono::Utc::now(),
@@ -372,7 +372,7 @@ fn a_draft_task_refuses_cli_image_and_epic_changes_but_reads_still_work() {
         .set_draft(
             &project_id(home.path()),
             1,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             chrono::Utc::now(),
         )

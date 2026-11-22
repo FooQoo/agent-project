@@ -237,7 +237,7 @@ fn a_file_comes_back_with_its_revision() {
     assert!(body.get("readOnly").is_none());
     assert_eq!(
         body["revision"],
-        agent_board::docs::revision_of("# Hi\r\nあ\n".as_bytes())
+        agent_project::docs::revision_of("# Hi\r\nあ\n".as_bytes())
     );
 }
 
@@ -249,7 +249,7 @@ fn the_bom_stays_in_the_content() {
     assert_eq!(body["content"], "\u{feff}text");
     assert_eq!(
         body["revision"],
-        agent_board::docs::revision_of(b"\xEF\xBB\xBFtext")
+        agent_project::docs::revision_of(b"\xEF\xBB\xBFtext")
     );
 }
 

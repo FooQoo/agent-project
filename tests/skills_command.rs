@@ -158,7 +158,7 @@ fn skills_works_without_a_data_directory() {
 
 #[test]
 fn the_task_template_still_parses_as_new_task_input() {
-    use agent_board::file_store::history::{ParseMode, parse_task};
+    use agent_project::file_store::history::{ParseMode, parse_task};
     let (_, template, _) = skills(&["task-template"]);
     let block = template
         .split("```markdown\n")

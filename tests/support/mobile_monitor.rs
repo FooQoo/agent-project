@@ -6,15 +6,15 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use agent_board::domain::{Actor, Assignee, NewTask};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::monitor_connection::contracts::PublicOrigin;
-use agent_board::server::monitor_connection::lifecycle::{
+use agent_project::domain::{Actor, Assignee, NewTask};
+use agent_project::error::AgboardError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::monitor_connection::contracts::PublicOrigin;
+use agent_project::server::monitor_connection::lifecycle::{
     Connector, MonitorEnv, OpenFuture, OpenRequest, OpenedTunnel, Secret,
 };
-use agent_board::server::{MonitorOptions, ServeConfig, run_until_with_monitor_in};
+use agent_project::server::{MonitorOptions, ServeConfig, run_until_with_monitor_in};
 use serde_json::Value;
 
 #[path = "server_thread.rs"]

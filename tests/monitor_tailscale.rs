@@ -15,7 +15,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use agent_board::server::monitor_connection::tailscale::TailscaleConnector;
+use agent_project::server::monitor_connection::tailscale::TailscaleConnector;
 use harness::*;
 use serde_json::json;
 
@@ -47,7 +47,7 @@ fn calls(dir: &Path) -> Vec<String> {
 }
 
 fn server(home: &Path, cli: Option<PathBuf>) -> Server {
-    let connector: Arc<dyn agent_board::server::monitor_connection::lifecycle::Connector> =
+    let connector: Arc<dyn agent_project::server::monitor_connection::lifecycle::Connector> =
         Arc::new(match cli {
             Some(cli) => TailscaleConnector::with_cli(cli),
             None => TailscaleConnector::with_cli(PathBuf::from("/nonexistent/tailscale")),

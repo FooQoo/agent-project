@@ -795,7 +795,7 @@ fn deleting_the_project_while_waiting_is_an_error_and_a_same_name_project_is_not
     // needs a human, so this goes through the library, as the server's own
     // administrator would.
     {
-        let store = agent_board::file_store::FileStore::open(&home.path().join("shared"));
+        let store = agent_project::file_store::FileStore::open(&home.path().join("shared"));
         let id = store.project_by_name("Alpha").unwrap().id;
         store.delete_project(&id).unwrap();
         let now = chrono::Utc::now();
@@ -803,11 +803,11 @@ fn deleting_the_project_while_waiting_is_an_error_and_a_same_name_project_is_not
         store
             .create_task(
                 &recreated.id,
-                agent_board::domain::NewTask {
+                agent_project::domain::NewTask {
                     title: "Belongs to the new Alpha".into(),
                     description: "## 作業内容\n\nNew.\n\n## 完了条件と確認結果\n\n- [ ] AC-1. Works\n  - 確認結果: 未確認\n  - 根拠: 未記入\n  - 調整役の確認: 未確認\n\n## 実行記録\n\n".into(),
-                    assignee: agent_board::domain::Assignee::Ai,
-                    actor: agent_board::domain::Actor::Human,
+                    assignee: agent_project::domain::Assignee::Ai,
+                    actor: agent_project::domain::Actor::Human,
                     draft: None,
                 },
                 now,
@@ -815,8 +815,8 @@ fn deleting_the_project_while_waiting_is_an_error_and_a_same_name_project_is_not
             .unwrap();
     }
     // The server is told, as it would be after a CLI change.
-    let info = agent_board::paths::read_serve_info_in(home.path()).unwrap();
-    assert!(agent_board::interact::notify::notify_port(
+    let info = agent_project::paths::read_serve_info_in(home.path()).unwrap();
+    assert!(agent_project::interact::notify::notify_port(
         info.port,
         Duration::from_secs(2)
     ));
@@ -843,14 +843,14 @@ fn a_notification_without_a_change_and_a_timeout_do_not_end_the_wait_as_a_succes
         .unwrap()
         .to_string();
     let server = start_server(home.path());
-    let info = agent_board::paths::read_serve_info_in(home.path()).unwrap();
+    let info = agent_project::paths::read_serve_info_in(home.path()).unwrap();
     let before = snapshot(home.path(), "Alpha");
 
     let began = Instant::now();
     let mut waiter = spawn_wait(home.path(), "Alpha", &after, Some("4"));
     std::thread::sleep(Duration::from_millis(500));
     // A `changed` event with nothing new in this project.
-    assert!(agent_board::interact::notify::notify_port(
+    assert!(agent_project::interact::notify::notify_port(
         info.port,
         Duration::from_secs(2)
     ));

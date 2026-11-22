@@ -250,13 +250,13 @@ fn a_command_needs_a_project_that_exists_and_never_guesses_one() {
 
 /// Mark a task as a draft the way the Web does, through the file store.
 fn make_draft(home: &std::path::Path, project: &str, id: i64) {
-    let files = agent_board::file_store::FileStore::open(&home.join("shared"));
+    let files = agent_project::file_store::FileStore::open(&home.join("shared"));
     let meta = files.project_by_name(project).unwrap();
     files
         .set_draft(
             &meta.id,
             id,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             chrono::Utc::now(),
         )

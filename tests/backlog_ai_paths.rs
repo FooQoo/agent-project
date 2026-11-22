@@ -9,8 +9,8 @@ mod qa;
 
 use std::path::PathBuf;
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_board::file_store::FileStore;
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
+use agent_project::file_store::FileStore;
 use chrono::{TimeZone, Utc};
 
 fn now() -> chrono::DateTime<Utc> {
@@ -64,14 +64,14 @@ impl Fx {
 
     fn next(&self) -> Vec<i64> {
         let snapshot = self.store.board(&self.project).unwrap();
-        let table = agent_board::progress::build(&snapshot, &self.shared, now());
+        let table = agent_project::progress::build(&snapshot, &self.shared, now());
         table.next_tasks.iter().map(|t| t.id).collect()
     }
 
     fn start_reminders(&self) -> Vec<Option<i64>> {
         let snapshot = self.store.board(&self.project).unwrap();
-        let table = agent_board::progress::build(&snapshot, &self.shared, now());
-        agent_board::nudge::state_reminders(&table, now())
+        let table = agent_project::progress::build(&snapshot, &self.shared, now());
+        agent_project::nudge::state_reminders(&table, now())
             .into_iter()
             .filter(|r| r.rule == "next-task")
             .map(|r| r.task_id)

@@ -9,15 +9,15 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::monitor_connection::contracts::PublicOrigin;
-use agent_board::server::monitor_connection::keychain::{TokenVault, VaultError};
-use agent_board::server::monitor_connection::lifecycle::{
+use agent_project::error::AgboardError;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::monitor_connection::contracts::PublicOrigin;
+use agent_project::server::monitor_connection::keychain::{TokenVault, VaultError};
+use agent_project::server::monitor_connection::lifecycle::{
     Connector, FailureCode, MonitorEnv, OpenFailure, OpenFuture, OpenRequest, OpenedTunnel, Secret,
 };
-use agent_board::server::push_delivery::{Outcome, PushTransport, Request, SendFuture};
-use agent_board::server::{MonitorOptions, MonitorReady, ServeConfig, run_until_with_monitor_in};
+use agent_project::server::push_delivery::{Outcome, PushTransport, Request, SendFuture};
+use agent_project::server::{MonitorOptions, MonitorReady, ServeConfig, run_until_with_monitor_in};
 use serde_json::{Value, json};
 
 use super::support::server_thread;

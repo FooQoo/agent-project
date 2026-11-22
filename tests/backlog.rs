@@ -9,12 +9,12 @@ mod qa;
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{
+use agent_project::domain::{
     Actor, Assignee, AttachmentInput, ChangeContext, Column, Draft, NewTask, ProjectId,
 };
-use agent_board::file_store::model::{AttachmentOwner, NewEpic};
-use agent_board::file_store::validate::EpicId;
-use agent_board::file_store::{DraftSave, FileStore, ImageChanges};
+use agent_project::file_store::model::{AttachmentOwner, NewEpic};
+use agent_project::file_store::validate::EpicId;
+use agent_project::file_store::{DraftSave, FileStore, ImageChanges};
 use chrono::{TimeZone, Utc};
 use serde_json::{Value, json};
 
@@ -246,7 +246,7 @@ fn an_open_question_is_a_warning_a_person_confirms() {
     // It waits for the answer in Todo, so no agent can run it.
     assert_eq!(
         view.agent_status,
-        agent_board::domain::RunState::AwaitingAnswer
+        agent_project::domain::RunState::AwaitingAnswer
     );
 }
 
@@ -430,7 +430,7 @@ fn nothing_leaves_the_backlog_by_a_move_or_a_run_state_except_a_persons_move() {
     let state = f.store.set_agent_status(
         &f.project,
         id,
-        agent_board::domain::RunState::Running,
+        agent_project::domain::RunState::Running,
         ChangeContext {
             actor: Actor::Ai,
             reason: "go".into(),
@@ -597,7 +597,7 @@ fn the_agent_surfaces_ignore_the_backlog() {
     let plan = f.plan("Plan");
     let ready = f.human_task("Ready");
     let snapshot = f.store.board(&f.project).unwrap();
-    let table = agent_board::progress::build(&snapshot, &f.shared, now());
+    let table = agent_project::progress::build(&snapshot, &f.shared, now());
     let next: Vec<i64> = table.next_tasks.iter().map(|t| t.id).collect();
     assert_eq!(
         next,
@@ -616,7 +616,7 @@ fn the_agent_surfaces_ignore_the_backlog() {
         .send_task(&f.project, plan, Actor::Human, false, now())
         .unwrap();
     let snapshot = f.store.board(&f.project).unwrap();
-    let table = agent_board::progress::build(&snapshot, &f.shared, now());
+    let table = agent_project::progress::build(&snapshot, &f.shared, now());
     let next: Vec<i64> = table.next_tasks.iter().map(|t| t.id).collect();
     assert!(next.contains(&plan));
 }
@@ -633,7 +633,7 @@ fn an_epic_waits_for_a_plan_that_is_still_in_the_backlog() {
         .update_epic(
             &f.project,
             &epic,
-            agent_board::file_store::model::EpicUpdate {
+            agent_project::file_store::model::EpicUpdate {
                 document: Some("---\nwaves:\n- 1\n- 2\n---\n\n## 目的\n\nx\n".to_string()),
                 ..Default::default()
             },
@@ -641,7 +641,7 @@ fn an_epic_waits_for_a_plan_that_is_still_in_the_backlog() {
         )
         .unwrap();
     let snapshot = f.store.board(&f.project).unwrap();
-    let table = agent_board::progress::build(&snapshot, &f.shared, now());
+    let table = agent_project::progress::build(&snapshot, &f.shared, now());
     assert!(
         table.next_tasks.iter().all(|t| t.id != second),
         "wave 2 waits while wave 1 is in the Backlog"

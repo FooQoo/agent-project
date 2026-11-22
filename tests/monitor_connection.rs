@@ -12,9 +12,9 @@ use std::sync::atomic::Ordering;
 use std::sync::{Arc, mpsc};
 use std::time::{Duration, Instant};
 
-use agent_board::cli::args::{Command as CliCommand, Parsed, parse, validate_monitor_args};
-use agent_board::server::monitor_connection::config::ConfigStore;
-use agent_board::server::monitor_connection::contracts::ConnectionConfig;
+use agent_project::cli::args::{Command as CliCommand, Parsed, parse, validate_monitor_args};
+use agent_project::server::monitor_connection::config::ConfigStore;
+use agent_project::server::monitor_connection::contracts::ConnectionConfig;
 use assert_cmd::Command;
 use serde_json::{Value, json};
 use support::home;
@@ -695,8 +695,8 @@ fn an_unreadable_settings_file_keeps_the_pc_entrance_and_can_be_replaced() {
 
 #[test]
 fn settings_saved_from_the_command_line_show_in_a_running_board_without_a_reload() {
-    use agent_board::remote_settings::{Change, apply};
-    use agent_board::server::monitor_connection::keychain::NoKeychain;
+    use agent_project::remote_settings::{Change, apply};
+    use agent_project::server::monitor_connection::keychain::NoKeychain;
 
     let home = home();
     let s = Server::start(home.path(), Opts::default());
@@ -727,8 +727,8 @@ fn settings_saved_from_the_command_line_show_in_a_running_board_without_a_reload
 
 #[test]
 fn a_stop_keeps_a_domain_saved_from_the_command_line_meanwhile() {
-    use agent_board::remote_settings::{Change, apply};
-    use agent_board::server::monitor_connection::keychain::NoKeychain;
+    use agent_project::remote_settings::{Change, apply};
+    use agent_project::server::monitor_connection::keychain::NoKeychain;
 
     let home = home();
     let s = Server::start(home.path(), Opts::default());

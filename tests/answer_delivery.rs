@@ -104,7 +104,7 @@ fn an_unaccepted_answer_is_in_progress_and_leaves_when_accepted() {
 fn the_hook_carries_the_unaccepted_answers() {
     let home = tempfile::tempdir().unwrap();
     let id = answered(home.path());
-    let out = agent_board::agent::hook::run(
+    let out = agent_project::agent::hook::run(
         "claude",
         &mut Cursor::new(r#"{"hook_event_name":"SessionStart"}"#),
         &home.path().join("shared"),

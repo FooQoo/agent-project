@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
 
-use agent_board::file_store::FileStore;
+use agent_project::file_store::FileStore;
 use serde_json::{Value, json};
 use support::home;
 

@@ -23,7 +23,7 @@ mod harness;
 
 use std::io::BufRead;
 
-use agent_board::file_store::FileStore;
+use agent_project::file_store::FileStore;
 use harness::*;
 use serde_json::json;
 use support::home;

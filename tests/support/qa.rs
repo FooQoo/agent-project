@@ -1,10 +1,10 @@
 //! Asking and answering project questions in tests.
 #![allow(dead_code)]
 
-use agent_board::domain::{Actor, ProjectId};
-use agent_board::file_store::model::Choice;
-use agent_board::file_store::qa::{AnswerVia, Question};
-use agent_board::file_store::{AnswerItem, AskInput, AskQuestion, FileStore};
+use agent_project::domain::{Actor, ProjectId};
+use agent_project::file_store::model::Choice;
+use agent_project::file_store::qa::{AnswerVia, Question};
+use agent_project::file_store::{AnswerItem, AskInput, AskQuestion, FileStore};
 
 pub fn choices(pairs: &[(&str, &str)]) -> Vec<Choice> {
     pairs

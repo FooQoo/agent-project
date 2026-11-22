@@ -9,14 +9,14 @@ mod qa;
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId};
-use agent_board::file_store::FileStore;
-use agent_board::file_store::TaskTextParts;
-use agent_board::file_store::frontmatter::AcceptanceItem;
-use agent_board::file_store::index::{ProjectEntry, ProjectIndex};
-use agent_board::file_store::model::{EpicUpdate, NewEpic};
-use agent_board::file_store::projection::{ChangeSet, Facet, Projection, Resource, ResourceId};
-use agent_board::file_store::validate::EpicId;
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId};
+use agent_project::file_store::FileStore;
+use agent_project::file_store::TaskTextParts;
+use agent_project::file_store::frontmatter::AcceptanceItem;
+use agent_project::file_store::index::{ProjectEntry, ProjectIndex};
+use agent_project::file_store::model::{EpicUpdate, NewEpic};
+use agent_project::file_store::projection::{ChangeSet, Facet, Projection, Resource, ResourceId};
+use agent_project::file_store::validate::EpicId;
 use chrono::{DateTime, TimeZone, Utc};
 
 fn at(minute: u32) -> DateTime<Utc> {

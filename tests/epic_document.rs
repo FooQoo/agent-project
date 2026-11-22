@@ -196,7 +196,7 @@ fn the_hook_snapshot_uses_document_path() {
     assert_eq!(code, 0, "{err}");
     write_document(home.path(), "ALPHA", DOCUMENT.as_bytes());
     let input = br#"{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"x"}}"#;
-    let out = agent_board::agent::hook::run(
+    let out = agent_project::agent::hook::run(
         "claude",
         &mut Cursor::new(input),
         &home.path().join("shared"),

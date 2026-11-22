@@ -18,8 +18,8 @@ use std::net::{SocketAddr, TcpStream};
 use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
 
-use agent_board::domain::{Actor, Assignee, NewTask};
-use agent_board::file_store::FileStore;
+use agent_project::domain::{Actor, Assignee, NewTask};
+use agent_project::file_store::FileStore;
 use serde_json::{Value, json};
 use support::home;
 

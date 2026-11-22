@@ -18,9 +18,9 @@ use std::time::Duration;
 #[path = "../support/server_thread.rs"]
 mod server_thread;
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::{ServeConfig, run_until_in};
+use agent_project::error::AgboardError;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::{ServeConfig, run_until_in};
 use serde_json::Value;
 
 /// A valid 1x1 PNG.

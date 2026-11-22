@@ -4,7 +4,7 @@
 use serde_json::Value;
 
 fn topic(name: &str) -> &'static str {
-    agent_board::skills::TOPICS
+    agent_project::skills::TOPICS
         .iter()
         .find(|(topic, _)| *topic == name)
         .unwrap()
@@ -13,8 +13,8 @@ fn topic(name: &str) -> &'static str {
 
 /// The main text and every topic: the whole Skill.
 fn full_skill() -> String {
-    let mut text = agent_board::skills::AGENT_BOARD.to_string();
-    for (_, topic) in agent_board::skills::TOPICS {
+    let mut text = agent_project::skills::AGENT_BOARD.to_string();
+    for (_, topic) in agent_project::skills::TOPICS {
         text.push_str(topic);
     }
     text
@@ -116,7 +116,7 @@ fn templates_hold_no_personal_or_machine_specific_paths() {
 #[test]
 fn the_skill_sends_an_unbound_folder_to_the_users_own_setup_run() {
     for (name, text) in [
-        ("the Skill", agent_board::skills::AGENT_BOARD),
+        ("the Skill", agent_project::skills::AGENT_BOARD),
         ("listening", topic("listening")),
     ] {
         assert!(
@@ -126,7 +126,7 @@ fn the_skill_sends_an_unbound_folder_to_the_users_own_setup_run() {
         assert!(text.contains("agboard setup"), "{name} omits setup");
         assert!(!text.contains("agboard connect"), "{name} names connect");
     }
-    let skill = agent_board::skills::AGENT_BOARD;
+    let skill = agent_project::skills::AGENT_BOARD;
     assert!(
         skill.contains("never run it"),
         "the Skill must not run setup itself"

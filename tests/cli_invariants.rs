@@ -4,7 +4,7 @@
 //! and the argument; fix the definition, or add an entry to the matching allowlist with a
 //! reason a reviewer can weigh.
 
-use agent_board::cli::args::Cli;
+use agent_project::cli::args::Cli;
 use clap::error::ErrorKind;
 use clap::{Arg, Command, CommandFactory};
 

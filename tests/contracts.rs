@@ -5,8 +5,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent_board::server::contracts::detail::parse_sections;
-use agent_board::server::contracts::{Changed, DetailEvent, Section, StreamValidator, Summary};
+use agent_project::server::contracts::detail::parse_sections;
+use agent_project::server::contracts::{Changed, DetailEvent, Section, StreamValidator, Summary};
 use serde_json::Value;
 
 fn dir() -> PathBuf {

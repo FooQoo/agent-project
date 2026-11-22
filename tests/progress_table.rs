@@ -5,7 +5,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent_board::file_store::frontmatter;
+use agent_project::file_store::frontmatter;
 use assert_cmd::Command;
 use serde_json::{Value, json};
 use tempfile::{TempDir, tempdir};
@@ -459,7 +459,7 @@ fn the_human_table_lists_each_epic_and_the_unassigned_tasks() {
 
 #[test]
 fn an_archived_task_is_never_listed() {
-    use agent_board::file_store::FileStore;
+    use agent_project::file_store::FileStore;
     let home = demo();
     let task = add(home.path(), "to archive", Some("ALPHA"));
     let kept = add(home.path(), "still open", Some("ALPHA"));

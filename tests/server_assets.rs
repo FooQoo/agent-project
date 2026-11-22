@@ -12,10 +12,10 @@ use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::web_assets::APP_ASSETS;
-use agent_board::server::{ServeConfig, run_until_in};
+use agent_project::error::AgboardError;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::web_assets::APP_ASSETS;
+use agent_project::server::{ServeConfig, run_until_in};
 
 const IMMUTABLE: &str = "public, max-age=31536000, immutable";
 

@@ -20,11 +20,11 @@ use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::{ServeConfig, run_until_in};
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
+use agent_project::error::AgboardError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::{ServeConfig, run_until_in};
 use chrono::{DateTime, TimeZone, Utc};
 use serde_json::{Value, json};
 
@@ -58,15 +58,15 @@ fn body_of(count: usize) -> String {
 
 fn replace_task_body_preserving_history(path: &Path, description: &str) {
     let current = std::fs::read_to_string(path).unwrap();
-    let stored = agent_board::file_store::history::parse_task(
+    let stored = agent_project::file_store::history::parse_task(
         &current,
-        agent_board::file_store::history::ParseMode::Stored,
+        agent_project::file_store::history::ParseMode::Stored,
     );
-    let input = agent_board::file_store::history::parse_task(
+    let input = agent_project::file_store::history::parse_task(
         description,
-        agent_board::file_store::history::ParseMode::NewInput,
+        agent_project::file_store::history::ParseMode::NewInput,
     );
-    let next = agent_board::file_store::history::compose_task(
+    let next = agent_project::file_store::history::compose_task(
         description,
         &input.body,
         Some(&input.acceptance),
@@ -1018,8 +1018,8 @@ fn a_busy_database_is_503() {
     let (home, a, _) = two_projects();
     let server = Running::start(home.path());
     let project_dir = home.path().join("shared/projects").join(a.as_str());
-    let _held = agent_board::file_store::lock::WriteLock::acquire(
-        &agent_board::file_store::layout::write_lock(&project_dir),
+    let _held = agent_project::file_store::lock::WriteLock::acquire(
+        &agent_project::file_store::layout::write_lock(&project_dir),
     )
     .unwrap();
     let reply = server.write(
@@ -1221,7 +1221,7 @@ fn draft_task(home: &Path, project: &ProjectId, id: i64) {
         .set_draft(
             project,
             id,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             t(9),
         )
@@ -1652,13 +1652,13 @@ fn the_page_carries_a_content_security_policy_and_no_referrer() {
     }
 }
 
-fn two_choices() -> Vec<agent_board::file_store::model::Choice> {
+fn two_choices() -> Vec<agent_project::file_store::model::Choice> {
     vec![
-        agent_board::file_store::model::Choice {
+        agent_project::file_store::model::Choice {
             id: "a".into(),
             label: "Plan A".into(),
         },
-        agent_board::file_store::model::Choice {
+        agent_project::file_store::model::Choice {
             id: "b".into(),
             label: "Plan B".into(),
         },

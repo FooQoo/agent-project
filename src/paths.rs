@@ -194,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn data_dir_defaults_to_agent_board_in_the_home_directory() {
+    fn data_dir_defaults_to_agent_project_in_the_home_directory() {
         with_home(None, || {
             assert_eq!(
                 data_dir().unwrap(),

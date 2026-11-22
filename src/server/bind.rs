@@ -181,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn the_notice_names_another_agent_board_server() {
+    fn the_notice_names_another_agent_project_server() {
         assert_eq!(
             another_port_notice(7420, PortHolder::AgentBoard { pid: 41235 }, 52114),
             "Port 7420 is used by another Agent Board server (pid 41235) with a different data folder, so this server uses port 52114."

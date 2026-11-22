@@ -1,8 +1,8 @@
 use std::ffi::OsString;
 
-use agent_board::cli::args::{Command, Parsed, parse};
+use agent_project::cli::args::{Command, Parsed, parse};
 
-fn parse_args(args: &[&str]) -> Result<Parsed, agent_board::error::AgboardError> {
+fn parse_args(args: &[&str]) -> Result<Parsed, agent_project::error::AgboardError> {
     let mut full = vec![OsString::from("agboard")];
     full.extend(args.iter().map(OsString::from));
     parse(&full)

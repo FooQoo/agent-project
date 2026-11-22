@@ -191,7 +191,7 @@ fn include_flags_add_the_waiting_question_and_the_newest_done_tasks() {
 fn the_hook_passes_the_flags_through() {
     let b = board();
     let input = br#"{"hook_event_name":"SessionStart"}"#;
-    let default = agent_board::agent::hook::run(
+    let default = agent_project::agent::hook::run(
         "claude",
         &mut Cursor::new(input),
         &b.home.path().join("shared"),
@@ -199,12 +199,12 @@ fn the_hook_passes_the_flags_through() {
     )
     .unwrap();
     assert!(!default.contains("Proceed?"));
-    let with = agent_board::agent::hook::run_with(
+    let with = agent_project::agent::hook::run_with(
         "claude",
         &mut Cursor::new(input),
         &b.home.path().join("shared"),
         Some("Demo"),
-        agent_board::progress::Include {
+        agent_project::progress::Include {
             awaiting_answer: true,
             done: 1,
         },

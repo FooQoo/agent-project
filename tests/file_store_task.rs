@@ -4,10 +4,10 @@
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{Actor, Assignee, Changed, Draft, NewTask, ProjectId};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::model::TaskView;
+use agent_project::domain::{Actor, Assignee, Changed, Draft, NewTask, ProjectId};
+use agent_project::error::AgboardError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::model::TaskView;
 use chrono::{TimeZone, Utc};
 
 fn now() -> chrono::DateTime<Utc> {
@@ -65,9 +65,9 @@ impl Fixture {
 
     fn history(&self, id: i64) -> serde_json::Value {
         let markdown = fs::read_to_string(self.task_dir(id).join("TASK.md")).unwrap();
-        let parsed = agent_board::file_store::history::parse_task(
+        let parsed = agent_project::file_store::history::parse_task(
             &markdown,
-            agent_board::file_store::history::ParseMode::Stored,
+            agent_project::file_store::history::ParseMode::Stored,
         );
         serde_json::to_value(parsed.history).unwrap()
     }
@@ -596,9 +596,9 @@ fn a_half_written_body_reads_as_a_problem_and_recovers_when_it_is_finished() {
     let fx = fixture();
     fx.create("one");
     let markdown = fs::read_to_string(fx.task_dir(1).join("TASK.md")).unwrap();
-    let created = agent_board::file_store::history::parse_task(
+    let created = agent_project::file_store::history::parse_task(
         &markdown,
-        agent_board::file_store::history::ParseMode::Stored,
+        agent_project::file_store::history::ParseMode::Stored,
     );
     // What a reader sees while an agent is still writing the file.
     fs::write(
@@ -609,11 +609,11 @@ fn a_half_written_body_reads_as_a_problem_and_recovers_when_it_is_finished() {
     let during = fx.store.snapshot(&fx.project).unwrap();
     assert_eq!(during.tasks.len(), 1);
     assert!(!during.problems.is_empty());
-    let input = agent_board::file_store::history::parse_task(
+    let input = agent_project::file_store::history::parse_task(
         VALID_BODY,
-        agent_board::file_store::history::ParseMode::NewInput,
+        agent_project::file_store::history::ParseMode::NewInput,
     );
-    let finished = agent_board::file_store::history::compose_task(
+    let finished = agent_project::file_store::history::compose_task(
         VALID_BODY,
         &input.body,
         Some(&input.acceptance),

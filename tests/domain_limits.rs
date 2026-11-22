@@ -1,7 +1,7 @@
-use agent_board::domain::{
+use agent_project::domain::{
     normalize_and_validate_description, validate_board_name, validate_reason, validate_title,
 };
-use agent_board::error::AgboardError;
+use agent_project::error::AgboardError;
 
 fn invalid(field: &str, reason: &str) -> AgboardError {
     AgboardError::InvalidValue {

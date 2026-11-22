@@ -622,7 +622,7 @@ fn the_old_monitor_addresses_are_not_found_on_the_local_entrance_too() {
 #[test]
 fn projects_are_listed_and_switched_through_the_entrance_as_on_the_pc() {
     let home = home();
-    let store = agent_board::file_store::FileStore::open(&home.path().join("shared"));
+    let store = agent_project::file_store::FileStore::open(&home.path().join("shared"));
     let second = store
         .create_project("second", chrono::Utc::now())
         .unwrap()
@@ -630,11 +630,11 @@ fn projects_are_listed_and_switched_through_the_entrance_as_on_the_pc() {
     store
         .create_task(
             &second,
-            agent_board::domain::NewTask {
+            agent_project::domain::NewTask {
                 title: "Only in the second project".into(),
                 description: String::new(),
-                assignee: agent_board::domain::Assignee::Human,
-                actor: agent_board::domain::Actor::Human,
+                assignee: agent_project::domain::Assignee::Human,
+                actor: agent_project::domain::Actor::Human,
                 draft: None,
             },
             chrono::Utc::now(),

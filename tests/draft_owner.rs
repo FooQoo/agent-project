@@ -3,11 +3,11 @@
 
 mod common;
 
-use agent_board::domain::{Actor, Assignee, Draft, NewTask, ProjectId};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::model::NewEpic;
-use agent_board::file_store::validate::EpicId;
+use agent_project::domain::{Actor, Assignee, Draft, NewTask, ProjectId};
+use agent_project::error::AgboardError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::model::NewEpic;
+use agent_project::file_store::validate::EpicId;
 use chrono::{TimeZone, Utc};
 use serde_json::{Value, json};
 use std::fs;

@@ -4,13 +4,13 @@
 use std::io::Cursor;
 use std::path::Path;
 
-use agent_board::domain::{Actor, Assignee, AttachmentInput, NewTask, ProjectId};
-use agent_board::error::AgboardError;
-use agent_board::file_store::detail::{DetailSnapshot, epic_version, task_versions};
-use agent_board::file_store::model::{AttachmentOwner, NewEpic};
-use agent_board::file_store::validate::EpicId;
-use agent_board::file_store::{FileStore, TaskTextParts};
-use agent_board::server::contracts::{
+use agent_project::domain::{Actor, Assignee, AttachmentInput, NewTask, ProjectId};
+use agent_project::error::AgboardError;
+use agent_project::file_store::detail::{DetailSnapshot, epic_version, task_versions};
+use agent_project::file_store::model::{AttachmentOwner, NewEpic};
+use agent_project::file_store::validate::EpicId;
+use agent_project::file_store::{FileStore, TaskTextParts};
+use agent_project::server::contracts::{
     BlockKind, DetailEvent, DetailResource, ResourceId, Section, StreamValidator,
 };
 use chrono::{TimeZone, Utc};
@@ -72,7 +72,7 @@ impl World {
             .id
     }
 
-    fn snapshot(&self) -> agent_board::file_store::reader::ProjectSnapshot {
+    fn snapshot(&self) -> agent_project::file_store::reader::ProjectSnapshot {
         self.store.snapshot(&self.project).unwrap()
     }
 
@@ -409,7 +409,7 @@ fn a_block_lists_the_images_it_refers_to_with_their_size() {
 
 #[test]
 fn acceptance_conditions_follow_the_blocks_with_their_full_text() {
-    use agent_board::file_store::frontmatter::AcceptanceItem;
+    use agent_project::file_store::frontmatter::AcceptanceItem;
     let world = World::new();
     let id = world.task("Body text.\n");
     let items = vec![
@@ -480,7 +480,7 @@ fn acceptance_conditions_follow_the_blocks_with_their_full_text() {
 
 fn attachment_items(
     events: &[DetailEvent],
-) -> Vec<Vec<agent_board::server::contracts::DetailAttachment>> {
+) -> Vec<Vec<agent_project::server::contracts::DetailAttachment>> {
     events
         .iter()
         .filter_map(|e| match e {
@@ -517,7 +517,7 @@ fn a_task_document_lists_its_attachments_once_before_the_blocks() {
         assert_eq!(item.size, stored.size);
         assert_eq!(
             item.created_at,
-            agent_board::clock::format_utc(stored.created_at)
+            agent_project::clock::format_utc(stored.created_at)
         );
     }
     // The list is the document's header, not an item: the count is of blocks and conditions.

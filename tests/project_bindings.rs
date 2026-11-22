@@ -6,8 +6,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
+use agent_project::error::AgboardError;
+use agent_project::file_store::FileStore;
 use assert_cmd::Command;
 use chrono::{TimeZone, Utc};
 use serde_json::Value;
@@ -142,13 +142,13 @@ fn an_unknown_folder_cannot_be_canonicalized_and_a_file_is_not_a_folder() {
     let file = work.join("note.txt");
     fs::write(&file, "x").unwrap();
     assert_eq!(
-        agent_board::file_store::bindings::canonical_folder(&root.path().join("missing"))
+        agent_project::file_store::bindings::canonical_folder(&root.path().join("missing"))
             .unwrap_err()
             .code(),
         "invalid_value"
     );
     assert_eq!(
-        agent_board::file_store::bindings::canonical_folder(&file)
+        agent_project::file_store::bindings::canonical_folder(&file)
             .unwrap_err()
             .code(),
         "invalid_value"

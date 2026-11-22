@@ -177,7 +177,7 @@ fn init_empties_the_named_project_and_keeps_its_id_name_and_task_number() {
 
     // The confirmed replacement itself is the store's reset: the same ID and
     // name, no tasks, and the task number is kept.
-    let files = agent_board::file_store::FileStore::open(&home.path().join("shared"));
+    let files = agent_project::file_store::FileStore::open(&home.path().join("shared"));
     let project = files.project_by_name("Demo").unwrap();
     assert_eq!(project.id.to_string(), id);
     assert!(files.reset_project(&project.id).unwrap().changed);

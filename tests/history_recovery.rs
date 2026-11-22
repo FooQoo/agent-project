@@ -1,10 +1,10 @@
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{Actor, Assignee, NewTask};
-use agent_board::file_store::FileStore;
-use agent_board::file_store::lock::WriteLock;
-use agent_board::file_store::transaction::{
+use agent_project::domain::{Actor, Assignee, NewTask};
+use agent_project::file_store::FileStore;
+use agent_project::file_store::lock::WriteLock;
+use agent_project::file_store::transaction::{
     Fault, PairBytes, PairTargets, Stage, save_pair_with_hook_locked,
 };
 use chrono::{TimeZone, Utc};

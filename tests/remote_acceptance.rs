@@ -4,8 +4,8 @@
 #[path = "support/mobile_monitor.rs"]
 mod support;
 
-use agent_board::domain::{Actor, Assignee, NewTask};
-use agent_board::file_store::FileStore;
+use agent_project::domain::{Actor, Assignee, NewTask};
+use agent_project::file_store::FileStore;
 use support::{Running, home};
 
 /// The monitor fixture plus task #2 with one condition.

@@ -9,9 +9,9 @@ use std::ffi::OsString;
 use std::sync::{Mutex, mpsc};
 use std::time::{Duration, Instant};
 
-use agent_board::file_store::{FileStore, layout, lock::WriteLock};
-use agent_board::lifecycle::LifecycleGuard;
-use agent_board::server::{ServeConfig, run_until};
+use agent_project::file_store::{FileStore, layout, lock::WriteLock};
+use agent_project::lifecycle::LifecycleGuard;
+use agent_project::server::{ServeConfig, run_until};
 
 static ENV_LOCK: Mutex<()> = Mutex::new(());
 
@@ -83,7 +83,7 @@ fn server_startup_keeps_its_captured_directory_when_environment_changes() {
     drop(write_lock);
     let started = server_thread::wait_ready(&ready_rx, stop_tx, worker)
         .unwrap_or_else(|result| panic!("server did not start: {result:?}"));
-    let captured_info = agent_board::paths::read_serve_info_in(home.path());
+    let captured_info = agent_project::paths::read_serve_info_in(home.path());
     let sentinel_bytes = std::fs::read(sentinel.path().join("serve.json")).unwrap();
     server_thread::finish(Some(started.stop), started.handle)
         .expect("the server stops")

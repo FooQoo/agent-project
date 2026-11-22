@@ -7,9 +7,9 @@ use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
 
-use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::file_store::FileStore;
-use agent_board::file_store::onboarding_state::{GuideOutcome, GuideStatus};
+use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+use agent_project::file_store::FileStore;
+use agent_project::file_store::onboarding_state::{GuideOutcome, GuideStatus};
 use chrono::{TimeZone, Utc};
 use serde_json::{Value, json};
 

@@ -11,8 +11,8 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
-use agent_board::cli::{Context, Env, Target};
-use agent_board::clock::SystemClock;
+use agent_project::cli::{Context, Env, Target};
+use agent_project::clock::SystemClock;
 use assert_cmd::Command;
 use serde_json::{Value, json};
 use tempfile::tempdir;
@@ -625,7 +625,7 @@ fn in_process(home: &Path, args: &[&str]) -> (i32, String, String, usize, Vec<Pa
         stderr: &mut err,
         after_commit: &mut spy,
     };
-    let code = agent_board::cli::run_with(&args, &mut env);
+    let code = agent_project::cli::run_with(&args, &mut env);
     (
         code,
         String::from_utf8(out).unwrap(),
@@ -741,7 +741,7 @@ fn only_a_confirmed_real_change_notifies_once_and_to_the_data_directory() {
 
 #[test]
 fn the_notification_goes_to_the_serve_of_the_same_data_directory_only() {
-    use agent_board::interact::notify::notify_serve_in;
+    use agent_project::interact::notify::notify_serve_in;
     let (mine, elsewhere) = (tempdir().unwrap(), tempdir().unwrap());
     let spy_mine = NotifySpy::start(mine.path());
     let spy_other = NotifySpy::start(elsewhere.path());
@@ -800,10 +800,10 @@ impl<F: FnMut()> BufRead for SlowAnswer<F> {
 
 mod races {
     use super::*;
-    use agent_board::cli::args::ProjectRenameArgs;
-    use agent_board::cli::commands::project;
-    use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-    use agent_board::file_store::FileStore;
+    use agent_project::cli::args::ProjectRenameArgs;
+    use agent_project::cli::commands::project;
+    use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+    use agent_project::file_store::FileStore;
 
     struct World {
         _dir: tempfile::TempDir,
