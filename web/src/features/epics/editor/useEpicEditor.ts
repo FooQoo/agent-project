@@ -124,8 +124,7 @@ export function useEpicEditor({
     enter: async () => snapshotOfEpic(await api.enterDraft(), members),
     leave: () => api.leaveDraft(),
   });
-  // The images and the order are saved before the last request. If that request fails the editor
-  // is no longer different from what the server holds, but the draft is still to be finalized.
+  // Images and order are saved before the epic. If that fails the editor equals the server, but the draft is still to finalize.
   const [finalizePending, setFinalizePending] = useState(false);
   const canSave =
     valid &&
@@ -196,10 +195,8 @@ export function useEpicEditor({
         setSaved((current) => ({ ...current, waves }));
         setWaves(waves);
       }
-      // The order is saved under its own lock, so the epic goes last: its request also ends
-      // the draft the dialog entered.
+      // The order has its own lock, so the epic goes last: its request ends the entered draft.
       step = 'epic';
-      // A change of the planned versions alone leaves the epic itself as it is.
       const planOnly = !dirty && !wasDraft && !lock.entered && !finalizePending;
       const sentAlready = epicSent.current && !dirty && !finalizePending;
       if (!planOnly && !sentAlready && (!wasDraft || documentChanged || detailsChanged)) {
@@ -212,6 +209,8 @@ export function useEpicEditor({
         epicSent.current = true;
         somethingSaved.current = true;
         setSaved((current) => ({ ...current, ...base, document: text }));
+        // The draft is finalized: a later edit enters one again, checked against what was shown.
+        if (!wasDraft) lock.finalized();
       }
       step = 'plan';
       if (plan) await plan();

@@ -24,15 +24,22 @@ const epic = {
 } as Epic;
 
 function setup(planSave: () => Promise<void>) {
+  // The server holds what the last save wrote, so a later draft shows no foreign change.
+  let held = epic;
   const api = {
-    save: vi.fn(async () => undefined),
+    save: vi.fn(async (input: { name: string }) => {
+      held = { ...held, name: input.name };
+    }),
     saveWaves: vi.fn(async () => undefined),
     addImages: vi.fn(async () => undefined),
     removeImage: vi.fn(async () => undefined),
-    enterDraft: vi.fn(async () => epic),
+    enterDraft: vi.fn(async () => held),
     leaveDraft: vi.fn(async () => undefined),
     remove: vi.fn(async () => undefined),
-  } as unknown as EpicApi & { save: ReturnType<typeof vi.fn> };
+  } as unknown as EpicApi & {
+    save: ReturnType<typeof vi.fn>;
+    enterDraft: ReturnType<typeof vi.fn>;
+  };
   // A field that reports one pending change as soon as it is shown.
   const Field = ({ onPending }: PlanFieldArgs) => {
     useEffect(() => onPending(planSave), [onPending]);
@@ -105,6 +112,35 @@ describe('the epic editor saving the planned versions', () => {
     fireEvent.click(save());
     await waitFor(() => expect(plan).toHaveBeenCalledTimes(2));
     expect(api.save).toHaveBeenCalledTimes(2);
+  });
+
+  it('enters a draft again on the next edit after the epic was saved and the plan step failed', async () => {
+    const plan = vi.fn().mockRejectedValueOnce(new Error('no')).mockResolvedValue(undefined);
+    const api = setup(plan);
+    const name = () => screen.getByRole('textbox', { name: 'Title' });
+    fireEvent.change(name(), { target: { value: 'Renamed' } });
+    await waitFor(() => expect(save().disabled).toBe(false));
+    expect(api.enterDraft).toHaveBeenCalledTimes(1);
+    fireEvent.click(save());
+    await waitFor(() => expect(plan).toHaveBeenCalledTimes(1));
+    // The epic request finalized the draft; the dialog stays open with the error.
+    fireEvent.change(name(), { target: { value: 'Renamed again' } });
+    await waitFor(() => expect(api.enterDraft).toHaveBeenCalledTimes(2));
+  });
+
+  it('shows a conflict when the epic changed elsewhere after it was saved and the plan step failed', async () => {
+    const plan = vi.fn().mockRejectedValueOnce(new Error('no'));
+    const api = setup(plan);
+    const name = () => screen.getByRole('textbox', { name: 'Title' });
+    fireEvent.change(name(), { target: { value: 'Renamed' } });
+    await waitFor(() => expect(save().disabled).toBe(false));
+    fireEvent.click(save());
+    await waitFor(() => expect(plan).toHaveBeenCalledTimes(1));
+    // Another client renames the epic while the dialog stays open.
+    api.enterDraft.mockResolvedValue({ ...epic, name: 'Renamed by the CLI' });
+    fireEvent.change(name(), { target: { value: 'Renamed again' } });
+    await waitFor(() => expect(api.enterDraft).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(save().disabled).toBe(true));
   });
 
   it('still applies the accepted plan when the board clears it while the epic is being saved', async () => {
