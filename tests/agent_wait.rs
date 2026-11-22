@@ -21,7 +21,7 @@ fn agboard_for(home: &std::path::Path, project: &str, args: &[&str]) -> std::pro
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["--project", project])
         .args(args)
@@ -34,7 +34,7 @@ fn start_server(home: &std::path::Path) -> ServeProcess {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -113,7 +113,7 @@ fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env("AGPJ_HOME", home.path())
         .args([
             "--project",
             "Agent Board",
@@ -248,7 +248,7 @@ fn a_change_to_another_project_does_not_end_the_wait() {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env("AGPJ_HOME", home.path())
         .args([
             "--project",
             "Agent Board",

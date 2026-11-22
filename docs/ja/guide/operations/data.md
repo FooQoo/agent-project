@@ -15,7 +15,7 @@ Agent Boardのデータは、すべて手元のマシンの一つのフォルダ
 | macOS | `~/.agent-board/` |
 | Windows | `%USERPROFILE%\.agent-board\` |
 
-別のデータフォルダを使うには`AGBOARD_HOME`を設定します。空の値は未設定として扱います。ボードを共有するには、CLI、サーバー、Hook、`agboard setup`が同じフォルダを使う必要があります。
+別のデータフォルダを使うには`AGPJ_HOME`を設定します。空の値は未設定として扱います。ボードを共有するには、CLI、サーバー、Hook、`agboard setup`が同じフォルダを使う必要があります。
 
 ```text
 .agent-board/

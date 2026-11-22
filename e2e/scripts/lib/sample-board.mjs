@@ -60,7 +60,7 @@ export function markdown(body, checks, completed, priority) {
 
 export function cli(home, args) {
   const result = spawnSync(binary, [...args, '--json'], {
-    cwd: home, env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' }, encoding: 'utf8',
+    cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' }, encoding: 'utf8',
   });
   if (result.status !== 0) throw new Error(`${args[0]} failed: ${result.stderr || result.stdout}`);
   return JSON.parse(result.stdout);

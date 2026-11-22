@@ -264,7 +264,7 @@ impl Server {
             .env("AGBOARD_AUTOSTART", "0")
             .env("AGBOARD_OPEN_BROWSER", "0")
             .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home)
+            .env("AGPJ_HOME", home)
             .env("TZ", "UTC")
             .args(["serve", "--port", "0"])
             .stdout(Stdio::piped())

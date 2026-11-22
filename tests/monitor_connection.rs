@@ -26,7 +26,7 @@ fn agboard(home: &Path) -> Command {
     cmd.env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0");
     cmd.env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .env_remove("NGROK_AUTHTOKEN")
         .env_remove("AGBOARD_GOOGLE_CLIENT_ID")

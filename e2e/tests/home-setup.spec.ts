@@ -106,7 +106,7 @@ test.afterEach(() => {
 
 /**
  * Run the binary with a cleared environment: HOME, TZ, a PATH with only the fake agents, and no automatic
- * server, plus `env`. Nothing from the developer's shell (AGBOARD_HOME, CODEX_HOME, CLAUDE_CONFIG_DIR) reaches
+ * server, plus `env`. Nothing from the developer's shell (AGPJ_HOME, CODEX_HOME, CLAUDE_CONFIG_DIR) reaches
  * the run unless the test passes it.
  */
 function cli(args: string[], options: { cwd?: string; env?: Record<string, string> } = {}): CliResult {
@@ -168,15 +168,15 @@ function createProject(name: string): void {
 	cliOk(['project', 'create', name], { cwd: folder });
 }
 
-test('the default root is <HOME>/.agent-board, AGBOARD_HOME overrides it, and an empty AGBOARD_HOME is ignored', () => {
+test('the default root is <HOME>/.agent-board, AGPJ_HOME overrides it, and an empty AGPJ_HOME is ignored', () => {
 	const custom = path.join(root, 'custom-data');
 
 	expect(setup(['--dry-run']).dataDir).toBe(dataRoot);
-	expect(setup(['--dry-run'], { AGBOARD_HOME: custom }).dataDir).toBe(custom);
-	expect(setup(['--dry-run'], { AGBOARD_HOME: '' }).dataDir).toBe(dataRoot);
+	expect(setup(['--dry-run'], { AGPJ_HOME: custom }).dataDir).toBe(custom);
+	expect(setup(['--dry-run'], { AGPJ_HOME: '' }).dataDir).toBe(dataRoot);
 
 	// An override is also where the real run creates the data root and its shared folder.
-	const applied = setup([], { AGBOARD_HOME: custom });
+	const applied = setup([], { AGPJ_HOME: custom });
 	expect(applied.sharedDir).toBe(path.join(custom, 'shared'));
 	expect(existsSync(path.join(custom, 'shared'))).toBe(true);
 	expect(existsSync(dataRoot)).toBe(false);

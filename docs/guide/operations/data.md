@@ -15,7 +15,7 @@ The default data folder is `.agent-board/` directly in your home directory:
 | macOS | `~/.agent-board/` |
 | Windows | `%USERPROFILE%\.agent-board\` |
 
-Set `AGBOARD_HOME` to use another data folder. An empty value counts as unset. The CLI, server, hooks, and `agboard setup` must use the same folder to share a board.
+Set `AGPJ_HOME` to use another data folder. An empty value counts as unset. The CLI, server, hooks, and `agboard setup` must use the same folder to share a board.
 
 ```text
 .agent-board/

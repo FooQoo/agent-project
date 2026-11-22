@@ -85,7 +85,7 @@ const json = (home: string, args: string[]) => JSON.parse(agboardOk(PROJECT, arg
 
 function runWith(home: string, args: string[], input = '') {
   return spawnSync(agboardBinary(), ['--project', PROJECT, ...args], {
-    env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     cwd: home,
     encoding: 'utf8',
     input,
@@ -186,7 +186,7 @@ test('the CLI, snapshot, progress, hook, wait, and API return document and docum
 
   // `wait --after` returns the new snapshot when an epic document changes.
   const waiter = spawn(agboardBinary(), ['--project', PROJECT, 'wait', '--after', snapshot.cursor, '--timeout', '20', '--json'], {
-    env: { ...process.env, AGBOARD_HOME: fixture.home, TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: fixture.home, TZ: 'UTC' },
     cwd: fixture.home,
     stdio: ['ignore', 'pipe', 'pipe'],
   });

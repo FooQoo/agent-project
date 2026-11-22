@@ -97,7 +97,7 @@ cp -R web/dist-demo docs/.vitepress/dist/demo
 pnpm --dir e2e test:demo
 ```
 
-The suite (`e2e/playwright.demo.config.ts` and `e2e/demo/`) serves `docs/.vitepress/dist/` with `vitepress preview` on port 8446, or on `AGBOARD_DEMO_E2E_PORT`, and opens `/agent-board/demo/` in Chromium. Like the documentation site suite, it needs no Rust build and no `AGBOARD_HOME`, because the board lives in the page. Playwright allows Service Workers by default, and the demo does not render its board until the worker controls the page, so the tests need no extra wait; keep `serviceWorkers` out of the Playwright config. It checks that:
+The suite (`e2e/playwright.demo.config.ts` and `e2e/demo/`) serves `docs/.vitepress/dist/` with `vitepress preview` on port 8446, or on `AGBOARD_DEMO_E2E_PORT`, and opens `/agent-board/demo/` in Chromium. Like the documentation site suite, it needs no Rust build and no `AGPJ_HOME`, because the board lives in the page. Playwright allows Service Workers by default, and the demo does not render its board until the worker controls the page, so the tests need no extra wait; keep `serviceWorkers` out of the Playwright config. It checks that:
 
 - the guide starts on page load and runs to the end, including sending its sample request in Ask AI and answering its question, at desktop width and at phone width
 - after the guide, a card can be dragged to another lane

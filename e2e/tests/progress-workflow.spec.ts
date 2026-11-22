@@ -20,7 +20,7 @@ import { closeMessages } from '../helpers/answer-flow';
 function run(args: string[], home: string, cwd: string, input = ''): { code: number; stdout: string; stderr: string } {
   const result = spawnSync(agboardBinary(), args, {
     cwd,
-    env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     encoding: 'utf8',
     input,
   });
@@ -40,7 +40,7 @@ function startWaiter(home: string, cwd: string, project: string, id: number): Ch
     }),
   ], {
     cwd,
-    env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   return child;

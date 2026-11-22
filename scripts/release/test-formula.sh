@@ -69,7 +69,7 @@ else
 # Stand-in for the real binary: answers what the Formula test block asks.
 case "$1" in
   --version) echo "agboard 1.0.0" ;;
-  project) [ "$2" = create ] && mkdir -p "${AGBOARD_HOME:?}" && echo "Created project \"$3\" and bound it to this folder." ;;
+  project) [ "$2" = create ] && mkdir -p "${AGPJ_HOME:?}" && echo "Created project \"$3\" and bound it to this folder." ;;
   progress) echo "No tasks to pick up." ;;
   *) exit 2 ;;
 esac
@@ -117,10 +117,10 @@ done
 mkdir -p "$work/testpath/work"
 (
   cd "$work/testpath/work"
-  AGBOARD_HOME="$work/testpath/agboard-home" "$prefix/bin/agboard" project create "Formula Test" >/dev/null
-  out=$(AGBOARD_HOME="$work/testpath/agboard-home" "$prefix/bin/agboard" progress)
+  AGPJ_HOME="$work/testpath/agboard-home" "$prefix/bin/agboard" project create "Formula Test" >/dev/null
+  out=$(AGPJ_HOME="$work/testpath/agboard-home" "$prefix/bin/agboard" progress)
   case "$out" in *"No tasks to pick up."*) ;; *) echo "test-formula: unexpected progress output: $out" >&2; exit 1 ;; esac
 )
-[ -d "$work/testpath/agboard-home" ] || fail "the test did not use the temporary AGBOARD_HOME"
+[ -d "$work/testpath/agboard-home" ] || fail "the test did not use the temporary AGPJ_HOME"
 
 echo "test-formula: ok ($target)"

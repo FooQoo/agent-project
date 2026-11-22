@@ -54,7 +54,7 @@ When the agent has verified every acceptance condition of a task and nothing is 
 
 ## Practice the loop by hand
 
-If you want to see the loop without an agent, you can play the agent yourself with a few `agboard` commands. This is a way to learn the mechanics, not how you normally work. To keep your own board untouched, create one temporary data folder first: run `export AGBOARD_HOME="$(mktemp -d)"` and `echo "$AGBOARD_HOME"` in the first terminal. In every other terminal you use below, run `export AGBOARD_HOME="<the printed path>"` so that all of them share that folder. Skip this to use your real board.
+If you want to see the loop without an agent, you can play the agent yourself with a few `agboard` commands. This is a way to learn the mechanics, not how you normally work. To keep your own board untouched, create one temporary data folder first: run `export AGPJ_HOME="$(mktemp -d)"` and `echo "$AGPJ_HOME"` in the first terminal. In every other terminal you use below, run `export AGPJ_HOME="<the printed path>"` so that all of them share that folder. Skip this to use your real board.
 
 ### The first-run guide
 
@@ -152,7 +152,7 @@ With the server running, task #1 moves to Done by itself: every condition is don
 
 ### 7. Clean up
 
-Press Ctrl+C in the server's terminal. If you used a temporary `AGBOARD_HOME`, there is nothing more to do. Otherwise, delete the practice project (it asks for your confirmation, and agents cannot do it):
+Press Ctrl+C in the server's terminal. If you used a temporary `AGPJ_HOME`, there is nothing more to do. Otherwise, delete the practice project (it asks for your confirmation, and agents cannot do it):
 
 ```sh
 agboard --project "Quickstart" project rm

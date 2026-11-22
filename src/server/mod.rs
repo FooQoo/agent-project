@@ -110,7 +110,7 @@ pub fn run_until<F: Future<Output = ()>>(
 
 /// [`run_until`] with the data area and the watch mode given, not read from the
 /// environment. Embedded servers in the tests use it so that they need not set
-/// `AGBOARD_HOME` for the whole process.
+/// `AGPJ_HOME` for the whole process.
 pub fn run_until_in<F: Future<Output = ()>>(
     data_dir: &Path,
     watch: WatchMode,
@@ -137,7 +137,7 @@ pub fn run_until_with_monitor<F: Future<Output = ()>>(
     on_ready: impl FnOnce(SocketAddr, Option<MonitorReady>),
 ) -> Result<(), AgpjError> {
     // Resolve the process environment once. Another embedded caller can change
-    // AGBOARD_HOME while startup is awaiting file locks or filesystem watches.
+    // AGPJ_HOME while startup is awaiting file locks or filesystem watches.
     let data_dir = paths::data_dir()?;
     run_until_with_monitor_in(
         &data_dir,

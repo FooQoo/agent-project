@@ -163,7 +163,7 @@ fn agboard(home: &Path, cwd: &Path, args: &[&str]) -> assert_cmd::assert::Assert
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(cwd)
         .args(args)

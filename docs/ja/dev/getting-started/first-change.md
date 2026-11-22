@@ -9,7 +9,7 @@
 自分のボードに触れないよう、一時的なボードを使います。
 
 ```sh
-export AGBOARD_HOME="$(mktemp -d)"
+export AGPJ_HOME="$(mktemp -d)"
 cargo run -- project create demo
 cat > /tmp/demo-task.md <<'EOF'
 ---
@@ -47,7 +47,7 @@ cargo run -- --project demo mv 1 done --actor ai
 
 ## 4. テストを探す
 
-CLIの振る舞いは`tests/acceptance_cli.rs`で試験しています。`an_agent_cannot_move_a_task_to_done_while_a_condition_is_unmet`を探してください。テストは、一時的な`AGBOARD_HOME`に対して本物の実行ファイルを動かすので、自分のボードには触れません。
+CLIの振る舞いは`tests/acceptance_cli.rs`で試験しています。`an_agent_cannot_move_a_task_to_done_while_a_condition_is_unmet`を探してください。テストは、一時的な`AGPJ_HOME`に対して本物の実行ファイルを動かすので、自分のボードには触れません。
 
 このテストファイルだけを実行するには、次のコマンドを使います。
 

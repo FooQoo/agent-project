@@ -1,7 +1,7 @@
 //! Opening the board in the browser: once when a server starts automatically,
 //! and on request with `agboard open`.
 //!
-//! These tests run the real binary with `AGBOARD_HOME` in a temporary
+//! These tests run the real binary with `AGPJ_HOME` in a temporary
 //! directory. No real browser is opened: `AGBOARD_BROWSER_OPENER` names a
 //! script that appends the address it was given to `opened.txt`.
 //! `AGBOARD_AUTOSTART_PORT=0` makes every automatic server listen on a port
@@ -72,7 +72,7 @@ impl Board {
             .env_remove("AGBOARD_AUTOSTART")
             .env_remove("AGBOARD_IDLE_TIMEOUT")
             .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", self.dir())
+            .env("AGPJ_HOME", self.dir())
             .env("TZ", "UTC")
             .envs(self.env.iter().map(|(k, v)| (*k, v.as_str())))
             .current_dir(&self.folder)

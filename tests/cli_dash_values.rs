@@ -32,7 +32,7 @@ fn agboard_stdin(home: &Path, args: &[&str], input: &str) -> (i32, String, Strin
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)
         .args(args)

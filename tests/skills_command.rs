@@ -11,7 +11,7 @@ fn skills(args: &[&str]) -> (i32, String, bool) {
     let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
         .env_clear()
         .env("HOME", home.path())
-        .env("AGBOARD_HOME", home.path().join("data"))
+        .env("AGPJ_HOME", home.path().join("data"))
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .current_dir(home.path())

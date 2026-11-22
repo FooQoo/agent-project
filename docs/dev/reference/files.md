@@ -34,7 +34,7 @@ Lengths are counted in Unicode scalar values. The `assignee` (who owns the task)
 
 ## Files on disk
 
-The data area is `.agent-board/` in the home directory on every OS, or a non-empty `AGBOARD_HOME`. If the home directory cannot be resolved, the command fails instead of using the working folder.
+The data area is `.agent-board/` in the home directory on every OS, or a non-empty `AGPJ_HOME`. If the home directory cannot be resolved, the command fails instead of using the working folder.
 
 ```text
 <data-root>/

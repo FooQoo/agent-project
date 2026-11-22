@@ -18,7 +18,7 @@ fn agboard(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)
         .args(full)
@@ -75,7 +75,7 @@ fn board() -> Board {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env("AGPJ_HOME", home.path())
         .args(["project", "create", "Demo", "--folder", &folder])
         .assert()
         .success();

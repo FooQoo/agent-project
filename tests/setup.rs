@@ -221,7 +221,7 @@ fn agboard_home_overrides_the_default_and_an_empty_value_does_not() {
     let custom = tmp.path().join("custom data");
     let json = setup_json(
         &home,
-        &[("AGBOARD_HOME", custom.to_str().unwrap())],
+        &[("AGPJ_HOME", custom.to_str().unwrap())],
         &["--agent", "claude"],
     );
     assert_eq!(json["dataDir"], custom.display().to_string());
@@ -230,7 +230,7 @@ fn agboard_home_overrides_the_default_and_an_empty_value_does_not() {
 
     let json = setup_json(
         &home,
-        &[("AGBOARD_HOME", "")],
+        &[("AGPJ_HOME", "")],
         &["--agent", "claude", "--dry-run"],
     );
     assert_eq!(json["dataDir"], data_root(&home).display().to_string());
@@ -241,7 +241,7 @@ fn a_relative_agboard_home_is_resolved_to_an_absolute_path_once() {
     let (_tmp, home) = home_with_settings("home");
     let json = setup_json(
         &home,
-        &[("AGBOARD_HOME", "relative-data")],
+        &[("AGPJ_HOME", "relative-data")],
         &["--agent", "claude", "--dry-run"],
     );
     let data = json["dataDir"].as_str().unwrap();

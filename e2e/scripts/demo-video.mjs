@@ -66,7 +66,7 @@ function markdown(text, completed) {
 
 function cli(home, args) {
   const result = spawnSync(binary, [...args, '--json'], {
-    cwd: home, env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' }, encoding: 'utf8',
+    cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' }, encoding: 'utf8',
   });
   if (result.status !== 0) throw new Error(`${args.join(' ')} failed: ${result.stderr || result.stdout}`);
   return JSON.parse(result.stdout);
@@ -170,7 +170,7 @@ async function record(browser, locale, tmp) {
     const origin = `http://127.0.0.1:${port}`;
     let stderr = '';
     server = spawn(binary, ['serve', '--port', String(port)], {
-      cwd: home, env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC', AGBOARD_WATCH: 'poll' }, stdio: ['ignore', 'ignore', 'pipe'],
+      cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC', AGBOARD_WATCH: 'poll' }, stdio: ['ignore', 'ignore', 'pipe'],
     });
     server.stderr.on('data', (chunk) => { stderr += chunk; });
     await expect.poll(async () => {

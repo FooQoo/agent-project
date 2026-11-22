@@ -47,7 +47,7 @@ class Agboard < Formula
     assert_operator (pkgshare/"THIRD_PARTY_NOTICES.txt").size, :>, 0
 
     # Only temporary data: the board lives under testpath.
-    ENV["AGBOARD_HOME"] = (testpath/"agboard-home").to_s
+    ENV["AGPJ_HOME"] = (testpath/"agboard-home").to_s
     (testpath/"work").mkpath
     cd testpath/"work" do
       system bin/"agboard", "project", "create", "Formula Test"

@@ -25,7 +25,7 @@ Headings below H2 stay inside their section.
 | Second run | Nothing changes | AC-2 |
 
 ```sh
-AGBOARD_HOME=$(mktemp -d) agboard init --name a-very-long-board-name-that-does-not-wrap --description "long line"
+AGPJ_HOME=$(mktemp -d) agboard init --name a-very-long-board-name-that-does-not-wrap --description "long line"
 ```
 
 > Quoted note from a review.

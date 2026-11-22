@@ -85,7 +85,7 @@ export function removeHome(home: string): void {
 }
 
 function agboardEnv(home: string): NodeJS.ProcessEnv {
-  return { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' };
+  return { ...process.env, AGPJ_HOME: home, TZ: 'UTC' };
 }
 
 /**

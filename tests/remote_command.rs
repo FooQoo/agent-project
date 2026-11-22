@@ -23,7 +23,7 @@ fn agboard(home: &Path, args: &[&str]) -> Output {
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_KEYCHAIN", "none")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .env_remove("NGROK_AUTHTOKEN")
         .current_dir(home)

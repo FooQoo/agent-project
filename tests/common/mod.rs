@@ -1,7 +1,7 @@
 //! Shared harness for the epic, request, and shared-file HTTP and CLI tests.
 //!
 //! Servers listen on port 0 in a temporary data area. The CLI is the real
-//! `agboard` binary run against the same `AGBOARD_HOME`.
+//! `agboard` binary run against the same `AGPJ_HOME`.
 
 #![allow(dead_code)]
 
@@ -42,7 +42,7 @@ pub fn agboard(home: &Path, args: &[&str]) -> (i32, String, String) {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)
         .args(folder_args(home, args))
@@ -141,7 +141,7 @@ pub struct Running {
 impl Running {
     pub fn start(home: &Path) -> Running {
         // The data area is passed in, so servers start in parallel without
-        // touching AGBOARD_HOME, and the poll watch starts without FSEvents.
+        // touching AGPJ_HOME, and the poll watch starts without FSEvents.
         let data_dir = home.to_path_buf();
         let (ready_tx, ready_rx) = mpsc::channel();
         let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();

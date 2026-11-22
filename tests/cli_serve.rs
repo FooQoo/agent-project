@@ -1,6 +1,6 @@
 //! `agboard serve` and the automatic notification after a write.
 //!
-//! These tests run the real `agboard` binary with `AGBOARD_HOME` in a temporary
+//! These tests run the real `agboard` binary with `AGPJ_HOME` in a temporary
 //! directory and `TZ=UTC`. Every server listens on a port the OS picks (never
 //! 7420), and the tests run one at a time. Every `agboard serve` child is
 //! stopped when its handle is dropped, and the port is checked to be free again.
@@ -37,7 +37,7 @@ fn agboard(home: &Path) -> Command {
         .env_remove("AGBOARD_RESIDENT_ID")
         .env("AGBOARD_OPEN_BROWSER", "0");
     cmd.env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home);
     cmd
@@ -205,7 +205,7 @@ impl Serving {
             .env("AGBOARD_OPEN_BROWSER", "0")
             .args(args)
             .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home)
+            .env("AGPJ_HOME", home)
             .env("TZ", "UTC")
             .current_dir(home)
             .stdin(Stdio::null())

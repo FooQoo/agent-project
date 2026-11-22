@@ -84,5 +84,5 @@ The command from Homebrew is signed with a Developer ID certificate and notarize
 ## Still stuck?
 
 - Read `problems` in `snapshot --json`: it explains file and format errors.
-- Check which data folder you use: the CLI, the server, and the hooks must share the same `AGBOARD_HOME`. See [Data and backups](./data#where-the-data-lives).
+- Check which data folder you use: the CLI, the server, and the hooks must share the same `AGPJ_HOME`. See [Data and backups](./data#where-the-data-lives).
 - If you work on Agent Board itself, the [developer troubleshooting page](../../dev/troubleshooting) covers building, testing, and internal failures.

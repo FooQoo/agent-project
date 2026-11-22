@@ -19,7 +19,7 @@ struct EnvironmentRestore(Option<OsString>);
 
 impl EnvironmentRestore {
     fn capture() -> Self {
-        Self(std::env::var_os("AGBOARD_HOME"))
+        Self(std::env::var_os("AGPJ_HOME"))
     }
 }
 
@@ -29,8 +29,8 @@ impl Drop for EnvironmentRestore {
         // every server is stopped before its test releases the restoration guard.
         unsafe {
             match &self.0 {
-                Some(value) => std::env::set_var("AGBOARD_HOME", value),
-                None => std::env::remove_var("AGBOARD_HOME"),
+                Some(value) => std::env::set_var("AGPJ_HOME", value),
+                None => std::env::remove_var("AGPJ_HOME"),
             }
         }
     }
@@ -39,7 +39,7 @@ impl Drop for EnvironmentRestore {
 fn set_home(home: &std::path::Path) {
     // SAFETY: this deliberate startup race is serialized against other tests,
     // and both values point exclusively at temporary directories.
-    unsafe { std::env::set_var("AGBOARD_HOME", home) };
+    unsafe { std::env::set_var("AGPJ_HOME", home) };
 }
 
 #[test]
@@ -120,10 +120,10 @@ fn monitor_fixture_restores_parent_environment_and_does_not_clear_it_at_shutdown
     let home = support::home();
     set_home(parent.path());
     let server = support::Running::start(home.path());
-    let after_start = std::env::var_os("AGBOARD_HOME");
+    let after_start = std::env::var_os("AGPJ_HOME");
     set_home(next_parent.path());
     drop(server);
-    let after_shutdown = std::env::var_os("AGBOARD_HOME");
+    let after_shutdown = std::env::var_os("AGPJ_HOME");
     assert_eq!(after_start.as_deref(), Some(parent.path().as_os_str()));
     assert_eq!(
         after_shutdown.as_deref(),
@@ -140,7 +140,7 @@ fn failed_monitor_fixture_start_restores_parent_environment() {
     let _busy = LifecycleGuard::acquire(home.path()).unwrap();
     set_home(parent.path());
     let failed = std::panic::catch_unwind(|| support::Running::start(home.path()));
-    let after_failure = std::env::var_os("AGBOARD_HOME");
+    let after_failure = std::env::var_os("AGPJ_HOME");
     assert!(
         failed.is_err(),
         "the temporary lifecycle lock must refuse startup"

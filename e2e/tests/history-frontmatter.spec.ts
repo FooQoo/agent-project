@@ -47,7 +47,7 @@ interface TaskView {
 function cli(args: string[]): { code: number; stdout: string; stderr: string } {
 	const result = spawnSync(agboardBinary(), ['--project', project, ...args], {
 		cwd: home,
-		env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
 		encoding: 'utf8',
 	});
 	if (result.error) throw result.error;
@@ -57,7 +57,7 @@ function cli(args: string[]): { code: number; stdout: string; stderr: string } {
 function catalog(args: string[]): { code: number; stdout: string; stderr: string } {
 	const result = spawnSync(agboardBinary(), args, {
 		cwd: home,
-		env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
 		encoding: 'utf8',
 	});
 	if (result.error) throw result.error;
@@ -104,7 +104,7 @@ async function openPc(page: Page): Promise<void> {
 function beginWait(cursor: string): { child: ChildProcess; result: Promise<{ code: number | null; stdout: string; stderr: string }> } {
 	const child = spawn(agboardBinary(), ['--project', project, 'wait', '--after', cursor, '--timeout', '10', '--json'], {
 		cwd: home,
-		env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
 		stdio: ['ignore', 'pipe', 'pipe'],
 	});
 	let stdout = '';

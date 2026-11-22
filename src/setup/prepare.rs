@@ -79,8 +79,7 @@ pub fn prepare(env: &SetupEnv, options: &SetupOptions) -> Result<Prepared, AgpjE
     let root = data_dir
         .to_str()
         .ok_or_else(|| AgpjError::BoardUnavailable {
-            reason: "The data directory path is not UTF-8. Set AGBOARD_HOME to a UTF-8 path."
-                .into(),
+            reason: "The data directory path is not UTF-8. Set AGPJ_HOME to a UTF-8 path.".into(),
         })?
         .to_string();
     let shared_dir = data_dir.join("shared");

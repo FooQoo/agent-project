@@ -69,7 +69,7 @@ The Rust tests run with [cargo-nextest](https://nexte.st/) (`cargo install cargo
 Rules for tests:
 
 - Set `TZ=UTC` so displayed times are fixed.
-- Never use the default data area: each test sets `AGBOARD_HOME` to a temporary directory.
+- Never use the default data area: each test sets `AGPJ_HOME` to a temporary directory.
 - A test that runs the `agboard` binary sets `AGBOARD_AUTOSTART=0`, so that a wait or the hook does not start a server by itself, and `AGBOARD_OPEN_BROWSER=0`, so that nothing opens a browser. The Playwright config sets both for the whole suite. A test of autostart itself leaves `AGBOARD_AUTOSTART` unset and sets `AGBOARD_AUTOSTART_PORT=0`, and stops every server it started. A test that runs `setup remote` or `show remote` sets `AGBOARD_KEYCHAIN=none`, so that the OS keychain is never read or written. A test of opening the board points `AGBOARD_BROWSER_OPENER` at a script that records the address, as `tests/open_board.rs` does; no test opens a real browser.
 - A test that starts `agboard serve` sets `AGBOARD_WATCH=poll`, and an embedded server is started with `server::run_until_in` and `WatchMode::Poll`. Only `tests/file_watch.rs` uses the platform's file events.
 - `agboard serve` listens only on `127.0.0.1`. Do not use port 7420; use an available port or port 0, and connect to `http://127.0.0.1:<port>/` rather than `localhost`.

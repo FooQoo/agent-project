@@ -145,7 +145,7 @@ fn edits_files(call: &Call) -> bool {
 fn is_ignored_path(path: &str) -> bool {
     let tmp = path == "/tmp" || path.starts_with("/tmp/");
     let data = path.contains("/.agent-board/") || path.ends_with("/.agent-board");
-    let home = std::env::var("AGBOARD_HOME")
+    let home = std::env::var("AGPJ_HOME")
         .ok()
         .filter(|h| !h.is_empty())
         .is_some_and(|h| path.starts_with(h.trim_end_matches('/')));

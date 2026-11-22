@@ -18,7 +18,7 @@ fn bin(home: &Path) -> Command {
         .env("AGBOARD_OPEN_BROWSER", "0");
     command
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC");
     command
 }

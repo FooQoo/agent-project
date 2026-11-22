@@ -12,7 +12,7 @@ fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
             .env("AGBOARD_AUTOSTART", "0")
             .env("AGBOARD_OPEN_BROWSER", "0")
             .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home.path())
+            .env("AGPJ_HOME", home.path())
             .args(["--project", project, "init"])
             .output()
             .unwrap();
@@ -26,7 +26,7 @@ fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
             .env("AGBOARD_AUTOSTART", "0")
             .env("AGBOARD_OPEN_BROWSER", "0")
             .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home.path())
+            .env("AGPJ_HOME", home.path())
             .args([
                 "--project",
                 project,
@@ -273,7 +273,7 @@ fn installed_binary_handles_hook_json_on_stdin() {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env("AGPJ_HOME", home.path())
         .args(["--project", "Agent Board", "init"])
         .output()
         .unwrap();
@@ -282,7 +282,7 @@ fn installed_binary_handles_hook_json_on_stdin() {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env("AGPJ_HOME", home.path())
         .args(["--project", "Agent Board", "hook", "--agent", "codex"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -327,7 +327,7 @@ fn hook_process(
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(cwd)
         .args(args)

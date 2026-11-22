@@ -9,7 +9,7 @@
 # only the target CPU, built for macOS 15.0, and links only system libraries;
 # and, when this machine can run it, the extracted binary reports its version
 # and serves the embedded web UI. The serve check listens on VERIFY_PORT
-# (default 9040) on 127.0.0.1 with a temporary AGBOARD_HOME.
+# (default 9040) on 127.0.0.1 with a temporary AGPJ_HOME.
 set -euo pipefail
 
 archive=${1:?usage: verify-artifact.sh <archive> <target>}
@@ -72,8 +72,8 @@ if [ "$host" != "$arch" ]; then
   fi
 fi
 
-export AGBOARD_HOME="$work/home" HOME="$work/home" TZ=UTC
-mkdir -p "$AGBOARD_HOME"
+export AGPJ_HOME="$work/home" HOME="$work/home" TZ=UTC
+mkdir -p "$AGPJ_HOME"
 reported=$(cd "$work/x" && ${runner[@]+"${runner[@]}"} ./agboard --version)
 case "$reported" in *"$version"*) ;; *) fail "--version printed '$reported', expected $version" ;; esac
 

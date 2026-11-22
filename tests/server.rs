@@ -134,17 +134,17 @@ use agent_project::file_store::watch::WatchMode;
 use agent_project::server::{ServeConfig, run_until_in};
 use chrono::{DateTime, TimeZone, Utc};
 
-// AGBOARD_HOME is process-global. It is only needed while a server starts (the
+// AGPJ_HOME is process-global. It is only needed while a server starts (the
 // server captures its paths then), so the lock is released once it is ready.
 static ENV_LOCK: Mutex<()> = Mutex::new(());
 
 fn with_home<T>(home: &Path, f: impl FnOnce() -> T) -> T {
     let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     // SAFETY: access to the environment is serialized by ENV_LOCK.
-    unsafe { std::env::set_var("AGBOARD_HOME", home) };
+    unsafe { std::env::set_var("AGPJ_HOME", home) };
     let result = f();
     // SAFETY: as above.
-    unsafe { std::env::remove_var("AGBOARD_HOME") };
+    unsafe { std::env::remove_var("AGPJ_HOME") };
     result
 }
 
@@ -239,7 +239,7 @@ impl Running {
     /// wait until it is ready, or return the error it stopped with.
     fn start(home: &Path, port: u16) -> Result<Running, AgpjError> {
         // The data area is passed in, so servers start in parallel without
-        // touching AGBOARD_HOME, and the poll watch starts without FSEvents.
+        // touching AGPJ_HOME, and the poll watch starts without FSEvents.
         let data_dir = home.to_path_buf();
         let (ready_tx, ready_rx) = mpsc::channel();
         let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
@@ -1664,7 +1664,7 @@ fn spawn_serve(home: &Path, args: &[&str]) -> ServeProcess {
         .arg("serve")
         .args(args)
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .stdout(Stdio::null())
         .stderr(Stdio::piped())

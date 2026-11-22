@@ -20,7 +20,7 @@ fn run(home: &Path, args: &[&str]) -> Output {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(args)
         .output()
@@ -43,7 +43,7 @@ fn json(output: &Output) -> Value {
 }
 
 fn fixture() -> TempDir {
-    let home = tempfile::tempdir().expect("temporary AGBOARD_HOME");
+    let home = tempfile::tempdir().expect("temporary AGPJ_HOME");
     let folder = home.path().join("project-folder");
     fs::create_dir_all(&folder).unwrap();
     success(
@@ -64,7 +64,7 @@ fn serve(home: &Path) -> ServeProcess {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
@@ -85,7 +85,7 @@ fn wait(home: &Path, timeout: &str) -> Child {
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args([
             "--project",

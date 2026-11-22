@@ -5,7 +5,7 @@ import { defineConfig } from '@playwright/test';
 // Documentation site tests. They run against the built VitePress site served by
 // `vitepress preview`, so build it first: `pnpm --dir docs build`. This config
 // is independent of the app suite: no global setup, no Rust or web build, no
-// AGBOARD_HOME. Runners can override the default documentation test port with their assigned port.
+// AGPJ_HOME. Runners can override the default documentation test port with their assigned port.
 const port = Number(process.env.AGBOARD_DOCS_E2E_PORT ?? 8445);
 
 export default defineConfig({

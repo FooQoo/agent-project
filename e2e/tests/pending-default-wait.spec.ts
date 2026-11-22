@@ -36,7 +36,7 @@ test('default pending waits for a browser answer', async ({ page }) => {
     waiter = spawn(agboardBinary(), [
       '--project', project, 'message', 'ask', '--actor', 'ai', '--task', '1', '--json',
       '--questions-json', decisionJson('Which plan should the default wait use?'),
-    ], { cwd: home, env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    ], { cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' }, stdio: ['ignore', 'pipe', 'pipe'] });
     let stdout = '';
     let stderr = '';
     waiter.stdout?.on('data', (chunk) => { stdout += chunk; });

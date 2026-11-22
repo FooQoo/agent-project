@@ -14,7 +14,7 @@ use crate::error::AgpjError;
 use crate::setup::Mode;
 
 /// Runs a command line when no data directory can be resolved (no
-/// `AGBOARD_HOME` and no home directory). Help and version still print; every
+/// `AGPJ_HOME` and no home directory). Help and version still print; every
 /// other command fails with `error`, because nothing can be stored without a
 /// data directory and the working directory is never used instead.
 pub fn execute_without_data_dir(

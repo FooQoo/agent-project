@@ -74,7 +74,7 @@ done
 case "$1" in
   auth|login) echo '{{"loggedIn":true}}'; exit 0 ;;
 esac
-export AGBOARD_HOME='{home}' AGBOARD_AUTOSTART=0 AGBOARD_OPEN_BROWSER=0 AGBOARD_WATCH=poll TZ=UTC
+export AGPJ_HOME='{home}' AGBOARD_AUTOSTART=0 AGBOARD_OPEN_BROWSER=0 AGBOARD_WATCH=poll TZ=UTC
 LOG='{log}'
 echo $$ >> '{log}/starts'
 echo "$AGBOARD_SESSION_ORIGIN $AGBOARD_SESSION_TOOL" >> '{log}/env'
@@ -194,7 +194,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
             "--idle-timeout",
             "60",
         ])
-        .env("AGBOARD_HOME", home.path())
+        .env("AGPJ_HOME", home.path())
         .env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_WATCH", "poll")
         .env("TZ", "UTC")

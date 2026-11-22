@@ -69,13 +69,13 @@ serve port="7420" backend_port="7421": build
 serve-ngrok port="7450": build
     #!/usr/bin/env bash
     set -euo pipefail
-    export AGBOARD_HOME="$(mktemp -d)"
+    export AGPJ_HOME="$(mktemp -d)"
     if [ -z "${NGROK_AUTHTOKEN:-}" ]; then
         read -rs -p "ngrok authtoken: " NGROK_AUTHTOKEN
         echo
         export NGROK_AUTHTOKEN
     fi
-    echo "Temporary data area: $AGBOARD_HOME"
+    echo "Temporary data area: $AGPJ_HOME"
     ./target/debug/agboard project create dev
     echo "The startup line shows the phone URL and its 4-digit passcode."
     ./target/debug/agboard serve --port "{{port}}" --monitor ngrok

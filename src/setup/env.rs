@@ -25,7 +25,7 @@ pub struct SetupEnv {
 impl SetupEnv {
     pub fn from_process() -> Self {
         SetupEnv {
-            agboard_home: std::env::var_os("AGBOARD_HOME"),
+            agboard_home: std::env::var_os("AGPJ_HOME"),
             home: dirs::home_dir(),
             codex_home: std::env::var_os("CODEX_HOME"),
             claude_config_dir: std::env::var_os("CLAUDE_CONFIG_DIR"),

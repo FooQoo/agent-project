@@ -9,7 +9,7 @@ You need a working build. If you have not built Agent Board yet, start with [Set
 Use a temporary board so that your own board is untouched:
 
 ```sh
-export AGBOARD_HOME="$(mktemp -d)"
+export AGPJ_HOME="$(mktemp -d)"
 cargo run -- project create demo
 cat > /tmp/demo-task.md <<'EOF'
 ---
@@ -47,7 +47,7 @@ Notice what is *not* here: no printing and no JSON. The error carries a code (`a
 
 ## 4. Find the test
 
-The CLI behavior is tested in `tests/acceptance_cli.rs`. Find `an_agent_cannot_move_a_task_to_done_while_a_condition_is_unmet`. Tests run the real binary against a temporary `AGBOARD_HOME`, which is why they never touch your board.
+The CLI behavior is tested in `tests/acceptance_cli.rs`. Find `an_agent_cannot_move_a_task_to_done_while_a_condition_is_unmet`. Tests run the real binary against a temporary `AGPJ_HOME`, which is why they never touch your board.
 
 Run just that file:
 

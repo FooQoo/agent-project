@@ -1,6 +1,6 @@
 //! `agboard serve -d` and `agboard stop`.
 //!
-//! These tests run the real binary with `AGBOARD_HOME` in a temporary
+//! These tests run the real binary with `AGPJ_HOME` in a temporary
 //! directory. Every server listens on a port the OS picks (never 7420), and
 //! the tests run one at a time.
 //! A guard stops any background server a test leaves behind.
@@ -22,7 +22,7 @@ fn agboard(home: &Path) -> Command {
     cmd.env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0");
     cmd.env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC");
     cmd
 }

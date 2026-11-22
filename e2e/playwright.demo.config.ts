@@ -9,7 +9,7 @@ import { defineConfig } from '@playwright/test';
 // /agent-board/demo/. Build both first, as the Pages workflow does:
 //   pnpm --dir docs build && pnpm --dir web build:demo
 //   cp -R web/dist-demo docs/.vitepress/dist/demo
-// Like the docs suite, it needs no global setup, no Rust build, and no AGBOARD_HOME: the demo
+// Like the docs suite, it needs no global setup, no Rust build, and no AGPJ_HOME: the demo
 // keeps its board in the page. Runners can override the default port with their assigned port.
 const port = Number(process.env.AGBOARD_DEMO_E2E_PORT ?? 8446);
 // Playwright empties its output folder at the start of a run, so each checkout has its own.

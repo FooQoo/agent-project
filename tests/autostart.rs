@@ -1,6 +1,6 @@
 //! Starting the server when a command needs it, and its stopping by itself.
 //!
-//! These tests run the real binary with `AGBOARD_HOME` in a temporary
+//! These tests run the real binary with `AGPJ_HOME` in a temporary
 //! directory and with autostart on. `AGBOARD_AUTOSTART_PORT=0` makes every
 //! automatic server listen on a port the OS picks, never 7420. A guard kills
 //! every server a test started, even when the test fails.
@@ -59,7 +59,7 @@ impl Board {
             .env_remove("AGBOARD_AUTOSTART")
             .env_remove("AGBOARD_IDLE_TIMEOUT")
             .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", self.dir())
+            .env("AGPJ_HOME", self.dir())
             .env("TZ", "UTC")
             .envs(self.env.iter().map(|(k, v)| (*k, v.as_str())))
             .stdin(Stdio::null());

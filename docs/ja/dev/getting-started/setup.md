@@ -13,7 +13,7 @@ Agent Boardの開発に必要な環境を用意し、ビルド・動作確認・
 
 普段使っているボードへの影響を避けるため、次の二点を守ってください。
 
-- **一時的なデータ領域を使う。** 既定のデータ領域（macOSは`~/.agent-board/`、Windowsは`%USERPROFILE%\.agent-board\`）は普段使っているボードの保存先です。試すときやテストでは、`AGBOARD_HOME`に一時ディレクトリを設定してください。この設定は現在のシェル内で有効です。
+- **一時的なデータ領域を使う。** 既定のデータ領域（macOSは`~/.agent-board/`、Windowsは`%USERPROFILE%\.agent-board\`）は普段使っているボードの保存先です。試すときやテストでは、`AGPJ_HOME`に一時ディレクトリを設定してください。この設定は現在のシェル内で有効です。
 - **ポート7420を空けておく。** 通常の利用の既定のポートです。ほかのポートか、テストではポート0を使ってください。
 - **コマンドがサーバーを起動することを知っておく。** `wait`、答えを待つ質問、Hookは、サーバーが動いていなければ、そのデータ領域のサーバーを裏で起動します。こうして起動したサーバーは、ボードをブラウザーでも開きます。試している間にサーバーを起動させたくなければ`AGBOARD_AUTOSTART=0`を、ブラウザーだけ開かせたくなければ`AGBOARD_OPEN_BROWSER=0`を設定してください。`agboard stop`で止められます。
 
@@ -46,7 +46,7 @@ just serve        # 保存されたボードとViteのHMR、Rustの監視(ポー
 - `just dev`はサンプルデータを配信し、Webのファイルが変わるとHMRでブラウザを更新します。
 - `just docs`はドキュメントサイトを`http://127.0.0.1:8662/agent-board/`で配信します。必要なら`just docs 8663`のように別のポートを指定できます。
 - `just storybook`は部品とページのStoryを`http://127.0.0.1:8610/`で配信します。
-- `just serve`は実際のAPIに接続します。Rustのファイルが変わるとRustのサーバーを起動し直し、画面はViteのHMRで配信します。`http://127.0.0.1:7420/`を開きます。RustのAPIはポート7421を使います。ボードは通常の場所、または設定されていれば`AGBOARD_HOME`から読みます。Rustが起動し直すと、書き込み用トークンを更新するためにページが再読み込みされます。
+- `just serve`は実際のAPIに接続します。Rustのファイルが変わるとRustのサーバーを起動し直し、画面はViteのHMRで配信します。`http://127.0.0.1:7420/`を開きます。RustのAPIはポート7421を使います。ボードは通常の場所、または設定されていれば`AGPJ_HOME`から読みます。Rustが起動し直すと、書き込み用トークンを更新するためにページが再読み込みされます。
 - ほかのポートは引数で渡します。例: `just dev 5174`、`just serve 7500 7501`（Webのポート、RustのAPIのポートの順）。
 
 サンプルデータでWeb画面だけを開発するには:
@@ -60,7 +60,7 @@ pnpm --dir web dev --mode mock --port <port>
 手でCLIを試すときは、一時的なデータ領域を使います。
 
 ```sh
-export AGBOARD_HOME="$(mktemp -d)"
+export AGPJ_HOME="$(mktemp -d)"
 cargo run -- project create dev
 cargo run -- --project dev add "Try it" --assignee ai --actor ai
 cargo run -- serve --port <port>
@@ -152,7 +152,7 @@ Storyで使う架空の画像は`web/.storybook/static/`にあります。Storyb
 
 ### Homebrewへの公開
 
-Releaseを公開すると、`.github/workflows/homebrew-tap.yml`がFormulaを自動で公開します。`scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agboard.rb`は、公開したファイルからFormulaを作り、CPUの欠け、版の違い、ハッシュの不一致を拒否します。Formulaは、`on_macos`でCPUごとにアーカイブを選び、macOS 15を要求し（`depends_on macos: :sequoia`）、MITを宣言し、`agboard`を`bin`へ、2つのライセンスファイルを`pkgshare`へインストールします。`test do`では、`--version`を確認し、一時的な`AGBOARD_HOME`を使います。
+Releaseを公開すると、`.github/workflows/homebrew-tap.yml`がFormulaを自動で公開します。`scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agboard.rb`は、公開したファイルからFormulaを作り、CPUの欠け、版の違い、ハッシュの不一致を拒否します。Formulaは、`on_macos`でCPUごとにアーカイブを選び、macOS 15を要求し（`depends_on macos: :sequoia`）、MITを宣言し、`agboard`を`bin`へ、2つのライセンスファイルを`pkgshare`へインストールします。`test do`では、`--version`を確認し、一時的な`AGPJ_HOME`を使います。
 
 ワークフローはReleaseの公開時に動き、下書きとプレリリースは対象外です。次の順に進めます。
 
@@ -209,7 +209,7 @@ macOSでは、テストが極端に遅くなることもあります。macOSは�
 ```sh
 root="$(mktemp -d)"
 cargo install --path . --locked --root "$root"
-export AGBOARD_HOME="$(mktemp -d)"
+export AGPJ_HOME="$(mktemp -d)"
 "$root/bin/agboard" --help
 "$root/bin/agboard" project create demo
 "$root/bin/agboard" --project demo ls

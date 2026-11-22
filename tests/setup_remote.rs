@@ -1,6 +1,6 @@
 //! `agboard setup remote`: save the ngrok connection settings.
 //!
-//! Runs the real `agboard` binary with `AGBOARD_HOME` in a temporary directory and
+//! Runs the real `agboard` binary with `AGPJ_HOME` in a temporary directory and
 //! `AGBOARD_KEYCHAIN=none`, so the real keychain is never touched. No server is
 //! started and port 7420 is never used.
 
@@ -17,7 +17,7 @@ fn agboard(home: &Path) -> Command {
     cmd.env("AGBOARD_AUTOSTART", "0")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_KEYCHAIN", "none")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .env_remove("NGROK_AUTHTOKEN")
         .current_dir(home);

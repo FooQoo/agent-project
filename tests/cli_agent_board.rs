@@ -19,7 +19,7 @@ fn invoke_for(home: &std::path::Path, project: &str, args: &[&str]) -> assert_cm
         .env("AGBOARD_OPEN_BROWSER", "0");
     command
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["--project", project])
         .args(args)
@@ -228,7 +228,7 @@ fn a_command_needs_a_project_that_exists_and_never_guesses_one() {
         .env_remove("AGBOARD_RESIDENT_ID")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env("AGPJ_HOME", home.path())
         .args(["ls"])
         .assert()
         .failure()
@@ -272,7 +272,7 @@ fn invoke_none(home: &std::path::Path, args: &[&str]) -> assert_cmd::assert::Ass
         .env_remove("AGBOARD_RESIDENT_ID")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(args)
         .assert()
@@ -439,7 +439,7 @@ fn descriptions_up_to_the_limit_pass_through_every_input() {
         .env_remove("AGBOARD_RESIDENT_ID")
         .env("AGBOARD_OPEN_BROWSER", "0")
         .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env("AGPJ_HOME", home.path())
         .args([
             "--project",
             "Agent Board",

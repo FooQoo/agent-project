@@ -175,7 +175,7 @@ test('a draft stays a draft over time, and toggling it wakes wait; history updat
   await open(page, 13);
   const first = show(13);
   const cursor = JSON.parse(agboardOk(mainProject, ['snapshot', '--json']).stdout).cursor as string;
-  const env = { ...process.env, AGBOARD_HOME: mainHome(), TZ: 'UTC' };
+  const env = { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' };
   const waiter = spawn(agboardBinary(), ['--project', mainProject, '--json', 'wait', '--after', cursor, '--timeout', '30'], {
     env,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -220,7 +220,7 @@ test('a draft stays a draft over time, and toggling it wakes wait; history updat
 
 function spawnSyncWait(cursor: string): Promise<{ code: number | null }> {
   const child = spawn(agboardBinary(), ['--project', mainProject, '--json', 'wait', '--after', cursor, '--timeout', '30'], {
-    env: { ...process.env, AGBOARD_HOME: mainHome(), TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' },
     stdio: 'ignore',
   });
   return new Promise((resolve) => child.once('exit', (code) => resolve({ code })));
@@ -238,7 +238,7 @@ test('a body of exactly 50,000 characters is accepted for add, edit, and --desc 
   agboardOk(mainProject, ['add', 'Exact limit', '--desc-file', exactFile]);
   expect([...show(id).body].length).toBe(50_000);
   const stdin = spawnSync(agboardBinary(), ['--project', mainProject, 'add', 'From stdin', '--desc', '-', '--assignee', 'ai', '--actor', 'human'], {
-    env: { ...process.env, AGBOARD_HOME: mainHome(), TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' },
     input: exact,
     encoding: 'utf8',
   });
@@ -304,7 +304,7 @@ test('the hook hands over active progress metadata without task bodies, even whe
 
   const hook = () =>
     spawnSync(agboardBinary(), ['--project', mainProject, 'hook', '--agent', 'claude'], {
-      env: { ...process.env, AGBOARD_HOME: mainHome(), TZ: 'UTC' },
+      env: { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' },
       encoding: 'utf8',
       input: JSON.stringify({ hook_event_name: 'PostToolUse' }),
     });

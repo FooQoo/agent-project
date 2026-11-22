@@ -13,7 +13,7 @@ You need:
 
 Two habits keep your own board safe while you work:
 
-- **Use a temporary data area.** The default data area (`~/.agent-board/` on macOS, `%USERPROFILE%\.agent-board\` on Windows) is your real board. For experiments and tests, set `AGBOARD_HOME` to a temporary directory. The variable applies to the current shell only.
+- **Use a temporary data area.** The default data area (`~/.agent-board/` on macOS, `%USERPROFILE%\.agent-board\` on Windows) is your real board. For experiments and tests, set `AGPJ_HOME` to a temporary directory. The variable applies to the current shell only.
 - **Leave port 7420 free.** It is the default port for normal use. Use another port, or port 0 in tests.
 - **Know that commands start a server.** `wait`, a question that waits, and the hook start a background server for the data area when none runs. Such a server also opens the board in your browser. Set `AGBOARD_AUTOSTART=0` while you experiment if you do not want a server, or `AGBOARD_OPEN_BROWSER=0` if you only do not want the browser, and `agboard stop` ends one.
 
@@ -46,7 +46,7 @@ just serve        # saved board with Vite HMR and Rust watch (port 7420)
 - `just dev` serves sample data and updates the browser through HMR when web files change.
 - `just docs` serves the documentation site at `http://127.0.0.1:8662/agent-board/`. Pass another port as an argument when needed, for example `just docs 8663`.
 - `just storybook` serves the component and page Stories at `http://127.0.0.1:8610/`.
-- `just serve` uses the real API. It restarts the Rust server when Rust files change and serves the UI through Vite with HMR. Open `http://127.0.0.1:7420/`; the Rust API uses port 7421. The board comes from the normal location, or from `AGBOARD_HOME` if set. A Rust restart reloads the page to refresh its write token.
+- `just serve` uses the real API. It restarts the Rust server when Rust files change and serves the UI through Vite with HMR. Open `http://127.0.0.1:7420/`; the Rust API uses port 7421. The board comes from the normal location, or from `AGPJ_HOME` if set. A Rust restart reloads the page to refresh its write token.
 - Pass other ports as arguments, for example `just dev 5174` or `just serve 7500 7501` (web port, then Rust API port).
 
 To work on the web UI alone with sample data:
@@ -60,7 +60,7 @@ The sample data starts like a new data area: the [first-run guide](../../guide/q
 For manual CLI experiments, use a temporary data area:
 
 ```sh
-export AGBOARD_HOME="$(mktemp -d)"
+export AGPJ_HOME="$(mktemp -d)"
 cargo run -- project create dev
 cargo run -- --project dev add "Try it" --assignee ai --actor ai
 cargo run -- serve --port <port>
@@ -152,7 +152,7 @@ A single command-line binary cannot carry a stapled ticket, so macOS checks the 
 
 ### Publish to Homebrew
 
-After the Release is published, `.github/workflows/homebrew-tap.yml` publishes the Formula by itself. `scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agboard.rb` renders the Formula from the published files and refuses a missing CPU, a wrong version, or a hash mismatch. The Formula selects the archive by CPU in `on_macos`, requires macOS 15 (`depends_on macos: :sequoia`), declares MIT, installs `agboard` into `bin` and the two license files into `pkgshare`, and has a `test do` block that checks `--version` and uses a temporary `AGBOARD_HOME`.
+After the Release is published, `.github/workflows/homebrew-tap.yml` publishes the Formula by itself. `scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agboard.rb` renders the Formula from the published files and refuses a missing CPU, a wrong version, or a hash mismatch. The Formula selects the archive by CPU in `on_macos`, requires macOS 15 (`depends_on macos: :sequoia`), declares MIT, installs `agboard` into `bin` and the two license files into `pkgshare`, and has a `test do` block that checks `--version` and uses a temporary `AGPJ_HOME`.
 
 The workflow runs when a Release is published, and skips drafts and prereleases. It does these steps in order:
 
@@ -209,7 +209,7 @@ To try an installation without touching `~/.cargo/bin` or your board:
 ```sh
 root="$(mktemp -d)"
 cargo install --path . --locked --root "$root"
-export AGBOARD_HOME="$(mktemp -d)"
+export AGPJ_HOME="$(mktemp -d)"
 "$root/bin/agboard" --help
 "$root/bin/agboard" project create demo
 "$root/bin/agboard" --project demo ls

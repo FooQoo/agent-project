@@ -100,7 +100,7 @@ function requestsOf(project: string, home: string): string {
 /** The project's snapshot from the CLI, without the time it was fetched. */
 function snapshotOf(project: string, home: string): unknown {
   const result = spawnSync(agboardBinary(), ['--project', project, 'snapshot', '--json'], {
-    env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     encoding: 'utf8',
   });
   if (result.status !== 0) throw new Error(`snapshot of ${project} failed: ${result.stderr}`);
@@ -175,7 +175,7 @@ test.describe('a new data area', () => {
     const refused = agboardCatalogOk(['project', 'ls', '--json'], home);
     expect(JSON.parse(refused.stdout).projects.map((p: { name: string }) => p.name)).toEqual(['Alpha', 'Beta']);
     const again = spawnSync(agboardBinary(), ['project', 'create', 'Alpha'], {
-      env: { ...process.env, AGBOARD_HOME: home },
+      env: { ...process.env, AGPJ_HOME: home },
       encoding: 'utf8',
     });
     expect(again.status).toBe(2);
@@ -636,7 +636,7 @@ test.describe('two projects with the same task numbers', () => {
   test('a person answers on the page; the waiting agent gets the answer, and its hook shows only that project progress', async ({
     page,
   }) => {
-    const env = { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' };
+    const env = { ...process.env, AGPJ_HOME: home, TZ: 'UTC' };
     const snapshot = JSON.parse(
       spawnSync(agboardBinary(), ['--project', 'Alpha', 'snapshot', '--json'], { env, encoding: 'utf8' }).stdout,
     ) as { cursor: string };

@@ -23,7 +23,7 @@ The rest of this page describes the implementation that carries the model.
 
 Agent Board is a single Rust executable, `agboard`. The same binary is the CLI that agents and people run, and the web server (`agboard serve`) that shows the board in a browser.
 
-There is no database. Every project lives as plain files in the shared area, `.agent-board/shared/` in the user's home directory (or under `AGBOARD_HOME`). Markdown holds what people and agents write: task bodies, acceptance conditions, history, and epic details. JSON holds the operational state: lanes, run states, and the project's questions and answers. Because the files are the source of truth, agents may also edit `TASK.md` and `EPIC.md` directly, and the server notices.
+There is no database. Every project lives as plain files in the shared area, `.agent-board/shared/` in the user's home directory (or under `AGPJ_HOME`). Markdown holds what people and agents write: task bodies, acceptance conditions, history, and epic details. JSON holds the operational state: lanes, run states, and the project's questions and answers. Because the files are the source of truth, agents may also edit `TASK.md` and `EPIC.md` directly, and the server notices.
 
 ### Reading and writing data
 

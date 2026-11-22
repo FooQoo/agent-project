@@ -34,7 +34,7 @@ node e2e/scripts/docs-screenshots.mjs   # docs/images/guide/*.png (24 images, En
 node e2e/scripts/demo-video.mjs         # docs/public/videos/ (also needs ffmpeg)
 ```
 
-Both scripts use disposable data in a temporary `AGBOARD_HOME` and their own loopback ports, so your saved board and port 7420 are untouched. Review the generated images and videos before committing them.
+Both scripts use disposable data in a temporary `AGPJ_HOME` and their own loopback ports, so your saved board and port 7420 are untouched. Review the generated images and videos before committing them.
 
 ## Move a page and keep its old URL
 
@@ -80,6 +80,6 @@ pnpm --dir e2e exec playwright install chromium
 node e2e/scripts/readme-screenshots.mjs
 ```
 
-The script creates disposable projects in temporary `AGBOARD_HOME` directories, starts its own servers on available loopback ports, and captures the desktop board, the epic progress panel, the board at a tablet width (1024 x 768, behind the remote entrance), and four phone screens (the Doing lane with its tabs, a chosen card slid open to show its buttons, a question with a choice picked, and the bottom drawer) in English and Japanese. It never uses your saved board or port 7420. The browser renders the built UI against the real API; images are not mockups. It checks the four detail tabs, the task editor's folded conditions panel, and browser errors, and removes its temporary data afterwards.
+The script creates disposable projects in temporary `AGPJ_HOME` directories, starts its own servers on available loopback ports, and captures the desktop board, the epic progress panel, the board at a tablet width (1024 x 768, behind the remote entrance), and four phone screens (the Doing lane with its tabs, a chosen card slid open to show its buttons, a question with a choice picked, and the bottom drawer) in English and Japanese. It never uses your saved board or port 7420. The browser renders the built UI against the real API; images are not mockups. It checks the four detail tabs, the task editor's folded conditions panel, and browser errors, and removes its temporary data afterwards.
 
 Review all fourteen images in `docs/images/` before committing them, and keep the sample text free of personal data. Screenshots do not replace the regression suite or phone keyboard checks. The guide images in `docs/images/guide/` (24 files) come from the separate script above; review them too when you regenerate them.

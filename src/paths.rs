@@ -36,15 +36,15 @@ pub struct ServeInfo {
     pub idle_timeout_seconds: Option<u64>,
 }
 
-/// The data directory: `$AGBOARD_HOME` when it is set and not empty, otherwise
+/// The data directory: `$AGPJ_HOME` when it is set and not empty, otherwise
 /// `.agent-board` directly under the home directory. When neither can be found
 /// this is an error; the working directory is never used instead.
 pub fn data_dir() -> Result<PathBuf, AgpjError> {
-    data_dir_from(std::env::var_os("AGBOARD_HOME"), dirs::home_dir())
+    data_dir_from(std::env::var_os("AGPJ_HOME"), dirs::home_dir())
 }
 
 /// [`data_dir`] with its inputs given, so the rule needs no process environment.
-/// An empty `AGBOARD_HOME` counts as unset.
+/// An empty `AGPJ_HOME` counts as unset.
 pub fn data_dir_from(
     agboard_home: Option<OsString>,
     home: Option<PathBuf>,
@@ -55,7 +55,7 @@ pub fn data_dir_from(
     match home.filter(|dir| !dir.as_os_str().is_empty()) {
         Some(home) => Ok(home.join(DEFAULT_DATA_DIR_NAME)),
         None => Err(AgpjError::BoardUnavailable {
-            reason: "The home directory cannot be found. Set AGBOARD_HOME to the data directory."
+            reason: "The home directory cannot be found. Set AGPJ_HOME to the data directory."
                 .to_string(),
         }),
     }
@@ -114,25 +114,25 @@ mod tests {
 
     use super::*;
 
-    // AGBOARD_HOME is process-global, so tests that change it must not overlap.
+    // AGPJ_HOME is process-global, so tests that change it must not overlap.
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     fn with_home<T>(home: Option<&std::path::Path>, f: impl FnOnce() -> T) -> T {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let previous = std::env::var_os("AGBOARD_HOME");
+        let previous = std::env::var_os("AGPJ_HOME");
         // SAFETY: access to the environment is serialized by ENV_LOCK.
         unsafe {
             match home {
-                Some(path) => std::env::set_var("AGBOARD_HOME", path),
-                None => std::env::remove_var("AGBOARD_HOME"),
+                Some(path) => std::env::set_var("AGPJ_HOME", path),
+                None => std::env::remove_var("AGPJ_HOME"),
             }
         }
         let result = f();
         // SAFETY: as above.
         unsafe {
             match previous {
-                Some(value) => std::env::set_var("AGBOARD_HOME", value),
-                None => std::env::remove_var("AGBOARD_HOME"),
+                Some(value) => std::env::set_var("AGPJ_HOME", value),
+                None => std::env::remove_var("AGPJ_HOME"),
             }
         }
         result
@@ -179,7 +179,7 @@ mod tests {
         assert_eq!(error.code(), "board_unavailable");
         let empty_home = data_dir_from(None, Some(PathBuf::new())).unwrap_err();
         assert_eq!(empty_home.code(), "board_unavailable");
-        // An explicit AGBOARD_HOME still works without a home directory.
+        // An explicit AGPJ_HOME still works without a home directory.
         assert!(data_dir_from(Some("/data".into()), None).is_ok());
     }
 

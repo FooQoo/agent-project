@@ -101,7 +101,7 @@ H2 より下の見出しは、そのセクションの中に入る。
 | 2 回目の実行 | 何も変わらない | AC-2 |
 
 \`\`\`sh
-AGBOARD_HOME=$(mktemp -d) agboard init --name a-very-long-board-name-that-does-not-wrap --description "long line"
+AGPJ_HOME=$(mktemp -d) agboard init --name a-very-long-board-name-that-does-not-wrap --description "long line"
 \`\`\`
 
 > レビューでのコメントの引用。

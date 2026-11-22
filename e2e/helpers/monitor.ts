@@ -19,7 +19,7 @@ export { startPhoneEntrance, type PhoneEntrance } from './phone-entrance.mjs';
 function run(home: string, args: string[]): string {
   const result = spawnSync(agboardBinary(), args, {
     cwd: home,
-    env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     encoding: 'utf8',
   });
   if (result.error) throw new Error(`agboard ${args.join(' ')} did not run: ${result.error.message}`, { cause: result.error });
