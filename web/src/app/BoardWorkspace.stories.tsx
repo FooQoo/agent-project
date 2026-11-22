@@ -16,7 +16,7 @@ import type { AppControllerModel, AppView } from './contracts';
 import { detailFixtureOf, withDetailFixture } from '../features/tasks/detail/detailFixture';
 import { BoardWorkspace } from './BoardWorkspace';
 
-const project = makeProject({ name: 'agent-board' });
+const project = makeProject({ name: 'agent-project' });
 const taskBody = `## 背景と方針
 
 担当エージェントが共有領域にTASK.mdと確認キャプチャを保存する。ボードから同じ本文と画像を開けることを確認し、結果と根拠をこのタスクに残す。
@@ -358,7 +358,7 @@ function makeMessageModel(empty = false): AppControllerModel {
     card(9, 'Return the card list as JSON', 'done'),
     card(8, 'Initialize the board', 'done'),
   ];
-  const project = makeProject({ id: SAMPLE_PROJECT, name: 'agent-board' });
+  const project = makeProject({ id: SAMPLE_PROJECT, name: 'agent-project' });
   const data = { ...boardData, tasks, messages };
   return {
     ...base,

@@ -60,7 +60,7 @@ function questionCard(
  */
 function QuestionScreen({ variant }: { variant: MonitorGalleryVariant }) {
   const { i18n } = useTranslation();
-  const project = useMemo(() => makeProject({ id: SAMPLE_PROJECT, name: 'agent-board' }), []);
+  const project = useMemo(() => makeProject({ id: SAMPLE_PROJECT, name: 'agent-project' }), []);
   // The first question waits on the card "API refactoring" (#11).
   const messages = useMemo(
     () =>

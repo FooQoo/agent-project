@@ -38,7 +38,7 @@ export function sampleTask(overrides: Partial<Task> & Pick<Task, 'id'>): Task {
   };
 }
 
-export const SAMPLE_PROJECT = sampleProject({ name: 'agent-board' });
+export const SAMPLE_PROJECT = sampleProject({ name: 'agent-project' });
 /** Recent enough that the cards show "just now", as in the approved mock. */
 export const RECENT = RECENT_ISO;
 

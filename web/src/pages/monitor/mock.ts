@@ -5,7 +5,7 @@ import { monitorFreshness } from './model/freshness';
 import { monitorTasksOf } from './model/summary';
 
 const PROJECT_ID = 'a'.repeat(32);
-const PROJECT_NAME = 'agent-board';
+const PROJECT_NAME = 'agent-project';
 const EPIC_ID = 'MOB-1';
 
 interface FixtureBlock {

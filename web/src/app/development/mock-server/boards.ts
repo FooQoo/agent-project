@@ -85,7 +85,7 @@ const SAMPLE_CONDITIONS: Record<number, Task['acceptance']> = {
 export const SAMPLE_PROJECTS: Project[] = [
   {
     id: 'a1b2c3d4e5f60718293a4b5c6d7e8f90',
-    name: 'agent-board',
+    name: 'agent-project',
     createdAt: '2026-10-01T07:00:00Z',
   },
   { id: 'b2c3d4e5f60718293a4b5c6d7e8f90a1', name: 'knowledge', createdAt: '2026-10-01T08:00:00Z' },
