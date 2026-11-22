@@ -20,7 +20,7 @@ agboard setup
 2. **Plan.** It shows, for each agent, how the plugin will be installed or updated, every settings file it will change, whether the Codex hooks will be trusted, and any step you have to take yourself.
 3. **Confirmation.** It asks **Apply these changes?** When Codex is in the plan, the question also says that the Agent Board hooks will be marked as trusted in Codex. Press `y` to go on. Any other answer, Esc, or Ctrl+C changes nothing.
 
-4. **Remote access (optional).** After the plugin is installed, it asks whether to set up the ngrok connection for your phone now; the default is no. If you answer yes, it shows what is saved and asks for the fixed domain and the ngrok token, which you type hidden. Each question can be skipped. This is the same step as [`agboard setup remote`](../reference/cli#save-the-remote-access-settings), which you can also run later.
+4. **Remote access (optional).** After the plugin is installed, it asks whether to set up the remote connection for your phone now; the default is no. If you answer yes, it shows what is saved and asks whether the phone connects through ngrok or Tailscale. For ngrok it then asks for the fixed domain and the ngrok token, which you type hidden; for Tailscale it checks that Tailscale is ready and says what to do next if it is not. Each question can be skipped. This is the same step as [`agboard setup remote`](../reference/cli#save-the-remote-access-settings), which you can also run later.
 
 After the run, start a new agent session to load the plugin. Then create or bind a project in your working folder (see [Install and start](../getting-started#create-or-bind-a-project)).
 
