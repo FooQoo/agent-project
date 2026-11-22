@@ -17,7 +17,7 @@ import type { LanePending } from './MonitorLaneDialogs';
 import { HOLD_MS } from '@/shared/lib/gesture/sideSwipe';
 import { MonitorLanesScreen, type MonitorLanesScreenProps } from './MonitorLanesScreen';
 
-const LANE_PROJECT_NAME = 'agent-board';
+const LANE_PROJECT_NAME = 'agent-project';
 
 /** A synthetic card for the lane stories; a card with an open question waits for it. */
 function card(

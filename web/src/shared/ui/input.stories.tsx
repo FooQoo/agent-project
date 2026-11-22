@@ -24,10 +24,10 @@ export const Empty: Story = {
 };
 
 export const WithValue: Story = {
-  args: { defaultValue: 'agent-board' },
+  args: { defaultValue: 'agent-project' },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByRole('textbox', { name: 'Project name' })).toHaveValue(
-      'agent-board',
+      'agent-project',
     );
   },
 };
