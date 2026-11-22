@@ -243,3 +243,43 @@ fn the_provider_must_be_ngrok_or_tailscale() {
     assert_eq!(r.status, 422, "{}", r.body);
     assert_eq!(r.json()["error"]["code"], "invalid_provider");
 }
+
+#[test]
+fn the_snapshot_names_the_provider_that_is_running_not_the_one_that_is_saved() {
+    let tools = tempfile::tempdir().unwrap();
+    let home = support::home();
+    let s = server(home.path(), Some(fake_cli(tools.path(), RUNNING)));
+    // Nothing runs yet.
+    assert_eq!(s.get()["activeProvider"], serde_json::Value::Null);
+    choose_tailscale(&s);
+    assert_eq!(s.get()["activeProvider"], serde_json::Value::Null);
+    assert_eq!(s.start_ngrok(json!({})).status, 202);
+    let ready = s.wait_status("ready");
+    assert_eq!(ready["activeProvider"], "tailscale");
+
+    // Saving another provider does not touch the live connection, and the snapshot says so.
+    let r = s.write(
+        "PUT",
+        "/api/monitor-connections/settings/ngrok",
+        &json!({"enabled": true, "revision": ready["revision"], "provider": "ngrok"}),
+    );
+    assert_eq!(r.status, 200, "{}", r.body);
+    let v = r.json();
+    assert_eq!(v["settings"]["provider"], "ngrok");
+    assert_eq!(v["status"], "ready");
+    assert_eq!(v["activeProvider"], "tailscale");
+
+    s.stop_ngrok();
+    assert_eq!(s.get()["activeProvider"], serde_json::Value::Null);
+}
+
+#[test]
+fn a_start_that_fails_leaves_no_active_provider_and_names_the_failure() {
+    let home = support::home();
+    let s = server(home.path(), None);
+    choose_tailscale(&s);
+    assert_eq!(s.start_ngrok(json!({})).status, 202);
+    let v = s.wait_status("failed");
+    assert_eq!(v["failure"], "tailscale_not_installed");
+    assert_eq!(v["activeProvider"], serde_json::Value::Null);
+}

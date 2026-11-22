@@ -28,6 +28,7 @@ const snapshot = (over: Partial<ConnectionSnapshot> = {}): ConnectionSnapshot =>
   url: null,
   revision: 1,
   settings: { enabled: false, provider: 'ngrok', domain: null },
+  activeProvider: null,
   domainEnv: null,
   tokenConfigured: true,
   tokenSource: 'keychain',
@@ -182,6 +183,7 @@ describe('useConnectionController', () => {
   it('starts the new connection when the provider changes while another is running', async () => {
     const running = snapshot({
       status: 'ready',
+      activeProvider: 'ngrok',
       settings: { enabled: true, provider: 'ngrok', domain: null },
     });
     api.getConnection.mockResolvedValue(running);
@@ -190,6 +192,7 @@ describe('useConnectionController', () => {
       snapshot({
         status: 'ready',
         revision: 2,
+        activeProvider: 'ngrok',
         settings: { enabled: true, provider: 'tailscale', domain: null },
       }),
     );
@@ -206,6 +209,7 @@ describe('useConnectionController', () => {
     api.getConnection.mockResolvedValue(
       snapshot({
         status: 'ready',
+        activeProvider: 'tailscale',
         settings: { enabled: true, provider: 'tailscale', domain: null },
       }),
     );
@@ -214,6 +218,7 @@ describe('useConnectionController', () => {
       snapshot({
         status: 'ready',
         revision: 2,
+        activeProvider: 'tailscale',
         settings: { enabled: true, provider: 'ngrok', domain: null },
       }),
     );
@@ -224,15 +229,51 @@ describe('useConnectionController', () => {
     await waitFor(() => expect(api.startConnection).toHaveBeenCalledWith(null, false));
   });
 
+  it('starts the chosen provider on a retry after a failed start left the old one running', async () => {
+    const before = snapshot({
+      status: 'ready',
+      activeProvider: 'ngrok',
+      settings: { enabled: true, provider: 'ngrok', domain: null },
+    });
+    // The provider is saved, but the old connection is still the one running.
+    const saved = snapshot({
+      status: 'ready',
+      revision: 2,
+      activeProvider: 'ngrok',
+      settings: { enabled: true, provider: 'tailscale', domain: null },
+    });
+    api.getConnection.mockResolvedValueOnce(before).mockResolvedValue(saved);
+    api.getDevices.mockResolvedValue([]);
+    api.saveSettings.mockResolvedValue(saved);
+    api.startConnection
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValue(snapshot({ status: 'starting', revision: 2 }));
+    const { result } = renderHook(() => useConnectionController(true));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    const draft = { provider: 'tailscale', token: '', save: false, domain: '' } as const;
+    act(() => result.current.connect(draft));
+    await waitFor(() => expect(result.current.error).not.toBeNull());
+    expect(api.startConnection).toHaveBeenCalledTimes(1);
+    // The saved provider now equals the draft's, yet the one running is still ngrok.
+    await waitFor(() => expect(result.current.saving).toBe(false));
+    act(() => result.current.connect(draft));
+    await waitFor(() => expect(api.startConnection).toHaveBeenCalledTimes(2));
+  });
+
   it('does not restart a running connection when only a setting other than the provider is saved', async () => {
     api.getConnection.mockResolvedValue(
-      snapshot({ status: 'ready', settings: { enabled: true, provider: 'ngrok', domain: null } }),
+      snapshot({
+        status: 'ready',
+        activeProvider: 'ngrok',
+        settings: { enabled: true, provider: 'ngrok', domain: null },
+      }),
     );
     api.getDevices.mockResolvedValue([]);
     api.saveSettings.mockResolvedValue(
       snapshot({
         status: 'ready',
         revision: 2,
+        activeProvider: 'ngrok',
         settings: { enabled: true, provider: 'ngrok', domain: 'a.ngrok-free.dev' },
       }),
     );
