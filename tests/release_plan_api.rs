@@ -132,7 +132,7 @@ fn versions_are_listed_added_and_set_current_with_non_ascii_names() {
     assert_eq!(current.status, 200, "{}", current.body);
     assert_eq!(current.json()["currentVersion"], "第2版");
     let read = board.server.get(&format!("{}/versions", board.base)).json();
-    assert_eq!(read["versions"], json!(["v1.8.0", "第2版"]));
+    assert_eq!(read["versions"], json!(["第2版", "v1.8.0"]));
     assert_eq!(read["currentVersion"], "第2版");
 
     // A version that is not listed is listed when it becomes current.

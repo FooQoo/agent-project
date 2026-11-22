@@ -8,9 +8,9 @@ use super::{io, layout};
 use crate::domain::{MAX_VERSIONS, compare_versions, validate_version_name};
 use crate::error::AgboardError;
 
-/// The listed versions in natural order, oldest first (`v1.9.0` before `v1.10.0`). A file
+/// The listed versions in natural order, newest first (`v1.10.0` before `v1.9.0`). A file
 /// counts when it is a plain `.md` file directly in `docs/release/`, is not hidden, and its stem
-/// is a valid version name. Subfolders, other extensions and other names are ignored. A missing
+/// is a valid version name (`TEMPLATE` is not one). Subfolders, other extensions and other names are ignored. A missing
 /// or unreadable folder lists nothing.
 pub fn listed_versions(project_dir: &Path) -> Vec<String> {
     let Ok(entries) = fs::read_dir(layout::release_dir(project_dir)) else {
@@ -25,7 +25,7 @@ pub fn listed_versions(project_dir: &Path) -> Vec<String> {
             validate_version_name(stem).ok()
         })
         .collect();
-    versions.sort_by(|a, b| compare_versions(a, b));
+    versions.sort_by(|a, b| compare_versions(b, a));
     versions.dedup();
     versions
 }

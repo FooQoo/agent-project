@@ -9,6 +9,9 @@ pub const MAX_VERSION_CHARS: usize = 64;
 /// The most versions one project can list.
 pub const MAX_VERSIONS: usize = 200;
 
+/// The name of the release template file, `docs/release/TEMPLATE.md`, which is never a version.
+const RESERVED_NAME: &str = "TEMPLATE";
+
 /// Characters a file name cannot hold on some platform, and path separators.
 const FORBIDDEN: &[char] = &['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
 
@@ -25,6 +28,9 @@ pub fn validate_version_name(value: &str) -> Result<String, AgboardError> {
         return Err(invalid(
             "Version names cannot contain whitespace or control characters.",
         ));
+    }
+    if value == RESERVED_NAME {
+        return Err(invalid("TEMPLATE is reserved for the release template."));
     }
     if value.starts_with('.') || value.chars().any(|c| FORBIDDEN.contains(&c)) {
         return Err(invalid(
@@ -119,6 +125,7 @@ mod tests {
             "a/b",
             "a\\b",
             "v1:2",
+            "TEMPLATE",
         ] {
             assert!(validate_version_name(bad).is_err(), "{bad:?}");
         }
@@ -130,6 +137,7 @@ mod tests {
             "v1.10.0", "v1.9.0", "v1.8.0", "v1.8", "next", "v1.08.0", "v2",
         ];
         names.sort_by(|a, b| compare_versions(a, b));
+        // The list shows the reverse: newest first.
         assert_eq!(
             names,
             [

@@ -97,6 +97,7 @@ fn the_list_is_the_md_stems_in_natural_order_and_ignores_everything_else() {
         ("v1.8.0.md", ""),
         ("next.md", ""),
         ("第2版.md", ""),
+        ("TEMPLATE.md", "# template\n"),
         ("v1.8.0.txt", ""),
         ("v1.7.0", ""),
         (".hidden.md", ""),
@@ -106,10 +107,10 @@ fn the_list_is_the_md_stems_in_natural_order_and_ignores_everything_else() {
         fs::write(f.release().join(name), text).unwrap();
     }
     // The folder named like a file, the subfolder, other extensions, hidden and invalid names
-    // are not versions. Natural order: v1.9.0 comes before v1.10.0.
+    // are not versions. Natural order, newest first: v1.10.0 comes before v1.9.0.
     assert_eq!(
         f.versions(),
-        ["next", "v1.8.0", "v1.9.0", "v1.10.0", "第2版"]
+        ["第2版", "v1.10.0", "v1.9.0", "v1.8.0", "next"]
     );
     // A file elsewhere in the Docs is not a version.
     fs::write(f.dir().join("docs/v5.md"), "").unwrap();
@@ -143,7 +144,15 @@ fn adding_creates_an_empty_file_and_never_overwrites_one() {
     for bad in ["a/b", "..", ".x", "a\\b", "v1:2"] {
         assert!(f.store.add_version(&f.project, bad).is_err(), "{bad}");
     }
-    assert_eq!(f.versions(), ["v1.8.0", "v2.0.0"]);
+    assert_eq!(f.versions(), ["v2.0.0", "v1.8.0"]);
+    // The release template is never a version and cannot be created as one.
+    assert!(f.store.add_version(&f.project, "TEMPLATE").is_err());
+    assert!(
+        f.store
+            .set_current_version(&f.project, Some("TEMPLATE"))
+            .is_err()
+    );
+    assert!(!f.release().join("TEMPLATE.md").exists());
     // No temporary files are left behind.
     let names: Vec<_> = fs::read_dir(f.release())
         .unwrap()

@@ -111,7 +111,7 @@ fn the_current_version_is_shown_set_listed_and_cleared() {
     run(home.path(), &["version", "add", "v1.9.0"]);
     assert_eq!(
         plain(home.path(), &["version", "ls"]),
-        "v1.8.0 (current)\nv1.9.0\n"
+        "v1.9.0\nv1.8.0 (current)\n"
     );
     assert_eq!(
         plain(home.path(), &["version", "current"]),
@@ -120,7 +120,7 @@ fn the_current_version_is_shown_set_listed_and_cleared() {
 
     let cleared = run(home.path(), &["version", "current", "--clear"]);
     assert_eq!(cleared["currentVersion"], Value::Null);
-    assert_eq!(cleared["versions"], serde_json::json!(["v1.8.0", "v1.9.0"]));
+    assert_eq!(cleared["versions"], serde_json::json!(["v1.9.0", "v1.8.0"]));
 
     // A value with --clear is a usage error.
     let (code, name) = fail(home.path(), &["version", "current", "v2", "--clear"]);

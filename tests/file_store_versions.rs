@@ -228,7 +228,7 @@ fn the_current_version_is_stored_as_a_concrete_name_and_later_switches_do_not_mo
     // The versions stay listed after the current one is cleared.
     assert_eq!(
         f.store.project_versions(&f.project).unwrap().versions,
-        ["v1.8.0", "v1.9.0"]
+        ["v1.9.0", "v1.8.0"]
     );
 
     f.store
@@ -258,7 +258,7 @@ fn a_version_must_be_listed_and_named_validly() {
     assert!(f.store.add_version(&f.project, "1.8.0").unwrap().changed);
     assert_eq!(
         f.store.project_versions(&f.project).unwrap().versions,
-        ["1.8.0", "v1.8.0"]
+        ["v1.8.0", "1.8.0"]
     );
 }
 
