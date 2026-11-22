@@ -19,7 +19,9 @@ pub fn run(ctx: &mut Context, args: &VersionArgs) -> Result<Outcome, AgboardErro
 }
 
 fn add(ctx: &mut Context, args: &VersionAddArgs) -> Result<Outcome, AgboardError> {
-    let result = ctx.files.add_version(ctx.project_id()?, &args.version)?;
+    let result = ctx
+        .files
+        .add_version(ctx.project_id()?, &args.version, ctx.clock.now())?;
     let text = if result.changed {
         format!("Added version {}.\n", args.version)
     } else {
@@ -38,9 +40,9 @@ fn current(ctx: &mut Context, args: &VersionCurrentArgs) -> Result<Outcome, Agbo
         };
         return Ok(outcome(false, text, &versions));
     }
-    let result = ctx
-        .files
-        .set_current_version(&project, args.version.as_deref())?;
+    let result =
+        ctx.files
+            .set_current_version(&project, args.version.as_deref(), ctx.clock.now())?;
     let text = match (&result.value.current, result.changed) {
         (Some(current), true) => format!("Current version is now {current}.\n"),
         (Some(current), false) => format!("Current version is already {current}.\n"),

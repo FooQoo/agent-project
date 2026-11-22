@@ -187,7 +187,7 @@ fn events_a_version_change_announces_the_project_and_a_planned_version_the_task(
     );
 
     store(home.path())
-        .set_current_version(&project, Some("v1.8.0"))
+        .set_current_version(&project, Some("v1.8.0"), chrono::Utc::now())
         .unwrap();
     let listed = events.changed(WAIT).expect("the version change");
     assert_eq!(listed.project_id, project.to_string());

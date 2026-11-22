@@ -108,10 +108,25 @@ impl FileStore {
         lane: Column,
         now: DateTime<Utc>,
     ) -> Result<TaskView, AgboardError> {
+        let shared = self.shared_dir();
+        let (project_dir, _lock) = lock_project(shared, project)?;
+        self.create_task_locked(&project_dir, project, new, lane, None, now)
+    }
+
+    /// Create a task while the caller holds the project's write lock. `release_notes_version`
+    /// marks the card that creating a version issues.
+    pub(in crate::file_store) fn create_task_locked(
+        &self,
+        project_dir: &Path,
+        project: &ProjectId,
+        new: NewTask,
+        lane: Column,
+        release_notes_version: Option<String>,
+        now: DateTime<Utc>,
+    ) -> Result<TaskView, AgboardError> {
         let title = validate_title(&new.title)?;
         let description = normalize_description(&new.description)?;
         let shared = self.shared_dir();
-        let (project_dir, _lock) = lock_project(shared, project)?;
         let mut file = reader::read_project_file(shared, project)?;
         let id = file.next_task_id;
         let body = if description.trim().is_empty() {
@@ -119,10 +134,8 @@ impl FileStore {
         } else {
             description
         };
-        let label = layout::shared_label(
-            shared,
-            &layout::task_md(&layout::task_dir(&project_dir, id)),
-        );
+        let label =
+            layout::shared_label(shared, &layout::task_md(&layout::task_dir(project_dir, id)));
         validate::ensure_task_body(&body, &label)?;
         let position = lane_end(shared, project, lane)?;
         let at = stamp(now);
@@ -152,6 +165,7 @@ impl FileStore {
             results: Vec::new(),
             simple_request: None,
             onboarding_sample: None,
+            release_notes_version,
             planned_version: None,
             history: vec![transition_event(Transition {
                 language,
@@ -167,8 +181,8 @@ impl FileStore {
         file.next_task_id = id
             .checked_add(1)
             .ok_or_else(|| io::write_error("project.json", "The task number overflowed."))?;
-        save_project(shared, &project_dir, &file)?;
-        write_new_task(shared, &project_dir, &task, &body)?;
+        save_project(shared, project_dir, &file)?;
+        write_new_task(shared, project_dir, &task, &body)?;
         view(shared, project, id)
     }
 }

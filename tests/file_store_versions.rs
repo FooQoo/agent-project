@@ -108,7 +108,7 @@ fn named(name: &str) -> VersionChoice {
 fn two_projects_keep_the_same_version_name_independently() {
     let f = fixture();
     let other = f.store.create_project("Beta", at(4)).unwrap().id;
-    f.store.add_version(&f.project, "v1.8.0").unwrap();
+    f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
     assert!(
         f.store
             .project_versions(&other)
@@ -116,8 +116,10 @@ fn two_projects_keep_the_same_version_name_independently() {
             .versions
             .is_empty()
     );
-    f.store.add_version(&other, "v1.8.0").unwrap();
-    f.store.set_current_version(&other, Some("v1.8.0")).unwrap();
+    f.store.add_version(&other, "v1.8.0", at(5)).unwrap();
+    f.store
+        .set_current_version(&other, Some("v1.8.0"), at(5))
+        .unwrap();
 
     let alpha = f.store.project_versions(&f.project).unwrap();
     assert_eq!(alpha.versions, ["v1.8.0"]);
@@ -126,7 +128,7 @@ fn two_projects_keep_the_same_version_name_independently() {
     assert_eq!(beta.current.as_deref(), Some("v1.8.0"));
 
     // Clearing in one project leaves the other.
-    f.store.set_current_version(&other, None).unwrap();
+    f.store.set_current_version(&other, None, at(5)).unwrap();
     assert_eq!(
         f.store.project_versions(&f.project).unwrap().versions,
         ["v1.8.0"]
@@ -157,7 +159,7 @@ fn files_without_the_fields_load_and_a_task_never_gets_a_version_by_itself() {
     assert_eq!(view.planned_version, None);
     assert!(
         !f.store
-            .set_current_version(&f.project, None)
+            .set_current_version(&f.project, None, at(5))
             .unwrap()
             .changed
     );
@@ -167,7 +169,7 @@ fn files_without_the_fields_load_and_a_task_never_gets_a_version_by_itself() {
     // A current version on the project does not give the task one, and a later write that
     // rewrites the task keeps it free of the fields.
     f.store
-        .set_current_version(&f.project, Some("v1.8.0"))
+        .set_current_version(&f.project, Some("v1.8.0"), at(5))
         .unwrap();
     f.store
         .add_history(&f.project, task.id, Some("note"), at(5))
@@ -181,7 +183,9 @@ fn files_without_the_fields_load_and_a_task_never_gets_a_version_by_itself() {
     assert!(f.store.snapshot(&f.project).unwrap().problems.is_empty());
 
     // Clearing the current version again returns project.json to its legacy shape.
-    f.store.set_current_version(&f.project, None).unwrap();
+    f.store
+        .set_current_version(&f.project, None, at(5))
+        .unwrap();
     let text = String::from_utf8(f.project_json(&f.project)).unwrap();
     assert!(!text.contains("currentVersion"));
 }
@@ -203,7 +207,7 @@ fn the_current_version_is_stored_as_a_concrete_name_and_later_switches_do_not_mo
         "there is no current version yet"
     );
     f.store
-        .set_current_version(&f.project, Some("v1.8.0"))
+        .set_current_version(&f.project, Some("v1.8.0"), at(5))
         .unwrap();
     let (view, changed) = f.set(task.id, VersionChoice::Current, 5);
     assert!(changed);
@@ -214,9 +218,11 @@ fn the_current_version_is_stored_as_a_concrete_name_and_later_switches_do_not_mo
     assert!(stored.get("plannedVersion").is_none());
 
     f.store
-        .set_current_version(&f.project, Some("v1.9.0"))
+        .set_current_version(&f.project, Some("v1.9.0"), at(5))
         .unwrap();
-    f.store.set_current_version(&f.project, None).unwrap();
+    f.store
+        .set_current_version(&f.project, None, at(5))
+        .unwrap();
     assert_eq!(
         f.store
             .task(&f.project, task.id)
@@ -232,7 +238,7 @@ fn the_current_version_is_stored_as_a_concrete_name_and_later_switches_do_not_mo
     );
 
     f.store
-        .set_current_version(&f.project, Some("v1.9.0"))
+        .set_current_version(&f.project, Some("v1.9.0"), at(5))
         .unwrap();
     let (view, changed) = f.set(task.id, VersionChoice::Current, 6);
     assert!(changed);
@@ -249,13 +255,35 @@ fn a_version_must_be_listed_and_named_validly() {
             .is_err()
     );
     for bad in ["", "has space", "tab\t", &"x".repeat(65)] {
-        assert!(f.store.add_version(&f.project, bad).is_err(), "{bad:?}");
-        assert!(f.store.set_current_version(&f.project, Some(bad)).is_err());
+        assert!(
+            f.store.add_version(&f.project, bad, at(5)).is_err(),
+            "{bad:?}"
+        );
+        assert!(
+            f.store
+                .set_current_version(&f.project, Some(bad), at(5))
+                .is_err()
+        );
     }
-    assert!(f.store.add_version(&f.project, "v1.8.0").unwrap().changed);
-    assert!(!f.store.add_version(&f.project, "v1.8.0").unwrap().changed);
+    assert!(
+        f.store
+            .add_version(&f.project, "v1.8.0", at(5))
+            .unwrap()
+            .changed
+    );
+    assert!(
+        !f.store
+            .add_version(&f.project, "v1.8.0", at(5))
+            .unwrap()
+            .changed
+    );
     // Names are compared exactly.
-    assert!(f.store.add_version(&f.project, "1.8.0").unwrap().changed);
+    assert!(
+        f.store
+            .add_version(&f.project, "1.8.0", at(5))
+            .unwrap()
+            .changed
+    );
     assert_eq!(
         f.store.project_versions(&f.project).unwrap().versions,
         ["v1.8.0", "1.8.0"]
@@ -266,8 +294,8 @@ fn a_version_must_be_listed_and_named_validly() {
 fn moves_between_versions_are_traced_in_the_history_with_before_after_and_time() {
     let f = fixture();
     let task = f.task("Plan", Assignee::Ai);
-    f.store.add_version(&f.project, "v1.8.0").unwrap();
-    f.store.add_version(&f.project, "v1.9.0").unwrap();
+    f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
+    f.store.add_version(&f.project, "v1.9.0", at(5)).unwrap();
 
     f.set(task.id, named("v1.8.0"), 5);
     f.set(task.id, named("v1.9.0"), 6);
@@ -311,7 +339,7 @@ fn a_japanese_task_gets_a_japanese_history_reason() {
             at(4),
         )
         .unwrap();
-    f.store.add_version(&f.project, "v1.8.0").unwrap();
+    f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
     let (view, _) = f.set(task.id, named("v1.8.0"), 5);
     assert_eq!(
         view.history.last().unwrap().reason,
@@ -323,7 +351,7 @@ fn a_japanese_task_gets_a_japanese_history_reason() {
 fn a_retried_set_is_a_no_op_without_a_second_history_entry() {
     let f = fixture();
     let task = f.task("Plan", Assignee::Ai);
-    f.store.add_version(&f.project, "v1.8.0").unwrap();
+    f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
     let (first, changed) = f.set(task.id, named("v1.8.0"), 5);
     assert!(changed);
     let json = f.task_json(task.id);
@@ -339,7 +367,7 @@ fn a_retried_set_is_a_no_op_without_a_second_history_entry() {
 fn concurrent_sets_of_the_same_version_record_one_change() {
     let f = fixture();
     let task = f.task("Plan", Assignee::Ai);
-    f.store.add_version(&f.project, "v1.8.0").unwrap();
+    f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
     let shared = f.shared.clone();
     let project = f.project.clone();
     let id = task.id;
@@ -376,7 +404,7 @@ fn a_set_keeps_assignee_lane_position_and_acceptance() {
     let f = fixture();
     let ai = f.task("AI task", Assignee::Ai);
     let human = f.task("Human task", Assignee::Human);
-    f.store.add_version(&f.project, "v1.8.0").unwrap();
+    f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
     for before in [ai, human] {
         let (after, _) = f.set(before.id, named("v1.8.0"), 5);
         assert_eq!(after.assignee, before.assignee);
@@ -404,8 +432,8 @@ fn an_epic_can_hold_mixed_versions_and_a_bulk_set_reports_what_changed() {
             .set_task_epic(&f.project, id, Some(&epic), Actor::Human, at(4))
             .unwrap();
     }
-    f.store.add_version(&f.project, "v1.8.0").unwrap();
-    f.store.add_version(&f.project, "v1.9.0").unwrap();
+    f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
+    f.store.add_version(&f.project, "v1.9.0", at(5)).unwrap();
     f.set(b.id, named("v1.9.0"), 5);
 
     let run = |choice: &VersionChoice, day: u32| {
@@ -453,7 +481,7 @@ fn an_epic_can_hold_mixed_versions_and_a_bulk_set_reports_what_changed() {
     );
     // Setting the current version for the whole epic resolves it once.
     f.store
-        .set_current_version(&f.project, Some("v1.9.0"))
+        .set_current_version(&f.project, Some("v1.9.0"), at(5))
         .unwrap();
     let all = run(&VersionChoice::Current, 9);
     assert_eq!(all.changed, [a.id, b.id]);
@@ -478,7 +506,7 @@ fn archived_tasks_are_refused_alone_and_skipped_in_bulk() {
             .set_task_epic(&f.project, id, Some(&epic), Actor::Human, at(4))
             .unwrap();
     }
-    f.store.add_version(&f.project, "v1.8.0").unwrap();
+    f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
     f.store.archive_task(&f.project, b.id, at(5)).unwrap();
     assert!(
         f.store
