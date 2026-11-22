@@ -90,15 +90,24 @@ if (typeof window !== 'undefined') {
   // Code that the pages load after their first screen is fetched before each file's tests, so a
   // dialog opens in the same render as it would once the page has settled.
   beforeAll(async () => {
-    const [{ actionDialog }, { settingsDialog }, { preloadMonitorDrawer }, { boardWorkspace }] =
-      await Promise.all([
-        import('../src/app/dialogs/lazyDialogs'),
-        import('../src/features/settings/ui/settingsSlot'),
-        import('../src/pages/monitor/View'),
-        import('../src/app/App'),
-      ]);
+    const [
+      { actionDialog },
+      { settingsDialog },
+      { preloadMonitorDrawer },
+      { boardWorkspace },
+      { guideLayer },
+    ] = await Promise.all([
+      import('../src/app/dialogs/lazyDialogs'),
+      import('../src/features/settings/ui/settingsSlot'),
+      import('../src/pages/monitor/View'),
+      import('../src/app/App'),
+      import('../src/app/onboarding/lazyGuide'),
+    ]);
     await Promise.all([
       boardWorkspace.preload(),
+      // The guide reads `/api/onboarding` when it mounts. Loaded late, it would mount after a
+      // short test had ended and its request would reach no stub.
+      guideLayer.preload(),
       actionDialog.preload(),
       settingsDialog.preload(),
       preloadMonitorDrawer(),
