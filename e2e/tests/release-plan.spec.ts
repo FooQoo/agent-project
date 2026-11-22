@@ -92,7 +92,7 @@ test('sets the current version from the header, plans a task and plans an epic i
 
 	// A task's planned version is edited in its edit dialog, and saved with the dialog.
 	const taskDialog = await openTaskDialog(page, 'Plan B reset mail', cards.b);
-	await expect(taskDialog.getByRole('radio', { name: /Make it current \(saves v1\.8\.0\)/ })).toBeEnabled();
+	await expect(taskDialog.getByRole('radio', { name: /Make it current \(v1\.8\.0\)/ })).toBeEnabled();
 	await taskDialog.getByRole('radio', { name: /v1\.9\.0/ }).click();
 	expect((await plannedVersions())[cards.b]).toBeNull();
 	await taskDialog.getByRole('button', { name: 'Save', exact: true }).click();
@@ -107,8 +107,11 @@ test('sets the current version from the header, plans a task and plans an epic i
 	const save = epicDialog.getByRole('button', { name: 'Save', exact: true });
 	await expect(save).toBeDisabled();
 	await epicDialog.getByRole('button', { name: 'Planned versions' }).click();
-	await expect(epicDialog.getByRole('radio', { name: 'No change' })).toBeChecked();
-	await epicDialog.getByRole('radio', { name: 'v1.9.0' }).click();
+	await epicDialog.getByRole('button', { name: 'Planned version of the epic: No change' }).click();
+	await expect(page.getByRole('radio', { name: 'No change' })).toBeChecked();
+	await expect(page.getByRole('radio', { name: 'Current (v1.8.0)' })).toBeVisible();
+	await page.getByRole('radio', { name: 'v1.9.0' }).click();
+	await expect(epicDialog.getByRole('button', { name: 'Planned version of the epic: v1.9.0' })).toBeVisible();
 	expect(await plannedVersions()).toMatchObject({ [cards.a]: 'v1.8.0', [cards.c]: null });
 	await expect(save).toBeEnabled();
 	await save.click();

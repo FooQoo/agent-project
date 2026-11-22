@@ -119,6 +119,11 @@
               "interaction": true
             },
             {
+              "id": "versions-fields--epic-dropdown-open",
+              "states": ["dropdown open"],
+              "interaction": true
+            },
+            {
               "id": "versions-fields--epic-picking-a-version",
               "states": ["version picked"],
               "interaction": true

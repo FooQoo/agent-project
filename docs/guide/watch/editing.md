@@ -84,7 +84,7 @@ Images are referenced in the Markdown as `attachment:<attachment-id>`, and the i
 
 On the PC board, a task's planned version is edited in its preview dialog (**Open full screen** in the task's details). The **Planned version** field is in the right column, under the epic. The choices are:
 
-- **Make it current (saves vX)**, which saves the name of the project's current version on the task. It is disabled, with a note, while the project has no current version.
+- **Make it current (vX)**, which saves the name of the project's current version on the task. It is disabled, with a note, while the project has no current version.
 - One of the project's other versions.
 - **Leave unplanned**.
 

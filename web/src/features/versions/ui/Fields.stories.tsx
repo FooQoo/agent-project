@@ -100,19 +100,32 @@ export const EpicDefaultNoChange: Story = {
   render: () => <EpicPlanField {...epicArgs} apply={fn(async () => result)} onPending={fn()} />,
   play: async ({ canvasElement }) => {
     const view = within(canvasElement);
-    await expect(view.getByRole('radio', { name: 'No change' })).toBeChecked();
-    await expect(view.getByRole('radio', { name: /Make it current/ })).toBeVisible();
-    await expect(view.getByRole('radio', { name: 'v1.9.0' })).toBeVisible();
+    await expect(
+      view.getByRole('button', { name: 'Planned version of the epic: No change' }),
+    ).toBeVisible();
+  },
+};
+
+export const EpicDropdownOpen: Story = {
+  render: () => <EpicPlanField {...epicArgs} apply={fn(async () => result)} onPending={fn()} />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button'));
+    const list = within(document.body);
+    await expect(await list.findByRole('radio', { name: 'No change' })).toBeChecked();
+    await expect(list.getByRole('radio', { name: 'Current (v1.8.0)' })).toBeVisible();
+    await expect(list.getByRole('radio', { name: 'v1.9.0' })).toBeVisible();
+    await expect(list.getByRole('radio', { name: 'Leave unplanned' })).toBeVisible();
   },
 };
 
 export const EpicPickingAVersion: Story = {
   render: () => <EpicPlanField {...epicArgs} apply={fn(async () => result)} onPending={fn()} />,
-  play: async ({ canvasElement, args }) => {
-    const view = within(canvasElement);
-    await userEvent.click(view.getByRole('radio', { name: 'v1.9.0' }));
-    await expect(view.getByRole('radio', { name: 'v1.9.0' })).toBeChecked();
-    void args;
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button'));
+    await userEvent.click(await within(document.body).findByRole('radio', { name: 'v1.9.0' }));
+    await expect(
+      within(canvasElement).getByRole('button', { name: 'Planned version of the epic: v1.9.0' }),
+    ).toBeVisible();
   },
 };
 
@@ -121,8 +134,9 @@ export const EpicCurrentUnavailable: Story = {
     <EpicPlanField {...epicArgs} current={null} apply={fn(async () => result)} onPending={fn()} />
   ),
   play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button'));
     await expect(
-      within(canvasElement).getByRole('radio', { name: /Make it current/ }),
+      await within(document.body).findByRole('radio', { name: /^Current/ }),
     ).toBeDisabled();
   },
 };

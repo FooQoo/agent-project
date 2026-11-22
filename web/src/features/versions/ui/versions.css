@@ -239,3 +239,29 @@
   margin: 0;
   overflow-y: auto;
 }
+
+/* The epic's version dropdown: a field-wide button that opens the list of choices. */
+.ver-select {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.ver-select__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ver-select[data-changed="true"] .ver-select__value {
+  font-weight: 600;
+}
+
+.ver-select-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: var(--radix-popover-trigger-width);
+  min-width: 240px;
+  max-width: calc(100vw - 24px);
+  padding: 8px;
+}

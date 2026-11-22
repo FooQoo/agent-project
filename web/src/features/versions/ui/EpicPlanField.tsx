@@ -1,5 +1,8 @@
+import { ChevronDownIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/shared/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 import { RadioGroup } from '@/shared/ui/radio-group';
 import type { PendingSave } from '../../../shared/ui/editor/planField';
 import type { EpicVersionResult, VersionChoice } from '../api/versions';
@@ -50,43 +53,71 @@ export function EpicPlanField({
     const choice = choiceOf(key);
     onPending(choice === null ? null : async () => void (await applyRef.current(choice)));
   }, [key, onPending]);
+  const [open, setOpen] = useState(false);
   const named = sortVersions(versions.filter((version) => version !== current));
+  const labels = new Map<string, string>([
+    [KEEP, t('versions.bulk.noChange')],
+    [
+      CURRENT,
+      current === null
+        ? t('versions.bulk.currentUnset')
+        : t('versions.bulk.current', { version: current }),
+    ],
+    [NONE, t('versions.detail.none')],
+  ]);
+  const shown = labels.get(key) ?? key.slice(2);
   const titleId = 'ver-epic-plan-title';
+  const choose = (next: string) => {
+    setKey(next);
+    setOpen(false);
+  };
   return (
     <section className="ver-epic-plan" aria-labelledby={titleId}>
       <h3 className="sr-only" id={titleId}>
         {t('versions.bulk.title')}
       </h3>
       <p className="ver-note">{t('versions.bulk.note')}</p>
-      <RadioGroup
-        value={key}
-        onValueChange={setKey}
-        disabled={disabled}
-        className="ver-options"
-        aria-label={t('versions.bulk.target')}
-      >
-        <OptionRow value={KEEP} checked={key === KEEP} label={t('versions.bulk.noChange')} />
-        <OptionRow
-          value={CURRENT}
-          checked={key === CURRENT}
-          disabled={current === null}
-          label={
-            current === null
-              ? t('versions.detail.currentUnset')
-              : t('versions.detail.current', { version: current })
-          }
-          hint={current === null ? t('versions.detail.currentUnsetHint') : undefined}
-        />
-        {named.map((version) => (
-          <OptionRow
-            key={version}
-            value={`v:${version}`}
-            checked={key === `v:${version}`}
-            label={version}
-          />
-        ))}
-        <OptionRow value={NONE} checked={key === NONE} label={t('versions.detail.none')} />
-      </RadioGroup>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            className="ver-select"
+            disabled={disabled}
+            aria-label={`${t('versions.bulk.target')}: ${shown}`}
+            data-changed={key !== KEEP}
+          >
+            <span className="ver-select__value">{shown}</span>
+            <ChevronDownIcon aria-hidden="true" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="ver-select-pop">
+          <RadioGroup
+            value={key}
+            onValueChange={choose}
+            className="ver-options ver-head-list"
+            aria-label={t('versions.bulk.target')}
+          >
+            <OptionRow value={KEEP} checked={key === KEEP} label={labels.get(KEEP) ?? ''} />
+            <OptionRow
+              value={CURRENT}
+              checked={key === CURRENT}
+              disabled={current === null}
+              label={labels.get(CURRENT) ?? ''}
+              hint={current === null ? t('versions.detail.currentUnsetHint') : undefined}
+            />
+            {named.map((version) => (
+              <OptionRow
+                key={version}
+                value={`v:${version}`}
+                checked={key === `v:${version}`}
+                label={version}
+              />
+            ))}
+            <OptionRow value={NONE} checked={key === NONE} label={labels.get(NONE) ?? ''} />
+          </RadioGroup>
+        </PopoverContent>
+      </Popover>
     </section>
   );
 }

@@ -27,18 +27,24 @@ function field(current: string | null = 'v1.8.0', versions = ['v1.8.0', 'v1.9.0'
   return { apply, pending: () => pending as PendingSave | null };
 }
 
+/** Opens the dropdown and chooses a row. */
+function pick(name: string | RegExp) {
+  fireEvent.click(screen.getByRole('button', { name: /Planned version of the epic/ }));
+  fireEvent.click(screen.getByRole('radio', { name }));
+}
+
 describe('the planned version of an epic, in its editor', () => {
   it('has no change to save by default', () => {
     const { pending } = field();
     expect(pending()).toBeNull();
-    expect(screen.getByRole('radio', { name: 'No change' }).getAttribute('aria-checked')).toBe(
-      'true',
-    );
+    expect(
+      screen.getByRole('button', { name: 'Planned version of the epic: No change' }),
+    ).toBeTruthy();
   });
 
   it('applies the chosen version when the editor saves, with nothing asked before', async () => {
     const { apply, pending } = field();
-    fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
+    pick('v1.9.0');
     await waitFor(() => expect(pending()).not.toBeNull());
     expect(apply).not.toHaveBeenCalled();
     await pending()?.();
@@ -47,14 +53,21 @@ describe('the planned version of an epic, in its editor', () => {
 
   it('offers current, none, and the versions newest first', async () => {
     const { apply, pending } = field('v1.8.0', ['v1.8.0', 'v1.9.0', 'v1.10.0']);
+    fireEvent.click(screen.getByRole('button', { name: /Planned version of the epic/ }));
     const names = screen.getAllByRole('radio').map((r) => r.parentElement?.textContent);
-    expect(names[0]).toBe('No change');
-    expect(names.slice(-3)).toEqual(['v1.10.0', 'v1.9.0', 'Leave unplanned']);
-    fireEvent.click(screen.getByRole('radio', { name: /Make it current/ }));
+    expect(names).toEqual([
+      'No change',
+      'Current (v1.8.0)',
+      'v1.10.0',
+      'v1.9.0',
+      'Leave unplanned',
+    ]);
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+    pick(/^Current/);
     await waitFor(() => expect(pending()).not.toBeNull());
     await pending()?.();
     expect(apply).toHaveBeenLastCalledWith({ choice: 'current' });
-    fireEvent.click(screen.getByRole('radio', { name: 'Leave unplanned' }));
+    pick('Leave unplanned');
     await waitFor(() => expect(pending()).not.toBeNull());
     await pending()?.();
     expect(apply).toHaveBeenLastCalledWith({ choice: 'unset' });
@@ -62,16 +75,17 @@ describe('the planned version of an epic, in its editor', () => {
 
   it('disables current while none is set', () => {
     field(null);
-    expect(
-      (screen.getByRole('radio', { name: /Make it current/ }) as HTMLButtonElement).disabled,
-    ).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: /Planned version of the epic/ }));
+    expect((screen.getByRole('radio', { name: /^Current/ }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
   });
 
   it('takes the change back when "No change" is chosen again', async () => {
     const { pending } = field();
-    fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
+    pick('v1.9.0');
     await waitFor(() => expect(pending()).not.toBeNull());
-    fireEvent.click(screen.getByRole('radio', { name: 'No change' }));
+    pick('No change');
     await waitFor(() => expect(pending()).toBeNull());
   });
 
@@ -88,7 +102,7 @@ describe('the planned version of an epic, in its editor', () => {
         }}
       />,
     );
-    fireEvent.click(screen.getByRole('radio', { name: 'c:none' }));
+    pick('c:none');
     await waitFor(() => expect(pending).not.toBeNull());
     await (pending as PendingSave | null)?.();
     expect(apply).toHaveBeenCalledWith({ choice: 'named', version: 'c:none' });
@@ -108,7 +122,7 @@ describe('the planned version of an epic, in its editor', () => {
         }}
       />,
     );
-    fireEvent.click(screen.getByRole('radio', { name: 'v1' }));
+    pick('v1');
     await waitFor(() => expect(pending).not.toBeNull());
     await expect((pending as PendingSave | null)?.()).rejects.toThrow('no');
   });

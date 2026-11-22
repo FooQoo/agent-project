@@ -31,7 +31,7 @@ function picker(props: Partial<Parameters<typeof PlannedVersionPicker>[0]> = {})
 describe('the planned version field of the task editor', () => {
   it('offers current, the other versions and none', () => {
     picker();
-    expect(screen.getByRole('radio', { name: /Make it current \(saves v1\.8\.0\)/ })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: /Make it current \(v1\.8\.0\)/ })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /v1\.9\.0/ })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /Leave unplanned/ })).toBeTruthy();
   });

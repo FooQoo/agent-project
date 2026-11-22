@@ -86,10 +86,10 @@ The epic editor shows the outline on the left, the name and the "Epic details (M
 
 ## Plan an epic at once {#plan-an-epic}
 
-On the PC board, the epic's preview dialog has a folded **Planned versions** section in its right column, under the label row. Open it to give every task of the epic the same planned version in one save. It is a short list of choices:
+On the PC board, the epic's preview dialog has a folded **Planned versions** section in its right column, under the label row. Open it to give every task of the epic the same planned version in one save. It is a single dropdown. Its choices are:
 
 - **No change** (the default).
-- **Make it current (saves vX)**, disabled while the project has no current version.
+- **Current (vX)**, disabled while the project has no current version.
 - Each version of the project, newest first.
 - **Leave unplanned**.
 
