@@ -7,7 +7,7 @@ import { startPhoneEntrance } from '../../helpers/phone-entrance.mjs';
 
 // Shared disposable sample board for the screenshot scripts. Build web/ and the CLI first.
 export const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-export const binary = process.env.AGBOARD_E2E_BINARY ?? path.join(repo, 'target/debug/agboard');
+export const binary = process.env.AGPJ_E2E_BINARY ?? path.join(repo, 'target/debug/agboard');
 export const project = 'website-launch';
 
 export const copy = {

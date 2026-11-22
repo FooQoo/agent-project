@@ -1,6 +1,6 @@
 //! The launcher routes: they start, list and stop a headless session through the board's own
 //! routes, and are served on the local entrance only. The agent CLI is a fake script named by
-//! `AGBOARD_CLAUDE_BIN`; the server runs on port 0 in a temporary data directory.
+//! `AGPJ_CLAUDE_BIN`; the server runs on port 0 in a temporary data directory.
 #![cfg(unix)]
 
 mod common;
@@ -34,7 +34,7 @@ fn fake_claude() {
         std::fs::write(&path, FAKE).unwrap();
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
         // SAFETY: set once, before any server of this test binary starts.
-        unsafe { std::env::set_var("AGBOARD_CLAUDE_BIN", path) };
+        unsafe { std::env::set_var("AGPJ_CLAUDE_BIN", path) };
         dir
     });
     let _ = dir;

@@ -162,7 +162,7 @@ fn the_marketplace_override_installs_from_another_place_without_a_tag() {
     let fx = fixture(&["claude"]);
     let local = fx.home.parent().unwrap().join("checkout");
     let (code, _json) = fx.json(
-        &[("AGBOARD_PLUGIN_MARKETPLACE", local.to_str().unwrap())],
+        &[("AGPJ_PLUGIN_MARKETPLACE", local.to_str().unwrap())],
         &["setup", "--agent", "claude", "--yes"],
     );
     assert_eq!(code, 0);

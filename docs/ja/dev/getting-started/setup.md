@@ -79,7 +79,7 @@ pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-board/demo/
 
 製品のビルドとの違いは次のとおりです。
 
-- ページは`/agent-board/demo/`から配信します。別のフォルダで配信するときは、ビルド時に`AGBOARD_DEMO_BASE`を指定します（例: `AGBOARD_DEMO_BASE=/demo/`）。
+- ページは`/agent-board/demo/`から配信します。別のフォルダで配信するときは、ビルド時に`AGPJ_DEMO_BASE`を指定します（例: `AGPJ_DEMO_BASE=/demo/`）。
 - サンプルデータのサーバーは、ページの中のService Worker（MSW）の後ろで動き、`/api/`へのリクエスト、ライブ更新、添付画像に応答します。ワーカーのスクリプトは`index.html`の隣に書き出します。Service Workerに対応しないブラウザでは、ボードの代わりにお知らせを表示します。
 - トークンは固定で、ビルドIDは空です。そのため新しいビルドを理由に再読み込みすることはありません。ページを再読み込みするとサンプルデータが元に戻り、初回の案内がもう一度表示されます。
 - パソコンが必要な機能は表示しません。対象は、プロジェクトのDocs（ファイルやフォルダを開くボタンを含む）、リモートアクセスの接続、貼り付けやドロップした画像の保存です。
@@ -193,11 +193,11 @@ macOSでは、リモートアクセスのトークンをキーチェーンに保
 
 ```sh
 security find-identity -v -p codesigning   # 署名に使えるIDの一覧
-export AGBOARD_CODESIGN_IDENTITY="<IDの名前またはSHA-1>"
+export AGPJ_CODESIGN_IDENTITY="<IDの名前またはSHA-1>"
 scripts/dev/install-local.sh
 ```
 
-`just install`はweb UIをビルドしてからこのスクリプトを実行するので、`AGBOARD_CODESIGN_IDENTITY`を設定していれば同じように署名します。`AGBOARD_CODESIGN_IDENTITY`を設定していないとき、またはmacOS以外では、署名せずにインストールし、その旨を表示します。
+`just install`はweb UIをビルドしてからこのスクリプトを実行するので、`AGPJ_CODESIGN_IDENTITY`を設定していれば同じように署名します。`AGPJ_CODESIGN_IDENTITY`を設定していないとき、またはmacOS以外では、署名せずにインストールし、その旨を表示します。
 
 - 署名後の最初の実行では、確認が1回出ます。**常に許可**を選んでください。
 - `codesign`が署名用の鍵を使う許可を1回求めることがあります。ログインパスワードを入力し、**常に許可**を選んでください。ターミナルのアプリから実行してください。GUIのない環境から実行すると、`codesign`が`errSecInternalComponent`で失敗することがあります。

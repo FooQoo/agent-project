@@ -313,8 +313,8 @@ test('the hook hands over active progress metadata without task bodies, even whe
   const context = (JSON.parse(first.stdout) as { hookSpecificOutput: { additionalContext: string } }).hookSpecificOutput
     .additionalContext;
   expect(Buffer.byteLength(context)).toBeLessThanOrEqual(256 * 1024);
-  expect(context.startsWith('AGBOARD_PROGRESS\n')).toBe(true);
-  const progress = JSON.parse(context.slice('AGBOARD_PROGRESS\n'.length)) as {
+  expect(context.startsWith('AGPJ_PROGRESS\n')).toBe(true);
+  const progress = JSON.parse(context.slice('AGPJ_PROGRESS\n'.length)) as {
     epics: { tasks: (TaskJson & { draft: 'human' | 'ai' | null })[] }[];
     unassigned: (TaskJson & { draft: 'human' | 'ai' | null })[];
   };
@@ -332,8 +332,8 @@ test('the hook hands over active progress metadata without task bodies, even whe
   expect(over.status).toBe(0);
   const overContext = (JSON.parse(over.stdout) as { hookSpecificOutput: { additionalContext: string } }).hookSpecificOutput
     .additionalContext;
-  expect(overContext.startsWith('AGBOARD_PROGRESS\n')).toBe(true);
-  expect(overContext).not.toContain('AGBOARD_ERROR');
+  expect(overContext.startsWith('AGPJ_PROGRESS\n')).toBe(true);
+  expect(overContext).not.toContain('AGPJ_ERROR');
   expect(overContext).not.toContain('あ');
   expect(Buffer.byteLength(overContext)).toBeLessThanOrEqual(256 * 1024);
 });

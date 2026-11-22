@@ -32,7 +32,7 @@ pub const HOME_ICON_512_PNG: &[u8] = include_bytes!(concat!(
 ));
 
 /// What the web build leaves in `index.html` for the server to fill in.
-pub const TOKEN_PLACEHOLDER: &str = "{{AGBOARD_TOKEN}}";
+pub const TOKEN_PLACEHOLDER: &str = "{{AGPJ_TOKEN}}";
 
 /// Number of random bytes behind a session token (64 hex characters).
 const TOKEN_BYTES: usize = 32;
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn render_index_replaces_the_placeholder() {
-        let html = r#"<meta name="agboard-token" content="{{AGBOARD_TOKEN}}" />"#;
+        let html = r#"<meta name="agboard-token" content="{{AGPJ_TOKEN}}" />"#;
         assert_eq!(
             render_index(html, "abc123"),
             r#"<meta name="agboard-token" content="abc123" />"#
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn render_index_fills_in_the_build_id() {
-        let html = r#"<meta name="agboard-build" content="{{AGBOARD_BUILD_ID}}" />"#;
+        let html = r#"<meta name="agboard-build" content="{{AGPJ_BUILD_ID}}" />"#;
         assert_eq!(
             render_index(html, "abc"),
             format!(r#"<meta name="agboard-build" content="{APP_BUILD_ID}" />"#)

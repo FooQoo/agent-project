@@ -22,7 +22,7 @@ build:
     cargo build
 
 # Install the current checkout's CLI and embedded web UI globally. On macOS it
-# is signed when AGBOARD_CODESIGN_IDENTITY is set (see scripts/dev/install-local.sh).
+# is signed when AGPJ_CODESIGN_IDENTITY is set (see scripts/dev/install-local.sh).
 install:
     pnpm --dir web install --frozen-lockfile
     pnpm --dir web build
@@ -61,7 +61,7 @@ serve port="7420" backend_port="7421": build
         echo "The Rust server did not start." >&2
         exit 1
     fi
-    AGBOARD_BACKEND_PORT="{{backend_port}}" AGBOARD_WEB_PORT="{{port}}" pnpm --dir web dev --mode live --host 127.0.0.1 --port "{{port}}" --strictPort
+    AGPJ_BACKEND_PORT="{{backend_port}}" AGPJ_WEB_PORT="{{port}}" pnpm --dir web dev --mode live --host 127.0.0.1 --port "{{port}}" --strictPort
 
 # Run a development board with a temporary data area and the ngrok monitor.
 # Usage: just serve-ngrok [port]. The authtoken comes from NGROK_AUTHTOKEN, or is asked once without echo.

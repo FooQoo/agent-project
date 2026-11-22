@@ -110,7 +110,7 @@ fn every_topic_prints_its_text() {
     assert!(template.contains("recommended, not required"));
     let (_, resident, _) = skills(&["resident"]);
     for needed in [
-        "AGBOARD_RESIDENT_ID",
+        "AGPJ_RESIDENT_ID",
         "run_in_background",
         "wait --until task --idle-timeout 3600",
         "run the same wait again immediately",

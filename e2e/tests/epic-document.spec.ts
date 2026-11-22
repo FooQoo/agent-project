@@ -180,8 +180,8 @@ test('the CLI, snapshot, progress, hook, wait, and API return document and docum
   const hook = runWith(fixture.home, ['hook', '--agent', 'claude'], JSON.stringify({ hook_event_name: 'PostToolUse' }));
   expect(hook.status).toBe(0);
   const context = JSON.parse(hook.stdout).hookSpecificOutput.additionalContext as string;
-  expect(context.startsWith('AGBOARD_PROGRESS\n')).toBe(true);
-  const handed = JSON.parse(context.slice('AGBOARD_PROGRESS\n'.length));
+  expect(context.startsWith('AGPJ_PROGRESS\n')).toBe(true);
+  const handed = JSON.parse(context.slice('AGPJ_PROGRESS\n'.length));
   expect(handed.epics.find((epic: { id: string }) => epic.id === 'ALPHA').documentPath).toBe(alphaPath);
 
   // `wait --after` returns the new snapshot when an epic document changes.

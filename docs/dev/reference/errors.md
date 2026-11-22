@@ -87,15 +87,15 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `invalid_domain` | `setup remote --domain` is not a bare host name: it has a scheme, a path, a port, a wildcard, or spaces. The board's settings API returns the same code with HTTP 422. Nothing is saved. | 2 | 422 |
 | `keychain_unavailable` | `setup remote --token-stdin` (or the token question of `setup`) cannot use the OS keychain. Nothing is saved, including the other options of the same command. The board's API returns the same code with HTTP 409. | 1 | 409 |
 | `browser_open_failed` | `open` could not start the program that opens the browser (`open`, `xdg-open`, or `AGPJ_BROWSER_OPENER`). The reason names the address to open by hand. A browser that may not be opened (`AGPJ_OPEN_BROWSER=0`, SSH, no display) is not an error. | 1 | n/a |
-| `agent_cli_missing` | The board cannot launch a session because `claude` or `codex` is not installed on the server's `PATH` (or `AGBOARD_CLAUDE_BIN` / `AGPJ_CODEX_BIN` does not name a file). | 1 | 409 |
+| `agent_cli_missing` | The board cannot launch a session because `claude` or `codex` is not installed on the server's `PATH` (or `AGPJ_CLAUDE_BIN` / `AGPJ_CODEX_BIN` does not name a file). | 1 | 409 |
 | `agent_cli_logged_out` | The agent CLI is installed but not logged in (`claude auth status` reports `loggedIn` false, or `codex login status` fails). The reason says to log in in a terminal. | 1 | 409 |
 | `session_launch_refused` | The board already keeps a launched session, of either tool, and it is running, restarting, or attached. Board-launched sessions are limited to one in total over both tools and all projects. The reason names the tool and says to stop it first. | 1 | 409 |
 | `session_launch_failed` | The agent CLI could not be started, its log file could not be written, or its login check did not finish within 20 seconds. | 1 | 500 |
 | `project_has_no_folder` | A session cannot be launched because the project has no bound folder that still exists. Bind one with `agboard project bind`. | 1 | 409 |
 | `cursor_invalid` | The cursor is malformed or belongs to another project. | 1 | n/a |
 | `wait_timeout` | Change mode (`wait --after`) reached its optional `--timeout` with no change, with no change. A `message ask` or `message wait` that reaches its `--timeout` is not an error: it prints a `timeout` event and exits 5. | 1 | n/a |
-| `hook_cwd_unavailable` | The hook's input `cwd` is an absolute path that does not exist or cannot be read. It is reported as `AGBOARD_ERROR`; a folder that cannot be checked is never treated as unbound. | n/a (hook output) | n/a |
-| `invalid_hook_input` | The hook input is not valid JSON, is too large, or has a `cwd` that is not a string or not an absolute path. Reported as `AGBOARD_ERROR`. | n/a (hook output) | n/a |
+| `hook_cwd_unavailable` | The hook's input `cwd` is an absolute path that does not exist or cannot be read. It is reported as `AGPJ_ERROR`; a folder that cannot be checked is never treated as unbound. | n/a (hook output) | n/a |
+| `invalid_hook_input` | The hook input is not valid JSON, is too large, or has a `cwd` that is not a string or not an absolute path. Reported as `AGPJ_ERROR`. | n/a (hook output) | n/a |
 | `forbidden` | A web write failed the guard (Host, Origin, `Sec-Fetch-Site`, or token). | n/a | 403 |
 | `invalid_sections` | The `sections` query of a Detail route is not `document`, `history`, or `document,history`. See [Web API](./web-api.md#summary-and-detail). | n/a | 400 |
 | `not_implemented` | The Summary or Detail route exists but its handler is not written yet. | n/a | 501 |

@@ -56,7 +56,7 @@ fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
     let context = parsed["hookSpecificOutput"]["additionalContext"]
         .as_str()
         .unwrap();
-    assert!(context.starts_with("AGBOARD_PROGRESS\n"));
+    assert!(context.starts_with("AGPJ_PROGRESS\n"));
     let snapshot: Value = serde_json::from_str(context.split_once('\n').unwrap().1).unwrap();
     assert_eq!(snapshot["project"]["name"], "Agent Board");
     // Work metadata is included, while details/history are not sent to the hook.
@@ -85,7 +85,7 @@ fn hook_failure_is_bounded_and_does_not_create_a_missing_database() {
     let output =
         agent_project::agent::hook::run("codex", &mut Cursor::new(input), &db_path, Some("demo"))
             .unwrap();
-    assert!(output.contains("AGBOARD_ERROR"));
+    assert!(output.contains("AGPJ_ERROR"));
     assert!(!db_path.exists());
     // A readable, unbound hook folder says nothing and creates nothing.
     assert!(
@@ -184,7 +184,7 @@ fn hook_omits_long_descriptions_from_the_progress_table() {
         ("codex", "SessionStart"),
     ] {
         let context = hook_context(agent, event, &db_path);
-        assert!(context.starts_with("AGBOARD_PROGRESS\n"), "{agent} {event}");
+        assert!(context.starts_with("AGPJ_PROGRESS\n"), "{agent} {event}");
         assert!(context.len() < 10 * 1024);
         let snapshot: Value = serde_json::from_str(context.split_once('\n').unwrap().1).unwrap();
         assert!(snapshot.get("tasks").is_none());
@@ -201,7 +201,7 @@ fn hook_progress_size_depends_on_work_metadata_not_markdown_bodies() {
     let (_home, db_path) = board_with_descriptions(&["あ".repeat(50_000), "あ".repeat(50_000)]);
     for (agent, event) in [("claude", "PostToolUse"), ("codex", "SessionStart")] {
         let context = hook_context(agent, event, &db_path);
-        assert!(context.starts_with("AGBOARD_PROGRESS\n"));
+        assert!(context.starts_with("AGPJ_PROGRESS\n"));
         assert!(context.len() < 10 * 1024);
         assert!(!context.contains("あ"));
     }
@@ -243,7 +243,7 @@ fn hook_adds_the_progress_table_after_a_large_tool_result() {
         let context = parsed["hookSpecificOutput"]["additionalContext"]
             .as_str()
             .unwrap();
-        assert!(context.starts_with("AGBOARD_PROGRESS\n"), "{agent} {event}");
+        assert!(context.starts_with("AGPJ_PROGRESS\n"), "{agent} {event}");
         // The tool result is never passed on.
         assert!(context.len() < 10 * 1024);
     }
@@ -300,7 +300,7 @@ fn installed_binary_handles_hook_json_on_stdin() {
     assert!(
         String::from_utf8(result.stdout)
             .unwrap()
-            .contains("AGBOARD_PROGRESS")
+            .contains("AGPJ_PROGRESS")
     );
 }
 
@@ -370,7 +370,7 @@ fn error_of(run: &HookRun) -> Value {
         .as_str()
         .unwrap();
     let body = context
-        .strip_prefix("AGBOARD_ERROR\n")
+        .strip_prefix("AGPJ_ERROR\n")
         .unwrap_or_else(|| panic!("not an error: {context}"));
     serde_json::from_str(body.lines().next().unwrap()).unwrap()
 }
@@ -381,7 +381,7 @@ fn project_of(run: &HookRun) -> String {
     let context = parsed["hookSpecificOutput"]["additionalContext"]
         .as_str()
         .unwrap();
-    let json = context.strip_prefix("AGBOARD_PROGRESS\n").unwrap();
+    let json = context.strip_prefix("AGPJ_PROGRESS\n").unwrap();
     let snapshot: Value = serde_json::from_str(json).unwrap();
     snapshot["project"]["name"].as_str().unwrap().to_string()
 }
@@ -648,11 +648,11 @@ fn hook_takes_no_plugin_version_but_accepts_the_one_of_an_older_plugin() {
             .unwrap();
         // `fetchedAt` has second precision, so runs that straddle a second differ.
         let body = text
-            .strip_prefix("AGBOARD_PROGRESS\n")
+            .strip_prefix("AGPJ_PROGRESS\n")
             .expect("progress prefix");
         let mut snapshot: Value = serde_json::from_str(body).unwrap();
         snapshot.as_object_mut().unwrap().remove("fetchedAt");
-        format!("AGBOARD_PROGRESS\n{snapshot}")
+        format!("AGPJ_PROGRESS\n{snapshot}")
     };
     let plain = context(&[]);
     // Hook commands of an installed plugin that predates this release.

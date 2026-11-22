@@ -16,7 +16,7 @@ Use a CLI that supports `history add`. If the command is unavailable, report the
 
 Before choosing, starting, or resuming work, read the progress table. It groups active tasks under epics and lists unassigned work. Done, archived, and awaiting-answer tasks are omitted. A `requests` array lists the open requests a person sent you and an `answers` array lists the answers to your questions that you have not taken in (see `agboard skills requests`). A question stays on the board until answered; inspect it with `show` or `snapshot`, never read its absence from progress as expiry. It has IDs, titles, owners, statuses, acceptance counts, and paths, but no bodies, history, or images. Read only the selected epic's `EPIC.md` and task's `TASK.md` before implementation. Use `show <id> --json` when history or a current question/answer is needed. Hooks attach the same table:
 
-- `AGBOARD_PROGRESS` is followed by the progress table for the nearest bound folder or explicit project.
-- `AGBOARD_ERROR` (for example `bound_project_missing`) means there is no usable table. Resolve the correct folder or report the problem; do not guess.
+- `AGPJ_PROGRESS` is followed by the progress table for the nearest bound folder or explicit project.
+- `AGPJ_ERROR` (for example `bound_project_missing`) means there is no usable table. Resolve the correct folder or report the problem; do not guess.
 
 After context compaction, read a fresh progress table before any board-dependent change. This skill does not register hooks; never add or edit the user's installed hook command.

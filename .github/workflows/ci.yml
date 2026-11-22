@@ -210,9 +210,9 @@ jobs:
     container: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
     env:
       # global-setup.ts uses the downloaded binaries instead of building.
-      AGBOARD_E2E_PREBUILT: "1"
-      AGBOARD_E2E_BINARY: ${{ github.workspace }}/e2e-bin/agboard
-      AGBOARD_E2E_PHONE_BACKEND: ${{ github.workspace }}/e2e-bin/monitor_phone_serve
+      AGPJ_E2E_PREBUILT: "1"
+      AGPJ_E2E_BINARY: ${{ github.workspace }}/e2e-bin/agboard
+      AGPJ_E2E_PHONE_BACKEND: ${{ github.workspace }}/e2e-bin/monitor_phone_serve
     # The suite is split across five runners. Each shard runs a quarter of the tests.
     strategy:
       fail-fast: false

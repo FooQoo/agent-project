@@ -68,7 +68,7 @@ fn a_permission_request_is_answered_allow_and_a_turn_end_does_not_end_the_sessio
         panic!("the first call is the start");
     };
     assert!(prompt.starts_with("You were launched by Agent Board"));
-    assert!(env.contains(&("AGBOARD_SESSION_ORIGIN".to_string(), "board".to_string())));
+    assert!(env.contains(&("AGPJ_SESSION_ORIGIN".to_string(), "board".to_string())));
 
     assert!(fx.launcher.stop().unwrap());
     assert!(calls_of(&calls).contains(&Call::Stop));

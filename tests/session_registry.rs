@@ -1,7 +1,7 @@
 //! The agent sessions attached to the board: registering on connect, the attributes, leaving the
 //! count after the grace period, a reconnect counted once, and the real `wait --until task`
 //! command naming itself. Servers listen on port 0 in a temporary data directory, and the grace
-//! period is shortened with `AGBOARD_SESSION_GRACE_MS`.
+//! period is shortened with `AGPJ_SESSION_GRACE_MS`.
 
 mod common;
 #[path = "support/serve_process.rs"]
@@ -30,7 +30,7 @@ fn start(home: &std::path::Path) -> Running {
     GRACE.call_once(|| {
         // SAFETY: set once, before any server of this test binary starts; tests of this file
         // are serialized and none reads the environment concurrently.
-        unsafe { std::env::set_var("AGBOARD_SESSION_GRACE_MS", GRACE_MS.to_string()) };
+        unsafe { std::env::set_var("AGPJ_SESSION_GRACE_MS", GRACE_MS.to_string()) };
     });
     Running::start(home)
 }
@@ -189,7 +189,7 @@ fn serve(home: &std::path::Path) -> (ServeProcess, u16) {
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
-        .env("AGBOARD_SESSION_GRACE_MS", GRACE_MS.to_string())
+        .env("AGPJ_SESSION_GRACE_MS", GRACE_MS.to_string())
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -257,7 +257,7 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
         .env("AGPJ_HOME", home.path())
         .env("CLAUDECODE", "1")
         .env("CLAUDE_CODE_SESSION_ID", "session-under-test")
-        .env_remove("AGBOARD_RESIDENT_ID")
+        .env_remove("AGPJ_RESIDENT_ID")
         .args([
             "--project",
             "Agent Board",
@@ -315,7 +315,7 @@ fn agboard_in_session(home: &std::path::Path, session: Option<&str>, args: &[&st
         .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
-        .env_remove("AGBOARD_RESIDENT_ID")
+        .env_remove("AGPJ_RESIDENT_ID")
         .env_remove("CLAUDECODE")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")

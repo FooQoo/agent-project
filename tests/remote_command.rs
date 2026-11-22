@@ -21,7 +21,7 @@ fn agboard(home: &Path, args: &[&str]) -> Output {
     let mut cmd = Command::cargo_bin("agboard").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
-        .env("AGBOARD_KEYCHAIN", "none")
+        .env("AGPJ_KEYCHAIN", "none")
         .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")

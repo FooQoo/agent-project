@@ -25,7 +25,7 @@ describe('pageBuildId', () => {
 
   it('is null without the meta or with the placeholder a dev server leaves', () => {
     expect(pageBuildId()).toBeNull();
-    setMeta('{{AGBOARD_BUILD_ID}}');
+    setMeta('{{AGPJ_BUILD_ID}}');
     expect(pageBuildId()).toBeNull();
   });
 });

@@ -26,10 +26,10 @@ use crate::paths::{self, ServeInfo, ServeMode};
 /// data directory.
 const AUTO_LIFECYCLE_WAIT: Duration = Duration::from_secs(10);
 
-/// How long a session whose wait ended stays counted: `AGBOARD_SESSION_GRACE_MS` when set to a
+/// How long a session whose wait ended stays counted: `AGPJ_SESSION_GRACE_MS` when set to a
 /// number of milliseconds (tests shorten it), else [`sessions::GRACE`].
 fn session_grace() -> Duration {
-    std::env::var("AGBOARD_SESSION_GRACE_MS")
+    std::env::var("AGPJ_SESSION_GRACE_MS")
         .ok()
         .and_then(|text| text.trim().parse::<u64>().ok())
         .map_or(sessions::GRACE, Duration::from_millis)

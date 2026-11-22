@@ -139,7 +139,7 @@ fn context(output: &Output) -> String {
 
 fn error_code(context: &str) -> String {
     let body = context
-        .strip_prefix("AGBOARD_ERROR\n")
+        .strip_prefix("AGPJ_ERROR\n")
         .unwrap_or_else(|| panic!("not a hook error: {context}"))
         .lines()
         .next()
@@ -313,7 +313,7 @@ fn the_hook_passes_only_the_named_projects_progress_table() {
         let output = hook(home.path(), Some(project), agent, SESSION_START);
         assert!(output.stderr.is_empty());
         let context = context(&output);
-        let body = context.strip_prefix("AGBOARD_PROGRESS\n").unwrap();
+        let body = context.strip_prefix("AGPJ_PROGRESS\n").unwrap();
         let passed: Value = serde_json::from_str(body).unwrap();
         assert_eq!(passed["project"]["name"], project);
         assert!(passed["unassigned"].as_array().unwrap().is_empty());
@@ -346,7 +346,7 @@ fn a_hook_without_a_usable_target_reports_agboard_error_and_changes_nothing() {
     // An error is data for the agent, never a snapshot.
     assert!(
         !context(&hook(home.path(), Some("Nowhere"), "codex", SESSION_START))
-            .contains("AGBOARD_PROGRESS")
+            .contains("AGPJ_PROGRESS")
     );
     let unbound = hook(home.path(), None, "codex", SESSION_START);
     assert!(unbound.stdout.is_empty());
@@ -386,7 +386,7 @@ fn a_renamed_project_needs_its_new_name_and_a_recreated_one_is_a_new_project() {
     assert_eq!(error_code(&context(&output)), "project_not_found");
     let body = context(&hook(home.path(), Some("Gamma"), "claude", SESSION_START));
     let renamed: Value =
-        serde_json::from_str(body.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(body.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(renamed["project"]["id"], original["project"]["id"]);
     assert_eq!(renamed["project"]["name"], "Gamma");
 
@@ -394,7 +394,7 @@ fn a_renamed_project_needs_its_new_name_and_a_recreated_one_is_a_new_project() {
     ok(&agboard(home.path(), "Alpha", &["init"]));
     let again = context(&hook(home.path(), Some("Alpha"), "claude", SESSION_START));
     let again: Value =
-        serde_json::from_str(again.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(again.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_ne!(again["project"]["id"], original["project"]["id"]);
     assert_eq!(again["unassigned"].as_array().unwrap().len(), 0);
 }
@@ -528,7 +528,7 @@ fn hook_uses_cwd_binding_and_emits_the_same_read_only_progress_snapshot() {
     let output = hook_in(home.path(), None, "codex", &input, Some(folders.path()));
     let passed_context = context(&output);
     let hook =
-        serde_json::from_str::<Value>(passed_context.strip_prefix("AGBOARD_PROGRESS\n").unwrap())
+        serde_json::from_str::<Value>(passed_context.strip_prefix("AGPJ_PROGRESS\n").unwrap())
             .unwrap();
     assert_eq!(hook["project"]["name"], "Beta");
     assert_eq!(hook["unassigned"][0]["title"], "Nested task");
@@ -538,7 +538,7 @@ fn hook_uses_cwd_binding_and_emits_the_same_read_only_progress_snapshot() {
     let fallback = hook_in(home.path(), None, "codex", SESSION_START, Some(&deeper));
     let fallback = context(&fallback);
     let fallback: Value =
-        serde_json::from_str(fallback.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(fallback.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(fallback["project"]["name"], "Beta");
 
     let progress = agboard_in(home.path(), &deeper, &["progress", "--json"]);
@@ -586,7 +586,7 @@ fn hook_explicit_project_overrides_cwd_binding_and_missing_binding_is_an_error()
         Some(&unbound),
     ));
     let progress: Value =
-        serde_json::from_str(body.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(body.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(progress["project"]["name"], "Beta");
     assert_eq!(progress["unassigned"][0]["title"], "Explicit task");
 
@@ -625,7 +625,7 @@ fn hook_treats_cwd_as_a_path_and_never_interpolates_it_as_shell_text() {
     let output = hook_in(home.path(), None, "codex", &input, Some(folders.path()));
     let body = context(&output);
     let progress: Value =
-        serde_json::from_str(body.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(body.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(progress["project"]["name"], "Literal path");
     assert!(!marker.exists());
 }

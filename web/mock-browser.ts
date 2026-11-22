@@ -50,8 +50,8 @@ export function mockBrowser(options: MockBrowserOptions): Plugin {
       this.emitFile({ type: 'asset', fileName: WORKER_FILE, source: workerSource() });
     },
     transformIndexHtml(html) {
-      const page = html.replace('{{AGBOARD_TOKEN}}', options.token);
-      return options.noBuildId ? page.replace('{{AGBOARD_BUILD_ID}}', '') : page;
+      const page = html.replace('{{AGPJ_TOKEN}}', options.token);
+      return options.noBuildId ? page.replace('{{AGPJ_BUILD_ID}}', '') : page;
     },
   };
 }

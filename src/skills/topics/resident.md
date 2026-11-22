@@ -2,7 +2,7 @@
 
 There are two kinds of resident agent, and the environment tells them apart:
 
-- **Launched by the board** (`AGBOARD_RESIDENT_ID` and `AGBOARD_SESSION_ORIGIN=board` are set). The board watches the project for you and sends each piece of work as a message when you are idle. Follow "Work the board pushes" below, and never run `agboard wait`.
+- **Launched by the board** (`AGPJ_RESIDENT_ID` and `AGPJ_SESSION_ORIGIN=board` are set). The board watches the project for you and sends each piece of work as a message when you are idle. Follow "Work the board pushes" below, and never run `agboard wait`.
 - **Opened by a person** who told you to stay on the board. Nothing sends you work, so you wait for it yourself. Follow "Wait for work yourself" below.
 
 Both keep one session attached to one project and working until the board stops the process. Neither ends when the board is idle; that is the difference from `agboard skills listening`, which ends at `idle_timeout` and is for an explicit one-off request.

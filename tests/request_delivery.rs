@@ -115,7 +115,7 @@ fn the_hook_carries_the_open_requests() {
         .as_str()
         .unwrap();
     let table: Value =
-        serde_json::from_str(context.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(context.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(table["requests"][0]["id"], id.as_str());
     assert_eq!(table["requests"][0]["title"], "Fix the typo");
 }

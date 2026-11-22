@@ -112,12 +112,9 @@ impl Launcher {
             prompt: cli::prompt(project_name),
             writable_dirs: vec![self.data_dir.clone()],
             env: vec![
-                ("AGBOARD_RESIDENT_ID".to_string(), launch_id.clone()),
-                (
-                    "AGBOARD_SESSION_TOOL".to_string(),
-                    tool.as_str().to_string(),
-                ),
-                ("AGBOARD_SESSION_ORIGIN".to_string(), "board".to_string()),
+                ("AGPJ_RESIDENT_ID".to_string(), launch_id.clone()),
+                ("AGPJ_SESSION_TOOL".to_string(), tool.as_str().to_string()),
+                ("AGPJ_SESSION_ORIGIN".to_string(), "board".to_string()),
             ],
             log,
         })?;

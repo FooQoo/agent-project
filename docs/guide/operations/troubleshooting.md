@@ -38,7 +38,7 @@ Find what you see, read the cause, and do what the last column says. The command
 | `questions_unanswered` | The task waits for an answer, so the agent cannot set it to Running or move it to Done. | Answer the question on the board, or have the agent withdraw it. |
 | `folder_unbound` or `bound_project_missing` | The agent's folder is not registered to a project, or the project was deleted. (The hook itself stays silent in a folder with no binding; this error comes from `agboard progress` and from a deleted project.) | Register the folder: `agboard project bind "My project"`. See [Data and backups](./data#register-a-folder). |
 | `confirmation_required` | Deleting something needs a person's confirmation in a terminal. | Run the command yourself. |
-| The hook shows `AGBOARD_ERROR` | The progress table cannot be built (no project, table larger than 256 KiB, or the server is unreachable). | Fix the cause named in the message. The agent must not change the board until the table works. |
+| The hook shows `AGPJ_ERROR` | The progress table cannot be built (no project, table larger than 256 KiB, or the server is unreachable). | Fix the cause named in the message. The agent must not change the board until the table works. |
 
 ## The server will not start
 

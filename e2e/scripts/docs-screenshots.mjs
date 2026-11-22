@@ -7,8 +7,8 @@ import { cli, copy, markdown, project, repo, seed, seedProposal, settle, startSe
 
 // Captures the screenshots used by the guide pages into docs/images/guide.
 // Build web/ and the CLI first. Only disposable sample data and free loopback ports are used.
-// AGBOARD_MEDIA_OUT points the images at another folder, so a check run does not touch the repository's files.
-const output = process.env.AGBOARD_MEDIA_OUT ? path.resolve(process.env.AGBOARD_MEDIA_OUT, 'guide') : path.join(repo, 'docs/images/guide');
+// AGPJ_MEDIA_OUT points the images at another folder, so a check run does not touch the repository's files.
+const output = process.env.AGPJ_MEDIA_OUT ? path.resolve(process.env.AGPJ_MEDIA_OUT, 'guide') : path.join(repo, 'docs/images/guide');
 mkdirSync(output, { recursive: true });
 
 // Texts that only the guide screenshots need, in both languages. UI labels come from the app itself.
@@ -105,7 +105,7 @@ try {
       const folder = path.join(home, 'work');
       mkdirSync(folder);
       cli(home, ['project', 'bind', project, '--folder', folder]);
-      process.env.AGBOARD_CLAUDE_BIN = fakeClaude(home);
+      process.env.AGPJ_CLAUDE_BIN = fakeClaude(home);
       seedProposal(home, text);
       const docs = addDocs(home, id, locale, more);
       const started = await startServer(home);
@@ -268,7 +268,7 @@ try {
     } finally {
       await Promise.all(contexts.map((ctx) => ctx.close()));
       await stop(server);
-      delete process.env.AGBOARD_CLAUDE_BIN;
+      delete process.env.AGPJ_CLAUDE_BIN;
       rmSync(home, { recursive: true, force: true });
     }
   }

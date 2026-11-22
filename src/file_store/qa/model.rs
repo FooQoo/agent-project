@@ -61,7 +61,7 @@ pub struct Question {
     pub reply: Option<Reply>,
     pub withdrawn_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
-    /// The launch ID of the board-launched session that asked it (`AGBOARD_RESIDENT_ID`), when
+    /// The launch ID of the board-launched session that asked it (`AGPJ_RESIDENT_ID`), when
     /// one did. The board uses it to push the answer back to that session.
     pub asked_by: Option<String>,
 }

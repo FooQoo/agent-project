@@ -77,7 +77,7 @@ esac
 export AGPJ_HOME='{home}' AGPJ_AUTOSTART=0 AGPJ_OPEN_BROWSER=0 AGPJ_WATCH=poll TZ=UTC
 LOG='{log}'
 echo $$ >> '{log}/starts'
-echo "$AGBOARD_SESSION_ORIGIN $AGBOARD_SESSION_TOOL" >> '{log}/env'
+echo "$AGPJ_SESSION_ORIGIN $AGPJ_SESSION_TOOL" >> '{log}/env'
 {setup}
 handle() {{
   printf '%s\n' "$1" >> "$LOG/pushed"
@@ -113,7 +113,7 @@ fn sessions(server: &Running, base: &str) -> Value {
 /// process environment before its server starts.
 #[test]
 fn a_launched_session_is_pushed_work_is_restarted_and_stops() {
-    scenario("claude-code", "claude", "AGBOARD_CLAUDE_BIN");
+    scenario("claude-code", "claude", "AGPJ_CLAUDE_BIN");
     scenario("codex", "codex", "AGPJ_CODEX_BIN");
 }
 
@@ -136,7 +136,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
     // SAFETY: set before the server of this run starts, and runs of this test binary are serial.
     unsafe {
         std::env::set_var(bin_var, &fake);
-        std::env::set_var("AGBOARD_SESSION_GRACE_MS", "5000");
+        std::env::set_var("AGPJ_SESSION_GRACE_MS", "5000");
     }
 
     // A project with no task, so the only work the session meets is the request below.
@@ -198,8 +198,8 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_WATCH", "poll")
         .env("TZ", "UTC")
-        .env_remove("AGBOARD_RESIDENT_ID")
-        .env_remove("AGBOARD_SESSION_ORIGIN")
+        .env_remove("AGPJ_RESIDENT_ID")
+        .env_remove("AGPJ_SESSION_ORIGIN")
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()

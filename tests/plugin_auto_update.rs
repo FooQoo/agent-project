@@ -91,7 +91,7 @@ impl Fixture {
         let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
         command.env_clear();
         if self.use_override {
-            command.env("AGBOARD_PLUGIN_MARKETPLACE", &self.marketplace);
+            command.env("AGPJ_PLUGIN_MARKETPLACE", &self.marketplace);
         }
         let mut child = command
             .env("HOME", &self.home)
@@ -126,7 +126,7 @@ impl Fixture {
     fn notice(output: &Value) -> Option<String> {
         output["hookSpecificOutput"]["additionalContext"]
             .as_str()
-            .filter(|text| text.contains("AGBOARD_NOTICE"))
+            .filter(|text| text.contains("AGPJ_NOTICE"))
             .map(str::to_string)
     }
 
@@ -249,7 +249,7 @@ fn codex_falls_back_to_the_claude_plugin_root_variable() {
         .env("PATH", &fx.fakes.bin)
         .env("AGPJ_HOME", &fx.data)
         .env("AGPJ_AUTOSTART", "0")
-        .env("AGBOARD_PLUGIN_MARKETPLACE", &fx.marketplace)
+        .env("AGPJ_PLUGIN_MARKETPLACE", &fx.marketplace)
         .env("CLAUDE_PLUGIN_ROOT", root)
         .args(["hook", "--agent", "codex"])
         .stdin(Stdio::piped())
@@ -264,7 +264,7 @@ fn codex_falls_back_to_the_claude_plugin_root_variable() {
         .write_all(br#"{"hook_event_name":"SessionStart"}"#)
         .unwrap();
     let output = child.wait_with_output().unwrap();
-    assert!(String::from_utf8_lossy(&output.stdout).contains("AGBOARD_NOTICE"));
+    assert!(String::from_utf8_lossy(&output.stdout).contains("AGPJ_NOTICE"));
     fx.wait_finished("codex");
 }
 
@@ -276,7 +276,7 @@ fn only_session_start_updates_and_the_opt_out_stops_it() {
     let opted_out = fx.hook(
         "claude",
         "SessionStart",
-        &[("AGBOARD_NO_PLUGIN_AUTO_UPDATE", "1")],
+        &[("AGPJ_NO_PLUGIN_AUTO_UPDATE", "1")],
     );
     assert_eq!(Fixture::notice(&opted_out), None);
     Fixture::settle();

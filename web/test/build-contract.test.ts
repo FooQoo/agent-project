@@ -10,7 +10,7 @@ const files = (folder: string) => readdirSync(join(dist, folder)).sort();
 describe('board build', () => {
   it('names its scripts and stylesheets by content and loads them from the page', () => {
     const page = read('index.html');
-    expect(page).toContain('name="agboard-build" content="{{AGBOARD_BUILD_ID}}"');
+    expect(page).toContain('name="agboard-build" content="{{AGPJ_BUILD_ID}}"');
     expect(page).toMatch(/src="\/assets\/app-[\w-]+\.js"/);
     expect(page).toMatch(/href="\/assets\/app-[\w-]+\.css"/);
     expect(files('assets')).not.toContain('app.js');

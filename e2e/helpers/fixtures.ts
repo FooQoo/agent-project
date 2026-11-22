@@ -19,14 +19,14 @@ export const test = base.extend<object, WorkerFixtures>({
   mainServe: [
     async ({}, use, workerInfo) => {
       const home = makeHome(`main-${workerInfo.workerIndex}`);
-      process.env.AGBOARD_E2E_HOME = home;
+      process.env.AGPJ_E2E_HOME = home;
       resetBoard(mainProject, home);
       const serve = await startServe(home);
-      process.env.AGBOARD_E2E_MAIN_URL = serve.url;
+      process.env.AGPJ_E2E_MAIN_URL = serve.url;
       await use({ ...serve, home });
       await stopServe(serve);
-      delete process.env.AGBOARD_E2E_MAIN_URL;
-      delete process.env.AGBOARD_E2E_HOME;
+      delete process.env.AGPJ_E2E_MAIN_URL;
+      delete process.env.AGPJ_E2E_HOME;
       removeHome(home);
     },
     { scope: 'worker', auto: true, timeout: serveStartTimeout + 30_000 },

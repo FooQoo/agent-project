@@ -428,10 +428,7 @@ fn the_hook_starts_the_server_in_the_background_but_not_after_stop() {
     let board = Board::new();
     let hooked = board.hook();
     assert!(hooked.status.success(), "{hooked:?}");
-    assert!(
-        text(&hooked.stdout).contains("AGBOARD_PROGRESS"),
-        "{hooked:?}"
-    );
+    assert!(text(&hooked.stdout).contains("AGPJ_PROGRESS"), "{hooked:?}");
     assert!(
         until(Duration::from_secs(20), || board.serve_info().is_some()),
         "the hook should start a server"

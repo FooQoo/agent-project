@@ -36,7 +36,7 @@ pub struct AskQuestion {
 #[derive(Debug, Clone)]
 pub struct AskInput {
     pub actor: Actor,
-    /// The board-launched session that asks (`AGBOARD_RESIDENT_ID`), recorded on each question.
+    /// The board-launched session that asks (`AGPJ_RESIDENT_ID`), recorded on each question.
     pub asked_by: Option<String>,
     pub questions: Vec<AskQuestion>,
     /// Tasks that wait on every question.

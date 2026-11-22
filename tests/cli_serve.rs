@@ -34,7 +34,7 @@ fn agboard(home: &Path) -> Command {
     cmd.env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
-        .env_remove("AGBOARD_RESIDENT_ID")
+        .env_remove("AGPJ_RESIDENT_ID")
         .env("AGPJ_OPEN_BROWSER", "0");
     cmd.env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
@@ -201,7 +201,7 @@ impl Serving {
             .env("AGPJ_AUTOSTART", "0")
             .env_remove("CLAUDE_CODE_SESSION_ID")
             .env_remove("CODEX_THREAD_ID")
-            .env_remove("AGBOARD_RESIDENT_ID")
+            .env_remove("AGPJ_RESIDENT_ID")
             .env("AGPJ_OPEN_BROWSER", "0")
             .args(args)
             .env("AGPJ_WATCH", "poll")

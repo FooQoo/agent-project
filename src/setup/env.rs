@@ -17,7 +17,7 @@ pub struct SetupEnv {
     pub claude_config_dir: Option<OsString>,
     /// `PATH`, where the `codex` and `claude` commands are looked up.
     pub path_var: Option<OsString>,
-    /// `AGBOARD_PLUGIN_MARKETPLACE`: a marketplace to install the plugin from
+    /// `AGPJ_PLUGIN_MARKETPLACE`: a marketplace to install the plugin from
     /// instead of the release tag on GitHub (a local checkout, for development).
     pub marketplace: Option<OsString>,
 }
@@ -30,7 +30,7 @@ impl SetupEnv {
             codex_home: std::env::var_os("CODEX_HOME"),
             claude_config_dir: std::env::var_os("CLAUDE_CONFIG_DIR"),
             path_var: std::env::var_os("PATH"),
-            marketplace: std::env::var_os("AGBOARD_PLUGIN_MARKETPLACE"),
+            marketplace: std::env::var_os("AGPJ_PLUGIN_MARKETPLACE"),
         }
     }
 
@@ -60,7 +60,7 @@ impl SetupEnv {
         Ok(self.codex_dir()?.join("rules").join("agboard.rules"))
     }
 
-    /// The marketplace override, when `AGBOARD_PLUGIN_MARKETPLACE` is set and
+    /// The marketplace override, when `AGPJ_PLUGIN_MARKETPLACE` is set and
     /// not empty.
     pub fn marketplace_override(&self) -> Option<String> {
         non_empty(&self.marketplace).map(|value| value.to_string_lossy().into_owned())

@@ -11,7 +11,7 @@ import { defineConfig } from '@playwright/test';
 //   cp -R web/dist-demo docs/.vitepress/dist/demo
 // Like the docs suite, it needs no global setup, no Rust build, and no AGPJ_HOME: the demo
 // keeps its board in the page. Runners can override the default port with their assigned port.
-const port = Number(process.env.AGBOARD_DEMO_E2E_PORT ?? 8446);
+const port = Number(process.env.AGPJ_DEMO_E2E_PORT ?? 8446);
 // Playwright empties its output folder at the start of a run, so each checkout has its own.
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const checkout = createHash('sha256').update(repoRoot).digest('hex').slice(0, 8);

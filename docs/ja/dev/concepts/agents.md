@@ -26,7 +26,7 @@
 
 `src/progress.rs`は、`Include`に応じて任意の`awaitingAnswer`節と`done`節を作ります。`agboard progress`と`agboard hook`が`--include-awaiting-answer`と`--include-done`から`Include`を作ります。既定の`Include`は何も追加しないため、既定の表は変わりません。オプションは[エピックと進行表](../../guide/watch/epics.md#進行表を読む)を参照してください。
 
-Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登録済みの祖先からプロジェクトを識別します。セッションIDは使わず、登録がないときに全プロジェクトを選ぶことも、最も近い登録が壊れているときに親へ戻ることもありません。保存した言語が英語以外のときは、返答の言語の手がかりとして、`preferences.json`から直接読んだ値（`src/server/preferences/`の`saved_locale`）を、一覧の最上位の`locale`に載せます。一覧は`hookSpecificOutput.additionalContext`に`AGBOARD_PROGRESS`のJSONとして返し、失敗したときは`bound_project_missing`などの`AGBOARD_ERROR`を返します。登録がまったくないフォルダはエラーではありません。[Hookのスキップとエラー](#hookのスキップとエラー)を参照してください。
+Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登録済みの祖先からプロジェクトを識別します。セッションIDは使わず、登録がないときに全プロジェクトを選ぶことも、最も近い登録が壊れているときに親へ戻ることもありません。保存した言語が英語以外のときは、返答の言語の手がかりとして、`preferences.json`から直接読んだ値（`src/server/preferences/`の`saved_locale`）を、一覧の最上位の`locale`に載せます。一覧は`hookSpecificOutput.additionalContext`に`AGPJ_PROGRESS`のJSONとして返し、失敗したときは`bound_project_missing`などの`AGPJ_ERROR`を返します。登録がまったくないフォルダはエラーではありません。[Hookのスキップとエラー](#hookのスキップとエラー)を参照してください。
 
 - **Claude Code。** プラグインの`hooks/claude.json`が、プロジェクト名を固定せずに`agboard hook --agent claude`をSessionStart（`startup`、`resume`、`clear`、`compact`）、PostToolUse、PostToolUseFailure、Stopに登録します。汎用スキルのfrontmatterのHookは使いません。
 - **Codex。** プラグインの`hooks/codex.json`が、`agboard hook --agent codex`をSessionStart、PostToolUse、Stopに登録します。Codexはプラグインのhookを、信頼されたものだけ実行します。信頼の設定は`agboard setup`と`agboard update`が行います（[setupとupdate](#setupとupdate)を参照）。
@@ -132,9 +132,9 @@ Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登�
 
 ボードは、自分を使っている外部のセッションを2通りの方法で数えます。`wait --until task`は、どのセッションが待っているかをサーバーに伝えます。イベントストリームのリクエストに、セッションのキー、ツール、起動元、プロジェクトのIDを`X-Agboard-Session*`ヘッダーで付けます（[張り付いたセッション](../reference/web-api.md#張り付いたセッション)を参照）。出力するJSONは変わりません。ほかの`agboard`コマンドと`agboard hook`の実行（フックはエージェントがツールを使うたびに動きます）も、待機するかどうかにかかわらずセッションを報告します。コマンドがプロジェクトを特定したあと、`src/agent/session_touch.rs`が同じヘッダーを付けた`POST /api/projects/{id}/sessions/touch`を、`serve.json`が指すサーバーへ1回送ります。ボードが起動したセッションは報告しません。サーバーが自分で数に加えるからです（[pushモード](#push-mode)を参照）。コマンドは自分の環境変数から下の値を読み、環境からはそれ以外を送りません。
 
-- 起動元: `AGBOARD_RESIDENT_ID`が設定されていれば（ボードの起動処理が設定します）`board`、なければ`external`です。
-- ツール: `AGBOARD_SESSION_TOOL`（`claude-code`または`codex`。ボードの起動処理が設定します）があれば、それが優先されます。なければ`CLAUDECODE`または`CLAUDE_CODE_SESSION_ID`があれば`claude-code`、`CODEX_THREAD_ID`、`CODEX_SANDBOX`、`CODEX_SANDBOX_NETWORK_DISABLED`のいずれかがあれば`codex`、どれもなければ`unknown`です。`CODEX_COMPANION_SESSION_ID`はClaude Codeのプラグインの変数でCodexのものではないため、使いません。
-- キー: `AGBOARD_RESIDENT_ID`、`CLAUDE_CODE_SESSION_ID`、`CODEX_THREAD_ID`のうち最初に設定されているもの、どれもなければ親プロセスIDです。送るキーは、接頭辞（`resident`、`claude`、`codex`、`ppid`）と、値のSHA-256の先頭16桁（16進数）で、値そのものは送りません。コマンドごとに新しいシェルを起動し、これらのどれも設定しないエージェントでは、親プロセスIDがコマンドごとに変わるため、待機するセッションは短いセッションが何本も見えます。ボードはこれを隠しません。
+- 起動元: `AGPJ_RESIDENT_ID`が設定されていれば（ボードの起動処理が設定します）`board`、なければ`external`です。
+- ツール: `AGPJ_SESSION_TOOL`（`claude-code`または`codex`。ボードの起動処理が設定します）があれば、それが優先されます。なければ`CLAUDECODE`または`CLAUDE_CODE_SESSION_ID`があれば`claude-code`、`CODEX_THREAD_ID`、`CODEX_SANDBOX`、`CODEX_SANDBOX_NETWORK_DISABLED`のいずれかがあれば`codex`、どれもなければ`unknown`です。`CODEX_COMPANION_SESSION_ID`はClaude Codeのプラグインの変数でCodexのものではないため、使いません。
+- キー: `AGPJ_RESIDENT_ID`、`CLAUDE_CODE_SESSION_ID`、`CODEX_THREAD_ID`のうち最初に設定されているもの、どれもなければ親プロセスIDです。送るキーは、接頭辞（`resident`、`claude`、`codex`、`ppid`）と、値のSHA-256の先頭16桁（16進数）で、値そのものは送りません。コマンドごとに新しいシェルを起動し、これらのどれも設定しないエージェントでは、親プロセスIDがコマンドごとに変わるため、待機するセッションは短いセッションが何本も見えます。ボードはこれを隠しません。
 
 報告はベストエフォートで、コマンドの動作を変えません。`serve.json`を読むだけでサーバーは起動せず、全体（接続、送信、返答の最初のバイト）で300ミリ秒を超えたら諦め、失敗はすべて無視します。そのため、サーバーがないとき、または古い`serve.json`があるときも、コマンドはこれまでどおり動いて同じ出力をします。報告するのは、自分のキーを持つセッションだけです。親プロセスID由来のキー（`ppid`）は報告しません。コマンドごとにシェルを起動するツールでは呼び出しのたびに別のセッションになってしまううえ、人が自分のターミナルで動かしたコマンドまでセッションに見えてしまうからです。このため、`CLAUDE_CODE_SESSION_ID`と`CODEX_THREAD_ID`のどちらも設定しないエージェントは、待機している間だけ数えられます。このルートはローカルの入口にだけあり、`/api/notify`と同じくページのトークンを求めず、ヘッダーの内容にかかわらず204を返します。有効なヘッダーのないリクエスト、ヘッダーのプロジェクトがパスと違うリクエスト、起動元が`board`のリクエストは、何も変えません。
 
@@ -146,7 +146,7 @@ Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登�
 
 起動処理がすること:
 
-- **確認。** CLIがサーバーの`PATH`にあり（なければ`agent_cli_missing`）、ログイン済みであること（`agent_cli_logged_out`）を確かめます。Claude Codeは`claude auth status`の`loggedIn`、Codexは`codex login status`が終了コード0で終わるかどうかです。これらの呼び出しとモデルの一覧は、リクエストが長く待たされないよう、それぞれ20秒を上限とします。ログインの確認が時間切れになると`session_launch_failed`です。`AGBOARD_CLAUDE_BIN`と`AGPJ_CODEX_BIN`は、`PATH`を探す代わりに実行ファイルを指定します。テストはこれに偽のスクリプトを指定します。
+- **確認。** CLIがサーバーの`PATH`にあり（なければ`agent_cli_missing`）、ログイン済みであること（`agent_cli_logged_out`）を確かめます。Claude Codeは`claude auth status`の`loggedIn`、Codexは`codex login status`が終了コード0で終わるかどうかです。これらの呼び出しとモデルの一覧は、リクエストが長く待たされないよう、それぞれ20秒を上限とします。ログインの確認が時間切れになると`session_launch_failed`です。`AGPJ_CLAUDE_BIN`と`AGPJ_CODEX_BIN`は、`PATH`を探す代わりに実行ファイルを指定します。テストはこれに偽のスクリプトを指定します。
 - **モデル。** Claude Codeにはモデルを一覧するコマンドがないので、固定の別名`opus`、`sonnet`、`haiku`、`fable`を示します。Codexは`codex debug models`で一覧し、`visibility`が`list`のモデルだけを示します。一覧を読めないとき（コマンドがない、失敗した、20秒を超えた、期待するJSONではない）は、`reason`付きの空の一覧を返し、モデルを指定しない起動ではツール自身の既定のモデルを使います。示していないモデルと、フラグに読めてしまう名前は、`invalid_value`で拒否します。
 - **承認。** Claude Codeは`--permission-mode auto --permission-prompts none`で動きます。レビュアーが各操作を確認し、確認が必要になる操作は、拒否されたツールの結果として返るので、人を待つことはありません。Codexは`codex app-server`として動き、スレッドはworkspace-writeのサンドボックス、`approvalPolicy`の`on-request`、`approvalsReviewer`の`auto_review`（自動レビュー。以前の1方向の起動での`--approve-for-me`に当たります）、`sandbox_workspace_write.writable_roots`のデータ領域で始まるので、セッションの`agboard`の書き込みがサンドボックスに阻まれません。`cwd`はプロジェクトのフォルダです。これらの設定を書いてあるのはここだけです。
 - **起動。** ツールやプロジェクトによらず、全体で1つです。この起動処理にすでに生きている子プロセスがあるとき（セッションが動き出す前の隙間を塞ぎます）、再起動が待っているとき、または、登録にどちらかのツールのボード起動のセッションが数えられているときは、枠を持っているツールを示す理由付きで`session_launch_refused`として拒否します。自分で起動した外部のセッションには上限がありません。子プロセスは、プロジェクトに結び付けたフォルダで起動し、出力は`<データ領域>/resident/<ツール>.log`に書きます。起動のたびに新しいファイルになり、直前の4回分は`<ツール>.1.log`（直前の起動）から`<ツール>.4.log`として残ります。起動処理はサーバーの標準エラー出力（バックグラウンドのサーバーでは`serve.log`）にも、子プロセスが起動したとき、終了を求められたとき（人の停止。再起動やモデル変更も最初に停止します。サーバーの終了。一度もつながらなかったセッションをボードが終わらせたとき）、終了したときに1行ずつ書きます。行には、UTCの時刻、ツール、起動ID、理由が入ります。停止が求めていない終了は`exited abnormally`と書かれ、続く行に監督が再起動するかどうかが書かれます。これらの行は`src/server/resident/events.rs`にあります。最初の指示はスキルを使ってターンを終えることを伝え、以後の仕事はボードが送ります。
@@ -154,7 +154,7 @@ Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登�
 - **Claude Code。** `ClaudeDriver`は`claude -p --input-format stream-json --output-format stream-json --verbose --permission-mode auto --permission-prompts none`（と`--model`）で動かすので、許可の扱いは以前と同じです。最初の指示は、標準入力へstream-jsonの`user`メッセージとして送り、入力はセッションの間ずっと開いたままにします。閉じるとセッションが終わるためです。出力は1行ずつJSONとして読み、必要なフィールドだけを使います（知らないメッセージは`Unknown`の出来事、8 MiBを超える行は読み飛ばします）。エラー出力は常にログへ流します。`system/init`のツールのバージョンはログに書きます。autoモードではCLIは通常、許可の問い合わせを送りません。送られてきた`can_use_tool`には`control_response`で答え（許可は入力を`updatedInput`として返し、拒否は理由を添えます）、知らない種類の制御要求にはエラーの応答を返します。
 - **Codex。** `CodexDriver`（`codex.rs`）は`codex app-server`を動かします。標準入出力は改行区切りのJSON-RPCで、`jsonrpc`フィールドはありません。`initialize`（クライアント名は`agboard`）と`initialized`を送り、続けて`thread/start`を送ります。パラメータは`cwd`、`model`（選んだときだけ）、`approvalPolicy: on-request`、`approvalsReviewer: auto_review`、`sandbox: workspace-write`、`config.sandbox_workspace_write.writable_roots`です。最初の指示が最初の`turn/start`です。この指示でエージェントはSkillを読み、`agboard wait`を実行せずにターンを終えます。仕事はそのあと、ボードが次のターンとして1つずつ送ります（[pushモード](#push-mode)を参照）。`Started`にはスレッドIDと、`initialize`の結果の`userAgent`から取ったバージョンを入れ、バージョンはログにも書きます。`send_user_message`は、待機中なら新しいターンを始め、ターンの実行中は`turn/steer`を使います。サーバーに断られた差し込みや、ターンがまだ分からないうちに届いたメッセージは待たせ、`turn/completed`のあとの次の`turn/start`で送ります。`interrupt`は`turn/interrupt`で、`is_idle`は`turn/started`と`turn/completed`に従います。`turn/completed`の状態が`failed`なら、エラーメッセージ付きの`TurnEnded(Failed)`です。サーバーを終わらせる要求はないので、`stop`は入力を閉じ、そのあとはClaude Codeと同じSIGTERMとSIGKILLの手順です。やり取りはプロセスを持たない状態機械（`codex_parse.rs`、`codex_inbound.rs`）で、こちらが送る要求のidとサーバーの要求のidを分けて持ち、`itemId`からitemへの対応表も持ちます。ファイル変更のパスは`item/started`にしか出ないからです。読むのは必要なフィールドだけで、`hook/*`、`mcpServer/*`、`account/*`、トークン使用量などは無視します。8 MiBを超える行は読み飛ばし、トレースの文字列であるエラーストリームはログに流します。
 - **Codexの承認。** ボードに届く承認の問い合わせ（`item/commandExecution/requestApproval`、`item/fileChange/requestApproval`）は`PermissionRequest`になり、`decide_permission`で答えます。`Allow`は`accept`、`Deny`は`decline`で、答えに理由の欄はないので理由は落ちます。サーバーからのそれ以外の要求にはJSON-RPCのエラー`-32601`を返します。答えないとターンが止まるからです。ふつうは自動レビューが先に答えます。codex-cli 0.170.0の実機では、サーバーが`auto_review`を受け付けて`thread/start`の結果にも反映し、ボードへの承認の問い合わせは来ませんでした。
-- **環境。** 子プロセスには、サーバーの環境から`CLAUDECODE`、`CLAUDE_CODE_*`、`CODEX_*`、`AGBOARD_RESIDENT_ID`を除いたものを渡します。サーバー自身のエージェントのセッションが、子プロセスを別のツールに見せないためです。`CODEX_HOME`、`CODEX_API_KEY`、`CLAUDE_CODE_OAUTH_TOKEN`は、CLIの設定やサインインに使うので残します。そのうえで`AGBOARD_RESIDENT_ID`（ランダムな起動ID）、`AGBOARD_SESSION_TOOL`、`AGBOARD_SESSION_ORIGIN=board`を設定します。これにより、子プロセスの`agboard`コマンドが外部のセッションと区別されます。`message ask`は、保存する各質問に`AGBOARD_RESIDENT_ID`を`askedBy`として記録し、これらの変数を付けて実行した`wait`は起動元`board`を報告します。
+- **環境。** 子プロセスには、サーバーの環境から`CLAUDECODE`、`CLAUDE_CODE_*`、`CODEX_*`、`AGPJ_RESIDENT_ID`を除いたものを渡します。サーバー自身のエージェントのセッションが、子プロセスを別のツールに見せないためです。`CODEX_HOME`、`CODEX_API_KEY`、`CLAUDE_CODE_OAUTH_TOKEN`は、CLIの設定やサインインに使うので残します。そのうえで`AGPJ_RESIDENT_ID`（ランダムな起動ID）、`AGPJ_SESSION_TOOL`、`AGPJ_SESSION_ORIGIN=board`を設定します。これにより、子プロセスの`agboard`コマンドが外部のセッションと区別されます。`message ask`は、保存する各質問に`AGPJ_RESIDENT_ID`を`askedBy`として記録し、これらの変数を付けて実行した`wait`は起動元`board`を報告します。
 - **停止。** 子プロセスは、自分のプロセスグループの先頭です。停止はドライバーに終了を頼みます。ドライバーは子プロセスの標準入力を閉じ、短い猶予（1.5秒）を置いてからグループへSIGTERMを送り、5秒後にSIGKILLを送ります。子プロセスが先に終了しても、その子が起動したコマンドがグループに残っているとき（SIGTERMを無視するものなど）は、それにもSIGKILLを送ります。そのうえで、そのセッションの登録をすぐに外します。すでにいないセッションの30秒の猶予のために、次の起動が拒否されることはありません。子プロセスが自分で終了したときも同じで、すべての子プロセスをスレッドが待つので、ゾンビは残りません。停止、起動、再起動は1つずつ順に実行します。停止は、その前に用意された自動起動や再起動も取り消すので、どれもセッションを復活させません。サーバーが終了するときは、起動したすべての子プロセスを止めます。強制終了されたサーバーは、これを行えず、子プロセスが動いたまま残ります。
 - **健全性と再起動。** 人が起動すると、ボードはそのセッションを動かし続けます。誰も止めていない子プロセスが終了すると、監視が同じプロジェクト、ツール、モデルでもう一度起動します。待ち時間は2秒から始まり、失敗のたびに倍になります（上限は60秒）。10分以内に5回失敗すると再起動をやめ、健全性は理由付きの`failed`になり、人が起動し直すまでそのままです。10分動き続けたセッションは、数え直しになります。プロセスの起動に失敗したときも失敗として数えます。コマンドがない、ログインしていない、プロジェクトがなくなったときは、再試行しても直らないので、すぐに`failed`にします。人が止めると、その記録が消えるので、再起動にはならず、待っている再起動や表示中の失敗も消えます。
 - **不健全な子プロセス。** 生きていても一度も動き出さない子プロセスは入れ替えます。ドライバーが最初の`Started`または`TurnEnded`を報告した子プロセスは、張り付いたものとみなし、監視は1秒ごとに確認します。新しい子プロセスが張り付くまでの猶予は3分で、張り付かなければ、停止と同じ方法で終了し、理由（`never started`）を記録します。この終了も、ほかの終了と同じく失敗として数えます。一度張り付いた子プロセスは、プロセスの終了だけで終わりとみなします。タスクのターンはどんな上限よりずっと長くかかることがあるためです。健全性は`waiting`（セッションが張り付いていて、ターンの合間にいる）を返すので、画面は動作中のセッションを作業中として表示できます。ボードが起動したセッションの健全性に、レジストリは関わりません。作業中のセッションが道具を動かしているとは限らず、サブエージェントやバックグラウンドのコマンドを待っていることがあります。`ClaudeDriver`は、stream-jsonのシステムメッセージ`task_started`と`task_notification`（または最終状態の`task_updated`）を読み、終わっていない作業の集合を保ちます。開始と終了はそのたびに`agboard:`のメモとしてログに書き、セッションが待機中でないあいだは、その集合を健全性の`backgroundTasks`として返します。こうしてボードは、止まっているように見せず「作業中（サブエージェント待ち）」と表示できます。
@@ -168,7 +168,7 @@ pusherが見るとき。ボードが変わったとき（サーバーが変更�
 
 送るもの。`wait --until task`と同じ順序で、一度に1つの指示です。
 
-1. 誰も受領していない回答のうち、`askedBy`を持つ質問へのもの。`message ask`は`AGBOARD_RESIDENT_ID`をそこに記録するので、ボードが起動したセッションの質問と、外部のセッションが出した質問（`askedBy`がありません）を区別できます。ボードが起動したセッションは同時に1つまでなので、`askedBy`を持つ質問は、いまのセッションか以前の実行が出したもので、どちらでも伝える相手はこのセッションです。外部のセッションの質問への回答は、そのセッション自身の`wait`や`message wait`に任せます。
+1. 誰も受領していない回答のうち、`askedBy`を持つ質問へのもの。`message ask`は`AGPJ_RESIDENT_ID`をそこに記録するので、ボードが起動したセッションの質問と、外部のセッションが出した質問（`askedBy`がありません）を区別できます。ボードが起動したセッションは同時に1つまでなので、`askedBy`を持つ質問は、いまのセッションか以前の実行が出したもので、どちらでも伝える相手はこのセッションです。外部のセッションの質問への回答は、そのセッション自身の`wait`や`message wait`に任せます。
 2. 未処理の依頼。pusherは送る直前にボードを読むので、外部のセッションがすでに受領した依頼（`message accept`が成功するのは最初の1回だけです）は送りません。
 3. 次の着手可能なタスク。`wait --until task`と同じ基準で選びます。AIのタスクで、未着手または進行中にあり、Idle、Paused、またはHas runで、下書きでもアーカイブ済みでもなく、未着手ならエピックのウェーブで待たされていないものです。すでに誰かが作業しているタスクはRunningなので送りません。同じタスクを外部のセッションが同時に取った場合の競合は、外部のセッション同士と同じです。最初に開始した側が勝ち、もう一方は読み直して次へ進みます。
 
@@ -224,10 +224,10 @@ Hookは、`FileStore::resolve_binding`でプロジェクトを解決します。
 
 | 入力・状態 | 動作 |
 | --- | --- |
-| `cwd`が登録済みのフォルダ、そのサブフォルダ、またはより近い入れ子の登録済みフォルダの中 | 最も近いプロジェクトだけを、`AGBOARD_PROGRESS`として返します。 |
+| `cwd`が登録済みのフォルダ、そのサブフォルダ、またはより近い入れ子の登録済みフォルダの中 | 最も近いプロジェクトだけを、`AGPJ_PROGRESS`として返します。 |
 | フォルダの登録情報が正常で、`cwd`が読め、一致する登録がない | stdoutにもstderrにも出力せず、終了コード0。ボードは読みません。 |
 | 最も近い登録のプロジェクトが存在しない | `bound_project_missing`。親へ戻りません。 |
-| フォルダの登録情報が壊れている、または読めない | 原因を付けた`AGBOARD_ERROR`。未登録とは扱いません。 |
+| フォルダの登録情報が壊れている、または読めない | 原因を付けた`AGPJ_ERROR`。未登録とは扱いません。 |
 | 入力がJSONでない、型が違う、大きすぎる | これまでどおり`invalid_hook_input`。 |
 | `cwd`がない、`null`、空 | プロセスの作業フォルダを使います。 |
 | `cwd`が文字列でない、または相対パス | `invalid_hook_input`。 |
@@ -246,7 +246,7 @@ Hookは、`FileStore::resolve_binding`でプロジェクトを解決します。
 
 どちらのエージェントも、プラグインは、導入したタグのマーケットプレイスの写しとして持ちます。そのため新しい`agboard`にしても、古いプラグインはそのまま残ります。ビルドスクリプト（`build.rs`）は`plugins/agent-board/`のすべてのファイル（`.DS_Store`を除く）をハッシュし、ファイルの一覧とハッシュを埋め込みます（`src/plugin_hash.rs`、`src/setup/auto_update.rs`）。ハッシュは、各ファイルの相対パスと内容に対するFNV-1aです。マニフェストにはクレートの版が入っているので、リリースごとにハッシュが変わります。
 
-SessionStartで、Hookは進行表を出したあと、エージェントが設定するルートの環境変数から導入済みのプラグインを見つけます（Claude Codeは`CLAUDE_PLUGIN_ROOT`、Codexは`PLUGIN_ROOT`で、なければ`CLAUDE_PLUGIN_ROOT`）。そこにある同じ相対パスのファイルをハッシュして比べます（エージェントが加えたファイルは無視し、足りないファイルは違いとみなします）。一致する、環境変数がない・空、ほかのHookイベント、`AGBOARD_NO_PLUGIN_AUTO_UPDATE`が`0`以外に設定されている、のいずれでも何もしません。違うときは`agboard update --agent <agent> --yes --background`を、切り離したプロセス（`setsid`、入出力なし）として始めるので、Hookは制限時間内に戻ります。そして`AGBOARD_NOTICE`を加えます。プラグインを`agboard`の版へ更新中で、次のセッションから有効になる、という内容です。フォルダが未登録のときは、この通知が出力のすべてになります。
+SessionStartで、Hookは進行表を出したあと、エージェントが設定するルートの環境変数から導入済みのプラグインを見つけます（Claude Codeは`CLAUDE_PLUGIN_ROOT`、Codexは`PLUGIN_ROOT`で、なければ`CLAUDE_PLUGIN_ROOT`）。そこにある同じ相対パスのファイルをハッシュして比べます（エージェントが加えたファイルは無視し、足りないファイルは違いとみなします）。一致する、環境変数がない・空、ほかのHookイベント、`AGPJ_NO_PLUGIN_AUTO_UPDATE`が`0`以外に設定されている、のいずれでも何もしません。違うときは`agboard update --agent <agent> --yes --background`を、切り離したプロセス（`setsid`、入出力なし）として始めるので、Hookは制限時間内に戻ります。そして`AGPJ_NOTICE`を加えます。プラグインを`agboard`の版へ更新中で、次のセッションから有効になる、という内容です。フォルダが未登録のときは、この通知が出力のすべてになります。
 
 バックグラウンドの実行は、そのエージェントについて`agboard update`と同じことをします。違いは次のとおりです。
 
@@ -257,7 +257,7 @@ SessionStartで、Hookは進行表を出したあと、エージェントが設�
 - **タグの確認。** 既定の取得元では、エージェントのコマンドより前に`git ls-remote --exit-code --tags <repo> refs/tags/v<version>`を実行し（制限時間15秒）、終了コード0のときだけ続けます。タグがない（終了コード2。最後のリリースより進んだ開発ビルド）、ネットワークエラー、タイムアウト、`git`がない、のいずれでも止めて失敗として記録します。追加し直せないマーケットプレイスを消さないためです。次にいつ試すかは、再試行の間隔が決めます。
 - **無言。** 何も出力せず、Hookは終わりを待ちません。
 
-`AGBOARD_PLUGIN_MARKETPLACE`は、`agboard update`と同じく取得元を置き換えます。テストはこれと`tests/support/fake_agents.rs`の偽のエージェントを使います。利用者から見た動きは、[プラグインを更新する](../../guide/delegate/agents.md#update-the-plugin)を参照してください。
+`AGPJ_PLUGIN_MARKETPLACE`は、`agboard update`と同じく取得元を置き換えます。テストはこれと`tests/support/fake_agents.rs`の偽のエージェントを使います。利用者から見た動きは、[プラグインを更新する](../../guide/delegate/agents.md#update-the-plugin)を参照してください。
 
 ## setupとupdate
 
@@ -271,7 +271,7 @@ SessionStartで、Hookは進行表を出したあと、エージェントが設�
 各部分の役割は次のとおりです。
 
 - **エージェントのコマンド。** `agent_cli.rs`は、`codex`と`claude`をシェルを使わずに`PATH`から探し、入力なしで時間制限を付けて実行し、出力を受け取ります。テストは偽のコマンドを`PATH`の先頭に置くので（`tests/support/fake_agents.rs`）、本物のエージェントやネットワークに触れることはありません。
-- **プラグインの導入。** `plugin.rs`は、`https://github.com/FooQoo/agent-board.git`のタグ`v<version>`でマーケットプレイスを追加し、`codex plugin add agent-board@agent-board`、または`claude plugin install`と`claude plugin update`を実行します。マーケットプレイスがすでに別の取得元から追加されているとき（Codexは別の取得元から追加済みであることを、Claude Codeは失敗コード`declared`を報告します）は、マーケットプレイスを削除して追加し直します。どちらのエージェントでも、これがマーケットプレイスを新しいタグへ移す方法です。開発では、`AGBOARD_PLUGIN_MARKETPLACE`で取得元をローカルのチェックアウトなど別の場所に差し替えられます。
+- **プラグインの導入。** `plugin.rs`は、`https://github.com/FooQoo/agent-board.git`のタグ`v<version>`でマーケットプレイスを追加し、`codex plugin add agent-board@agent-board`、または`claude plugin install`と`claude plugin update`を実行します。マーケットプレイスがすでに別の取得元から追加されているとき（Codexは別の取得元から追加済みであることを、Claude Codeは失敗コード`declared`を報告します）は、マーケットプレイスを削除して追加し直します。どちらのエージェントでも、これがマーケットプレイスを新しいタグへ移す方法です。開発では、`AGPJ_PLUGIN_MARKETPLACE`で取得元をローカルのチェックアウトなど別の場所に差し替えられます。
 - **設定ファイル。** `plan.rs`、`codex.rs`、`claude.rs`が各ファイルの新しい内容を求めます。CodexのTOMLは`toml_edit`で編集し、コメント・ほかのキー・配列を保ちます。Claude CodeのJSONは未知のキーを保ちます。Codexには`sandbox_workspace_write.writable_roots`へのデータフォルダの追加と、ルールファイル`$CODEX_HOME/rules/agboard.rules`を、Claude Codeには`permissions.additionalDirectories`へのデータフォルダの追加を行います。`update`は設定ファイルを変えません。
 - **書き込み。** `apply.rs`と`apply/files.rs`は、既存の各ファイルを同じフォルダの`<file>.agboard-backup…`に退避し、一時ファイルと名前の変更で置き換え、後の書き込みが失敗したときは、その実行が書いたものを戻します。計画の後に変わったファイルは上書きしません。シンボリックリンクは解決して実体のファイルを編集します。
 - **hookの信頼。** `trust.rs`は`codex app-server`を起動し、`hooks/list`でhookの一覧を受け取り、Agent Boardの各hookの現在のハッシュを`config/value/write`で`hooks.state`に保存します。触れるのはこのプラグインのhookだけです。Codexは信頼をプラグインの内容に結び付けるので、導入や更新のたびにhookを信頼し直します。

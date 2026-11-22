@@ -174,7 +174,7 @@ How a session names itself: a command that waits for tasks sends four headers wi
 | `X-Agboard-Session-Tool` | `claude-code`, `codex`, or `unknown`. |
 | `X-Agboard-Session-Origin` | `board` or `external`. |
 
-The limit on launching is held by the launcher: it refuses a launch while it has a live child or a waiting restart, and also when `SessionRegistry::check_board_launch()` finds a board-origin wait of a session it does not know. Board-launched sessions are limited to one in total, over both tools and all projects. The refusal names the tool that holds the slot. External sessions are never limited or counted against the limit. `AGBOARD_SESSION_GRACE_MS` replaces the 30-second grace period with a number of milliseconds; tests use it. The five-minute access window is fixed.
+The limit on launching is held by the launcher: it refuses a launch while it has a live child or a waiting restart, and also when `SessionRegistry::check_board_launch()` finds a board-origin wait of a session it does not know. Board-launched sessions are limited to one in total, over both tools and all projects. The refusal names the tool that holds the slot. External sessions are never limited or counted against the limit. `AGPJ_SESSION_GRACE_MS` replaces the 30-second grace period with a number of milliseconds; tests use it. The five-minute access window is fixed.
 
 ### Launching sessions
 

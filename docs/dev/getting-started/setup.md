@@ -79,7 +79,7 @@ pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-board/demo/
 
 How it differs from the product build:
 
-- The pages are served from `/agent-board/demo/`. Set `AGBOARD_DEMO_BASE` (for example `AGBOARD_DEMO_BASE=/demo/`) when building to use another folder.
+- The pages are served from `/agent-board/demo/`. Set `AGPJ_DEMO_BASE` (for example `AGPJ_DEMO_BASE=/demo/`) when building to use another folder.
 - The sample-data server runs in the page, behind a Service Worker (MSW) that answers `/api/` requests, the live stream, and attachment images. The worker script is emitted next to `index.html`. A browser with no Service Worker support shows a notice instead of the board.
 - The page has a fixed token and an empty build ID, so it never reloads for a new build. Reloading the page restores the sample data and opens the first-run guide again.
 - Features that need a computer are hidden: project Docs (with its buttons that open files and folders), the remote access connection, and saving pasted or dropped images.
@@ -193,11 +193,11 @@ On macOS, the remote access token lives in the Keychain, and the "Always Allow" 
 
 ```sh
 security find-identity -v -p codesigning   # list your signing identities
-export AGBOARD_CODESIGN_IDENTITY="<identity name or SHA-1>"
+export AGPJ_CODESIGN_IDENTITY="<identity name or SHA-1>"
 scripts/dev/install-local.sh
 ```
 
-`just install` builds the web UI and then runs this script, so it signs the same way when `AGBOARD_CODESIGN_IDENTITY` is set. Without `AGBOARD_CODESIGN_IDENTITY`, or on another OS, the script installs without signing and prints a note.
+`just install` builds the web UI and then runs this script, so it signs the same way when `AGPJ_CODESIGN_IDENTITY` is set. Without `AGPJ_CODESIGN_IDENTITY`, or on another OS, the script installs without signing and prints a note.
 
 - The first run after signing still asks once. Choose **Always Allow**.
 - `codesign` may ask once for permission to use the signing key. Enter your login password and choose **Always Allow**. Run the script from a terminal app: from a non-GUI context, `codesign` can fail with `errSecInternalComponent`.

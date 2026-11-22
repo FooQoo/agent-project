@@ -27,11 +27,11 @@ use crate::server::monitor_connection::lifecycle::{Secret, parse_domain, parse_t
 /// The file, as the data area's users see it in messages.
 const FILE: &str = ".internal/monitor-connection.json";
 
-/// The vault the command line uses: the OS keychain. `AGBOARD_KEYCHAIN=none`
+/// The vault the command line uses: the OS keychain. `AGPJ_KEYCHAIN=none`
 /// makes the keychain unavailable, so a test or a locked-down machine never
 /// touches it.
 pub fn vault_from_process() -> Arc<dyn TokenVault> {
-    if std::env::var("AGBOARD_KEYCHAIN").is_ok_and(|v| v == "none") {
+    if std::env::var("AGPJ_KEYCHAIN").is_ok_and(|v| v == "none") {
         Arc::new(NoKeychain)
     } else {
         Arc::new(OsKeychain)

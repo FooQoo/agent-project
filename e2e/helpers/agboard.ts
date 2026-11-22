@@ -26,7 +26,7 @@ export const betaFixture = path.resolve(here, '..', 'fixtures', 'multi-project-b
 export const mainProject = 'agent-board';
 
 export function agboardBinary(): string {
-  return process.env.AGBOARD_E2E_BINARY ?? path.join(repoRoot, 'target', 'debug', 'agboard');
+  return process.env.AGPJ_E2E_BINARY ?? path.join(repoRoot, 'target', 'debug', 'agboard');
 }
 
 /*
@@ -38,15 +38,15 @@ const notInWorker = 'is not set; import test from helpers/fixtures';
 
 /** The data directory of this worker, shared by its main serve and the CLI helper. */
 export function mainHome(): string {
-  const home = process.env.AGBOARD_E2E_HOME;
-  if (!home) throw new Error(`AGBOARD_E2E_HOME ${notInWorker}`);
+  const home = process.env.AGPJ_E2E_HOME;
+  if (!home) throw new Error(`AGPJ_E2E_HOME ${notInWorker}`);
   return home;
 }
 
 /** The URL of this worker's main serve, such as `http://127.0.0.1:53124/`. */
 export function mainUrl(): string {
-  const url = process.env.AGBOARD_E2E_MAIN_URL;
-  if (!url) throw new Error(`AGBOARD_E2E_MAIN_URL ${notInWorker}`);
+  const url = process.env.AGPJ_E2E_MAIN_URL;
+  if (!url) throw new Error(`AGPJ_E2E_MAIN_URL ${notInWorker}`);
   return url;
 }
 
@@ -429,7 +429,7 @@ export function resetBoard(project: string, home: string = mainHome()): void {
 export function restoreProject(project: string, file: string, home: string = mainHome(), serveUrl?: string): void {
   ensureProject(project, home);
   seedProject(project, file, home);
-  const url = serveUrl ?? (home === process.env.AGBOARD_E2E_HOME ? process.env.AGBOARD_E2E_MAIN_URL : undefined);
+  const url = serveUrl ?? (home === process.env.AGPJ_E2E_HOME ? process.env.AGPJ_E2E_MAIN_URL : undefined);
   if (url) waitForServeToShow(url, project, file, projectId(project, home));
 }
 

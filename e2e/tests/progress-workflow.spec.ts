@@ -93,7 +93,7 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
     }));
     expect(hook.code, hook.stderr).toBe(0);
     const hookOutput = JSON.parse(hook.stdout).hookSpecificOutput.additionalContext as string;
-    expect(hookOutput).toContain('AGBOARD_PROGRESS\n');
+    expect(hookOutput).toContain('AGPJ_PROGRESS\n');
     expect(hookOutput).toContain('Workflow E2E');
     const unregistered = run(['progress', '--json'], home, home);
     expect(unregistered.code).not.toBe(0);

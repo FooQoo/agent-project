@@ -69,11 +69,11 @@
 `agboard hook --agent claude|codex`は、エージェント向けにJSONを出力します。
 
 ```json
-{ "hookSpecificOutput": { "hookEventName": "PostToolUse", "additionalContext": "AGBOARD_PROGRESS\n{…}" } }
+{ "hookSpecificOutput": { "hookEventName": "PostToolUse", "additionalContext": "AGPJ_PROGRESS\n{…}" } }
 ```
 
-- `additionalContext`には、成功時は`AGBOARD_PROGRESS`と進行表のJSONが入ります。失敗時は`AGBOARD_ERROR`に続き、`code`と理由、ボードに依存する変更を止めるよう促す注意文が入ります。
-- `AGBOARD_ERROR`のコード: `bound_project_missing`・`project_not_found`・`board_unavailable`・`context_too_large`・`invalid_hook_input`（JSONが不正、または`cwd`が文字列でない、絶対パスでない）・`hook_cwd_unavailable`（`cwd`が存在しない、または読めない）。`folder_unbound`は、Hookの出力ではなくなりました。
+- `additionalContext`には、成功時は`AGPJ_PROGRESS`と進行表のJSONが入ります。失敗時は`AGPJ_ERROR`に続き、`code`と理由、ボードに依存する変更を止めるよう促す注意文が入ります。
+- `AGPJ_ERROR`のコード: `bound_project_missing`・`project_not_found`・`board_unavailable`・`context_too_large`・`invalid_hook_input`（JSONが不正、または`cwd`が文字列でない、絶対パスでない）・`hook_cwd_unavailable`（`cwd`が存在しない、または読めない）。`folder_unbound`は、Hookの出力ではなくなりました。
 - **静かなスキップ。** フォルダの登録情報が正常で、`cwd`が読め、一致する登録がないとき、Hookはstdoutにもstderrにも出力せず、終了コード0で終わります。そのため、GlobalのHookが、プロジェクトのないフォルダでの作業を妨げることはありません。[Hookのスキップとエラー](../concepts/agents.md#hookのスキップとエラー)を参照してください。
 - **Stop。** StopイベントではHookは何も出力しません。ターンの終わりにルールが項目（ボードにない質問、記録されていない成果）を出したときだけ、一度`{ "decision": "block", "reason": "..." }`を出します。理由はチェックリストで、確定した違反は`Found:`の下に`- NG: ...`、エージェントが判断する項目は`Check:`の下に`- [ ] ...`で並びます。[Stop](../concepts/agents.md)を参照してください。
 - 表を加えるとき、サーバーが動いていなければ、Hookは裏で起動もします。出力は変わらず、失敗は`serve.log`に残ります。

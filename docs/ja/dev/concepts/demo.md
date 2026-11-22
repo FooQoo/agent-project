@@ -79,7 +79,7 @@ flowchart LR
 
 ## ビルドする
 
-コマンドとベースパスの指定は、[開発環境のセットアップのデモビルド](../getting-started/setup.md#demo-build)にあります。要点は、`pnpm --dir web build:demo`がベース`/agent-board/demo/`向けに`web/dist-demo/`を書き出し、`AGBOARD_DEMO_BASE`でベースを変えられることです。
+コマンドとベースパスの指定は、[開発環境のセットアップのデモビルド](../getting-started/setup.md#demo-build)にあります。要点は、`pnpm --dir web build:demo`がベース`/agent-board/demo/`向けに`web/dist-demo/`を書き出し、`AGPJ_DEMO_BASE`でベースを変えられることです。
 
 `.github/workflows/docs.yml`は、ドキュメントサイトをビルドし、デモをビルドし、`web/dist-demo/`を`docs/.vitepress/dist/demo/`にコピーします。VitePressはビルドのたびに出力フォルダーを空にするので、コピーはサイトのビルドのあとです。サイトのワークフローのそのほかの部分は[ドキュメントと画像](../docs-and-images.md#ドキュメントサイト)を参照してください。
 
@@ -97,7 +97,7 @@ cp -R web/dist-demo docs/.vitepress/dist/demo
 pnpm --dir e2e test:demo
 ```
 
-このスイート（`e2e/playwright.demo.config.ts`と`e2e/demo/`）は、`docs/.vitepress/dist/`を`vitepress preview`でポート8446（または`AGBOARD_DEMO_E2E_PORT`）から配信し、Chromiumで`/agent-board/demo/`を開きます。ドキュメントサイトのスイートと同じく、ボードがページの中にあるので、Rustのビルドも`AGPJ_HOME`も要りません。PlaywrightはService Workerを既定で許可し、デモはワーカーがページを制御するまでボードを描画しないので、テストに追加の待機は要りません。Playwrightの設定に`serviceWorkers`を入れないでください。確かめる内容は次のとおりです。
+このスイート（`e2e/playwright.demo.config.ts`と`e2e/demo/`）は、`docs/.vitepress/dist/`を`vitepress preview`でポート8446（または`AGPJ_DEMO_E2E_PORT`）から配信し、Chromiumで`/agent-board/demo/`を開きます。ドキュメントサイトのスイートと同じく、ボードがページの中にあるので、Rustのビルドも`AGPJ_HOME`も要りません。PlaywrightはService Workerを既定で許可し、デモはワーカーがページを制御するまでボードを描画しないので、テストに追加の待機は要りません。Playwrightの設定に`serviceWorkers`を入れないでください。確かめる内容は次のとおりです。
 
 - ページを開くと案内が始まり、「AI に依頼」でのサンプルの依頼の送信と質問への回答を含めて、PC幅でもスマホ幅でも最後まで進む
 - 案内のあと、カードを別のレーンにドラッグで移動できる

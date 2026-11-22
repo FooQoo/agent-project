@@ -40,7 +40,7 @@ fn hook_table(shared: &Path) -> Value {
     let context = parsed["hookSpecificOutput"]["additionalContext"]
         .as_str()
         .unwrap();
-    serde_json::from_str(context.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap()
+    serde_json::from_str(context.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap()
 }
 
 fn cli_table(home: &Path) -> Value {

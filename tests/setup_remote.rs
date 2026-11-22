@@ -1,7 +1,7 @@
 //! `agboard setup remote`: save the ngrok connection settings.
 //!
 //! Runs the real `agboard` binary with `AGPJ_HOME` in a temporary directory and
-//! `AGBOARD_KEYCHAIN=none`, so the real keychain is never touched. No server is
+//! `AGPJ_KEYCHAIN=none`, so the real keychain is never touched. No server is
 //! started and port 7420 is never used.
 
 use std::path::Path;
@@ -16,7 +16,7 @@ fn agboard(home: &Path) -> Command {
     let mut cmd = Command::cargo_bin("agboard").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
-        .env("AGBOARD_KEYCHAIN", "none")
+        .env("AGPJ_KEYCHAIN", "none")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .env_remove("NGROK_AUTHTOKEN")

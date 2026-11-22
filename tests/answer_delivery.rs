@@ -116,7 +116,7 @@ fn the_hook_carries_the_unaccepted_answers() {
         .as_str()
         .unwrap();
     let table: Value =
-        serde_json::from_str(context.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(context.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(table["answers"][0]["id"], id.as_str());
     assert_eq!(table["answers"][0]["choiceLabel"], "Blue");
 }

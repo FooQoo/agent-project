@@ -87,15 +87,15 @@
 | `invalid_domain` | `setup remote --domain`の値がホスト名だけではない（スキーム、パス、ポート、ワイルドカード、空白を含む）。ボードの設定APIも同じコードをHTTP 422で返す。何も保存しない。 | 2 | 422 |
 | `keychain_unavailable` | `setup remote --token-stdin`（または`setup`のトークンの質問）がOSのキーチェーンを使えない。同じコマンドのほかのオプションも含めて、何も保存しない。ボードのAPIも同じコードをHTTP 409で返す。 | 1 | 409 |
 | `browser_open_failed` | `open`が、ブラウザーを開くプログラム（`open`、`xdg-open`、`AGPJ_BROWSER_OPENER`）を起動できなかった。理由に、手で開くアドレスを示す。ブラウザーを開いてはいけないとき（`AGPJ_OPEN_BROWSER=0`、SSH、画面がない）はエラーではない。 | 1 | なし |
-| `agent_cli_missing` | `claude`または`codex`がサーバーの`PATH`にない（または`AGBOARD_CLAUDE_BIN`・`AGPJ_CODEX_BIN`がファイルを指していない）ため、ボードがセッションを起動できない。 | 1 | 409 |
+| `agent_cli_missing` | `claude`または`codex`がサーバーの`PATH`にない（または`AGPJ_CLAUDE_BIN`・`AGPJ_CODEX_BIN`がファイルを指していない）ため、ボードがセッションを起動できない。 | 1 | 409 |
 | `agent_cli_logged_out` | エージェントのCLIはあるが、ログインしていない（`claude auth status`の`loggedIn`がfalse、または`codex login status`が失敗）。理由に、ターミナルでログインするよう示す。 | 1 | 409 |
 | `session_launch_refused` | どちらかのツールのセッションをボードがすでに起動していて、動いている、再起動を待っている、または張り付いている。ボードが起動するセッションは、2つのツールと全プロジェクトを通して全体で1つまで。理由に、そのツールを示し、先に止めるよう示す。 | 1 | 409 |
 | `session_launch_failed` | エージェントのCLIを起動できなかった、ログファイルに書けなかった、またはログインの確認が20秒以内に終わらなかった。 | 1 | 500 |
 | `project_has_no_folder` | プロジェクトに、存在する結び付いたフォルダがないため、セッションを起動できない。`agboard project bind`で結び付ける。 | 1 | 409 |
 | `cursor_invalid` | cursorの形式が誤っている、または別のプロジェクトのもの。 | 1 | なし |
 | `wait_timeout` | 変更待ち（`wait --after`）が、変更のないまま任意の`--timeout`に達した。`message ask`や`message wait`が`--timeout`に達するのはエラーではなく、`timeout`イベントを出して終了コード5で終わる。 | 1 | なし |
-| `hook_cwd_unavailable` | Hookの入力の`cwd`が、存在しない、または読めない絶対パス。`AGBOARD_ERROR`として返す。確認できないフォルダを未登録とは扱わない。 | なし（Hookの出力） | なし |
-| `invalid_hook_input` | Hookの入力がJSONでない、大きすぎる、または`cwd`が文字列でない、絶対パスでない。`AGBOARD_ERROR`として返す。 | なし（Hookの出力） | なし |
+| `hook_cwd_unavailable` | Hookの入力の`cwd`が、存在しない、または読めない絶対パス。`AGPJ_ERROR`として返す。確認できないフォルダを未登録とは扱わない。 | なし（Hookの出力） | なし |
+| `invalid_hook_input` | Hookの入力がJSONでない、大きすぎる、または`cwd`が文字列でない、絶対パスでない。`AGPJ_ERROR`として返す。 | なし（Hookの出力） | なし |
 | `forbidden` | Webの書き込みが保護に失敗した（Host・Origin・`Sec-Fetch-Site`・トークン）。 | なし | 403 |
 | `invalid_sections` | Detail経路の`sections`クエリが`document`・`history`・`document,history`のいずれでもない。[Web API](./web-api.md#summaryとdetail)を参照。 | なし | 400 |
 | `not_implemented` | SummaryまたはDetailの経路はあるが、ハンドラーがまだ書かれていない。 | なし | 501 |

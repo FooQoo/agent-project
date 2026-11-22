@@ -484,7 +484,7 @@ fn index_is_html_with_a_fresh_64_hex_token() {
         Some("text/html; charset=utf-8")
     );
     assert_eq!(page.cache_control.as_deref(), Some("no-store"));
-    assert!(!page.body.contains("{{AGBOARD_TOKEN}}"));
+    assert!(!page.body.contains("{{AGPJ_TOKEN}}"));
     let token = server.token();
     assert_eq!(token.len(), 64);
     assert!(token.chars().all(|c| matches!(c, '0'..='9' | 'a'..='f')));

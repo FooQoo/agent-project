@@ -17,8 +17,8 @@ const REAL_WINDOW_FILES = [
 ];
 
 export default defineConfig(({ mode }) => {
-  const backendOrigin = `http://127.0.0.1:${process.env.AGBOARD_BACKEND_PORT ?? '7421'}`;
-  const webOrigin = `http://127.0.0.1:${process.env.AGBOARD_WEB_PORT ?? '7420'}`;
+  const backendOrigin = `http://127.0.0.1:${process.env.AGPJ_BACKEND_PORT ?? '7421'}`;
+  const webOrigin = `http://127.0.0.1:${process.env.AGPJ_WEB_PORT ?? '7420'}`;
   // The demo build runs in the browser alone and is served from a folder of the documentation site.
   const demo = mode === 'demo';
 

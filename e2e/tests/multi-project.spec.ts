@@ -690,11 +690,11 @@ test.describe('two projects with the same task numbers', () => {
         .additionalContext;
     };
     const context = hookContext();
-    expect(context.startsWith('AGBOARD_PROGRESS\n')).toBe(true);
+    expect(context.startsWith('AGPJ_PROGRESS\n')).toBe(true);
     expect(context).toContain('Alpha: choose the license');
     expect(context).not.toContain('Beta');
     expect(context).not.toContain('Resuming with the MIT license.');
-    const progress = JSON.parse(context.slice('AGBOARD_PROGRESS\n'.length).split('\n\n')[0]) as {
+    const progress = JSON.parse(context.slice('AGPJ_PROGRESS\n'.length).split('\n\n')[0]) as {
       answers?: { id: string; tasks: number[]; text: string | null }[];
     };
     const answer = progress.answers?.find(({ tasks }) => tasks.includes(2));

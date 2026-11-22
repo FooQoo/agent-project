@@ -13,7 +13,7 @@ use crate::server::sessions::Tool;
 use crate::setup::agent_cli;
 
 /// Overrides the `claude` executable (tests point it at a fake script).
-pub const CLAUDE_BIN_ENV: &str = "AGBOARD_CLAUDE_BIN";
+pub const CLAUDE_BIN_ENV: &str = "AGPJ_CLAUDE_BIN";
 /// Overrides the `codex` executable.
 pub const CODEX_BIN_ENV: &str = "AGPJ_CODEX_BIN";
 
@@ -63,7 +63,7 @@ pub struct Executables {
 const CHECK_TIMEOUT: Duration = Duration::from_secs(20);
 
 impl Executables {
-    /// `AGBOARD_CLAUDE_BIN` and `AGPJ_CODEX_BIN` when set, else the server's `PATH`.
+    /// `AGPJ_CLAUDE_BIN` and `AGPJ_CODEX_BIN` when set, else the server's `PATH`.
     pub fn from_env() -> Executables {
         let var = |name: &str| {
             std::env::var_os(name)
@@ -273,7 +273,7 @@ pub fn scrubbed(name: &str) -> bool {
         return false;
     }
     name == "CLAUDECODE"
-        || name == "AGBOARD_RESIDENT_ID"
+        || name == "AGPJ_RESIDENT_ID"
         || name.starts_with("CLAUDE_CODE_")
         || name.starts_with("CODEX_")
 }

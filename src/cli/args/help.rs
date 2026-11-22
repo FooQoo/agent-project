@@ -72,7 +72,7 @@ Descriptions and drafts:
   - `edit` replaces the body and acceptance conditions only. The stored history and
     question references stay; `history` and `questions` in the input are ignored.
   - Snapshots, `show`, and `wait` return descriptions in full. Progress and hooks
-    return metadata only. If the hook's progress table exceeds 256 KiB, it reports AGBOARD_ERROR
+    return metadata only. If the hook's progress table exceeds 256 KiB, it reports AGPJ_ERROR
     (context_too_large) instead; read only the needed EPIC.md and TASK.md files.
   - A task with \"draft\": \"human\" is a draft the user is still writing. It is
     read-only for you: `edit`, `mv`, `state`, and `history add` fail with

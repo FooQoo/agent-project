@@ -624,7 +624,7 @@ fn every_command_that_works_on_a_project_refuses_to_guess_one() {
             // A hook never fails the agent's turn: it reports the error in its output and hands over no board.
             ok(&output);
             let text = String::from_utf8_lossy(&output.stdout).into_owned();
-            assert!(text.contains("AGBOARD_ERROR"), "{text}");
+            assert!(text.contains("AGPJ_ERROR"), "{text}");
             assert!(!text.contains("AGPJ_SNAPSHOT"), "{text}");
             continue;
         }
@@ -825,7 +825,7 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
     // The hook hands over only Alpha's active progress metadata, for both agents.
     for agent in ["claude", "codex"] {
         let context = hook(home.path(), "Alpha", agent);
-        assert!(context.starts_with("AGBOARD_PROGRESS\n"), "{agent}");
+        assert!(context.starts_with("AGPJ_PROGRESS\n"), "{agent}");
         assert!(
             context.contains("Alpha: draft the release notes"),
             "{agent}"
@@ -911,7 +911,7 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
         ],
     ));
     let context = hook(home.path(), "Alpha", "claude");
-    assert!(context.starts_with("AGBOARD_PROGRESS\n"));
+    assert!(context.starts_with("AGPJ_PROGRESS\n"));
     let progress: Value = serde_json::from_str(context.split_once('\n').unwrap().1).unwrap();
     let resumed = progress["unassigned"]
         .as_array()
