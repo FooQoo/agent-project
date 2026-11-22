@@ -256,7 +256,7 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 | `tokenSource` | `env`（`NGROK_AUTHTOKEN`）、`keychain`（安全な保管場所）、`session`（今回の起動だけ入力）、`null`のいずれか。値は返さない。 |
 | `keychainAvailable` | このPCに、トークンを保存できる安全な保管場所（OSの資格情報ストア）があるか。 |
 | `keychainTokenSaved` | 別の取得元が使われていても、安全な保管場所にトークンが保存されているか。 |
-| `failure` | `null`、または`connect_failed`・`endpoint_failed`・`public_url_invalid`・`internal`・`config_unreadable`・`config_invalid`・`tailscale_not_installed`・`tailscale_not_logged_in`・`tailscale_https_disabled`・`tailscale_serve_failed`のいずれか。 |
+| `failure` | `null`、または`connect_failed`・`endpoint_failed`・`public_url_invalid`・`internal`・`config_unreadable`・`config_invalid`・`tailscale_not_installed`・`tailscale_not_logged_in`・`tailscale_https_disabled`・`tailscale_serve_failed`・`tailscale_serve_busy`のいずれか。 |
 | `passcode` | 動いている接続の4桁の合言葉。PCが表示するために返す。`status`が`ready`の間だけ含まれ、開始中・停止中・失敗のときは含まれない。このAPIが返す唯一の秘密。 |
 
 開始の進み具合はこの状態で報告されます。`status`が`starting`でなくなるまで`GET`で確認してください。トークン、間違いの回数、sessionが、応答や設定ファイルに現れることはなく、合言葉が現れるのはここと`serve`の起動行だけです。設定の保存先は[共有ファイル](./files.md#モニター接続の設定)、エラーのコードは[エラーコード](./errors.md#リモート接続)にあります。

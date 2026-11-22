@@ -50,8 +50,8 @@ flowchart LR
     Entry --> Shared["共有FileStore"]
 ```
 
-- **開始。** コネクターは`tailscale`コマンド（`PATH`にあるもの、なければ`/Applications/Tailscale.app/Contents/MacOS/Tailscale`）を探し、`tailscale status --json`を実行します。公開アドレスは`https://`に`Self.DNSName`（末尾のドットを除く）を続けたものです。ツールが見つからない（`tailscale_not_installed`）、バックエンドの状態が`Running`でない（`tailscale_not_logged_in`）、tailnetでHTTPS証明書が有効でなく`CertDomains`が空（`tailscale_https_disabled`）のときは、失敗コードを出して始めず、Tailscaleの設定も変えません。そのうえで`tailscale serve --bg --https=443 http://127.0.0.1:<port>`を実行します。portは入口のループバックのportで、ここでの失敗は`tailscale_serve_failed`です。
-- **停止。** 接続を落とすと`tailscale serve --https=443 off`を実行します。serveの設定はそれまでTailscaleが保持するため、サーバーが異常終了すると残ることがあります。次の開始で置き換わり、手動では`tailscale serve --https=443 off`で消せます。
+- **開始。** コネクターは`tailscale`コマンド（`PATH`にあるもの、なければ`/Applications/Tailscale.app/Contents/MacOS/Tailscale`）を探し、`tailscale status --json`を実行します。公開アドレスは`https://`に`Self.DNSName`（末尾のドットを除く）を続けたものです。ツールが見つからない（`tailscale_not_installed`）、バックエンドの状態が`Running`でない（`tailscale_not_logged_in`）、tailnetでHTTPS証明書が有効でなく`CertDomains`が空（`tailscale_https_disabled`）のときは、失敗コードを出して始めず、Tailscaleの設定も変えません。そのうえで`tailscale serve --bg --https=443 http://127.0.0.1:<port>`を実行します。portは入口のループバックのportで、ここでの失敗は`tailscale_serve_failed`です。その前に`tailscale serve status --json`を読み、すでにポート443でHTTPSを配信しているものがあれば、`tailscale_serve_busy`として開始を断り、何も変えません。ほかのプログラムの入口を置き換えることはありません。ツールの呼び出しにはどれも5秒の制限があり、Serveの設定の変更は直列に行い、変更した接続の印を付けます。そのため、開始の途中で止められた接続が、新しい接続の設定を変えることはありません。
+- **停止。** 接続を落とすと、専用のスレッドで`tailscale serve --https=443 off`を実行します。実行するのは、その接続がまだ入口を持っているときだけです。停止はこれを最長2秒待ちます。serveの設定はそれまでTailscaleが保持するため、サーバーが異常終了すると残ることがあります。次の開始で置き換わり、手動では`tailscale serve --https=443 off`で消せます。
 - **トークンなし。** Tailscaleでの開始にngrokのトークンは要らず、キーチェーンも読みません。保存した`tailscale`設定は、次の`serve`でトークンなしに再開します。`domain`と`AGBOARD_NGROK_DOMAIN`はngrokにだけ効きます。
 - **Host。** Serveは受け取ったHostをそのまま渡します。443ではportなし、ほかのportではportありです。入口は、このマシンの`ts.net`の名前だけを受け付けます。
 - **信用しないもの。** Serveは`X-Forwarded-*`と`Tailscale-User-Login`を付けます。入口のportにはこのPCの他のプログラムも届くため、これらのヘッダーは何も証明せず、本人確認には読みません。入る方法は合言葉と登録済みの端末だけです。
