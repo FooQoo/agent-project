@@ -27,7 +27,7 @@ pub(super) fn create_backup(path: &Path, bytes: &[u8], mode: u32) -> io::Result<
         .file_name()
         .map(|name| name.to_string_lossy().into_owned())
         .unwrap_or_default();
-    let (backup, mut file) = create_unique(dir, &format!("{name}.agboard-backup"), mode)?;
+    let (backup, mut file) = create_unique(dir, &format!("{name}.agpj-backup"), mode)?;
     let result = file.write_all(bytes).and_then(|()| file.sync_all());
     drop(file);
     if let Err(error) = result {

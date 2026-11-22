@@ -58,9 +58,9 @@ fn fixture(agent: &str, edited: bool) -> Fixture {
     fakes.preinstall(agent, "0.0.1", "elsewhere");
     let plugin_root = tmp
         .path()
-        .join("home/.agent/plugins/cache/agent-board/agent-board/0.0.1");
+        .join("home/.agent/plugins/cache/agent-project/agent-project/0.0.1");
     copy_dir(
-        &Path::new(env!("CARGO_MANIFEST_DIR")).join("plugins/agent-board"),
+        &Path::new(env!("CARGO_MANIFEST_DIR")).join("plugins/agent-project"),
         &plugin_root,
     );
     if edited {
@@ -228,7 +228,7 @@ fn codex_is_told_to_trust_hooks_only_when_the_hook_definition_changed() {
 #[test]
 fn a_plugin_that_was_not_installed_from_a_marketplace_is_left_alone() {
     let fx = fixture("claude", true);
-    let checkout = fx._tmp.path().join("checkout/plugins/agent-board");
+    let checkout = fx._tmp.path().join("checkout/plugins/agent-project");
     copy_dir(&fx.plugin_root, &checkout);
     let mut fx = fx;
     fx.plugin_root = checkout;
@@ -413,7 +413,7 @@ fn the_tag_is_checked_before_any_agent_command_and_a_missing_tag_stops_the_updat
         assert_eq!(
             git_log(&fx),
             [format!(
-                "ls-remote --exit-code --tags https://github.com/FooQoo/agent-board.git refs/tags/v{VERSION}"
+                "ls-remote --exit-code --tags https://github.com/FooQoo/agent-project.git refs/tags/v{VERSION}"
             )]
         );
         // Not even `plugin list` ran, and nothing was removed.
@@ -446,7 +446,7 @@ fn a_confirmed_tag_lets_the_update_run() {
 fn install_into_codex_cache(fx: &Fixture) {
     let cache = fx
         .home
-        .join(".codex/plugins/cache/agent-board/agent-board")
+        .join(".codex/plugins/cache/agent-project/agent-project")
         .join(VERSION);
     copy_dir(&fx.plugin_root, &cache);
 }

@@ -68,7 +68,7 @@ pub(crate) async fn connect(
     session: Option<(&ProjectId, &SessionIdentity)>,
 ) -> Result<Connected, AgpjError> {
     let info = paths::read_serve_info_in(dir).ok_or_else(|| {
-        unavailable("No running Agent Board server was found. Run \"agpj serve\".")
+        unavailable("No running Agent Project server was found. Run \"agpj serve\".")
     })?;
     let client = reqwest::Client::builder()
         .connect_timeout(CONNECT_LIMIT)

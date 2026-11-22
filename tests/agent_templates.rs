@@ -13,7 +13,7 @@ fn topic(name: &str) -> &'static str {
 
 /// The main text and every topic: the whole Skill.
 fn full_skill() -> String {
-    let mut text = agent_project::skills::AGENT_BOARD.to_string();
+    let mut text = agent_project::skills::AGENT_PROJECT.to_string();
     for (_, topic) in agent_project::skills::TOPICS {
         text.push_str(topic);
     }
@@ -21,11 +21,11 @@ fn full_skill() -> String {
 }
 
 fn claude() -> Value {
-    serde_json::from_str(include_str!("../plugins/agent-board/hooks/claude.json")).unwrap()
+    serde_json::from_str(include_str!("../plugins/agent-project/hooks/claude.json")).unwrap()
 }
 
 fn codex() -> Value {
-    serde_json::from_str(include_str!("../plugins/agent-board/hooks/codex.json")).unwrap()
+    serde_json::from_str(include_str!("../plugins/agent-project/hooks/codex.json")).unwrap()
 }
 
 /// Every `(event, handler)` of a template.
@@ -97,9 +97,9 @@ fn every_template_command_uses_cwd_resolution_and_is_fixed() {
 #[test]
 fn templates_hold_no_personal_or_machine_specific_paths() {
     for text in [
-        include_str!("../plugins/agent-board/hooks/claude.json"),
-        include_str!("../plugins/agent-board/hooks/codex.json"),
-        include_str!("../plugins/agent-board/README.md"),
+        include_str!("../plugins/agent-project/hooks/claude.json"),
+        include_str!("../plugins/agent-project/hooks/codex.json"),
+        include_str!("../plugins/agent-project/README.md"),
     ] {
         for personal in [
             "/Users/",
@@ -116,7 +116,7 @@ fn templates_hold_no_personal_or_machine_specific_paths() {
 #[test]
 fn the_skill_sends_an_unbound_folder_to_the_users_own_setup_run() {
     for (name, text) in [
-        ("the Skill", agent_project::skills::AGENT_BOARD),
+        ("the Skill", agent_project::skills::AGENT_PROJECT),
         ("listening", topic("listening")),
     ] {
         assert!(
@@ -126,7 +126,7 @@ fn the_skill_sends_an_unbound_folder_to_the_users_own_setup_run() {
         assert!(text.contains("agpj setup"), "{name} omits setup");
         assert!(!text.contains("agpj connect"), "{name} names connect");
     }
-    let skill = agent_project::skills::AGENT_BOARD;
+    let skill = agent_project::skills::AGENT_PROJECT;
     assert!(
         skill.contains("never run it"),
         "the Skill must not run setup itself"

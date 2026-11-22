@@ -94,7 +94,7 @@ fn backups_in(dir: &Path) -> Vec<String> {
     fs::read_dir(dir)
         .unwrap()
         .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
-        .filter(|name| name.contains("agboard-backup"))
+        .filter(|name| name.contains("agpj-backup"))
         .collect()
 }
 
@@ -199,7 +199,7 @@ fn json_output_has_the_documented_keys() {
         files[1]["path"]
             .as_str()
             .unwrap()
-            .ends_with(".codex/rules/agboard.rules")
+            .ends_with(".codex/rules/agpj.rules")
     );
     assert_eq!(agent["plugin"]["version"], env!("CARGO_PKG_VERSION"));
 }
@@ -434,7 +434,7 @@ fn codex_home_and_claude_config_dir_overrides_are_honored() {
             .unwrap()
             .contains(".agent-project")
     );
-    assert!(codex_home.join("rules/agboard.rules").is_file());
+    assert!(codex_home.join("rules/agpj.rules").is_file());
     assert!(!home.join(".codex/rules").exists());
     assert!(
         fs::read_to_string(claude_dir.join("settings.json"))
@@ -519,7 +519,7 @@ fn a_codex_config_without_workspace_write_is_left_alone_with_a_manual_step() {
             text,
             "the sandbox settings are never changed"
         );
-        assert!(home.join(".codex/rules/agboard.rules").is_file());
+        assert!(home.join(".codex/rules/agpj.rules").is_file());
         assert!(backups_in(&home.join(".codex")).is_empty());
     }
 }
@@ -548,11 +548,11 @@ fn an_existing_rule_file_is_kept_as_it_is() {
     let (_tmp, home) = home_with_settings("home");
     fs::create_dir_all(home.join(".codex/rules")).unwrap();
     let mine = "# my own rules\nprefix_rule(pattern=[\"agpj\"], decision=\"prompt\")\n";
-    fs::write(home.join(".codex/rules/agboard.rules"), mine).unwrap();
+    fs::write(home.join(".codex/rules/agpj.rules"), mine).unwrap();
     let json = setup_json(&home, &[], &["--agent", "codex"]);
     assert_eq!(json["agents"][0]["files"][1]["status"], "unchanged");
     assert_eq!(
-        fs::read_to_string(home.join(".codex/rules/agboard.rules")).unwrap(),
+        fs::read_to_string(home.join(".codex/rules/agpj.rules")).unwrap(),
         mine
     );
 }
@@ -561,7 +561,7 @@ fn an_existing_rule_file_is_kept_as_it_is() {
 fn the_written_rule_allows_the_agpj_command() {
     let (_tmp, home) = home_with_settings("home");
     setup_json(&home, &[], &["--agent", "codex"]);
-    let rules = fs::read_to_string(home.join(".codex/rules/agboard.rules")).unwrap();
+    let rules = fs::read_to_string(home.join(".codex/rules/agpj.rules")).unwrap();
     assert!(
         rules.contains("prefix_rule(pattern=[\"agpj\"], decision=\"allow\")"),
         "{rules}"

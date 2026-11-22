@@ -55,9 +55,9 @@ impl SetupEnv {
         Ok(self.codex_dir()?.join("config.toml"))
     }
 
-    /// The rule file setup writes for Codex: `$CODEX_HOME/rules/agboard.rules`.
+    /// The rule file setup writes for Codex: `$CODEX_HOME/rules/agpj.rules`.
     pub fn codex_rules(&self) -> Result<PathBuf, AgpjError> {
-        Ok(self.codex_dir()?.join("rules").join("agboard.rules"))
+        Ok(self.codex_dir()?.join("rules").join("agpj.rules"))
     }
 
     /// The marketplace override, when `AGPJ_PLUGIN_MARKETPLACE` is set and

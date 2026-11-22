@@ -31,7 +31,7 @@ Commands:
   release Generate the release document of a version in docs/release/
   version List the project's versions, or show, set, or clear the current one
   hook    Add the current progress table to an agent hook
-  skills  Print the instructions of the agent-board Skill
+  skills  Print the instructions of the agent-project Skill
   wait    Wait for a board change or the next task
   workspace Show the project's shared folder and where its files are
   serve   Show the board in your browser (-d runs it in the background)

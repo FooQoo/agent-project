@@ -1,5 +1,5 @@
 //! `agpj setup` and `agpj update`: prepare the data directory, install
-//! the Agent Board plugin (the Skill and the Hook) with each agent's own
+//! the Agent Project plugin (the Skill and the Hook) with each agent's own
 //! plugin commands, give the agents access to the shared folder, and, for
 //! Codex, trust the plugin's hooks.
 //!

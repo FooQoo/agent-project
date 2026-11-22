@@ -113,7 +113,7 @@ fn is_test_run(tokens: &[&str]) -> bool {
     })
 }
 
-/// A call that edits a file outside `/tmp` and the Agent Board data folder, or
+/// A call that edits a file outside `/tmp` and the Agent Project data folder, or
 /// commits.
 fn edits_files(call: &Call) -> bool {
     if contains_sequence(&tokens(&call.command), &["git", "commit"]) {

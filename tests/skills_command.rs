@@ -1,4 +1,4 @@
-//! `agpj skills`: the Agent Board Skill and its topics, printed by the
+//! `agpj skills`: the Agent Project Skill and its topics, printed by the
 //! binary. It reads nothing, writes nothing, and always exits 0.
 
 use std::process::Command;
@@ -34,7 +34,7 @@ fn skills_prints_the_skill_body_without_frontmatter_and_writes_nothing() {
     let (code, out, untouched) = skills(&[]);
     assert_eq!(code, 0);
     assert!(untouched, "agpj skills wrote a file");
-    assert!(out.starts_with("# Agent Board\n"), "{}", &out[..80]);
+    assert!(out.starts_with("# Agent Project\n"), "{}", &out[..80]);
     assert!(!out.starts_with("---"));
     assert!(out.contains("## 1. Resolve the project from the working folder"));
     // The references are topics, not files.
@@ -153,7 +153,7 @@ fn skills_works_without_a_data_directory() {
         .output()
         .unwrap();
     assert_eq!(output.status.code(), Some(0));
-    assert!(String::from_utf8_lossy(&output.stdout).starts_with("# Agent Board\n"));
+    assert!(String::from_utf8_lossy(&output.stdout).starts_with("# Agent Project\n"));
 }
 
 #[test]

@@ -146,7 +146,7 @@ fn start(agent: Agent, root: &Path) -> Option<String> {
 fn started_notice(agent: Agent, hooks_changed: bool) -> String {
     let version = super::VERSION;
     let mut text = format!(
-        "AGPJ_NOTICE\nThe Agent Board plugin differs from the one this agpj (version {version}) ships. agpj started updating it to version {version} in the background; the update applies from the next session, and nothing needs to be done now."
+        "AGPJ_NOTICE\nThe Agent Project plugin differs from the one this agpj (version {version}) ships. agpj started updating it to version {version} in the background; the update applies from the next session, and nothing needs to be done now."
     );
     if agent == Agent::Codex && hooks_changed {
         text.push_str(" The hook definition changed, and Codex runs a plugin's hooks only after they are trusted. agpj marks them trusted itself when the installed definition is identical to its own, and never otherwise. If the hooks do not run in the next session, tell the user to run `agpj update` in a terminal, then start a new session.");
@@ -155,7 +155,7 @@ fn started_notice(agent: Agent, hooks_changed: bool) -> String {
 }
 
 fn failed_notice() -> String {
-    "AGPJ_NOTICE\nThe automatic update of the Agent Board plugin did not complete. Tell the user to run `agpj update` in a terminal, then start a new session. Setting AGPJ_NO_PLUGIN_AUTO_UPDATE=1 turns the automatic update off.".to_string()
+    "AGPJ_NOTICE\nThe automatic update of the Agent Project plugin did not complete. Tell the user to run `agpj update` in a terminal, then start a new session. Setting AGPJ_NO_PLUGIN_AUTO_UPDATE=1 turns the automatic update off.".to_string()
 }
 
 /// Starts the background update as a process of its own, so it outlives the

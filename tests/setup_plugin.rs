@@ -16,7 +16,7 @@ use serde_json::Value;
 use fake_agents::{FakeAgents, PLUGIN};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-const REPOSITORY: &str = "https://github.com/FooQoo/agent-board.git";
+const REPOSITORY: &str = "https://github.com/FooQoo/agent-project.git";
 
 struct Fixture {
     _tmp: tempfile::TempDir,
@@ -130,7 +130,7 @@ fn setup_trusts_only_the_agent_project_hooks_in_codex() {
     let value = params["value"].as_object().unwrap();
     assert_eq!(value.len(), 2, "{value:?}");
     for (key, state) in value {
-        assert!(key.starts_with("agent-board@agent-board:"), "{key}");
+        assert!(key.starts_with("agent-project@agent-project:"), "{key}");
         assert!(
             state["trusted_hash"]
                 .as_str()
@@ -287,7 +287,7 @@ fn update_moves_the_marketplace_to_this_tag_and_trusts_the_hooks_again() {
         [
             "plugin list --json".to_string(),
             format!("plugin marketplace add {REPOSITORY} --ref {tag} --json"),
-            "plugin marketplace remove agent-board --json".to_string(),
+            "plugin marketplace remove agent-project --json".to_string(),
             format!("plugin marketplace add {REPOSITORY} --ref {tag} --json"),
             format!("plugin add {PLUGIN} --json"),
             "app-server".to_string(),
@@ -296,7 +296,7 @@ fn update_moves_the_marketplace_to_this_tag_and_trusts_the_hooks_again() {
     assert_eq!(
         fx.fakes.log("claude")[2..4],
         [
-            "plugin marketplace remove agent-board --json".to_string(),
+            "plugin marketplace remove agent-project --json".to_string(),
             format!("plugin marketplace add {REPOSITORY}#{tag} --json"),
         ]
     );
@@ -356,7 +356,7 @@ fn the_plan_and_the_report_name_the_hook_trust() {
     let (code, out, err) = fx.run(&[], &["setup", "--agent", "codex", "--yes"]);
     assert_eq!(code, 0, "{err}");
     assert!(out.contains("hooks: trusted 2"), "{out}");
-    assert!(out.contains("rules/agboard.rules"), "{out}");
+    assert!(out.contains("rules/agpj.rules"), "{out}");
 }
 
 #[test]
@@ -379,7 +379,7 @@ fn setup_needs_no_project_and_writes_inside_the_given_homes_only() {
         &["setup", "--agent", "all", "--yes"],
     );
     assert_eq!(code, 0, "{json}");
-    assert!(codex_home.join("rules/agboard.rules").is_file());
+    assert!(codex_home.join("rules/agpj.rules").is_file());
     assert!(claude_dir.join("settings.json").is_file());
     assert!(!fx.home.join(".claude").exists());
     assert!(!fx.home.join(".codex/rules").exists());
@@ -402,7 +402,7 @@ fn plugin_copy(into: &Path, extra: Option<&str>) -> PathBuf {
     }
     let root = into.join("installed-plugin");
     copy(
-        &Path::new(env!("CARGO_MANIFEST_DIR")).join("plugins/agent-board"),
+        &Path::new(env!("CARGO_MANIFEST_DIR")).join("plugins/agent-project"),
         &root,
     );
     if let Some(extra) = extra {

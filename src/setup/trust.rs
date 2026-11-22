@@ -3,7 +3,7 @@
 //! install or update needs it again. With the user's consent on the
 //! confirmation screen, agpj writes the trust through Codex's own
 //! app-server: `hooks/list` gives each hook's current hash and
-//! `config/value/write` stores it under `hooks.state`. Only the Agent Board
+//! `config/value/write` stores it under `hooks.state`. Only the Agent Project
 //! plugin's hooks are touched.
 
 use std::io::{BufRead, BufReader, Write};
@@ -19,7 +19,7 @@ use super::plugin::PLUGIN_ID;
 /// How long the whole exchange with the app-server may take.
 const TIMEOUT: Duration = Duration::from_secs(60);
 
-/// Trusts every Agent Board hook that Codex does not trust yet. Returns how
+/// Trusts every Agent Project hook that Codex does not trust yet. Returns how
 /// many hooks were trusted now (0 when all were trusted already).
 pub fn trust_codex_hooks(program: &Path, cwd: &Path) -> Result<usize, String> {
     let mut server = Server::start(program, cwd)?;
@@ -38,7 +38,7 @@ fn exchange(server: &mut Server, cwd: &Path) -> Result<usize, String> {
     let hooks = list(server, 1, cwd)?;
     if hooks.is_empty() {
         return Err(
-            "Codex lists no hooks of the Agent Board plugin, so nothing was trusted. Check that the plugin is installed and enabled with `codex plugin list`."
+            "Codex lists no hooks of the Agent Project plugin, so nothing was trusted. Check that the plugin is installed and enabled with `codex plugin list`."
                 .to_string(),
         );
     }

@@ -1,4 +1,4 @@
-//! The content hash of the Agent Board plugin's files.
+//! The content hash of the Agent Project plugin's files.
 //!
 //! The build script hashes `plugins/agent-project/` and embeds the result; the
 //! hook and `agpj setup` hash the same relative files of an installed plugin

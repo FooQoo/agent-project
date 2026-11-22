@@ -56,19 +56,19 @@ fn fixture_root(manifest_version: &str, lock_version: &str) -> tempfile::TempDir
 
 /// The plugin files that check-version.py compares with the crate version.
 fn write_plugin(root: &Path, version: &str) {
-    let plugin = root.join("plugins/agent-board");
+    let plugin = root.join("plugins/agent-project");
     for (path, text) in [
         (
             plugin.join(".codex-plugin/plugin.json"),
-            format!(r#"{{"name":"agent-board","version":"{version}"}}"#),
+            format!(r#"{{"name":"agent-project","version":"{version}"}}"#),
         ),
         (
             plugin.join(".claude-plugin/plugin.json"),
-            format!(r#"{{"name":"agent-board","version":"{version}"}}"#),
+            format!(r#"{{"name":"agent-project","version":"{version}"}}"#),
         ),
         (
             root.join(".claude-plugin/marketplace.json"),
-            format!(r#"{{"plugins":[{{"name":"agent-board","version":"{version}"}}]}}"#),
+            format!(r#"{{"plugins":[{{"name":"agent-project","version":"{version}"}}]}}"#),
         ),
     ] {
         fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -183,8 +183,8 @@ fn check_version_rejects_a_plugin_of_another_version() {
     let fixture = fixture_root("1.2.3", "1.2.3");
     let root = fixture.path();
     fs::write(
-        root.join("plugins/agent-board/.claude-plugin/plugin.json"),
-        r#"{"name":"agent-board","version":"1.2.2"}"#,
+        root.join("plugins/agent-project/.claude-plugin/plugin.json"),
+        r#"{"name":"agent-project","version":"1.2.2"}"#,
     )
     .unwrap();
     let out = python(
@@ -202,7 +202,7 @@ fn check_version_rejects_a_plugin_of_another_version() {
     let root = fixture.path();
     write_plugin(root, "1.2.3");
     fs::write(
-        root.join("plugins/agent-board/hooks/codex.json"),
+        root.join("plugins/agent-project/hooks/codex.json"),
         r#"{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"agpj hook --agent codex --plugin-version 1.2.3"}]}]}}"#,
     )
     .unwrap();

@@ -144,7 +144,7 @@ fn plan_agent(
     match mode {
         Mode::Update if planned.installed.is_none() => {
             planned.skipped = Some(format!(
-                "The Agent Board plugin is not installed in {}. Run agpj setup to install it.",
+                "The Agent Project plugin is not installed in {}. Run agpj setup to install it.",
                 agent.label()
             ));
             return Ok(planned);
@@ -196,7 +196,9 @@ impl Prepared {
                 }
             }
             if plan.trust {
-                text.push_str("  hooks: mark the Agent Board plugin's hooks as trusted in Codex\n");
+                text.push_str(
+                    "  hooks: mark the Agent Project plugin's hooks as trusted in Codex\n",
+                );
             }
             for step in &plan.manual {
                 text.push_str(&format!("  manual step: {step}\n"));

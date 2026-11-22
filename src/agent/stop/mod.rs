@@ -88,7 +88,7 @@ pub(crate) fn decide(facts: &Facts, rules: &[Rule]) -> Option<String> {
             .collect()
     };
     let mut reason = String::from(
-        "Agent Board turn-end checklist. Items under 'Found' are confirmed by the hook; handle them. Items under 'Check' are triggered by this turn; handle those that apply and ignore the rest.",
+        "Agent Project turn-end checklist. Items under 'Found' are confirmed by the hook; handle them. Items under 'Check' are triggered by this turn; handle those that apply and ignore the rest.",
     );
     for (title, body) in [
         ("Found:", lines(Kind::Definite, "NG: ")),
