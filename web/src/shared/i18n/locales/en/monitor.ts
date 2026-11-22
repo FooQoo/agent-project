@@ -189,6 +189,8 @@ export const monitorEn = {
         'Tailscale is not running or not signed in. Open the Tailscale app and sign in.',
       tailscale_https_disabled:
         'HTTPS certificates are off for your tailnet. Turn on MagicDNS and HTTPS certificates in the Tailscale admin console.',
+      tailscale_serve_busy:
+        'Another program already serves HTTPS on this PC through Tailscale. Turn it off first, for example with tailscale serve --https=443 off, then try again.',
       tailscale_serve_failed:
         'Tailscale did not open the address. Check the Tailscale app and try again.',
     },

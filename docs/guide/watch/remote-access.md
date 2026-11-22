@@ -91,7 +91,7 @@ Agent Board can reach your phone in two ways. You choose one in the **Remote con
 
 Both ways use the same passcode, registered phones, and notifications. Only the way the phone reaches the PC differs. Because the address differs, switching from one to the other makes the phone a new device: enter the passcode again and turn notifications on again.
 
-To use Tailscale, install Tailscale on the PC and the phone and sign in with the same account. In the Tailscale admin console, turn on MagicDNS and HTTPS certificates for your network. Then open **Remote connection**, choose **Tailscale**, and choose **Save and connect**. The dialog hides the token and the domain, which belong to ngrok. If Tailscale is not installed, not signed in, or has no HTTPS certificates, the dialog says which and does not connect. The phone must have Tailscale turned on to open the address.
+To use Tailscale, install Tailscale on the PC and the phone and sign in with the same account. In the Tailscale admin console, turn on MagicDNS and HTTPS certificates for your network. Then open **Remote connection**, choose **Tailscale**, and choose **Save and connect**. The dialog hides the token and the domain, which belong to ngrok. If Tailscale is not installed, not signed in, or has no HTTPS certificates, the dialog says which and does not connect. It also does not connect when another program already serves HTTPS on this PC through Tailscale, so that program is never replaced; turn that one off first, for example with `tailscale serve --https=443 off`. The phone must have Tailscale turned on to open the address.
 
 ## How the passcode protects the monitor
 

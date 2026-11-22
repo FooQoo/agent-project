@@ -13,7 +13,8 @@ export type FailureCode =
   | 'tailscale_not_installed'
   | 'tailscale_not_logged_in'
   | 'tailscale_https_disabled'
-  | 'tailscale_serve_failed';
+  | 'tailscale_serve_failed'
+  | 'tailscale_serve_busy';
 
 /** How the phone reaches the board. */
 export type Provider = 'ngrok' | 'tailscale';

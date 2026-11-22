@@ -192,14 +192,16 @@ fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgboardError> {
     };
     answers.provider = (chosen != now.provider).then_some(chosen);
 
-    if chosen == Provider::Ngrok {
-        ask_ngrok(&now, &mut answers)?;
+    if chosen == Provider::Ngrok && !ask_ngrok(&now, &mut answers)? {
+        // A cancelled question saves nothing, not even the answers given before it.
+        return Ok(());
     }
     finish(data_dir, vault, &answers)
 }
 
 /// The ngrok-only questions: the fixed domain and the token.
-fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<(), AgboardError> {
+/// Returns `false` when a question was cancelled, so the caller saves nothing.
+fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<bool, AgboardError> {
     let change_domain = match &now.domain {
         Some(_) => confirm("Change the fixed domain?"),
         None => true,
@@ -224,7 +226,10 @@ fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<(), AgboardError> {
             // Empty means "skip" when nothing is saved, and "remove" when something is.
             Ok(text) if text.trim().is_empty() && now.domain.is_none() => {}
             Ok(text) => answers.domain = Some(text),
-            Err(_) => return cancelled(),
+            Err(_) => {
+                let _ = cancelled();
+                return Ok(false);
+            }
         }
     }
 
@@ -247,11 +252,14 @@ fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<(), AgboardError> {
             .interact();
         match typed {
             Ok(text) => answers.token = Some(text),
-            Err(_) => return cancelled(),
+            Err(_) => {
+                let _ = cancelled();
+                return Ok(false);
+            }
         }
     }
 
-    Ok(())
+    Ok(true)
 }
 
 fn finish(data_dir: &Path, vault: &dyn TokenVault, answers: &Answers) -> Result<(), AgboardError> {

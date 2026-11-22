@@ -186,6 +186,8 @@ export const monitorJa = {
         'Tailscaleが起動していないか、サインインしていません。Tailscaleアプリを開いてサインインしてください。',
       tailscale_https_disabled:
         'tailnetでHTTPS証明書が無効です。Tailscaleの管理画面でMagicDNSとHTTPS証明書を有効にしてください。',
+      tailscale_serve_busy:
+        'このPCでは、別のプログラムがすでにTailscaleでHTTPSを配信しています。tailscale serve --https=443 offなどで先に止めてから、もう一度お試しください。',
       tailscale_serve_failed:
         'Tailscaleがアドレスを開けませんでした。Tailscaleアプリを確認してもう一度お試しください。',
     },
