@@ -146,7 +146,7 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
     await expect.poll(() => JSON.parse(agboardOk(project, ['show', String(publish), '--json'], home).stdout).task.taskStatus)
       .toBe('done');
     const shown = JSON.parse(agboardOk(project, ['show', String(publish), '--json'], home).stdout).task;
-    expect(shown).toMatchObject({ taskStatus: 'done', agentStatus: 'idle', pendingRequestId: null });
+    expect(shown).toMatchObject({ taskStatus: 'done', agentStatus: 'ran', pendingRequestId: null });
     expect(shown.acceptance).toEqual([{ id: 'AC-1', text: 'Release plan confirmed', done: true }]);
 
     const rejected = run(projectArgs(['edit', String(publish), '--title', 'AI changed Done']), home, work);
