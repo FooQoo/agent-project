@@ -203,7 +203,13 @@ fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgboardError> {
 /// Returns `false` when a question was cancelled, so the caller saves nothing.
 fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<bool, AgboardError> {
     let change_domain = match &now.domain {
-        Some(_) => confirm("Change the fixed domain?"),
+        Some(_) => match confirm("Change the fixed domain?") {
+            Some(answer) => answer,
+            None => {
+                let _ = cancelled();
+                return Ok(false);
+            }
+        },
         None => true,
     };
     if change_domain {
@@ -234,7 +240,13 @@ fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<bool, AgboardError> {
     }
 
     let change_token = if now.token_saved == Some(true) {
-        confirm("Replace the saved token?")
+        match confirm("Replace the saved token?") {
+            Some(answer) => answer,
+            None => {
+                let _ = cancelled();
+                return Ok(false);
+            }
+        }
     } else {
         true
     };
@@ -275,11 +287,12 @@ fn finish(data_dir: &Path, vault: &dyn TokenVault, answers: &Answers) -> Result<
     Ok(())
 }
 
-fn confirm(question: &str) -> bool {
-    matches!(
-        cliclack::confirm(question).initial_value(false).interact(),
-        Ok(true)
-    )
+/// `Some(answer)` for a yes or a no, `None` when the prompt was cancelled.
+fn confirm(question: &str) -> Option<bool> {
+    cliclack::confirm(question)
+        .initial_value(false)
+        .interact()
+        .ok()
 }
 
 fn cancelled() -> Result<(), AgboardError> {

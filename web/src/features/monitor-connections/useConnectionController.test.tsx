@@ -179,4 +179,75 @@ describe('useConnectionController', () => {
     await waitFor(() => expect(result.current.error).not.toBeNull());
     expect(api.saveSettings).not.toHaveBeenCalled();
   });
+  it('starts the new connection when the provider changes while another is running', async () => {
+    const running = snapshot({
+      status: 'ready',
+      settings: { enabled: true, provider: 'ngrok', domain: null },
+    });
+    api.getConnection.mockResolvedValue(running);
+    api.getDevices.mockResolvedValue([]);
+    api.saveSettings.mockResolvedValue(
+      snapshot({
+        status: 'ready',
+        revision: 2,
+        settings: { enabled: true, provider: 'tailscale', domain: null },
+      }),
+    );
+    api.startConnection.mockResolvedValue(snapshot({ status: 'starting', revision: 2 }));
+    const { result } = renderHook(() => useConnectionController(true));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    act(() =>
+      result.current.connect({ provider: 'tailscale', token: '', save: false, domain: '' }),
+    );
+    await waitFor(() => expect(api.startConnection).toHaveBeenCalledWith(null, false));
+  });
+
+  it('starts ngrok again with the saved token when switching back from Tailscale', async () => {
+    api.getConnection.mockResolvedValue(
+      snapshot({
+        status: 'ready',
+        settings: { enabled: true, provider: 'tailscale', domain: null },
+      }),
+    );
+    api.getDevices.mockResolvedValue([]);
+    api.saveSettings.mockResolvedValue(
+      snapshot({
+        status: 'ready',
+        revision: 2,
+        settings: { enabled: true, provider: 'ngrok', domain: null },
+      }),
+    );
+    api.startConnection.mockResolvedValue(snapshot({ status: 'starting', revision: 2 }));
+    const { result } = renderHook(() => useConnectionController(true));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    act(() => result.current.connect({ provider: 'ngrok', token: '', save: false, domain: '' }));
+    await waitFor(() => expect(api.startConnection).toHaveBeenCalledWith(null, false));
+  });
+
+  it('does not restart a running connection when only a setting other than the provider is saved', async () => {
+    api.getConnection.mockResolvedValue(
+      snapshot({ status: 'ready', settings: { enabled: true, provider: 'ngrok', domain: null } }),
+    );
+    api.getDevices.mockResolvedValue([]);
+    api.saveSettings.mockResolvedValue(
+      snapshot({
+        status: 'ready',
+        revision: 2,
+        settings: { enabled: true, provider: 'ngrok', domain: 'a.ngrok-free.dev' },
+      }),
+    );
+    const { result } = renderHook(() => useConnectionController(true));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    act(() =>
+      result.current.connect({
+        provider: 'ngrok',
+        token: '',
+        save: false,
+        domain: 'a.ngrok-free.dev',
+      }),
+    );
+    await waitFor(() => expect(api.saveSettings).toHaveBeenCalled());
+    await waitFor(() => expect(result.current.saving).toBe(false));
+    expect(api.startConnection).not.toHaveBeenCalled();
+  });
 });
