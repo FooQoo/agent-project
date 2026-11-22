@@ -319,8 +319,8 @@ function taskFilesFor(item: FixtureTask, question?: string): { task: Record<stri
     epicId: null,
     taskStatus: item.taskStatus,
     taskStatusChangedAt: item.taskStatusChangedAt,
-    // Waiting is derived from the open question the card refers to; a card that asks is stored as paused, because asking pauses a running task.
-    agentStatus: item.agentStatus === 'awaiting_answer' ? 'paused' : item.agentStatus,
+    // Waiting is derived from the open question the card refers to; a card that waits for an answer is stored as idle, a valid stored state that the open question turns into awaiting_answer.
+    agentStatus: item.agentStatus === 'awaiting_answer' ? 'idle' : item.agentStatus,
     position: item.position,
     draft: null,
     archivedAt: null,
