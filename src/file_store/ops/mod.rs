@@ -16,6 +16,7 @@ mod epic;
 mod history_event;
 mod onboarding;
 mod qa;
+mod release_notes;
 mod request_create;
 mod save;
 mod send;

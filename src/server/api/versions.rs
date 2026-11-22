@@ -68,7 +68,7 @@ pub(super) async fn add_version(
         Err(error) => return agboard_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.add_version(&project_id, &input.name)
+        store.add_version(&project_id, &input.name, chrono::Utc::now())
     })
     .await;
     versions_answer(&state, result)
@@ -94,7 +94,7 @@ pub(super) async fn set_current_version(
         Err(error) => return agboard_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.set_current_version(&project_id, input.version.as_deref())
+        store.set_current_version(&project_id, input.version.as_deref(), chrono::Utc::now())
     })
     .await;
     versions_answer(&state, result)
