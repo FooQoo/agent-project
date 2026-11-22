@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
 import { allPages, devFiles, guideFiles, guideScreenshots, readRepoFile, repoRoot } from './site';
+import { siteBase } from '../site-base';
 
 // Static checks that need no browser: the Pages workflow, links to the removed documents,
 // the contributor instructions, and the source files behind the pages.
@@ -258,9 +259,9 @@ test.describe('site sources', () => {
     expect(pairs).toHaveLength(11);
     for (const [from, to] of pairs.flatMap(([f, t]) => [[f, t], [`ja/${f}`, `ja/${t}`]])) {
       const html = fs.readFileSync(path.join(dist, `${from}.html`), 'utf8');
-      expect(html, from).toContain(`<link rel="canonical" href="/agent-project/${to}">`);
-      expect(html, from).toContain(`http-equiv="refresh" content="0; url=/agent-project/${to}"`);
-      expect(html, from).toContain(`<a href="/agent-project/${to}">`);
+      expect(html, from).toContain(`<link rel="canonical" href="${siteBase}${to}">`);
+      expect(html, from).toContain(`http-equiv="refresh" content="0; url=${siteBase}${to}"`);
+      expect(html, from).toContain(`<a href="${siteBase}${to}">`);
       expect(fs.existsSync(path.join(dist, `${to}.html`)), to).toBe(true);
     }
   });

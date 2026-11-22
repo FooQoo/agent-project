@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { siteBase } from '../site-base';
 
 // Mermaid diagrams on the documentation site. Mermaid sizes each label box (a foreignObject)
 // from text it measured itself; Japanese text falls back to fonts with taller lines, so the
@@ -19,7 +20,7 @@ const pages = [
 for (const width of [390, 1280]) {
   for (const locale of ['', 'ja/']) {
     for (const page of pages) {
-      const path = `/agent-project/${locale}${page}`;
+      const path = `${siteBase}${locale}${page}`;
       test(`Mermaid labels are not clipped at ${width}px: ${path}`, async ({ page: browserPage }) => {
         await browserPage.setViewportSize({ width, height: 900 });
         await browserPage.goto(path);

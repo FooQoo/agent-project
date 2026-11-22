@@ -79,7 +79,7 @@ pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-project/demo/
 
 How it differs from the product build:
 
-- The pages are served from `/agent-project/demo/`. Set `AGPJ_DEMO_BASE` (for example `AGPJ_DEMO_BASE=/demo/`) when building to use another folder.
+- The pages are served from `/<repository name>/demo/`, taken from `GITHUB_REPOSITORY` and `/agent-project/demo/` when it is unset. Set `AGPJ_DEMO_BASE` (for example `AGPJ_DEMO_BASE=/demo/`) when building to use another folder.
 - The sample-data server runs in the page, behind a Service Worker (MSW) that answers `/api/` requests, the live stream, and attachment images. The worker script is emitted next to `index.html`. A browser with no Service Worker support shows a notice instead of the board.
 - The page has a fixed token and an empty build ID, so it never reloads for a new build. Reloading the page restores the sample data and opens the first-run guide again.
 - Features that need a computer are hidden: project Docs (with its buttons that open files and folders), the remote access connection, and saving pasted or dropped images.

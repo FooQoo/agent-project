@@ -11,8 +11,10 @@ import {
   screenshotFile,
   type Lang,
 } from './site';
+import { siteBase } from '../site-base';
 
 const langs: Lang[] = ['en', 'ja'];
+// The landing links come from the frontmatter of docs/index.md, so they do not follow the repository name.
 const repoUrl = 'https://github.com/FooQoo/agent-project';
 
 // Markdown syntax must not leak into rendered prose. Code samples may intentionally contain it.
@@ -96,7 +98,7 @@ for (const lang of langs) {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('brew install fooqoo/tap/agpj');
 
     const start = hero.getByRole('link', { name: en ? 'Get started' : 'はじめる' });
-    await expect(start).toHaveAttribute('href', en ? '/agent-project/guide/getting-started' : '/agent-project/ja/guide/getting-started');
+    await expect(start).toHaveAttribute('href', en ? `${siteBase}guide/getting-started` : `${siteBase}ja/guide/getting-started`);
     await expect(hero.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', repoUrl);
 
     // The loop has five steps across four lanes, and the request and the answers are the user's.
@@ -107,7 +109,7 @@ for (const lang of langs) {
     // Four features; only Docs carries the public preview badge.
     await expect(landing.locator('.lp-feature')).toHaveCount(4);
     const badges = landing.getByRole('link', { name: en ? 'Public preview' : 'パブリックプレビュー' });
-    const stages = `/agent-project/${pagePath(lang, 'feature-stages')}`;
+    const stages = `${siteBase}${pagePath(lang, 'feature-stages')}`;
     expect(await badges.evaluateAll((els) => els.map((el) => el.getAttribute('href')))).toEqual([
       `${stages}#docs`,
     ]);
@@ -126,17 +128,17 @@ for (const lang of langs) {
   test(`every link on the ${lang} home page opens a page and its section`, async ({ page, request }) => {
     await page.goto(pagePath(lang, 'home'));
     const hrefs = await page.locator('.landing a').evaluateAll((els) => els.map((el) => el.getAttribute('href') ?? ''));
-    const internal = [...new Set(hrefs.filter((href) => href.startsWith('/agent-project/')))];
+    const internal = [...new Set(hrefs.filter((href) => href.startsWith(siteBase)))];
     // The guide pages the sections link to: the steps, features, stages, and agents.
     expect(internal.length).toBeGreaterThanOrEqual(8);
     for (const href of internal) {
       const [url, hash] = href.split('#');
-      const res = await request.get(url.replace('/agent-project/', ''));
+      const res = await request.get(url.replace(siteBase, ''));
       expect(res.status(), href).toBe(200);
       if (hash) expect(await res.text(), href).toContain(`id="${hash}"`);
     }
     // Outside the site: GitHub twice, and the official page of each supported agent.
-    expect(hrefs.filter((href) => !href.startsWith('/agent-project/'))).toEqual([
+    expect(hrefs.filter((href) => !href.startsWith(siteBase))).toEqual([
       repoUrl,
       'https://www.claude.com/product/claude-code',
       'https://developers.openai.com/codex',
@@ -168,7 +170,7 @@ for (const { lang, file, path: urlPath } of allPages.filter((p) => p.file !== 'h
 
     // The current page is highlighted in the sidebar.
     const active = page.locator('.VPSidebarItem.is-active > .item a').first();
-    await expect(active).toHaveAttribute('href', `/agent-project/${urlPath}`);
+    await expect(active).toHaveAttribute('href', `${siteBase}${urlPath}`);
     expect(file).toBeTruthy();
   });
 }
@@ -182,22 +184,22 @@ test('the sidebar lists the seventeen guide pages in five groups, in the same or
     await expect(links).toHaveCount(guideFiles.length);
     hrefs[lang] = await links.evaluateAll((els) => els.map((el) => el.getAttribute('href') ?? ''));
   }
-  expect(hrefs.en).toEqual(guideFiles.map((f) => `/agent-project/${pagePath('en', f)}`));
-  expect(hrefs.ja).toEqual(guideFiles.map((f) => `/agent-project/${pagePath('ja', f)}`));
+  expect(hrefs.en).toEqual(guideFiles.map((f) => `${siteBase}${pagePath('en', f)}`));
+  expect(hrefs.ja).toEqual(guideFiles.map((f) => `${siteBase}${pagePath('ja', f)}`));
   // Same order: stripping the language prefix gives identical lists.
-  expect(hrefs.ja.map((h) => h.replace('/agent-project/ja/', '/agent-project/'))).toEqual(hrefs.en);
+  expect(hrefs.ja.map((h) => h.replace(`${siteBase}ja/`, siteBase))).toEqual(hrefs.en);
 });
 
 test('the developer chapter is in the nav and its sidebar lists twenty-three pages in four groups', async ({ page }) => {
   for (const lang of langs) {
     await page.goto(pagePath(lang, 'home'));
     const nav = page.locator('.VPNavBarMenu').getByRole('link', { name: lang === 'en' ? 'Developers' : '開発者向け' });
-    await expect(nav).toHaveAttribute('href', `/agent-project/${devPagePath(lang, 'index')}`);
+    await expect(nav).toHaveAttribute('href', `${siteBase}${devPagePath(lang, 'index')}`);
     await page.goto(devPagePath(lang, 'index'));
     await expect(page.locator('.VPSidebar .VPSidebarItem.level-0')).toHaveCount(4);
     const links = page.locator('.VPSidebar .VPSidebarItem.level-1 > .item a.link');
     expect(await links.evaluateAll((els) => els.map((el) => el.getAttribute('href') ?? ''))).toEqual(
-      devFiles.map((f) => `/agent-project/${devPagePath(lang, f)}`),
+      devFiles.map((f) => `${siteBase}${devPagePath(lang, f)}`),
     );
   }
 });
@@ -209,14 +211,14 @@ for (const file of guideFiles) {
     const menu = page.locator('.VPNavBarTranslations');
     await menu.getByRole('button', { name: 'Change language' }).click();
     await menu.getByRole('link', { name: '日本語' }).click();
-    await expect(page).toHaveURL(new RegExp(`/agent-project/${pagePath('ja', file).replace('/', '\\/')}$`));
+    await expect(page).toHaveURL(new RegExp(`${siteBase}${pagePath('ja', file).replace('/', '\\/')}$`));
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
     expect(await brokenImages(page)).toEqual([]);
     for (const src of await docImageSources(page)) expect(src).toMatch(/\.ja\.[\w-]+\.png$/);
 
     await page.locator('.VPNavBarTranslations').getByRole('button', { name: '言語を変更' }).click();
     await page.locator('.VPNavBarTranslations').getByRole('link', { name: 'English' }).click();
-    await expect(page).toHaveURL(new RegExp(`/agent-project/${pagePath('en', file).replace('/', '\\/')}$`));
+    await expect(page).toHaveURL(new RegExp(`${siteBase}${pagePath('en', file).replace('/', '\\/')}$`));
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     for (const src of await docImageSources(page)) expect(src).not.toMatch(/\.ja\./);
   });
@@ -297,10 +299,10 @@ for (const lang of langs) {
 
 // AC-7: local search
 const searchCases: { lang: Lang; term: string; hrefPart: string }[] = [
-  { lang: 'en', term: 'epic', hrefPart: '/agent-project/guide/watch/epics' },
-  { lang: 'en', term: 'archive', hrefPart: '/agent-project/guide/watch/board' },
-  { lang: 'ja', term: 'エピック', hrefPart: '/agent-project/ja/guide/watch/epics' },
-  { lang: 'ja', term: 'アーカイブ', hrefPart: '/agent-project/ja/guide/watch/board' },
+  { lang: 'en', term: 'epic', hrefPart: `${siteBase}guide/watch/epics` },
+  { lang: 'en', term: 'archive', hrefPart: `${siteBase}guide/watch/board` },
+  { lang: 'ja', term: 'エピック', hrefPart: `${siteBase}ja/guide/watch/epics` },
+  { lang: 'ja', term: 'アーカイブ', hrefPart: `${siteBase}ja/guide/watch/board` },
 ];
 for (const { lang, term, hrefPart } of searchCases) {
   test(`search (${lang}) finds "${term}"`, async ({ page }) => {
@@ -412,8 +414,8 @@ for (const lang of langs) {
       const video = page.locator('video.demo-video');
       await expect(video).toHaveCount(1);
       const suffix = lang === 'ja' ? '.ja' : '';
-      await expect(video).toHaveAttribute('src', `/agent-project/videos/demo${suffix}.mp4`);
-      await expect(video).toHaveAttribute('poster', `/agent-project/videos/demo${suffix}.jpg`);
+      await expect(video).toHaveAttribute('src', `${siteBase}videos/demo${suffix}.mp4`);
+      await expect(video).toHaveAttribute('poster', `${siteBase}videos/demo${suffix}.jpg`);
       await expect(video).not.toHaveAttribute('controls', /.*/);
       // Browsers pause muted autoplay videos that are off screen.
       await video.scrollIntoViewIfNeeded();

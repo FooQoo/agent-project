@@ -1,6 +1,6 @@
 # ブラウザのデモ
 
-ブラウザのデモは、`agpj serve`を置かずに静的サイトの上でボードを動かすものです。このドキュメントサイトと一緒に[`/agent-project/demo/`](https://fooqoo.github.io/agent-project/demo/)で公開しています。画面は製品と同じもので、サーバーだけがページ内で動くサンプルデータのサーバーに置き換わっています。
+ブラウザのデモは、`agpj serve`を置かずに静的サイトの上でボードを動かすものです。このドキュメントサイトと一緒に[`/agent-project/demo/`（`agent-project`はリポジトリ名）](https://fooqoo.github.io/agent-project/demo/)で公開しています。画面は製品と同じもので、サーバーだけがページ内で動くサンプルデータのサーバーに置き換わっています。
 
 訪れた人には、まず[初回の案内](../../guide/quickstart.md#before-you-start-the-first-run-guide)が表示され、そのあと通常のボードを操作できます。このページでは、その仕組み、ビルドの方法、公開前に確かめる方法を説明します。
 
