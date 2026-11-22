@@ -26,7 +26,16 @@ agboard --project "My project" result add 12 --actor ai --final --title "Release
 Published: v1.0.0" --link https://example.com/releases/v1.0.0
 ```
 
-行はあってもリンクがない成果は主張にすぎないので、レポートは「確認できない」に載せます。そうした成果がないカードも、完了していても確認できません。Doneのカードはエージェントから読み取り専用で、最終成果がすでにあると新しい成果を受け付けません。公開の記録はカードが開いている間に残すか、人がカードをDoneから戻して記録し、またDoneにします。
+行はあってもリンクがない成果は主張にすぎないので、レポートは「確認できない」に載せます。そうした成果がないカードも、完了していても確認できません。
+
+明示的な形式なら、版名を検証し、リンクを必須にし、`Published:`の行も自動で付けます。
+
+```sh
+agboard --project "My project" result add 12 --actor ai --published v1.0.0 \
+  --link https://example.com/releases/v1.0.0 --summary "Released."
+```
+
+公開の記録は、Doneのカードにも、最終成果がすでにあるカードにも、いつでも追加できます。Doneのカードが受け付けるのはこの記録だけで、ほかの成果・本文・受け入れ条件・列は変わりません。Web APIでは`POST /api/projects/{projectId}/tasks/{id}/results`で同じ記録を追加できます。詳しくは[Web API](../../dev/reference/web-api)を参照してください。
 
 ### 例：版の一部だけ公開を確認できた場合
 

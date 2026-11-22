@@ -35,6 +35,7 @@ fn task_with_result(
                 link: None,
                 images: Vec::new(),
                 key: None,
+                published: None,
             },
             when,
         )

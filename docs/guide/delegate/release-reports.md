@@ -26,7 +26,16 @@ agboard --project "My project" result add 12 --actor ai --final --title "Release
 Published: v1.0.0" --link https://example.com/releases/v1.0.0
 ```
 
-A result with the line but no link is only a claim, and the report lists the card as not confirmed. A card with no such result is not confirmed either, however finished it is. A Done card is read-only for agents, and one that already has a final result takes no more results, so record the publication while the card is open, or have a person move it out of Done, record it, and move it back.
+A result with the line but no link is only a claim, and the report lists the card as not confirmed. A card with no such result is not confirmed either, however finished it is.
+
+The explicit form checks the version name, requires the link, and writes the `Published:` line for you:
+
+```sh
+agboard --project "My project" result add 12 --actor ai --published v1.0.0 \
+  --link https://example.com/releases/v1.0.0 --summary "Released."
+```
+
+A publication record can be added at any time, including to a Done card and to a card that already has a final result. It is the only change a Done card takes: other results, the body, the acceptance conditions, and the column stay as they are. The Web API accepts the same record with `POST /api/projects/{projectId}/tasks/{id}/results`; see the [Web API](../../dev/reference/web-api).
 
 ### Example: publication confirmed for part of a version
 

@@ -78,6 +78,7 @@ fn add(ctx: &mut Context, args: &ResultAddArgs) -> Result<Outcome, AgboardError>
             link: args.link.clone(),
             images,
             key: args.key.clone(),
+            published: args.published.clone(),
         },
         ctx.clock.now(),
     )?;
