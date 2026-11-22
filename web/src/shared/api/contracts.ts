@@ -1,5 +1,5 @@
 export type ColumnName = 'backlog' | 'todo' | 'doing' | 'done';
-export type RunState = 'idle' | 'running' | 'pending';
+export type RunState = 'idle' | 'running' | 'paused' | 'ran' | 'awaiting_answer';
 export type Assignee = 'ai' | 'human';
 export type Actor = 'ai' | 'human';
 /** Who still writes a card or epic: a person in the browser (an edit lock). */

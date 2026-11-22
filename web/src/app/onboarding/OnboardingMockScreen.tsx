@@ -37,7 +37,7 @@ function sampleCard(task: TaskSummary) {
       renderEpic={renderEpic}
       onSelect={noop}
     >
-      {task.agentStatus === 'pending' && (
+      {task.agentStatus === 'awaiting_answer' && (
         <div className="card__answer">
           <DecisionAnswerButton taskId={task.id} onClick={noop} />
         </div>

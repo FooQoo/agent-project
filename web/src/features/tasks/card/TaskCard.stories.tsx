@@ -85,7 +85,7 @@ export const PendingWithEpic: Story = {
   args: {
     task: makeTask({
       id: 44,
-      agentStatus: 'pending',
+      agentStatus: 'awaiting_answer',
       pendingReason: 'Waiting for a decision.',
       epic: makeEpic(),
     }),
@@ -116,7 +116,7 @@ const answerCard = (): Story['args'] => ({
   task: makeTask({
     id: 11,
     title: 'API refactor',
-    agentStatus: 'pending',
+    agentStatus: 'awaiting_answer',
     pendingReason: 'How much compatibility should v2 keep?',
     pendingRequestId: 'request-11',
     pendingChoices: [

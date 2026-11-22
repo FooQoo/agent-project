@@ -20,7 +20,7 @@ export function StateChip({ kind }: StateChipProps) {
       {kind === 'draft'
         ? t('editor.draft')
         : kind === 'pending'
-          ? t('runState.pending')
+          ? t('runState.awaiting_answer')
           : t('editor.running')}
     </span>
   );

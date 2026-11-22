@@ -196,7 +196,7 @@ for (const [name, size] of [
 
     // Only #13 was answered; #12 still waits, and the count dropped by one.
     expect(show(13)).toMatchObject({ agentStatus: 'idle', pendingRequestId: null });
-    expect(show(12).agentStatus).toBe('pending');
+    expect(show(12).agentStatus).toBe('awaiting_answer');
     await expect.poll(() => openQuestionCount(page)).toBe(total - 1);
     await expect(answerButton(page, 12)).toBeVisible();
     await page.setViewportSize(DESKTOP);

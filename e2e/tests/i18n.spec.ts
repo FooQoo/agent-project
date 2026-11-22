@@ -90,7 +90,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   expect(storedTask).toMatchObject({
     title: 'Restore a board from JSON',
     taskStatus: 'doing',
-    agentStatus: 'pending',
+    agentStatus: 'awaiting_answer',
     pendingReason: 'Waiting for confirmation on how to replace a board.',
   });
 
@@ -110,7 +110,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(lane(page, 'Todo')).toBeVisible();
   await expect(task(page, 12)).toContainText('Pending');
-  expect(listTasks(mainProject).find(({ id }) => id === 12)).toMatchObject({ taskStatus: 'doing', agentStatus: 'pending' });
+  expect(listTasks(mainProject).find(({ id }) => id === 12)).toMatchObject({ taskStatus: 'doing', agentStatus: 'awaiting_answer' });
 });
 
 test('keyboard selection keeps an open archive confirmation and the selected task', async ({ page }, testInfo) => {

@@ -19,10 +19,10 @@ describe('Task', () => {
     const { rerender } = render(
       <TaskCard task={fixtureTask(14)} selected={false} onSelect={noop} />,
     );
-    for (const label of ['Idle', 'Running', 'Pending'])
+    for (const label of ['Idle', 'Running', 'Awaiting answer'])
       expect(screen.queryByText(label)).toBeNull();
     rerender(<TaskCard task={fixtureTask(8)} selected={false} onSelect={noop} />);
-    for (const label of ['Idle', 'Running', 'Pending'])
+    for (const label of ['Idle', 'Running', 'Awaiting answer'])
       expect(screen.queryByText(label)).toBeNull();
   });
 
@@ -44,7 +44,7 @@ describe('Task', () => {
     rerender(<TaskCard task={fixtureTask(13)} selected={false} onSelect={noop} />);
     expect(screen.getByText('Idle')).toBeTruthy();
     rerender(<TaskCard task={fixtureTask(12)} selected={false} onSelect={noop} />);
-    expect(screen.getByText('Pending')).toBeTruthy();
+    expect(screen.getByText('Awaiting answer')).toBeTruthy();
   });
 
   it('translates the column run state and update label without changing task input or time', async () => {
@@ -52,7 +52,7 @@ describe('Task', () => {
       id: 40,
       title: 'Keep this title as entered',
       taskStatus: 'doing',
-      agentStatus: 'pending',
+      agentStatus: 'awaiting_answer',
       pendingReason: 'Keep this waiting reason as entered',
       updatedAt: '2026-10-02T10:08:00Z',
     });
@@ -62,7 +62,7 @@ describe('Task', () => {
       await act(async () => {
         await i18n.changeLanguage('ja');
       });
-      expect(screen.getByText('待機中')).toBeTruthy();
+      expect(screen.getByText('回答待')).toBeTruthy();
       expect(screen.getByText('更新 10/02 10:08')).toBeTruthy();
       expect(screen.getByText('Keep this title as entered')).toBeTruthy();
       expect(screen.getByText('Keep this waiting reason as entered')).toBeTruthy();
@@ -94,7 +94,7 @@ describe('Task', () => {
     const task = makeTask({
       id: 41,
       taskStatus: 'todo',
-      agentStatus: 'pending',
+      agentStatus: 'awaiting_answer',
       pendingRequestId: 'request-41',
       pendingReason: 'Choose a direction',
     });
@@ -125,7 +125,7 @@ describe('Task', () => {
     const task = makeTask({
       id: 43,
       taskStatus: 'todo',
-      agentStatus: 'pending',
+      agentStatus: 'awaiting_answer',
       pendingReason: 'Choose a direction',
       openQuestionIds: ['Q-1', 'Q-2'],
     });
@@ -148,7 +148,7 @@ describe('Task', () => {
     const task = makeTask({
       id: 42,
       taskStatus: 'doing',
-      agentStatus: 'pending',
+      agentStatus: 'awaiting_answer',
       pendingReason: 'Waiting for the request to be restored.',
       pendingRequestId: null,
     });

@@ -9,7 +9,7 @@ function props(): MonitorViewProps {
   const item = (
     id: number,
     taskStatus: 'todo' | 'doing' | 'done',
-    agentStatus: 'idle' | 'running' | 'pending',
+    agentStatus: 'idle' | 'running' | 'awaiting_answer',
   ) => ({
     projectId: PROJECT_A.id,
     projectName: PROJECT_A.name,
@@ -17,16 +17,21 @@ function props(): MonitorViewProps {
       id,
       taskStatus,
       agentStatus,
-      pendingReason: agentStatus === 'pending' ? 'Waiting for decision' : null,
-      pendingRequestId: agentStatus === 'pending' ? `request-${id}` : null,
-      pendingChoices: agentStatus === 'pending' ? [{ id: 'choice', label: 'Continue' }] : [],
+      pendingReason: agentStatus === 'awaiting_answer' ? 'Waiting for decision' : null,
+      pendingRequestId: agentStatus === 'awaiting_answer' ? `request-${id}` : null,
+      pendingChoices:
+        agentStatus === 'awaiting_answer' ? [{ id: 'choice', label: 'Continue' }] : [],
     }),
   });
   return {
     summary: { backlog: 0, todo: 1, doing: 3, done: 1 },
     backlog: [],
     todo: [item(1, 'todo', 'idle')],
-    doing: [item(2, 'doing', 'running'), item(4, 'doing', 'pending'), item(5, 'doing', 'idle')],
+    doing: [
+      item(2, 'doing', 'running'),
+      item(4, 'doing', 'awaiting_answer'),
+      item(5, 'doing', 'idle'),
+    ],
     done: [item(3, 'done', 'idle')],
     freshness: {
       state: 'fresh',
@@ -57,14 +62,14 @@ describe('MonitorView', () => {
     const tabs = screen.getAllByRole('tab').map((tab) => tab.getAttribute('aria-label'));
     expect(tabs).toEqual(['Backlog 0', 'Todo 1', 'Doing 3', 'Done 1']);
     expect(screen.getAllByRole('article', { name: /^#4 / })).toHaveLength(1);
-    const pendingTask = screen.getByRole('article', { name: /^#4 Doing Pending / });
-    expect(pendingTask.querySelector('.status-label')?.textContent).toBe('Pending');
+    const pendingTask = screen.getByRole('article', { name: /^#4 Doing Awaiting answer / });
+    expect(pendingTask.querySelector('.status-label')?.textContent).toBe('Awaiting answer');
     // A decision card shows the button only: no question, no choices, no note.
     expect(within(pendingTask).getByRole('button', { name: 'Answer the question' })).toBeTruthy();
     expect(within(pendingTask).queryByText('Waiting for decision')).toBeNull();
     expect(within(pendingTask).queryByRole('textbox')).toBeNull();
     expect(within(pendingTask).queryByRole('button', { name: 'Send' })).toBeNull();
-    expect(pendingTask.getAttribute('data-agent-status')).toBe('pending');
+    expect(pendingTask.getAttribute('data-agent-status')).toBe('awaiting_answer');
     const idleTodo = screen.getByRole('article', { name: /^#1 Todo Idle / });
     expect(idleTodo.getAttribute('data-agent-status')).toBe('idle');
     expect(idleTodo.querySelector('.status-label')?.textContent).toBe('Idle');

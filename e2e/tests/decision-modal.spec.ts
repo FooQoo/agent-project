@@ -125,7 +125,7 @@ test('Later closes the dialog without answering, and the board keeps updating', 
   // A change made through the CLI shows up, and nothing was sent.
   agboardOk(mainProject, ['add', 'Added while a question was open']);
   await expect(lane(page, 'Todo').getByText('Added while a question was open')).toBeVisible({ timeout: 15_000 });
-  expect(show(13).agentStatus).toBe('pending');
+  expect(show(13).agentStatus).toBe('awaiting_answer');
 
   // The typed note is not kept: the question opens empty again, and Clear removes what is typed.
   await openAnswer(page, 13);
@@ -135,7 +135,7 @@ test('Later closes the dialog without answering, and the board keeps updating', 
   await expect(answerNote(page)).toHaveValue('');
   await page.keyboard.press('Escape');
   await expect(answerDialog(page)).toBeHidden();
-  expect(show(13).agentStatus).toBe('pending');
+  expect(show(13).agentStatus).toBe('awaiting_answer');
 });
 
 // DM-3: a question withdrawn while its dialog is open leaves the dialog, and cannot be answered any more.
@@ -218,7 +218,7 @@ test('a failed send keeps the input and the retry sends the same answer', async 
   // The dialog still holds the answer.
   await expect(dialog).toContainText('Plan B');
   await expect(dialog).toContainText('Same answer, twice.');
-  expect(show(13).agentStatus).toBe('pending');
+  expect(show(13).agentStatus).toBe('awaiting_answer');
 
   fail = false;
   // Sending again is the retry.
@@ -254,7 +254,7 @@ test('the band and the list show the open questions, and each is answered on its
   await expect(rows).toHaveCount(2);
   await expect(listRow(page, /Which way for #13\?/)).toContainText('Answered, waiting for an AI');
   expect(show(13)).toMatchObject({ agentStatus: 'idle', pendingRequestId: null });
-  expect(show(12).agentStatus).toBe('pending');
+  expect(show(12).agentStatus).toBe('awaiting_answer');
   expectHistoryNote(show(13).history.at(-1), ['Which way for #13?', 'Plan A', 'Replace it.']);
 
   // Answering the other one leaves nothing waiting for the person.

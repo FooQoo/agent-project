@@ -162,9 +162,9 @@ describe('DetailPanel', () => {
         onRemove={noRemove}
       />,
     );
-    expect(document.querySelector('.detail__meta .status-label--pending')?.textContent).toBe(
-      'Pending',
-    );
+    expect(
+      document.querySelector('.detail__meta .status-label--awaiting_answer')?.textContent,
+    ).toBe('Awaiting answer');
     expect(document.querySelector('.detail__request')).toBeNull();
     rerender(
       <DetailPanel

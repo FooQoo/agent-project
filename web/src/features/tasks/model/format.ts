@@ -26,15 +26,20 @@ export function columnLabel(c: ColumnName, t?: TFunction): string {
 const STATE_LABELS = {
   idle: 'Idle',
   running: 'Running',
-  pending: 'Pending',
+  paused: 'Paused',
+  ran: 'Has run',
+  awaiting_answer: 'Awaiting answer',
 } as const;
 
-/** The run state is only shown for cards in Doing. */
+/** The run state is shown for cards in Doing, and for a card that waits for an answer or has run. */
 export function stateLabel(task: TaskSummary, t?: TFunction): string | null {
-  // An AI card shows its run state in Doing, and a pending question in Todo (before the work starts).
+  // An AI card shows its run state in Doing; in Todo and Done only a question that waits for an answer
+  // or the fact that the task has run is worth a label.
   const shows =
     task.assignee === 'ai' &&
-    (task.taskStatus === 'doing' || (task.taskStatus === 'todo' && task.agentStatus === 'pending'));
+    (task.taskStatus === 'doing' ||
+      task.agentStatus === 'awaiting_answer' ||
+      task.agentStatus === 'ran');
   if (!shows) return null;
   return t ? t(`runState.${task.agentStatus}`) : STATE_LABELS[task.agentStatus];
 }

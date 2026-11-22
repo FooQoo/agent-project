@@ -29,16 +29,20 @@ export const AgentIdle: Story = { args: { kind: 'agent', status: 'idle' } };
 
 export const AgentRunning: Story = { args: { kind: 'agent', status: 'running' } };
 
-export const AgentPending: Story = { args: { kind: 'agent', status: 'pending' } };
+export const AgentPaused: Story = { args: { kind: 'agent', status: 'paused' } };
+
+export const AgentRan: Story = { args: { kind: 'agent', status: 'ran' } };
+
+export const AgentAwaitingAnswer: Story = { args: { kind: 'agent', status: 'awaiting_answer' } };
 
 /** The monitor shows the agent states with its own words. */
 export const MonitorRunning: Story = { args: { kind: 'agent', status: 'running', monitor: true } };
 
-/** The monitor shows a pending agent with its own pending wording and the pause icon. */
-export const MonitorPending: Story = {
-  args: { kind: 'agent', status: 'pending', monitor: true },
+/** The monitor shows an agent that waits for an answer with its own wording and the pause icon. */
+export const MonitorAwaitingAnswer: Story = {
+  args: { kind: 'agent', status: 'awaiting_answer', monitor: true },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByText('Pending')).toBeInTheDocument();
+    await expect(within(canvasElement).getByText('Awaiting answer')).toBeInTheDocument();
   },
 };
 

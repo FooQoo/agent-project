@@ -45,7 +45,7 @@ test('the panel shows the run state and the reason for Doing tasks, and an empty
   await expect(panel).toContainText('Pending');
   // The pause icon shows on the card and in the detail alike.
   await expect(task(page, 12).locator('.status-label svg')).toHaveCount(1);
-  await expect(panel.locator('.detail__meta .status-label--pending svg')).toHaveCount(1);
+  await expect(panel.locator('.detail__meta .status-label--awaiting_answer svg')).toHaveCount(1);
   // The request is answered on the card, so the details do not repeat it.
   await expect(panel.getByRole('region', { name: 'The agent is waiting for your answer' })).toHaveCount(0);
   // The card shows only the button; the answer is entered in its dialog, and Later closes it without sending.

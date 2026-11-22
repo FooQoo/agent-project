@@ -61,7 +61,7 @@ test('moving a task out of Todo keeps its question pending until the question is
   agboardOk(mainProject, ['mv', String(id), 'doing', '--actor', 'human', '--reason', 'Start now.']);
   await page.reload();
   await waitForSync(page);
-  expect(show(id)).toMatchObject({ taskStatus: 'doing', agentStatus: 'pending', pendingRequestId: question });
+  expect(show(id)).toMatchObject({ taskStatus: 'doing', agentStatus: 'awaiting_answer', pendingRequestId: question });
   await expect(card()).toContainText('Pending');
   await expect(answerButton(page, id)).toBeVisible();
 

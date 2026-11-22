@@ -522,7 +522,7 @@ test('the answer dialog takes the focus and gives it back', async ({ page }) => 
   }
   await page.keyboard.press('Escape');
   await expect(answer).toHaveCount(0);
-  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('pending');
+  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('awaiting_answer');
 });
 
 // ------------------------------------------------------------------ The language never changes the data
@@ -735,7 +735,7 @@ test('a request that fails keeps what was typed, shows the reason, and can be se
   // The dialog says the question was answered elsewhere, and keeps the typed note.
   await expect(answer.getByRole('alert')).toContainText('This question was answered elsewhere or withdrawn.');
   await expect(answer).toContainText('Kept answer.');
-  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('pending');
+  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('awaiting_answer');
   answerFails = false;
   await send(page);
   await closeMessages(page);

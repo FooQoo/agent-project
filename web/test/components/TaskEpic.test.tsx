@@ -38,7 +38,7 @@ describe('Task epic label', () => {
       id: 22,
       epic,
       taskStatus: 'doing',
-      agentStatus: 'pending',
+      agentStatus: 'awaiting_answer',
       pendingReason: 'Waiting',
     });
     const { container } = render(

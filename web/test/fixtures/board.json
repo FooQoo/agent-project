@@ -118,7 +118,7 @@
       "position": 2,
       "assignee": "ai",
       "taskStatus": "doing",
-      "agentStatus": "pending",
+      "agentStatus": "awaiting_answer",
       "pendingReason": "Waiting for confirmation on how to replace a board.",
       "pendingRequestId": "0123456789abcdef0123456789abcdef",
       "createdAt": "2026-10-02T00:20:00Z",

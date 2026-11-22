@@ -191,7 +191,7 @@ export interface TaskJson {
   taskStatus: 'backlog' | 'todo' | 'doing' | 'done';
   taskStatusChangedAt: string;
   assignee: 'ai' | 'human';
-  agentStatus: 'idle' | 'running' | 'pending';
+  agentStatus: 'idle' | 'running' | 'paused' | 'ran' | 'awaiting_answer';
   pendingReason: string | null;
   pendingRequestId: string | null;
   pendingChoices?: { id: string; label: string }[];
@@ -293,7 +293,7 @@ interface FixtureTask {
   assignee: 'ai' | 'human';
   taskStatus: 'backlog' | 'todo' | 'doing' | 'done';
   taskStatusChangedAt: string;
-  agentStatus: 'idle' | 'running' | 'pending';
+  agentStatus: 'idle' | 'running' | 'paused' | 'ran' | 'awaiting_answer';
   pendingReason: string | null;
   pendingRequestId: string | null;
   pendingChoices?: { id: string; label: string }[];
@@ -320,7 +320,7 @@ function taskFilesFor(item: FixtureTask, question?: string): { task: Record<stri
     taskStatus: item.taskStatus,
     taskStatusChangedAt: item.taskStatusChangedAt,
     // Waiting is derived from the open question the card refers to; only idle and running are stored.
-    agentStatus: item.agentStatus === 'pending' ? 'idle' : item.agentStatus,
+    agentStatus: item.agentStatus === 'awaiting_answer' ? 'idle' : item.agentStatus,
     position: item.position,
     draft: null,
     archivedAt: null,
@@ -359,7 +359,7 @@ export function seedProject(project: string, file: string, home: string = mainHo
     const dir = path.join(folder, 'tasks', String(item.id));
     mkdirSync(dir, { recursive: true });
     let question: string | undefined;
-    if (item.agentStatus === 'pending') {
+    if (item.agentStatus === 'awaiting_answer') {
       question = `Q-${nextQuestionId++}`;
       const questionDir = path.join(folder, 'qa', question);
       mkdirSync(questionDir, { recursive: true });
