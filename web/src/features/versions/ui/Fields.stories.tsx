@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import type { PendingSave } from '../../../shared/ui/editor/planField';
 import { type EpicVersionResult, PlannedVersionChangedError } from '../api/versions';
 import { EpicPlanField } from './EpicPlanField';
@@ -86,72 +86,43 @@ export const PickerConflict: Story = {
   },
 };
 
-const members = [
-  { id: 1, title: 'Plan one', taskStatus: 'todo', plannedVersion: null },
-  { id: 2, title: 'Plan two', taskStatus: 'doing', plannedVersion: 'v1.8.0' },
-  { id: 3, title: 'Plan three', taskStatus: 'done', plannedVersion: null },
-  { id: 4, title: 'Plan four', taskStatus: 'todo', plannedVersion: 'v1.9.0' },
-];
-
-const dry: EpicVersionResult = {
-  changed: [1],
-  unchanged: [2],
-  skipped: [3, 4],
-  skippedReasons: { '3': 'done', '4': 'planned' },
-  dryRun: true,
+const result: EpicVersionResult = {
+  changed: [1, 2],
+  unchanged: [],
+  skipped: [3],
+  skippedReasons: { '3': 'done' },
+  dryRun: false,
 };
 
-const epicArgs = { members, current: 'v1.8.0', versions: ['v1.8.0', 'v1.9.0'] };
+const epicArgs = { current: 'v1.8.0' as string | null, versions: ['v1.8.0', 'v1.9.0'] };
 
-export const EpicDryRun: Story = {
-  render: () => (
-    <EpicPlanField
-      {...epicArgs}
-      preview={fn(async () => dry)}
-      apply={fn(async () => ({ ...dry, dryRun: false }))}
-      onPending={fn()}
-    />
-  ),
+export const EpicDefaultNoChange: Story = {
+  render: () => <EpicPlanField {...epicArgs} apply={fn(async () => result)} onPending={fn()} />,
   play: async ({ canvasElement }) => {
     const view = within(canvasElement);
-    await userEvent.click(view.getByRole('radio', { name: /Make it current/ }));
-    await expect(await view.findByText('1 of 4 tasks will change to v1.8.0')).toBeVisible();
-    await expect(view.getByText('Skipped: done')).toBeVisible();
-    await expect(view.getByText('Skipped: already planned')).toBeVisible();
-    await expect(view.getAllByText('No change').length).toBeGreaterThan(1);
+    await expect(view.getByRole('radio', { name: 'No change' })).toBeChecked();
+    await expect(view.getByRole('radio', { name: /Make it current/ })).toBeVisible();
+    await expect(view.getByRole('radio', { name: 'v1.9.0' })).toBeVisible();
   },
 };
 
-export const EpicNothingToChange: Story = {
-  render: () => (
-    <EpicPlanField
-      {...epicArgs}
-      preview={fn(async () => ({ ...dry, changed: [], unchanged: [1, 2] }))}
-      apply={fn(async () => dry)}
-      onPending={fn()}
-    />
-  ),
-  play: async ({ canvasElement }) => {
+export const EpicPickingAVersion: Story = {
+  render: () => <EpicPlanField {...epicArgs} apply={fn(async () => result)} onPending={fn()} />,
+  play: async ({ canvasElement, args }) => {
     const view = within(canvasElement);
-    await userEvent.click(view.getByRole('radio', { name: /Make it current/ }));
-    await expect(await view.findByText('No task will change')).toBeVisible();
+    await userEvent.click(view.getByRole('radio', { name: 'v1.9.0' }));
+    await expect(view.getByRole('radio', { name: 'v1.9.0' })).toBeChecked();
+    void args;
   },
 };
 
-export const EpicCheckFailed: Story = {
+export const EpicCurrentUnavailable: Story = {
   render: () => (
-    <EpicPlanField
-      {...epicArgs}
-      preview={fn(async () => {
-        throw new Error('nope');
-      })}
-      apply={fn(async () => dry)}
-      onPending={fn()}
-    />
+    <EpicPlanField {...epicArgs} current={null} apply={fn(async () => result)} onPending={fn()} />
   ),
   play: async ({ canvasElement }) => {
-    const view = within(canvasElement);
-    await userEvent.click(view.getByRole('radio', { name: /Make it current/ }));
-    await waitFor(() => expect(view.getByRole('alert')).toBeVisible());
+    await expect(
+      within(canvasElement).getByRole('radio', { name: /Make it current/ }),
+    ).toBeDisabled();
   },
 };

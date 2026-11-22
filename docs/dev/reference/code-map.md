@@ -135,7 +135,7 @@ The main files and directories outside `src/` are:
 ### Planned versions
 
 - `web/src/features/versions/api/versions.ts`: the write requests.
-- `web/src/features/versions/model/`: the epic preview rows (`bulk.ts`) and the project's versions from the Summary (`useProjectVersions.ts`).
+- `web/src/features/versions/model/`: the project's versions from the Summary (`useProjectVersions.ts`).
 - `web/src/features/versions/ui/`: the card tag, the header's current-version menu (`CurrentVersionMenu.tsx`, wired by `HeaderCurrentVersion.tsx`), the task's planned-version field (`PlannedVersionPicker.tsx`, wired by `TaskPlanField.tsx`), the epic's field (`EpicPlanField.tsx`, wired by `EpicPlan.tsx`), the option rows, and the phone's `PlanContext.tsx`.
 - `web/src/shared/ui/editor/planField.ts` and `usePendingPlan.ts`: the contract between an editor and a planned-version field.
 - `web/src/app/useBoardVersions.tsx`: the PC board's card tag and header slot.

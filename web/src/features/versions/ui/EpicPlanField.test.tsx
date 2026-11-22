@@ -7,102 +7,64 @@ import { EpicPlanField } from './EpicPlanField';
 
 afterEach(cleanup);
 
-const members = [
-  { id: 1, title: 'Plan one', taskStatus: 'todo', plannedVersion: null },
-  { id: 2, title: 'Plan two', taskStatus: 'doing', plannedVersion: null },
-  { id: 3, title: 'Plan three', taskStatus: 'done', plannedVersion: null },
-  { id: 4, title: 'Plan four', taskStatus: 'todo', plannedVersion: 'v1.9.0' },
-];
-
-const dry: EpicVersionResult = {
-  changed: [1, 2],
+const result: EpicVersionResult = {
+  changed: [1],
   unchanged: [],
-  skipped: [3, 4],
-  skippedReasons: { '3': 'done', '4': 'planned' },
-  dryRun: true,
+  skipped: [],
+  skippedReasons: {},
+  dryRun: false,
 };
 
-function field(preview = vi.fn(async () => dry)) {
+function field(current: string | null = 'v1.8.0', versions = ['v1.8.0', 'v1.9.0']) {
   let pending: PendingSave | null = null;
   const onPending = vi.fn((next: PendingSave | null) => {
     pending = next;
   });
-  const apply = vi.fn(async () => ({ ...dry, dryRun: false }));
+  const apply = vi.fn(async () => result);
   render(
-    <EpicPlanField
-      members={members}
-      current="v1.8.0"
-      versions={['v1.8.0', 'v1.9.0']}
-      preview={preview}
-      apply={apply}
-      onPending={onPending}
-    />,
+    <EpicPlanField current={current} versions={versions} apply={apply} onPending={onPending} />,
   );
-  return { preview, apply, onPending, pending: () => pending as PendingSave | null };
+  return { apply, pending: () => pending as PendingSave | null };
 }
 
-describe('the planned versions of an epic, in its editor', () => {
-  it('changes nothing and asks nothing until a version is chosen', () => {
-    const { preview, pending } = field();
-    expect(preview).not.toHaveBeenCalled();
+describe('the planned version of an epic, in its editor', () => {
+  it('has no change to save by default', () => {
+    const { pending } = field();
     expect(pending()).toBeNull();
+    expect(screen.getByRole('radio', { name: 'No change' }).getAttribute('aria-checked')).toBe(
+      'true',
+    );
   });
 
-  it('shows the dry run of each task before anything is saved', async () => {
-    const { preview, apply } = field();
-    fireEvent.click(screen.getByRole('radio', { name: /Make it current/ }));
-    expect(await screen.findByText('2 of 4 tasks will change to v1.8.0')).toBeTruthy();
-    expect(preview).toHaveBeenCalledWith({ choice: 'current' }, 'unplanned-only', [1, 2, 3, 4]);
-    expect(screen.getByText('Skipped: done')).toBeTruthy();
-    expect(screen.getByText('Skipped: already planned')).toBeTruthy();
-    expect(apply).not.toHaveBeenCalled();
-  });
-
-  it('applies the checked rows with the same body and no dry run when the editor saves', async () => {
+  it('applies the chosen version when the editor saves, with nothing asked before', async () => {
     const { apply, pending } = field();
     fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
-    await screen.findByText('2 of 4 tasks will change to v1.9.0');
-    fireEvent.click(screen.getByRole('checkbox', { name: /Plan two/ }));
-    expect(screen.getByText('1 of 4 tasks will change to v1.9.0')).toBeTruthy();
+    await waitFor(() => expect(pending()).not.toBeNull());
+    expect(apply).not.toHaveBeenCalled();
+    await pending()?.();
+    expect(apply).toHaveBeenCalledWith({ choice: 'named', version: 'v1.9.0' });
+  });
+
+  it('offers current, none, and the versions newest first', async () => {
+    const { apply, pending } = field('v1.8.0', ['v1.8.0', 'v1.9.0', 'v1.10.0']);
+    const names = screen.getAllByRole('radio').map((r) => r.parentElement?.textContent);
+    expect(names[0]).toBe('No change');
+    expect(names.slice(-3)).toEqual(['v1.10.0', 'v1.9.0', 'Leave unplanned']);
+    fireEvent.click(screen.getByRole('radio', { name: /Make it current/ }));
     await waitFor(() => expect(pending()).not.toBeNull());
     await pending()?.();
-    expect(apply).toHaveBeenCalledWith(
-      { choice: 'named', version: 'v1.9.0' },
-      'unplanned-only',
-      [1],
-    );
+    expect(apply).toHaveBeenLastCalledWith({ choice: 'current' });
+    fireEvent.click(screen.getByRole('radio', { name: 'Leave unplanned' }));
+    await waitFor(() => expect(pending()).not.toBeNull());
+    await pending()?.();
+    expect(apply).toHaveBeenLastCalledWith({ choice: 'unset' });
   });
 
-  it('asks again when the scope changes', async () => {
-    const { preview } = field();
-    fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
-    await screen.findByText('2 of 4 tasks will change to v1.9.0');
-    fireEvent.click(screen.getByRole('radio', { name: /Every task in the epic/ }));
-    await waitFor(() =>
-      expect(preview).toHaveBeenLastCalledWith(
-        { choice: 'named', version: 'v1.9.0' },
-        'all',
-        [1, 2, 3, 4],
-      ),
-    );
-  });
-
-  it('has nothing to save when no task would change', async () => {
-    const { pending } = field(
-      vi.fn(
-        async (): Promise<EpicVersionResult> => ({
-          changed: [],
-          unchanged: [1, 2],
-          skipped: [3, 4],
-          skippedReasons: { '3': 'done', '4': 'planned' },
-          dryRun: true,
-        }),
-      ),
-    );
-    fireEvent.click(screen.getByRole('radio', { name: /Make it current/ }));
-    expect(await screen.findByText('No task will change')).toBeTruthy();
-    expect(pending()).toBeNull();
-    expect(screen.getAllByText('No change').length).toBeGreaterThan(0);
+  it('disables current while none is set', () => {
+    field(null);
+    expect(
+      (screen.getByRole('radio', { name: /Make it current/ }) as HTMLButtonElement).disabled,
+    ).toBe(true);
   });
 
   it('takes the change back when "No change" is chosen again', async () => {
@@ -113,109 +75,41 @@ describe('the planned versions of an epic, in its editor', () => {
     await waitFor(() => expect(pending()).toBeNull());
   });
 
-  it('says so when the check fails', async () => {
-    field(
-      vi.fn(async () => {
-        throw new Error('nope');
-      }),
-    );
-    fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
-    expect((await screen.findByRole('alert')).textContent).toContain('Nothing was changed');
-  });
-
   it('keeps versions named like the controls apart from the controls', async () => {
-    const { pending, preview } = field();
-    cleanup();
-    let next: PendingSave | null = null;
+    let pending: PendingSave | null = null;
+    const apply = vi.fn(async () => result);
     render(
       <EpicPlanField
-        members={members}
         current={null}
-        versions={['__none__', 'c:none', '__keep__']}
-        preview={preview}
-        apply={vi.fn(async () => ({ ...dry, dryRun: false }))}
+        versions={['c:none', '__keep__']}
+        apply={apply}
         onPending={(p) => {
-          next = p;
+          pending = p;
         }}
       />,
     );
     fireEvent.click(screen.getByRole('radio', { name: 'c:none' }));
-    await waitFor(() =>
-      expect(preview).toHaveBeenLastCalledWith(
-        { choice: 'named', version: 'c:none' },
-        'unplanned-only',
-        [1, 2, 3, 4],
-      ),
-    );
-    fireEvent.click(screen.getByRole('radio', { name: '__none__' }));
-    await waitFor(() =>
-      expect(preview).toHaveBeenLastCalledWith(
-        { choice: 'named', version: '__none__' },
-        'unplanned-only',
-        [1, 2, 3, 4],
-      ),
-    );
-    expect(pending()).toBeNull();
-    expect(next).not.toBeNull();
+    await waitFor(() => expect(pending).not.toBeNull());
+    await (pending as PendingSave | null)?.();
+    expect(apply).toHaveBeenCalledWith({ choice: 'named', version: 'c:none' });
   });
 
-  it('keeps a task unchecked when another client changes the members', async () => {
-    const preview = vi.fn(async () => dry);
-    const props = {
-      current: 'v1.8.0',
-      versions: ['v1.8.0', 'v1.9.0'],
-      preview,
-      apply: vi.fn(async () => ({ ...dry, dryRun: false })),
-      onPending: vi.fn(),
-    };
-    const view = render(<EpicPlanField members={members} {...props} />);
-    fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
-    await screen.findByText('2 of 4 tasks will change to v1.9.0');
-    fireEvent.click(screen.getByRole('checkbox', { name: /Plan two/ }));
-    expect(screen.getByText('1 of 4 tasks will change to v1.9.0')).toBeTruthy();
-    // Task 4 is planned by someone else meanwhile: the members change, the checks stay.
-    const next = members.map((m) => (m.id === 3 ? { ...m, plannedVersion: 'v1.9.0' } : m));
-    view.rerender(<EpicPlanField members={next} {...props} />);
-    await waitFor(() => expect(preview).toHaveBeenCalledTimes(2));
-    await screen.findByText('1 of 4 tasks will change to v1.9.0');
-    expect(
-      (screen.getByRole('checkbox', { name: /Plan two/ }) as HTMLInputElement).getAttribute(
-        'aria-checked',
-      ),
-    ).toBe('false');
-    // Choosing another scope starts a different operation: every task is checked again.
-    fireEvent.click(screen.getByRole('radio', { name: /Every task in the epic/ }));
-    await screen.findByText('2 of 4 tasks will change to v1.9.0');
-  });
-
-  it('fails the plan step while the preview of a chosen target is not ready', async () => {
-    let release: (value: EpicVersionResult) => void = () => {};
-    const slow = vi.fn(() => new Promise<EpicVersionResult>((resolve) => (release = resolve)));
-    const { pending } = field(slow);
-    fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
-    await waitFor(() => expect(pending()).not.toBeNull());
-    await expect(pending()?.()).rejects.toThrow(/not ready/);
-    release(dry);
-    await screen.findByText('2 of 4 tasks will change to v1.9.0');
-    await waitFor(() => expect(pending()).not.toBeNull());
-    // "No change" has nothing to save.
-    fireEvent.click(screen.getByRole('radio', { name: 'No change' }));
-    await waitFor(() => expect(pending()).toBeNull());
-  });
-
-  it('applies the rows that were checked when the change was reported, not a later state', async () => {
-    const { apply, pending } = field();
-    fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
-    await screen.findByText('2 of 4 tasks will change to v1.9.0');
-    await waitFor(() => expect(pending()).not.toBeNull());
-    const accepted = pending();
-    // The preview is asked again (and its rows cleared) before the accepted change runs.
-    fireEvent.click(screen.getByRole('radio', { name: /Every task in the epic/ }));
-    await accepted?.();
-    expect(apply).toHaveBeenCalledWith(
-      { choice: 'named', version: 'v1.9.0' },
-      'unplanned-only',
-      [1, 2],
+  it('propagates a failing apply so the editor keeps the dialog open', async () => {
+    let pending: PendingSave | null = null;
+    render(
+      <EpicPlanField
+        current={null}
+        versions={['v1']}
+        apply={vi.fn(async () => {
+          throw new Error('no');
+        })}
+        onPending={(p) => {
+          pending = p;
+        }}
+      />,
     );
+    fireEvent.click(screen.getByRole('radio', { name: 'v1' }));
+    await waitFor(() => expect(pending).not.toBeNull());
+    await expect((pending as PendingSave | null)?.()).rejects.toThrow('no');
   });
 });

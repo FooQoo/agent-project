@@ -114,24 +114,18 @@
           "name": "EpicPlanField",
           "stories": [
             {
-              "id": "versions-fields--epic-dry-run",
-              "states": [
-                "dry run",
-                "change row",
-                "unchanged row",
-                "skipped done",
-                "skipped planned"
-              ],
+              "id": "versions-fields--epic-default-no-change",
+              "states": ["no change default", "options"],
               "interaction": true
             },
             {
-              "id": "versions-fields--epic-nothing-to-change",
-              "states": ["nothing to change"],
+              "id": "versions-fields--epic-picking-a-version",
+              "states": ["version picked"],
               "interaction": true
             },
             {
-              "id": "versions-fields--epic-check-failed",
-              "states": ["check failed"],
+              "id": "versions-fields--epic-current-unavailable",
+              "states": ["current disabled"],
               "interaction": true
             }
           ]
@@ -162,16 +156,6 @@
             {
               "id": "versions-fields--picker-current-enabled",
               "states": ["label", "hint"],
-              "interaction": true
-            }
-          ]
-        },
-        {
-          "name": "PillRow",
-          "stories": [
-            {
-              "id": "versions-fields--epic-dry-run",
-              "states": ["target pills", "selected pill"],
               "interaction": true
             }
           ]

@@ -37,25 +37,3 @@ export function OptionRow({
     </label>
   );
 }
-
-/** One radio choice drawn as a pill, for a short list of versions. */
-export function PillRow({
-  value,
-  checked,
-  label,
-  mark,
-}: {
-  value: string;
-  checked: boolean;
-  label: string;
-  mark?: string;
-}) {
-  const id = useId();
-  return (
-    <label htmlFor={id} className="ver-pill" data-checked={checked}>
-      <RadioGroupItem id={id} value={value} className="ver-pill__radio" />
-      <span>{label}</span>
-      {mark && <span className="ver-tag__mark">{mark}</span>}
-    </label>
-  );
-}

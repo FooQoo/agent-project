@@ -99,7 +99,7 @@ test('sets the current version from the header, plans a task and plans an epic i
 	await expect(taskDialog).toHaveCount(0);
 	await expect.poll(plannedVersions).toMatchObject({ [cards.b]: 'v1.9.0' });
 
-	// An epic's tasks are planned together in the epic's edit dialog: the dry run lists each task first.
+	// An epic's tasks are planned together in the epic's edit dialog: every task that is not done takes the version.
 	await page.getByRole('button', { name: 'Epics', exact: true }).click();
 	await page.getByRole('list', { name: 'Epics in this project' }).getByRole('listitem').filter({ hasText: 'Login work' }).getByRole('button').first().click();
 	await page.getByRole('button', { name: 'Edit epic', exact: true }).click();
@@ -107,19 +107,15 @@ test('sets the current version from the header, plans a task and plans an epic i
 	const save = epicDialog.getByRole('button', { name: 'Save', exact: true });
 	await expect(save).toBeDisabled();
 	await epicDialog.getByRole('button', { name: 'Planned versions' }).click();
+	await expect(epicDialog.getByRole('radio', { name: 'No change' })).toBeChecked();
 	await epicDialog.getByRole('radio', { name: 'v1.9.0' }).click();
-	// Plan B is planned already; A is planned for v1.8.0: only the unplanned ones (C and D) change.
-	await expect(epicDialog.getByText('2 of 4 tasks will change to v1.9.0')).toBeVisible();
-	await expect(epicDialog.getByText('Skipped: already planned')).toHaveCount(2);
-	expect(await plannedVersions()).toMatchObject({ [cards.c]: null, [cards.d]: null });
-	await epicDialog.getByRole('checkbox', { name: /Plan D history/ }).uncheck();
-	await expect(epicDialog.getByText('1 of 4 tasks will change to v1.9.0')).toBeVisible();
+	expect(await plannedVersions()).toMatchObject({ [cards.a]: 'v1.8.0', [cards.c]: null });
 	await expect(save).toBeEnabled();
 	await save.click();
 	await expect(epicDialog).toHaveCount(0);
 	await expect
 		.poll(plannedVersions)
-		.toMatchObject({ [cards.a]: 'v1.8.0', [cards.b]: 'v1.9.0', [cards.c]: 'v1.9.0', [cards.d]: null, [cards.e]: 'v1.9.0' });
+		.toMatchObject({ [cards.a]: 'v1.9.0', [cards.b]: 'v1.9.0', [cards.c]: 'v1.9.0', [cards.d]: 'v1.9.0', [cards.e]: 'v1.9.0' });
 });
 
 test('the task dialog refuses to overwrite a change made elsewhere and shows the newer value', async ({ page }) => {

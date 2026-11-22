@@ -86,15 +86,16 @@ The epic editor shows the outline on the left, the name and the "Epic details (M
 
 ## Plan an epic at once {#plan-an-epic}
 
-On the PC board, the epic's preview dialog has a folded **Planned versions** section in its right column, under the label row. Open it to plan every task of the epic for one version in a single save.
+On the PC board, the epic's preview dialog has a folded **Planned versions** section in its right column, under the label row. Open it to give every task of the epic the same planned version in one save. It is a short list of choices:
 
-1. Choose the new version: **No change** (the default), **Make it current**, one of the project's versions, or **Unplanned**.
-2. Choose the tasks: **Only unplanned tasks**, or **Every task in the epic**.
-3. Read the list. The board asks the server for a preview first, and nothing is saved yet. Each task shows its version before and after, **No change**, or why it is skipped: done, archived, or already planned. Done tasks are always skipped.
-4. Uncheck any task you want to leave alone. The line above the list says, for example, "2 of 6 tasks will change to v1.9.0".
-5. Choose **Save**. The change is applied as the last step of the save, with the same choices and only the tasks left checked. **Save** is enabled when only this field changed, and the epic itself is then left as it is.
+- **No change** (the default).
+- **Make it current (saves vX)**, disabled while the project has no current version.
+- Each version of the project, newest first.
+- **Leave unplanned**.
 
-Afterwards each card can still be moved to another version on its own in its dialog. See [Planned versions](./editing#planned-versions) and [Planned versions on the board](./board#planned-versions).
+Choose **Save**. The change is applied as the last step of the save: every task of the epic that is not done takes the version, replacing the one it had. Done tasks are left as they are. **Save** is enabled when only this field changed, and the epic itself is then left as it is. If the change cannot be applied, the dialog stays open and says that saving the planned versions failed.
+
+There is no list of tasks and no way to leave one out here. To give one task another version afterwards, open its preview and use its **Planned version** field. See [Planned versions](./editing#planned-versions) and [Planned versions on the board](./board#planned-versions).
 
 ## Read the progress table
 

@@ -135,7 +135,7 @@
 ### 予定版
 
 - `web/src/features/versions/api/versions.ts`: 書き込みのリクエスト。
-- `web/src/features/versions/model/`: エピックのプレビュー行（`bulk.ts`）と、Summaryから読むプロジェクトの版（`useProjectVersions.ts`）。
+- `web/src/features/versions/model/`: Summaryから読むプロジェクトの版（`useProjectVersions.ts`）。
 - `web/src/features/versions/ui/`: カードのタグ、ヘッダーのカレント版メニュー（`CurrentVersionMenu.tsx`、配線は`HeaderCurrentVersion.tsx`）、タスクの予定版フィールド（`PlannedVersionPicker.tsx`、配線は`TaskPlanField.tsx`）、エピックのフィールド（`EpicPlanField.tsx`、配線は`EpicPlan.tsx`）、選択肢の行、スマホの`PlanContext.tsx`。
 - `web/src/shared/ui/editor/planField.ts`と`usePendingPlan.ts`: エディターと予定版フィールドの取り決め。
 - `web/src/app/useBoardVersions.tsx`: PCボードのカードのタグとヘッダーのスロット。
