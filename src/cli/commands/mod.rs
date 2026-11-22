@@ -21,6 +21,8 @@ pub mod serve;
 pub mod serve_auto;
 pub mod setup;
 pub mod setup_remote;
+mod setup_remote_ngrok;
+mod setup_remote_tailscale;
 pub mod show;
 pub mod snapshot;
 pub mod state;

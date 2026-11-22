@@ -143,7 +143,7 @@ taskの項目を省略した例です。
 
 `status`は、サーバーが動いていなければ`no_server`、サーバーが応えなければ`unknown`です。それ以外は接続の状態（`ready`、`disabled`、`starting`、`reconnecting`、`failed`など）です。`entrance`は接続が`ready`のときだけアドレスで、それ以外は`null`です。ngrokのトークンは出力に含まれません。`tokenSaved`は、OSのキーチェーンにトークンがあるかどうかを示します。
 
-`agboard setup remote --domain … --enabled … --token-stdin --json`は、保存した設定を同じ4つのフィールド（`enabled`、`domain`、`tokenSaved`、`keychainAvailable`）で出力し、`saved: true`と、設定は次に接続を開始するときから使われることを伝える`note`を加えます。
+`agboard setup remote --domain … --enabled … --token-stdin --json`は、保存した設定を同じ4つのフィールド（`enabled`、`domain`、`tokenSaved`、`keychainAvailable`）で出力し、`saved: true`と、設定は次に接続を開始するときから使われることを伝える`note`を加えます。保存でproviderをTailscaleにしたときは、`tailscale`オブジェクト（`{ "status": "ready" | "not_installed" | "not_logged_in" | "https_disabled", "domain": string | null }`）も加わります。これは案内のための確認で、保存を失敗させることはありません。
 
 ## messageのイベント
 

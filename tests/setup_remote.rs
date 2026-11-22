@@ -269,3 +269,88 @@ fn the_provider_is_saved_and_a_name_other_than_ngrok_or_tailscale_is_refused() {
         serde_json::from_str(&std::fs::read_to_string(home.path().join(FILE)).unwrap()).unwrap();
     assert_eq!(file["provider"], "tailscale");
 }
+
+/// A directory holding a fake `tailscale` that prints `status` for any call.
+#[cfg(unix)]
+fn fake_tailscale(status: &str) -> tempfile::TempDir {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = tempfile::tempdir().unwrap();
+    let script = dir.path().join("tailscale");
+    std::fs::write(&script, format!("#!/bin/sh\necho '{status}'\n")).unwrap();
+    std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
+    dir
+}
+
+/// Save the Tailscale provider with `path` as the `PATH`, and return the JSON and the text.
+fn save_tailscale(home: &Path, path: &Path) -> (Value, String) {
+    let run = |json: bool| {
+        let mut cmd = agboard(home);
+        cmd.env("PATH", path)
+            .args(["setup", "remote", "--provider", "tailscale"]);
+        if json {
+            cmd.arg("--json");
+        }
+        let out = cmd.output().unwrap();
+        assert_eq!(out.status.code(), Some(0), "{}", text(&out));
+        out
+    };
+    let json = serde_json::from_slice(&run(true).stdout).unwrap();
+    let human = String::from_utf8_lossy(&run(false).stdout).into_owned();
+    let file: Value =
+        serde_json::from_str(&std::fs::read_to_string(home.join(FILE)).unwrap()).unwrap();
+    assert_eq!(file["provider"], "tailscale");
+    (json, human)
+}
+
+#[cfg(unix)]
+#[test]
+fn saving_tailscale_says_what_to_do_in_each_state_and_never_fails() {
+    let cases = [
+        (
+            r#"{"BackendState":"NeedsLogin"}"#,
+            "not_logged_in",
+            "tailscale up",
+        ),
+        (
+            r#"{"BackendState":"Running","Self":{"DNSName":"a.ts.net."},"CertDomains":[]}"#,
+            "https_disabled",
+            "https://login.tailscale.com/admin/dns",
+        ),
+        (
+            r#"{"BackendState":"Running","Self":{"DNSName":"A.ts.net."},"CertDomains":["a.ts.net"]}"#,
+            "ready",
+            "https://a.ts.net",
+        ),
+    ];
+    for (status, code, advice) in cases {
+        let home = tempfile::tempdir().unwrap();
+        let fake = fake_tailscale(status);
+        let (json, human) = save_tailscale(home.path(), fake.path());
+        assert_eq!(json["saved"], true);
+        assert_eq!(json["tailscale"]["status"], code, "{json}");
+        assert!(human.contains(advice), "{human}");
+    }
+    let home = tempfile::tempdir().unwrap();
+    let fake = fake_tailscale(cases[2].0);
+    let (json, _) = save_tailscale(home.path(), fake.path());
+    assert_eq!(json["tailscale"]["domain"], "a.ts.net");
+}
+
+#[cfg(unix)]
+#[test]
+fn saving_tailscale_without_it_installed_explains_both_ways_to_install() {
+    // The macOS app, when present, is found even with an empty PATH.
+    if Path::new("/Applications/Tailscale.app").exists() {
+        return;
+    }
+    let home = tempfile::tempdir().unwrap();
+    let empty = tempfile::tempdir().unwrap();
+    let (json, human) = save_tailscale(home.path(), empty.path());
+    assert_eq!(json["tailscale"]["status"], "not_installed");
+    assert!(
+        human.contains("brew install --cask tailscale-app"),
+        "{human}"
+    );
+    assert!(human.contains("brew install tailscale"), "{human}");
+    assert!(human.contains("cannot be used together"), "{human}");
+}

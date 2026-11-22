@@ -93,7 +93,7 @@ Agent Boardは、2つの方法でスマホに届けられます。**リモート
 
 どちらの方法でも、合言葉、登録済みのスマホ、通知は同じです。違うのは、スマホがPCに届く経路だけです。アドレスが変わるため、一方からもう一方に切り替えると、スマホは新しい端末として扱われます。合言葉をもう一度入力し、通知をもう一度オンにしてください。
 
-Tailscaleを使うには、PCとスマホにTailscaleをインストールし、同じアカウントでサインインします。Tailscaleの管理画面で、ネットワークのMagicDNSとHTTPS証明書を有効にします。続いて**リモート接続**を開き、**Tailscale**を選んで**保存して接続**を選びます。ngrokのものであるトークンとドメインは、ダイアログに表示されません。Tailscaleがインストールされていない、サインインしていない、HTTPS証明書がないときは、ダイアログがその旨を表示し、接続しません。このPCで別のプログラムがすでにTailscaleでHTTPSを配信している場合も接続しません。そのプログラムを置き換えないためです。先に`tailscale serve --https=443 off`などで止めてください。アドレスを開くには、スマホでTailscaleをオンにしておく必要があります。
+Tailscaleを使うには、PCとスマホにTailscaleをインストールし、同じアカウントでサインインします。Tailscaleの管理画面で、ネットワークのMagicDNSとHTTPS証明書を有効にします。続いて**リモート接続**を開き、**Tailscale**を選んで**保存して接続**を選びます。ngrokのものであるトークンとドメインは、ダイアログに表示されません。Tailscaleがインストールされていない、サインインしていない、HTTPS証明書がないときは、ダイアログがその旨を表示し、接続しません。このPCで別のプログラムがすでにTailscaleでHTTPSを配信している場合も接続しません。そのプログラムを置き換えないためです。先に`tailscale serve --https=443 off`などで止めてください。アドレスを開くには、スマホでTailscaleをオンにしておく必要があります。`agboard setup remote`でTailscaleを選ぶと、同じ点を確認して次にすることを案内します。案内だけで、保存は止めません。Tailscaleがインストールされていないときは、TailscaleのMacアプリ（`brew install --cask tailscale-app`、App Store、tailscale.com）か、Homebrewのコマンドラインツール（`brew install tailscale`のあと`sudo brew services start tailscale`）のどちらかを入れてください。この2つは併用できません。そのあとアプリか`tailscale up`でサインインし、<https://login.tailscale.com/admin/dns>でMagicDNSとHTTPS Certificatesを有効にします。
 
 ## 合言葉でモニターを守る仕組み
 
