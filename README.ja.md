@@ -101,7 +101,7 @@ agboard serve
 
 [http://127.0.0.1:7420/](http://127.0.0.1:7420/)を開き、プロジェクトを選んで**AI に依頼**を選びます。エージェントのためにサーバーを動かし続ける必要はありません。あなたを待つコマンドとエージェントのHookが裏で起動し、30分使われないと自分で止まります。こうして起動したサーバーは、ボードのタブが開いていなければプロジェクトのボードをブラウザーで開きます。`agboard open`でいつでも開けます。`agboard progress`とHookはカレントフォルダに最も近い登録済みプロジェクトを使います。別プロジェクトを対象にする場合は`--project NAME`で指定します。
 
-スマホから進捗の確認や質問への回答をするには、**設定** → **リモート接続**を開き、ngrokのauthtokenで接続します。スマホでは、ボードがコンピューターに表示する4桁の合言葉（接続を開始するたびに変わります）を入力します。ボード全体はあなたのコンピューターに残ります。環境変数`NGROK_AUTHTOKEN`を設定して`agboard serve --monitor ngrok`で起動することもでき、その場合は合言葉が表示されます。4桁の合言葉はアカウント認証より弱いため、URLは他の人に教えないでください。制限は[リモートアクセスのガイド](https://fooqoo.github.io/agent-board/ja/guide/watch/remote-access)で説明しています。
+スマホから進捗の確認や質問への回答をするには、**設定** → **リモート接続**を開き、ngrok（ngrokのauthtoken）またはTailscale（自分のTailscaleネットワーク内だけのアドレス）で接続します。スマホでは、ボードがコンピューターに表示する4桁の合言葉（接続を開始するたびに変わります）を入力します。ボード全体はあなたのコンピューターに残ります。環境変数`NGROK_AUTHTOKEN`を設定して`agboard serve --monitor ngrok`で起動することもでき、その場合は合言葉が表示されます。4桁の合言葉はアカウント認証より弱いため、URLは他の人に教えないでください。制限は[リモートアクセスのガイド](https://fooqoo.github.io/agent-board/ja/guide/watch/remote-access)で説明しています。
 
 ## 更新する
 
@@ -124,7 +124,7 @@ Agent Boardは、[MITライセンス](LICENSE)で公開しています。同梱�
 ## ドキュメント
 
 - [使い方ガイド](https://fooqoo.github.io/agent-board/ja/guide/) — ブラウザ操作、CLIの例、エージェントの作業手順、共有ファイル、バックアップ。
-- [リモートアクセス](https://fooqoo.github.io/agent-board/ja/guide/watch/remote-access) — ngrokと合言葉によるスマホの接続、モニターの表示内容、確認方法。
+- [リモートアクセス](https://fooqoo.github.io/agent-board/ja/guide/watch/remote-access) — ngrokまたはTailscaleと合言葉によるスマホの接続、モニターの表示内容、確認方法。
 - [リリース](https://github.com/FooQoo/agent-board/releases) — 公開した各版の変更点。
 - [Agent Boardプラグイン（英語）](plugins/agent-board/README.md) — `setup`がClaude CodeとCodexに導入するものと、Hookの仕組み。
 - [開発に参加する](CONTRIBUTING.ja.md) — 開発と検証。

@@ -174,7 +174,7 @@ The width of the detail panel is not part of these settings. Each browser keeps 
 Below the themes, four rows open other features. Each has an icon, a title, one line of description, and a button:
 
 - **Tutorial** with **Try it** closes the dialog and shows the [first-run guide](#the-first-run-guide) again, on the screen you are using.
-- **Remote connection** with **Connection settings** opens the setup for checking the board from a phone with ngrok; see the [remote access guide](./remote-access).
+- **Remote connection** with **Connection settings** opens the setup for checking the board from a phone with ngrok or Tailscale; see the [remote access guide](./remote-access).
 - **Resident agent** with **Agent settings** opens the dialog that starts and stops an agent session kept attached to the board; see [Resident agent](../delegate/resident-session). While a session is launched, or auto-start is on, the footer also shows its tool and state just left of the sync state, and clicking it opens the same dialog.
 - **Notifications** with **Notification settings** opens the dialog that chooses what the board may tell your phone about; see [Notifications](#phone-notifications).
 
@@ -192,7 +192,7 @@ The same board after choosing a dark theme.
 
 ## The first-run guide
 
-The first-run guide runs in your browser, on the PC board and on the phone screen, and it works the same way through the ngrok address. The text is the same in both. On a phone, the welcome and finish messages are centered cards. Each explanation sits at the bottom of the screen, and the buttons are full width; two buttons in a row, such as **Skip** and **Start guide**, share the row evenly.
+The first-run guide runs in your browser, on the PC board and on the phone screen, and it works the same way through the remote access address. The text is the same in both. On a phone, the welcome and finish messages are centered cards. Each explanation sits at the bottom of the screen, and the buttons are full width; two buttons in a row, such as **Skip** and **Start guide**, share the row evenly.
 
 The guide has five steps. At each one, the cards are drawn in a frame at the top of the lane the step is about, over the dimmed board. On a phone, the screen switches to that lane for you. They are not part of your board: they are not saved, they do not change the counts, and agents never see them. While the guide is on screen the rest of the board is covered, so you cannot open or move cards until the guide ends.
 
