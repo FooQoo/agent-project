@@ -1,0 +1,57 @@
+export const versionsJa = {
+  versions: {
+    tag: {
+      none: '未定',
+      current: 'カレント',
+    },
+    header: {
+      button: 'カレント版',
+      buttonValue: 'カレント版: {{version}}',
+      unset: '未設定',
+      listLabel: 'このプロジェクトの版',
+      none: 'カレント版を決めない',
+      addLabel: '新しい版',
+      addPlaceholder: '新しい版（例: v1.9.0）',
+      addConfirm: 'この版をプロジェクトに追加',
+      markCurrent: 'カレント',
+      empty: 'まだ版がありません。上に入力してください。',
+      failed: 'カレント版を変更できませんでした。',
+    },
+    detail: {
+      title: '予定版',
+      note: '変わるのはこのタスクだけです。プロジェクトのカレント版（{{version}}）は変わりません。',
+      noteUnset: '変わるのはこのタスクだけです。プロジェクトのカレント版は未設定のままです。',
+      current: 'カレントにする（{{version}} を保存）',
+      currentHint: 'いまのカレント版の版名がこのタスクに保存されます。',
+      currentUnset: 'カレントにする',
+      currentUnsetHint: 'カレント版が未設定のため選べません',
+      none: '未定にする',
+      failed: '予定版を保存できませんでした。',
+      conflict:
+        '先に別の変更で予定版が {{version}} になりました。あなたの選択は保存していません。選び直して保存すると置き換えます。',
+      conflictNone:
+        '先に別の変更で予定版が未定になりました。あなたの選択は保存していません。選び直して保存すると設定します。',
+    },
+    bulk: {
+      title: 'このエピックのタスクの予定版',
+      note: '予定する版を選びます。保存したときに変更します。',
+      target: '変更先の予定版',
+      noChange: '変更しない',
+      scope: '対象にするタスク',
+      scopeUnplanned: '予定版が未定のタスクだけ',
+      scopeAll: 'エピックの全タスク',
+      summary: '{{total}} 件中 {{changed}} 件の予定版を {{to}} に変更します',
+      summaryNone: '変更されるタスクがありません',
+      listHint: 'チェックを外したタスクは変わりません。',
+      unchanged: '変更なし',
+      checking: '変更内容を確認しています…',
+      checkFailed: '変更内容を確認できませんでした。何も変えていません。',
+      noTasks: 'このエピックにタスクがありません。',
+      skipped: {
+        done: '対象外: 完了済み',
+        archived: '対象外: アーカイブ済み',
+        planned: '対象外: 予定版が決まっています',
+      },
+    },
+  },
+} as const;

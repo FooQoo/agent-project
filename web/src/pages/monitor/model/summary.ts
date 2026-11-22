@@ -49,6 +49,7 @@ function taskOf(task: SummaryTask, epics: ReadonlyMap<string, EpicRef>): Task {
     updatedAt: task.updatedAt,
     agentStatusChangedAt: task.agentStatusChangedAt,
     draft: task.draft,
+    plannedVersion: task.plannedVersion,
     history: [],
     attachments: [],
   };

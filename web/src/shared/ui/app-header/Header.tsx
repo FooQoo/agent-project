@@ -47,6 +47,8 @@ export interface HeaderProps {
   onBack?: () => void;
   /** The project switcher, shown after the slash when the project list is known. */
   projectSwitcher?: ReactNode;
+  /** The project's current-version menu, shown right of the project's name on the board. */
+  versionSlot?: ReactNode;
   /** The settings dialog; without it the settings button opens nothing. */
   settings?: HeaderSettings;
   /** The logo the header shows; the board's own logo file by default. */
@@ -69,6 +71,7 @@ export function Header({
   viewMode = 'board',
   onBack = () => {},
   projectSwitcher = null,
+  versionSlot = null,
   settings,
   logoSrc = `${import.meta.env.BASE_URL}logo-white.png`,
   settingsSize = 'm',
@@ -102,6 +105,9 @@ export function Header({
             </span>
           ) : (
             <div className="header__switcher">{projectSwitcher}</div>
+          )}
+          {versionSlot && viewMode === 'board' && (
+            <div className="header__version">{versionSlot}</div>
           )}
         </>
       )}

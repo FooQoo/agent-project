@@ -192,6 +192,16 @@ Details are kept for 5 minutes after no screen shows them, and there are no fixe
 
 **Detail tabs on the board.** The detail panel reads only what its active tab shows. The Description and Conditions tabs read the `document` section, the History tab reads `history`, and the Epic tab reads the epic's document the first time it is opened. The count on the History tab appears after the history has been read.
 
+## Planned versions in the UI {#planned-versions-in-the-ui}
+
+The user-facing behavior is in [Planned versions](../../guide/watch/board.md#planned-versions); this section is how it is built. The code is in `web/src/features/versions/`, composed by `app/` and `pages/monitor/`.
+
+- **Tag.** The card draws its version tag in its own `card__plan` slot through `renderVersion`, apart from the epic label (`renderEpic`). A project that has no version and a task with no plan draw nothing. The phone has no render-prop path to its cards, so `MonitorScreen` provides `PlanContext` (the versions and the current one, from `planProject`) and `MonitorTask` reads the tag through it. The context is provided only when the environment sets `planning`, so the sample-data screens draw no tag. The phone has no field to set a version.
+- **Header.** `useBoardVersions` gives the PC board the header's `versionSlot`, the `CurrentVersionMenu` wired by `HeaderCurrentVersion`. Choosing a version calls `PUT .../versions/current`; confirming a typed one calls `POST .../versions` and then the same route. Both read the Summary again at once.
+- **Field contract.** An editor that hosts a planned-version field takes `renderPlan`, a function of `PlanFieldArgs` (`disabled` and `onPending`). The field reports its change as a `PendingSave` (or `null` when the person changed nothing). `usePendingPlan` holds it for `EditDialog` and `useEpicEditor`, which run it as the last step of their own save. A pending change alone enables Save and counts as unsaved, but never makes the card or the epic a draft, and an epic saved with only this change is not rewritten. `ActionDialog` supplies the fields on the PC board only.
+- **Task field.** `PlannedVersionPicker` saves with `expectedPlannedVersion` set to the value it showed. On `planned_version_changed` it shows the newer value, asks for the board to be read again, and rejects the save, so the editor reports a failure and the choice is never written silently. When the shown value changes, the pending change is made again over the new value, so a second Save is an explicit overwrite.
+- **Epic field.** `EpicPlanField` calls the epic route with `dryRun: true` whenever the target or the scope changes, over every task of the epic, and lists the answer with `bulkRows`. The pending change is the same body with `dryRun: false` and only the checked task IDs. The server skips done and archived tasks whatever is sent.
+
 ## Behavior on failure in the UI
 
 **Saving and answering**

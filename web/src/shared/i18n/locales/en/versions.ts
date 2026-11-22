@@ -1,0 +1,57 @@
+export const versionsEn = {
+  versions: {
+    tag: {
+      none: 'Unplanned',
+      current: 'Current',
+    },
+    header: {
+      button: 'Current version',
+      buttonValue: 'Current version: {{version}}',
+      unset: 'Not set',
+      listLabel: 'Versions of this project',
+      none: 'No current version',
+      addLabel: 'New version',
+      addPlaceholder: 'New version, such as v1.9.0',
+      addConfirm: 'Add this version to the project',
+      markCurrent: 'Current',
+      empty: 'No versions yet. Type one above.',
+      failed: 'Could not change the current version.',
+    },
+    detail: {
+      title: 'Planned version',
+      note: "Only this task changes. The project's current version ({{version}}) stays.",
+      noteUnset: "Only this task changes. The project's current version stays unset.",
+      current: 'Make it current (saves {{version}})',
+      currentHint: "Saves the current version's name on this task.",
+      currentUnset: 'Make it current',
+      currentUnsetHint: 'Unavailable: no current version is set',
+      none: 'Leave unplanned',
+      failed: 'Could not save the planned version.',
+      conflict:
+        'Another change set the planned version to {{version}} first. Your choice was not saved. Choose again and save to replace it.',
+      conflictNone:
+        'Another change cleared the planned version first. Your choice was not saved. Choose again and save to set it.',
+    },
+    bulk: {
+      title: "Planned versions of this epic's tasks",
+      note: 'Choose a version to plan the tasks for. The change is made when you save.',
+      target: 'New planned version',
+      noChange: 'No change',
+      scope: 'Tasks to change',
+      scopeUnplanned: 'Only unplanned tasks',
+      scopeAll: 'Every task in the epic',
+      summary: '{{changed}} of {{total}} tasks will change to {{to}}',
+      summaryNone: 'No task will change',
+      listHint: 'Tasks you uncheck stay as they are.',
+      unchanged: 'No change',
+      checking: 'Checking what would change…',
+      checkFailed: 'Could not check the change. Nothing was changed.',
+      noTasks: 'This epic has no tasks.',
+      skipped: {
+        done: 'Skipped: done',
+        archived: 'Skipped: archived',
+        planned: 'Skipped: already planned',
+      },
+    },
+  },
+} as const;

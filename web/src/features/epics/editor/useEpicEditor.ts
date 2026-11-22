@@ -12,6 +12,7 @@ import type { RichMarkdownEditorHandle } from '../../../shared/rich-editor/RichM
 import { useAttachmentState } from '../../../shared/ui/editor/useAttachmentState';
 import { useMultipartRequest } from '../../../shared/ui/editor/useMultipartRequest';
 import type { EpicApi, EpicSaveInput } from './epicApi';
+import { usePendingPlan } from '../../../shared/ui/editor/usePendingPlan';
 import {
   epicSnapshot,
   nameIsValid,
@@ -71,6 +72,8 @@ export function useEpicEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const busy = useRef(false);
+  // The planned versions of the epic's tasks are saved by their own request, last of all.
+  const { save: planSave, pending: planPending, onPending: onPlanPending } = usePendingPlan();
   const somethingSaved = useRef(false);
   const attachmentState = useAttachmentState({
     initial: epic.attachments,
@@ -123,7 +126,10 @@ export function useEpicEditor({
   // is no longer different from what the server holds, but the draft is still to be finalized.
   const [finalizePending, setFinalizePending] = useState(false);
   const canSave =
-    valid && (lock.canSave || (finalizePending && lock.entered && lock.problem === null));
+    valid &&
+    (lock.canSave ||
+      (finalizePending && lock.entered && lock.problem === null) ||
+      (planPending && lock.problem === null));
 
   const { updatedAt } = useFollowLatest<Epic>({
     subscribe,
@@ -160,7 +166,9 @@ export function useEpicEditor({
       ? t('epic.stepImages')
       : step === 'order'
         ? t('epic.stepOrder')
-        : t('epic.stepDocument');
+        : step === 'plan'
+          ? t('epic.stepPlan')
+          : t('epic.stepDocument');
 
   const run = async () => {
     if (busy.current || !canSave) return;
@@ -193,7 +201,9 @@ export function useEpicEditor({
       // The order is saved under its own lock, so the epic goes last: its request also ends
       // the draft the dialog entered.
       step = 'epic';
-      if (!wasDraft || documentChanged || detailsChanged) {
+      // A change of the planned versions alone leaves the epic itself as it is.
+      const planOnly = !dirty && !wasDraft && !lock.entered && !finalizePending;
+      if (!planOnly && (!wasDraft || documentChanged || detailsChanged)) {
         const text = currentDocument();
         const base = { name: name.trim(), color: color.toUpperCase() };
         const input: EpicSaveInput = whole
@@ -203,6 +213,8 @@ export function useEpicEditor({
         somethingSaved.current = true;
         setSaved((current) => ({ ...current, ...base, document: text }));
       }
+      step = 'plan';
+      if (planSave.current) await planSave.current();
       busy.current = false;
       setSaving(false);
       setFinalizePending(false);
@@ -282,5 +294,7 @@ export function useEpicEditor({
     close,
     attachmentState,
     removeAttachment,
+    planPending,
+    onPlanPending,
   };
 }

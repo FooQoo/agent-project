@@ -23,6 +23,8 @@ import { MonitorView } from './View';
 import { monitorFreshness } from './model/freshness';
 import { selectMonitorTasks } from './model/select';
 import { monitorTasksOf } from './model/summary';
+import { planProject } from './model/planProject';
+import { PlanContext } from '../../features/versions/ui/PlanContext';
 
 /** A hook that reloads the page for a newer build (`served`), unless the page is `busy`. The entry supplies it. */
 export type BuildReloadHook = (served: string | null, busy: boolean) => void;
@@ -42,6 +44,8 @@ export interface MonitorEnvironment {
   writes?: MonitorWrites;
   /** The header's settings dialog; without it, the plain one that saves through `preferences`. */
   settings?: HeaderSettings;
+  /** Show the planned version on each card (read only). The board app turns it on. */
+  planning?: boolean;
 }
 
 export interface MonitorScreenProps extends MonitorEnvironment {
@@ -122,6 +126,7 @@ export function MonitorScreen({
   statusSlot,
   writes,
   settings,
+  planning = false,
   resultLink,
   onResultLinkClose,
   summaryLink,
@@ -213,7 +218,9 @@ export function MonitorScreen({
   };
   return (
     <>
-      <MonitorView {...props} />
+      <PlanContext.Provider value={planProject(planning, data)}>
+        <MonitorView {...props} />
+      </PlanContext.Provider>
       {asking && (
         <AskAiSheet
           projectId={projectId}

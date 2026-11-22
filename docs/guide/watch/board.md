@@ -131,6 +131,15 @@ The Archive screen lists archived tasks with their ID, title, owner, date, and t
 
 The details of an archived task use the same layout as an active task. **Restore** and the trash icon for permanent deletion sit at the top right, next to the close button. Permanent deletion asks for confirmation first.
 
+## Planned versions {#planned-versions}
+
+A task can be planned for a version of the project, such as `v1.8.0`. The board shows the plan on every card and keeps the project's current version in the header.
+
+- **Tag.** A card shows its planned version in a tag below its title, apart from the epic label. The project's current version is marked **Current** in the tag. A task with no plan shows a dashed **Unplanned** tag. A project that has never used versions shows no tag until a task is planned. The phone shows the same tag, read only.
+- **Current version.** On the PC board, the **Current version** menu in the header, right of the project's name, shows the project's current version. Open it to see the project's versions, with the current one marked, and choose one to make it current. The list is newest first. Its top row is a text field: type a new version and choose the check button to add it to the project. A version you add does not become current by itself; you choose it from the list. The last row, **No current version**, clears it, and it is what a project starts with.
+
+Setting a version is a PC action. The phone has no way to change the current version or a task's plan. To plan a task, see [Planned versions](./editing#planned-versions); to plan the tasks of an epic together, see [Plan an epic at once](./epics#plan-an-epic).
+
 ## Narrow windows and phones {#narrow-windows-and-phones}
 
 When the window is narrower than 768 pixels, and on a phone, the board shows the mobile layout instead of the lanes side by side: tabs for Backlog, Todo, Doing, and Done with their counts, one lane at a time under them (the board opens on Doing), and a bottom bar with **Board**, **Messages**, **Ask**, **Archive**, and **Settings**; **Messages** shows the number of questions that wait on you and opens the list. Tap a tab or swipe sideways to change lanes. Choose a task to read it in a drawer, check its conditions, and answer a decision. Hold a task and swipe it to move it to the next lane or to archive it (swiping a Todo task to the right shows a button that takes it back to the Backlog if nobody has started it; in the Backlog, swiping a plan to the right shows a button that moves it to Todo and swiping it to the left offers the select button for sending several plans, and swiping the lane to the right past its start starts the selection mode, see [Backlog plans](#backlog-plans)), swipe left past the end of the Done lane to archive every completed task, and use **Archive** in the bottom bar to review archived tasks and restore one by swiping it left. The project switcher stays in the header; settings are in the bottom bar. Adding and editing tasks are for a wider window.

@@ -132,6 +132,17 @@ The main files and directories outside `src/` are:
 - `web/demo-build.ts`: the `demo` mode's base path and output folder.
 - `e2e/playwright.demo.config.ts` and `e2e/demo/`: the demo suite, run against the built documentation site. See [The browser demo](../concepts/demo.md).
 
+### Planned versions
+
+- `web/src/features/versions/api/versions.ts`: the write requests.
+- `web/src/features/versions/model/`: the epic preview rows (`bulk.ts`) and the project's versions from the Summary (`useProjectVersions.ts`).
+- `web/src/features/versions/ui/`: the card tag, the header's current-version menu (`CurrentVersionMenu.tsx`, wired by `HeaderCurrentVersion.tsx`), the task's planned-version field (`PlannedVersionPicker.tsx`, wired by `TaskPlanField.tsx`), the epic's field (`EpicPlanField.tsx`, wired by `EpicPlan.tsx`), the option rows, and the phone's `PlanContext.tsx`.
+- `web/src/shared/ui/editor/planField.ts` and `usePendingPlan.ts`: the contract between an editor and a planned-version field.
+- `web/src/app/useBoardVersions.tsx`: the PC board's card tag and header slot.
+- `web/src/pages/monitor/model/planProject.ts`: the versions the phone's cards read their tag from.
+- `web/src/app/development/mock-server/versions.ts`: the sample-data server's version routes.
+- `e2e/tests/release-plan.spec.ts`: the end-to-end tests.
+
 ## Technology choices
 
 <div class="technology-table">

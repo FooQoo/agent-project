@@ -4,7 +4,7 @@ import { groupTasks } from '../../../features/tasks/model/board';
 import type { TaskSummary, ColumnName } from '../../../shared/api/contracts';
 import type { BacklogTarget } from '../../../features/backlog/send';
 import { BoardMessage, type BoardMessageKind } from './BoardMessage';
-import { Lane } from './Lane';
+import { Lane, type LaneProps } from './Lane';
 import { DragDropProvider } from '@dnd-kit/react';
 import { dropPlacement } from '../../../shared/lib/gesture/sortableDrag';
 import type { ProjectId } from '../../../shared/api/contracts';
@@ -42,6 +42,8 @@ export interface BoardProps {
   layoutRef?: (node: HTMLDivElement | null) => void;
   /** The band of unanswered questions above the lanes. */
   band?: ReactNode;
+  /** Draws the planned-version tag of a card. */
+  renderVersion?: LaneProps['renderVersion'];
 }
 
 /**
@@ -69,6 +71,7 @@ function ProjectBoard({
   onAnswer,
   layoutRef,
   band,
+  renderVersion,
 }: BoardProps) {
   const groups = groupTasks(tasks);
   const selection = useBacklogSelection(groups.backlog.map((task) => task.id));
@@ -159,6 +162,7 @@ function ProjectBoard({
               onOpenEpic={onOpenEpic}
               projectId={projectId}
               onAnswer={onAnswer}
+              renderVersion={renderVersion}
               backlog={
                 column === 'backlog' && onSend
                   ? { selection, busy: sendBusy, onSend: send, draggingId }

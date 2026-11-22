@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { actionDialog, bulkArchiveDialog, docsDialog } from './dialogs/lazyDialogs';
 import type { AppDialogsProps } from './contracts';
+import { useNarrowViewport } from '../shared/lib/viewport/useNarrowViewport';
 
 export function AppDialogs({
   model,
@@ -14,6 +15,8 @@ export function AppDialogs({
   epicApi,
 }: AppDialogsProps) {
   const { t } = useTranslation();
+  // The planned-version fields are on the PC board only.
+  const narrow = useNarrowViewport();
   const { session, tasks, projects } = model;
   const dialog = session.dialog;
   const operation = session.operation;
@@ -38,6 +41,7 @@ export function AppDialogs({
             loadEpic={model.loadEpic}
             isTaskListed={model.isTaskListed}
             onChanged={() => model.refreshProject(operation.projectId)}
+            plan={!narrow}
           />
         </Suspense>
       ) : null}

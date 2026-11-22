@@ -4,7 +4,7 @@ import { normalizeNewlines } from '../../../shared/ui/editor/limits';
 import { normalizeWaves } from './waveModel';
 
 /** The steps of a save, in order: images, the waves, and the epic itself in the last request. */
-export type EpicSaveStep = 'images' | 'order' | 'epic';
+export type EpicSaveStep = 'images' | 'order' | 'epic' | 'plan';
 export type EpicEditorPanel = 'progress' | 'images';
 
 const NAME_LIMIT = 100;

@@ -161,7 +161,7 @@ test('the task grips never take keyboard focus', async ({ page }) => {
   await page.locator('body').click({ position: { x: 2, y: 2 } });
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   const visited: string[] = [];
-  for (let step = 0; step < 17; step++) {
+  for (let step = 0; step < 18; step++) {
     await page.keyboard.press('Tab');
     visited.push(
       await page.evaluate(() => {
@@ -173,6 +173,8 @@ test('the task grips never take keyboard focus', async ({ page }) => {
   }
   expect(visited).toEqual([
     'BUTTON agent-board',
+    // The project's current version is a menu in the header, after the project's name.
+    'BUTTON Current version: Not set',
     'BUTTON Ask AI',
     'BUTTON Docs',
     'BUTTON Epics',
@@ -213,7 +215,7 @@ test('the task grips never take keyboard focus', async ({ page }) => {
   );
   // Header actions (switcher, Ask AI, Docs, Epics, Archive, Settings), the band's two counts and its button, eight
   // cards, the Pending card's answer button, Archive completed tasks, four detail controls.
-  expect(focusable).toHaveLength(6 + 3 + 8 + 1 + 1 + 4);
+  expect(focusable).toHaveLength(6 + 1 + 3 + 8 + 1 + 1 + 4);
   expect(await page.locator('.grip').evaluateAll((elements) => elements.every((element) => (element as HTMLElement).tabIndex < 0))).toBe(true);
 });
 

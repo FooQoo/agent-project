@@ -1,6 +1,6 @@
 import { Button } from '@/shared/ui/button';
 import { useTranslation } from 'react-i18next';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { epicInk } from '../model/epic';
 import type { Epic } from '../../../shared/api/contracts';
 import { DiscardConfirm } from '../../../shared/ui/editor/DiscardConfirm';
@@ -12,7 +12,8 @@ import { StateChip } from '../../../shared/ui/editor/StateChip';
 import { CollapsibleSection } from '../../../shared/ui/editor/CollapsibleSection';
 import { EpicProgressList, type ProgressTaskRenderer } from './EpicProgressList';
 import { EpicColorPicker } from './EpicColorPicker';
-import { ListOrderedIcon } from 'lucide-react';
+import { ListOrderedIcon, TagIcon } from 'lucide-react';
+import type { RenderPlanField } from '../../../shared/ui/editor/planField';
 import type { useEpicEditor } from './useEpicEditor';
 
 type EpicEditorState = ReturnType<typeof useEpicEditor>;
@@ -26,12 +27,16 @@ export function EpicEditorView({
   epic,
   state,
   renderTask,
+  renderPlan,
 }: {
   epic: Epic;
   state: EpicEditorState;
   renderTask: ProgressTaskRenderer;
+  renderPlan?: RenderPlanField;
 }) {
   const { t, i18n } = useTranslation();
+  // The planned versions fold, like the progress and the images, so they leave the column its height.
+  const [planOpen, setPlanOpen] = useState(false);
   const {
     editor,
     panel,
@@ -65,6 +70,8 @@ export function EpicEditorView({
     requestOpenTask,
     attachmentState,
     removeAttachment,
+    planPending,
+    onPlanPending,
   } = state;
 
   const lines: EditorStatusLine[] =
@@ -75,7 +82,7 @@ export function EpicEditorView({
         ]
       : (dirty || finalizePending) && locked
         ? [{ tone: 'lock', text: t('editor.lockedEpic') }]
-        : dirty
+        : dirty || planPending
           ? [{ tone: 'info', text: t('editor.unsaved') }]
           : updatedAt !== null
             ? [
@@ -96,7 +103,7 @@ export function EpicEditorView({
       returnFocusSelector={`[data-epic-label="${epic.id}"]`}
       title={t('editor.previewEpicTitle')}
       badge={locked ? <StateChip kind="draft" /> : ''}
-      dirty={dirty}
+      dirty={dirty || planPending}
       saving={saving}
       error={error ?? (lockFailed ? t('editor.saveFailed') : null)}
       onRetry={error === null && lockFailed ? retryLock : run}
@@ -124,17 +131,31 @@ export function EpicEditorView({
         editorRef={editor}
         disabled={saving}
         asideTop={
-          <div className="epic-label-row">
-            <span className="editor__epic-caption">{t('epic.label')}</span>
-            <span
-              className="editor__epic-chip"
-              style={{ background: color, color: epicInk(color) }}
-              data-epic-label={epic.id}
-            >
-              {epic.id}
-            </span>
-            <EpicColorPicker color={color} disabled={saving} onChange={setColor} />
-          </div>
+          <>
+            <div className="epic-label-row">
+              <span className="editor__epic-caption">{t('epic.label')}</span>
+              <span
+                className="editor__epic-chip"
+                style={{ background: color, color: epicInk(color) }}
+                data-epic-label={epic.id}
+              >
+                {epic.id}
+              </span>
+              <EpicColorPicker color={color} disabled={saving} onChange={setColor} />
+            </div>
+            {renderPlan && (
+              <CollapsibleSection
+                title={t('epic.planTitle')}
+                open={planOpen}
+                onToggle={() => setPlanOpen(!planOpen)}
+                icon={
+                  <TagIcon aria-hidden="true" focusable="false" className="collapsible__icon" />
+                }
+              >
+                {renderPlan({ disabled: saving, onPending: onPlanPending })}
+              </CollapsibleSection>
+            )}
+          </>
         }
         sidebar={
           <CollapsibleSection

@@ -192,6 +192,16 @@ Detailは、表示する画面がなくなってから5分キャッシュに残�
 
 **ボードの詳細タブ。** 詳細パネルは、開いているタブが表示する内容だけを読みます。「説明」と「完了条件」のタブは`document`セクションを、「履歴」タブは`history`を読みます。「エピック」タブは、初めて開いたときにエピックの本文を読みます。履歴タブの件数は、履歴の読み込みが終わってから表示されます。
 
+## UIの予定版 {#planned-versions-in-the-ui}
+
+利用者から見た動作は[予定版](../../guide/watch/board.md#planned-versions)にあります。ここでは作りを説明します。コードは`web/src/features/versions/`にあり、`app/`と`pages/monitor/`が組み合わせます。
+
+- **タグ。** カードは版のタグを、エピックのラベル（`renderEpic`）とは別の専用の`card__plan`スロットに、`renderVersion`で描きます。版を持たないプロジェクトで予定のないタスクは、何も描きません。スマホのカードにはrender propの経路がないため、`MonitorScreen`が`PlanContext`（`planProject`が作る版とカレント版）を提供し、`MonitorTask`がそこからタグを読みます。コンテキストは環境が`planning`を指定したときだけ提供されるので、サンプルデータの画面にタグは出ません。スマホに版を設定するフィールドはありません。
+- **ヘッダー。** `useBoardVersions`がPCボードのヘッダーの`versionSlot`、つまり`HeaderCurrentVersion`が配線した`CurrentVersionMenu`を渡します。版を選ぶと`PUT .../versions/current`を呼び、入力した版を確定すると`POST .../versions`のあとに同じルートを呼びます。どちらもすぐにSummaryを読み直します。
+- **フィールドの取り決め。** 予定版フィールドを載せるエディターは、`PlanFieldArgs`（`disabled`と`onPending`）を受け取る関数`renderPlan`を取ります。フィールドは変更を`PendingSave`（何も変えていないときは`null`）として報告します。`usePendingPlan`が`EditDialog`と`useEpicEditor`のためにそれを保持し、各エディターは自分の保存の最後の手順として実行します。この変更だけで保存は押せて未保存として数えますが、カードやエピックが下書きになることはなく、この変更だけで保存したエピックは書き換えません。`ActionDialog`がフィールドを渡すのはPCボードだけです。
+- **タスクのフィールド。** `PlannedVersionPicker`は、表示していた値を`expectedPlannedVersion`にして保存します。`planned_version_changed`のときは新しい値を表示し、ボードの読み直しを求め、保存を拒否します。そのためエディターは失敗を報告し、選択が黙って書かれることはありません。表示している値が変わると、保留中の変更は新しい値のもとで作り直されるので、もう一度保存するのは明示的な上書きです。
+- **エピックのフィールド。** `EpicPlanField`は、対象かスコープが変わるたびに、エピックの全タスクについて`dryRun: true`でエピックのルートを呼び、答えを`bulkRows`で一覧にします。保留中の変更は、同じ本文を`dryRun: false`にし、チェックされたタスクIDだけにしたものです。サーバーは、何を送っても完了済みとアーカイブ済みのタスクを飛ばします。
+
 ## 画面での失敗時の振る舞い
 
 **保存と回答**
