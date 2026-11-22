@@ -89,11 +89,11 @@ for (const lang of langs) {
 
     // The install command is shown and copied as plain text.
     const hero = landing.locator('.lp-hero');
-    await expect(hero.locator('.lp-command code')).toHaveText('$ brew install fooqoo/tap/agboard');
+    await expect(hero.locator('.lp-command code')).toHaveText('$ brew install fooqoo/tap/agpj');
     const copy = hero.getByRole('button', { name: en ? 'Copy command' : 'コマンドをコピー' });
     await copy.click();
     await expect(hero.getByRole('button', { name: en ? 'Copied' : 'コピーしました' })).toBeVisible();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('brew install fooqoo/tap/agboard');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('brew install fooqoo/tap/agpj');
 
     const start = hero.getByRole('link', { name: en ? 'Get started' : 'はじめる' });
     await expect(start).toHaveAttribute('href', en ? '/agent-board/guide/getting-started' : '/agent-board/ja/guide/getting-started');

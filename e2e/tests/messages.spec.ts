@@ -1,6 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { askArgs, agboardOk, decisionJson, mainHome, mainProject, resetBoard, listTasks } from '../helpers/agboard';
+import { askArgs, agpjOk, decisionJson, mainHome, mainProject, resetBoard, listTasks } from '../helpers/agpj';
 import { expect, test } from '../helpers/fixtures';
 import { answerDialog, listRow, messageBand, messageList, openMessageList, sendAnswer } from '../helpers/answer';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
@@ -18,7 +18,7 @@ const lane = (page: import('@playwright/test').Page, name: string) => page.getBy
 type Listed = { id: string; body: string; status: string };
 
 function messages(type: 'question' | 'request'): Listed[] {
-  const out = agboardOk(mainProject, ['message', 'ls', '--type', type, '--status', 'all', '--json']).stdout;
+  const out = agpjOk(mainProject, ['message', 'ls', '--type', type, '--status', 'all', '--json']).stdout;
   return JSON.parse(out).messages;
 }
 
@@ -66,7 +66,7 @@ test('a request sent with Ask AI waits in the Messages band until it is picked u
 });
 
 test('a count in the band opens the list on its own tab', async ({ page }) => {
-  agboardOk(mainProject, ['message', 'send', '--actor', 'human', `--text=Add a reset link to the login page.`]);
+  agpjOk(mainProject, ['message', 'send', '--actor', 'human', `--text=Add a reset link to the login page.`]);
   await readBoardAfterReset(page);
 
   await messageBand(page).getByRole('button', { name: /^Your requests/ }).click();
@@ -81,7 +81,7 @@ test('a count in the band opens the list on its own tab', async ({ page }) => {
 test('the pictures sent with a request show in its detail from the message attachment route', async ({ page }) => {
   const picture = path.join(mainHome(), 'login.png');
   writeFileSync(picture, png);
-  agboardOk(mainProject, ['message', 'send', '--actor', 'human', `--text=The login page looks like this:\n\n![login](attachments/login.png)`, '--image', picture]);
+  agpjOk(mainProject, ['message', 'send', '--actor', 'human', `--text=The login page looks like this:\n\n![login](attachments/login.png)`, '--image', picture]);
   await readBoardAfterReset(page);
 
   const [request] = messages('request');
@@ -99,7 +99,7 @@ test('the pictures sent with a request show in its detail from the message attac
 
 test('a question without choices is answered in words from its card', async ({ page }) => {
   const id = listTasks(mainProject).find((task) => task.taskStatus === 'doing' && task.assignee === 'ai')!.id;
-  agboardOk(mainProject, [
+  agpjOk(mainProject, [
     'message', 'ask', '--actor', 'ai', '--no-wait', '--task', String(id), '--questions-json',
     JSON.stringify({ questions: [{ body: 'What should the page say?' }] }),
   ]);

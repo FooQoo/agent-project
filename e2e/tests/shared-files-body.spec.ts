@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { agboard, agboardOk, mainProject, projectId, resetBoard, taskBody, workspace, type TaskJson, askArgs, decisionJson, questionJson } from '../helpers/agboard';
+import { agpj, agpjOk, mainProject, projectId, resetBoard, taskBody, workspace, type TaskJson, askArgs, decisionJson, questionJson } from '../helpers/agpj';
 import { closeForUpdates, readBoardAfterReset, waitForSync } from '../helpers/ui';
 import { putDraft } from '../helpers/drafts';
 import { answerButton, answerNote, answerSend, openAnswer, send, sendAnswer } from '../helpers/answer';
@@ -23,7 +23,7 @@ const task = (page: Page, id: number) => page.getByRole('button', { name: new Re
 const body = (dialog: Locator) => dialog.getByRole('textbox', { name: 'Description (Markdown)' });
 
 function show(id: number): ShownTask {
-  return JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  return JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 }
 
 async function openBoard(page: Page): Promise<void> {
@@ -35,16 +35,16 @@ async function openBoard(page: Page): Promise<void> {
 
 /** A decision request on card `id`, the card moved to Doing and running first, as an agent does. */
 function askWithChoices(id: number, question: string, choices: { id: string; label: string }[]): void {
-  if (show(id).taskStatus !== 'doing') agboardOk(mainProject, ['mv', String(id), 'doing', '--actor', 'human', '--reason', 'Doing it.']);
-  agboardOk(mainProject, ['state', String(id), 'running', '--actor', 'ai', '--reason', 'Working.']);
+  if (show(id).taskStatus !== 'doing') agpjOk(mainProject, ['mv', String(id), 'doing', '--actor', 'human', '--reason', 'Doing it.']);
+  agpjOk(mainProject, ['state', String(id), 'running', '--actor', 'ai', '--reason', 'Working.']);
   const file = path.join(work, `request-${id}-${Date.now()}.json`);
   writeFileSync(file, questionJson(question, choices));
-  agboardOk(mainProject, askArgs(String(id), readFileSync(file, 'utf8')));
+  agpjOk(mainProject, askArgs(String(id), readFileSync(file, 'utf8')));
 }
 
 function askText(id: number, question: string): void {
-  agboardOk(mainProject, ['state', String(id), 'running', '--actor', 'ai', '--reason', 'Working.']);
-  agboardOk(mainProject, askArgs(String(id), questionJson(question, [])));
+  agpjOk(mainProject, ['state', String(id), 'running', '--actor', 'ai', '--reason', 'Working.']);
+  agpjOk(mainProject, askArgs(String(id), questionJson(question, [])));
 }
 
 let work: string;
@@ -68,8 +68,8 @@ test('a task body shows its sections, consecutive captures side by side, and a M
   const two = path.join(work, 'two.png');
   writeFileSync(one, png);
   writeFileSync(two, png);
-  const first = JSON.parse(agboardOk(mainProject, ['attachment', 'add', '13', '--file', one, '--actor', 'ai', '--json']).stdout);
-  const second = JSON.parse(agboardOk(mainProject, ['attachment', 'add', '13', '--file', two, '--actor', 'ai', '--json']).stdout);
+  const first = JSON.parse(agpjOk(mainProject, ['attachment', 'add', '13', '--file', one, '--actor', 'ai', '--json']).stdout);
+  const second = JSON.parse(agpjOk(mainProject, ['attachment', 'add', '13', '--file', two, '--actor', 'ai', '--json']).stdout);
   const ids = [first, second].map((item) => (item.attachment?.id ?? item.id) as string);
   const markdown = [
     '## Work',
@@ -82,7 +82,7 @@ test('a task body shows its sections, consecutive captures side by side, and a M
     '```',
     '',
   ].join('\n');
-  agboardOk(mainProject, ['edit', '13', '--desc-file', writeBody(markdown)]);
+  agpjOk(mainProject, ['edit', '13', '--desc-file', writeBody(markdown)]);
 
   await openBoard(page);
   await task(page, 13).click();
@@ -166,17 +166,17 @@ test('an answer with nothing chosen and nothing typed cannot be sent', async ({ 
 test('a Done task rejects agent edits while a person can still edit and show its body', async ({ page }) => {
   await openBoard(page);
   // The agent reports the work: the card stays in Doing, paused.
-  agboardOk(mainProject, ['state', '13', 'running', '--actor', 'ai', '--reason', 'Working.']);
-  agboardOk(mainProject, ['state', '13', 'paused', '--actor', 'ai', '--reason', 'Reported as finished.']);
+  agpjOk(mainProject, ['state', '13', 'running', '--actor', 'ai', '--reason', 'Working.']);
+  agpjOk(mainProject, ['state', '13', 'paused', '--actor', 'ai', '--reason', 'Reported as finished.']);
   expect(show(13)).toMatchObject({ taskStatus: 'doing', agentStatus: 'paused' });
   await expect(page.getByRole('region', { name: 'Doing' }).getByRole('button', { name: /^#13(?!\d)/ })).toBeVisible();
 
   // The coordinator moves it to Done with a reason.
-  agboardOk(mainProject, ['mv', '13', 'done', '--actor', 'human', '--reason', 'Accepted.']);
+  agpjOk(mainProject, ['mv', '13', 'done', '--actor', 'human', '--reason', 'Accepted.']);
   await expect(page.getByRole('region', { name: 'Done' }).getByRole('button', { name: /^#13(?!\d)/ })).toBeVisible();
 
   // Done is read-only for agents. A human can still edit it in the page below.
-  const refused = agboard(mainProject, ['edit', '13', '--desc-file', writeBody(taskBody('Corrected after Done.'))]);
+  const refused = agpj(mainProject, ['edit', '13', '--desc-file', writeBody(taskBody('Corrected after Done.'))]);
   expect(refused.code).not.toBe(0);
   expect(refused.stderr).toContain('task #13 is done and read-only for agents');
   expect(show(13)).toMatchObject({ taskStatus: 'done', agentStatus: 'ran' });
@@ -201,9 +201,9 @@ test('a Done task rejects agent edits while a person can still edit and show its
 test('the edit dialog writes nothing when it is opened and closed unchanged, and saves its text and pictures once when changed', async ({ page }) => {
   const picture = path.join(work, 'keep.png');
   writeFileSync(picture, png);
-  const added = JSON.parse(agboardOk(mainProject, ['attachment', 'add', '15', '--file', picture, '--actor', 'ai', '--json']).stdout);
+  const added = JSON.parse(agpjOk(mainProject, ['attachment', 'add', '15', '--file', picture, '--actor', 'ai', '--json']).stdout);
   const pictureId = (added.attachment?.id ?? added.id) as string;
-  agboardOk(mainProject, ['edit', '15', '--desc-file', writeBody(`## Work\n\nIntro text.\n\n![kept](attachment:${pictureId})\n`)]);
+  agpjOk(mainProject, ['edit', '15', '--desc-file', writeBody(`## Work\n\nIntro text.\n\n![kept](attachment:${pictureId})\n`)]);
 
   const file = path.join(workspace(mainProject).folder, 'tasks', '15', 'TASK.md');
 

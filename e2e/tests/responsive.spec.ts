@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '../helpers/fixtures';
-import { resetBoard, mainProject } from '../helpers/agboard';
+import { resetBoard, mainProject } from '../helpers/agpj';
 
 // There is one desktop layout. These checks run it at the supported desktop widths.
 test.beforeEach(() => {

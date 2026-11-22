@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { agboard, agboardCatalogOk, projectId, skipGuide, taskBody } from '../helpers/agboard';
+import { agboard, agpjCatalogOk, projectId, skipGuide, taskBody } from '../helpers/agpj';
 import { expect, test } from '../helpers/fixtures';
 import { startPhoneEntrance, type PhoneEntrance } from '../helpers/monitor';
 
@@ -20,7 +20,7 @@ test.beforeAll(async () => {
   test.setTimeout(240_000);
   home = mkdtempSync(path.join(os.tmpdir(), 'agent-board-phone-drawer-'));
   skipGuide(home);
-  agboardCatalogOk(['project', 'create', 'Live'], home);
+  agpjCatalogOk(['project', 'create', 'Live'], home);
   const added = JSON.parse(
     agboard('Live', ['add', 'Live card', `--desc=${taskBody('Body.')}`, '--assignee', 'ai', '--actor', 'human', '--json'], home).stdout,
   ) as { task: { id: number } };

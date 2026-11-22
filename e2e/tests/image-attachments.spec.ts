@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { agboardOk, mainProject, nextTaskId, resetBoard } from '../helpers/agboard';
+import { agpjOk, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
 
 const png = Buffer.from(
@@ -11,14 +11,14 @@ test.beforeEach(() => resetBoard(mainProject));
 
 test('attachments added from the CLI appear in the detail list and CLI can read their bytes', async ({ page }, info) => {
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', 'Dropped image', '--assignee', 'human', '--actor', 'human']);
+  agpjOk(mainProject, ['add', 'Dropped image', '--assignee', 'human', '--actor', 'human']);
   const { readFileSync, writeFileSync } = await import('node:fs');
   const file = info.outputPath('cli.png');
   writeFileSync(file, png);
-  agboardOk(mainProject, ['attachment', 'add', String(id), '--file', file, '--actor', 'ai']);
-  const saved = JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  agpjOk(mainProject, ['attachment', 'add', String(id), '--file', file, '--actor', 'ai']);
+  const saved = JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
   const output = info.outputPath('downloaded.png');
-  agboardOk(mainProject, ['attachment', 'get', String(id), saved.attachments[0].id, '--output', output]);
+  agpjOk(mainProject, ['attachment', 'get', String(id), saved.attachments[0].id, '--output', output]);
   expect(readFileSync(output)).toEqual(png);
 
   await page.goto('/');

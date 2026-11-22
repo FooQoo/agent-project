@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => {
         // The sample data the mock plugin provides in the page; a unit test replaces it with a stub.
         ...(process.env.VITEST
           ? {
-              'virtual:agboard-mock-seed': fileURLToPath(
+              'virtual:agpj-mock-seed': fileURLToPath(
                 new URL('./test/support/mockSeed.ts', import.meta.url),
               ),
             }

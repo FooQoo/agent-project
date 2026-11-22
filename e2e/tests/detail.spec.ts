@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '../helpers/fixtures';
-import { resetBoard, mainProject } from '../helpers/agboard';
+import { resetBoard, mainProject } from '../helpers/agpj';
 import { answerButton, answerNote, laterButton, openAnswer } from '../helpers/answer';
 
 test.beforeEach(async ({ page }) => {

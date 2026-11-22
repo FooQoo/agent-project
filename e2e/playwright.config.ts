@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
-import { repoRoot } from './helpers/agboard';
+import { repoRoot } from './helpers/agpj';
 
 // Every `agboard` the suite runs inherits this environment. A command that would start a server in the background
 // (a wait, the hook) must not do so: the specs start the servers they need, and an automatic one would try port 7420.

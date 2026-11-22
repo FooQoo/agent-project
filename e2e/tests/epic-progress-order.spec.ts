@@ -2,7 +2,7 @@
 // CLI reads the same order from the progress table.
 
 import { expect, test, type Page, type Locator } from '../helpers/fixtures';
-import { agboardOk, mainProject, projectId, resetBoard } from '../helpers/agboard';
+import { agpjOk, mainProject, projectId, resetBoard } from '../helpers/agpj';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
 
 const task = (page: Page | Locator, title: string) => page.locator('.epic-progress__row', { hasText: title });
@@ -31,16 +31,16 @@ async function dragToNewWave(page: Page, dialog: Locator, title: string): Promis
 }
 
 function progressOrder(): number[] {
-  const table = JSON.parse(agboardOk(mainProject, ['progress', '--json']).stdout);
+  const table = JSON.parse(agpjOk(mainProject, ['progress', '--json']).stdout);
   return (table.epics as { tasks: { id: number }[] }[])[0]?.tasks.map((item) => item.id) ?? [];
 }
 
 test.beforeEach(() => {
   resetBoard(mainProject);
-  agboardOk(mainProject, ['epic', 'add', 'ORDER', '--name', 'Ordered epic', '--color', '#7C3AED', '--actor', 'human']);
-  agboardOk(mainProject, ['add', 'First step', '--assignee', 'ai', '--actor', 'human', '--epic', 'ORDER']);
-  agboardOk(mainProject, ['add', 'Second step', '--assignee', 'ai', '--actor', 'human', '--epic', 'ORDER']);
-  agboardOk(mainProject, ['add', 'Third step', '--assignee', 'ai', '--actor', 'human', '--epic', 'ORDER']);
+  agpjOk(mainProject, ['epic', 'add', 'ORDER', '--name', 'Ordered epic', '--color', '#7C3AED', '--actor', 'human']);
+  agpjOk(mainProject, ['add', 'First step', '--assignee', 'ai', '--actor', 'human', '--epic', 'ORDER']);
+  agpjOk(mainProject, ['add', 'Second step', '--assignee', 'ai', '--actor', 'human', '--epic', 'ORDER']);
+  agpjOk(mainProject, ['add', 'Third step', '--assignee', 'ai', '--actor', 'human', '--epic', 'ORDER']);
 });
 
 test('a task dragged into a new wave in the progress table is saved with the epic and read back by the CLI', async ({ page }) => {

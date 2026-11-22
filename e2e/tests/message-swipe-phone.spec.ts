@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { mainProject, resetBoard } from '../helpers/agboard';
+import { mainProject, resetBoard } from '../helpers/agpj';
 import { openMessageList } from '../helpers/answer';
 
 // An iPhone-sized touch screen with no message at all.

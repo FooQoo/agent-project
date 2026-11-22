@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { repoRoot } from '../helpers/agboard';
+import { repoRoot } from '../helpers/agpj';
 import {
   createMonitorHome,
   monitorProjectId,

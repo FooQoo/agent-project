@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
-import { mainHome, mainProject, projectId, resetBoard } from '../helpers/agboard';
+import { mainHome, mainProject, projectId, resetBoard } from '../helpers/agpj';
 import { waitForSync } from '../helpers/ui';
 
 // The project docs on the real page: open the dialog and choose a file, which is only shown; the

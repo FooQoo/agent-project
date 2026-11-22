@@ -11,7 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 /** The repository root (the parent of e2e/). */
 export const repoRoot = path.resolve(here, '..', '..');
 export const seedFile = path.resolve(here, '..', 'fixtures', 'agent-board.json');
-const ptyAnswer = path.resolve(here, 'agboard_pty_answer.py');
+const ptyAnswer = path.resolve(here, 'agpj_pty_answer.py');
 const serveCaughtUp = path.resolve(here, 'serve-caught-up.mjs');
 
 /**
@@ -25,8 +25,8 @@ export const betaFixture = path.resolve(here, '..', 'fixtures', 'multi-project-b
 /** The project the main serve shows. Every helper takes the project explicitly; none has a default. */
 export const mainProject = 'agent-board';
 
-export function agboardBinary(): string {
-  return process.env.AGPJ_E2E_BINARY ?? path.join(repoRoot, 'target', 'debug', 'agboard');
+export function agpjBinary(): string {
+  return process.env.AGPJ_E2E_BINARY ?? path.join(repoRoot, 'target', 'debug', 'agpj');
 }
 
 /*
@@ -84,7 +84,7 @@ export function removeHome(home: string): void {
   rmSync(home, { recursive: true, force: true });
 }
 
-function agboardEnv(home: string): NodeJS.ProcessEnv {
+function agpjEnv(home: string): NodeJS.ProcessEnv {
   return { ...process.env, AGPJ_HOME: home, TZ: 'UTC' };
 }
 
@@ -93,10 +93,10 @@ function agboardEnv(home: string): NodeJS.ProcessEnv {
  * folder instead of registering a macOS FSEvents watch, which can take tens of seconds per start.
  */
 export function serveEnv(home: string): NodeJS.ProcessEnv {
-  return { ...agboardEnv(home), AGPJ_WATCH: 'poll' };
+  return { ...agpjEnv(home), AGPJ_WATCH: 'poll' };
 }
 
-export interface AgboardResult {
+export interface AgpjResult {
   code: number;
   stdout: string;
   stderr: string;
@@ -106,12 +106,12 @@ export interface AgboardResult {
  * Run a project command, `agboard --project <project> <args>`, against `home` (the main home by default),
  * without a terminal. The project is always named by the caller.
  */
-export function agboard(project: string, args: string[], home: string = mainHome()): AgboardResult {
+export function agboard(project: string, args: string[], home: string = mainHome()): AgpjResult {
   return run(['--project', project, ...withTestDefaults(args)], home);
 }
 
 /** Run a whole-catalog command such as `project create NAME` or `project ls`, which takes no `--project`. */
-export function agboardCatalog(args: string[], home: string = mainHome()): AgboardResult {
+export function agpjCatalog(args: string[], home: string = mainHome()): AgpjResult {
   return run(withOwnFolder(args, home), home);
 }
 
@@ -127,9 +127,9 @@ function withOwnFolder(args: string[], home: string): string[] {
   return [...args.slice(0, at + 3), '--folder', folder, ...args.slice(at + 3)];
 }
 
-function run(args: string[], home: string): AgboardResult {
-  const result = spawnSync(agboardBinary(), args, {
-    env: agboardEnv(home),
+function run(args: string[], home: string): AgpjResult {
+  const result = spawnSync(agpjBinary(), args, {
+    env: agpjEnv(home),
     cwd: home,
     encoding: 'utf8',
     input: '',
@@ -139,7 +139,7 @@ function run(args: string[], home: string): AgboardResult {
 }
 
 /** Like `agboard`, but the command must succeed. */
-export function agboardOk(project: string, args: string[], home: string = mainHome()): AgboardResult {
+export function agpjOk(project: string, args: string[], home: string = mainHome()): AgpjResult {
   const result = agboard(project, args, home);
   if (result.code !== 0) {
     throw new Error(`agboard --project ${project} ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
@@ -147,9 +147,9 @@ export function agboardOk(project: string, args: string[], home: string = mainHo
   return result;
 }
 
-/** Like `agboardCatalog`, but the command must succeed. */
-export function agboardCatalogOk(args: string[], home: string = mainHome()): AgboardResult {
-  const result = agboardCatalog(args, home);
+/** Like `agpjCatalog`, but the command must succeed. */
+export function agpjCatalogOk(args: string[], home: string = mainHome()): AgpjResult {
+  const result = agpjCatalog(args, home);
   if (result.code !== 0) throw new Error(`agboard ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
   return result;
 }
@@ -162,7 +162,7 @@ export interface ProjectJson {
 
 /** The projects from `agboard project ls --json`. */
 export function listProjects(home: string = mainHome()): ProjectJson[] {
-  return JSON.parse(agboardCatalogOk(['project', 'ls', '--json'], home).stdout).projects;
+  return JSON.parse(agpjCatalogOk(['project', 'ls', '--json'], home).stdout).projects;
 }
 
 /** The immutable ID of the project called `name`. */
@@ -182,7 +182,7 @@ export interface WorkspaceJson {
 
 /** The shared folder of `project`, from `agboard workspace --json`. */
 export function workspace(project: string, home: string = mainHome()): WorkspaceJson {
-  return JSON.parse(agboardOk(project, ['workspace', '--json'], home).stdout);
+  return JSON.parse(agpjOk(project, ['workspace', '--json'], home).stdout);
 }
 
 export interface TaskJson {
@@ -199,7 +199,7 @@ export interface TaskJson {
 
 /** The cards of `project` from `agboard ls --json`. */
 export function listTasks(project: string, home: string = mainHome()): TaskJson[] {
-  return JSON.parse(agboardOk(project, ['ls', '--json'], home).stdout).tasks;
+  return JSON.parse(agpjOk(project, ['ls', '--json'], home).stdout).tasks;
 }
 
 /**
@@ -390,7 +390,7 @@ export function seedProject(project: string, file: string, home: string = mainHo
 /** Create `project` if it does not exist yet. */
 export function ensureProject(project: string, home: string = mainHome()): void {
   if (!listProjects(home).some((existing) => existing.name === project)) {
-    agboardCatalogOk(['project', 'create', project], home);
+    agpjCatalogOk(['project', 'create', project], home);
   }
 }
 
@@ -398,14 +398,14 @@ export function ensureProject(project: string, home: string = mainHome()): void 
  * Answer a "[y/N] " prompt of a human-only command (`rm`, `project rm`) the way a person at a terminal
  * would. Runs `agboard` on a pseudo-terminal through a small Python helper, because Node cannot allocate one.
  */
-export function agboardOnTerminal(
+export function agpjOnTerminal(
   project: string,
   answer: string,
   args: string[],
   home: string = mainHome(),
-): AgboardResult {
-  const result = spawnSync('python3', [ptyAnswer, answer, agboardBinary(), '--project', project, ...args], {
-    env: agboardEnv(home),
+): AgpjResult {
+  const result = spawnSync('python3', [ptyAnswer, answer, agpjBinary(), '--project', project, ...args], {
+    env: agpjEnv(home),
     cwd: home,
     encoding: 'utf8',
   });
@@ -450,7 +450,7 @@ function waitForServeToShow(url: string, project: string, file: string, id: stri
 
 /** Delete `project` and its cards the way a person does: with a `y` on a terminal. */
 export function removeProject(project: string, home: string = mainHome()): void {
-  const result = agboardOnTerminal(project, 'y', ['project', 'rm'], home);
+  const result = agpjOnTerminal(project, 'y', ['project', 'rm'], home);
   if (result.code !== 0) throw new Error(`deleting ${project} failed: ${result.stdout}${result.stderr}`);
 }
 
@@ -477,7 +477,7 @@ function withTestDefaults(args: string[]): string[] {
 
 /** A project with no cards. */
 export function createEmptyProject(home: string, name: string): void {
-  agboardCatalogOk(['project', 'create', name], home);
+  agpjCatalogOk(['project', 'create', name], home);
 }
 
 async function portIsFree(port: number): Promise<boolean> {
@@ -561,7 +561,7 @@ async function waitForHealth(url: string, child: ChildProcess): Promise<void> {
  */
 export async function startServe(home: string, port = 0): Promise<Serve> {
   if (port !== 0 && !(await portIsFree(port))) throw new Error(`port ${port} is already in use`);
-  const child = spawn(agboardBinary(), ['--json', 'serve', '--port', String(port)], {
+  const child = spawn(agpjBinary(), ['--json', 'serve', '--port', String(port)], {
     env: serveEnv(home),
     cwd: home,
     stdio: ['ignore', 'pipe', 'pipe'],

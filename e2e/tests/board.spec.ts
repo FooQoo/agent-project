@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from '../helpers/fixtures';
-import { resetBoard, mainProject } from '../helpers/agboard';
+import { resetBoard, mainProject } from '../helpers/agpj';
 
 // The seed is the eight sample cards; see fixtures/agent-board.json.
 test.beforeEach(async ({ page }) => {

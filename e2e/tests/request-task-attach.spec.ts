@@ -1,6 +1,6 @@
 import { expect, test } from '../helpers/fixtures';
 import type { Locator, Page } from '@playwright/test';
-import { mainProject, resetBoard } from '../helpers/agboard';
+import { mainProject, resetBoard } from '../helpers/agpj';
 import { resetPreferences } from '../helpers/preferences';
 import { fillRequest, openAskAi, requestField } from '../helpers/ask-ai';
 import { askItem } from '../helpers/answer';

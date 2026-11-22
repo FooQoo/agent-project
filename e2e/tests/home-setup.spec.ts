@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from '../helpers/fixtures';
-import { agboardBinary, replaceFileAtomically } from '../helpers/agboard';
+import { agpjBinary, replaceFileAtomically } from '../helpers/agpj';
 import { fakeAgents } from '../helpers/fake-agents';
 
 // `agboard setup` and a CLI project that uses the shared folder it prepares, run with the real binary.
@@ -89,12 +89,12 @@ test.beforeEach(() => {
 	mkdirSync(path.dirname(claudeSettings), { recursive: true });
 	writeFileSync(codexConfig, CODEX_SENTINEL);
 	writeFileSync(claudeSettings, CLAUDE_SENTINEL);
-	fakeBin = fakeAgents(root, agboardVersion());
+	fakeBin = fakeAgents(root, agpjVersion());
 });
 
 /** The version of the binary, which the fake agents report as the installed plugin version. */
-function agboardVersion(): string {
-	const result = spawnSync(agboardBinary(), ['--version'], { env: {}, encoding: 'utf8' });
+function agpjVersion(): string {
+	const result = spawnSync(agpjBinary(), ['--version'], { env: {}, encoding: 'utf8' });
 	const version = /\d+\.\d+\.\d+\S*/.exec(result.stdout)?.[0];
 	if (!version) throw new Error(`agboard --version printed no version: ${result.stdout}${result.stderr}`);
 	return version;
@@ -110,7 +110,7 @@ test.afterEach(() => {
  * the run unless the test passes it.
  */
 function cli(args: string[], options: { cwd?: string; env?: Record<string, string> } = {}): CliResult {
-	const result = spawnSync(agboardBinary(), args, {
+	const result = spawnSync(agpjBinary(), args, {
 		cwd: options.cwd ?? home,
 		env: { HOME: home, TZ: 'UTC', PATH: fakeBin, AGPJ_AUTOSTART: '0', AGPJ_OPEN_BROWSER: '0', ...options.env },
 		encoding: 'utf8',

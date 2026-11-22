@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { mainProject, makeHome, removeHome, resetBoard, serveStartTimeout, startServe, stopServe, type Serve } from './agboard';
+import { mainProject, makeHome, removeHome, resetBoard, serveStartTimeout, startServe, stopServe, type Serve } from './agpj';
 
 // Every spec imports `test` and `expect` from here instead of from @playwright/test.
 export * from '@playwright/test';

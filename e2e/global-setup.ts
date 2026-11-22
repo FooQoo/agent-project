@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { repoRoot } from './helpers/agboard';
+import { repoRoot } from './helpers/agpj';
 import { buildPhoneBackend } from './helpers/phone-entrance.mjs';
 
 function run(command: string, args: string[]): void {

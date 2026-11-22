@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
-import { agboardOk, mainOrigin, mainProject, nextTaskId, resetBoard } from '../helpers/agboard';
+import { agpjOk, mainOrigin, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
 import { startImageServer, type ImageServer } from '../helpers/imageServer';
 import { longMarkdown } from '../helpers/markdown';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
@@ -32,7 +32,7 @@ async function addLongTask(title = 'Long markdown'): Promise<number> {
   const id = nextTaskId(mainProject);
   const file = path.join(work, 'long.md');
   writeFileSync(file, longMarkdown(images.origin));
-  agboardOk(mainProject, ['add', title, '--desc-file', file]);
+  agpjOk(mainProject, ['add', title, '--desc-file', file]);
   return id;
 }
 
@@ -94,7 +94,7 @@ test('a long Markdown task shows every section open, with counts, tables, checkl
   await expect(boxes.nth(1)).not.toBeChecked();
   await panel.getByText('open task').click({ force: true });
   await expect(boxes.nth(1)).not.toBeChecked();
-  expect(JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task.description).toContain('- [ ] open task');
+  expect(JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task.description).toContain('- [ ] open task');
 
   // A wide table and a long code line scroll sideways inside the column; the page itself does not.
   const table = panel.getByRole('table');
@@ -111,7 +111,7 @@ test('a long Markdown task shows every section open, with counts, tables, checkl
 
 test('headings do not fold: every section stays open across tabs and tasks', async ({ page }) => {
   const id = await addLongTask();
-  agboardOk(mainProject, ['add', 'Second task', `--desc=No sections here.`]);
+  agpjOk(mainProject, ['add', 'Second task', `--desc=No sections here.`]);
   await openTask(page, id);
   const panel = body(page);
   await expect(panel.getByText('first item')).toBeVisible();
@@ -134,7 +134,7 @@ test('headings do not fold: every section stays open across tabs and tasks', asy
 
 test('a body without H2 headings is shown whole, and an empty body says so', async ({ page }) => {
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', 'Plain task', `--desc=### Only a small heading\n\nBody text.\n\n- one\n- two`]);
+  agpjOk(mainProject, ['add', 'Plain task', `--desc=### Only a small heading\n\nBody text.\n\n- one\n- two`]);
   await page.goto('/');
   await waitForSync(page);
   await readBoardAfterReset(page);

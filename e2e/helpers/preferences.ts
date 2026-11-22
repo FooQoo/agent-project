@@ -1,4 +1,4 @@
-import { mainOrigin } from './agboard';
+import { mainOrigin } from './agpj';
 
 export type Locale = 'en' | 'ja';
 export type Mode = 'light' | 'dark';

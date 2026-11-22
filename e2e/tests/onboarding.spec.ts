@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '../helpers/fixtures';
-import { ensureProject, makeHome, projectId, removeHome, startServe, type Serve } from '../helpers/agboard';
+import { ensureProject, makeHome, projectId, removeHome, startServe, type Serve } from '../helpers/agpj';
 
 // The first-run guide runs in the browser: the request, the plan and the cards are drawn over the
 // board and never written to it, and the server only keeps whether the guide has been seen. Each test starts its

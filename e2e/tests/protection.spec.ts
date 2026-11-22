@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { agboardOk, listTasks, mainOrigin, mainPort, mainProject, projectId, resetBoard, taskBody, type TaskJson } from '../helpers/agboard';
+import { agpjOk, listTasks, mainOrigin, mainPort, mainProject, projectId, resetBoard, taskBody, type TaskJson } from '../helpers/agpj';
 
 // Writes go to /api/projects/<ProjectId>/cards/<number>; the guard answers before it looks at the project.
 let task15: string;
@@ -78,7 +78,7 @@ interface Shown extends TaskJson {
   description: string;
   draft: 'human' | 'ai' | null;
 }
-const shown = (id: number): Shown => JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+const shown = (id: number): Shown => JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 
 /** The page's own request: its Origin, Sec-Fetch-Site, and token, as the screen sends them. */
 async function fromPage(

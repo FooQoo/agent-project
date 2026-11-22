@@ -23,7 +23,7 @@ flowchart LR
 - the demo and the [sample-data mode](../getting-started/setup.md#development) (`pnpm --dir web dev --mode mock`), through a Service Worker in the page
 - the unit tests, through `setupServer()`, and Storybook, through the browser worker, as described in [Mock handlers](../getting-started/setup.md#mock-handlers)
 
-The boards are made fresh from `web/test/fixtures/board.json` each time a server starts, which is each page load. The page reads that fixture through the `virtual:agboard-mock-seed` module, which `web/mock-browser.ts` builds from the file in both modes. The demo passes `demo: true`, so it has a single project named `demo`, and its board starts with one open question, on card #12. The sample-data mode keeps three projects and three open questions for development and tests.
+The boards are made fresh from `web/test/fixtures/board.json` each time a server starts, which is each page load. The page reads that fixture through the `virtual:agpj-mock-seed` module, which `web/mock-browser.ts` builds from the file in both modes. The demo passes `demo: true`, so it has a single project named `demo`, and its board starts with one open question, on card #12. The sample-data mode keeps three projects and three open questions for development and tests.
 
 Besides reads, the server handles the writes a visitor can make:
 

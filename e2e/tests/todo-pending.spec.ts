@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '../helpers/fixtures';
-import { agboardOk, askArgs, decisionJson, mainProject, projectId, nextTaskId, resetBoard, type TaskJson } from '../helpers/agboard';
+import { agpjOk, askArgs, decisionJson, mainProject, projectId, nextTaskId, resetBoard, type TaskJson } from '../helpers/agpj';
 import { waitForSync } from '../helpers/ui';
 import { answerButton, fillAnswer, send, openAnswer } from '../helpers/answer';
 import { closeMessages } from '../helpers/answer-flow';
@@ -12,7 +12,7 @@ const task = (page: Page, id: number) => page.getByRole('button', { name: new Re
 const lane = (page: Page, name: string) => page.getByRole('region', { name });
 
 function show(id: number): TaskJson & { taskStatus: string; agentStatus: string; pendingRequestId: string | null } {
-  return JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  return JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 }
 
 test.beforeEach(async ({ page }) => {
@@ -23,8 +23,8 @@ test.beforeEach(async ({ page }) => {
 
 test('an AI task in Todo asks, shows as pending there, and the answer returns it to Todo idle', async ({ page }) => {
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', 'Ask before starting', '--assignee', 'ai', '--actor', 'human']);
-  agboardOk(mainProject, askArgs(String(id), decisionJson('Which plan before we start?')));
+  agpjOk(mainProject, ['add', 'Ask before starting', '--assignee', 'ai', '--actor', 'human']);
+  agpjOk(mainProject, askArgs(String(id), decisionJson('Which plan before we start?')));
   await page.reload();
   await waitForSync(page);
 
@@ -48,8 +48,8 @@ test('an AI task in Todo asks, shows as pending there, and the answer returns it
 
 test('moving a task out of Todo keeps its question pending until the question is withdrawn', async ({ page }) => {
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', 'Move while asking', '--assignee', 'ai', '--actor', 'human']);
-  const asked = JSON.parse(agboardOk(mainProject, ['--json', ...askArgs(String(id), decisionJson('Still wanted?'))]).stdout.split('\n')[0]) as {
+  agpjOk(mainProject, ['add', 'Move while asking', '--assignee', 'ai', '--actor', 'human']);
+  const asked = JSON.parse(agpjOk(mainProject, ['--json', ...askArgs(String(id), decisionJson('Still wanted?'))]).stdout.split('\n')[0]) as {
     questions: { id: string }[];
   };
   const question = asked.questions[0].id;
@@ -58,7 +58,7 @@ test('moving a task out of Todo keeps its question pending until the question is
   const card = () => lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) });
 
   // The lane move leaves the question open: the card waits in Doing on the same question.
-  agboardOk(mainProject, ['mv', String(id), 'doing', '--actor', 'human', '--reason', 'Start now.']);
+  agpjOk(mainProject, ['mv', String(id), 'doing', '--actor', 'human', '--reason', 'Start now.']);
   await page.reload();
   await waitForSync(page);
   expect(show(id)).toMatchObject({ taskStatus: 'doing', agentStatus: 'awaiting_answer', pendingRequestId: question });
@@ -66,7 +66,7 @@ test('moving a task out of Todo keeps its question pending until the question is
   await expect(answerButton(page, id)).toBeVisible();
 
   // Withdrawing the question ends the wait.
-  agboardOk(mainProject, ['message', 'withdraw', question, '--actor', 'ai']);
+  agpjOk(mainProject, ['message', 'withdraw', question, '--actor', 'ai']);
   await page.reload();
   await waitForSync(page);
   expect(show(id)).toMatchObject({ taskStatus: 'doing', agentStatus: 'idle', pendingRequestId: null });

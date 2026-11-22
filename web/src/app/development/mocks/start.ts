@@ -1,4 +1,4 @@
-import { fixture, longMarkdown } from 'virtual:agboard-mock-seed';
+import { fixture, longMarkdown } from 'virtual:agpj-mock-seed';
 import { applyLocale } from '../../../shared/i18n';
 import { createMockServer } from '../mock-server/server.ts';
 import { startMockWorker } from './browser.ts';

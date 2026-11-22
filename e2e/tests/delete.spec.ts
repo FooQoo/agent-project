@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '../helpers/fixtures';
-import { agboardOk, agboardOnTerminal, listTasks, mainProject, nextTaskId, resetBoard } from '../helpers/agboard';
+import { agpjOk, agpjOnTerminal, listTasks, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
 import { readBoardAfterReset } from '../helpers/ui';
 
 // Card IDs are never reused, so the disposable card gets whatever number is next after the reset.
@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
   resetBoard(mainProject);
   disposable = nextTaskId(mainProject);
   ask = `Archive #${disposable} "Disposable task"? You can restore it from the archive.`;
-  agboardOk(mainProject, ['add', 'Disposable task', `--desc=Delete me`]);
+  agpjOk(mainProject, ['add', 'Disposable task', `--desc=Delete me`]);
   await page.goto('/');
   await expect(page.getByRole('contentinfo').getByRole('status')).toHaveText(/^Synced/);
   await readBoardAfterReset(page);
@@ -45,7 +45,7 @@ test('archive removes the task from the board and clears the selection', async (
   await expect(page.getByRole('contentinfo')).toContainText('8 tasks');
   expect(listTasks(mainProject).map((c) => c.id)).not.toContain(disposable);
   // The numbering goes on; IDs are never reused.
-  expect(JSON.parse(agboardOk(mainProject, ['add', 'Next', '--json']).stdout).task.id).toBe(disposable + 1);
+  expect(JSON.parse(agpjOk(mainProject, ['add', 'Next', '--json']).stdout).task.id).toBe(disposable + 1);
 });
 
 test('a task the CLI deletes while selected clears the selection', async ({ page }) => {
@@ -53,7 +53,7 @@ test('a task the CLI deletes while selected clears the selection', async ({ page
   await expect(panel(page).getByRole('heading', { level: 2 })).toHaveText('Write the setup guide');
 
   // A person at a terminal confirms the deletion with y.
-  const result = agboardOnTerminal(mainProject, 'y', ['rm', '15']);
+  const result = agpjOnTerminal(mainProject, 'y', ['rm', '15']);
   expect(result.code).toBe(0);
   expect(result.stdout).toContain('Deleted #15.');
 

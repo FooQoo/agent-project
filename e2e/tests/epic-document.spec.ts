@@ -4,9 +4,9 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import path from 'node:path';
 import {
   agboard,
-  agboardBinary,
-  agboardCatalogOk,
-  agboardOk,
+  agpjBinary,
+  agpjCatalogOk,
+  agpjOk,
   makeHome,
   projectId,
   removeHome,
@@ -14,7 +14,7 @@ import {
   stopServe,
   workspace,
   type Serve,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 import { setPreferences } from '../helpers/preferences';
 import { waitForSync } from '../helpers/ui';
 
@@ -52,17 +52,17 @@ interface Fixture {
  */
 function buildHome(label: string): Fixture {
   const home = makeHome(label);
-  agboardCatalogOk(['project', 'create', PROJECT], home);
+  agpjCatalogOk(['project', 'create', PROJECT], home);
   const folder = workspace(PROJECT, home).folder;
   const epics = path.join(folder, 'epics');
   for (const [id, name] of [['ALPHA', 'Alpha epic'], ['BETA', 'Beta epic'], ['GAMMA', 'Gamma epic']]) {
-    agboardOk(PROJECT, ['epic', 'add', id, '--name', name, '--color', '#7C3AED', '--actor', 'human'], home);
+    agpjOk(PROJECT, ['epic', 'add', id, '--name', name, '--color', '#7C3AED', '--actor', 'human'], home);
   }
   // Cards 1-3 in ALPHA, 4-5 in BETA, 6 without an epic.
   for (const [index, epic] of [['1', 'ALPHA'], ['2', 'ALPHA'], ['3', 'ALPHA'], ['4', 'BETA'], ['5', 'BETA']]) {
-    agboardOk(PROJECT, ['add', `Card ${index}`, '--assignee', 'ai', '--actor', 'human', '--epic', epic], home);
+    agpjOk(PROJECT, ['add', `Card ${index}`, '--assignee', 'ai', '--actor', 'human', '--epic', epic], home);
   }
-  agboardOk(PROJECT, ['add', 'Card 6', '--assignee', 'ai', '--actor', 'human'], home);
+  agpjOk(PROJECT, ['add', 'Card 6', '--assignee', 'ai', '--actor', 'human'], home);
 
   // The image of ALPHA: the file in assets/ and its entry in epic.json.
   mkdirSync(path.join(epics, 'ALPHA', 'assets'), { recursive: true });
@@ -81,10 +81,10 @@ function buildHome(label: string): Fixture {
   return { home, folder, alpha, beta, gamma };
 }
 
-const json = (home: string, args: string[]) => JSON.parse(agboardOk(PROJECT, args, home).stdout);
+const json = (home: string, args: string[]) => JSON.parse(agpjOk(PROJECT, args, home).stdout);
 
 function runWith(home: string, args: string[], input = '') {
-  return spawnSync(agboardBinary(), ['--project', PROJECT, ...args], {
+  return spawnSync(agpjBinary(), ['--project', PROJECT, ...args], {
     env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     cwd: home,
     encoding: 'utf8',
@@ -185,7 +185,7 @@ test('the CLI, snapshot, progress, hook, wait, and API return document and docum
   expect(handed.epics.find((epic: { id: string }) => epic.id === 'ALPHA').documentPath).toBe(alphaPath);
 
   // `wait --after` returns the new snapshot when an epic document changes.
-  const waiter = spawn(agboardBinary(), ['--project', PROJECT, 'wait', '--after', snapshot.cursor, '--timeout', '20', '--json'], {
+  const waiter = spawn(agpjBinary(), ['--project', PROJECT, 'wait', '--after', snapshot.cursor, '--timeout', '20', '--json'], {
     env: { ...process.env, AGPJ_HOME: fixture.home, TZ: 'UTC' },
     cwd: fixture.home,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -194,7 +194,7 @@ test('the CLI, snapshot, progress, hook, wait, and API return document and docum
   waiter.stdout?.on('data', (chunk) => (waited += chunk));
   const waitExit = new Promise<number | null>((resolve) => waiter.once('exit', resolve));
   await new Promise((resolve) => setTimeout(resolve, 500));
-  agboardOk(PROJECT, ['epic', 'edit', 'GAMMA', `--document=Wakes the waiting command.\n`], fixture.home);
+  agpjOk(PROJECT, ['epic', 'edit', 'GAMMA', `--document=Wakes the waiting command.\n`], fixture.home);
   expect(await waitExit).toBe(0);
   const woken = JSON.parse(waited);
   expect(woken.epics.find((epic: { id: string }) => epic.id === 'GAMMA').document).toBe('Wakes the waiting command.\n');
@@ -247,8 +247,8 @@ test('the CLI stores the epic details from --document, standard input, and --doc
   expect(help.stdout).toContain('--document-file');
 
   // Put the epic back for the page scenarios.
-  agboardOk(PROJECT, ['epic', 'edit', 'BETA', `--document=${DOC_BETA}`], fixture.home);
-  agboardOk(PROJECT, ['epic', 'edit', 'GAMMA', '--document', ''], fixture.home);
+  agpjOk(PROJECT, ['epic', 'edit', 'BETA', `--document=${DOC_BETA}`], fixture.home);
+  agpjOk(PROJECT, ['epic', 'edit', 'GAMMA', '--document', ''], fixture.home);
 });
 
 test('the page shows the epic details with its cards in order and the Markdown image; an edited document survives a restart', async ({ page }) => {

@@ -1,7 +1,7 @@
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page, type TestInfo } from '../helpers/fixtures';
-import { listTasks, mainHome, resetBoard, mainProject } from '../helpers/agboard';
+import { listTasks, mainHome, resetBoard, mainProject } from '../helpers/agpj';
 import { getPreferences, resetPreferences } from '../helpers/preferences';
 import { readBoardAfterReset } from '../helpers/ui';
 

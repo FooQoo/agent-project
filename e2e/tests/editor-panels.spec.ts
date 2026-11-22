@@ -1,6 +1,6 @@
 import { expect, test } from '../helpers/fixtures';
 import path from 'node:path';
-import { agboardOk, mainProject, nextTaskId, projectId, replaceFileAtomically, resetBoard, workspace } from '../helpers/agboard';
+import { agpjOk, mainProject, nextTaskId, projectId, replaceFileAtomically, resetBoard, workspace } from '../helpers/agpj';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
 import { putDraft } from '../helpers/drafts';
@@ -15,11 +15,11 @@ for (const mode of ['light', 'dark'] as const) {
   for (const locale of ['en', 'ja'] as const) {
     test(`epic panels stay inside the dialog with many tasks and conditions (${locale}/${mode})`, async ({ page }, testInfo) => {
       resetBoard(mainProject);
-      agboardOk(mainProject, ['epic', 'add', 'PANELS', '--name', 'Panel layout', '--color', '#7C3AED', '--actor', 'human']);
+      agpjOk(mainProject, ['epic', 'add', 'PANELS', '--name', 'Panel layout', '--color', '#7C3AED', '--actor', 'human']);
       const folder = workspace(mainProject).folder;
       replaceFileAtomically(path.join(folder, 'epics', 'PANELS', 'EPIC.md'), body);
       for (let i = 1; i <= 16; i++) {
-        agboardOk(mainProject, ['add', `Work item ${i}`, '--assignee', 'human', '--actor', 'human', '--epic', 'PANELS', `--desc=---\nacceptance:\n  - id: AC-1\n    text: First check\n    done: true\n  - id: AC-2\n    text: Second check\n    done: false\n---\n\nTask body.`]);
+        agpjOk(mainProject, ['add', `Work item ${i}`, '--assignee', 'human', '--actor', 'human', '--epic', 'PANELS', `--desc=---\nacceptance:\n  - id: AC-1\n    text: First check\n    done: true\n  - id: AC-2\n    text: Second check\n    done: false\n---\n\nTask body.`]);
       }
       await page.setViewportSize({ width: locale === 'ja' ? 1600 : 1024, height: locale === 'ja' ? 1100 : 900 });
       await setPreferences({ locale, theme: { mode, accent: 'blue' } });
@@ -67,7 +67,7 @@ for (const mode of ['light', 'dark'] as const) {
 test('task editing uses a single conditions panel and a compact body start', async ({ page }, testInfo) => {
   resetBoard(mainProject);
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', 'Task layout', `--desc=${body}`, '--assignee', 'human', '--actor', 'human']);
+  agpjOk(mainProject, ['add', 'Task layout', `--desc=${body}`, '--assignee', 'human', '--actor', 'human']);
   await page.goto(`/?project=${projectId(mainProject)}`);
   await waitForSync(page);
   await page.getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) }).click();

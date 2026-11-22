@@ -4,7 +4,7 @@ import path from 'node:path';
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
 import {
   agboard,
-  agboardOk,
+  agpjOk,
   mainProject,
   nextTaskId,
   projectId,
@@ -12,7 +12,7 @@ import {
   resetBoard,
   workspace,
   type TaskJson,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 import { editorValue, readBoardAfterReset, waitForSync } from '../helpers/ui';
 import { putDraft } from '../helpers/drafts';
 
@@ -37,7 +37,7 @@ const details = (page: Page) => page.getByRole('complementary', { name: 'Task de
 const task = (page: Page, id: number) => page.getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) });
 
 function show(id: number): Shown {
-  return JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  return JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 }
 
 /** The TASK.md file of a card in the shared folder. */
@@ -48,7 +48,7 @@ function taskFile(id: number): string {
 /** A card the CLI writes with the given frontmatter and body; returns its ID. */
 function addTask(title: string, description: string): number {
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', title, `--desc=${description}`]);
+  agpjOk(mainProject, ['add', title, `--desc=${description}`]);
   return id;
 }
 
@@ -226,7 +226,7 @@ test('a frontmatter that cannot be read is shown as a problem, the body stays vi
 
   // The product does not rewrite the file; the CLI reports the same problem.
   expect(readFileSync(taskFile(id), 'utf8')).toBe(broken);
-  const snapshot = JSON.parse(agboardOk(mainProject, ['snapshot', '--json']).stdout);
+  const snapshot = JSON.parse(agpjOk(mainProject, ['snapshot', '--json']).stdout);
   expect(snapshot.problems).toEqual(
     expect.arrayContaining([expect.objectContaining({ file: expect.stringContaining(`tasks/${id}/TASK.md`) })]),
   );
@@ -309,15 +309,15 @@ test('the edit dialog wraps each condition onto two rows in a narrow width and k
 
 test('epic reference conditions stay in the Markdown body without a conditions dock', async ({ page }) => {
   const plan = path.join(os.tmpdir(), `epic-plan-${Date.now()}.md`);
-  agboardOk(mainProject, ['epic', 'add', 'PLAN-CHK', '--name', 'Checked plan', '--color', '#7C3AED', '--actor', 'human']);
+  agpjOk(mainProject, ['epic', 'add', 'PLAN-CHK', '--name', 'Checked plan', '--color', '#7C3AED', '--actor', 'human']);
   const text = '## Goal\n\nGoal.\n\n## Reference conditions\n\n- [x] Planned\n- [ ] Open\n';
   replaceFileAtomically(plan, text);
-  agboardOk(mainProject, ['epic', 'edit', 'PLAN-CHK', '--document-file', plan]);
-  const stored = JSON.parse(agboardOk(mainProject, ['epic', 'show', 'PLAN-CHK', '--json']).stdout).epic;
+  agpjOk(mainProject, ['epic', 'edit', 'PLAN-CHK', '--document-file', plan]);
+  const stored = JSON.parse(agpjOk(mainProject, ['epic', 'show', 'PLAN-CHK', '--json']).stdout).epic;
   expect(stored).not.toHaveProperty('acceptance');
   expect(stored.body).toBe(text.trimEnd());
   const inPlan = addTask('In the checked plan', frontmatter([], 'Work for the plan.'));
-  agboardOk(mainProject, ['edit', String(inPlan), '--epic', 'PLAN-CHK']);
+  agpjOk(mainProject, ['edit', String(inPlan), '--epic', 'PLAN-CHK']);
   await page.reload();
   await waitForSync(page);
   await readBoardAfterReset(page);

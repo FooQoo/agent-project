@@ -4,14 +4,14 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
 import {
-	agboardBinary,
-	agboardOk,
+	agpjBinary,
+	agpjOk,
 	askArgs,
 	makeHome,
 	replaceFileAtomically,
 	replaceTaskBodyPreservingFrontmatter,
 	workspace,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 import { removeMonitorHome, startPhoneEntrance, type PhoneEntrance } from '../helpers/monitor';
 import { waitForSync } from '../helpers/ui';
 import { putDraft } from '../helpers/drafts';
@@ -45,7 +45,7 @@ interface TaskView {
 }
 
 function cli(args: string[]): { code: number; stdout: string; stderr: string } {
-	const result = spawnSync(agboardBinary(), ['--project', project, ...args], {
+	const result = spawnSync(agpjBinary(), ['--project', project, ...args], {
 		cwd: home,
 		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
 		encoding: 'utf8',
@@ -55,7 +55,7 @@ function cli(args: string[]): { code: number; stdout: string; stderr: string } {
 }
 
 function catalog(args: string[]): { code: number; stdout: string; stderr: string } {
-	const result = spawnSync(agboardBinary(), args, {
+	const result = spawnSync(agpjBinary(), args, {
 		cwd: home,
 		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
 		encoding: 'utf8',
@@ -102,7 +102,7 @@ async function openPc(page: Page): Promise<void> {
 }
 
 function beginWait(cursor: string): { child: ChildProcess; result: Promise<{ code: number | null; stdout: string; stderr: string }> } {
-	const child = spawn(agboardBinary(), ['--project', project, 'wait', '--after', cursor, '--timeout', '10', '--json'], {
+	const child = spawn(agpjBinary(), ['--project', project, 'wait', '--after', cursor, '--timeout', '10', '--json'], {
 		cwd: home,
 		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
 		stdio: ['ignore', 'pipe', 'pipe'],

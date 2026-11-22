@@ -1,13 +1,13 @@
 import { expect, test } from '../helpers/fixtures';
 import {
-  agboardOk,
+  agpjOk,
   createEmptyProject,
   makeHome,
   removeHome,
   startServe,
   stopServe,
   type Serve,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 
 // This spec stops and restarts its serve, so it starts its own serve with its own
 // data directory and shares nothing with the other specs.
@@ -66,7 +66,7 @@ test('stopping the serve shows Disconnected, and restarting it reconnects and fe
   await expect(page.getByRole('contentinfo')).toContainText('0 tasks');
 
   // The CLI still works while the serve is down, and the change waits for the screen.
-  agboardOk('Empty Board', ['add', 'Added while disconnected'], home);
+  agpjOk('Empty Board', ['add', 'Added while disconnected'], home);
 
   // The same port, so the open page reconnects.
   serve = await startServe(home, serve!.port);
@@ -78,6 +78,6 @@ test('stopping the serve shows Disconnected, and restarting it reconnects and fe
   await expect(page.getByText('No tasks yet.')).toHaveCount(0);
 
   // Live updates work again after the reconnect.
-  agboardOk('Empty Board', ['add', 'Added after reconnecting'], home);
+  agpjOk('Empty Board', ['add', 'Added after reconnecting'], home);
   await expect(page.getByRole('button', { name: /^#2 AI Added after reconnecting / })).toBeVisible();
 });

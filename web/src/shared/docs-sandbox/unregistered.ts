@@ -1,7 +1,7 @@
 import { visit } from 'unist-util-visit';
 
 /** The component the sandbox shows in place of a part that is not registered. */
-export const UNREGISTERED = 'AgboardUnregistered';
+export const UNREGISTERED = 'AgpjUnregistered';
 
 /** The parts MDX may use besides the standard HTML elements. Empty for now: parts are registered here. */
 export const REGISTERED_COMPONENTS: Record<string, never> = {};
@@ -15,7 +15,7 @@ interface JsxNode {
 
 /**
  * A remark plugin that swaps every JSX element that is neither a standard HTML element (lower case)
- * nor registered for `AgboardUnregistered` carrying the original name, so one missing part does not
+ * nor registered for `AgpjUnregistered` carrying the original name, so one missing part does not
  * stop the whole document.
  */
 export function remarkUnregistered() {

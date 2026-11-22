@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
-import { agboardOk, mainProject, nextTaskId, resetBoard } from '../helpers/agboard';
+import { agpjOk, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
 import { startImageServer, type ImageServer } from '../helpers/imageServer';
 import { openAskAi } from '../helpers/ask-ai';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
@@ -74,7 +74,7 @@ test('a status change reads the Summary and the history again, and the document 
   };
 
   // The open panel does not hold the stream's update back: the card moves and the history is read again.
-  agboardOk(mainProject, ['mv', '16', 'doing', '--actor', 'ai', '--reason', 'Started the work.']);
+  agpjOk(mainProject, ['mv', '16', 'doing', '--actor', 'ai', '--reason', 'Started the work.']);
   await expect(lane(page, 'Doing').getByRole('button', { name: /^#16 / })).toBeVisible({ timeout: 5_000 });
   await expect.poll(() => sectionReads(seen, 16, 'history').length).toBeGreaterThan(before.histories);
   expect(summaries(seen).length).toBeGreaterThan(before.summaries);
@@ -100,9 +100,9 @@ test('a task nobody opened is not read, and opening a task reads its epic once, 
   const id = nextTaskId(mainProject);
   const plan = path.join(work, 'plan.md');
   writeFileSync(plan, 'The epic plan.');
-  agboardOk(mainProject, ['epic', 'add', 'TEST-EPIC', '--name', 'Test epic', '--color', '#2563EB', '--actor', 'human']);
-  agboardOk(mainProject, ['epic', 'edit', 'TEST-EPIC', '--document-file', plan]);
-  agboardOk(mainProject, ['add', 'In an epic', `--desc=Body.`, '--epic', 'TEST-EPIC']);
+  agpjOk(mainProject, ['epic', 'add', 'TEST-EPIC', '--name', 'Test epic', '--color', '#2563EB', '--actor', 'human']);
+  agpjOk(mainProject, ['epic', 'edit', 'TEST-EPIC', '--document-file', plan]);
+  agpjOk(mainProject, ['add', 'In an epic', `--desc=Body.`, '--epic', 'TEST-EPIC']);
   await readBoardAfterReset(page);
   expect(seen.filter((r) => r.path.includes('/detail'))).toEqual([]);
   // Opening the task reads its epic too, once, so the Epic tab shows at once.
@@ -128,7 +128,7 @@ test('the details panel does not hold updates; a dialog holds them while open an
   await expect(details(page).getByRole('heading', { level: 2 })).toHaveText('Initialize the board');
 
   // A change from the CLI reaches the board while the panel is open, and the panel stays open.
-  agboardOk(mainProject, ['mv', '16', 'doing']);
+  agpjOk(mainProject, ['mv', '16', 'doing']);
   await expect(lane(page, 'Doing').getByRole('button', { name: /^#16 / })).toBeVisible({ timeout: 5_000 });
   await expect(lane(page, 'Todo').getByRole('button', { name: /^#16 / })).toHaveCount(0);
   await expect(details(page).getByRole('heading', { level: 2 })).toHaveText('Initialize the board');
@@ -159,7 +159,7 @@ test('the details panel does not hold updates; a dialog holds them while open an
   // A change from the CLI made while a dialog is open waits until it has been closed for 3 seconds. The Ask AI
   // dialog closes without sending, so nothing reads the board at once.
   const create = await openAskAi(page);
-  agboardOk(mainProject, ['mv', '15', 'doing']);
+  agpjOk(mainProject, ['mv', '15', 'doing']);
   await page.waitForTimeout(1000);
   await expect(lane(page, 'Doing').getByRole('button', { name: /^#15 /, includeHidden: true })).toHaveCount(0);
   await create.getByRole('button', { name: 'Close', exact: true }).click();
@@ -200,7 +200,7 @@ test('a 50,000-character document is shown with a bounded page, and is edited an
   expect(text.length).toBeGreaterThan(49_000);
   expect(text.length).toBeLessThanOrEqual(50_000);
   writeFileSync(file, text);
-  agboardOk(mainProject, ['add', 'Big document', '--desc-file', file]);
+  agpjOk(mainProject, ['add', 'Big document', '--desc-file', file]);
   await readBoardAfterReset(page);
 
   await task(page, id).click();
@@ -240,15 +240,15 @@ test('a 50,000-character document is shown with a bounded page, and is edited an
   await secondDialog.getByRole('textbox', { name: 'Title', exact: true }).fill('Saved from the second page');
   await secondDialog.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(secondDialog).toHaveCount(0);
-  await expect.poll(() => JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task.title).toBe('Saved from the second page');
+  await expect.poll(() => JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task.title).toBe('Saved from the second page');
   await second.close();
 
   // The first page saves later, from what it opened with: its title is the one that stays, and the text is kept whole.
   await dialog.getByRole('textbox', { name: 'Title', exact: true }).fill('Saved from the first page');
   await dialog.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(dialog).toHaveCount(0, { timeout: 30_000 });
-  await expect.poll(() => JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task.title).toBe('Saved from the first page');
-  const stored = JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  await expect.poll(() => JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task.title).toBe('Saved from the first page');
+  const stored = JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
   expect(stored.body.trim()).toBe(text.trim());
   expect(stored.draft).toBe('human');
 });

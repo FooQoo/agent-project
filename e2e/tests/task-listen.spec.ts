@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { agboard, agboardOk, mainProject, resetBoard } from '../helpers/agboard';
+import { agboard, agpjOk, mainProject, resetBoard } from '../helpers/agpj';
 import { fillRequest, openAskAi, sendRequest } from '../helpers/ask-ai';
 import { waitForSync } from '../helpers/ui';
 
@@ -31,7 +31,7 @@ test('a request sent through Ask AI with an image is returned by task wait as a 
   await sendRequest(dialog);
 
   // A request is not a task: no card appears, and the wait returns the request before any task.
-  const snapshot = JSON.parse(agboardOk(mainProject, ['snapshot', '--json']).stdout) as { tasks: { title: string }[] };
+  const snapshot = JSON.parse(agpjOk(mainProject, ['snapshot', '--json']).stdout) as { tasks: { title: string }[] };
   expect(snapshot.tasks.map(({ title }) => title)).not.toContain('Investigate the listener request');
 
   const waited = agboard(mainProject, ['wait', '--until', 'task', '--idle-timeout', '1', '--json']);
@@ -47,14 +47,14 @@ test('a request sent through Ask AI with an image is returned by task wait as a 
   expect(selected.requests[0].title).toBe('Investigate the listener request');
 
   // The agent reads the whole text and its image with message show, and the next wait returns the same request until it is accepted.
-  const shown = JSON.parse(agboardOk(mainProject, ['message', 'show', selected.requests[0].id, '--json']).stdout) as {
+  const shown = JSON.parse(agpjOk(mainProject, ['message', 'show', selected.requests[0].id, '--json']).stdout) as {
     request: { body: string; status: string; from: string };
   };
   expect(shown.request.body).toContain('Keep the source wording intact.');
   expect(shown.request.status).toBe('open');
   const again = JSON.parse(agboard(mainProject, ['wait', '--until', 'task', '--idle-timeout', '1', '--json']).stdout) as { kind: string };
   expect(again.kind).toBe('requests');
-  agboardOk(mainProject, ['message', 'accept', selected.requests[0].id, '--actor', 'ai', '--json']);
+  agpjOk(mainProject, ['message', 'accept', selected.requests[0].id, '--actor', 'ai', '--json']);
   // An accepted request no longer wakes the wait: the board's own todo task is returned instead.
   const next = JSON.parse(agboard(mainProject, ['wait', '--until', 'task', '--idle-timeout', '1', '--json']).stdout) as { kind: string };
   expect(next.kind).not.toBe('requests');

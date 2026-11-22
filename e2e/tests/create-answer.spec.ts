@@ -1,6 +1,6 @@
 import { expectHistoryNote } from '../helpers/history';
 import { expect, test, type Page } from '../helpers/fixtures';
-import { agboardOk, mainProject, resetBoard, type TaskJson, askArgs, decisionJson } from '../helpers/agboard';
+import { agpjOk, mainProject, resetBoard, type TaskJson, askArgs, decisionJson } from '../helpers/agpj';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
 import { answerButton, answerDialog, answerNote, answerSend, fillAnswer, laterButton, openAnswer, pressSend, send } from '../helpers/answer';
 import { closeMessages } from '../helpers/answer-flow';
@@ -19,7 +19,7 @@ const lane = (page: Page, name: string) => page.getByRole('region', { name });
 const task = (page: Page, id: number) => page.getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) });
 
 function show(id: number): ShownTask {
-  return JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  return JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 }
 
 test.beforeEach(async ({ page }) => {
@@ -132,12 +132,12 @@ function askAgain(reason: string): void {
   // The agent withdraws the open question before it asks a new one.
   const open = show(12).pendingRequestId;
   if (open) {
-    agboardOk(mainProject, ['message', 'withdraw', open, '--actor', 'ai']);
+    agpjOk(mainProject, ['message', 'withdraw', open, '--actor', 'ai']);
   }
-  agboardOk(mainProject, ['mv', '12', 'todo', '--actor', 'human', '--reason', 'Back to Todo.']);
-  agboardOk(mainProject, ['mv', '12', 'doing', '--actor', 'human', '--reason', 'Doing again.']);
-  agboardOk(mainProject, ['state', '12', 'running', '--actor', 'ai', '--reason', 'Moving on.']);
-  agboardOk(mainProject, askArgs('12', decisionJson(reason)));
+  agpjOk(mainProject, ['mv', '12', 'todo', '--actor', 'human', '--reason', 'Back to Todo.']);
+  agpjOk(mainProject, ['mv', '12', 'doing', '--actor', 'human', '--reason', 'Doing again.']);
+  agpjOk(mainProject, ['state', '12', 'running', '--actor', 'ai', '--reason', 'Moving on.']);
+  agpjOk(mainProject, askArgs('12', decisionJson(reason)));
 }
 
 test('when the agent asks something else while the dialog is open, the old question leaves it and the new one is answered on its own', async ({
@@ -180,14 +180,14 @@ test('an answer sent from a page that missed the new request is refused by the s
 
   // Once the board can be read, the dialog no longer offers the old question.
   await page.unroute('**/api/projects/*/summary');
-  agboardOk(mainProject, ['add', 'Triggers a refresh']);
+  agpjOk(mainProject, ['add', 'Triggers a refresh']);
   await expect(dialog.getByRole('button', { name: /^Question AI .*A different question now\./ })).toBeVisible();
   await expect(answerSend(page)).toHaveCount(0);
 });
 
 test('a long question does not grow the card; the dialog reads all of it', async ({ page }) => {
   const lines = Array.from({ length: 14 }, (_, index) => `Line ${index + 1} of a long question about the release plan.`);
-  agboardOk(mainProject, askArgs('13', decisionJson(lines.join('\n'))));
+  agpjOk(mainProject, askArgs('13', decisionJson(lines.join('\n'))));
   await expect(answerButton(page, 13)).toBeVisible();
   // The card shows no question text, so its height does not follow the question.
   await expect(page.locator('.card__item').getByText('Line 1 of a long question')).toHaveCount(0);

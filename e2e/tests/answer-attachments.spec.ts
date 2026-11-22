@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { expect, test, type Page } from '../helpers/fixtures';
-import { agboardOk, mainProject, projectId as projectIdOf, resetBoard, type TaskJson } from '../helpers/agboard';
+import { agpjOk, mainProject, projectId as projectIdOf, resetBoard, type TaskJson } from '../helpers/agpj';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
 import { answerDialog, fillAnswer, openAnswer, send } from '../helpers/answer';
 
@@ -19,13 +19,13 @@ interface Reply {
 }
 
 function pendingId(id: number): string {
-  const task: TaskJson = JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  const task: TaskJson = JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
   if (!task.pendingRequestId) throw new Error('The task asks nothing.');
   return task.pendingRequestId;
 }
 
 function replyOf(questionId: string): Reply {
-  const shown = JSON.parse(agboardOk(mainProject, ['message', 'show', questionId, '--json']).stdout);
+  const shown = JSON.parse(agpjOk(mainProject, ['message', 'show', questionId, '--json']).stdout);
   return shown.question.reply;
 }
 
@@ -76,5 +76,5 @@ test('a refused picture is not saved and leaves the question open', async ({ pag
   await dialog.getByRole('button', { name: 'Send answer' }).click();
   expect((await refused).status()).toBe(422);
   await expect(dialog.getByRole('alert')).toBeVisible();
-  expect(JSON.parse(agboardOk(mainProject, ['message', 'show', questionId, '--json']).stdout).question.reply).toBeNull();
+  expect(JSON.parse(agpjOk(mainProject, ['message', 'show', questionId, '--json']).stdout).question.reply).toBeNull();
 });

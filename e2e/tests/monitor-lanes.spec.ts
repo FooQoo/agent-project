@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { agboard, agboardCatalogOk, projectId, skipGuide, taskBody } from '../helpers/agboard';
+import { agboard, agpjCatalogOk, projectId, skipGuide, taskBody } from '../helpers/agpj';
 import { startPhoneEntrance, type PhoneEntrance } from '../helpers/monitor';
 
 // The phone monitor's lane view through the phone entrance, driven with a finger: one lane on screen,
@@ -29,7 +29,7 @@ function cli(project: string, args: string[]): string {
 }
 
 function seed(project: string, cards: Seed[]): void {
-  agboardCatalogOk(['project', 'create', project], home);
+  agpjCatalogOk(['project', 'create', project], home);
   for (const { title, lane } of cards) {
     const added = JSON.parse(
       cli(project, ['add', title, `--desc=${taskBody(`${title} body.`)}`, '--assignee', 'ai', '--actor', 'human', '--json', ...(lane === 'backlog' ? ['--backlog'] : [])]),

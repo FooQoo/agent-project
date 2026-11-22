@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, request as playwrightRequest, test } from '../helpers/fixtures';
-import { agboard, askArgs, decisionJson } from '../helpers/agboard';
+import { agboard, askArgs, decisionJson } from '../helpers/agpj';
 import { answerDialog, answerSend, askItem, fillAnswer, messageBand, openAnswer, openMessageList, openQuestionCount, phoneBar, send } from '../helpers/answer';
 import { closeMessages } from '../helpers/answer-flow';
 import {

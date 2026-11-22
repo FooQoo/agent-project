@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { resetBoard, agboardOk, mainProject, projectId } from '../helpers/agboard';
+import { resetBoard, agpjOk, mainProject, projectId } from '../helpers/agpj';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
 
@@ -64,9 +64,9 @@ const computed = (page: Page, selector: string, props: string[]) =>
   );
 
 function fillDone(extra = 14): void {
-  for (let i = 0; i < extra; i += 1) agboardOk(mainProject, ['add', `Extra done task ${i + 1}`]);
-  const tasks = JSON.parse(agboardOk(mainProject, ['ls', '--json']).stdout).tasks as { id: number; title: string }[];
-  for (const c of tasks.filter((x) => x.title.startsWith('Extra done task'))) agboardOk(mainProject, ['mv', String(c.id), 'done']);
+  for (let i = 0; i < extra; i += 1) agpjOk(mainProject, ['add', `Extra done task ${i + 1}`]);
+  const tasks = JSON.parse(agpjOk(mainProject, ['ls', '--json']).stdout).tasks as { id: number; title: string }[];
+  for (const c of tasks.filter((x) => x.title.startsWith('Extra done task'))) agpjOk(mainProject, ['mv', String(c.id), 'done']);
 }
 
 // ---------------------------------------------------------------- Desktop layout

@@ -16,7 +16,7 @@ export default defineConfig({
     lib: {
       entry: fileURLToPath(new URL('./src/shared/docs-sandbox/main.tsx', import.meta.url)),
       formats: ['iife'],
-      name: 'AgboardDocsSandbox',
+      name: 'AgpjDocsSandbox',
     },
     rollupOptions: {
       output: { entryFileNames: 'sandbox-[hash].js' },

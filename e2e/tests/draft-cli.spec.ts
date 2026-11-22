@@ -5,10 +5,10 @@ import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
 import {
   agboard,
-  agboardBinary,
-  agboardCatalog,
-  agboardCatalogOk,
-  agboardOk,
+  agpjBinary,
+  agpjCatalog,
+  agpjCatalogOk,
+  agpjOk,
   listTasks,
   mainHome,
   mainProject,
@@ -18,9 +18,9 @@ import {
   resetBoard,
   taskBody,
   workspace,
-  type AgboardResult,
+  type AgpjResult,
   type TaskJson,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 import { waitForSync } from '../helpers/ui';
 import { putDraft } from '../helpers/drafts';
 
@@ -39,12 +39,12 @@ const details = (page: Page) => page.getByRole('complementary', { name: 'Task de
 const task = (page: Page, id: number) => page.getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) });
 
 function show(id: number): ShownTask {
-  return JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  return JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 }
 
 /** The whole board as the CLI reports it, without the time of the report. */
 function board(): string {
-  const { fetchedAt, ...rest } = JSON.parse(agboardOk(mainProject, ['snapshot', '--json']).stdout);
+  const { fetchedAt, ...rest } = JSON.parse(agpjOk(mainProject, ['snapshot', '--json']).stdout);
   void fetchedAt;
   return JSON.stringify(rest);
 }
@@ -95,7 +95,7 @@ test('a draft is read-only for edit, mv, and state, and everything else still wo
     ['state', ['state', '13', 'running', '--actor', 'ai', '--reason', 'Resuming.']],
   ];
   for (const [name, args] of refused) {
-    const result: AgboardResult = agboard(mainProject, args);
+    const result: AgpjResult = agboard(mainProject, args);
     expect(result.code, name).toBe(1);
     expect(result.stdout, name).toBe('');
     // The message is English and says what to do.
@@ -110,27 +110,27 @@ test('a draft is read-only for edit, mv, and state, and everything else still wo
 
   // Reading, listing, and adding keep working, and the draft is visible in each.
   expect(show(13)).toMatchObject({ id: 13, draft: 'human' });
-  expect(agboardOk(mainProject, ['show', '13']).stdout).toContain('Draft: human');
-  expect(agboardOk(mainProject, ['ls']).stdout).toMatch(/#13 Check the board display \[AI\] \[draft\]/);
-  expect(agboardOk(mainProject, ['ls']).stdout).not.toMatch(/#14 .*\[draft\]/);
-  expect(JSON.parse(agboardOk(mainProject, ['ls', '--json']).stdout).tasks.find((c: ShownTask) => c.id === 13).draft).toBe('human');
-  expect(JSON.parse(agboardOk(mainProject, ['snapshot', '--json']).stdout).tasks.find((c: ShownTask) => c.id === 13).draft).toBe('human');
-  const added = JSON.parse(agboardOk(mainProject, ['add', 'Made while a draft exists', '--json']).stdout).task;
+  expect(agpjOk(mainProject, ['show', '13']).stdout).toContain('Draft: human');
+  expect(agpjOk(mainProject, ['ls']).stdout).toMatch(/#13 Check the board display \[AI\] \[draft\]/);
+  expect(agpjOk(mainProject, ['ls']).stdout).not.toMatch(/#14 .*\[draft\]/);
+  expect(JSON.parse(agpjOk(mainProject, ['ls', '--json']).stdout).tasks.find((c: ShownTask) => c.id === 13).draft).toBe('human');
+  expect(JSON.parse(agpjOk(mainProject, ['snapshot', '--json']).stdout).tasks.find((c: ShownTask) => c.id === 13).draft).toBe('human');
+  const added = JSON.parse(agpjOk(mainProject, ['add', 'Made while a draft exists', '--json']).stdout).task;
   expect(added).toMatchObject({ draft: null, taskStatus: 'todo', agentStatus: 'idle' });
 
   // The page and the CLI agree; a person can finalize and the agent can write again.
   await details(page).getByRole('button', { name: 'Finalize' }).click();
   await expect(details(page).getByRole('region', { name: 'Draft' })).toHaveCount(0);
   expect(show(13).draft).toBeNull();
-  expect(agboardOk(mainProject, ['edit', '13', '--title', 'Changed by an agent']).code).toBe(0);
-  agboardOk(mainProject, ['state', '13', 'running', '--actor', 'ai', '--reason', 'Resuming.']);
-  agboardOk(mainProject, ['mv', '13', 'done', '--actor', 'ai', '--reason', 'Finished.']);
+  expect(agpjOk(mainProject, ['edit', '13', '--title', 'Changed by an agent']).code).toBe(0);
+  agpjOk(mainProject, ['state', '13', 'running', '--actor', 'ai', '--reason', 'Resuming.']);
+  agpjOk(mainProject, ['mv', '13', 'done', '--actor', 'ai', '--reason', 'Finished.']);
   expect(show(13)).toMatchObject({ title: 'Changed by an agent', taskStatus: 'done' });
 });
 
 test('a plan in the Backlog takes AI edits and history but not mv, state, or a move to Todo; a person moves it with mv', async () => {
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, [
+  agpjOk(mainProject, [
     'add',
     'Proposed by the AI',
     '--assignee',
@@ -140,13 +140,13 @@ test('a plan in the Backlog takes AI edits and history but not mv, state, or a m
     '--backlog',
   ]);
   expect(show(id)).toMatchObject({ draft: null, taskStatus: 'backlog' });
-  expect(agboardOk(mainProject, ['ls']).stdout).toMatch(
+  expect(agpjOk(mainProject, ['ls']).stdout).toMatch(
     new RegExp(`Backlog\\n\\s+#${id} Proposed by the AI \\[AI\\]`),
   );
 
   // The AI can keep shaping its own plan.
-  agboardOk(mainProject, ['edit', String(id), '--title', 'Proposed again']);
-  agboardOk(mainProject, ['history', 'add', String(id), '--reason', 'Refined the plan.']);
+  agpjOk(mainProject, ['edit', String(id), '--title', 'Proposed again']);
+  agpjOk(mainProject, ['history', 'add', String(id), '--reason', 'Refined the plan.']);
   expect(show(id)).toMatchObject({ title: 'Proposed again', taskStatus: 'backlog' });
 
   // It cannot move, run, or hand it to Todo, and nothing changes.
@@ -163,9 +163,9 @@ test('a plan in the Backlog takes AI edits and history but not mv, state, or a m
   expect(board()).toBe(before);
 
   // A person moves it to Todo, and then the AI can work on it.
-  agboardOk(mainProject, ['mv', String(id), 'todo', '--actor', 'human']);
+  agpjOk(mainProject, ['mv', String(id), 'todo', '--actor', 'human']);
   expect(show(id).taskStatus).toBe('todo');
-  agboardOk(mainProject, ['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Go.']);
+  agpjOk(mainProject, ['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Go.']);
   expect(show(id).taskStatus).toBe('doing');
 });
 
@@ -174,9 +174,9 @@ test('a draft stays a draft over time, and toggling it wakes wait; history updat
 }) => {
   await open(page, 13);
   const first = show(13);
-  const cursor = JSON.parse(agboardOk(mainProject, ['snapshot', '--json']).stdout).cursor as string;
+  const cursor = JSON.parse(agpjOk(mainProject, ['snapshot', '--json']).stdout).cursor as string;
   const env = { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' };
-  const waiter = spawn(agboardBinary(), ['--project', mainProject, '--json', 'wait', '--after', cursor, '--timeout', '30'], {
+  const waiter = spawn(agpjBinary(), ['--project', mainProject, '--json', 'wait', '--after', cursor, '--timeout', '30'], {
     env,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -206,7 +206,7 @@ test('a draft stays a draft over time, and toggling it wakes wait; history updat
   expect(show(13).draft).toBe('human');
 
   // Finalizing is a change too: wait wakes, and it adds one more history event and advances the display time.
-  const cursor2 = JSON.parse(agboardOk(mainProject, ['snapshot', '--json']).stdout).cursor as string;
+  const cursor2 = JSON.parse(agpjOk(mainProject, ['snapshot', '--json']).stdout).cursor as string;
   const second = spawnSyncWait(cursor2);
   await details(page).getByRole('button', { name: 'Finalize' }).click();
   expect((await second).code).toBe(0);
@@ -219,7 +219,7 @@ test('a draft stays a draft over time, and toggling it wakes wait; history updat
 });
 
 function spawnSyncWait(cursor: string): Promise<{ code: number | null }> {
-  const child = spawn(agboardBinary(), ['--project', mainProject, '--json', 'wait', '--after', cursor, '--timeout', '30'], {
+  const child = spawn(agpjBinary(), ['--project', mainProject, '--json', 'wait', '--after', cursor, '--timeout', '30'], {
     env: { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' },
     stdio: 'ignore',
   });
@@ -235,9 +235,9 @@ test('a body of exactly 50,000 characters is accepted for add, edit, and --desc 
   writeFileSync(overFile, over);
 
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', 'Exact limit', '--desc-file', exactFile]);
+  agpjOk(mainProject, ['add', 'Exact limit', '--desc-file', exactFile]);
   expect([...show(id).body].length).toBe(50_000);
-  const stdin = spawnSync(agboardBinary(), ['--project', mainProject, 'add', 'From stdin', '--desc', '-', '--assignee', 'ai', '--actor', 'human'], {
+  const stdin = spawnSync(agpjBinary(), ['--project', mainProject, 'add', 'From stdin', '--desc', '-', '--assignee', 'ai', '--actor', 'human'], {
     env: { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' },
     input: exact,
     encoding: 'utf8',
@@ -260,7 +260,7 @@ test('a body of exactly 50,000 characters is accepted for add, edit, and --desc 
   // CRLF is stored as LF.
   const crlfFile = path.join(work, 'crlf.md');
   writeFileSync(crlfFile, taskBody('line one\nline two').replace(/\n/g, '\r\n'));
-  agboardOk(mainProject, ['edit', String(id), '--desc-file', crlfFile]);
+  agpjOk(mainProject, ['edit', String(id), '--desc-file', crlfFile]);
   expect(show(id).description).not.toContain('\r');
   expect(show(id).description).toContain('line one\nline two');
 });
@@ -300,10 +300,10 @@ test('the hook hands over active progress metadata without task bodies, even whe
   const bodyFile = path.join(work, 'hook.md');
   writeFileSync(bodyFile, body);
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', 'Long hook task', '--desc-file', bodyFile]);
+  agpjOk(mainProject, ['add', 'Long hook task', '--desc-file', bodyFile]);
 
   const hook = () =>
-    spawnSync(agboardBinary(), ['--project', mainProject, 'hook', '--agent', 'claude'], {
+    spawnSync(agpjBinary(), ['--project', mainProject, 'hook', '--agent', 'claude'], {
       env: { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' },
       encoding: 'utf8',
       input: JSON.stringify({ hook_event_name: 'PostToolUse' }),
@@ -326,8 +326,8 @@ test('the hook hands over active progress metadata without task bodies, even whe
   // Large task bodies do not inflate the progress context or cause the hook to truncate it.
   const huge = path.join(work, 'huge.md');
   writeFileSync(huge, bodyOfLength(49_000));
-  agboardOk(mainProject, ['add', 'Huge one', '--desc-file', huge]);
-  agboardOk(mainProject, ['add', 'Huge two', '--desc-file', huge]);
+  agpjOk(mainProject, ['add', 'Huge one', '--desc-file', huge]);
+  agpjOk(mainProject, ['add', 'Huge two', '--desc-file', huge]);
   const over = hook();
   expect(over.status).toBe(0);
   const overContext = (JSON.parse(over.stdout) as { hookSpecificOutput: { additionalContext: string } }).hookSpecificOutput
@@ -339,14 +339,14 @@ test('the hook hands over active progress metadata without task bodies, even whe
 });
 
 test('the help explains Markdown descriptions and what a refused write to a draft means', async () => {
-  const general = agboardCatalog(['--help']);
+  const general = agpjCatalog(['--help']);
   expect(general.code).toBe(0);
   expect(general.stdout).toContain('Markdown');
   expect(general.stdout).toContain('50,000');
   expect(general.stdout).toContain('"draft"');
   expect(general.stdout).toContain('task_is_draft');
   for (const command of ['add', 'edit']) {
-    const help = agboardCatalog([command, '--help']);
+    const help = agpjCatalog([command, '--help']);
     expect(help.stdout, command).toContain('Markdown');
     expect(help.stdout, command).toContain('50,000');
   }

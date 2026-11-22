@@ -3,21 +3,21 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-  agboardBinary,
-  agboardCatalogOk,
+  agpjBinary,
+  agpjCatalogOk,
   decisionJson,
   projectId,
   skipGuide,
   taskBody,
   workspace,
-} from './agboard';
+} from './agpj';
 
 // The phone monitor is reached through the ngrok entrance: the dedicated loopback
 // backend behind an Edge stand-in. See phone-entrance.mjs for what is and is not covered.
 export { startPhoneEntrance, type PhoneEntrance } from './phone-entrance.mjs';
 
 function run(home: string, args: string[]): string {
-  const result = spawnSync(agboardBinary(), args, {
+  const result = spawnSync(agpjBinary(), args, {
     cwd: home,
     env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     encoding: 'utf8',
@@ -55,7 +55,7 @@ function writeJson(file: string, value: unknown): void {
 export function createMonitorHome(): string {
   const home = mkdtempSync(path.join(os.tmpdir(), 'agent-board-monitor-'));
   skipGuide(home);
-  for (const name of ['Alpha', 'Beta', 'Empty', 'DeleteMe']) agboardCatalogOk(['project', 'create', name], home);
+  for (const name of ['Alpha', 'Beta', 'Empty', 'DeleteMe']) agpjCatalogOk(['project', 'create', name], home);
 
   const alphaPending = task(home, 'Alpha', 'Alpha pending review', 'Pending request body.');
   move(home, 'Alpha', alphaPending, 'doing', 'Start review');

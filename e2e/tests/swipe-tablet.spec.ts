@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { mainProject, resetBoard } from '../helpers/agboard';
+import { mainProject, resetBoard } from '../helpers/agpj';
 import { openMessageList } from '../helpers/answer';
 
 // An iPad held sideways: a touch screen wide enough for the PC board, so Messages is a modal and

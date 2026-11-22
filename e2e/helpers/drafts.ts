@@ -1,4 +1,4 @@
-import { mainHome, mainOrigin, mainProject, projectId } from './agboard';
+import { mainHome, mainOrigin, mainProject, projectId } from './agpj';
 
 /** The write token the server puts in the page it serves. */
 async function pageToken(origin: string): Promise<string> {
