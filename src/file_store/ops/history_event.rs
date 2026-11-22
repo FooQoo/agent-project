@@ -49,9 +49,9 @@ pub(super) fn agent_word_ja(state: RunState) -> &'static str {
 pub(super) fn transition_event(t: Transition<'_>) -> Result<HistoryRecord, AgboardError> {
     let fallback = match t.kind {
         HistoryKind::Created => format!(
-            "Created task in {}; {}.",
+            "Created task in {} with agent {}.",
             t.to_task.label(),
-            agent_clause(t.to_agent)
+            t.to_agent.as_str()
         ),
         HistoryKind::Lane => format!(
             "Moved task from {} to {}; {}.",
