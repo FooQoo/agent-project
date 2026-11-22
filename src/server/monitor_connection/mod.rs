@@ -3,9 +3,11 @@
 
 mod backend;
 pub mod config;
+mod connector;
 pub mod contracts;
 pub mod devices;
 mod entry;
+mod input;
 pub mod keychain;
 pub mod lifecycle;
 pub mod push;
@@ -13,5 +15,6 @@ mod restore;
 pub mod router;
 mod run;
 mod start;
+pub mod tailscale;
 mod token;
 mod types;

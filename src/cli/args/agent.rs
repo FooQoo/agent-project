@@ -112,15 +112,18 @@ pub struct SetupArgs {
 
 #[derive(clap::Subcommand, Debug)]
 pub enum SetupCommand {
-    /// Set up the remote (phone) access: the ngrok fixed domain, whether it is on, and the token
+    /// Set up the remote (phone) access: ngrok or Tailscale, whether it is on, and for ngrok the fixed domain and the token
     Remote(SetupRemoteArgs),
 }
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "With no option on a terminal it shows the saved settings and asks for the domain and the token (typed hidden); each question can be skipped, and an existing value is changed only when you say so.\nWithout a terminal it asks nothing: add one of the saving options. To only look at the settings, use \"agboard show remote\".\nThe settings are shared by every project and are saved whether or not a server runs; a running board shows the change without a reload. Saving does not replace a running connection: the settings apply the next time the connection starts.\nThe token is read from standard input only, never from an argument, and goes to the OS keychain. It is never printed.\n\nExamples:\n  agboard setup remote\n  agboard setup remote --domain example.ngrok-free.dev --enabled true\n  agboard setup remote --clear-domain\n  printf '%s' \"$NGROK_AUTHTOKEN\" | agboard setup remote --token-stdin"
+    after_help = "With no option on a terminal it shows the saved settings and asks which way the phone connects (ngrok or Tailscale), then only the settings of that way: for ngrok the domain and the token (typed hidden), for Tailscale nothing more. Each question can be skipped, and an existing value is changed only when you say so.\nWithout a terminal it asks nothing: add one of the saving options. To only look at the settings, use \"agboard show remote\".\nThe settings are shared by every project and are saved whether or not a server runs; a running board shows the change without a reload. Saving does not replace a running connection: the settings apply the next time the connection starts.\nThe token is read from standard input only, never from an argument, and goes to the OS keychain. It is never printed.\n\nExamples:\n  agboard setup remote\n  agboard setup remote --provider tailscale --enabled true\n  agboard setup remote --domain example.ngrok-free.dev --enabled true\n  agboard setup remote --clear-domain\n  printf '%s' \"$NGROK_AUTHTOKEN\" | agboard setup remote --token-stdin"
 )]
 pub struct SetupRemoteArgs {
+    /// Save how the phone connects: ngrok (the default) or tailscale. Tailscale needs no token or domain
+    #[arg(long, value_name = "NAME", value_parser = ["ngrok", "tailscale"])]
+    pub provider: Option<String>,
     /// Save this fixed ngrok domain (a bare host name such as example.ngrok-free.dev)
     #[arg(long, value_name = "HOST", conflicts_with = "clear_domain")]
     pub domain: Option<String>,
@@ -138,7 +141,11 @@ pub struct SetupRemoteArgs {
 impl SetupRemoteArgs {
     /// Whether any option asks for a save.
     pub fn saves(&self) -> bool {
-        self.domain.is_some() || self.clear_domain || self.enabled.is_some() || self.token_stdin
+        self.provider.is_some()
+            || self.domain.is_some()
+            || self.clear_domain
+            || self.enabled.is_some()
+            || self.token_stdin
     }
 }
 

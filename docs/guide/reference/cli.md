@@ -23,7 +23,7 @@ Use the browser to review and edit work, and `agboard` for agent updates and pro
 | Manage projects and folders | `project`, `workspace` |
 | Open the board in the browser | `open` |
 | Get the phone address and passcode, or see the remote access settings | `show remote` |
-| Save the remote access settings (domain, token) | `setup remote` |
+| Save the remote access settings (ngrok or Tailscale, domain, token) | `setup remote` |
 | Run the server and the hook | `serve`, `stop`, `hook` |
 | Install and update the Agent Board plugin | `setup`, `update` |
 | Delete things (people only) | `rm`, `project rm`, `epic rm`, `init` |
@@ -366,21 +366,23 @@ It shows whether remote access is turned on, the saved fixed domain (or that ngr
 
 ### Save the remote access settings {#save-the-remote-access-settings}
 
-`agboard setup remote` saves the ngrok settings that the board's connection dialog also keeps: whether the connection is on, the fixed domain, and the ngrok token. It needs no project, because the settings belong to the whole data folder, and it works whether or not a server is running. A running board shows the change without a reload.
+`agboard setup remote` saves the remote access settings that the board's connection dialog also keeps: whether the connection is on, whether the phone connects through ngrok or Tailscale, and for ngrok the fixed domain and the token. It needs no project, because the settings belong to the whole data folder, and it works whether or not a server is running. A running board shows the change without a reload.
 
 ```sh
 agboard setup remote
+agboard setup remote --provider tailscale --enabled true
 agboard setup remote --domain example.ngrok-free.dev --enabled true
 agboard setup remote --clear-domain
 printf '%s' "$NGROK_AUTHTOKEN" | agboard setup remote --token-stdin
 ```
 
-On a terminal, `agboard setup remote` with no option shows what is saved (the domain, and whether a token is saved, never the token) and asks for the domain and the token. The token is typed hidden and is never printed. Each question can be skipped by leaving it empty, and a value that is already saved is changed only when you say so. Without a terminal, or with `--json`, it asks nothing and exits with `2`, so a script never waits for input.
+On a terminal, `agboard setup remote` with no option shows what is saved (the provider, the domain, and whether a token is saved, never the token) and asks which way the phone connects, ngrok or Tailscale. It then asks only the settings of that way: for ngrok the domain and the token, and for Tailscale nothing more, because Tailscale needs neither. The token is typed hidden and is never printed. Each question can be skipped by leaving it empty, and a value that is already saved is changed only when you say so. Without a terminal, or with `--json`, it asks nothing and exits with `2`, so a script never waits for input.
 
 The options save without any question:
 
 | Option | Meaning |
 | --- | --- |
+| `--provider ngrok\|tailscale` | Saves how the phone connects. `ngrok` is the default. With `tailscale` the domain and the token are not used, and `setup remote` shows neither. Any other name exits with code 2. See [Choose ngrok or Tailscale](../watch/remote-access#choose-a-way). |
 | `--domain <host>` | Saves a fixed ngrok domain your account owns. It must be a bare host name; it is lower-cased, and a value with `https://`, a path, or a port exits with code 2 as `invalid_domain`. |
 | `--clear-domain` | Removes the saved domain, so ngrok chooses an address at each start. Cannot be combined with `--domain`. |
 | `--enabled true\|false` | Saves whether the connection is turned on. |

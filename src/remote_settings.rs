@@ -18,7 +18,7 @@ use serde_json::{Value, json};
 
 use crate::error::{AgboardError, FileAction};
 use crate::server::monitor_connection::config::{ConfigError, ConfigStore};
-use crate::server::monitor_connection::contracts::ConnectionConfig;
+use crate::server::monitor_connection::contracts::{ConnectionConfig, Provider};
 use crate::server::monitor_connection::keychain::{
     NoKeychain, OsKeychain, TokenVault, put_back, replace_token,
 };
@@ -42,6 +42,7 @@ pub fn vault_from_process() -> Arc<dyn TokenVault> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Saved {
     pub enabled: bool,
+    pub provider: Provider,
     pub domain: Option<String>,
     pub revision: u64,
     pub keychain_available: bool,
@@ -53,6 +54,7 @@ impl Saved {
     pub fn to_json(&self) -> Value {
         json!({
             "enabled": self.enabled,
+            "provider": self.provider.as_str(),
             "domain": self.domain,
             "tokenSaved": self.token_saved.unwrap_or(false),
             "keychainAvailable": self.keychain_available,
@@ -68,9 +70,17 @@ impl Saved {
     }
 
     pub fn human(&self) -> String {
-        format!(
-            "Enabled: {}\nDomain: {}\nToken: {}\n",
+        let head = format!(
+            "Enabled: {}\nProvider: {}\n",
             if self.enabled { "yes" } else { "no" },
+            self.provider.as_str(),
+        );
+        // The domain and the token are ngrok's; Tailscale has neither.
+        if self.provider == Provider::Tailscale {
+            return head;
+        }
+        format!(
+            "{head}Domain: {}\nToken: {}\n",
             self.domain
                 .as_deref()
                 .unwrap_or("none (ngrok chooses an address at each start)"),
@@ -85,12 +95,16 @@ pub struct Change {
     /// `Some(None)` clears the domain.
     pub domain: Option<Option<String>>,
     pub enabled: Option<bool>,
+    pub provider: Option<Provider>,
     pub token: Option<Secret>,
 }
 
 impl Change {
     pub fn is_empty(&self) -> bool {
-        self.domain.is_none() && self.enabled.is_none() && self.token.is_none()
+        self.domain.is_none()
+            && self.enabled.is_none()
+            && self.provider.is_none()
+            && self.token.is_none()
     }
 }
 
@@ -136,6 +150,7 @@ pub fn read(data_dir: &std::path::Path, vault: &dyn TokenVault) -> Result<Saved,
 fn saved_of(config: &ConnectionConfig, vault: &dyn TokenVault) -> Saved {
     Saved {
         enabled: config.enabled,
+        provider: config.provider,
         domain: config.domain.clone(),
         revision: config.revision,
         keychain_available: vault.available(),
@@ -174,6 +189,7 @@ pub fn apply(
     let next = ConnectionConfig {
         enabled: change.enabled.unwrap_or(current.enabled),
         revision: current.revision + 1,
+        provider: change.provider.unwrap_or(current.provider),
         domain: match change.domain {
             Some(domain) => domain,
             None => current.domain,

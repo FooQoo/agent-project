@@ -84,8 +84,9 @@ export const WithConnectionEntry: StoryObj<typeof meta> = {
     await waitFor(() => expect(notification).toBeVisible());
     await expect(view.getAllByRole('dialog', { hidden: true })).toHaveLength(1);
     await userEvent.click(await view.findByRole('button', { name: 'Connection settings' }));
-    // The settings dialog is gone and the connection dialog is the only one on the screen.
-    await waitFor(() => expect(view.queryAllByRole('radio')).toHaveLength(0));
+    // The settings dialog is gone and the connection dialog is the only one on the screen: the
+    // theme and language radios are gone and only its ngrok and Tailscale choice is left.
+    await waitFor(() => expect(view.queryAllByRole('radio')).toHaveLength(2));
     await waitFor(() => expect(view.getAllByRole('dialog', { hidden: true })).toHaveLength(1));
     const heading = await view.findByRole('heading', { name: 'Remote connection' });
     await waitFor(() => expect(heading).toBeVisible());

@@ -80,7 +80,7 @@ async fn only_the_passcode_starts_a_session_and_only_get_session_shows_it() {
     assert_eq!(none.status(), StatusCode::UNAUTHORIZED);
     assert!(!none.headers().contains_key(header::SET_COOKIE));
     assert_eq!(body_of(none).await["error"]["code"], "session_required");
-    let stale = headers(&[("cookie", "agboard_ngrok_session=guess")]);
+    let stale = headers(&[("cookie", "agboard_remote_session=guess")]);
     assert_eq!(
         open_session(&p, &Method::GET, &stale).status(),
         StatusCode::UNAUTHORIZED
@@ -96,7 +96,7 @@ async fn only_the_passcode_starts_a_session_and_only_get_session_shows_it() {
         .to_str()
         .unwrap();
     for part in [
-        "agboard_ngrok_session=",
+        "agboard_remote_session=",
         "; Secure",
         "; HttpOnly",
         "; SameSite=Lax",

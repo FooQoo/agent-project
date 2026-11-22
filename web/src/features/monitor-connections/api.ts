@@ -9,7 +9,15 @@ export type FailureCode =
   | 'public_url_invalid'
   | 'internal'
   | 'config_unreadable'
-  | 'config_invalid';
+  | 'config_invalid'
+  | 'tailscale_not_installed'
+  | 'tailscale_not_logged_in'
+  | 'tailscale_https_disabled'
+  | 'tailscale_serve_failed'
+  | 'tailscale_serve_busy';
+
+/** How the phone reaches the board. */
+export type Provider = 'ngrok' | 'tailscale';
 
 export type TokenSource = 'env' | 'keychain' | 'session';
 
@@ -23,9 +31,13 @@ export interface ConnectionSnapshot {
   revision: number;
   settings: {
     enabled: boolean;
+    provider: Provider;
     /** The saved ngrok domain, or null when none is saved (ngrok then chooses the address). */
     domain: string | null;
   };
+  /** The provider of the connection that is starting, ready or reconnecting; null when none runs.
+   * It can differ from `settings.provider`, which is only what is saved. */
+  activeProvider: Provider | null;
   /** The domain from the AGBOARD_NGROK_DOMAIN environment variable; when set, it is the one used. */
   domainEnv: string | null;
   /** Whether a token is available: from the environment, this PC's secure storage or this run. */
@@ -104,6 +116,8 @@ export const getConnection = () => request(BASE, { method: 'GET' });
 export interface SettingsInput {
   enabled: boolean;
   revision: number;
+  /** The way to connect; left out, the saved one is kept. */
+  provider?: Provider;
   /** A host name to save; an empty string clears it; left out, the saved one is kept. */
   domain?: string;
 }

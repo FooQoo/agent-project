@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use super::contracts::ConnectionConfig;
+use super::contracts::{ConnectionConfig, Provider};
 
 /// The only file format this build reads and writes.
 pub const FORMAT_VERSION: u32 = 1;
@@ -25,6 +25,9 @@ struct StoredFile {
     format_version: u32,
     revision: u64,
     enabled: bool,
+    /// Absent means ngrok.
+    #[serde(default)]
+    provider: Provider,
     /// Absent in files written before the domain was a setting.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     domain: Option<String>,
@@ -114,6 +117,7 @@ impl ConfigStore {
         Ok(ConnectionConfig {
             enabled: stored.enabled,
             revision: stored.revision,
+            provider: stored.provider,
             // A saved value that is not a plain host name is not used.
             domain: stored
                 .domain
@@ -129,6 +133,7 @@ impl ConfigStore {
             format_version: FORMAT_VERSION,
             revision: config.revision,
             enabled: config.enabled,
+            provider: config.provider,
             domain: config.domain.clone(),
         };
         let mut text =
@@ -199,6 +204,7 @@ mod tests {
         ConnectionConfig {
             enabled: true,
             revision: 3,
+            provider: Provider::Tailscale,
             domain: Some("example.ngrok-free.dev".to_string()),
         }
     }
@@ -268,7 +274,10 @@ mod tests {
             .map(String::as_str)
             .collect();
         keys.sort();
-        assert_eq!(keys, ["domain", "enabled", "formatVersion", "revision"]);
+        assert_eq!(
+            keys,
+            ["domain", "enabled", "formatVersion", "provider", "revision"]
+        );
     }
 
     #[test]
@@ -280,12 +289,14 @@ mod tests {
             .save(&ConnectionConfig {
                 enabled: true,
                 revision: 1,
+                provider: Provider::Ngrok,
                 domain: None,
             })
             .unwrap();
         let text = std::fs::read_to_string(&path).unwrap();
         assert!(!text.contains("domain"));
         assert_eq!(store.load().unwrap().domain, None);
+        assert_eq!(store.load().unwrap().provider, Provider::Ngrok);
         std::fs::write(
             &path,
             r#"{"formatVersion":1,"revision":1,"enabled":true,"domain":"https://a.ngrok.app/x"}"#,

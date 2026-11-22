@@ -27,6 +27,16 @@
               "interaction": true
             },
             {
+              "id": "monitor-connections-connectionsettingsview--tailscale-chosen",
+              "states": ["provider choice", "token and domain hidden", "connects without a token"],
+              "interaction": true
+            },
+            {
+              "id": "monitor-connections-connectionsettingsview--tailscale-saved",
+              "states": ["tailscale saved", "token field hidden"],
+              "interaction": true
+            },
+            {
               "id": "monitor-connections-connectionsettingsview--domain-from-environment",
               "states": ["domain from environment", "domain field read-only"],
               "interaction": true

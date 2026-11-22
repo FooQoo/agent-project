@@ -87,8 +87,14 @@ export function ConnectionSettingsView({
 
   // Reset only when the values differ, so an equal draft from a re-render keeps what was typed.
   useEffect(
-    () => setValues({ token: draft.token, save: draft.save, domain: draft.domain }),
-    [draft.token, draft.save, draft.domain],
+    () =>
+      setValues({
+        provider: draft.provider,
+        token: draft.token,
+        save: draft.save,
+        domain: draft.domain,
+      }),
+    [draft.provider, draft.token, draft.save, draft.domain],
   );
   useEffect(() => {
     if (!copied) return;
@@ -204,7 +210,9 @@ export function ConnectionSettingsView({
               </p>
               <DialogActions align="between">
                 <Button type="button" variant="outline" disabled={busy} onClick={onResetToken}>
-                  {t('monitorConnection.resetToken')}
+                  {draft.provider === 'tailscale'
+                    ? t('monitorConnection.changeSettings')
+                    : t('monitorConnection.resetToken')}
                 </Button>
                 <Button
                   type="button"
@@ -241,7 +249,14 @@ export function ConnectionSettingsView({
                   type="button"
                   className="connection-dialog__reconnect"
                   disabled={busy}
-                  onClick={() => onConnect({ token: '', save: false, domain: draft.domain })}
+                  onClick={() =>
+                    onConnect({
+                      provider: draft.provider,
+                      token: '',
+                      save: false,
+                      domain: draft.domain,
+                    })
+                  }
                 >
                   {t('monitorConnection.reconnect')}
                 </Button>

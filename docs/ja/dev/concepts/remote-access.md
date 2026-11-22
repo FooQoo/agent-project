@@ -39,6 +39,24 @@ flowchart LR
 - **開始のやり直し。** トンネルが動いている間の開始（**トークン再設定**のあとのPCのダイアログの**保存して接続**など）は、古いトンネルを閉じ、新しい合言葉を作り、古いsessionとイベントストリームを終えてから、新しいトンネルを`ready`にします。同じ設定をもう一度保存しても何も変わりません。
 - **停止。** 停止はトンネルを閉じ、入口を閉じて開いているイベントストリームを終え、新しい回答を拒否し、設定を無効として保存します。PCのダイアログではこれを**一時停止**と呼び、**再開**は開始です。停止してもトークン・保存したドメイン・[登録済みの端末](#登録済みの端末)は残るため、再開すると、登録済みのスマホは合言葉なしで戻ってきます。設定ファイルは原子的に書き込み、合言葉・session・トークンをディスクへ書くことはありません。
 
+## Tailscaleの入口
+
+保存した`provider`設定（`ngrok`が既定、または`tailscale`）が、公開エンドポイントを開くコネクターを決めます。違いはそれだけです。入口、HostとOriginの検査、合言葉、session、登録済みの端末、CSRFトークン、イベントストリーム、Web Pushは、ngrokの入口と同じものを使います。コネクターは`src/server/monitor_connection/tailscale.rs`の`TailscaleConnector`で、`RoutingConnector`が開く要求のproviderに応じて、これかngrok SDKのコネクターを選びます。
+
+```mermaid
+flowchart LR
+    Phone["tailnet上のスマホ"] -->|HTTPS| Serve["tailscale serve<br/>443"]
+    Serve --> Entry["入口 (127.0.0.1)"]
+    Entry --> Shared["共有FileStore"]
+```
+
+- **開始。** コネクターは`tailscale`コマンド（`PATH`にあるもの、なければ`/Applications/Tailscale.app/Contents/MacOS/Tailscale`）を探し、`tailscale status --json`を実行します。公開アドレスは`https://`に`Self.DNSName`（末尾のドットを除く）を続けたものです。ツールが見つからない（`tailscale_not_installed`）、バックエンドの状態が`Running`でない（`tailscale_not_logged_in`）、tailnetでHTTPS証明書が有効でなく`CertDomains`が空（`tailscale_https_disabled`）のときは、失敗コードを出して始めず、Tailscaleの設定も変えません。そのうえで`tailscale serve --bg --https=443 http://127.0.0.1:<port>`を実行します。portは入口のループバックのportで、ここでの失敗は`tailscale_serve_failed`です。その前に`tailscale serve status --json`を読み、すでにポート443でHTTPSを配信しているものがあれば、`tailscale_serve_busy`として開始を断り、何も変えません。ほかのプログラムの入口を置き換えることはありません。ツールの呼び出しにはどれも5秒の制限があり、Serveの設定の変更は直列に行い、変更した接続の印を付けます。そのため、開始の途中で止められた接続が、新しい接続の設定を変えることはありません。
+- **停止。** 接続を落とすと、専用のスレッドで`tailscale serve --https=443 off`を実行します。実行するのは、その接続がまだ入口を持っているときだけです。停止はこれを最長2秒待ちます。serveの設定はそれまでTailscaleが保持するため、サーバーが異常終了すると残ることがあります。次の開始で置き換わり、手動では`tailscale serve --https=443 off`で消せます。
+- **トークンなし。** Tailscaleでの開始にngrokのトークンは要らず、キーチェーンも読みません。保存した`tailscale`設定は、次の`serve`でトークンなしに再開します。`domain`と`AGBOARD_NGROK_DOMAIN`はngrokにだけ効きます。
+- **Host。** Serveは受け取ったHostをそのまま渡します。443ではportなし、ほかのportではportありです。入口は、このマシンの`ts.net`の名前だけを受け付けます。
+- **信用しないもの。** Serveは`X-Forwarded-*`と`Tailscale-User-Login`を付けます。入口のportにはこのPCの他のプログラムも届くため、これらのヘッダーは何も証明せず、本人確認には読みません。入る方法は合言葉と登録済みの端末だけです。
+- **アドレスごと。** 登録済みの端末と通知の購読は公開アドレスに属します。ngrokとTailscaleの切り替えや、別のTailscale名への切り替えで、スマホは新しい端末になります。合言葉をもう一度入れ、通知をもう一度有効にします。
+
 ## 保存先
 
 | 内容 | 保存先 |
@@ -68,9 +86,9 @@ Edgeがアプリのために行うことはありません。エンドポイン�
 1. **Host。** 入口は、トンネルが準備済みで、`Host`がngrokの返した公開HTTPSアドレスとちょうど一致する（`Host`ヘッダーが一つで、ポートも付かない）要求だけを受け付けます。それ以外は理由を示さない同じ403を返します。ループバックのポートを開いたブラウザは`Host`がループバックのアドレスなので、これに含まれます。転送ヘッダーやメソッド上書きのヘッダーは信頼しません。Hostの確認は、要求がngrok経由で届いたことをアプリに証明しません。[防げないこと](./security.md#防げないこと)を参照してください。
 2. **合言葉とsession。** ページの殻と静的ファイルには最初の層だけが必要です。それ以外はsessionなしでは配信せず、sessionは`POST /api/remote/unlock`でだけ始まります。
    - *合言葉。* 起動のたびに、OSの乱数源から4桁の合言葉（`0000`〜`9999`）を偏りなく作り、連続した間違いの回数とともにメモリーに置きます。PCがこれを見るのは、接続が`ready`の間のローカルの状態APIと、`serve`の起動行だけです。ファイル、ログ、`serve.json`、ページ、エラー、スマホ向けの応答には一切書きません。
-   - *unlock。* 本文はJSONの`{"code":"1234"}`で、公開Originとの完全一致と`Sec-Fetch-Site: same-origin`が必要です。まだsessionがないため、CSRFトークンは要りません。コードは定時間で比較します。正しければ、Cookie`agboard_ngrok_session`（`Secure; HttpOnly; SameSite=Lax; Path=/`、最長12時間。この起動と公開アドレスに結び付く）を発行し、回数を0に戻し、CSRFトークンを返します。あわせて、2つ目のCookie`agboard_ngrok_device`で[端末を登録](#登録済みの端末)します。間違っていれば403 `unlock_failed`で、どれだけ近かったか、残り何回かは示しません。
+   - *unlock。* 本文はJSONの`{"code":"1234"}`で、公開Originとの完全一致と`Sec-Fetch-Site: same-origin`が必要です。まだsessionがないため、CSRFトークンは要りません。コードは定時間で比較します。正しければ、Cookie`agboard_remote_session`（`Secure; HttpOnly; SameSite=Lax; Path=/`、最長12時間。この起動と公開アドレスに結び付く）を発行し、回数を0に戻し、CSRFトークンを返します。あわせて、2つ目のCookie`agboard_remote_device`で[端末を登録](#登録済みの端末)します。間違っていれば403 `unlock_failed`で、どれだけ近かったか、残り何回かは示しません。
    - *制限。* 連続5回目の間違いまでは403です。それ以降は、正しい合言葉を含むすべての試行が429 `unlock_locked`になり、何も発行しません。新しく起動し直したときだけ、新しい合言葉と数え直した回数になります。ヘッダーや本文の不備（Originがない、JSONでない本文）で拒否された要求は推測ではないため、数えません。
-   - *session。* `GET /api/remote/session`は、有効なsessionとそのCSRFトークンを知らせます。sessionがなくても、有効な`agboard_ngrok_device`のCookieがあれば、ここで合言葉なしに新しいsessionを開きます。どちらもなければ401 `session_required`を返します。そのほかの`/api/`の経路は有効なsessionが必要で、なければ401 `session_required`です。イベントストリームは、sessionの終了、起動の終了、5分の経過で終わります（ページは再接続します）。
+   - *session。* `GET /api/remote/session`は、有効なsessionとそのCSRFトークンを知らせます。sessionがなくても、有効な`agboard_remote_device`のCookieがあれば、ここで合言葉なしに新しいsessionを開きます。どちらもなければ401 `session_required`を返します。そのほかの`/api/`の経路は有効なsessionが必要で、なければ401 `session_required`です。イベントストリームは、sessionの終了、起動の終了、5分の経過で終わります（ページは再接続します）。
 3. **書き込みのガード。** あらゆる変更（回答、編集、移動、表示設定の保存など）には、公開Originとの完全一致、`Sec-Fetch-Site: same-origin`、`X-Agboard-Csrf`のCSRFトークンも必要です。
 
 4桁の合言葉は、意図的に小さな秘密です。10,000通りしかなく、5回までの制限と、起動ごとに変わる合言葉で守ります。アカウントでのサインインより弱い守りです。防げないことは[セキュリティモデル](./security.md#防げないこと)にまとめています。
@@ -83,7 +101,7 @@ Edgeがアプリのために行うことはありません。エンドポイン�
 
 正しい合言葉でスマホを登録するので、合言葉が必要なのは、sessionごと・起動ごとではなく、スマホごとに1回です。登録はsessionとは別です。sessionは短く、メモリーにだけあります。登録は長く、一時停止・再起動・再接続のあとも残ります。
 
-- **資格情報。** 正しい合言葉で、入口はランダムな256ビットの端末トークンを作り、Cookie`agboard_ngrok_device`（`Secure; HttpOnly; SameSite=Lax; Path=/`、`Max-Age`は400日。ブラウザが保持できる最長）として設定します。サーバーが保存するのはSHA-256のダイジェストだけで、id（`dev_`と16桁の16進数）、`User-Agent`から作るラベル（例: `iPhone / Safari`）、登録した公開origin、作成と最終確認の時刻を添えます。有効な端末Cookieをすでに送るブラウザは、二重に登録しません。保持するのは最大32台で、最後に使われてから最も長いものから外します。登録を保存できなかったときも、スマホはsessionを得て、次回は合言葉を求められます。
+- **資格情報。** 正しい合言葉で、入口はランダムな256ビットの端末トークンを作り、Cookie`agboard_remote_device`（`Secure; HttpOnly; SameSite=Lax; Path=/`、`Max-Age`は400日。ブラウザが保持できる最長）として設定します。サーバーが保存するのはSHA-256のダイジェストだけで、id（`dev_`と16桁の16進数）、`User-Agent`から作るラベル（例: `iPhone / Safari`）、登録した公開origin、作成と最終確認の時刻を添えます。有効な端末Cookieをすでに送るブラウザは、二重に登録しません。保持するのは最大32台で、最後に使われてから最も長いものから外します。登録を保存できなかったときも、スマホはsessionを得て、次回は合言葉を求められます。
 - **戻ってくる。** `GET /api/remote/session`に有効なsessionがなくても、要求が、この公開originで登録されているダイジェストの端末Cookieを持っていれば、入口は新しいsession（unlockと同じ12時間のsessionとCSRFトークン）を開き、端末Cookieを更新して、時刻を記録します。ページは読み込みのたびと、401のあとに、まずこれを行う（`RemoteGate`）ので、sessionが終わったあとも、一時停止と再開のあとも、PCの再起動のあとも、合言葉なしでスマホは戻ります。従来どおり`Sec-Fetch-Site: same-origin`の確認が必要です。合言葉の試行はしないため、5回の制限を使うことも、すり抜けることもありません。別の公開origin（保存したドメインを変えたあとなど）に送られた端末Cookieは、何にも一致しません。
 - **登録の解除。** PCのダイアログは、端末の一覧（`GET /api/monitor-connections/devices`）と1台の削除（`DELETE /api/monitor-connections/devices/{id}`）を持ちます。どちらもローカルのリスナーにだけあります。削除は、先に記録を消し、動作中のトンネルでその端末のために開いたsessionをすべて終わらせ、その端末の開いているイベントストリームに知らせてすぐに終わらせます。スマホの次の要求は401になり、端末Cookieは何にも一致せず、合言葉を求められます。
 - **登録が変えないこと。** 新しい端末には、これまでどおり、現在の起動の合言葉と同じ制限が必要です。一時停止や停止の間は、登録済みかどうかにかかわらず、入口は何も配信しません。合言葉だけで開いたsession（登録ができなかったときなど）には端末がなく、自分の時間か実行の終了でだけ終わります。

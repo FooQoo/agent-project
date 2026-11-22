@@ -9,7 +9,7 @@
 use std::sync::{Arc, Mutex};
 
 use super::config::{ConfigError, ConfigStore};
-use super::contracts::{ConnectionConfig, ConnectionStatus};
+use super::contracts::{ConnectionConfig, ConnectionStatus, Provider};
 use super::devices::DeviceStore;
 use super::keychain::TokenVault;
 use super::push::PushStore;
@@ -124,8 +124,8 @@ impl MonitorConnections {
                 Some(self.begin(&mut inner).map_err(|e| failure_of(&e))?)
             } else {
                 if inner.config.enabled && inner.failure.is_none() {
-                    if inner.token.is_some() {
-                        // A token is already held: nothing to read.
+                    if inner.token.is_some() || inner.config.provider == Provider::Tailscale {
+                        // A token is already held, or none is needed: nothing to read.
                         self.restore(&mut inner);
                     } else {
                         // The keychain may stop to ask the user, so it is read
@@ -155,6 +155,7 @@ impl MonitorConnections {
         let candidate = ConnectionConfig {
             enabled: update.enabled,
             revision: inner.config.revision + 1,
+            provider: update.provider.unwrap_or(inner.config.provider),
             domain: match update.domain {
                 Some(domain) => domain,
                 None => inner.config.domain.clone(),
@@ -208,7 +209,10 @@ impl MonitorConnections {
                 inner.config.revision
             };
             // A known token needs no keychain read, so a restart while connected cannot hang on it.
-            if token.is_none() && self.lock().token.is_none() {
+            if token.is_none()
+                && self.lock().token.is_none()
+                && self.lock().config.provider == Provider::Ngrok
+            {
                 self.probed().await;
             }
             if save && let Some(token) = &token {
@@ -250,13 +254,14 @@ impl MonitorConnections {
                 TokenSource::Session
             });
         }
-        if inner.token.is_none() {
+        if inner.token.is_none() && inner.config.provider == Provider::Ngrok {
             return Err(StartError::TokenRequired);
         }
         if !inner.config.enabled {
             let next = ConnectionConfig {
                 enabled: true,
                 revision: inner.config.revision + 1,
+                provider: inner.config.provider,
                 domain: inner.config.domain.clone(),
             };
             self.store.save(&next).map_err(|_| StartError::SaveFailed)?;
@@ -279,7 +284,7 @@ impl MonitorConnections {
 }
 
 pub(super) fn idle_status(config: &ConnectionConfig, has_token: bool) -> ConnectionStatus {
-    if config.enabled && !has_token {
+    if config.enabled && !has_token && config.provider == Provider::Ngrok {
         ConnectionStatus::NeedsConfig
     } else {
         ConnectionStatus::Disabled

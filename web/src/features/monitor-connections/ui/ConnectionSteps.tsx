@@ -8,6 +8,7 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import './connection.css';
 import type { ConnectionDraft, ConnectionQr, TokenInfo } from './connectionTypes';
+import { ProviderChoice } from './ProviderChoice';
 
 /**
  * Where the person signs in to ngrok and copies the auth token. The page never loads it: the
@@ -53,7 +54,10 @@ export interface ConnectionSetupStepsProps {
   onDeleteToken?: () => void;
 }
 
-/** The two steps of the first setup: get the token from ngrok, then paste it and connect. */
+/**
+ * The first setup: the choice of the way to connect, then the settings of that way. ngrok has two
+ * steps (get the token, paste it) and the domain; Tailscale has one step and no token or domain.
+ */
 export function ConnectionSetupSteps({
   values,
   onChange,
@@ -75,8 +79,36 @@ export function ConnectionSetupSteps({
           ? t('monitorConnection.tokenThisRun')
           : t('monitorConnection.tokenNote');
 
+  if (values.provider === 'tailscale') {
+    return (
+      <>
+        <ProviderChoice
+          value={values.provider}
+          busy={busy}
+          onChange={(provider) => onChange({ ...values, provider })}
+        />
+        <ol className="connection-dialog__steps">
+          <Step number={1} title={t('monitorConnection.tailscale.title')}>
+            <p className="connection-dialog__step-text">{t('monitorConnection.tailscale.body')}</p>
+            <p
+              className="connection-dialog__step-text connection-dialog__step-text--note"
+              data-testid="tailscale-note"
+            >
+              {t('monitorConnection.tailscale.note')}
+            </p>
+          </Step>
+        </ol>
+      </>
+    );
+  }
+
   return (
     <>
+      <ProviderChoice
+        value={values.provider}
+        busy={busy}
+        onChange={(provider) => onChange({ ...values, provider })}
+      />
       <ol className="connection-dialog__steps">
         <Step number={1} title={t('monitorConnection.getTokenTitle')}>
           <p className="connection-dialog__step-text">{t('monitorConnection.getTokenBody')}</p>

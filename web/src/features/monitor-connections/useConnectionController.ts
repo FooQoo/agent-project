@@ -99,6 +99,8 @@ export function useConnectionController(open: boolean, projectId: string | null 
             return t('monitorConnectionPc.error.saveFailed');
           case 'token_required':
             return t('monitorConnectionPc.error.tokenRequired');
+          case 'invalid_provider':
+            return t('monitorConnectionPc.error.invalid');
           case 'invalid_domain':
             return t('monitorConnectionPc.error.invalidDomain');
           case 'invalid_value':
@@ -133,14 +135,21 @@ export function useConnectionController(open: boolean, projectId: string | null 
         let next = await saveSettings({
           enabled: true,
           revision: base.revision,
-          // The environment variable decides when it is set, so the field is not sent then.
-          ...(base.domainEnv ? {} : { domain: draft.domain.trim() }),
+          provider: draft.provider,
+          // The domain is ngrok's. The environment variable decides when it is set, so the
+          // field is not sent then.
+          ...(base.domainEnv || draft.provider === 'tailscale'
+            ? {}
+            : { domain: draft.domain.trim() }),
         });
         setSnapshot(next);
         const running =
           next.status === 'starting' || next.status === 'ready' || next.status === 'reconnecting';
-        // A new token always restarts; otherwise a saved change has already restarted a live tunnel.
-        if (token || !running)
+        // A new token always starts the connection. Otherwise it is started when none is running
+        // or when the one running is not the provider chosen: a save changes only what is stored,
+        // never a live connection, and a retry after a failed start must still replace it.
+        const providerChanged = draft.provider !== next.activeProvider;
+        if (token || !running || providerChanged)
           next = await startConnection(
             token || null,
             Boolean(token) && draft.save && base.keychainAvailable,
@@ -173,9 +182,10 @@ export function useConnectionController(open: boolean, projectId: string | null 
         setError(t('monitorConnectionPc.error.unreachable'));
         return;
       }
-      const token = draft.token.trim();
+      // Tailscale needs no token and the field is not shown, so none is sent.
+      const token = draft.provider === 'tailscale' ? '' : draft.token.trim();
       // An environment or saved token is enough; the server answers token_required otherwise.
-      if (!token && !snapshot.tokenConfigured) {
+      if (draft.provider === 'ngrok' && !token && !snapshot.tokenConfigured) {
         setError(t('monitorConnectionPc.error.tokenRequired'));
         return;
       }
@@ -197,9 +207,10 @@ export function useConnectionController(open: boolean, projectId: string | null 
   );
 
   const savedDomain = snapshot?.settings.domain ?? '';
+  const savedProvider = snapshot?.settings.provider ?? 'ngrok';
   const draft = useMemo<ConnectionDraft>(
-    () => ({ token: '', save: false, domain: savedDomain }),
-    [savedDomain],
+    () => ({ provider: savedProvider, token: '', save: false, domain: savedDomain }),
+    [savedProvider, savedDomain],
   );
   const tokenInfo = useMemo<TokenInfo>(
     () => ({

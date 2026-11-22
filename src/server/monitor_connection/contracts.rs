@@ -21,12 +21,44 @@ pub enum ConnectionStatus {
     Stopping,
 }
 
+/// How the phone reaches the board.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Provider {
+    /// An ngrok tunnel. Needs an ngrok token.
+    #[default]
+    Ngrok,
+    /// Tailscale Serve on the tailnet. Needs no token.
+    Tailscale,
+}
+
+impl Provider {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Ngrok => "ngrok",
+            Self::Tailscale => "tailscale",
+        }
+    }
+
+    /// The provider named `raw` (`ngrok` or `tailscale`), or `None`.
+    pub fn parse(raw: &str) -> Option<Self> {
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "ngrok" => Some(Self::Ngrok),
+            "tailscale" => Some(Self::Tailscale),
+            _ => None,
+        }
+    }
+}
+
 /// The non-secret configuration that may be saved to disk.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ConnectionConfig {
     pub enabled: bool,
     pub revision: u64,
+    /// Which way the phone reaches the board. ngrok unless chosen otherwise.
+    #[serde(default)]
+    pub provider: Provider,
     /// The ngrok domain to open the endpoint on, so the address stays the same.
     /// `None` lets ngrok choose a new address at every start.
     #[serde(default)]
@@ -152,8 +184,8 @@ mod tests {
         let v = serde_json::to_value(ConnectionConfig::default()).unwrap();
         let mut keys: Vec<&str> = v.as_object().unwrap().keys().map(String::as_str).collect();
         keys.sort();
-        assert_eq!(keys, ["domain", "enabled", "revision"]);
-        // Only the enabled flag, the revision and the domain are settings: a file with any other field is not read.
+        assert_eq!(keys, ["domain", "enabled", "provider", "revision"]);
+        // Only the enabled flag, the revision, the provider and the domain are settings: a file with any other field is not read.
         for stale in [
             r#"{"enabled":false,"revision":0,"allowEmails":[]}"#,
             r#"{"enabled":false,"revision":0,"oauthApp":"managed"}"#,

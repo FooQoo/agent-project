@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use super::contracts::ConnectionStatus;
+use super::contracts::{ConnectionStatus, Provider};
 use super::lifecycle::{Inner, MonitorConnections, failure_of, idle_status};
 use super::types::Snapshot;
 
@@ -10,7 +10,7 @@ impl MonitorConnections {
     /// Start the saved connection with the token in hand. A failure is shown
     /// on the PC, not fatal.
     pub(super) fn restore(self: &Arc<Self>, inner: &mut Inner) {
-        if inner.token.is_some() {
+        if inner.token.is_some() || inner.config.provider == Provider::Tailscale {
             if let Err(e) = self.begin(inner).map(drop) {
                 inner.status = ConnectionStatus::Failed;
                 inner.failure = Some(failure_of(&e));

@@ -68,6 +68,19 @@ export const monitorEn = {
     changeSettings: 'Change settings',
     reconnect: 'Resume',
     statusOn: 'Accepting connections',
+    provider: {
+      label: 'How the phone connects',
+      ngrok: 'ngrok',
+      ngrokHint: 'A public address from an ngrok account. Needs an auth token.',
+      tailscale: 'Tailscale',
+      tailscaleHint:
+        'A private address on your own Tailscale network. Needs no token. Your phone must have Tailscale on.',
+    },
+    tailscale: {
+      title: 'Check Tailscale',
+      body: 'Sign in to the Tailscale app on this PC and on your phone, then turn on MagicDNS and HTTPS certificates for your tailnet.',
+      note: 'Switching between ngrok and Tailscale changes the address, so the phone enters the passcode and turns notifications on again.',
+    },
     getTokenTitle: 'Get a token',
     getTokenBody: 'Sign in to ngrok and copy the authtoken.',
     getTokenAction: 'Open the token page',
@@ -170,6 +183,16 @@ export const monitorEn = {
       internal: 'The connection stopped because of an internal error. Try again.',
       config_unreadable: 'The saved settings could not be read. Save them again to continue.',
       config_invalid: 'The saved settings are not valid. Enter the token and connect again.',
+      tailscale_not_installed:
+        'Tailscale was not found on this PC. Install the Tailscale app and sign in.',
+      tailscale_not_logged_in:
+        'Tailscale is not running or not signed in. Open the Tailscale app and sign in.',
+      tailscale_https_disabled:
+        'HTTPS certificates are off for your tailnet. Turn on MagicDNS and HTTPS certificates in the Tailscale admin console.',
+      tailscale_serve_busy:
+        'Another program already serves HTTPS on this PC through Tailscale. Turn it off first, for example with tailscale serve --https=443 off, then try again.',
+      tailscale_serve_failed:
+        'Tailscale did not open the address. Check the Tailscale app and try again.',
     },
   },
 } as const;

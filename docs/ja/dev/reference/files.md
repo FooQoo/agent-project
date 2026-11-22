@@ -264,6 +264,7 @@ ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.i
   "formatVersion": 1,
   "revision": 3,
   "enabled": true,
+  "provider": "ngrok",
   "domain": "example.ngrok-free.dev"
 }
 ```
@@ -273,6 +274,7 @@ ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.i
 | `formatVersion` | 常に`1`。ほかの値、未知のフィールド、壊れたファイルは、設定を読めない（`config_unreadable`）扱いになる。PCの入口は動き続け、新しい設定を保存するとファイルが置き換わる。 |
 | `revision` | 保存のたびに増える。トークンだけを変えるコマンドラインからの保存でも増える。設定APIが、別の画面での変更を検出するために使い、動いているサーバーが、コマンドラインでの変更に気づくために使う。 |
 | `enabled` | 次の`serve`で接続を再び始めるか。停止すると`false`で保存する。 |
+| `provider` | 省略できる。`ngrok`（省略時の既定）か`tailscale`で、スマホがボードに届く方法。ほかの値はファイルを読めないものにする。 |
 | `domain` | 省略できる。エンドポイントを要求するngrokのドメインで、小文字のホスト名だけ。開始のたびに公開アドレスが同じになる。保存していないときは書かない。ホスト名でない値は、読み込み時に無視する。環境変数`AGBOARD_NGROK_DOMAIN`があるときはそちらを使い、ファイルには書かない。 |
 
 ファイルには、ngrokのトークン、スマホの合言葉、session、CSRFトークンを入れません。利用者が保存を選んだトークンは、代わりにこのPCの安全な保管場所（OSの資格情報ストア。service `agent-board`、account `ngrok-authtoken`）に置きます。`monitor/config.json`はありません。

@@ -12,11 +12,11 @@ pub const SESSION_MAX_AGE_SECS: u64 = 12 * 60 * 60;
 
 /// Name of the application session cookie. Scoped to the whole entrance, because the
 /// board app and its API are served from `/`.
-pub const SESSION_COOKIE_NAME: &str = "agboard_ngrok_session";
+pub const SESSION_COOKIE_NAME: &str = "agboard_remote_session";
 
 /// Name of the device cookie: the long-lived proof that a phone or browser was registered with
 /// the passcode. Only its digest is kept on the PC.
-pub const DEVICE_COOKIE_NAME: &str = "agboard_ngrok_device";
+pub const DEVICE_COOKIE_NAME: &str = "agboard_remote_device";
 
 /// How long the device cookie lasts, in seconds (400 days, the most a browser keeps).
 pub const DEVICE_COOKIE_MAX_AGE_SECS: u64 = 400 * 24 * 60 * 60;

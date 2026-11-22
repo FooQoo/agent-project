@@ -236,7 +236,7 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 | API | 入出力と動作 |
 | --- | --- |
 | `GET /api/monitor-connections` | 現在の状態（下記）。秘密の値は含まない。 |
-| `PUT /api/monitor-connections/settings/ngrok` | `{enabled, revision, domain?}`を保存し、状態を返す。`revision`は最後に読んだ値でなければならない。`domain`は省略でき、省略すると保存済みのドメインを保つ。空文字列で消去する。それ以外はホスト名だけ（スキーム、パス、ポート、ワイルドカードは不可）で、小文字にして保存する。違反は422 `invalid_domain`。未知のフィールドは422 `invalid_value`、古いrevisionは409 `revision_conflict`、保存の失敗は500 `save_failed`で何も変えない。トンネルが動いている間に保存しても作り直さない。作り直すのは開始だけ。 |
+| `PUT /api/monitor-connections/settings/ngrok` | `{enabled, revision, provider?, domain?}`を保存し、状態を返す。`provider`は省略でき、省略すると保存済みのproviderを保つ。指定するなら`ngrok`か`tailscale`で、それ以外は422 `invalid_provider`。`revision`は最後に読んだ値でなければならない。`domain`は省略でき、省略すると保存済みのドメインを保つ。空文字列で消去する。それ以外はホスト名だけ（スキーム、パス、ポート、ワイルドカードは不可）で、小文字にして保存する。違反は422 `invalid_domain`。未知のフィールドは422 `invalid_value`、古いrevisionは409 `revision_conflict`、保存の失敗は500 `save_failed`で何も変えない。トンネルが動いている間に保存しても作り直さない。作り直すのは開始だけ。 |
 | `POST /api/monitor-connections/transports/ngrok/start` | 接続を開始し、202で状態（通常は`starting`）を返す。任意の本文は`{token, save}`。`token`はメモリーだけに保持する。`save: true`はこのPCの安全な保管場所（OSの資格情報ストア）にも保存し、`token`が必要。無効な設定は、先に有効として保存する。トンネルが動いている間の開始は、トンネルを作り直す（合言葉も新しくなる）。 |
 | `POST /api/monitor-connections/transports/ngrok/stop` | 接続を停止して無効として保存し、200で状態を返す。 |
 | `GET /api/monitor-connections/devices` | 登録済みの端末を、最後に使われたものが先頭の順で返す。`{"devices":[{"id","label","createdAt","lastSeenAt"}]}`。トークンもそのダイジェストも含まない。接続が一時停止中でも使える。 |
@@ -250,13 +250,14 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 | `status` | `disabled`・`needs_config`・`starting`・`ready`・`reconnecting`・`failed`・`stopping`のいずれか。 |
 | `url` | `ready`のときの公開HTTPSアドレス。それ以外は`null`。 |
 | `revision` | `PUT`に使う設定のrevision。 |
-| `settings` | `enabled`と`domain`（保存したngrokのドメイン。なければ`null`）。 |
+| `settings` | `enabled`、`provider`（`ngrok`か`tailscale`）、`domain`（保存したngrokのドメイン。なければ`null`）。 |
+| `activeProvider` | `starting`、`ready`、`reconnecting`のいずれかの接続のプロバイダー。それ以外は`null`。保存済みの設定にすぎない`settings.provider`とは異なることがある。別のプロバイダーを保存しても稼働中の接続には触れず、開始して初めて置き換わる。保存したプロバイダーを実際に稼働させたいクライアントは、`activeProvider`がそれと違うときに開始する。 |
 | `domainEnv` | 環境変数`AGBOARD_NGROK_DOMAIN`のドメイン。なければ`null`。設定されているとき、開始は`settings.domain`の代わりにこれを使う。 |
 | `tokenConfigured` | 開始したときにトークンが見つかるか。 |
 | `tokenSource` | `env`（`NGROK_AUTHTOKEN`）、`keychain`（安全な保管場所）、`session`（今回の起動だけ入力）、`null`のいずれか。値は返さない。 |
 | `keychainAvailable` | このPCに、トークンを保存できる安全な保管場所（OSの資格情報ストア）があるか。 |
 | `keychainTokenSaved` | 別の取得元が使われていても、安全な保管場所にトークンが保存されているか。 |
-| `failure` | `null`、または`connect_failed`・`endpoint_failed`・`public_url_invalid`・`internal`・`config_unreadable`・`config_invalid`のいずれか。 |
+| `failure` | `null`、または`connect_failed`・`endpoint_failed`・`public_url_invalid`・`internal`・`config_unreadable`・`config_invalid`・`tailscale_not_installed`・`tailscale_not_logged_in`・`tailscale_https_disabled`・`tailscale_serve_failed`・`tailscale_serve_busy`のいずれか。 |
 | `passcode` | 動いている接続の4桁の合言葉。PCが表示するために返す。`status`が`ready`の間だけ含まれ、開始中・停止中・失敗のときは含まれない。このAPIが返す唯一の秘密。 |
 
 開始の進み具合はこの状態で報告されます。`status`が`starting`でなくなるまで`GET`で確認してください。トークン、間違いの回数、sessionが、応答や設定ファイルに現れることはなく、合言葉が現れるのはここと`serve`の起動行だけです。設定の保存先は[共有ファイル](./files.md#モニター接続の設定)、エラーのコードは[エラーコード](./errors.md#リモート接続)にあります。

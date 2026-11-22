@@ -247,6 +247,8 @@ pub struct Opts {
     pub env_domain: Option<String>,
     pub explicit: bool,
     pub mock: Arc<MockConnector>,
+    /// A connector to use instead of the mock one (the mock then records nothing).
+    pub connector: Option<Arc<dyn Connector>>,
     /// Stands in for the push services: records each message and answers `Delivered`.
     pub push: Arc<RecordingPush>,
 }
@@ -272,6 +274,7 @@ impl Default for Opts {
             env_domain: None,
             explicit: false,
             mock: Arc::new(MockConnector::default()),
+            connector: None,
             push: Arc::new(RecordingPush::default()),
         }
     }
@@ -288,7 +291,7 @@ impl Server {
                 domain: opts.env_domain.clone(),
             },
             explicit: opts.explicit,
-            connector: opts.mock.clone(),
+            connector: opts.connector.clone().unwrap_or_else(|| opts.mock.clone()),
             vault: opts.vault.clone(),
             push_transport: opts.push.clone(),
         };
