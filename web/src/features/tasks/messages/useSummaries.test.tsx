@@ -51,6 +51,19 @@ const event = (facets: ChangedEvent['changes'][number]['facets']): ChangedEvent 
 });
 
 describe('useSummaries', () => {
+  it('lists at most ten summaries even when the server returns more', async () => {
+    const many = Array.from({ length: 13 }, (_, i) => summary(`s${i}`));
+    setup({ list: vi.fn().mockResolvedValue(many), dismiss: vi.fn() });
+    await waitFor(() =>
+      expect(screen.getByTestId('ids').textContent).toBe(
+        many
+          .slice(0, 10)
+          .map((s) => s.id)
+          .join(','),
+      ),
+    );
+  });
+
   it('reads the list on mount and again on a messages change with the summary facet', async () => {
     const list = vi
       .fn()
