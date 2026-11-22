@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use crate::agent::wait_engine::{Evaluation, WaitReader, WaitResult, wait_until};
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::qa::{Message, MessageState, Question, read_message};
 use crate::file_store::reader;
 
@@ -35,12 +35,12 @@ pub fn read_questions(
     shared: &Path,
     project: &ProjectId,
     ids: &[String],
-) -> Result<Vec<Question>, AgboardError> {
+) -> Result<Vec<Question>, AgpjError> {
     let project_dir = reader::project_dir_checked(shared, project)?;
     ids.iter()
         .map(|id| match read_message(shared, &project_dir, id)? {
             Message::Question(question) => Ok(question),
-            Message::Request(_) => Err(AgboardError::MessageTypeMismatch {
+            Message::Request(_) => Err(AgpjError::MessageTypeMismatch {
                 id: id.clone(),
                 expected: "question".into(),
             }),
@@ -57,7 +57,7 @@ struct QuestionReader<'a> {
 impl WaitReader for QuestionReader<'_> {
     type Snapshot = Vec<Question>;
 
-    fn read(&self) -> Result<Self::Snapshot, AgboardError> {
+    fn read(&self) -> Result<Self::Snapshot, AgpjError> {
         read_questions(self.shared, &self.project, self.ids)
     }
 
@@ -75,11 +75,11 @@ pub fn wait_for_questions(
     timeout_secs: Option<u64>,
     heartbeat_secs: u64,
     mut tick: impl FnMut(Heartbeat),
-) -> Result<MessageWaitEnd, AgboardError> {
+) -> Result<MessageWaitEnd, AgpjError> {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
-        .map_err(|error| AgboardError::BoardUnavailable {
+        .map_err(|error| AgpjError::BoardUnavailable {
             reason: error.to_string(),
         })?;
     let reader = QuestionReader {

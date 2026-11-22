@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 
 use serde_json::json;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::lifecycle::LifecycleGuard;
 
 /// How long a stopping server gets to finish its shutdown.
@@ -22,7 +22,7 @@ const POLL: Duration = Duration::from_millis(50);
 /// `stop` also leaves `autostart.paused`, so that the agent hook does not start
 /// the server again right away. A command that waits, `serve` and `serve -d`
 /// remove it and start one.
-pub fn run(json: bool) -> Result<String, AgboardError> {
+pub fn run(json: bool) -> Result<String, AgpjError> {
     let data_dir = crate::paths::data_dir()?;
     crate::autostart::pause(&data_dir);
     let Some(info) = crate::paths::read_serve_info_in(&data_dir) else {
@@ -58,14 +58,14 @@ pub fn run(json: bool) -> Result<String, AgboardError> {
 
 /// Wait until no process holds the lifecycle lock of `data_dir`, taking it
 /// for a moment to know. Gives up at `deadline`.
-fn wait_for_lifecycle(data_dir: &Path, pid: u32, deadline: Instant) -> Result<(), AgboardError> {
+fn wait_for_lifecycle(data_dir: &Path, pid: u32, deadline: Instant) -> Result<(), AgpjError> {
     loop {
         match LifecycleGuard::acquire(data_dir) {
             Ok(_released) => return Ok(()),
-            Err(AgboardError::DatabaseBusy) if Instant::now() < deadline => {
+            Err(AgpjError::DatabaseBusy) if Instant::now() < deadline => {
                 std::thread::sleep(POLL);
             }
-            Err(AgboardError::DatabaseBusy) => {
+            Err(AgpjError::DatabaseBusy) => {
                 return Err(unavailable(format!(
                     "The server (pid {pid}) did not finish shutting down within {} seconds.",
                     STOP_TIMEOUT.as_secs()
@@ -76,8 +76,8 @@ fn wait_for_lifecycle(data_dir: &Path, pid: u32, deadline: Instant) -> Result<()
     }
 }
 
-fn unavailable(reason: String) -> AgboardError {
-    AgboardError::BoardUnavailable { reason }
+fn unavailable(reason: String) -> AgpjError {
+    AgpjError::BoardUnavailable { reason }
 }
 
 fn render(json: bool, stopped_port: Option<u16>) -> String {

@@ -1,9 +1,9 @@
 use crate::cli::args::{HistoryArgs, HistoryCommand, read_reason};
 use crate::cli::{Context, Outcome};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use serde_json::json;
 
-pub fn run(ctx: &mut Context, args: &HistoryArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &HistoryArgs) -> Result<Outcome, AgpjError> {
     let HistoryCommand::Add(args) = &args.command;
     let reason = read_reason(args.reason.as_deref(), args.reason_file.as_deref())?;
     let task = ctx.files.add_history(

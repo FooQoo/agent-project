@@ -9,13 +9,13 @@ use crate::cli::args::{
 };
 use crate::cli::{Context, Outcome};
 use crate::domain::Draft;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::model::{EpicUpdate, EpicView, NewEpic};
 use crate::file_store::reader::ProjectSnapshot;
 use crate::file_store::validate::EpicId;
 use crate::interact::confirm;
 
-pub fn run(ctx: &mut Context, args: &EpicArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &EpicArgs) -> Result<Outcome, AgpjError> {
     match &args.command {
         EpicCommand::Add(args) => add(ctx, args),
         EpicCommand::Ls => ls(ctx),
@@ -35,7 +35,7 @@ pub fn run(ctx: &mut Context, args: &EpicArgs) -> Result<Outcome, AgboardError> 
     }
 }
 
-fn add(ctx: &mut Context, args: &EpicAddArgs) -> Result<Outcome, AgboardError> {
+fn add(ctx: &mut Context, args: &EpicAddArgs) -> Result<Outcome, AgpjError> {
     // Epics keep no history, so the actor is only checked for presence; the
     // command line requires it.
     let epic = ctx.files.create_epic(
@@ -76,7 +76,7 @@ fn task_count(snapshot: &ProjectSnapshot, epic: &str) -> usize {
         .count()
 }
 
-fn ls(ctx: &mut Context) -> Result<Outcome, AgboardError> {
+fn ls(ctx: &mut Context) -> Result<Outcome, AgpjError> {
     let snapshot = ctx.files.snapshot(ctx.project_id()?)?;
     let mut epics = snapshot.epics.clone();
     epics.sort_by(|a, b| a.id.cmp(&b.id));
@@ -108,7 +108,7 @@ fn ls(ctx: &mut Context) -> Result<Outcome, AgboardError> {
     })
 }
 
-fn show(ctx: &mut Context, args: &EpicIdArgs) -> Result<Outcome, AgboardError> {
+fn show(ctx: &mut Context, args: &EpicIdArgs) -> Result<Outcome, AgpjError> {
     let id = EpicId::normalize(&args.id)?;
     let project = ctx.project_id()?;
     let epic = ctx.files.epic(project, &id)?;
@@ -132,7 +132,7 @@ fn show(ctx: &mut Context, args: &EpicIdArgs) -> Result<Outcome, AgboardError> {
     })
 }
 
-fn edit(ctx: &mut Context, args: &EpicEditArgs) -> Result<Outcome, AgboardError> {
+fn edit(ctx: &mut Context, args: &EpicEditArgs) -> Result<Outcome, AgpjError> {
     let id = EpicId::normalize(&args.id)?;
     let mut stdin = std::io::stdin();
     let document = args.document.resolve(&mut stdin)?;
@@ -181,9 +181,9 @@ fn edit(ctx: &mut Context, args: &EpicEditArgs) -> Result<Outcome, AgboardError>
 
 /// The `--waves` values, one per wave: a task ID or task IDs joined by commas.
 /// Blank values are dropped, so a single empty value clears the order.
-fn parse_waves(values: &[String]) -> Result<Vec<Vec<i64>>, AgboardError> {
+fn parse_waves(values: &[String]) -> Result<Vec<Vec<i64>>, AgpjError> {
     let invalid = || {
-        AgboardError::InvalidValue {
+        AgpjError::InvalidValue {
         field: "waves".to_string(),
         reason: "Give one value per wave, a task ID or task IDs joined by commas, for example --waves 24 25,26."
             .to_string(),
@@ -194,7 +194,7 @@ fn parse_waves(values: &[String]) -> Result<Vec<Vec<i64>>, AgboardError> {
         let wave = value
             .split(',')
             .map(|part| part.trim().parse::<i64>().map_err(|_| invalid()))
-            .collect::<Result<Vec<i64>, AgboardError>>()?;
+            .collect::<Result<Vec<i64>, AgpjError>>()?;
         waves.push(wave);
     }
     Ok(waves)
@@ -207,12 +207,12 @@ pub fn rm_with_io(
     args: &EpicIdArgs,
     input: &mut impl BufRead,
     output: &mut impl Write,
-) -> Result<Outcome, AgboardError> {
+) -> Result<Outcome, AgpjError> {
     let id = EpicId::normalize(&args.id)?;
     let project = ctx.project_id()?;
     ctx.files.epic(project, &id)?;
     if ctx.json || !ctx.interactive {
-        return Err(AgboardError::ConfirmationRequired {
+        return Err(AgpjError::ConfirmationRequired {
             operation: "deleting an epic".into(),
         });
     }
@@ -249,7 +249,7 @@ fn draft_name(draft: Option<Draft>) -> &'static str {
     }
 }
 
-fn send(ctx: &mut Context, args: &EpicSendArgs) -> Result<Outcome, AgboardError> {
+fn send(ctx: &mut Context, args: &EpicSendArgs) -> Result<Outcome, AgpjError> {
     let id = EpicId::normalize(&args.id)?;
     let project = ctx.project_id()?;
     let actor = args.actor.actor();
@@ -272,8 +272,8 @@ fn send(ctx: &mut Context, args: &EpicSendArgs) -> Result<Outcome, AgboardError>
 }
 
 /// `--tasks 12,13`: task numbers joined by commas.
-fn parse_task_ids(text: &str) -> Result<Vec<i64>, AgboardError> {
-    let invalid = || AgboardError::InvalidValue {
+fn parse_task_ids(text: &str) -> Result<Vec<i64>, AgpjError> {
+    let invalid = || AgpjError::InvalidValue {
         field: "tasks".into(),
         reason: "Give task numbers joined by commas, for example 12,13.".into(),
     };

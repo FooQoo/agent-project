@@ -255,7 +255,7 @@ fn messages_and_reasons_follow_the_design_table() {
 
 #[test]
 fn port_in_use_names_what_holds_the_port() {
-    let board = AgboardError::PortInUse {
+    let board = AgpjError::PortInUse {
         port: 7420,
         holder: crate::error::PortHolder::AgentBoard { pid: 41235 },
     };
@@ -263,7 +263,7 @@ fn port_in_use_names_what_holds_the_port() {
         board.reason(),
         "Port 7420 is used by another Agent Board server (pid 41235) with a different data folder. Choose another port with --port."
     );
-    let other = AgboardError::PortInUse {
+    let other = AgpjError::PortInUse {
         port: 7420,
         holder: crate::error::PortHolder::OtherProgram,
     };
@@ -275,7 +275,7 @@ fn port_in_use_names_what_holds_the_port() {
 
 #[test]
 fn already_serving_says_when_the_server_was_started_automatically() {
-    let auto = AgboardError::AlreadyServing {
+    let auto = AgpjError::AlreadyServing {
         port: 52114,
         auto: true,
     };

@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use clap::{Args, Subcommand};
 
 use super::enums::ActorArg;
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 
 #[derive(Args, Debug)]
 pub struct HistoryArgs {
@@ -44,7 +44,7 @@ pub struct ChangeArgs {
 }
 
 impl ChangeArgs {
-    pub fn resolve_reason(&self) -> Result<String, AgboardError> {
+    pub fn resolve_reason(&self) -> Result<String, AgpjError> {
         match read_reason(self.reason.as_deref(), self.reason_file.as_deref())? {
             Some(raw) if !raw.trim().is_empty() => {
                 crate::domain::validate_work_reason(&raw)?;
@@ -60,11 +60,11 @@ impl ChangeArgs {
 pub fn read_reason(
     reason: Option<&str>,
     reason_file: Option<&std::path::Path>,
-) -> Result<Option<String>, AgboardError> {
+) -> Result<Option<String>, AgpjError> {
     if let Some(path) = reason_file {
         return std::fs::read_to_string(path)
             .map(Some)
-            .map_err(|e| AgboardError::FileError {
+            .map_err(|e| AgpjError::FileError {
                 action: FileAction::Read,
                 file: path.display().to_string(),
                 reason: e.to_string(),
@@ -76,7 +76,7 @@ pub fn read_reason(
             let mut value = String::new();
             std::io::stdin()
                 .read_to_string(&mut value)
-                .map_err(|e| AgboardError::FileError {
+                .map_err(|e| AgpjError::FileError {
                     action: FileAction::Read,
                     file: "standard input".into(),
                     reason: e.to_string(),

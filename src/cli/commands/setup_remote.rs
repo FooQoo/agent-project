@@ -21,7 +21,7 @@ use serde_json::json;
 use super::setup_remote_tailscale as advice;
 use crate::cli::Outcome;
 use crate::cli::args::SetupRemoteArgs;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::remote_settings::{self as saved, APPLIES_NOTE, Change, Saved};
 use crate::server::monitor_connection::contracts::Provider;
 use crate::server::monitor_connection::keychain::TokenVault;
@@ -38,7 +38,7 @@ pub fn run(
     json: bool,
     vault: &dyn TokenVault,
     stdin: &mut dyn Read,
-) -> Result<Option<Outcome>, AgboardError> {
+) -> Result<Option<Outcome>, AgpjError> {
     if args.saves() {
         let change = Change {
             domain: if args.clear_domain {
@@ -62,7 +62,7 @@ pub fn run(
     }
     let terminal = std::io::stdin().is_terminal() && std::io::stderr().is_terminal();
     if json || !terminal {
-        return Err(AgboardError::InvalidArgument {
+        return Err(AgpjError::InvalidArgument {
             message: "setup remote asks questions and needs a terminal for it. Without a terminal or with --json, add --provider, --domain, --clear-domain, --enabled, or --token-stdin to save them.".to_string(),
             command: Some("setup".to_string()),
         });
@@ -72,7 +72,7 @@ pub fn run(
     Ok(None)
 }
 
-fn save(data_dir: &Path, vault: &dyn TokenVault, change: Change) -> Result<Outcome, AgboardError> {
+fn save(data_dir: &Path, vault: &dyn TokenVault, change: Change) -> Result<Outcome, AgpjError> {
     let tailscale = (change.provider == Some(Provider::Tailscale)).then(advice::check_now);
     let now = saved::apply(data_dir, vault, change)?;
     let mut json = now.to_json();
@@ -93,9 +93,9 @@ fn save(data_dir: &Path, vault: &dyn TokenVault, change: Change) -> Result<Outco
     })
 }
 
-fn read_token(stdin: &mut dyn Read) -> Result<Secret, AgboardError> {
+fn read_token(stdin: &mut dyn Read) -> Result<Secret, AgpjError> {
     let mut bytes = Vec::new();
-    let invalid = |message: String| AgboardError::InvalidArgument {
+    let invalid = |message: String| AgpjError::InvalidArgument {
         message,
         command: Some("setup".to_string()),
     };
@@ -132,7 +132,7 @@ pub fn apply_answers(
     data_dir: &Path,
     vault: &dyn TokenVault,
     answers: &Answers,
-) -> Result<Option<Saved>, AgboardError> {
+) -> Result<Option<Saved>, AgpjError> {
     let domain = match answers.domain.as_deref().map(str::trim) {
         None => None,
         Some("") => Some(None),
@@ -179,7 +179,7 @@ pub fn offer(data_dir: &Path, vault: &dyn TokenVault) {
 
 /// The questions. Shows the current state first; an existing value is changed
 /// only when the user says so, and each question can be skipped.
-fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgboardError> {
+fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgpjError> {
     let now = saved::read(data_dir, vault)?;
     let _ = cliclack::note("Saved remote settings", now.human());
     let mut answers = Answers::default();
@@ -208,7 +208,7 @@ fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgboardError> {
     finish(data_dir, vault, &answers)
 }
 
-fn finish(data_dir: &Path, vault: &dyn TokenVault, answers: &Answers) -> Result<(), AgboardError> {
+fn finish(data_dir: &Path, vault: &dyn TokenVault, answers: &Answers) -> Result<(), AgpjError> {
     match apply_answers(data_dir, vault, answers)? {
         Some(now) => {
             let _ = cliclack::note("Saved", format!("{}\n{APPLIES_NOTE}", now.human()));
@@ -230,12 +230,12 @@ pub(super) fn confirm(question: &str) -> Option<bool> {
 }
 
 /// A cancelled question: say so and tell the caller to save nothing.
-pub(super) fn cancel_false() -> Result<bool, AgboardError> {
+pub(super) fn cancel_false() -> Result<bool, AgpjError> {
     let _ = cancelled();
     Ok(false)
 }
 
-fn cancelled() -> Result<(), AgboardError> {
+fn cancelled() -> Result<(), AgpjError> {
     let _ = cliclack::outro_cancel("Nothing was changed.");
     Ok(())
 }

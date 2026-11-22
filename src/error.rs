@@ -3,6 +3,9 @@ use thiserror::Error;
 
 use crate::domain::{Column, RunState};
 
+/// The old name, kept only while the rename is applied across the stack of changes.
+pub use self::AgpjError as AgboardError;
+
 /// Whether a file operation was a read or a write (for `file_error`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FileAction {
@@ -25,7 +28,7 @@ pub enum PortHolder {
 /// design's error table.
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 #[error("{}", self.message())]
-pub enum AgboardError {
+pub enum AgpjError {
     /// `project` is the name or ID the caller used to look the project up.
     ProjectNotFound {
         project: String,

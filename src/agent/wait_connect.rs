@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use super::session_identity::SessionIdentity;
 use crate::server::sessions;
-use crate::{domain::ProjectId, error::AgboardError, paths};
+use crate::{domain::ProjectId, error::AgpjError, paths};
 
 const CONNECT_LIMIT: Duration = Duration::from_secs(3);
 
@@ -25,8 +25,8 @@ pub(crate) enum Connected {
     DeadlineReached,
 }
 
-fn unavailable(reason: impl Into<String>) -> AgboardError {
-    AgboardError::BoardUnavailable {
+fn unavailable(reason: impl Into<String>) -> AgpjError {
+    AgpjError::BoardUnavailable {
         reason: reason.into(),
     }
 }
@@ -47,14 +47,14 @@ fn connect_budget(deadline: Option<tokio::time::Instant>) -> Duration {
 /// anything else is described by `otherwise`.
 fn reach_error(
     error: reqwest::Error,
-    otherwise: impl FnOnce(&reqwest::Error) -> AgboardError,
-) -> AgboardError {
+    otherwise: impl FnOnce(&reqwest::Error) -> AgpjError,
+) -> AgpjError {
     let mut source: Option<&(dyn std::error::Error + 'static)> = Some(&error);
     while let Some(current) = source {
         if let Some(io) = current.downcast_ref::<std::io::Error>()
             && crate::server::bind::is_denied(io)
         {
-            return AgboardError::LocalNetworkDenied;
+            return AgpjError::LocalNetworkDenied;
         }
         source = current.source();
     }
@@ -66,7 +66,7 @@ pub(crate) async fn connect(
     dir: &Path,
     deadline: Option<tokio::time::Instant>,
     session: Option<(&ProjectId, &SessionIdentity)>,
-) -> Result<Connected, AgboardError> {
+) -> Result<Connected, AgpjError> {
     let info = paths::read_serve_info_in(dir).ok_or_else(|| {
         unavailable("No running Agent Board server was found. Run \"agboard serve\".")
     })?;

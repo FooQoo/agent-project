@@ -9,7 +9,7 @@ use crate::{
     agent::wait_engine::{Evaluation, WaitReader, WaitResult, wait_until},
     clock::{Clock, SystemClock, format_utc},
     domain::{ChangeCursor, ProjectId, validate_project_name},
-    error::AgboardError,
+    error::AgpjError,
     file_store::{
         FileStore,
         reader::{FetchedSnapshot, ProjectSnapshot},
@@ -28,14 +28,14 @@ struct Reader<'a> {
 impl WaitReader for Reader<'_> {
     type Snapshot = ProjectSnapshot;
 
-    fn read(&self) -> Result<Self::Snapshot, AgboardError> {
+    fn read(&self) -> Result<Self::Snapshot, AgpjError> {
         FileStore::open(self.shared)
             .board(&self.id)
             .map_err(|error| match error {
-                AgboardError::ProjectNotFound { .. } => AgboardError::ProjectNotFound {
+                AgpjError::ProjectNotFound { .. } => AgpjError::ProjectNotFound {
                     project: self.name.to_string(),
                 },
-                other => AgboardError::BoardUnavailable {
+                other => AgpjError::BoardUnavailable {
                     reason: format!("{} {}", other.message(), other.reason()),
                 },
             })
@@ -51,21 +51,21 @@ impl WaitReader for Reader<'_> {
 }
 
 /// Resolve `name` to its project, once, and check that the cursor belongs to it.
-fn resolve(shared: &Path, name: &str, cursor: &ChangeCursor) -> Result<ProjectId, AgboardError> {
+fn resolve(shared: &Path, name: &str, cursor: &ChangeCursor) -> Result<ProjectId, AgpjError> {
     let name = validate_project_name(name)?;
     let id = FileStore::open(shared)
         .project_by_name(&name)
         .map_err(|error| match error {
-            AgboardError::ProjectNotFound { .. } => AgboardError::ProjectNotFound {
+            AgpjError::ProjectNotFound { .. } => AgpjError::ProjectNotFound {
                 project: name.clone(),
             },
-            other => AgboardError::BoardUnavailable {
+            other => AgpjError::BoardUnavailable {
                 reason: format!("{} {}", other.message(), other.reason()),
             },
         })?
         .id;
     if id != cursor.project_id {
-        return Err(AgboardError::CursorInvalid {
+        return Err(AgpjError::CursorInvalid {
             reason: "The cursor belongs to a different project. Use the cursor from a snapshot of this project."
                 .into(),
         });
@@ -84,7 +84,7 @@ pub async fn wait_for_change(
     project: &str,
     cursor: ChangeCursor,
     timeout_secs: Option<u64>,
-) -> Result<String, AgboardError> {
+) -> Result<String, AgpjError> {
     let deadline =
         timeout_secs.map(|seconds| tokio::time::Instant::now() + Duration::from_secs(seconds));
     let id = resolve(shared_dir, project, &cursor)?;
@@ -107,7 +107,7 @@ pub async fn wait_for_change(
             fetched_at: format_utc(SystemClock.now()),
             snapshot,
         })
-        .map_err(|error| AgboardError::BoardUnavailable {
+        .map_err(|error| AgpjError::BoardUnavailable {
             reason: error.to_string(),
         })?;
         Ok(Evaluation::Ready(json))
@@ -115,6 +115,6 @@ pub async fn wait_for_change(
     .await?;
     match result {
         WaitResult::Satisfied(json) => Ok(json),
-        WaitResult::DeadlineReached(_) => Err(AgboardError::WaitTimeout),
+        WaitResult::DeadlineReached(_) => Err(AgpjError::WaitTimeout),
     }
 }

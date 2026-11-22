@@ -31,12 +31,12 @@ pub use work::{
 const WORK_REASON_MAX: usize = 10_000;
 
 /// Normalize line endings, trim the outer boundary, and validate a work-history reason.
-pub fn validate_work_reason(value: &str) -> Result<String, crate::error::AgboardError> {
+pub fn validate_work_reason(value: &str) -> Result<String, crate::error::AgpjError> {
     let normalized = value.replace("\r\n", "\n").replace('\r', "\n");
     let trimmed = normalized.trim();
     let count = value.chars().count();
     if trimmed.is_empty() || count > WORK_REASON_MAX {
-        return Err(crate::error::AgboardError::InvalidValue {
+        return Err(crate::error::AgpjError::InvalidValue {
             field: "reason".into(),
             reason: "Reasons must be 1 to 10000 characters.".into(),
         });
@@ -51,7 +51,7 @@ pub fn check_work_state(
     assignee: Assignee,
     column: Column,
     state: RunState,
-) -> Result<(), crate::error::AgboardError> {
+) -> Result<(), crate::error::AgpjError> {
     let allowed = state == RunState::Idle
         || (assignee == Assignee::Ai
             && match state {
@@ -63,7 +63,7 @@ pub fn check_work_state(
     if allowed {
         Ok(())
     } else {
-        Err(crate::error::AgboardError::InvalidStateForAssignee)
+        Err(crate::error::AgpjError::InvalidStateForAssignee)
     }
 }
 

@@ -16,7 +16,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::lock::AutostartLock;
 use crate::lifecycle::LifecycleGuard;
 use crate::paths::{self, ServeInfo};
@@ -88,10 +88,7 @@ pub fn is_paused(data_dir: &Path) -> bool {
 /// once it accepts connections. One line on standard error says when a server
 /// was started; standard output stays the command's own. A server started now
 /// opens the board of `open` in the browser, unless a board page connects.
-pub fn ensure_serving(
-    data_dir: &Path,
-    open: Option<&ProjectId>,
-) -> Result<ServeInfo, AgboardError> {
+pub fn ensure_serving(data_dir: &Path, open: Option<&ProjectId>) -> Result<ServeInfo, AgpjError> {
     if let Some(info) = running(data_dir)? {
         return Ok(info);
     }
@@ -168,7 +165,7 @@ fn process_named(data_dir: &Path) -> bool {
 /// holds the data directory but does not answer is never replaced by a second
 /// server: it is reported, after a short wait in case it is starting or
 /// stopping.
-fn running(data_dir: &Path) -> Result<Option<ServeInfo>, AgboardError> {
+fn running(data_dir: &Path) -> Result<Option<ServeInfo>, AgpjError> {
     let Some(info) = paths::read_serve_info_in(data_dir) else {
         return Ok(None);
     };
@@ -176,7 +173,7 @@ fn running(data_dir: &Path) -> Result<Option<ServeInfo>, AgboardError> {
         return Ok(Some(info));
     }
     if connection_denied(info.port) {
-        return Err(AgboardError::LocalNetworkDenied);
+        return Err(AgpjError::LocalNetworkDenied);
     }
     let deadline = Instant::now() + SETTLE_WAIT;
     loop {
@@ -226,8 +223,8 @@ pub(crate) fn connection_denied(port: u16) -> bool {
         .is_some_and(|error| bind::is_denied(&error))
 }
 
-fn unavailable(reason: String) -> AgboardError {
-    AgboardError::BoardUnavailable { reason }
+fn unavailable(reason: String) -> AgpjError {
+    AgpjError::BoardUnavailable { reason }
 }
 
 #[cfg(test)]

@@ -18,7 +18,7 @@ use super::projection::{
 };
 use super::reader::{self, ProjectSnapshot};
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// What the index knows about one project.
 #[derive(Debug)]
@@ -33,7 +33,7 @@ pub enum ProjectEntry {
     /// `project.json` could not be read. `last_good` keeps the previous read,
     /// so the screen can show it next to the error.
     Invalid {
-        error: AgboardError,
+        error: AgpjError,
         last_good: Option<Arc<ProjectSnapshot>>,
         version: String,
         /// The projection of `last_good`.
@@ -98,7 +98,7 @@ impl ProjectIndex {
 
     /// Read every project folder again. Returns whether the catalog version
     /// changed. A failure to list the projects leaves the index as it was.
-    pub fn reload_all(&mut self, shared: &Path) -> Result<bool, AgboardError> {
+    pub fn reload_all(&mut self, shared: &Path) -> Result<bool, AgpjError> {
         let ids = scan_ids(shared)?;
         let gone: Vec<ProjectId> = self
             .entries
@@ -136,7 +136,7 @@ impl ProjectIndex {
         &mut self,
         shared: &Path,
         id: &ProjectId,
-        read: impl FnOnce(&Path, &ProjectId) -> Result<ProjectSnapshot, AgboardError>,
+        read: impl FnOnce(&Path, &ProjectId) -> Result<ProjectSnapshot, AgpjError>,
     ) {
         let dir = layout::project_dir(shared, id);
         if !dir.is_dir() {

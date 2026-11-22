@@ -10,7 +10,7 @@ pub(crate) use self::prepare::prepare;
 use self::prepare::prepare_and_run;
 use crate::cli::args::{self, Command, Parsed};
 use crate::cli::{Context, Env, commands, errors, output};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::setup::Mode;
 
 /// Runs a command line when no data directory can be resolved (no
@@ -21,7 +21,7 @@ pub fn execute_without_data_dir(
     args: &[OsString],
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
-    error: &AgboardError,
+    error: &AgpjError,
 ) -> i32 {
     let json_requested = args.iter().any(|arg| arg == "--json");
     match args::parse(args) {
@@ -169,7 +169,7 @@ pub fn execute(args: &[OsString], env: &mut Env) -> i32 {
         let result = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
-            .map_err(|error| AgboardError::BoardUnavailable {
+            .map_err(|error| AgpjError::BoardUnavailable {
                 reason: error.to_string(),
             })
             .and_then(|runtime| match args.until {
@@ -255,7 +255,7 @@ fn data_dir_of(shared: &std::path::Path) -> std::path::PathBuf {
         .to_path_buf()
 }
 
-pub(crate) fn fail(env: &mut Env, error: &AgboardError, json: bool) -> i32 {
+pub(crate) fn fail(env: &mut Env, error: &AgpjError, json: bool) -> i32 {
     let text = if json {
         errors::json(error)
     } else {

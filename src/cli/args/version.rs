@@ -3,7 +3,7 @@
 use clap::{Args, Subcommand};
 
 use crate::domain::{VersionFilter, validate_version_name};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 #[derive(Args, Debug)]
 pub struct VersionArgs {
@@ -61,7 +61,7 @@ pub struct PlanArgs {
 
 impl PlanArgs {
     /// The choice asked for, or `None` when no option was given.
-    pub fn choice(&self) -> Result<Option<crate::file_store::VersionChoice>, AgboardError> {
+    pub fn choice(&self) -> Result<Option<crate::file_store::VersionChoice>, AgpjError> {
         use crate::file_store::VersionChoice;
         if let Some(name) = &self.planned_version {
             return Ok(Some(VersionChoice::Named(validate_version_name(name)?)));
@@ -96,15 +96,15 @@ impl VersionFilterArgs {
     /// was given; a project with none is `no_current_version`.
     pub fn resolve(
         &self,
-        current: impl FnOnce() -> Result<Option<String>, AgboardError>,
-    ) -> Result<Option<VersionFilter>, AgboardError> {
+        current: impl FnOnce() -> Result<Option<String>, AgpjError>,
+    ) -> Result<Option<VersionFilter>, AgpjError> {
         if let Some(name) = &self.version {
             return Ok(Some(VersionFilter::Planned(validate_version_name(name)?)));
         }
         if self.current_version {
             return current()?
                 .map(|name| Some(VersionFilter::Planned(name)))
-                .ok_or(AgboardError::NoCurrentVersion);
+                .ok_or(AgpjError::NoCurrentVersion);
         }
         Ok(self.unplanned.then_some(VersionFilter::Unplanned))
     }

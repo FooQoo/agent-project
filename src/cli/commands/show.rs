@@ -1,9 +1,9 @@
 use crate::cli::args::{ShowArgs, ShowCommand};
 use crate::cli::{Context, Outcome};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use serde_json::json;
 
-pub fn run(ctx: &mut Context, args: &ShowArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &ShowArgs) -> Result<Outcome, AgpjError> {
     if let Some(ShowCommand::Remote) = &args.command {
         let meta = ctx.project()?;
         let data_dir = ctx
@@ -20,7 +20,7 @@ pub fn run(ctx: &mut Context, args: &ShowArgs) -> Result<Outcome, AgboardError> 
         );
     }
     let Some(id) = args.id else {
-        return Err(AgboardError::InvalidArgument {
+        return Err(AgpjError::InvalidArgument {
             message: "give the ID of the task to show, or \"remote\" to show the remote access."
                 .to_string(),
             command: Some("show".to_string()),

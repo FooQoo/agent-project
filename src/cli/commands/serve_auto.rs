@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 use serde_json::json;
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::interact::browser;
 use crate::paths::{ServeInfo, ServeMode};
 use crate::server::monitor_connection::lifecycle::MonitorEnv;
@@ -26,7 +26,7 @@ const OPEN_GRACE: Duration = Duration::from_secs(3);
 /// is JSON, for the command that waits for it; the command's lock is let go of
 /// once the server is ready. With `open`, the project's board is opened in the
 /// browser once, unless a board page connects within a short time.
-pub fn run(open: Option<ProjectId>) -> Result<(), AgboardError> {
+pub fn run(open: Option<ProjectId>) -> Result<(), AgpjError> {
     let lock = crate::autostart::inherited_lock();
     let env = |name: &str| std::env::var(name).ok();
     let port = crate::autostart::preferred_port(&env);
@@ -96,8 +96,8 @@ pub fn conflicts(port: Option<u16>, monitor: Option<&str>, info: &ServeInfo) -> 
 /// Turn the running automatic server into a manual one, which no longer stops
 /// by itself, and print the line `serve -d` prints. The server keeps running,
 /// so the commands waiting on it stay connected.
-pub fn switch_to_manual(data_dir: &Path, info: &ServeInfo, json: bool) -> Result<(), AgboardError> {
-    let unavailable = |reason: String| AgboardError::BoardUnavailable { reason };
+pub fn switch_to_manual(data_dir: &Path, info: &ServeInfo, json: bool) -> Result<(), AgpjError> {
+    let unavailable = |reason: String| AgpjError::BoardUnavailable { reason };
     let pid = libc::pid_t::try_from(info.pid)
         .map_err(|_| unavailable("serve.json has an invalid pid.".into()))?;
     // SAFETY: SIGUSR1 only tells the server to stop counting idle time.

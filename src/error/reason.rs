@@ -1,199 +1,199 @@
-use super::{AgboardError, PortHolder};
+use super::{AgpjError, PortHolder};
 
-impl AgboardError {
+impl AgpjError {
     /// What to do about it, or why it happened.
     pub fn reason(&self) -> String {
         match self {
-            AgboardError::ProjectNotFound { project } => format!(
+            AgpjError::ProjectNotFound { project } => format!(
                 "No project matches \"{project}\". Run \"agboard project ls\" to see the projects."
             ),
-            AgboardError::ProjectNameExists { .. } => {
+            AgpjError::ProjectNameExists { .. } => {
                 "Project names must be unique. Choose another name.".to_string()
             }
-            AgboardError::FolderBoundElsewhere { .. } => {
+            AgpjError::FolderBoundElsewhere { .. } => {
                 "A folder belongs to one project. Choose another folder.".to_string()
             }
-            AgboardError::FolderUnbound { .. } => {
+            AgpjError::FolderUnbound { .. } => {
                 "Create a project here with \"agboard project create NAME\", or bind this folder with \"agboard project bind NAME\".".to_string()
             }
-            AgboardError::BoundProjectMissing { .. } => {
+            AgpjError::BoundProjectMissing { .. } => {
                 "Bind this folder to a project with \"agboard project bind NAME\".".to_string()
             }
-            AgboardError::TaskNotFound { id } => {
+            AgpjError::TaskNotFound { id } => {
                 format!("No task has ID {id}. Run \"agboard ls\" to see the tasks.")
             }
-            AgboardError::TaskArchived { .. } => "Restore the task before editing it.".into(),
-            AgboardError::TaskNotArchived { .. } => "Only an archived task can be deleted here.".into(),
-            AgboardError::NoCurrentVersion => {
+            AgpjError::TaskArchived { .. } => "Restore the task before editing it.".into(),
+            AgpjError::TaskNotArchived { .. } => "Only an archived task can be deleted here.".into(),
+            AgpjError::NoCurrentVersion => {
                 "Set one with \"version current <VERSION>\", or name a version.".into()
             }
-            AgboardError::ArchiveTargetsChanged => "Read the latest Done tasks and confirm the archive again.".into(),
-            AgboardError::AttachmentNotFound { .. } => "The attachment does not belong to this task.".into(),
-            AgboardError::AttachmentLimitExceeded => "A task may contain at most 20 images and 50 MiB in total.".into(),
-            AgboardError::EpicIdTaken { .. } => "Choose another EPIC-ID.".into(),
-            AgboardError::EpicNotFound { .. } => "No epic has this EPIC-ID in the project.".into(),
-            AgboardError::EpicInUse { .. } => "Move or clear the tasks that belong to this epic first.".into(),
-            AgboardError::InvalidArgument { command, .. } => match command {
+            AgpjError::ArchiveTargetsChanged => "Read the latest Done tasks and confirm the archive again.".into(),
+            AgpjError::AttachmentNotFound { .. } => "The attachment does not belong to this task.".into(),
+            AgpjError::AttachmentLimitExceeded => "A task may contain at most 20 images and 50 MiB in total.".into(),
+            AgpjError::EpicIdTaken { .. } => "Choose another EPIC-ID.".into(),
+            AgpjError::EpicNotFound { .. } => "No epic has this EPIC-ID in the project.".into(),
+            AgpjError::EpicInUse { .. } => "Move or clear the tasks that belong to this epic first.".into(),
+            AgpjError::InvalidArgument { command, .. } => match command {
                 Some(command) => format!("Run \"agboard {command} --help\" for usage."),
                 None => "Run \"agboard --help\" for usage.".to_string(),
             },
-            AgboardError::InvalidValue { reason, .. } => reason.clone(),
-            AgboardError::InvalidStateForColumn { id, column, .. } => format!(
+            AgpjError::InvalidValue { reason, .. } => reason.clone(),
+            AgpjError::InvalidStateForColumn { id, column, .. } => format!(
                 "Only tasks in Doing can be running or paused. #{id} is in {}.",
                 column.label()
             ),
-            AgboardError::InvalidStateForAssignee => {
+            AgpjError::InvalidStateForAssignee => {
                 "Only AI-owned tasks can be running, paused, or have run.".into()
             }
-            AgboardError::InvalidStateChange { .. } => {
+            AgpjError::InvalidStateChange { .. } => {
                 "In Doing a task goes from idle to running, from running to paused, and from paused to running. Move the card to change the other states.".into()
             }
-            AgboardError::TaskIsDraft { .. } => {
+            AgpjError::TaskIsDraft { .. } => {
                 "Wait for the user to finalize it, then try again.".into()
             }
-            AgboardError::TaskInBacklog { .. } => {
+            AgpjError::TaskInBacklog { .. } => {
                 "Send it to Todo first (agboard mv <id> todo --actor human), then try again.".into()
             }
-            AgboardError::EpicIsDraft { .. } => {
+            AgpjError::EpicIsDraft { .. } => {
                 "Wait for the user to finalize it, then try again.".into()
             }
-            AgboardError::SendWithOpenQuestions { .. } => {
+            AgpjError::SendWithOpenQuestions { .. } => {
                 "Check the questions, then send again with --force (the API takes ack: true)."
                     .into()
             }
-            AgboardError::HumanOnly { .. } => {
+            AgpjError::HumanOnly { .. } => {
                 "Ask the user to do this in the web UI or run it with --actor human.".into()
             }
-            AgboardError::AiOnly { .. } => {
+            AgpjError::AiOnly { .. } => {
                 "An agent does this with --actor ai; a person has no way to do it.".into()
             }
-            AgboardError::TaskIsDone { .. } => {
+            AgpjError::TaskIsDone { .. } => {
                 "A person must move the task out of Done before you can change it.".into()
             }
-            AgboardError::AcceptanceUnmet { .. } => {
+            AgpjError::AcceptanceUnmet { .. } => {
                 "Mark each condition done once it is verified, or ask a person to move the task.".into()
             }
-            AgboardError::TaskNotDraft { id } => {
+            AgpjError::TaskNotDraft { id } => {
                 format!("Only a draft can be saved or finalized this way. #{id} is not a draft.")
             }
-            AgboardError::InvalidStateForDraft { id, .. } => format!(
+            AgpjError::InvalidStateForDraft { id, .. } => format!(
                 "Only tasks whose agent status is idle can become drafts. #{id} is not idle."
             ),
-            AgboardError::QuestionsUnanswered { .. } => {
+            AgpjError::QuestionsUnanswered { .. } => {
                 "Wait for the answers with \"agboard message wait\", or see the questions with \"agboard message ls --task ID\".".into()
             }
-            AgboardError::QuestionAnswered { .. } => {
+            AgpjError::QuestionAnswered { .. } => {
                 "The first recorded answer is kept. Compare it with the answer you have, and ask again if they differ.".into()
             }
-            AgboardError::QuestionWithdrawn { .. } => {
+            AgpjError::QuestionWithdrawn { .. } => {
                 "A withdrawn question takes no answer. Ask a new question if one is still needed.".into()
             }
-            AgboardError::StartBlockedByQuestions { .. } => {
+            AgpjError::StartBlockedByQuestions { .. } => {
                 "Answer the questions (the board, or \"agboard message answer\"), then send again.".into()
             }
-            AgboardError::MessageNotFound { .. } => {
+            AgpjError::MessageNotFound { .. } => {
                 "Run \"agboard message ls --status all\" to see the messages of the project.".into()
             }
-            AgboardError::MessageClosed { .. } => {
+            AgpjError::MessageClosed { .. } => {
                 "The message already has its reply; there is nothing to withdraw.".into()
             }
-            AgboardError::MessageTypeMismatch { expected, .. } => {
+            AgpjError::MessageTypeMismatch { expected, .. } => {
                 format!("Name a {expected} for this command.")
             }
-            AgboardError::RequestAccepted { .. } => {
+            AgpjError::RequestAccepted { .. } => {
                 "Another agent accepted this request first. Leave it to that agent.".into()
             }
-            AgboardError::AnswerAccepted { .. } => {
+            AgpjError::AnswerAccepted { .. } => {
                 "An agent took this answer in before. Read it with \"agboard message show ID\".".into()
             }
-            AgboardError::QuestionOpen { .. } => {
+            AgpjError::QuestionOpen { .. } => {
                 "Only an answered question can be accepted. Wait for the answer with \"agboard message wait\"."
                     .into()
             }
-            AgboardError::RequestWithdrawn { .. } => {
+            AgpjError::RequestWithdrawn { .. } => {
                 "The person withdrew this request. Nothing is written to a withdrawn request.".into()
             }
-            AgboardError::TaskStatusChanged { .. } => {
+            AgpjError::TaskStatusChanged { .. } => {
                 "Another change moved the task first. Check its current status and move it again."
                     .into()
             }
-            AgboardError::PlannedVersionChanged { .. } => {
+            AgpjError::PlannedVersionChanged { .. } => {
                 "Another change set the planned version first. Read the task again and choose the version again."
                     .into()
             }
-            AgboardError::ConfirmationRequired { .. } => {
+            AgpjError::ConfirmationRequired { .. } => {
                 "Run this command yourself in a terminal. Agents cannot delete tasks or projects, or replace a board."
                     .to_string()
             }
-            AgboardError::FileError { reason, .. } => reason.clone(),
-            AgboardError::FileInvalid { field, reason, .. } => {
+            AgpjError::FileError { reason, .. } => reason.clone(),
+            AgpjError::FileInvalid { field, reason, .. } => {
                 if field.is_empty() {
                     reason.clone()
                 } else {
                     format!("{field}: {reason}")
                 }
             }
-            AgboardError::FileUnreadable { reason, .. } => reason.clone(),
-            AgboardError::FormatUnsupported {
+            AgpjError::FileUnreadable { reason, .. } => reason.clone(),
+            AgpjError::FormatUnsupported {
                 version, expected, ..
             } => format!(
                 "Only formatVersion {expected} is supported, found {version}. The file is not converted."
             ),
-            AgboardError::ChoiceUnknown { .. } => {
+            AgpjError::ChoiceUnknown { .. } => {
                 "Choose one of the choices of the question.".into()
             }
-            AgboardError::DatabaseBusy => "Another agboard command is writing. Try again.".to_string(),
-            AgboardError::DatabaseError { reason } => reason.clone(),
-            AgboardError::AlreadyServing { port, auto: false } => {
+            AgpjError::DatabaseBusy => "Another agboard command is writing. Try again.".to_string(),
+            AgpjError::DatabaseError { reason } => reason.clone(),
+            AgpjError::AlreadyServing { port, auto: false } => {
                 format!("Open http://127.0.0.1:{port}/ or stop the other \"agboard serve\".")
             }
-            AgboardError::AlreadyServing { port, auto: true } => format!(
+            AgpjError::AlreadyServing { port, auto: true } => format!(
                 "A server started automatically is running at http://127.0.0.1:{port}/. Run \"agboard serve -d\" to keep it running, or stop it with \"agboard stop\"."
             ),
-            AgboardError::PortInUse { port, holder } => port_in_use_reason(*port, *holder),
-            AgboardError::LocalNetworkDenied => LOCAL_NETWORK_DENIED.to_string(),
-            AgboardError::BoardUnavailable { reason } => reason.clone(),
-            AgboardError::CursorInvalid { reason } => reason.clone(),
-            AgboardError::WaitTimeout => {
+            AgpjError::PortInUse { port, holder } => port_in_use_reason(*port, *holder),
+            AgpjError::LocalNetworkDenied => LOCAL_NETWORK_DENIED.to_string(),
+            AgpjError::BoardUnavailable { reason } => reason.clone(),
+            AgpjError::CursorInvalid { reason } => reason.clone(),
+            AgpjError::WaitTimeout => {
                 "Nothing changed in the project. This is not an answer; read the snapshot before acting."
                     .to_string()
             }
-            AgboardError::DocsPathInvalid { reason } => reason.clone(),
-            AgboardError::DocsNotFound { .. } => {
+            AgpjError::DocsPathInvalid { reason } => reason.clone(),
+            AgpjError::DocsNotFound { .. } => {
                 "No such file in the project's Docs. Choose a file from the tree.".to_string()
             }
-            AgboardError::DocsNotMarkdown { .. } => {
+            AgpjError::DocsNotMarkdown { .. } => {
                 "Only files ending in .md or .mdx can be opened.".to_string()
             }
-            AgboardError::DocsTooLarge { limit, .. } => {
+            AgpjError::DocsTooLarge { limit, .. } => {
                 format!("Files larger than {limit} bytes cannot be opened here.")
             }
-            AgboardError::DocsNotUtf8 { .. } => {
+            AgpjError::DocsNotUtf8 { .. } => {
                 "Only UTF-8 text can be opened here. The file is not changed.".to_string()
             }
-            AgboardError::DocsAssetType { .. } => {
+            AgpjError::DocsAssetType { .. } => {
                 "Only PNG, JPEG, WebP, GIF, AVIF and SVG images are served.".to_string()
             }
-            AgboardError::DocsNotImplemented => {
+            AgpjError::DocsNotImplemented => {
                 "The Docs API is still being built. Try again in a later version.".to_string()
             }
-            AgboardError::DocsOpenFailed { reason } => reason.clone(),
-            AgboardError::ReleaseDocRefused { reason, .. } => reason.clone(),
-            AgboardError::RemoteUnavailable { reason } => reason.clone(),
-            AgboardError::InvalidDomain => "Give a host name only, such as example.ngrok-free.dev, without https://, a path, or a port.".to_string(),
-            AgboardError::KeychainUnavailable { reason } => reason.clone(),
-            AgboardError::BrowserOpenFailed { url, reason } => {
+            AgpjError::DocsOpenFailed { reason } => reason.clone(),
+            AgpjError::ReleaseDocRefused { reason, .. } => reason.clone(),
+            AgpjError::RemoteUnavailable { reason } => reason.clone(),
+            AgpjError::InvalidDomain => "Give a host name only, such as example.ngrok-free.dev, without https://, a path, or a port.".to_string(),
+            AgpjError::KeychainUnavailable { reason } => reason.clone(),
+            AgpjError::BrowserOpenFailed { url, reason } => {
                 format!("{reason} Open {url} in your browser yourself.")
             }
-            AgboardError::AgentCliMissing { tool } => format!(
+            AgpjError::AgentCliMissing { tool } => format!(
                 "Install {tool} and make it available on the PATH of the server, then try again."
             ),
-            AgboardError::AgentCliLoggedOut { tool } => {
+            AgpjError::AgentCliLoggedOut { tool } => {
                 format!("Log in to {tool} in a terminal, then try again.")
             }
-            AgboardError::SessionLaunchRefused { reason } => reason.clone(),
-            AgboardError::SessionLaunchFailed { reason } => reason.clone(),
-            AgboardError::ProjectHasNoFolder { project } => format!(
+            AgpjError::SessionLaunchRefused { reason } => reason.clone(),
+            AgpjError::SessionLaunchFailed { reason } => reason.clone(),
+            AgpjError::ProjectHasNoFolder { project } => format!(
                 "Bind a folder to project {project} with \"agboard project bind\" in that folder."
             ),
         }

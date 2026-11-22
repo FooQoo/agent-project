@@ -5,13 +5,13 @@
 use super::{data_dir_of, fail, write_text};
 use crate::cli::args::{Cli, Command, SetupArgs, SetupCommand, ShowArgs, ShowCommand};
 use crate::cli::{Env, Outcome, commands, output};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// Runs the command when it is one of these, and returns its exit code.
 pub(super) fn run_remote_command(cli: &Cli, env: &mut Env) -> Option<i32> {
     let dir = data_dir_of(&env.shared_dir);
     let vault = crate::remote_settings::vault_from_process();
-    let result: Result<Option<Outcome>, AgboardError> = match &cli.command {
+    let result: Result<Option<Outcome>, AgpjError> = match &cli.command {
         Command::Setup(SetupArgs {
             command: Some(SetupCommand::Remote(args)),
             ..

@@ -13,7 +13,7 @@
 use std::io::IsTerminal;
 
 use crate::cli::args::SetupAgentArg;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::setup::{self, Agent, Mode, SetupEnv, SetupOptions, SetupReport};
 
 /// What the command line asked for; the same for both commands.
@@ -33,7 +33,7 @@ pub enum Finished {
     Cancelled,
 }
 
-pub fn run(request: &Request) -> Result<Finished, AgboardError> {
+pub fn run(request: &Request) -> Result<Finished, AgpjError> {
     if request.background {
         let agent = match request.agent {
             Some(SetupAgentArg::Codex) => Agent::Codex,
@@ -151,8 +151,8 @@ fn choose_agents(env: &SetupEnv) -> Option<Vec<Agent>> {
     }
 }
 
-fn invalid(command: &str, message: &str) -> AgboardError {
-    AgboardError::InvalidArgument {
+fn invalid(command: &str, message: &str) -> AgpjError {
+    AgpjError::InvalidArgument {
         message: message.to_string(),
         command: Some(command.to_string()),
     }

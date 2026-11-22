@@ -9,7 +9,7 @@ use clap::Args;
 use super::enums::{ActorArg, AssigneeArg, ColumnArg, ReportStateArg, RunStateArg};
 use super::history::ChangeArgs;
 use super::version::{PlanArgs, VersionFilterArgs};
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 
 /// The three mutually exclusive ways to give a description. On edit, the
 /// current TASK.md history is retained regardless of history in this input.
@@ -173,7 +173,7 @@ impl DescriptionArgs {
     /// The description the user asked for: `None` when no option was given.
     /// `--desc -` reads `stdin` to the end. One trailing newline from a file
     /// or from standard input is dropped, since editors and `echo` add it.
-    pub fn resolve(&self, stdin: &mut dyn Read) -> Result<Option<String>, AgboardError> {
+    pub fn resolve(&self, stdin: &mut dyn Read) -> Result<Option<String>, AgpjError> {
         if let Some(text) = &self.desc {
             if text != "-" {
                 return Ok(Some(text.clone()));
@@ -181,7 +181,7 @@ impl DescriptionArgs {
             let mut buffer = String::new();
             stdin
                 .read_to_string(&mut buffer)
-                .map_err(|e| AgboardError::FileError {
+                .map_err(|e| AgpjError::FileError {
                     action: FileAction::Read,
                     file: "standard input".to_string(),
                     reason: e.to_string(),
@@ -189,7 +189,7 @@ impl DescriptionArgs {
             return Ok(Some(strip_final_newline(buffer)));
         }
         if let Some(path) = &self.desc_file {
-            let text = std::fs::read_to_string(path).map_err(|e| AgboardError::FileError {
+            let text = std::fs::read_to_string(path).map_err(|e| AgpjError::FileError {
                 action: FileAction::Read,
                 file: path.display().to_string(),
                 reason: e.to_string(),

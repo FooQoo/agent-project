@@ -17,12 +17,12 @@ use crate::cli::args::{
 use crate::cli::{Context, Outcome};
 use crate::docs::DocsLocale;
 use crate::domain::validate_project_name;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::bindings::canonical_folder;
 use crate::interact::confirm;
 use crate::server::preferences::PreferencesStore;
 
-pub fn run(ctx: &mut Context, args: &ProjectArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &ProjectArgs) -> Result<Outcome, AgpjError> {
     match &args.command {
         ProjectCommand::Create(args) => create(ctx, args),
         ProjectCommand::Bind(args) => bind(ctx, args),
@@ -45,10 +45,10 @@ pub(super) fn docs_locale(ctx: &Context) -> DocsLocale {
 /// folder. A name already in use is `project_name_exists`; a folder that
 /// belongs to another project is refused before anything is created. If the
 /// binding still fails, the new project is removed again.
-pub fn create(ctx: &Context, args: &ProjectCreateArgs) -> Result<Outcome, AgboardError> {
+pub fn create(ctx: &Context, args: &ProjectCreateArgs) -> Result<Outcome, AgpjError> {
     let folder = folder_or_current(args.folder.as_deref())?;
     if ctx.files.live_binding_for_folder(&folder)?.is_some() {
-        return Err(AgboardError::FolderBoundElsewhere {
+        return Err(AgpjError::FolderBoundElsewhere {
             folder: folder.display().to_string(),
         });
     }
@@ -71,7 +71,7 @@ pub fn create(ctx: &Context, args: &ProjectCreateArgs) -> Result<Outcome, Agboar
 
 /// Bind an existing project to a folder: `--folder`, or the current folder.
 /// Binding a folder to its own project again changes nothing.
-pub fn bind(ctx: &Context, args: &ProjectBindArgs) -> Result<Outcome, AgboardError> {
+pub fn bind(ctx: &Context, args: &ProjectBindArgs) -> Result<Outcome, AgpjError> {
     let name = validate_project_name(&args.name)?;
     let project = ctx.files.project_by_name(&name)?;
     let folder = folder_or_current(args.folder.as_deref())?;
@@ -92,10 +92,10 @@ pub fn bind(ctx: &Context, args: &ProjectBindArgs) -> Result<Outcome, AgboardErr
 }
 
 /// The given folder, or the current one, checked and made canonical.
-fn folder_or_current(folder: Option<&Path>) -> Result<PathBuf, AgboardError> {
+fn folder_or_current(folder: Option<&Path>) -> Result<PathBuf, AgpjError> {
     let path = match folder {
         Some(path) => path.to_path_buf(),
-        None => std::env::current_dir().map_err(|_| AgboardError::InvalidValue {
+        None => std::env::current_dir().map_err(|_| AgpjError::InvalidValue {
             field: "--folder".to_string(),
             reason: "Use an existing folder.".to_string(),
         })?,
@@ -104,7 +104,7 @@ fn folder_or_current(folder: Option<&Path>) -> Result<PathBuf, AgboardError> {
 }
 
 /// The projects by name, with the catalog revision.
-pub fn ls(ctx: &Context) -> Result<Outcome, AgboardError> {
+pub fn ls(ctx: &Context) -> Result<Outcome, AgpjError> {
     let catalog = ctx.files.catalog()?;
     Ok(list_outcome(
         serde_json::to_value(&catalog).expect("catalog serializes"),
@@ -133,7 +133,7 @@ fn list_outcome<'a>(value: serde_json::Value, names: impl Iterator<Item = &'a st
 
 /// Rename the resolved project, keeping its ID. The same normalized name is
 /// a success that changes nothing.
-pub fn rename(ctx: &Context, args: &ProjectRenameArgs) -> Result<Outcome, AgboardError> {
+pub fn rename(ctx: &Context, args: &ProjectRenameArgs) -> Result<Outcome, AgpjError> {
     let current = ctx.project()?;
     let old_name = current.name.clone();
     let renamed = ctx.files.rename_project(&current.id, &args.new_name)?;
@@ -155,7 +155,7 @@ pub fn rename(ctx: &Context, args: &ProjectRenameArgs) -> Result<Outcome, Agboar
     })
 }
 
-pub fn rm(ctx: &mut Context) -> Result<Outcome, AgboardError> {
+pub fn rm(ctx: &mut Context) -> Result<Outcome, AgpjError> {
     ctx.interactive |= confirm::is_interactive(ctx.json);
     rm_with_io(ctx, &mut std::io::stdin().lock(), &mut std::io::stderr())
 }
@@ -169,10 +169,10 @@ pub fn rm_with_io(
     ctx: &Context,
     input: &mut impl BufRead,
     output: &mut impl Write,
-) -> Result<Outcome, AgboardError> {
+) -> Result<Outcome, AgpjError> {
     let project = ctx.project()?;
     if ctx.json || !ctx.interactive {
-        return Err(AgboardError::ConfirmationRequired {
+        return Err(AgpjError::ConfirmationRequired {
             operation: "deleting a project".to_string(),
         });
     }

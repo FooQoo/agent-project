@@ -33,7 +33,7 @@ use std::ffi::OsString;
 use clap::{Parser, Subcommand};
 
 use self::help::TOP_HELP;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -191,11 +191,11 @@ pub enum Parsed {
 }
 
 /// Parse `args` (the first item is the program name).
-pub fn parse(args: &[OsString]) -> Result<Parsed, AgboardError> {
+pub fn parse(args: &[OsString]) -> Result<Parsed, AgpjError> {
     match Cli::try_parse_from(args) {
         // The parser lets a later `--project` after the subcommand replace an
         // earlier one before it; a command must never guess which one was meant.
-        Ok(_) if project_occurrences(args) > 1 => Err(AgboardError::InvalidArgument {
+        Ok(_) if project_occurrences(args) > 1 => Err(AgpjError::InvalidArgument {
             message: "--project can be given only once.".to_string(),
             command: subcommand_in(args),
         }),
@@ -206,7 +206,7 @@ pub fn parse(args: &[OsString]) -> Result<Parsed, AgboardError> {
                 ErrorKind::DisplayHelp | ErrorKind::DisplayVersion => {
                     Ok(Parsed::Print(error.to_string()))
                 }
-                kind => Err(AgboardError::InvalidArgument {
+                kind => Err(AgpjError::InvalidArgument {
                     message: match kind {
                         // The parser would print the whole help text here.
                         ErrorKind::MissingSubcommand

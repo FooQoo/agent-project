@@ -1,156 +1,150 @@
-use super::{AgboardError, FileAction};
+use super::{AgpjError, FileAction};
 
-impl AgboardError {
+impl AgpjError {
     /// One-line summary of what went wrong.
     pub fn message(&self) -> String {
         match self {
-            AgboardError::ProjectNotFound { .. } => "project not found.".to_string(),
-            AgboardError::FolderBoundElsewhere { .. } => {
+            AgpjError::ProjectNotFound { .. } => "project not found.".to_string(),
+            AgpjError::FolderBoundElsewhere { .. } => {
                 "this folder already belongs to another project.".to_string()
             }
-            AgboardError::FolderUnbound { .. } => {
-                "this folder is not bound to a project.".to_string()
-            }
-            AgboardError::BoundProjectMissing { .. } => {
+            AgpjError::FolderUnbound { .. } => "this folder is not bound to a project.".to_string(),
+            AgpjError::BoundProjectMissing { .. } => {
                 "the project bound to this folder no longer exists.".to_string()
             }
-            AgboardError::ProjectNameExists { name } => {
+            AgpjError::ProjectNameExists { name } => {
                 format!("project \"{name}\" already exists.")
             }
-            AgboardError::TaskNotFound { id } => format!("task #{id} not found."),
-            AgboardError::TaskArchived { id } => format!("task #{id} is archived."),
-            AgboardError::TaskNotArchived { id } => format!("task #{id} is not archived."),
-            AgboardError::NoCurrentVersion => "the project has no current version.".into(),
-            AgboardError::ArchiveTargetsChanged => "archive targets changed.".into(),
-            AgboardError::AttachmentNotFound { id } => format!("attachment {id} not found."),
-            AgboardError::AttachmentLimitExceeded => "attachment limits were exceeded.".into(),
-            AgboardError::EpicIdTaken { id } => format!("epic {id} already exists."),
-            AgboardError::EpicNotFound { id } => format!("epic {id} not found."),
-            AgboardError::EpicInUse { id } => format!("epic {id} is used by tasks."),
-            AgboardError::InvalidArgument { message, .. } => message.clone(),
-            AgboardError::InvalidValue { field, .. } => format!("{field} is invalid."),
-            AgboardError::InvalidStateForColumn { id, state, .. } => {
+            AgpjError::TaskNotFound { id } => format!("task #{id} not found."),
+            AgpjError::TaskArchived { id } => format!("task #{id} is archived."),
+            AgpjError::TaskNotArchived { id } => format!("task #{id} is not archived."),
+            AgpjError::NoCurrentVersion => "the project has no current version.".into(),
+            AgpjError::ArchiveTargetsChanged => "archive targets changed.".into(),
+            AgpjError::AttachmentNotFound { id } => format!("attachment {id} not found."),
+            AgpjError::AttachmentLimitExceeded => "attachment limits were exceeded.".into(),
+            AgpjError::EpicIdTaken { id } => format!("epic {id} already exists."),
+            AgpjError::EpicNotFound { id } => format!("epic {id} not found."),
+            AgpjError::EpicInUse { id } => format!("epic {id} is used by tasks."),
+            AgpjError::InvalidArgument { message, .. } => message.clone(),
+            AgpjError::InvalidValue { field, .. } => format!("{field} is invalid."),
+            AgpjError::InvalidStateForColumn { id, state, .. } => {
                 format!("cannot set #{id} to {}.", state.as_str())
             }
-            AgboardError::InvalidStateForAssignee => "state is invalid for this assignee.".into(),
-            AgboardError::InvalidStateChange { from, to } => {
+            AgpjError::InvalidStateForAssignee => "state is invalid for this assignee.".into(),
+            AgpjError::InvalidStateChange { from, to } => {
                 format!(
                     "cannot change the state from {} to {}.",
                     from.as_str(),
                     to.as_str()
                 )
             }
-            AgboardError::TaskIsDraft { id } => {
+            AgpjError::TaskIsDraft { id } => {
                 format!("task #{id} is a draft and read-only for agents.")
             }
-            AgboardError::TaskInBacklog { id } => {
+            AgpjError::TaskInBacklog { id } => {
                 format!("task #{id} is in the Backlog and has not been sent to Todo.")
             }
-            AgboardError::EpicIsDraft { id } => {
+            AgpjError::EpicIsDraft { id } => {
                 format!("epic {id} is a draft and read-only for the CLI.")
             }
-            AgboardError::SendWithOpenQuestions { ids } => {
+            AgpjError::SendWithOpenQuestions { ids } => {
                 format!("the plan has open questions: {}.", ids.join(", "))
             }
-            AgboardError::HumanOnly { action } => format!("{action} is for a person only."),
-            AgboardError::AiOnly { action } => format!("{action} is for an agent only."),
-            AgboardError::TaskIsDone { id } => {
+            AgpjError::HumanOnly { action } => format!("{action} is for a person only."),
+            AgpjError::AiOnly { action } => format!("{action} is for an agent only."),
+            AgpjError::TaskIsDone { id } => {
                 format!("task #{id} is done and read-only for agents.")
             }
-            AgboardError::AcceptanceUnmet { id, unmet } => format!(
+            AgpjError::AcceptanceUnmet { id, unmet } => format!(
                 "task #{id} has unmet acceptance conditions: {}.",
                 unmet.join(", ")
             ),
-            AgboardError::TaskNotDraft { id } => format!("task #{id} is not a draft."),
-            AgboardError::InvalidStateForDraft { id, state } => {
+            AgpjError::TaskNotDraft { id } => format!("task #{id} is not a draft."),
+            AgpjError::InvalidStateForDraft { id, state } => {
                 format!("cannot make #{id} a draft while it is {}.", state.as_str())
             }
-            AgboardError::QuestionsUnanswered { id } => {
+            AgpjError::QuestionsUnanswered { id } => {
                 format!("task #{id} waits for answers to its questions.")
             }
-            AgboardError::QuestionAnswered { ids } => {
+            AgpjError::QuestionAnswered { ids } => {
                 format!("{} already answered.", ids.join(", "))
             }
-            AgboardError::QuestionWithdrawn { ids } => {
+            AgpjError::QuestionWithdrawn { ids } => {
                 format!("{} withdrawn.", ids.join(", "))
             }
-            AgboardError::StartBlockedByQuestions { ids } => {
+            AgpjError::StartBlockedByQuestions { ids } => {
                 format!("cannot send while {} has no answer.", ids.join(", "))
             }
-            AgboardError::MessageNotFound { id } => format!("message {id} not found."),
-            AgboardError::MessageClosed { id } => {
+            AgpjError::MessageNotFound { id } => format!("message {id} not found."),
+            AgpjError::MessageClosed { id } => {
                 format!("message {id} already has its reply.")
             }
-            AgboardError::MessageTypeMismatch { id, expected } => {
+            AgpjError::MessageTypeMismatch { id, expected } => {
                 format!("{id} is not a {expected}.")
             }
-            AgboardError::RequestAccepted { id } => format!("request {id} was already accepted."),
-            AgboardError::AnswerAccepted { id } => {
+            AgpjError::RequestAccepted { id } => format!("request {id} was already accepted."),
+            AgpjError::AnswerAccepted { id } => {
                 format!("the answer of {id} was already accepted.")
             }
-            AgboardError::QuestionOpen { id } => format!("question {id} has no answer yet."),
-            AgboardError::RequestWithdrawn { id } => format!("request {id} was withdrawn."),
-            AgboardError::TaskStatusChanged { id, current } => {
+            AgpjError::QuestionOpen { id } => format!("question {id} has no answer yet."),
+            AgpjError::RequestWithdrawn { id } => format!("request {id} was withdrawn."),
+            AgpjError::TaskStatusChanged { id, current } => {
                 format!("task #{id} is now {}.", current.as_str())
             }
-            AgboardError::PlannedVersionChanged { id, .. } => {
+            AgpjError::PlannedVersionChanged { id, .. } => {
                 format!("the planned version of task #{id} changed.")
             }
-            AgboardError::ConfirmationRequired { operation } => {
+            AgpjError::ConfirmationRequired { operation } => {
                 format!("{operation} needs confirmation from a human.")
             }
-            AgboardError::FileError { action, file, .. } => match action {
+            AgpjError::FileError { action, file, .. } => match action {
                 FileAction::Read => format!("cannot read {file}."),
                 FileAction::Write => format!("cannot write {file}."),
             },
-            AgboardError::FileInvalid { file, .. } => format!("{file} is not valid."),
-            AgboardError::FileUnreadable { file, .. } => format!("cannot read {file}."),
-            AgboardError::FormatUnsupported { file, .. } => {
+            AgpjError::FileInvalid { file, .. } => format!("{file} is not valid."),
+            AgpjError::FileUnreadable { file, .. } => format!("cannot read {file}."),
+            AgpjError::FormatUnsupported { file, .. } => {
                 format!("{file} has an unsupported format version.")
             }
-            AgboardError::ChoiceUnknown { .. } => "the choice is not part of this question.".into(),
-            AgboardError::DatabaseBusy => "the board is busy.".to_string(),
-            AgboardError::DatabaseError { .. } => "cannot open the board.".to_string(),
-            AgboardError::AlreadyServing { .. } => "the board is already being served.".to_string(),
-            AgboardError::PortInUse { port, .. } => format!("port {port} is already in use."),
-            AgboardError::LocalNetworkDenied => {
+            AgpjError::ChoiceUnknown { .. } => "the choice is not part of this question.".into(),
+            AgpjError::DatabaseBusy => "the board is busy.".to_string(),
+            AgpjError::DatabaseError { .. } => "cannot open the board.".to_string(),
+            AgpjError::AlreadyServing { .. } => "the board is already being served.".to_string(),
+            AgpjError::PortInUse { port, .. } => format!("port {port} is already in use."),
+            AgpjError::LocalNetworkDenied => {
                 "local network connections are not allowed.".to_string()
             }
-            AgboardError::BoardUnavailable { .. } => "the board is unavailable.".to_string(),
-            AgboardError::CursorInvalid { .. } => "the cursor is invalid.".to_string(),
-            AgboardError::WaitTimeout => "no board change before the timeout.".to_string(),
-            AgboardError::DocsPathInvalid { .. } => "the document path is invalid.".to_string(),
-            AgboardError::DocsNotFound { path } => format!("document {path} not found."),
-            AgboardError::DocsNotMarkdown { path } => format!("{path} is not a Markdown file."),
-            AgboardError::DocsTooLarge { path, .. } => format!("{path} is too large."),
-            AgboardError::DocsNotUtf8 { path } => format!("{path} is not UTF-8 text."),
-            AgboardError::DocsAssetType { path } => format!("{path} is not a supported image."),
-            AgboardError::DocsNotImplemented => {
+            AgpjError::BoardUnavailable { .. } => "the board is unavailable.".to_string(),
+            AgpjError::CursorInvalid { .. } => "the cursor is invalid.".to_string(),
+            AgpjError::WaitTimeout => "no board change before the timeout.".to_string(),
+            AgpjError::DocsPathInvalid { .. } => "the document path is invalid.".to_string(),
+            AgpjError::DocsNotFound { path } => format!("document {path} not found."),
+            AgpjError::DocsNotMarkdown { path } => format!("{path} is not a Markdown file."),
+            AgpjError::DocsTooLarge { path, .. } => format!("{path} is too large."),
+            AgpjError::DocsNotUtf8 { path } => format!("{path} is not UTF-8 text."),
+            AgpjError::DocsAssetType { path } => format!("{path} is not a supported image."),
+            AgpjError::DocsNotImplemented => {
                 "this document operation is not available yet.".to_string()
             }
-            AgboardError::DocsOpenFailed { .. } => "cannot open the Docs folder.".to_string(),
-            AgboardError::ReleaseDocRefused { file, .. } => format!("did not write {file}."),
-            AgboardError::RemoteUnavailable { .. } => {
+            AgpjError::DocsOpenFailed { .. } => "cannot open the Docs folder.".to_string(),
+            AgpjError::ReleaseDocRefused { file, .. } => format!("did not write {file}."),
+            AgpjError::RemoteUnavailable { .. } => {
                 "the ngrok connection is not available.".to_string()
             }
-            AgboardError::InvalidDomain => "the ngrok domain is not valid.".to_string(),
-            AgboardError::KeychainUnavailable { .. } => {
+            AgpjError::InvalidDomain => "the ngrok domain is not valid.".to_string(),
+            AgpjError::KeychainUnavailable { .. } => {
                 "secure storage on this computer is not available.".to_string()
             }
-            AgboardError::BrowserOpenFailed { .. } => "cannot open the browser.".to_string(),
-            AgboardError::AgentCliMissing { tool } => {
+            AgpjError::BrowserOpenFailed { .. } => "cannot open the browser.".to_string(),
+            AgpjError::AgentCliMissing { tool } => {
                 format!("the {tool} command is not installed.")
             }
-            AgboardError::AgentCliLoggedOut { tool } => format!("{tool} is not logged in."),
-            AgboardError::SessionLaunchRefused { .. } => {
-                "the session was not launched.".to_string()
-            }
-            AgboardError::SessionLaunchFailed { .. } => {
+            AgpjError::AgentCliLoggedOut { tool } => format!("{tool} is not logged in."),
+            AgpjError::SessionLaunchRefused { .. } => "the session was not launched.".to_string(),
+            AgpjError::SessionLaunchFailed { .. } => {
                 "the session could not be started.".to_string()
             }
-            AgboardError::ProjectHasNoFolder { .. } => {
-                "the project has no bound folder.".to_string()
-            }
+            AgpjError::ProjectHasNoFolder { .. } => "the project has no bound folder.".to_string(),
         }
     }
 }

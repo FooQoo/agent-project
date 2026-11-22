@@ -14,7 +14,7 @@ use std::process::{self, Child};
 use std::time::{Duration, Instant};
 
 use crate::domain::ProjectId;
-use crate::error::{AgboardError, PortHolder};
+use crate::error::{AgpjError, PortHolder};
 use crate::file_store::lock::AutostartLock;
 
 /// The variable that tells the child which descriptor holds `autostart.lock`.
@@ -43,14 +43,14 @@ impl Failure {
     /// The error the command reports. A refusal to use the local network and a
     /// taken port keep their codes; everything else is `board_unavailable`
     /// with the log to read.
-    pub(super) fn into_error(self, log: &Path) -> AgboardError {
+    pub(super) fn into_error(self, log: &Path) -> AgpjError {
         match self {
             Failure::Exited {
                 code: Some(code), ..
-            } if code == "local_network_denied" => AgboardError::LocalNetworkDenied,
+            } if code == "local_network_denied" => AgpjError::LocalNetworkDenied,
             Failure::Exited {
                 code: Some(code), ..
-            } if code == "port_in_use" => AgboardError::PortInUse {
+            } if code == "port_in_use" => AgpjError::PortInUse {
                 port: super::DEFAULT_PORT,
                 holder: PortHolder::Unknown,
             },
@@ -61,7 +61,7 @@ impl Failure {
                 } else {
                     format!(": {reason}")
                 };
-                AgboardError::BoardUnavailable {
+                AgpjError::BoardUnavailable {
                     reason: format!(
                         "The background server could not start ({}){detail}. See {}.",
                         code.as_deref().unwrap_or("no error was printed"),
@@ -69,7 +69,7 @@ impl Failure {
                     ),
                 }
             }
-            Failure::Timeout => AgboardError::BoardUnavailable {
+            Failure::Timeout => AgpjError::BoardUnavailable {
                 reason: format!(
                     "The background server was not ready within {} seconds. See {}.",
                     super::READY_TIMEOUT.as_secs(),
@@ -89,8 +89,8 @@ pub(super) fn spawn_server(
     log: &Path,
     lock: &AutostartLock,
     open: Option<&ProjectId>,
-) -> Result<Child, AgboardError> {
-    let unavailable = |what: &str, e: std::io::Error| AgboardError::BoardUnavailable {
+) -> Result<Child, AgpjError> {
+    let unavailable = |what: &str, e: std::io::Error| AgpjError::BoardUnavailable {
         reason: format!("{what}: {e}."),
     };
     std::fs::create_dir_all(data_dir)
@@ -253,7 +253,7 @@ mod tests {
             }
         );
         let log = Path::new("serve.log");
-        assert_eq!(failure.into_error(log), AgboardError::LocalNetworkDenied);
+        assert_eq!(failure.into_error(log), AgpjError::LocalNetworkDenied);
         assert_eq!(
             exit_of("{\"error\":{\"code\":\"port_in_use\",\"reason\":\"x\"}}\n")
                 .into_error(log)

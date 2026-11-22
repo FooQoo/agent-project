@@ -1,7 +1,7 @@
 //! Version names: the releases a project plans its tasks for. A version is named by a file,
 //! `docs/release/<name>.md` in the project's Docs, so a name must also be a safe file stem.
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The longest version name, in characters.
 pub const MAX_VERSION_CHARS: usize = 64;
@@ -19,7 +19,7 @@ const FORBIDDEN: &[char] = &['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
 /// file-name characters (`/ \ : * ? " < > |`), and it does not start with a dot. The name is
 /// kept and compared exactly: `v1.8.0` and `1.8.0` are two versions, and no semantic-version
 /// format is required.
-pub fn validate_version_name(value: &str) -> Result<String, AgboardError> {
+pub fn validate_version_name(value: &str) -> Result<String, AgpjError> {
     let count = value.chars().count();
     if count == 0 || count > MAX_VERSION_CHARS {
         return Err(invalid("Version names must be 1 to 64 characters."));
@@ -95,8 +95,8 @@ impl VersionFilter {
     }
 }
 
-fn invalid(reason: &str) -> AgboardError {
-    AgboardError::InvalidValue {
+fn invalid(reason: &str) -> AgpjError {
+    AgpjError::InvalidValue {
         field: "version".into(),
         reason: reason.into(),
     }

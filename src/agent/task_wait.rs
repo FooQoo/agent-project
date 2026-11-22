@@ -8,7 +8,7 @@ use serde::Serialize;
 use crate::agent::session_identity::SessionIdentity;
 use crate::agent::wait_engine::{Evaluation, WaitReader, WaitResult, wait_until};
 use crate::domain::{Assignee, Column, ProjectId, validate_project_name};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::layout;
 use crate::file_store::model::TaskView;
@@ -24,19 +24,19 @@ struct Reader<'a> {
 impl WaitReader for Reader<'_> {
     type Snapshot = ProjectSnapshot;
 
-    fn read(&self) -> Result<Self::Snapshot, AgboardError> {
+    fn read(&self) -> Result<Self::Snapshot, AgpjError> {
         let snapshot = FileStore::open(self.shared)
             .board(&self.project_id)
             .map_err(|error| match error {
-                AgboardError::ProjectNotFound { .. } => AgboardError::ProjectNotFound {
+                AgpjError::ProjectNotFound { .. } => AgpjError::ProjectNotFound {
                     project: self.project_name.to_string(),
                 },
-                other => AgboardError::BoardUnavailable {
+                other => AgpjError::BoardUnavailable {
                     reason: format!("{} {}", other.message(), other.reason()),
                 },
             })?;
         if let Some(problem) = snapshot.problems.first() {
-            return Err(AgboardError::BoardUnavailable {
+            return Err(AgpjError::BoardUnavailable {
                 reason: format!("{} ({}): {}", problem.file, problem.field, problem.reason),
             });
         }
@@ -101,15 +101,15 @@ pub async fn wait_for_task(
     shared: &Path,
     project_name: &str,
     idle_timeout_seconds: u64,
-) -> Result<String, AgboardError> {
+) -> Result<String, AgpjError> {
     let project_name = validate_project_name(project_name)?;
     let project_id = FileStore::open(shared)
         .project_by_name(&project_name)
         .map_err(|error| match error {
-            AgboardError::ProjectNotFound { .. } => AgboardError::ProjectNotFound {
+            AgpjError::ProjectNotFound { .. } => AgpjError::ProjectNotFound {
                 project: project_name.clone(),
             },
-            other => AgboardError::BoardUnavailable {
+            other => AgpjError::BoardUnavailable {
                 reason: format!("{} {}", other.message(), other.reason()),
             },
         })?
@@ -143,7 +143,7 @@ pub async fn wait_for_task(
             project_id,
             idle_timeout_seconds,
         })
-        .map_err(|error| AgboardError::BoardUnavailable {
+        .map_err(|error| AgpjError::BoardUnavailable {
             reason: error.to_string(),
         }),
     }
@@ -155,7 +155,7 @@ fn ready(
     shared: &Path,
     snapshot: &ProjectSnapshot,
     project_id: &ProjectId,
-) -> Result<Option<String>, AgboardError> {
+) -> Result<Option<String>, AgpjError> {
     let answers = unaccepted_answers(snapshot, shared);
     if !answers.is_empty() {
         return serde_json::to_string(&AnswersOutput {
@@ -165,7 +165,7 @@ fn ready(
             answers,
         })
         .map(Some)
-        .map_err(|error| AgboardError::BoardUnavailable {
+        .map_err(|error| AgpjError::BoardUnavailable {
             reason: error.to_string(),
         });
     }
@@ -178,7 +178,7 @@ fn ready(
             requests,
         })
         .map(Some)
-        .map_err(|error| AgboardError::BoardUnavailable {
+        .map_err(|error| AgpjError::BoardUnavailable {
             reason: error.to_string(),
         });
     }
@@ -214,7 +214,7 @@ pub(crate) fn render_task(
     snapshot: &ProjectSnapshot,
     project_id: &ProjectId,
     task: &TaskView,
-) -> Result<String, AgboardError> {
+) -> Result<String, AgpjError> {
     let project_dir = layout::project_dir(shared, project_id);
     let document_path = task.epic_id.as_deref().and_then(|epic_id| {
         snapshot
@@ -231,7 +231,7 @@ pub(crate) fn render_task(
         task_path: layout::task_md(&layout::task_dir(&project_dir, task.id)),
         document_path,
     };
-    serde_json::to_string(&output).map_err(|error| AgboardError::BoardUnavailable {
+    serde_json::to_string(&output).map_err(|error| AgpjError::BoardUnavailable {
         reason: error.to_string(),
     })
 }

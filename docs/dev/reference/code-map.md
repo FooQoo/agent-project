@@ -17,7 +17,7 @@ Where things live in the repository. For how the parts work together, read [How 
 | `progress` | Builds the progress table shared by `agboard progress` and the hook. |
 | `interact` | Human confirmation (terminal detection, y/N), the notify client, and opening a board page in the browser (`browser`: the board address, when no browser is opened, and the platform's opener). |
 | `setup` | Installs and updates the Agent Board plugin and prepares agent access to the data area. |
-| `paths`<br>`lifecycle`<br>`clock`<br>`error` | Data area resolution, the `serve` lock, UTC time, and `AgboardError` (code, exit code, message, reason). |
+| `paths`<br>`lifecycle`<br>`clock`<br>`error` | Data area resolution, the `serve` lock, UTC time, and `AgpjError` (code, exit code, message, reason). |
 
 Dependencies point one way.
 
@@ -55,7 +55,7 @@ Inside `server`, routers depend on shared modules rather than on each other:
 | `preferences/` | The saved language and color theme: `preferences.json` in the internal area (`PreferencesStore`), the `GET` and `PUT` handling of `/api/preferences`, and the change notice. |
 | `monitor_auth/` | The entrance's application sessions and CSRF tokens (`session`), the 4-digit passcode and its limit on wrong guesses (`passcode`), their header checks (`guard`), and constants such as the cookie name and 12-hour limit (`contracts`). |
 | `guard` | Host, Origin, Sec-Fetch-Site and token checks for local writes. |
-| `response`<br>`request` | The JSON error body, `AgboardError` to HTTP status mapping, and other shared responses; JSON bodies whose failures use that error body. |
+| `response`<br>`request` | The JSON error body, `AgpjError` to HTTP status mapping, and other shared responses; JSON bodies whose failures use that error body. |
 | `store`<br>`qa`<br>`acceptance` | Blocking file access, the index, and URL IDs for every router; reading messages, saving answers, and sending and withdrawing requests (`messages.rs`; `api/messages.rs` holds the board's handlers), and setting one acceptance condition as a person. |
 | `web_assets` | The embedded scripts and stylesheets of the board, its build ID, and the cacheable gzip or plain response. |
 | `contracts/` | The data layer's wire types: the Summary, the Detail NDJSON lines, and the `changed` event. The golden examples in `tests/fixtures/data-layer/` pin their shapes. |

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use crate::{
     clock::{Clock, SystemClock},
     domain::{ProjectId, validate_project_name},
-    error::AgboardError,
+    error::AgpjError,
     file_store::FileStore,
     progress::{self, Include},
     server::preferences::saved_locale,
@@ -237,7 +237,7 @@ fn progress_context(
     include: Include,
 ) -> Result<Option<(String, ProjectId)>, Failure> {
     let store = FileStore::open(shared);
-    let failed = |error: AgboardError| Failure::new(error.code(), error.reason());
+    let failed = |error: AgpjError| Failure::new(error.code(), error.reason());
     let meta = if let Some(name) = project {
         let name = validate_project_name(name)
             .map_err(|error| Failure::new("invalid_value", error.reason()))?;

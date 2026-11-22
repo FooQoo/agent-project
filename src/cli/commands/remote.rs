@@ -22,7 +22,7 @@ use std::time::Duration;
 use serde_json::{Value, json};
 
 use crate::cli::Outcome;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::remote_settings::{self as saved, Saved};
 use crate::server::monitor_connection::keychain::TokenVault;
 
@@ -35,7 +35,7 @@ pub fn run(
     data_dir: &Path,
     project: Option<(String, String)>,
     vault: &dyn TokenVault,
-) -> Result<Outcome, AgboardError> {
+) -> Result<Outcome, AgpjError> {
     let settings = saved::read(data_dir, vault)?;
     let info = crate::paths::read_serve_info_in(data_dir).filter(crate::server::is_serving);
     let Some(project) = project else {
@@ -58,7 +58,7 @@ pub fn run(
 
 /// The saved settings and the state of the connection, for a run with no project. A server that
 /// is not running, or that did not answer, is a state to report, not an error.
-fn overview(settings: &Saved, status: Option<Result<Value, AgboardError>>) -> Outcome {
+fn overview(settings: &Saved, status: Option<Result<Value, AgpjError>>) -> Outcome {
     let (state, entrance) = match &status {
         None => ("no_server", None),
         Some(Err(_)) => ("unknown", None),
@@ -96,7 +96,7 @@ fn state_is_ready(status: &Value) -> bool {
 /// The outcome for the status the server returned. Only a ready connection
 /// with an address and a passcode gives one; anything else is
 /// `remote_unavailable`, with no address or passcode in the message.
-fn build(status: &Value, (id, name): (String, String)) -> Result<Outcome, AgboardError> {
+fn build(status: &Value, (id, name): (String, String)) -> Result<Outcome, AgpjError> {
     let state = status["status"].as_str().unwrap_or("unknown");
     if state != "ready" {
         return Err(unavailable(&not_ready_reason(status, state)));
@@ -140,14 +140,14 @@ fn not_ready_reason(status: &Value, state: &str) -> String {
     reason
 }
 
-fn unavailable(reason: &str) -> AgboardError {
-    AgboardError::RemoteUnavailable {
+fn unavailable(reason: &str) -> AgpjError {
+    AgpjError::RemoteUnavailable {
         reason: reason.to_string(),
     }
 }
 
 /// `GET /api/monitor-connections` on the loopback address of the server.
-fn fetch_status(port: u16) -> Result<Value, AgboardError> {
+fn fetch_status(port: u16) -> Result<Value, AgpjError> {
     let failed = |why: String| {
         unavailable(&format!(
             "The server on port {port} did not give its ngrok status: {why}."
@@ -235,7 +235,7 @@ mod tests {
         ] {
             assert!(matches!(
                 build(&status, demo()),
-                Err(AgboardError::RemoteUnavailable { .. })
+                Err(AgpjError::RemoteUnavailable { .. })
             ));
         }
     }

@@ -5,7 +5,7 @@ use crate::file_store::model::TaskView;
 use crate::file_store::reader::AllSnapshots;
 use crate::{
     domain::{Column, VersionFilter},
-    error::AgboardError,
+    error::AgpjError,
 };
 use serde_json::json;
 
@@ -24,7 +24,7 @@ fn keep(args: &LsArgs, filter: Option<&VersionFilter>, task: &TaskView) -> bool 
         })
 }
 
-pub fn run(ctx: &mut Context, args: &LsArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &LsArgs) -> Result<Outcome, AgpjError> {
     if args.all_projects {
         return run_all_projects(ctx, args);
     }
@@ -49,7 +49,7 @@ pub fn run(ctx: &mut Context, args: &LsArgs) -> Result<Outcome, AgboardError> {
 
 /// Every project's board from one read, with the filters applied to each
 /// project's tasks. A project with no matching task stays, with no tasks.
-fn run_all_projects(ctx: &mut Context, args: &LsArgs) -> Result<Outcome, AgboardError> {
+fn run_all_projects(ctx: &mut Context, args: &LsArgs) -> Result<Outcome, AgpjError> {
     let filter = args.version.resolve(|| Ok(None))?;
     let fetched_at = format_utc(ctx.clock.now());
     let mut all = ctx.files.all_snapshots()?;

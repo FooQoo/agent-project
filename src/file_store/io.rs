@@ -11,7 +11,7 @@ use std::path::Path;
 
 use serde::Serialize;
 
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 
 /// `bytes` random bytes as lowercase hexadecimal.
 pub fn random_hex(bytes: usize) -> io::Result<String> {
@@ -20,23 +20,23 @@ pub fn random_hex(bytes: usize) -> io::Result<String> {
     Ok(buf.iter().map(|b| format!("{b:02x}")).collect())
 }
 
-pub fn write_error(label: &str, reason: impl Display) -> AgboardError {
-    AgboardError::FileError {
+pub fn write_error(label: &str, reason: impl Display) -> AgpjError {
+    AgpjError::FileError {
         action: FileAction::Write,
         file: label.to_string(),
         reason: reason.to_string(),
     }
 }
 
-pub fn read_error(label: &str, reason: impl Display) -> AgboardError {
-    AgboardError::FileUnreadable {
+pub fn read_error(label: &str, reason: impl Display) -> AgpjError {
+    AgpjError::FileUnreadable {
         file: label.to_string(),
         reason: reason.to_string(),
     }
 }
 
 /// Replace `path` with `bytes` in one step. `label` names the file in errors.
-pub fn write_atomic(path: &Path, bytes: &[u8], label: &str) -> Result<(), AgboardError> {
+pub fn write_atomic(path: &Path, bytes: &[u8], label: &str) -> Result<(), AgpjError> {
     let dir = path
         .parent()
         .ok_or_else(|| write_error(label, "the path has no parent folder"))?;
@@ -67,17 +67,17 @@ pub fn write_atomic(path: &Path, bytes: &[u8], label: &str) -> Result<(), Agboar
 }
 
 /// Serialize `value` as pretty JSON (two spaces, one trailing newline) and save it.
-pub fn write_json<T: Serialize>(path: &Path, value: &T, label: &str) -> Result<(), AgboardError> {
+pub fn write_json<T: Serialize>(path: &Path, value: &T, label: &str) -> Result<(), AgpjError> {
     let mut text = serde_json::to_string_pretty(value).map_err(|e| write_error(label, e))?;
     text.push('\n');
     write_atomic(path, text.as_bytes(), label)
 }
 
-pub fn read_bytes(path: &Path, label: &str) -> Result<Vec<u8>, AgboardError> {
+pub fn read_bytes(path: &Path, label: &str) -> Result<Vec<u8>, AgpjError> {
     fs::read(path).map_err(|e| read_error(label, e))
 }
 
-pub fn read_text(path: &Path, label: &str) -> Result<String, AgboardError> {
+pub fn read_text(path: &Path, label: &str) -> Result<String, AgpjError> {
     let bytes = read_bytes(path, label)?;
     String::from_utf8(bytes).map_err(|_| read_error(label, "the file is not valid UTF-8"))
 }

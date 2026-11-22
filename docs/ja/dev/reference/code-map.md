@@ -17,7 +17,7 @@
 | `progress` | `agboard progress`とHookが共有する進行表を組み立てる。 |
 | `interact` | 人による確認（端末の判定、y/N入力）、通知のクライアント、ボードのページをブラウザーで開く処理（`browser`：ボードのアドレス、開かない場合の判定、OSごとに開くプログラム）。 |
 | `setup` | Agent Boardプラグインを導入・更新し、データ領域へのエージェントのアクセスを準備する。 |
-| `paths`<br>`lifecycle`<br>`clock`<br>`error` | データ領域の解決、`serve`のロック、UTCの時刻、`AgboardError`（コード・終了コード・message・reason）。 |
+| `paths`<br>`lifecycle`<br>`clock`<br>`error` | データ領域の解決、`serve`のロック、UTCの時刻、`AgpjError`（コード・終了コード・message・reason）。 |
 
 依存は一方向です。
 
@@ -55,7 +55,7 @@
 | `preferences/` | 保存した言語とカラーテーマ。内部領域の`preferences.json`（`PreferencesStore`）、`/api/preferences`の`GET`・`PUT`の処理、変更の通知。 |
 | `monitor_auth/` | 入口のアプリsessionとCSRFトークン（`session`）、4桁の合言葉と間違いの回数の制限（`passcode`）、そのヘッダーの検査（`guard`）、Cookie名や12時間の上限などの定数（`contracts`）。 |
 | `guard` | ローカルの書き込みに対するHost・Origin・Sec-Fetch-Site・トークンの確認。 |
-| `response`<br>`request` | JSONのエラー本文、`AgboardError`からHTTPステータスへの対応、そのほかの共有の応答と、失敗時にそのエラー本文を返すJSONの本文。 |
+| `response`<br>`request` | JSONのエラー本文、`AgpjError`からHTTPステータスへの対応、そのほかの共有の応答と、失敗時にそのエラー本文を返すJSONの本文。 |
 | `store`<br>`qa`<br>`acceptance` | すべてのルーターが使う、ブロッキングのファイルアクセス・索引・URLのIDと、メッセージの読み出し、回答の保存、依頼の送信と取り下げ（`messages.rs`。ボードのハンドラーは`api/messages.rs`）、人による完了条件1件の設定。 |
 | `web_assets` | 埋め込んだボードのスクリプトとスタイルシート、ビルドID、キャッシュできるgzipまたは非圧縮の応答。 |
 | `contracts/` | データ層の通信の型。Summary、DetailのNDJSONの各行、`changed`イベント。`tests/fixtures/data-layer/`の例が形を固定します。 |

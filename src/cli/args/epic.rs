@@ -7,7 +7,7 @@ use clap::{Args, Subcommand};
 
 use super::enums::ActorArg;
 use super::task::strip_final_newline;
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 
 #[derive(Args, Debug)]
 #[command(
@@ -120,14 +120,14 @@ pub struct DocumentArgs {
 
 impl DocumentArgs {
     /// The document the user asked for, or `None` when neither option was given.
-    pub fn resolve(&self, stdin: &mut dyn Read) -> Result<Option<String>, AgboardError> {
+    pub fn resolve(&self, stdin: &mut dyn Read) -> Result<Option<String>, AgpjError> {
         if let Some(text) = &self.document
             && text == "-"
         {
             let mut buffer = String::new();
             stdin
                 .read_to_string(&mut buffer)
-                .map_err(|e| AgboardError::FileError {
+                .map_err(|e| AgpjError::FileError {
                     action: FileAction::Read,
                     file: "standard input".to_string(),
                     reason: e.to_string(),
@@ -138,7 +138,7 @@ impl DocumentArgs {
             return Ok(Some(text.clone()));
         }
         if let Some(path) = &self.document_file {
-            let text = std::fs::read_to_string(path).map_err(|e| AgboardError::FileError {
+            let text = std::fs::read_to_string(path).map_err(|e| AgpjError::FileError {
                 action: FileAction::Read,
                 file: path.display().to_string(),
                 reason: e.to_string(),

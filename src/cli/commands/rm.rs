@@ -1,10 +1,10 @@
 use crate::cli::args::RmArgs;
 use crate::cli::{Context, Outcome};
-use crate::{error::AgboardError, interact::confirm};
+use crate::{error::AgpjError, interact::confirm};
 use serde_json::json;
 use std::io::{BufRead, Write};
 
-pub fn run(ctx: &mut Context, args: &RmArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &RmArgs) -> Result<Outcome, AgpjError> {
     ctx.interactive |= confirm::is_interactive(ctx.json);
     run_with_io(
         ctx,
@@ -19,11 +19,11 @@ pub fn run_with_io(
     args: &RmArgs,
     input: &mut impl BufRead,
     output: &mut impl Write,
-) -> Result<Outcome, AgboardError> {
+) -> Result<Outcome, AgpjError> {
     let project_id = ctx.project_id()?;
     let task = ctx.files.task(project_id, args.id)?;
     if ctx.json || !ctx.interactive {
-        return Err(AgboardError::ConfirmationRequired {
+        return Err(AgpjError::ConfirmationRequired {
             operation: "deleting a task".into(),
         });
     }
