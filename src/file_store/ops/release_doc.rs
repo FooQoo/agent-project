@@ -64,6 +64,18 @@ impl FileStore {
         let path = layout::release_dir(&project_dir).join(format!("{version}.md"));
         let label = layout::shared_label(shared, &path);
         let project_label = layout::project_label(&project_dir, &path);
+        let refuse_linked = || -> Result<(), AgboardError> {
+            if layout::has_symlink_below(&project_dir, &path)
+                .map_err(|e| io::read_error(&label, e))?
+            {
+                return Err(AgboardError::ReleaseDocRefused {
+                    file: project_label.clone(),
+                    reason: "The path passes through a symbolic link.".into(),
+                });
+            }
+            Ok(())
+        };
+        refuse_linked()?;
         let mut created = false;
         if !listed.contains(&version) {
             if create_release_file(shared, &project_dir, &version)? {
@@ -71,6 +83,7 @@ impl FileStore {
             }
             created = true;
         }
+        refuse_linked()?;
         let meta = std::fs::symlink_metadata(&path).map_err(|e| io::read_error(&label, e))?;
         if !meta.is_file() {
             return Err(AgboardError::ReleaseDocRefused {

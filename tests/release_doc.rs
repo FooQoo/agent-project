@@ -252,3 +252,34 @@ fn archived_tasks_are_included_and_a_named_unlisted_version_is_listed() {
     assert!(release(&home, "v9").is_file());
     assert_eq!(new["planned"], 0);
 }
+
+#[cfg(unix)]
+#[test]
+fn a_linked_release_folder_is_refused_and_the_outside_file_is_left_as_it_was() {
+    let (_root, home) = demo();
+    run(&home, &["version", "add", "v1"]);
+    let outside = home.join("outside");
+    fs::create_dir_all(&outside).unwrap();
+    fs::write(outside.join("v1.md"), "outside\n").unwrap();
+    let folder = project_dir(&home).join("docs/release");
+    fs::remove_dir_all(&folder).unwrap();
+    std::os::unix::fs::symlink(&outside, &folder).unwrap();
+    let (code, error) = json_error(
+        &home,
+        &[
+            "--project",
+            "Demo",
+            "release",
+            "doc",
+            "--version",
+            "v1",
+            "--json",
+        ],
+    );
+    assert_eq!(code, 1);
+    assert!(error.contains("release_doc_refused"), "{error}");
+    assert_eq!(
+        fs::read_to_string(outside.join("v1.md")).unwrap(),
+        "outside\n"
+    );
+}
