@@ -26,6 +26,7 @@ pub struct ReleaseDoc {
     pub changed: bool,
     pub planned: usize,
     pub verified: usize,
+    pub done_unchecked: usize,
     pub remaining: usize,
     pub moved: usize,
     /// Planned tasks with a linked publication record.
@@ -127,6 +128,7 @@ impl FileStore {
             changed,
             planned: groups.planned.len(),
             verified: groups.verified.len(),
+            done_unchecked: groups.done_unchecked.len(),
             remaining: groups.remaining.len(),
             moved: groups.moved.len(),
             published: groups.published.len(),

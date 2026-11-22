@@ -10,10 +10,11 @@ title: 版別レポートとテーマ別の振り返り
 
 版のレポートを頼むと、エージェントはその版に[`release doc`](../reference/cli#generate-a-release-document)を実行して`docs/release/VERSION.md`を書き、生成ブロックの周りに要約を書きます。
 
-生成ブロックには、その版に予定したカード、検証済み、残作業、別の版へ移したカードを、カード番号と`agboard show <id>`への案内付きで載せます。次の3点で記述の根拠を保ちます。
+生成ブロックには、その版に予定したカード、検証済み、受入条件なしで完了したカード、残作業、別の版へ移したカードを、カード番号と`agboard show <id>`への案内付きで載せます。次の3点で記述の根拠を保ちます。
 
 - 版から外れたカードは履歴から拾い、移動先とともに一度だけ載せます。アーカイブ済みのカードも数えます。
-- 検証済みは、受入条件があり、そのすべてを満たしたカードです。
+- 検証済みは、受入条件があり、そのすべてを満たしたカードです。受入条件がないDoneのカードは検証済みではなく、残作業にも残しません。目的を満たしたかを示すものがないため、「受入条件なしで完了」として別に載せます。
+- 「別の版へ移した」には、後の版、前の版、版なしのいずれに移した場合も、版から外れたすべてのカードを載せ、各行に移動先を書きます。
 - 公開済みは別の事実として扱います。次の節で説明します。
 
 ### 公開済みと数える条件
@@ -46,8 +47,9 @@ agboard --project "My project" result add 12 --actor ai --published v1.0.0 \
 
 - Planned: 2
 - Verified: 2
+- Done without acceptance conditions: 0
 - Remaining: 0
-- Moved to the next version: 1
+- Moved to another version: 1
 - Published (with a publication record): 1 / 2
 
 ### Planned
@@ -64,11 +66,15 @@ agboard --project "My project" result add 12 --actor ai --published v1.0.0 \
   - Source: `agboard show 5`, results 1, history entries 6
   - Result: Offline board cache done [final]
 
+### Done without acceptance conditions
+
+No done task lacks acceptance conditions.
+
 ### Remaining
 
 Nothing remains.
 
-### Moved to the next version
+### Moved to another version
 
 - #4 Merge conflicting edits on reconnect (todo; acceptance 1/2)
   - Source: `agboard show 4`, results 0, history entries 4
