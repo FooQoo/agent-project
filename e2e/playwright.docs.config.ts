@@ -1,6 +1,7 @@
 import os from 'node:os';
 import path from 'node:path';
 import { defineConfig } from '@playwright/test';
+import { siteBase } from './site-base';
 
 // Documentation site tests. They run against the built VitePress site served by
 // `vitepress preview`, so build it first: `pnpm --dir docs build`. This config
@@ -19,12 +20,12 @@ export default defineConfig({
   reporter: [['list']],
   webServer: {
     command: `pnpm --dir ../docs preview --port ${port} --strictPort --host 127.0.0.1`,
-    url: `http://127.0.0.1:${port}/agent-project/`,
+    url: `http://127.0.0.1:${port}${siteBase}`,
     reuseExistingServer: false,
     timeout: 60_000,
   },
   use: {
-    baseURL: `http://127.0.0.1:${port}/agent-project/`,
+    baseURL: `http://127.0.0.1:${port}${siteBase}`,
     timezoneId: 'UTC',
     locale: 'en-US',
     viewport: { width: 1280, height: 900 },

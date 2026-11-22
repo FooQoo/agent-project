@@ -2,9 +2,8 @@ import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 import { languageRedirectScript } from './theme/languageChoice'
 import { writeRedirects } from './redirects'
+import { base, repo } from './repo'
 
-const repo = 'https://github.com/FooQoo/agent-project'
-const base = '/agent-project/'
 
 type Page = { file: string; en: string; ja: string }
 type Group = { en: string; ja: string; pages: Page[] }

@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
 import { readRepoFile, repoRoot, type Lang } from './site';
+import { siteBase } from '../site-base';
 
 // scripts/release/docs-release.mjs checks the published GitHub Releases before the site is
 // built, never reading Cargo.toml. These tests cover the script (no browser) and the built
@@ -174,7 +175,7 @@ for (const lang of langs) {
     const label = lang === 'en' ? 'Release notes' : 'リリースノート';
     await page.goto(`${prefix}guide/`);
     const link = page.locator('.VPNavBarMenu').getByRole('link', { name: label, exact: true });
-    await expect(link).toHaveAttribute('href', `/agent-project/${prefix}releases`);
+    await expect(link).toHaveAttribute('href', `${siteBase}${prefix}releases`);
     await link.click();
     await expect(page.locator('.vp-doc h1')).toHaveText(label);
     await expect(page.locator('.vp-doc h2[id="v1-0-0"]')).toHaveCount(1);

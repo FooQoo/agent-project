@@ -4,7 +4,7 @@
 
 ## ドキュメントサイト
 
-ドキュメントサイトは`docs/`にあり、VitePressでビルドします。利用者向けのガイド（`docs/guide/`）と、この開発者向けの章（`docs/dev/`）があります。英語が正本で、英語を変えるたびに`docs/ja/`の日本語ページも揃えます。`main`から`.github/workflows/docs.yml`でGitHub Pagesに公開し、`docs/**`、`web/**`、デモのスイートを変えるプルリクエストではビルドとテストだけを行います。同じワークフローが、サイトのあとに[デモ](./getting-started/setup.md#demo-build)をビルドし、`web/dist-demo/`を`docs/.vitepress/dist/demo/`へコピーするので、デモは`/agent-project/demo/`で配信されます。続けてその出力に対してデモのスイートを実行し、失敗したときはアップロードの前に止まります。詳しくは[ブラウザのデモ](./concepts/demo.md#手元で確かめる)を参照してください。デモはVitePressのページではないため、ガイドからのリンクには完全なURLを使います。
+ドキュメントサイトは`docs/`にあり、VitePressでビルドします。利用者向けのガイド（`docs/guide/`）と、この開発者向けの章（`docs/dev/`）があります。英語が正本で、英語を変えるたびに`docs/ja/`の日本語ページも揃えます。`main`から`.github/workflows/docs.yml`でGitHub Pagesに公開し、`docs/**`、`web/**`、デモのスイートを変えるプルリクエストではビルドとテストだけを行います。同じワークフローが、サイトのあとに[デモ](./getting-started/setup.md#demo-build)をビルドし、`web/dist-demo/`を`docs/.vitepress/dist/demo/`へコピーするので、デモは`/<リポジトリ名>/demo/`で配信されます。続けてその出力に対してデモのスイートを実行し、失敗したときはアップロードの前に止まります。詳しくは[ブラウザのデモ](./concepts/demo.md#手元で確かめる)を参照してください。デモはVitePressのページではないため、ガイドからのリンクには完全なURLを使います。
 
 ```sh
 pnpm --dir docs install
@@ -16,6 +16,8 @@ pnpm --dir docs preview --port <port>   # ビルドしたサイトを配信
 `docs/`の下を変更したら、コミット前に`pnpm --dir docs build`を実行してください。`docs/`の外にあるリポジトリのファイルへは、GitHubの絶対URLでリンクします。
 
 トップページにはMarkdownの本文がありません。文言は`docs/index.md`と`docs/ja/index.md`のfrontmatterにある`landing`に置き、`docs/.vitepress/theme/LandingPage.vue`がそれを配置します。言語に合ったスクリーンショットを選び、ダークテーマではボードの画像をダーク版に切り替えるのもこのコンポーネントです。文言は両方のファイルで直し、キーをそろえてください。frontmatterのリンクはbuildのリンク切れ検査の対象外なので、サイトのテストがトップページのすべてのリンクを開いて確かめます。配色は`custom.css`の`--lp-*`変数で、アプリの列と待機中の色に合わせています。
+
+サイトとデモはリポジトリ名のパスで配信するので、ベースパスもリポジトリ名に従います。`docs/.vitepress/repo.ts`と`web/demo-build.ts`が`GITHUB_REPOSITORY`（`owner/name`の形。GitHub Actionsが設定します）を読み、手元のビルドでは`FooQoo/agent-project`を既定にします。サイトのテストも`e2e/site-base.ts`で同じように読みます。以下の例は既定の名前を使います。
 
 英語のトップページ(`/agent-project/`)は、ブラウザの中で表示する言語を選びます。
 

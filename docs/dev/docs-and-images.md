@@ -4,7 +4,7 @@ The documentation site lives in `docs/`. This page explains how to preview and b
 
 ## Documentation site
 
-The documentation site lives in `docs/` and is built with VitePress. It has the user guide (`docs/guide/`) and this developer chapter (`docs/dev/`). English is the source language; keep the Japanese pages in `docs/ja/` in step with every English change. It is published to GitHub Pages from `main` by `.github/workflows/docs.yml`; pull requests that change `docs/**`, `web/**`, or the demo suite only build and test it. The same workflow builds the [demo](./getting-started/setup.md#demo-build) after the site and copies `web/dist-demo/` into `docs/.vitepress/dist/demo/`, so it is served at `/agent-project/demo/`. It then runs the demo suite against that output and stops before the upload if the suite fails; see [The browser demo](./concepts/demo.md#check-it-locally). Links to the demo from the guide use its full URL, because the demo is not a VitePress page.
+The documentation site lives in `docs/` and is built with VitePress. It has the user guide (`docs/guide/`) and this developer chapter (`docs/dev/`). English is the source language; keep the Japanese pages in `docs/ja/` in step with every English change. It is published to GitHub Pages from `main` by `.github/workflows/docs.yml`; pull requests that change `docs/**`, `web/**`, or the demo suite only build and test it. The same workflow builds the [demo](./getting-started/setup.md#demo-build) after the site and copies `web/dist-demo/` into `docs/.vitepress/dist/demo/`, so it is served at `/<repository name>/demo/`. It then runs the demo suite against that output and stops before the upload if the suite fails; see [The browser demo](./concepts/demo.md#check-it-locally). Links to the demo from the guide use its full URL, because the demo is not a VitePress page.
 
 ```sh
 pnpm --dir docs install
@@ -16,6 +16,8 @@ pnpm --dir docs preview --port <port>   # serve the built site
 Run `pnpm --dir docs build` before committing any change under `docs/`. Links to repository files outside `docs/` use absolute GitHub URLs.
 
 The home page has no Markdown body. Its copy lives in the `landing` frontmatter of `docs/index.md` and `docs/ja/index.md`, and `docs/.vitepress/theme/LandingPage.vue` lays it out, picks the screenshots for the language, and swaps the board image for its dark version. Edit the copy in both files and keep their keys the same. The build's dead-link check does not see links in frontmatter, so the site tests open every link on the home page instead. Its colors are the `--lp-*` variables in `custom.css`, which follow the app's lane and pending colors.
+
+The site and the demo are served from the repository name, so the base path follows it. `docs/.vitepress/repo.ts` and `web/demo-build.ts` read `GITHUB_REPOSITORY` (`owner/name`, set by GitHub Actions) and default to `FooQoo/agent-project` for local builds, and the site tests read it the same way through `e2e/site-base.ts`. The examples below use the default name.
 
 The English top page (`/agent-project/`) chooses its language in the browser:
 

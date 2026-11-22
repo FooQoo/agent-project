@@ -1,6 +1,6 @@
 # The browser demo
 
-The browser demo is the board running on a static site, with no `agpj serve` behind it. It is published with this documentation site at [`/agent-project/demo/`](https://fooqoo.github.io/agent-project/demo/). The screens are the product's own; only the server is replaced, by the sample-data server running in the page.
+The browser demo is the board running on a static site, with no `agpj serve` behind it. It is published with this documentation site at [`/agent-project/demo/`, where `agent-project` is the repository name](https://fooqoo.github.io/agent-project/demo/). The screens are the product's own; only the server is replaced, by the sample-data server running in the page.
 
 What a visitor sees is the [first-run guide](../../guide/quickstart.md#before-you-start-the-first-run-guide) followed by the ordinary board. This page explains how that is built, how to build it, and how to check it before it is published.
 
