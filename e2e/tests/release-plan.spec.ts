@@ -69,6 +69,15 @@ test('sets the current version from the header, plans a task and plans an epic i
 	await expect(headerMenu(page)).toHaveAccessibleName('Current version: Not set');
 	await expect(card(page, 'Plan A login screen').locator('.ver-tag')).toContainText('v1.8.0');
 	await expect(card(page, 'Plan C session').locator('.ver-tag')).toContainText('Unplanned');
+	// The tag shares the date row: it is at the left of "Updated", and the acceptance chip stays at the right.
+	for (const title of ['Plan A login screen', 'Plan C session']) {
+		const foot = card(page, title).locator('.card__foot');
+		await expect(foot.locator('.ver-tag')).toHaveCount(1);
+		await expect(foot.locator('.card__updated')).toBeVisible();
+		const [tag, updated] = await Promise.all([foot.locator('.ver-tag').boundingBox(), foot.locator('.card__updated').boundingBox()]);
+		expect(tag!.x + tag!.width).toBeLessThanOrEqual(updated!.x);
+		expect(Math.abs(tag!.y + tag!.height / 2 - (updated!.y + updated!.height / 2))).toBeLessThan(6);
+	}
 
 	// Type a new version and confirm: it is listed, but it does not become current.
 	await headerMenu(page).click();
@@ -153,6 +162,11 @@ test('the phone shows the planned version on its cards and offers nothing to set
 	await page.goto('/');
 	await page.getByRole('tab', { name: /Todo/ }).click();
 	await expect(page.locator('.monitor-card', { hasText: 'Plan A login screen' }).locator('.ver-tag')).toContainText('Current');
+	// The tag sits in the date row, at the left of the time.
+	const meta = page.locator('.monitor-card', { hasText: 'Plan A login screen' }).locator('.monitor-card__meta');
+	await expect(meta.locator('.ver-tag')).toHaveCount(1);
+	const [metaTag, metaTime] = await Promise.all([meta.locator('.ver-tag').boundingBox(), meta.locator('.monitor-card__time').boundingBox()]);
+	expect(metaTag!.x + metaTag!.width).toBeLessThanOrEqual(metaTime!.x);
 	await expect(page.getByRole('button', { name: /^Current version:/ })).toHaveCount(0);
 	await page.locator('.monitor-card', { hasText: 'Plan A login screen' }).getByRole('button', { name: 'Plan A login screen' }).click();
 	await expect(page.getByText('Planned version')).toHaveCount(0);

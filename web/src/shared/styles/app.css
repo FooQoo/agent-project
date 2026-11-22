@@ -1031,9 +1031,30 @@ ol {
 /* Keep the updated time and completion progress on opposite sides of the card footer. */
 .card__foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 4px 8px;
+}
+
+/* The version tag and the updated time share the left of the row. A narrow lane cuts the time short instead of wrapping the tag. */
+.card__when {
+  display: flex;
+  align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+
+.card__when .card__updated {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The progress chip stays at the right edge, on its own line when the row is full. */
+.card__foot .acceptance-chip {
+  margin-left: auto;
 }
 
 /* ---- Touch screens: finger-sized controls (44px) ---- */

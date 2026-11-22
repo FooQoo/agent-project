@@ -178,14 +178,19 @@ export function TaskCardView({
         <TaskCardContent task={task} showPendingReason={pending && showPendingReason}>
           {task.epic && renderEpic?.(task.epic)}
         </TaskCardContent>
-        {renderVersion && (
-          <span className="card__plan" data-slot="plan">
-            {renderVersion(task)}
-          </span>
-        )}
         <span className="card__foot">
-          <span className="card__updated">
-            {t('card.updated', { date: formatShort(task.updatedAt) })}
+          <span className="card__when">
+            {renderVersion && (
+              <span className="card__plan" data-slot="plan">
+                {renderVersion(task)}
+              </span>
+            )}
+            <span
+              className="card__updated"
+              title={t('card.updated', { date: formatShort(task.updatedAt) })}
+            >
+              {t('card.updated', { date: formatShort(task.updatedAt) })}
+            </span>
           </span>
           <AcceptanceProgress task={task} />
         </span>
