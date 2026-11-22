@@ -74,10 +74,11 @@ agboard --project "My project" result add 1 --title "First draft" --summary "The
 agboard --project "My project" result add 1 --summary "Top page capture" --file top.png --actor ai
 agboard --project "My project" result add 1 --summary "All screens of the mock" --file 01.png --file 02.png --file 03.png --actor ai
 agboard --project "My project" result add 1 --summary "Finished and checked" --final --actor ai
+agboard --project "My project" result add 1 --published v1.0.0 --link https://example.com/releases/v1.0.0 --summary "Released" --actor ai
 agboard --project "My project" result ls 1
 ```
 
-成果には、タスクごとに次の版番号（1、2、……）が付きます。記録しても列と稼働状態は変わらず、履歴が1件増えます。同じ成果を繰り返し送っても安全です。すでに記録した成果を見つけて`created: false`を返し、何も書きません。`--key`を省くと、内容（種別・要約・リンク・画像のバイト列）で同じ成果かを判断します。`--key <key>`で自分で名前を付けることもでき、別の内容に同じキーを使うと`invalid_value`で失敗します。`--title`を省くと、タイトルは要約の最初の1文を80文字までに切ったものになります（切ったときは最後が`…`）。タイトルは同じ成果かどうかの判断にも含まれるため、別のタイトルで送り直すと、同じ`--key`を使わない限り別の成果になります（同じ`--key`では`invalid_value`で失敗します）。要約とリンクは1〜2,000文字、1つのタスクに残せる成果は100件までです。AIは、人の下書き・アーカイブ済み・完了のタスクには成果を記録できません。ただし、すでに記録した成果の再送は成功します。
+成果には、タスクごとに次の版番号（1、2、……）が付きます。記録しても列と稼働状態は変わらず、履歴が1件増えます。同じ成果を繰り返し送っても安全です。すでに記録した成果を見つけて`created: false`を返し、何も書きません。`--key`を省くと、内容（種別・要約・リンク・画像のバイト列）で同じ成果かを判断します。`--key <key>`で自分で名前を付けることもでき、別の内容に同じキーを使うと`invalid_value`で失敗します。`--title`を省くと、タイトルは要約の最初の1文を80文字までに切ったものになります（切ったときは最後が`…`）。タイトルは同じ成果かどうかの判断にも含まれるため、別のタイトルで送り直すと、同じ`--key`を使わない限り別の成果になります（同じ`--key`では`invalid_value`で失敗します）。要約とリンクは1〜2,000文字、1つのタスクに残せる成果は100件までです。AIは、人の下書き・アーカイブ済み・完了のタスクには成果を記録できません。ただし、すでに記録した成果の再送は成功します。`--published 版名`は公開の記録です。`--link`が必須で、`--final`とは併用できず、版名は`version add`と同じ規則で検証され、要約の先頭に`Published: 版名`の行が付きます。Doneのタスクが受け付ける唯一の成果で、最終成果がすでにあっても、AIでも人でも追加できます。
 
 ### タスクを終える
 

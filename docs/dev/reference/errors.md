@@ -18,7 +18,7 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `epic_is_draft` | A CLI `epic edit`, or `epic edit --waves`, targets a person's draft epic; or a person sends an epic in a person's draft. | 1 | 409 |
 | `human_only` | An agent withdraws a request, or runs `mv <id> todo` on a Backlog card, `epic send`, or `mv ... backlog`. Only a person can. | 1 | 403 |
 | `task_not_draft` | A web edit targets a task that is not a draft. | 1 | 409 |
-| `task_is_done` | An AI change targets a Done task. The first `result add --final` on a Done task with no final result is the one change allowed. | 1 | 409 |
+| `task_is_done` | An AI change targets a Done task. Two changes are allowed: the first `result add --final` on a Done task with no final result, and a publication record (`result add --published`). | 1 | 409 |
 | `acceptance_unmet` | An AI moves a task to Done while a condition is unmet or the frontmatter is invalid. | 2 | n/a |
 | `invalid_state_for_column` | The run state is not valid in that lane (for example Running in Todo). | 1 | 422 |
 | `invalid_state_for_assignee` | A human task is given a run state other than Idle. | 2 | 422 |
