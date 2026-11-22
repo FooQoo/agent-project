@@ -49,6 +49,22 @@
               "interaction": true
             },
             {
+              "id": "pages-board-board--archive-selection",
+              "states": [
+                "Done lane selection",
+                "every card picked",
+                "unpick by click",
+                "archive bar",
+                "selection ends after archive"
+              ],
+              "interaction": true
+            },
+            {
+              "id": "pages-board-board--archive-selection-cancel",
+              "states": ["Done lane selection", "cancel archives nothing"],
+              "interaction": true
+            },
+            {
               "id": "pages-board-board--send-waits-for-confirmation",
               "states": ["send with confirmation", "selection kept"],
               "interaction": true

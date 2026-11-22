@@ -17,7 +17,6 @@ const meta = {
       session: {
         dialog: { kind: 'request' },
         operation: { id: 1, kind: 'create', projectId: project.id, saving: false },
-        bulkArchive: null,
         answerLeases: [],
       },
       operations: { end: fn(), saveStarted: fn(), saveFailed: fn() },
@@ -34,8 +33,6 @@ const meta = {
     onCloseOperation: fn(),
     onSavingChange: fn(),
     onOpenTask: fn(),
-    onConfirmBulkArchive: fn(async () => {}),
-    onCancelBulkArchive: fn(),
   },
 } satisfies Meta<typeof AppDialogs>;
 export default meta;

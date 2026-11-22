@@ -110,6 +110,14 @@ export const commonJa = {
     loadError: 'アーカイブを読み込めませんでした。',
     refreshError: 'アーカイブを更新できませんでした。',
     bulkTitle: '完了タスクをアーカイブ',
+    selection: {
+      barLabel: '選んだ完了タスクをアーカイブする',
+      selected: '{{count}} 枚を選択中',
+      submit: 'アーカイブ ({{count}})',
+      failed: 'アーカイブできませんでした。何も変更していません。',
+      conflict:
+        'タスクの状態が変わったため、1件もアーカイブされませんでした。選び直してもう一度お試しください。',
+    },
     bulkDescription: '{{projectName}} の完了タスク{{count}}件をアーカイブします。',
     bulkTargets: 'アーカイブ対象 {{count}}件',
     bulkRetentionNote: '本文・画像・履歴は保持され、アーカイブ一覧から復元できます。',

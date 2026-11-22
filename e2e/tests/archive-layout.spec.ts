@@ -9,7 +9,7 @@ test.afterEach(() => resetPreferences());
 for (const mode of ["light", "dark"] as const) {
 	for (const locale of ["en", "ja"] as const) {
 		for (const width of [960, 1280, 2048]) {
-			test(`archive layout and confirmation at ${width}px, ${locale}, ${mode}`, async ({
+			test(`archive layout and selection at ${width}px, ${locale}, ${mode}`, async ({
 				page,
 			}, testInfo) => {
 				resetBoard(mainProject);
@@ -156,226 +156,51 @@ for (const mode of ["light", "dark"] as const) {
 					});
 				await page.locator(".header__back").click();
 
+				// The Done lane's archive button starts the selection with every done card picked.
 				const trigger = page.locator(".lane-header__archive");
 				await trigger.click();
-				const dialog = page.getByRole("dialog");
-				await expect(dialog).toBeVisible();
-				await expect(dialog).toHaveAttribute("data-slot", "dialog-content");
-				await expect(dialog.getByRole("row")).toHaveCount(25);
-				for (const row of await dialog.getByRole("row").all()) {
-					const idCell = row.locator("th, td").first();
-					const idLayout = await idCell.evaluate((element) => ({
-						whiteSpace: getComputedStyle(element).whiteSpace,
-						clientWidth: element.clientWidth,
-						scrollWidth: element.scrollWidth,
-					}));
-					expect(idLayout.whiteSpace).toBe("nowrap");
-					expect(idLayout.scrollWidth).toBeLessThanOrEqual(
-						idLayout.clientWidth,
-					);
-				}
-				await expect(dialog.getByText("agent-board")).toBeVisible();
-				await expect(
-					dialog.getByText(
+				const bar = page.getByRole("region", {
+					name:
 						locale === "ja"
-							? "本文・画像・履歴は保持され、アーカイブ一覧から復元できます。"
-							: "Descriptions, images, and history are kept. You can restore tasks from the archive.",
-					),
-				).toBeVisible();
-				await expect(dialog.locator('[data-slot="dialog-close"]')).toHaveCount(
-					0,
+							? "選んだ完了タスクをアーカイブする"
+							: "Archive the picked completed tasks",
+				});
+				await expect(bar).toBeVisible();
+				await expect(bar.getByRole("status")).toHaveText(
+					locale === "ja" ? "24 枚を選択中" : "24 selected",
 				);
-				const cancel = dialog.getByRole("button", {
-					name: locale === "ja" ? "キャンセル" : "Cancel",
+				const laneBounds = (await page
+					.locator('.lane[data-column="done"]')
+					.boundingBox())!;
+				const barBounds = (await bar.boundingBox())!;
+				expect(barBounds.x).toBeGreaterThanOrEqual(laneBounds.x - 1);
+				expect(barBounds.x + barBounds.width).toBeLessThanOrEqual(
+					laneBounds.x + laneBounds.width + 1,
+				);
+				const cancel = bar.getByRole("button", {
+					name: locale === "ja" ? "やめる" : "Cancel",
 					exact: true,
 				});
-				const submit = dialog.getByRole("button", {
-					name: /archive 24 tasks|24件をアーカイブ/i,
+				const submit = bar.getByRole("button", {
+					name: /archive \(24\)|アーカイブ \(24\)/i,
 				});
-				const tableWrap = dialog.locator(".bulk-archive__table-wrap");
-				await expect(cancel).toBeFocused();
-				const dialogBounds = (await dialog.boundingBox())!;
-				expect(dialogBounds.x).toBeGreaterThanOrEqual(15);
-				expect(dialogBounds.x + dialogBounds.width).toBeLessThanOrEqual(
-					width - 15,
-				);
-				expect(dialogBounds.y).toBeGreaterThanOrEqual(15);
-				expect(dialogBounds.y + dialogBounds.height).toBeLessThanOrEqual(
-					page.viewportSize()!.height - 15,
-				);
-				expect(
-					await dialog
-						.locator(".bulk-archive__table-wrap")
-						.evaluate((element) => element.scrollHeight > element.clientHeight),
-				).toBe(true);
-				await dialog.getByRole("row").last().scrollIntoViewIfNeeded();
-				await expect(cancel).toBeVisible();
-				expect(
-					await page
-						.locator('[data-slot="dialog-overlay"]')
-						.evaluate((element) => getComputedStyle(element).backgroundColor),
-				).toBe("rgba(15, 23, 42, 0.85)"); // the one scrim every dialog shares (tokens.css)
-				await page.screenshot({
-					path: testInfo.outputPath("03-bulk-archive.png"),
-				});
-				await page.keyboard.press("Tab");
-				await expect(submit).toBeFocused();
-				await page.keyboard.press("Tab");
-				await expect(tableWrap).toBeFocused();
-				await page.keyboard.press("Tab");
-				await expect(cancel).toBeFocused();
-				await page.keyboard.press("Shift+Tab");
-				await expect(tableWrap).toBeFocused();
-				await page.keyboard.press("Shift+Tab");
-				await expect(submit).toBeFocused();
-				await page.keyboard.press("Shift+Tab");
-				await expect(cancel).toBeFocused();
-				await page.keyboard.press("Escape");
-				await expect(dialog).toHaveCount(0);
-				await expect(trigger).toBeFocused();
+				// The two buttons are the same size; the fill and the outline tell them apart.
+				const [cancelBox, submitBox] = [
+					(await cancel.boundingBox())!,
+					(await submit.boundingBox())!,
+				];
+				expect(Math.abs(cancelBox.width - submitBox.width)).toBeLessThan(2);
+				expect(Math.abs(cancelBox.height - submitBox.height)).toBeLessThan(2);
+				if (width === 1280)
+					await page.screenshot({
+						path: testInfo.outputPath("03-archive-selection.png"),
+					});
+				await cancel.click();
+				await expect(bar).toHaveCount(0);
 			});
 		}
 	}
 }
-
-for (const mode of ["light", "dark"] as const) {
-	for (const locale of ["en", "ja"] as const) {
-		test(`bulk archive fits 100 long targets at 360px, ${locale}, ${mode}`, async ({
-			page,
-		}, testInfo) => {
-			resetBoard(mainProject);
-			// Below 768px the board shows the phone screen, which has no lane archive button: open the dialog first, then narrow the window.
-			await page.setViewportSize({ width: 1280, height: 800 });
-			await setPreferences({ locale, theme: { mode, accent: "blue" } });
-			await page.route("**/api/projects/*/summary", async (route) => {
-				const response = await route.fetch();
-				const summary = await response.json();
-				const task = summary.tasks.find(
-					(item: { taskStatus: string }) => item.taskStatus === "done",
-				);
-				summary.tasks = Array.from({ length: 100 }, (_, index) => ({
-					...task,
-					id: index + 1001,
-					title:
-						locale === "ja"
-							? `検証対象タスク${index + 1}：アーカイブ確認用のとても長い日本語タイトルと保持説明`
-							: `Verification task ${index + 1}: a deliberately long English title for archive retention`,
-					assignee: index % 2 === 0 ? "ai" : "human",
-				}));
-				await route.fulfill({ json: summary });
-			});
-			await page.goto("/");
-			const trigger = page.locator(".lane-header__archive");
-			await expect(trigger).toBeEnabled();
-			await trigger.click();
-			const dialog = page.getByRole("dialog");
-			await expect(dialog).toBeVisible();
-			await page.setViewportSize({ width: 360, height: 800 });
-			await dialog.evaluate((element) =>
-				Promise.all(element.getAnimations().map((animation) => animation.finished)),
-			);
-			await expect(dialog.getByRole("row")).toHaveCount(101);
-			await expect(
-				dialog.getByText(
-					locale === "ja"
-						? "本文・画像・履歴は保持され、アーカイブ一覧から復元できます。"
-						: "Descriptions, images, and history are kept. You can restore tasks from the archive.",
-				),
-			).toBeVisible();
-			await expect(dialog.getByRole("button", { name: /100/ })).toBeVisible();
-			await expect(dialog.locator('[data-slot="dialog-close"]')).toHaveCount(0);
-			const cancel = dialog.getByRole("button", {
-				name: locale === "ja" ? "キャンセル" : "Cancel",
-				exact: true,
-			});
-			await expect(cancel).toBeFocused();
-			const bounds = (await dialog.boundingBox())!;
-			expect(bounds.x).toBeGreaterThanOrEqual(15);
-			expect(bounds.x + bounds.width).toBeLessThanOrEqual(345);
-			expect(bounds.y).toBeGreaterThanOrEqual(15);
-			expect(bounds.y + bounds.height).toBeLessThanOrEqual(785);
-			const tableWrap = dialog.locator(".bulk-archive__table-wrap");
-			const firstId = dialog.getByRole("row").nth(1).locator("td").first();
-			await expect(firstId).toHaveCSS("white-space", "nowrap");
-			expect(
-				await firstId.evaluate(
-					(element) => element.scrollWidth <= element.clientWidth,
-				),
-			).toBe(true);
-			const geometry = await tableWrap.evaluate((element) => ({
-				clientHeight: element.clientHeight,
-				scrollHeight: element.scrollHeight,
-				clientWidth: element.clientWidth,
-				scrollWidth: element.scrollWidth,
-			}));
-			expect(geometry.scrollHeight).toBeGreaterThan(geometry.clientHeight);
-			expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth);
-			await page.waitForTimeout(250);
-			await page.screenshot({
-				path: testInfo.outputPath("100-targets-360px.png"),
-			});
-			await tableWrap.focus();
-			await expect(tableWrap).toBeFocused();
-			await page.keyboard.press("PageDown");
-			if ((await tableWrap.evaluate((element) => element.scrollTop)) === 0)
-				await page.keyboard.press("ArrowDown");
-			expect(
-				await tableWrap.evaluate((element) => element.scrollTop),
-			).toBeGreaterThan(0);
-			await dialog.getByRole("row").last().scrollIntoViewIfNeeded();
-			await expect(cancel).toBeVisible();
-			await expect(
-				dialog.getByText(
-					locale === "ja"
-						? "本文・画像・履歴は保持され、アーカイブ一覧から復元できます。"
-						: "Descriptions, images, and history are kept. You can restore tasks from the archive.",
-				),
-			).toBeVisible();
-			await page.keyboard.press("Escape");
-			await expect(dialog).toHaveCount(0);
-			// The lane's archive button is not on the phone screen, so focus has no button to return to here;
-			// the wider layouts above check that focus returns to it.
-		});
-	}
-}
-
-test("bulk archive Pen baseline shows two fixed tasks and retention copy", async ({
-	page,
-}, testInfo) => {
-	resetBoard(mainProject);
-	await page.setViewportSize({ width: 1280, height: 900 });
-	await setPreferences({ locale: "ja", theme: { mode: "light", accent: "blue" } });
-	await page.goto("/");
-	await page.getByRole("button", { name: /Initialize the board/ }).click();
-	const trigger = page.locator(".lane-header__archive");
-	await trigger.click();
-	const dialog = page.getByRole("dialog");
-	await expect(dialog.getByRole("row")).toHaveCount(3);
-	const rows = dialog.getByRole("row");
-	await expect(rows.nth(1).locator("td")).toHaveText([
-		"#9",
-		"Return the task list as JSON",
-		"AI",
-	]);
-	await expect(rows.nth(2).locator("td")).toHaveText([
-		"#8",
-		"Initialize the board",
-		"AI",
-	]);
-	await expect(
-		dialog.getByText("agent-board の完了タスク2件をアーカイブします。"),
-	).toBeVisible();
-	await expect(
-		dialog.getByText(
-			"本文・画像・履歴は保持され、アーカイブ一覧から復元できます。",
-		),
-	).toBeVisible();
-	await expect(dialog.locator('[data-slot="dialog-close"]')).toHaveCount(0);
-	await page.waitForTimeout(250);
-	await page.screenshot({
-		path: testInfo.outputPath("pen-jNGnc-baseline.png"),
-	});
-});
 
 test("archive empty state matches the Pen guidance and shared detail placeholder", async ({
 	page,

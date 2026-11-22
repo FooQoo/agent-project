@@ -157,7 +157,8 @@ export function BoardWorkspace({
             onOpenEpic={actions.onOpenEpic}
             onMove={actions.onMove}
             onReorder={actions.onReorder}
-            onArchiveDone={actions.onArchiveDone}
+            onArchiveSelected={actions.onArchiveSelected}
+            archiveBusy={actions.archiveBusy}
             onSend={actions.onSend}
             onMoveBacklog={actions.onMoveBacklog}
             sendBusy={actions.sendBusy}

@@ -40,7 +40,7 @@ export interface MonitorLanesScreenProps
   /** The writes. A move is made at once; an archive is asked for only after the person confirmed. */
   onMove: (item: MonitorTask, target: ColumnName) => Promise<void>;
   onArchive: (item: MonitorTask) => Promise<boolean>;
-  onBulkArchive: () => Promise<void>;
+  onArchiveSelected: (ids: number[]) => Promise<boolean>;
   /** The archive list the bar's Archive item opens, and the write that restores from it. */
   archive?: ArchiveSheetData;
   onRestore?: (taskId: number) => Promise<void>;
@@ -65,7 +65,7 @@ export function MonitorLanesScreen({
   onOpenDetail,
   onMove,
   onArchive,
-  onBulkArchive,
+  onArchiveSelected,
   archive,
   onRestore,
   previewRevealed,
@@ -120,10 +120,7 @@ export function MonitorLanesScreen({
         onMove={(item, target) => void onMove(item, target)}
         onArchive={(item) => setPending({ kind: 'archive', item })}
         onOpenDetail={onOpenDetail}
-        onBulkArchive={() => {
-          panel.close();
-          setPending({ kind: 'bulk' });
-        }}
+        onArchiveSelected={onArchiveSelected}
         onOpenAnswer={
           messagesApi
             ? (item) =>
@@ -166,7 +163,6 @@ export function MonitorLanesScreen({
       <MonitorLaneDialogs
         pending={pending}
         projectName={projectName}
-        doneItems={lanes.done}
         onCancel={close}
         archive={archive}
         onRestore={onRestore}
@@ -174,10 +170,6 @@ export function MonitorLanesScreen({
           const ok = await onArchive(item);
           if (ok) close();
           return ok;
-        }}
-        onBulkArchive={async () => {
-          await onBulkArchive();
-          close();
         }}
       />
     </main>

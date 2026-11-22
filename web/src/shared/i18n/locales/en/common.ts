@@ -110,6 +110,13 @@ export const commonEn = {
     loadError: 'Could not load the archive.',
     refreshError: 'Could not refresh the archive.',
     bulkTitle: 'Archive completed tasks',
+    selection: {
+      barLabel: 'Archive the picked completed tasks',
+      selected: '{{count}} selected',
+      submit: 'Archive ({{count}})',
+      failed: 'Could not archive. Nothing was changed.',
+      conflict: 'Tasks changed, so none were archived. Pick the cards again and try once more.',
+    },
     bulkDescription: 'Archive {{count}} completed tasks in {{projectName}}.',
     bulkTargets: '{{count}} tasks to archive',
     bulkRetentionNote:

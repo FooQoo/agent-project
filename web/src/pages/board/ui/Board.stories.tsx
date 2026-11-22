@@ -103,6 +103,47 @@ export const SelectionAndSend: Story = {
   },
 };
 
+/** The Done lane's archive button starts a selection with every done card picked; the bar archives the picked ones. */
+export const ArchiveSelection: Story = {
+  args: {
+    tasks: [
+      ...(meta.args.tasks ?? []),
+      makeTask({ id: 24, title: 'Release notes', taskStatus: 'done' }),
+    ],
+    onArchiveSelected: fn(async () => true),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Archive completed tasks' }));
+    await expect(canvas.getByRole('checkbox', { name: 'Select #23' })).toBeChecked();
+    await expect(canvas.getByRole('checkbox', { name: 'Select #24' })).toBeChecked();
+    await expect(canvas.getByText('2 selected')).toBeVisible();
+    // A click on a card unpicks it; the count follows.
+    await userEvent.click(canvas.getByRole('button', { name: /Release notes/ }));
+    await expect(canvas.getByRole('checkbox', { name: 'Select #24' })).not.toBeChecked();
+    const bar = canvas.getByRole('region', { name: 'Archive the picked completed tasks' });
+    const cancel = within(bar).getByRole('button', { name: 'Cancel' });
+    const submit = within(bar).getByRole('button', { name: 'Archive (1)' });
+    await expect(Math.abs(cancel.offsetWidth - submit.offsetWidth)).toBeLessThan(2);
+    await expect(Math.abs(cancel.offsetHeight - submit.offsetHeight)).toBeLessThan(2);
+    await userEvent.click(submit);
+    await expect(args.onArchiveSelected).toHaveBeenCalledWith([23]);
+    await expect(canvas.queryByRole('checkbox')).toBeNull();
+  },
+};
+
+/** Cancel leaves the selection mode and archives nothing. */
+export const ArchiveSelectionCancel: Story = {
+  args: { onArchiveSelected: fn(async () => true) },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Archive completed tasks' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
+    await expect(args.onArchiveSelected).not.toHaveBeenCalled();
+    await expect(canvas.queryByRole('checkbox')).toBeNull();
+  },
+};
+
 /** A send that needs a confirmation keeps the selection until the screen answers. */
 export const SendWaitsForConfirmation: Story = {
   args: { tasks: [...backlogTasks, ...(meta.args.tasks ?? [])], onSend: fn(() => false) },

@@ -1,9 +1,9 @@
-import { SendIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { useDrawerDrag } from '@/shared/ui/use-drawer-drag';
 import '../../shared/styles/backlog.css';
+import { SELECTION_PARTS, type SelectionAction } from './selectionAction';
 
 /** The longest the sheet's slide down takes, in ms; a sheet whose animation never reports its end is removed after it. */
 const EXIT_FALLBACK_MS = 400;
@@ -20,12 +20,15 @@ const HEIGHT_VAR = '--backlog-sheet-height';
  * It shares the sheet's look, slide animation and pull-down gesture (`useDrawerDrag`).
  */
 export function BacklogSheet({
+  action = 'send',
   open,
   count,
   busy,
   onCancel,
   onSend,
 }: {
+  /** `send`: the Backlog's send to Todo; `archive`: the Done lane's archive. */
+  action?: SelectionAction;
   open: boolean;
   count: number;
   busy?: boolean;
@@ -34,6 +37,7 @@ export function BacklogSheet({
   onSend: () => void;
 }) {
   const { t } = useTranslation();
+  const parts = SELECTION_PARTS[action];
   const popup = useRef<HTMLElement>(null);
   const noBackdrop = useRef<HTMLElement>(null);
   const handle = useDrawerDrag({
@@ -74,7 +78,7 @@ export function BacklogSheet({
       ref={popup}
       className="backlog-sheet"
       data-state={open ? 'open' : 'closed'}
-      aria-label={t('backlog.barLabel')}
+      aria-label={t(parts.barLabel)}
       onAnimationEnd={(event) => {
         if (event.target === popup.current && !open) setMounted(false);
       }}
@@ -99,14 +103,14 @@ export function BacklogSheet({
       </div>
       <div className="backlog-sheet__actions">
         <span className="sr-only" role="status">
-          {t('backlog.selected', { count })}
+          {t(parts.selected, { count })}
         </span>
         <Button type="button" variant="outline" disabled={busy} onClick={onCancel}>
           <span className="backlog-sheet__label">{t('backlog.cancel')}</span>
         </Button>
         <Button type="button" disabled={busy || count === 0} onClick={onSend}>
-          <SendIcon aria-hidden="true" />
-          <span className="backlog-sheet__label">{t('backlog.send', { count })}</span>
+          <parts.Icon aria-hidden="true" />
+          <span className="backlog-sheet__label">{t(parts.submit, { count })}</span>
         </Button>
       </div>
     </section>

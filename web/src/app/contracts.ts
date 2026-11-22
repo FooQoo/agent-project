@@ -134,7 +134,9 @@ export interface AppWorkspaceActions {
   sendBusy: boolean;
   /** Sends the Backlog cards of an epic to Todo, in one save. */
   onSendEpic: (epicId: string) => boolean;
-  onArchiveDone: () => void;
+  /** Archives the picked Done cards in one save. Resolves with whether every card was archived. */
+  onArchiveSelected: (ids: number[]) => Promise<boolean>;
+  archiveBusy: boolean;
   onCloseEpic: () => void;
   onEditEpic: () => void;
   onDeleteEpic: () => Promise<void>;
@@ -153,7 +155,5 @@ export interface AppDialogsProps {
   onCloseOperation: () => void;
   onSavingChange: (saving: boolean) => void;
   onOpenTask: (taskId: number) => void;
-  onConfirmBulkArchive: () => Promise<void>;
-  onCancelBulkArchive: () => void;
   epicApi?: EpicApi;
 }

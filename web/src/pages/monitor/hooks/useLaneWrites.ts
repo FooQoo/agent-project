@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnName, ProjectId } from '../../../shared/api/contracts';
 import { moveFailureNotice } from '../../../features/tasks/api/lifecycle';
+import { useArchiveSelected } from '../../../features/tasks/archive/useArchiveSelected';
 import { useWrite } from '../../../shared/data/react/use-write';
 import { useLaneMove } from '../../../features/tasks/useLaneMove';
 import type { MonitorTask, MonitorWrites } from '../contracts';
@@ -9,21 +10,19 @@ import type { useLaneOverlay } from './useLaneOverlay';
 
 /**
  * What the lanes of the phone write: a move at once, an archive of one card, and the archive of the
- * whole Done lane. A move stays on top of the lanes while its save is in flight and until a newer read
+ * Done cards a person picked. A move stays on top of the lanes while its save is in flight and until a newer read
  * shows the project, and an archive until a read shows the card gone. A refused move says so in a notice.
  */
 export function useLaneWrites({
   writes,
   projectId,
   overlay,
-  doneItems,
   closePending,
   onWritten,
 }: {
   writes: MonitorWrites | undefined;
   projectId: string;
   overlay: ReturnType<typeof useLaneOverlay>;
-  doneItems: readonly MonitorTask[];
   closePending: () => void;
   onWritten?: () => void;
 }) {
@@ -64,17 +63,14 @@ export function useLaneWrites({
       return false;
     }
   };
-  // The Done lane's archive reads the project again whether or not it went through.
-  const archiveDoneLane = useWrite<unknown, number[]>({
-    mutationKey: ['phone-archive-done'],
-    mutationFn: (ids) =>
-      writes ? writes.archiveDone(projectId as ProjectId, ids) : Promise.resolve(),
-    onSuccess: (_result, ids) => overlay.hide(ids),
-    onSettled: () => onWritten?.(),
+  // The picked Done cards are archived in one save; the project is read again whether or not it went through.
+  const archiveSelected = useArchiveSelected({
+    write: async (ids) => {
+      if (!writes) return;
+      await writes.archiveDone(projectId as ProjectId, ids);
+      overlay.hide(ids);
+    },
+    onSettled: onWritten,
   });
-  const archiveAll = async () => {
-    await archiveDoneLane.mutateAsync(doneItems.map((item) => item.task.id));
-    closePending();
-  };
-  return { moveNow, archiveOne, archiveAll, notice, dismissNotice };
+  return { moveNow, archiveOne, archiveSelected, notice, dismissNotice };
 }

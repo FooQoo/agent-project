@@ -118,7 +118,6 @@ describe('sessionReducer: operations hold the switch', () => {
         viewMode: 'board',
         archiveSelectedId: null,
         epicSelectedId: null,
-        bulkArchive: null,
         dialog: null,
         operation: null,
         pendingTarget: null,
@@ -242,20 +241,7 @@ describe('sessionReducer: archive view state', () => {
       activeProjectId: B,
       viewMode: 'board',
       archiveSelectedId: null,
-      bulkArchive: null,
     });
-  });
-
-  it('keeps the bulk archive target snapshot attached to its project', () => {
-    const targets = [makeTask({ id: 8 })];
-    const state = run(
-      initSession(A),
-      { type: 'OPEN_OPERATION', operationId: 1, kind: 'archive-done', projectId: A },
-      { type: 'OPEN_BULK_ARCHIVE', projectId: A, targets },
-    );
-    targets.push(makeTask({ id: 9 }));
-    expect(state.bulkArchive?.projectId).toBe(A);
-    expect(state.bulkArchive?.targets.map((task) => task.id)).toEqual([8]);
   });
 });
 

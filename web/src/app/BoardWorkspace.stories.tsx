@@ -276,7 +276,7 @@ const meta = {
         <WithMessages {...args} />
       </div>,
     ),
-  args: { model: makeModel(), actions: { onArchiveDone: () => {} } as never },
+  args: { model: makeModel(), actions: { onArchiveSelected: async () => true } as never },
 } satisfies Meta<typeof BoardWorkspace>;
 export default meta;
 type Story = StoryObj<typeof meta>;

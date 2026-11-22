@@ -17,6 +17,21 @@
               "id": "backlog-send--bar-with-nothing-picked",
               "states": ["nothing picked", "send disabled"],
               "interaction": true
+            },
+            {
+              "id": "backlog-send--archive-bar",
+              "states": ["Done lane archive", "equal-size buttons", "archive", "cancel"],
+              "interaction": true
+            },
+            {
+              "id": "backlog-send--archive-bar-with-nothing-picked",
+              "states": ["Done lane archive", "nothing picked", "archive disabled"],
+              "interaction": true
+            },
+            {
+              "id": "backlog-send--archive-bar-japanese",
+              "states": ["Done lane archive", "Japanese"],
+              "interaction": true
             }
           ]
         }
@@ -37,6 +52,16 @@
                 "send",
                 "cancel"
               ],
+              "interaction": true
+            },
+            {
+              "id": "backlog-send--archive-drawer",
+              "states": ["Done lane archive", "equal-size buttons", "archive", "cancel"],
+              "interaction": true
+            },
+            {
+              "id": "backlog-send--archive-drawer-japanese",
+              "states": ["Done lane archive", "Japanese"],
               "interaction": true
             },
             {
