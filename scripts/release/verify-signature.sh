@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verify the Developer ID signature of an agboard binary and describe it.
+# Verify the Developer ID signature of an agpj binary and describe it.
 #
 # Usage: verify-signature.sh <binary> <target> [--json FILE]
 #

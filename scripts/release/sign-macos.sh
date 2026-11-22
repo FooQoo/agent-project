@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sign the agboard binary with a Developer ID Application certificate held in
+# Sign the agpj binary with a Developer ID Application certificate held in
 # a temporary keychain that lives only for the CI job.
 #
 # Usage:
@@ -38,7 +38,7 @@ IDENTIFIER=io.github.FooQoo.agent-project.agpj
 die() { echo "sign-macos: $*" >&2; exit "${2:-1}"; }
 need() { [ -n "${!1:-}" ] || die "required setting $1 is not set" 2; }
 
-state_dir() { need RUNNER_TEMP; printf '%s/agboard-signing' "$RUNNER_TEMP"; }
+state_dir() { need RUNNER_TEMP; printf '%s/agpj-signing' "$RUNNER_TEMP"; }
 
 cleanup() {
   local dir kc
@@ -71,7 +71,7 @@ prepare() {
   trap 'cleanup' EXIT
 
   security list-keychains -d user | sed 's/^[[:space:]]*"\{0,1\}//; s/"\{0,1\}$//' > "$dir/search-list"
-  kc="$dir/agboard-signing.keychain-db"
+  kc="$dir/agpj-signing.keychain-db"
   printf '%s' "$kc" > "$dir/keychain-path"
   # The keychain password is random per job and never stored as a Secret.
   pw=$(openssl rand -hex 24)
@@ -87,7 +87,7 @@ prepare() {
   local onetime
   onetime=$(openssl rand -hex 24)
   [ -n "$onetime" ] || die "could not make a one-time passphrase" 1
-  export AGBOARD_P12_ONETIME=$onetime
+  export AGPJ_P12_ONETIME=$onetime
   : > "$dir/key.pem"
   chmod 600 "$dir/key.pem"
   if ! openssl pkcs12 -in "$dir/cert.p12" -nodes -passin env:MACOS_CERT_PASSWORD -out "$dir/key.pem" 2>/dev/null \
@@ -95,7 +95,7 @@ prepare() {
     die "the certificate could not be decrypted with the given password" 2
   fi
   rm -f "$dir/cert.p12"
-  openssl pkcs12 -export -in "$dir/key.pem" -out "$dir/wrapped.p12" -passout env:AGBOARD_P12_ONETIME \
+  openssl pkcs12 -export -in "$dir/key.pem" -out "$dir/wrapped.p12" -passout env:AGPJ_P12_ONETIME \
     -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1 2>/dev/null \
     || die "the certificate could not be re-wrapped" 2
   rm -f "$dir/key.pem"
@@ -106,7 +106,7 @@ prepare() {
   security import "$dir/wrapped.p12" -k "$kc" -P "$onetime" -T /usr/bin/codesign >/dev/null \
     || die "the certificate could not be imported" 2
   rm -f "$dir/wrapped.p12"
-  unset AGBOARD_P12_ONETIME
+  unset AGPJ_P12_ONETIME
   security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$pw" "$kc" >/dev/null
   # Search the job keychain first, then whatever was there before.
   local list=()

@@ -6,7 +6,7 @@ Usage: release-gate.py --evidence DIR --version X.Y.Z --out DIR
 
 DIR holds one sub-directory per target (aarch64-apple-darwin and
 x86_64-apple-darwin) with signature.json, notary.json, and the final archive
-agboard-<version>-<target>.tar.gz. The gate passes only when, for BOTH CPUs:
+agpj-<version>-<target>.tar.gz. The gate passes only when, for BOTH CPUs:
 
   * the signature record names the fixed identifier, a Developer ID
     Application authority, Hardened Runtime and a secure timestamp;
@@ -14,7 +14,7 @@ agboard-<version>-<target>.tar.gz. The gate passes only when, for BOTH CPUs:
   * the notary record is status Accepted with a submission ID;
   * the SHA-256 of the signed binary, of the notarized binary, and of the
     binary inside the final archive are the same bytes;
-  * the archive holds exactly agboard, LICENSE and THIRD_PARTY_NOTICES.txt;
+  * the archive holds exactly agpj, LICENSE and THIRD_PARTY_NOTICES.txt;
   * the run SHA matches --sha when the record carries one.
 
 Any missing piece, including a whole CPU, fails the gate: there is no unsigned
@@ -32,7 +32,7 @@ from pathlib import Path
 
 IDENTIFIER = "io.github.FooQoo.agent-project.agpj"
 TARGETS = ("aarch64-apple-darwin", "x86_64-apple-darwin")
-MEMBERS = {"agboard", "LICENSE", "THIRD_PARTY_NOTICES.txt"}
+MEMBERS = {"agpj", "LICENSE", "THIRD_PARTY_NOTICES.txt"}
 
 
 def load(path, problems, label):
@@ -52,7 +52,7 @@ def archive_binary_sha(path, problems, label):
             if names != MEMBERS:
                 problems.append(f"{label}: archive holds {sorted(names)}, expected {sorted(MEMBERS)}")
                 return None
-            return hashlib.sha256(tar.extractfile("agboard").read()).hexdigest()
+            return hashlib.sha256(tar.extractfile("agpj").read()).hexdigest()
     except (tarfile.TarError, OSError):
         problems.append(f"{label}: the archive cannot be read")
         return None
@@ -61,7 +61,7 @@ def archive_binary_sha(path, problems, label):
 def check_target(evidence, target, version, expect_sha, problems):
     label = target
     directory = evidence / target
-    archive = directory / f"agboard-{version}-{target}.tar.gz"
+    archive = directory / f"agpj-{version}-{target}.tar.gz"
     sig = load(directory / "signature.json", problems, label)
     notary = load(directory / "notary.json", problems, label)
     if not archive.is_file():

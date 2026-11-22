@@ -44,13 +44,13 @@ def lock_version(root, name):
 
 
 PLUGIN_FILES = (
-    ("plugins/agent-board/.codex-plugin/plugin.json", lambda d: [d["version"]]),
-    ("plugins/agent-board/.claude-plugin/plugin.json", lambda d: [d["version"]]),
+    ("plugins/agent-project/.codex-plugin/plugin.json", lambda d: [d["version"]]),
+    ("plugins/agent-project/.claude-plugin/plugin.json", lambda d: [d["version"]]),
     (".claude-plugin/marketplace.json", lambda d: [p["version"] for p in d["plugins"]]),
 )
 HOOK_FILES = (
-    ("plugins/agent-board/hooks/claude.json", "claude"),
-    ("plugins/agent-board/hooks/codex.json", "codex"),
+    ("plugins/agent-project/hooks/claude.json", "claude"),
+    ("plugins/agent-project/hooks/codex.json", "codex"),
 )
 
 
@@ -69,7 +69,7 @@ def check_plugin(root, version):
 
 
 def check_assets(directory, version):
-    expected = {f"agboard-{version}-{t}.tar.gz" for t in ("aarch64-apple-darwin", "x86_64-apple-darwin")}
+    expected = {f"agpj-{version}-{t}.tar.gz" for t in ("aarch64-apple-darwin", "x86_64-apple-darwin")}
     found = {p.name for p in Path(directory).iterdir()} if Path(directory).is_dir() else set()
     if found != expected:
         fail(f"assets in {directory} differ: missing {sorted(expected - found)}, unexpected {sorted(found - expected)}")

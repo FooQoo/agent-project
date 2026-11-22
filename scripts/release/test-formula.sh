@@ -4,7 +4,7 @@
 # Usage: test-formula.sh
 #
 # Runs the generator self-test, renders the fixture SHA256SUMS and compares the
-# result byte for byte with tests/fixtures/release/agboard.rb.expected, checks
+# result byte for byte with tests/fixtures/release/agpj.rb.expected, checks
 # the Ruby syntax, then builds throwaway archives and replays the Formula's
 # install and test steps on the host CPU: the binary must come out of the
 # install byte-identical, LICENSE and THIRD_PARTY_NOTICES.txt must land in
@@ -35,7 +35,7 @@ python3 -I "$render" --self-test
 
 # 2. Fixture render: exact output and Ruby syntax.
 python3 -I "$render" --tag v1.0.0 --sums "$fixtures/SHA256SUMS" --out "$work/fixture.rb"
-cmp "$work/fixture.rb" "$fixtures/agboard.rb.expected" || fail "fixture render differs from agboard.rb.expected"
+cmp "$work/fixture.rb" "$fixtures/agpj.rb.expected" || fail "fixture render differs from agpj.rb.expected"
 "$ruby_bin" -c "$work/fixture.rb" >/dev/null || fail "ruby -c rejected the rendered Formula"
 # `brew style` refuses a Formula that is not readable by everyone.
 mode=$(stat -c %a "$work/fixture.rb" 2>/dev/null || stat -f %Lp "$work/fixture.rb")
@@ -62,26 +62,26 @@ other=x86_64-apple-darwin
 stage="$work/stage"
 mkdir -p "$stage" "$work/assets"
 if [ -n "${AGPJ_BIN:-}" ]; then
-  cp "$AGPJ_BIN" "$stage/agboard"
+  cp "$AGPJ_BIN" "$stage/agpj"
 else
-  cat > "$stage/agboard" <<'STUB'
+  cat > "$stage/agpj" <<'STUB'
 #!/bin/sh
 # Stand-in for the real binary: answers what the Formula test block asks.
 case "$1" in
-  --version) echo "agboard 1.0.0" ;;
+  --version) echo "agpj 1.0.0" ;;
   project) [ "$2" = create ] && mkdir -p "${AGPJ_HOME:?}" && echo "Created project \"$3\" and bound it to this folder." ;;
   progress) echo "No tasks to pick up." ;;
   *) exit 2 ;;
 esac
 STUB
 fi
-chmod 755 "$stage/agboard"
+chmod 755 "$stage/agpj"
 printf 'fixture licence text\n' > "$stage/LICENSE"
 printf 'fixture notices text\n' > "$stage/THIRD_PARTY_NOTICES.txt"
 for t in "$target" "$other"; do
-  tar -cf - -C "$stage" agboard LICENSE THIRD_PARTY_NOTICES.txt | gzip -n -9 > "$work/assets/agboard-1.0.0-$t.tar.gz"
+  tar -cf - -C "$stage" agpj LICENSE THIRD_PARTY_NOTICES.txt | gzip -n -9 > "$work/assets/agpj-1.0.0-$t.tar.gz"
 done
-(cd "$work/assets" && shasum -a 256 agboard-1.0.0-*.tar.gz > "$work/SHA256SUMS")
+(cd "$work/assets" && shasum -a 256 agpj-1.0.0-*.tar.gz > "$work/SHA256SUMS")
 
 python3 -I "$render" --tag v1.0.0 --sums "$work/SHA256SUMS" --assets "$work/assets" --out "$work/local.rb"
 python3 -I "$render" --tag v1.0.0 --sums "$work/SHA256SUMS" --assets "$work/assets" --out "$work/local2.rb"
@@ -89,38 +89,38 @@ cmp "$work/local.rb" "$work/local2.rb" || fail "rendering twice gave different F
 "$ruby_bin" -c "$work/local.rb" >/dev/null || fail "ruby -c rejected the local Formula"
 
 # A tampered archive must stop the render and leave no Formula behind.
-cp "$work/assets/agboard-1.0.0-$other.tar.gz" "$work/keep.tar.gz"
-printf 'x' >> "$work/assets/agboard-1.0.0-$other.tar.gz"
+cp "$work/assets/agpj-1.0.0-$other.tar.gz" "$work/keep.tar.gz"
+printf 'x' >> "$work/assets/agpj-1.0.0-$other.tar.gz"
 if python3 -I "$render" --tag v1.0.0 --sums "$work/SHA256SUMS" --assets "$work/assets" --out "$work/tampered.rb" 2>"$work/err"; then
   fail "a tampered archive was accepted"
 fi
 grep -q 'does not match' "$work/err" || fail "tampered archive failed for the wrong reason: $(cat "$work/err")"
 [ ! -e "$work/tampered.rb" ] || fail "a Formula was written for a tampered archive"
-mv "$work/keep.tar.gz" "$work/assets/agboard-1.0.0-$other.tar.gz"
+mv "$work/keep.tar.gz" "$work/assets/agpj-1.0.0-$other.tar.gz"
 
-# Install: bin.install agboard; pkgshare.install LICENSE, THIRD_PARTY_NOTICES.txt.
+# Install: bin.install agpj; pkgshare.install LICENSE, THIRD_PARTY_NOTICES.txt.
 prefix="$work/prefix"
-mkdir -p "$prefix/bin" "$prefix/share/agboard" "$work/x"
-tar -xzf "$work/assets/agboard-1.0.0-$target.tar.gz" -C "$work/x"
-sums_before=$(shasum -a 256 "$work/x/agboard" | cut -d' ' -f1)
-install -m 755 "$work/x/agboard" "$prefix/bin/agboard"
-install -m 644 "$work/x/LICENSE" "$work/x/THIRD_PARTY_NOTICES.txt" "$prefix/share/agboard/"
-sums_after=$(shasum -a 256 "$prefix/bin/agboard" | cut -d' ' -f1)
+mkdir -p "$prefix/bin" "$prefix/share/agpj" "$work/x"
+tar -xzf "$work/assets/agpj-1.0.0-$target.tar.gz" -C "$work/x"
+sums_before=$(shasum -a 256 "$work/x/agpj" | cut -d' ' -f1)
+install -m 755 "$work/x/agpj" "$prefix/bin/agpj"
+install -m 644 "$work/x/LICENSE" "$work/x/THIRD_PARTY_NOTICES.txt" "$prefix/share/agpj/"
+sums_after=$(shasum -a 256 "$prefix/bin/agpj" | cut -d' ' -f1)
 [ "$sums_before" = "$sums_after" ] || fail "the installed binary differs from the archive binary"
 for f in LICENSE THIRD_PARTY_NOTICES.txt; do
-  [ -s "$prefix/share/agboard/$f" ] || fail "$f is missing or empty in pkgshare"
-  cmp -s "$prefix/share/agboard/$f" "$work/x/$f" || fail "$f differs after install"
+  [ -s "$prefix/share/agpj/$f" ] || fail "$f is missing or empty in pkgshare"
+  cmp -s "$prefix/share/agpj/$f" "$work/x/$f" || fail "$f differs after install"
 done
 
 # Test block: version, then project create and progress with temporary data only.
-"$prefix/bin/agboard" --version | grep -q '1\.0\.0' || fail "--version does not report 1.0.0"
+"$prefix/bin/agpj" --version | grep -q '1\.0\.0' || fail "--version does not report 1.0.0"
 mkdir -p "$work/testpath/work"
 (
   cd "$work/testpath/work"
-  AGPJ_HOME="$work/testpath/agboard-home" "$prefix/bin/agboard" project create "Formula Test" >/dev/null
-  out=$(AGPJ_HOME="$work/testpath/agboard-home" "$prefix/bin/agboard" progress)
+  AGPJ_HOME="$work/testpath/agpj-home" "$prefix/bin/agpj" project create "Formula Test" >/dev/null
+  out=$(AGPJ_HOME="$work/testpath/agpj-home" "$prefix/bin/agpj" progress)
   case "$out" in *"No tasks to pick up."*) ;; *) echo "test-formula: unexpected progress output: $out" >&2; exit 1 ;; esac
 )
-[ -d "$work/testpath/agboard-home" ] || fail "the test did not use the temporary AGPJ_HOME"
+[ -d "$work/testpath/agpj-home" ] || fail "the test did not use the temporary AGPJ_HOME"
 
 echo "test-formula: ok ($target)"
