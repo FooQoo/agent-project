@@ -133,6 +133,17 @@
 - `web/demo-build.ts`: `demo`モードのベースパスと出力フォルダ。
 - `e2e/playwright.demo.config.ts`と`e2e/demo/`: ビルド済みのドキュメントサイトを相手にするデモのスイート。[ブラウザのデモ](../concepts/demo.md)を参照してください。
 
+### 予定版
+
+- `web/src/features/versions/api/versions.ts`: 書き込みのリクエスト。
+- `web/src/features/versions/model/`: Summaryから読むプロジェクトの版（`useProjectVersions.ts`）。
+- `web/src/features/versions/ui/`: カードのタグ、ヘッダーのカレント版メニュー（`CurrentVersionMenu.tsx`、配線は`HeaderCurrentVersion.tsx`）、タスクの予定版フィールド（`PlannedVersionPicker.tsx`、配線は`TaskPlanField.tsx`）、エピックのフィールド（`EpicPlanField.tsx`、配線は`EpicPlan.tsx`）、選択肢の行、スマホの`PlanContext.tsx`。
+- `web/src/shared/ui/editor/planField.ts`と`usePendingPlan.ts`: エディターと予定版フィールドの取り決め。
+- `web/src/app/useBoardVersions.tsx`: PCボードのカードのタグとヘッダーのスロット。
+- `web/src/pages/monitor/model/planProject.ts`: スマホのカードがタグを読む版。
+- `web/src/app/development/mock-server/versions.ts`: サンプルデータサーバーの版のルート。
+- `e2e/tests/release-plan.spec.ts`: エンドツーエンドのテスト。
+
 ## 採用技術
 
 <div class="technology-table">

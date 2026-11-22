@@ -1,0 +1,267 @@
+/*
+ * Styles of the planned-version parts: the tag on a card, the header's current-version menu, and the
+ * planned-version fields of the task and epic editors. They use the product's tokens and add only
+ * what these parts need.
+ */
+
+/* ---- The header's current-version menu ---- */
+
+.header__version {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.ver-head {
+  gap: 6px;
+  max-width: 100%;
+}
+
+.ver-head svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ver-head[data-set="true"] > svg:first-child {
+  color: var(--r-accent);
+}
+
+.ver-head__label {
+  color: var(--r-muted);
+  font-weight: 400;
+}
+
+.ver-head__value {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.ver-head[data-set="false"] .ver-head__value {
+  color: var(--r-muted);
+  font-weight: 500;
+}
+
+.ver-head-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  padding: 12px;
+}
+
+.ver-head-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ver-head-list {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.ver-head-list .ver-option {
+  padding: 8px 10px;
+  align-items: center;
+}
+
+/* ---- Card version tag ---- */
+
+.card__plan,
+.monitor-card__plan {
+  display: flex;
+  margin-top: 6px;
+}
+
+.card__plan:empty,
+.monitor-card__plan:empty {
+  display: none;
+}
+
+.ver-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--r-border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--r-text2);
+  white-space: nowrap;
+}
+
+.ver-tag svg {
+  width: 11px;
+  height: 11px;
+  flex: none;
+}
+
+.ver-tag[data-kind="current"] {
+  border-color: var(--r-accent);
+  background: var(--r-accent-soft);
+  color: var(--r-text);
+}
+
+.ver-tag[data-kind="none"] {
+  border-style: dashed;
+  font-weight: 500;
+  color: var(--r-muted);
+}
+
+.ver-tag__mark {
+  padding-left: 6px;
+  border-left: 1px solid var(--r-accent);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--r-accent);
+}
+
+/* ---- Fields of the editors ---- */
+
+@media (max-width: 1100px) {
+  .ver-head__label {
+    display: none;
+  }
+}
+
+/* The editor's side column has no padding of its own: the fields keep a margin to its edge. */
+.editor__aside > .ver-picker,
+.editor__aside > .ver-epic-plan {
+  margin: 10px 12px 0;
+}
+
+.ver-picker,
+.ver-epic-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--r-border);
+  border-radius: 10px;
+  background: var(--r-surface);
+}
+
+.ver-picker__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--r-text);
+}
+
+.ver-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--r-text2);
+}
+
+.ver-error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--r-danger);
+}
+
+.ver-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ver-opt {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ver-opt__label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ver-opt__hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--r-muted);
+  white-space: normal;
+}
+
+.ver-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--r-border);
+  border-radius: 10px;
+  background: var(--r-surface);
+  cursor: pointer;
+}
+
+.ver-option > button {
+  margin-top: 2px;
+}
+
+.ver-option[data-checked="true"] {
+  border-color: var(--r-accent);
+  background: var(--r-accent-soft);
+}
+
+.ver-option[data-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ver-option .ver-tag__mark {
+  margin-left: auto;
+}
+
+/*
+ * In the epic's side column the open sections share the height. The planned versions take what
+ * their content needs, up to a share of the column, and scroll inside it.
+ */
+.editor__aside--progress .collapsible[data-open="true"]:has(.ver-epic-plan) {
+  flex: 0 1 auto;
+  max-height: 75%;
+}
+
+/* A body with a basis of 0 would have no height in a section sized by its content. */
+.collapsible:has(.ver-epic-plan) > .collapsible__body {
+  flex: 0 1 auto;
+}
+
+.collapsible__body > .ver-epic-plan {
+  min-height: 0;
+  margin: 0;
+  overflow-y: auto;
+}
+
+/* The epic's version dropdown: a field-wide button that opens the list of choices. */
+.ver-select {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.ver-select__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ver-select[data-changed="true"] .ver-select__value {
+  font-weight: 600;
+}
+
+.ver-select-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: var(--radix-popover-trigger-width);
+  min-width: 240px;
+  max-width: calc(100vw - 24px);
+  padding: 8px;
+}

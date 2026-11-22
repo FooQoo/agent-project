@@ -4,6 +4,7 @@ import { setDraft } from '../../features/tasks/api/edit';
 import type { ChangeSubscription } from '../../shared/ui/editor/useFollowLatest';
 import type { ActionDialogData } from '../../features/tasks/model/actionData';
 import type { EpicRef, ProjectId, Task } from '../../shared/api/contracts';
+import type { RenderPlanField } from '../../shared/ui/editor/planField';
 
 export interface TaskPreviewDialogProps {
   task: Task;
@@ -21,6 +22,8 @@ export interface TaskPreviewDialogProps {
   onClose: () => void;
   onSavingChange?: (saving: boolean) => void;
   onSubmit: (data: ActionDialogData) => Promise<void>;
+  /** Draws the planned-version field of the editor. */
+  renderPlan?: RenderPlanField;
 }
 
 /**

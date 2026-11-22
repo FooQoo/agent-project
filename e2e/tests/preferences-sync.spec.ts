@@ -46,7 +46,7 @@ test.afterEach(async () => {
 });
 
 async function choose(page: Page, dialogName: string, option: string): Promise<void> {
-  await page.getByRole('button', { name: dialogName }).click();
+  await page.getByRole('button', { name: dialogName, exact: true }).click();
   const dialog = page.getByRole('dialog', { name: dialogName });
   await dialog.getByRole('radio', { name: option, exact: true }).click();
   await page.keyboard.press('Escape');
@@ -86,7 +86,7 @@ test('E-1: a language and theme chosen in one PC browser open the same in a brow
     expect(await b.evaluate(() => (window as unknown as Record<string, number>).__storageAtStart)).toBe(0);
     await expect(b.getByRole('contentinfo').getByRole('status')).toHaveText(/^同期済み/);
     await expectLook(b, 'ja', 'dark', 'teal');
-    await expect(b.getByRole('button', { name: '設定' })).toBeVisible();
+    await expect(b.getByRole('button', { name: '設定', exact: true })).toBeVisible();
   } finally {
     await contextA.close();
     await contextB.close();
@@ -142,7 +142,7 @@ test('E-3: a phone with empty storage opens the monitor in the language and them
     await entrance.open(phone, monitorUrl());
     await expect(phone.getByRole('article', { name: /Alpha pending review/ })).toBeVisible();
     await expectLook(phone, 'ja', 'dark', 'teal');
-    await expect(phone.getByRole('button', { name: '設定' })).toBeVisible();
+    await expect(phone.getByRole('button', { name: '設定', exact: true })).toBeVisible();
     await expect(phone.getByRole('status')).toContainText('接続中');
   } finally {
     await phoneContext.close();

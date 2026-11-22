@@ -4,6 +4,7 @@ import { EpicEditorView } from './EpicEditorView';
 import { useEpicEditor } from './useEpicEditor';
 import type { EpicApi } from './epicApi';
 import type { ChangeSubscription } from '../../../shared/ui/editor/useFollowLatest';
+import type { RenderPlanField } from '../../../shared/ui/editor/planField';
 
 export type { EpicApi } from './epicApi';
 
@@ -23,6 +24,8 @@ export interface EpicDialogProps {
   subscribe?: ChangeSubscription;
   /** Reads the latest epic without a loading state; null when it found nothing or failed. */
   load?: () => Promise<Epic | null>;
+  /** Draws the field that plans the epic's tasks for a version. Its change is saved as the last step. */
+  renderPlan?: RenderPlanField;
 }
 
 /** Connects the public epic editor contract to its state controller and display. */
@@ -37,6 +40,7 @@ export function EpicDialog({
   renderTask,
   subscribe,
   load,
+  renderPlan,
 }: EpicDialogProps) {
   const state = useEpicEditor({
     epic,
@@ -49,5 +53,7 @@ export function EpicDialog({
     subscribe,
     load,
   });
-  return <EpicEditorView epic={epic} state={state} renderTask={renderTask} />;
+  return (
+    <EpicEditorView epic={epic} state={state} renderTask={renderTask} renderPlan={renderPlan} />
+  );
 }

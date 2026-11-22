@@ -84,6 +84,19 @@ The epic editor shows the outline on the left, the name and the "Epic details (M
 - While a person has an epic in draft, `agboard epic edit` refuses changes to its details and task order with `epic_is_draft`. Attachments and a task's membership in the epic still change.
 - If a draft is left behind, choose **Finalize** in the epic's details to release it.
 
+## Plan an epic at once {#plan-an-epic}
+
+On the PC board, the epic's preview dialog has a folded **Planned versions** section in its right column, under the label row. Open it to give every task of the epic the same planned version in one save. It is a single dropdown. Its choices are:
+
+- **No change** (the default).
+- **Current (vX)**, disabled while the project has no current version.
+- Each version of the project, newest first.
+- **Leave unplanned**.
+
+Choose **Save**. The change is applied as the last step of the save: every task of the epic that is not done takes the version, replacing the one it had. Done tasks are left as they are. **Save** is enabled when only this field changed, and the epic itself is then left as it is. If the change cannot be applied, the dialog stays open and says that saving the planned versions failed.
+
+There is no list of tasks and no way to leave one out here. To give one task another version afterwards, open its preview and use its **Planned version** field. See [Planned versions](./editing#planned-versions) and [Planned versions on the board](./board#planned-versions).
+
 ## Read the progress table
 
 ```sh

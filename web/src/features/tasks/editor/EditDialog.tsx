@@ -15,6 +15,8 @@ import {
 } from '../../../shared/ui/editor/limits';
 import type { RichMarkdownEditorHandle } from '../../../shared/rich-editor/RichMarkdownEditor';
 import { useSaveFlow } from '../../../shared/ui/editor/useSaveFlow';
+import type { RenderPlanField } from '../../../shared/ui/editor/planField';
+import { usePendingPlan } from '../../../shared/ui/editor/usePendingPlan';
 import { useAttachmentState } from '../../../shared/ui/editor/useAttachmentState';
 import { useMultipartRequest } from '../../../shared/ui/editor/useMultipartRequest';
 import type { StoredAttachment } from '../../../shared/ui/editor/attachmentTypes';
@@ -44,6 +46,8 @@ export interface EditDialogProps {
   leaveDraft?: () => Promise<void>;
   /** Reads the latest card without a loading state; null when it could not be read. */
   reload?: () => Promise<Task | null>;
+  /** Draws the planned-version field beside the epic. Its change is saved as the last step. */
+  renderPlan?: RenderPlanField;
 }
 
 /**
@@ -64,6 +68,7 @@ export function EditDialog({
   enterDraft,
   leaveDraft,
   reload,
+  renderPlan,
 }: EditDialogProps) {
   const { t } = useTranslation();
   const editor = useRef<RichMarkdownEditorHandle>(null);
@@ -87,6 +92,8 @@ export function EditDialog({
   const flow = useSaveFlow({ onClose, onSavingChange });
   const requestId = useMultipartRequest();
   const readOnly = readOnlyReason !== undefined;
+  // The planned version is saved by its own request, so it never makes the card a draft.
+  const { save: planSave, pending: planPending, onPending: onPlanPending } = usePendingPlan();
 
   const localAdded = attachmentState.attachments.filter((a) => a.source === 'local');
   const imagesChanged = localAdded.length > 0 || removed.length > 0;
@@ -148,7 +155,7 @@ export function EditDialog({
   const { badge, status } = usePreviewStatus({
     readOnlyReason,
     problem: lock.problem,
-    dirty,
+    dirty: dirty || planPending,
     locked,
     updatedAt: follow.updatedAt,
   });
@@ -166,7 +173,8 @@ export function EditDialog({
   // The images are saved but the last request failed: nothing differs any more, yet the end of
   // the draft is still to be sent, so Save and Retry stay available until it goes through.
   const [lastPending, setLastPending] = useState(false);
-  const canSend = lock.canSave || (lastPending && !readOnly && lock.problem === null);
+  const canSend =
+    lock.canSave || ((lastPending || planPending) && !readOnly && lock.problem === null && valid);
 
   const save = () => {
     if (!valid || !canSend || flow.busy.current) return;
@@ -207,6 +215,8 @@ export function EditDialog({
       if (lock.entered && enterDraft) input.finalize = true;
       if (Object.keys(input).length > 0) await onSubmit(input);
       setLastPending(false);
+      // 3. The planned version, over the value the field showed; a change made elsewhere refuses it.
+      if (planSave.current) await planSave.current();
     });
   };
 
@@ -216,7 +226,7 @@ export function EditDialog({
       title={t('editor.previewTaskTitle')}
       badge={badge}
       dialogData={readOnly ? { 'data-read-only': '' } : undefined}
-      dirty={dirty}
+      dirty={dirty || planPending}
       saving={flow.saving}
       error={flow.error ?? (lock.problem === 'failed' ? t('editor.saveFailed') : null)}
       onRetry={flow.error !== null ? save : lock.retry}
@@ -251,11 +261,16 @@ export function EditDialog({
           )
         }
         asideTop={
-          task.epic ? (
-            <div className="editor__epic-row">
-              <span className="editor__epic-caption">{t('editor.epic')}</span>
-              {renderEpicChip(task.epic)}
-            </div>
+          task.epic || renderPlan ? (
+            <>
+              {task.epic && (
+                <div className="editor__epic-row">
+                  <span className="editor__epic-caption">{t('editor.epic')}</span>
+                  {renderEpicChip(task.epic)}
+                </div>
+              )}
+              {renderPlan?.({ disabled: flow.saving || readOnly, onPending: onPlanPending })}
+            </>
           ) : undefined
         }
         attachmentNotice={attachmentState.error}

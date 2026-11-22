@@ -1,6 +1,7 @@
 import type { Task } from '../../../shared/api/contracts.ts';
 import type { Change, ChangedEvent } from '../../../shared/data/api/contracts.ts';
 import { acceptanceRoutes } from './acceptance.ts';
+import { versionRoutes } from './versions.ts';
 import { SAMPLE_IMAGE, sampleBoards, sampleProjects, type MockBoard } from './boards.ts';
 import { completedTasks } from './completion.ts';
 import { docsRoutes } from './docs.ts';
@@ -147,6 +148,7 @@ export function createMockServer(options: MockServerOptions): MockServer {
     guide.routes,
     editRoutes,
     acceptanceRoutes,
+    versionRoutes,
     reorderRoutes,
     readRoutes,
     docsRoutes,

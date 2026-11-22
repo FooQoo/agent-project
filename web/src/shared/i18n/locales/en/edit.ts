@@ -108,6 +108,8 @@ export const editEn = {
     documentLabel: 'Epic details (Markdown)',
     stepImages: 'the images',
     stepDocument: 'the epic details',
+    stepPlan: 'the planned versions',
+    planTitle: 'Planned versions',
     saveFailedAt: 'Could not save {{step}}. Earlier changes were saved. Your input is kept.',
     saveFailedFirst: 'Could not save {{step}}. Your input is kept.',
     deleteTitle: 'Delete this epic?',

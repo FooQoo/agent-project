@@ -12,12 +12,14 @@ import type { RichMarkdownEditorHandle } from '../../../shared/rich-editor/RichM
 import { useAttachmentState } from '../../../shared/ui/editor/useAttachmentState';
 import { useMultipartRequest } from '../../../shared/ui/editor/useMultipartRequest';
 import type { EpicApi, EpicSaveInput } from './epicApi';
+import { usePendingPlan } from '../../../shared/ui/editor/usePendingPlan';
 import {
   epicSnapshot,
   nameIsValid,
   snapshotOfEpic,
   storedOf,
   type EpicEditorPanel,
+  STEP_KEYS,
   type EpicSaveStep,
 } from './epicEditorModel';
 import { normalizeWaves, unlistedOf, type Waves } from './waveModel';
@@ -71,6 +73,9 @@ export function useEpicEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const busy = useRef(false);
+  const epicSent = useRef(false);
+  // The planned versions of the epic's tasks are saved by their own request, last of all.
+  const { save: planSave, pending: planPending, onPending: onPlanPending } = usePendingPlan();
   const somethingSaved = useRef(false);
   const attachmentState = useAttachmentState({
     initial: epic.attachments,
@@ -119,11 +124,13 @@ export function useEpicEditor({
     enter: async () => snapshotOfEpic(await api.enterDraft(), members),
     leave: () => api.leaveDraft(),
   });
-  // The images and the order are saved before the last request. If that request fails the editor
-  // is no longer different from what the server holds, but the draft is still to be finalized.
+  // Images and order are saved before the epic. If that fails the editor equals the server, but the draft is still to finalize.
   const [finalizePending, setFinalizePending] = useState(false);
   const canSave =
-    valid && (lock.canSave || (finalizePending && lock.entered && lock.problem === null));
+    valid &&
+    (lock.canSave ||
+      (finalizePending && lock.entered && lock.problem === null) ||
+      (planPending && !dirty && lock.problem === null));
 
   const { updatedAt } = useFollowLatest<Epic>({
     subscribe,
@@ -155,20 +162,18 @@ export function useEpicEditor({
     },
   });
 
-  const stepName = (step: EpicSaveStep): string =>
-    step === 'images'
-      ? t('epic.stepImages')
-      : step === 'order'
-        ? t('epic.stepOrder')
-        : t('epic.stepDocument');
+  const stepName = (step: EpicSaveStep): string => t(STEP_KEYS[step]);
 
   const run = async () => {
     if (busy.current || !canSave) return;
+    const plan = planSave.current; // accepted now: a later board update cannot take it away
     busy.current = true;
     setSaving(true);
     setError(null);
     onSavingChange?.(true);
     let step: EpicSaveStep = 'images';
+    // New edits since the epic was sent are saved again.
+    if (dirty) epicSent.current = false;
     try {
       if (imagesChanged) {
         for (const id of removed) {
@@ -190,19 +195,25 @@ export function useEpicEditor({
         setSaved((current) => ({ ...current, waves }));
         setWaves(waves);
       }
-      // The order is saved under its own lock, so the epic goes last: its request also ends
-      // the draft the dialog entered.
+      // The order has its own lock, so the epic goes last: its request ends the entered draft.
       step = 'epic';
-      if (!wasDraft || documentChanged || detailsChanged) {
+      const planOnly = !dirty && !wasDraft && !lock.entered && !finalizePending;
+      const sentAlready = epicSent.current && !dirty && !finalizePending;
+      if (!planOnly && !sentAlready && (!wasDraft || documentChanged || detailsChanged)) {
         const text = currentDocument();
         const base = { name: name.trim(), color: color.toUpperCase() };
         const input: EpicSaveInput = whole
           ? { ...base, document: text, ...(wasDraft ? {} : { draft: null }) }
           : { ...base, body: text, ...(wasDraft ? {} : { draft: null }) };
         await api.save(input);
+        epicSent.current = true;
         somethingSaved.current = true;
         setSaved((current) => ({ ...current, ...base, document: text }));
+        // The draft is finalized: a later edit enters one again, checked against what was shown.
+        if (!wasDraft) lock.finalized();
       }
+      step = 'plan';
+      if (plan) await plan();
       busy.current = false;
       setSaving(false);
       setFinalizePending(false);
@@ -282,5 +293,7 @@ export function useEpicEditor({
     close,
     attachmentState,
     removeAttachment,
+    planPending,
+    onPlanPending,
   };
 }

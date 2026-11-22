@@ -389,7 +389,9 @@ test.describe('two projects with the same task numbers', () => {
     await expect(switcher(page)).toBeFocused();
     // Tab leaves the menu closed and moves on.
     await page.keyboard.press('Tab');
-    // The header order is project, Ask AI, Docs, Epics, Archive, Settings.
+    // The header order is project, current version, Ask AI, Docs, Epics, Archive, Settings.
+    await expect(page.getByRole('button', { name: /^Current version:/ })).toBeFocused();
+    await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name: 'Ask AI', exact: true })).toBeFocused();
   });
 
@@ -1074,10 +1076,10 @@ test.describe('long names and many projects', () => {
     await page.setViewportSize({ width: 1024, height: 768 });
     await open(page, projectId(longName, home));
     await expect(page.getByRole('button', { name: 'AI に依頼' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '設定' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '設定', exact: true })).toBeVisible();
     const width = 1024;
     for (const name of ['AI に依頼', '設定']) {
-      const box = (await page.getByRole('button', { name }).boundingBox())!;
+      const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
       expect(box.x + box.width).toBeLessThanOrEqual(width);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
