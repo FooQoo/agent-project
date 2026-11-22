@@ -209,7 +209,7 @@ agboard --project "My project" edit 15 --current-version
 agboard --project "My project" edit 15 --unplanned
 ```
 
-`--planned-version VERSION`は一覧にある版（`version add`済み、または`docs/release/`にファイルがあるもの）が必要です。`--current-version`はその時点の現在の版の名前を保存し、`--unplanned`は割り当てを外します。3つは同時に指定できません。プロジェクトに現在の版がないときの`--current-version`は`no_current_version`（終了コード1）で失敗し、何も変更しません。実際に変わったときだけカードの履歴に記録し、すでにその版のカードに同じ版を割り当てても何も変わりません。エージェントは、Doneのカード、人の下書き、アーカイブされたカードを変更できません。
+`--planned-version VERSION`は一覧にある版（`version add`済み、または`docs/release/`にファイルがあるもの）が必要です。`--current-version`はその時点の現在の版の名前を保存し、`--unplanned`は割り当てを外します。3つは同時に指定できません。プロジェクトに現在の版がないときの`--current-version`は`no_current_version`（終了コード1）で失敗し、何も変更しません。実際に変わったときだけカードの履歴に記録し、すでにその版のカードに同じ版を割り当てても何も変わりません。予定の版は、Doneやアーカイブされたカードでもエージェントと人のどちらも変更できる唯一の項目です。Doneのカードのそのほかの編集はエージェントには拒否されたままなので、Doneのカードで`--planned-version`とタイトルや説明の変更を組み合わせた編集は全体が拒否されます。エージェントは人の下書きを変更できません。
 
 エピックのカードをまとめて割り当てるには`epic plan`を使います。
 

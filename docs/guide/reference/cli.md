@@ -208,7 +208,7 @@ agboard --project "My project" edit 15 --current-version
 agboard --project "My project" edit 15 --unplanned
 ```
 
-`--planned-version VERSION` needs a listed version (`version add`, or a file in `docs/release/`), `--current-version` stores the current version's name as it is now, and `--unplanned` removes the plan. The three exclude each other. When the project has no current version, `--current-version` fails with `no_current_version` (exit code 1) and changes nothing. Each real change is recorded in the card's history; planning a card for the version it already has changes nothing. An agent cannot change a Done card, a person's draft, or an archived card.
+`--planned-version VERSION` needs a listed version (`version add`, or a file in `docs/release/`), `--current-version` stores the current version's name as it is now, and `--unplanned` removes the plan. The three exclude each other. When the project has no current version, `--current-version` fails with `no_current_version` (exit code 1) and changes nothing. Each real change is recorded in the card's history; planning a card for the version it already has changes nothing. The planned version is the one field you can change on a Done or archived card, as an agent or a person; every other edit of a Done card stays refused for an agent, so an edit that combines `--planned-version` with a title or description change on a Done card is refused as a whole. An agent cannot change a person's draft.
 
 Plan every card of an epic at once with `epic plan`:
 
