@@ -187,4 +187,35 @@ describe('the planned versions of an epic, in its editor', () => {
     fireEvent.click(screen.getByRole('radio', { name: /Every task in the epic/ }));
     await screen.findByText('2 of 4 tasks will change to v1.9.0');
   });
+
+  it('fails the plan step while the preview of a chosen target is not ready', async () => {
+    let release: (value: EpicVersionResult) => void = () => {};
+    const slow = vi.fn(() => new Promise<EpicVersionResult>((resolve) => (release = resolve)));
+    const { pending } = field(slow);
+    fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
+    await waitFor(() => expect(pending()).not.toBeNull());
+    await expect(pending()?.()).rejects.toThrow(/not ready/);
+    release(dry);
+    await screen.findByText('2 of 4 tasks will change to v1.9.0');
+    await waitFor(() => expect(pending()).not.toBeNull());
+    // "No change" has nothing to save.
+    fireEvent.click(screen.getByRole('radio', { name: 'No change' }));
+    await waitFor(() => expect(pending()).toBeNull());
+  });
+
+  it('applies the rows that were checked when the change was reported, not a later state', async () => {
+    const { apply, pending } = field();
+    fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
+    await screen.findByText('2 of 4 tasks will change to v1.9.0');
+    await waitFor(() => expect(pending()).not.toBeNull());
+    const accepted = pending();
+    // The preview is asked again (and its rows cleared) before the accepted change runs.
+    fireEvent.click(screen.getByRole('radio', { name: /Every task in the epic/ }));
+    await accepted?.();
+    expect(apply).toHaveBeenCalledWith(
+      { choice: 'named', version: 'v1.9.0' },
+      'unplanned-only',
+      [1, 2],
+    );
+  });
 });

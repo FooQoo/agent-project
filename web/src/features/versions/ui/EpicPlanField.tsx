@@ -110,15 +110,24 @@ export function EpicPlanField({
 
   const ids = rows === null ? [] : checkedIds(rows, unchecked);
   const idsKey = ids.join(',');
-  const idsRef = useRef(ids);
-  idsRef.current = ids;
-  // The change the editor saves: the checked rows, with the body the dry run was asked with.
+  const resolved = rows !== null;
+  // The change the editor saves. It holds the checked rows as they are now, so a later update of
+  // the board cannot change what Save applies. A chosen target whose preview is not ready is an
+  // unfinished step: Save fails it instead of closing without the change. "No change" and a
+  // resolved preview with every row unchecked have nothing to save.
   // biome-ignore lint/correctness/useExhaustiveDependencies: `idsKey` stands for the checked rows
   useEffect(() => {
-    if (target === null || idsRef.current.length === 0) onPending(null);
-    else
-      onPending(async () => void (await applyRef.current(choiceOf(target), scope, idsRef.current)));
-  }, [target, scope, idsKey, onPending]);
+    if (target === null) onPending(null);
+    else if (!resolved)
+      onPending(async () => {
+        throw new Error('The preview of the planned versions is not ready.');
+      });
+    else if (ids.length === 0) onPending(null);
+    else {
+      const checked = [...ids];
+      onPending(async () => void (await applyRef.current(choiceOf(target), scope, checked)));
+    }
+  }, [target, scope, idsKey, resolved, onPending]);
 
   const name = target === null ? '' : (targetName(target, current) ?? t('versions.tag.none'));
   const unplannedCount = members.filter((member) => member.plannedVersion === null).length;
