@@ -63,13 +63,13 @@ The board is one monitor for the work. A monitor is not watch-only: your phone, 
 
 ![Desktop board with a question on its task, acceptance counts, and four detail tabs](../images/board.png){.screenshot}
 
-The board shows Todo, Doing, and Done. Here a task in Doing is waiting for your answer, and every task shows how many of its acceptance conditions are done. On the go, the [remote access](./watch/remote-access) shows the same work on your phone. The agent's own monitor is the chat, and the `agboard` command is the one the agent and your scripts use.
+The board shows Todo, Doing, and Done. Here a task in Doing is waiting for your answer, and every task shows how many of its acceptance conditions are done. On the go, the [remote access](./watch/remote-access) shows the same work on your phone. The agent's own monitor is the chat, and the `agpj` command is the one the agent and your scripts use.
 
 ## Where to start
 
 New here? Read the first four pages in order.
 
-1. [Install and start](./getting-started): install `agboard`, set up your agent, and open the board.
+1. [Install and start](./getting-started): install `agpj`, set up your agent, and open the board.
 2. [Quickstart](./quickstart): delegate your first piece of work and watch it reach Done.
 3. [The work model](./work-model): the few ideas that explain everything else.
 4. [Working with agents](./delegate/agents): how the agent plans, asks, and finishes.

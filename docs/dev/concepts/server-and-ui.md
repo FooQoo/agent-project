@@ -1,13 +1,13 @@
 # Server and web UI
 
-`agboard serve` serves the board to browsers: a JSON API, live updates, and the React app embedded in the binary. This page covers how requests are handled, how the UI is built, and how the UI behaves when something fails. The endpoints are in [Web API](../reference/web-api.md).
+`agpj serve` serves the board to browsers: a JSON API, live updates, and the React app embedded in the binary. This page covers how requests are handled, how the UI is built, and how the UI behaves when something fails. The endpoints are in [Web API](../reference/web-api.md).
 
 ## Starting and stopping serve
 
 A data area has at most one server. It runs in one of two modes, recorded as `mode` in `serve.json`:
 
 - **Automatic.** A command that cannot work without a server starts one in the background: `wait --after`, `wait --until task`, `message ask` unless `--no-wait`, and `message wait` for an open question. The agent hook starts one too, without waiting. The server stops by itself after it has gone unused.
-- **Manual.** A person runs `agboard serve` (in the foreground) or `agboard serve -d` (in the background). It runs until Ctrl+C or `agboard stop`.
+- **Manual.** A person runs `agpj serve` (in the foreground) or `agpj serve -d` (in the background). It runs until Ctrl+C or `agpj stop`.
 
 Every other command works on the files alone and starts nothing.
 
@@ -15,7 +15,7 @@ Every other command works on the files alone and starts nothing.
 
 - `serve` listens only on `127.0.0.1` and works with zero projects; it may create `workspace.json` in an empty data area.
 - `lifecycle.lock` (a standard `try_lock`) is held from start to exit so that only one server runs per data area. The file existing does not mean a server is running; the lock is released when the process exits. An automatic server waits up to 10 seconds for a server that is still shutting down to release it.
-- At startup, if `serve.json` exists and `GET /api/health` on its port returns the same `pid`, `serve` exits with `already_serving`. Otherwise the file is stale and is overwritten. When the running server is automatic, the reason says to run `agboard serve -d` to keep it.
+- At startup, if `serve.json` exists and `GET /api/health` on its port returns the same `pid`, `serve` exits with `already_serving`. Otherwise the file is stale and is overwritten. When the running server is automatic, the reason says to run `agpj serve -d` to keep it.
 - `serve -d` makes the same check first. If the running server is automatic and the command gives no `--port` or `--monitor` that differs from it, `serve -d` sends it SIGUSR1: the same process records `mode: "manual"`, stops counting idle time, and keeps every connection. Otherwise, for a person at a terminal, it offers to stop the running server through the `stop` path and start a new one; with `--json` or without a terminal it exits with `already_serving`.
 - `serve` writes `serve.json` (`pid`, `port`, `started_at`, `mode`, and `idleTimeoutSeconds` for an automatic server) after it starts listening. On SIGINT or SIGTERM it removes `serve.json` only if the file holds its own pid.
 
@@ -24,27 +24,27 @@ Every other command works on the files alone and starts nothing.
 1. The command reads `serve.json`. If its server answers the health check, the command uses it.
 2. If the pid in `serve.json` is alive and still holds `lifecycle.lock` but does not answer, the command waits up to 10 seconds in case it is starting or stopping, then fails with `board_unavailable` naming the pid. It never starts a second server. A connection the OS or a sandbox refuses is `local_network_denied` instead.
 3. Otherwise the command takes `autostart.lock`, waiting up to 40 seconds for another command that is starting a server, and checks again.
-4. It runs `agboard --json serve --auto` as a new session (`setsid`), with the data area as its working directory and standard output and error in `serve.log` (truncated at each start, mode 0600). The child inherits the open `autostart.lock` and releases it once it is ready, so no other command starts a second server meanwhile.
+4. It runs `agpj --json serve --auto` as a new session (`setsid`), with the data area as its working directory and standard output and error in `serve.log` (truncated at each start, mode 0600). The child inherits the open `autostart.lock` and releases it once it is ready, so no other command starts a second server meanwhile.
 5. The command waits up to 30 seconds for the startup line in `serve.log`, then prints one line on standard error and continues. Standard output stays the command's own.
 
 ```text
 Started the Agent Board server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
 ```
 
-If the connection fails after a command has read `serve.json`, for example because the server stopped in between, the command starts a server once more. The hook starts the server without waiting: it only checks that the pid in `serve.json` is alive and that `autostart.lock` is free, and it starts nothing after `agboard stop` (see below). Failures are left in `serve.log`.
+If the connection fails after a command has read `serve.json`, for example because the server stopped in between, the command starts a server once more. The hook starts the server without waiting: it only checks that the pid in `serve.json` is alive and that `autostart.lock` is free, and it starts nothing after `agpj stop` (see below). Failures are left in `serve.log`.
 
-`AGPJ_AUTOSTART=0` turns all of this off: commands report `board_unavailable` as before, and the hook starts nothing. The library never starts a server by itself; only the `agboard` command line does.
+`AGPJ_AUTOSTART=0` turns all of this off: commands report `board_unavailable` as before, and the hook starts nothing. The library never starts a server by itself; only the `agpj` command line does.
 
 ### Opening the board
 
 An automatic server opens the board of the project it was started for, once. The user-facing rules are in the [CLI reference](../../guide/reference/cli.md#open-the-board-in-the-browser).
 
-- The command that starts the server passes the project ID as the hidden `serve --auto --open-board=<projectId>`: a waiting command passes the project it follows, `message ask` and `message wait` the project of the questions, and the hook the project of the progress table it printed. `agboard open` passes none, because it opens the page itself.
+- The command that starts the server passes the project ID as the hidden `serve --auto --open-board=<projectId>`: a waiting command passes the project it follows, `message ask` and `message wait` the project of the questions, and the hook the project of the progress table it printed. `agpj open` passes none, because it opens the page itself.
 - Once the server is ready and has released `autostart.lock`, a thread waits 3 seconds (`AGPJ_OPEN_GRACE_MS` changes it for the tests, up to 60,000 ms). Then it opens `http://127.0.0.1:<port>/?project=<projectId>` unless a board page has connected since the start. A tab that connected and closed again still counts, because it may reconnect.
 - A board page is a `GET /api/events` stream without the `X-Agpj-Wait` header. The waiting commands send that header, so their own stream, which opens right after the start, is not taken for a tab. A phone's page through the ngrok entrance is the same stream behind the session and counts the same way.
 - `src/interact/browser.rs` decides whether a browser can be opened, in this order: `AGPJ_OPEN_BROWSER=0` opens nothing; `AGPJ_BROWSER_OPENER` names a program that replaces the system's opener; `SSH_CONNECTION` or `SSH_TTY` opens nothing; on systems other than macOS and Windows, no `DISPLAY` and no `WAYLAND_DISPLAY` opens nothing. Otherwise it runs `open` (macOS), `explorer` (Windows), or `xdg-open`, with the address as its only argument and no shell, and does not wait for it.
 - The outcome is one line in `serve.log`: `Opened … in the browser.`, `Did not open … in the browser.` with the reason, or `Could not open …` when the program could not be started.
-- Like starting a server, only the `agboard` command line opens a browser; the library embedded in a test never does. The tests set `AGPJ_OPEN_BROWSER=0`, and the tests of opening point `AGPJ_BROWSER_OPENER` at a script that records the address.
+- Like starting a server, only the `agpj` command line opens a browser; the library embedded in a test never does. The tests set `AGPJ_OPEN_BROWSER=0`, and the tests of opening point `AGPJ_BROWSER_OPENER` at a script that records the address.
 
 ### Ports
 

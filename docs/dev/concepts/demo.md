@@ -1,6 +1,6 @@
 # The browser demo
 
-The browser demo is the board running on a static site, with no `agboard serve` behind it. It is published with this documentation site at [`/agent-board/demo/`](https://fooqoo.github.io/agent-board/demo/). The screens are the product's own; only the server is replaced, by the sample-data server running in the page.
+The browser demo is the board running on a static site, with no `agpj serve` behind it. It is published with this documentation site at [`/agent-board/demo/`](https://fooqoo.github.io/agent-board/demo/). The screens are the product's own; only the server is replaced, by the sample-data server running in the page.
 
 What a visitor sees is the [first-run guide](../../guide/quickstart.md#before-you-start-the-first-run-guide) followed by the ordinary board. This page explains how that is built, how to build it, and how to check it before it is published.
 
@@ -18,7 +18,7 @@ flowchart LR
 
 ### The sample-data server
 
-`web/src/app/development/mock-server/` answers `/api/*` the way `agboard serve` does, from boards held in memory. It uses no Node API and no transport of its own. MSW carries requests to it, and the same handlers serve every place that needs the sample data:
+`web/src/app/development/mock-server/` answers `/api/*` the way `agpj serve` does, from boards held in memory. It uses no Node API and no transport of its own. MSW carries requests to it, and the same handlers serve every place that needs the sample data:
 
 - the demo and the [sample-data mode](../getting-started/setup.md#development) (`pnpm --dir web dev --mode mock`), through a Service Worker in the page
 - the unit tests, through `setupServer()`, and Storybook, through the browser worker, as described in [Mock handlers](../getting-started/setup.md#mock-handlers)
@@ -52,7 +52,7 @@ Each change is reported to subscribers in the shape of the SSE `changed` event, 
 
 ### The first-run guide
 
-The guide runs in the page, as it does against `agboard serve`: its sample request, the plan, the steps, and the question are local to the front end (`web/src/app/onboarding/`). The sample-data server (`mock-server/guide.ts`) answers only the two routes the real server has: `GET /api/onboarding` and `POST /api/onboarding/seen`. It writes no card to the demo's board.
+The guide runs in the page, as it does against `agpj serve`: its sample request, the plan, the steps, and the question are local to the front end (`web/src/app/onboarding/`). The sample-data server (`mock-server/guide.ts`) answers only the two routes the real server has: `GET /api/onboarding` and `POST /api/onboarding/seen`. It writes no card to the demo's board.
 
 The seen state lives only in memory. A new page is a new server, so the guide starts again on every page load, and **Skip** or **Finish and get started** closes it for that page only. Its user-facing steps are described in the [quickstart](../../guide/quickstart.md#before-you-start-the-first-run-guide).
 
@@ -66,12 +66,12 @@ The demo ignores any language an earlier visit left in the browser. A language c
 
 ### Hidden features
 
-A static site has no computer and no `agboard serve` to reach, so the demo hides the features that need one:
+A static site has no computer and no `agpj serve` to reach, so the demo hides the features that need one:
 
 | Feature | Where it is hidden | Why |
 | --- | --- | --- |
 | Project Docs | `BoardWorkspace.tsx` passes no `onDocs`, so the header has no **Docs** button | Docs open files and folders on the computer. |
-| Remote connection | `BoardSettings.tsx` leaves out the connection row and dialog | A phone connects to an `agboard serve`. |
+| Remote connection | `BoardSettings.tsx` leaves out the connection row and dialog | A phone connects to an `agpj serve`. |
 | Attachments | `EditorBody.tsx` and `AskAiDialog.tsx` offer no images panel and ignore pasted or dropped images | Nothing is saved, so there is nowhere to keep them. |
 | Saved language and theme | `app/entry/board.tsx` and `BoardSettings.tsx` skip `/api/preferences` | There is no server to keep them. The theme stays in the browser, as in the sample-data mode; the language follows the browser on each page load. |
 

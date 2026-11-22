@@ -4,7 +4,7 @@ title: The work model
 
 # The work model
 
-Agent Board is built around a model of the work, not around a screen. The model lets an agent know what to do next, when it is finished, when to ask you, and what to leave behind. The board, the `agboard` command, and the files are all ways into the same model. Read this page once you have tried the loop; the other pages build on it.
+Agent Board is built around a model of the work, not around a screen. The model lets an agent know what to do next, when it is finished, when to ask you, and what to leave behind. The board, the `agpj` command, and the files are all ways into the same model. Read this page once you have tried the loop; the other pages build on it.
 
 ## The elements
 
@@ -23,7 +23,7 @@ Agent Board is built around a model of the work, not around a screen. The model 
 
 A task also has a **title** and a **body** in free Markdown for the plan, the results, and links. A task belongs to at most one epic, and the epic's order and the task's place in a column are separate things.
 
-Everything is stored as plain files in a folder on your machine (by default `~/.agent-board/`). The browser, the `agboard` command, and the agents read and write the same files. See [Data and backups](./operations/data).
+Everything is stored as plain files in a folder on your machine (by default `~/.agent-board/`). The browser, the `agpj` command, and the agents read and write the same files. See [Data and backups](./operations/data).
 
 ## States
 
@@ -95,7 +95,7 @@ Some things are not enforced by Agent Board yet. They depend on the agent follow
 - **Who answered.** Agent Board does not check who actually typed an answer. When you reply in the chat, the agent records your words on the board.
 - **Editing the files directly.** Changing `TASK.md` by hand skips these checks and the automatic history. Use the board or the CLI.
 - **Running.** Running is self-reported, so a task can look active when its agent has stopped.
-- **Automatic Done needs the server.** It happens only while `agboard serve` is running, so a finished task can wait in Doing until it is.
+- **Automatic Done needs the server.** It happens only while `agpj serve` is running, so a finished task can wait in Doing until it is.
 - **Your own tasks.** Tasks you own are recorded, not verified.
 - **Epics.** Agent Board does not track whether an epic is finished; its completion conditions are written in its body.
 
@@ -117,7 +117,7 @@ The approaches combine well. A spec written with Spec Kit or Kiro, or the phase 
 | **How you step in** | You answer questions, or watch the board live and move cards, check conditions, or rewrite plans, from the browser or your phone. | You validate the AI's proposals at each phase. | You review and edit the spec files. |
 | **How done is judged** | Automatically: all acceptance conditions are done and no question is open. | By the validation of each step. | By the tasks and checklists in the spec; the tool does not verify them. |
 | **Resuming in another session or agent** | The task history records what was done and why, so a new session or agent continues from there. | Relies on the workflow's recorded state. | Relies on the spec files. |
-| **Tool dependence** | Any agent that can run the `agboard` command; the plugin covers Claude Code and Codex. | Rules for agents such as Claude Code, Kiro, and Codex CLI. | Depends on the tool, for example an IDE or a set of slash commands. |
+| **Tool dependence** | Any agent that can run the `agpj` command; the plugin covers Claude Code and Codex. | Rules for agents such as Claude Code, Kiro, and Codex CLI. | Depends on the tool, for example an IDE or a set of slash commands. |
 
 These columns describe each approach at its core, as its public documentation presents it. Teams adapt methods and tools, so check the sources above for the details. The strengths of Agent Board are in its column, the first after the labels: its guarantees are enforced rather than agreed, and the person and the agent see the same state as it changes.
 

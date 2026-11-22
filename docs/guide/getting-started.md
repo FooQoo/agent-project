@@ -4,7 +4,7 @@ title: Install and start
 
 # Install and start
 
-By the end of this page, `agboard` is installed with Homebrew, your working folder has a project, your agents are set up, and the board is open in your browser. Then continue with the [Quickstart](./quickstart).
+By the end of this page, `agpj` is installed with Homebrew, your working folder has a project, your agents are set up, and the board is open in your browser. Then continue with the [Quickstart](./quickstart).
 
 The steps are: install, create or bind a project, set up your agents, and start the server.
 
@@ -20,12 +20,12 @@ You do not build Agent Board yourself. The Homebrew package is a prebuilt comman
 
 ```sh
 brew install fooqoo/tap/agboard
-agboard --version
+agpj --version
 ```
 
-The command is signed with a Developer ID certificate and notarized by Apple. If macOS refuses to run it, do not turn off Gatekeeper; see [Troubleshooting](./operations/troubleshooting#macos-will-not-run-agboard).
+The command is signed with a Developer ID certificate and notarized by Apple. If macOS refuses to run it, do not turn off Gatekeeper; see [Troubleshooting](./operations/troubleshooting#macos-will-not-run-agpj).
 
-Agent Board is released under the MIT License. The license and the notices for bundled third-party components are installed in `share/agboard` under your Homebrew prefix (`$(brew --prefix)/share/agboard`).
+Agent Board is released under the MIT License. The license and the notices for bundled third-party components are installed in `share/agpj` under your Homebrew prefix (`$(brew --prefix)/share/agpj`).
 
 ## Create or bind a project
 
@@ -33,13 +33,13 @@ Go to the folder you work in. A project belongs to the folder it is bound to, an
 
 ```sh
 cd my-project
-agboard project create "My project"
+agpj project create "My project"
 ```
 
 `project create` makes the project and binds the current folder to it. If the project already exists, bind this folder to it instead:
 
 ```sh
-agboard project bind "My project"
+agpj project bind "My project"
 ```
 
 For renaming projects and registering other folders, see [Data and backups](./operations/data#projects-and-folders).
@@ -47,7 +47,7 @@ For renaming projects and registering other folders, see [Data and backups](./op
 ## Set up your agents
 
 ```sh
-agboard setup
+agpj setup
 ```
 
 `setup` asks which agents you use, shows the plan, and after you answer `y` installs the Agent Board plugin (the Skill and the Hook) for Claude Code, Codex, or both. You run it once on your computer; it works in any folder. See [Set up your agents](./delegate/agents#set-up-your-agents) for what it asks, what it changes, and what to do afterwards.
@@ -57,10 +57,10 @@ agboard setup
 Start the server:
 
 ```sh
-agboard serve
+agpj serve
 ```
 
-Open [http://127.0.0.1:7420/](http://127.0.0.1:7420/) and select the project in the header. Press Ctrl+C in its terminal to stop it. You do not have to keep it running for agents: a waiting command and the agent hook start a server in the background when none runs, and that server stops by itself after 30 minutes without use. To keep a server running in the background instead, use `agboard serve -d`. The server listens only on `127.0.0.1`; choose another port with `--port` if 7420 is taken.
+Open [http://127.0.0.1:7420/](http://127.0.0.1:7420/) and select the project in the header. Press Ctrl+C in its terminal to stop it. You do not have to keep it running for agents: a waiting command and the agent hook start a server in the background when none runs, and that server stops by itself after 30 minutes without use. To keep a server running in the background instead, use `agpj serve -d`. The server listens only on `127.0.0.1`; choose another port with `--port` if 7420 is taken.
 
 ![Agent Board in the browser with a project selected, showing tasks in Todo, Doing, and Done](../images/board.png){.screenshot}
 
@@ -74,14 +74,14 @@ Update the command with Homebrew:
 
 ```sh
 brew upgrade fooqoo/tap/agboard
-agboard --version
+agpj --version
 ```
 
-`brew upgrade` replaces the command and the web UI inside it. The Agent Board plugin in your agents updates itself: the next time an agent session starts, the Hook notices that the plugin differs and reinstalls it in the background, and the new plugin applies from the following session. The agent's instructions for Agent Board come from the command itself, so they are the new ones at once. Run `agboard update` yourself only when the automatic update cannot do it, such as the hook trust of Codex, or to repair the plugin. See [Update the plugin](./delegate/agents#update-the-plugin).
+`brew upgrade` replaces the command and the web UI inside it. The Agent Board plugin in your agents updates itself: the next time an agent session starts, the Hook notices that the plugin differs and reinstalls it in the background, and the new plugin applies from the following session. The agent's instructions for Agent Board come from the command itself, so they are the new ones at once. Run `agpj update` yourself only when the automatic update cannot do it, such as the hook trust of Codex, or to repair the plugin. See [Update the plugin](./delegate/agents#update-the-plugin).
 
-Stop and restart `agboard serve` after an upgrade to use the new command and UI. Open boards and monitors reload themselves once the server is back, after you finish any edit or answer in progress.
+Stop and restart `agpj serve` after an upgrade to use the new command and UI. Open boards and monitors reload themselves once the server is back, after you finish any edit or answer in progress.
 
-Hooks and the agent Skill run `agboard` from your `PATH`, so they use the installed version. A development build (`cargo build`, `cargo run`, or `target/debug/agpj`) is a separate executable.
+Hooks and the agent Skill run `agpj` from your `PATH`, so they use the installed version. A development build (`cargo build`, `cargo run`, or `target/debug/agpj`) is a separate executable.
 
 ## Next
 

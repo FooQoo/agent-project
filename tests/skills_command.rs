@@ -1,9 +1,9 @@
-//! `agboard skills`: the Agent Board Skill and its topics, printed by the
+//! `agpj skills`: the Agent Board Skill and its topics, printed by the
 //! binary. It reads nothing, writes nothing, and always exits 0.
 
 use std::process::Command;
 
-/// Runs `agboard skills <args>` with an empty environment and a folder of its
+/// Runs `agpj skills <args>` with an empty environment and a folder of its
 /// own as the only place it could write to; returns the exit code, stdout, and
 /// whether the folder is still empty.
 fn skills(args: &[&str]) -> (i32, String, bool) {
@@ -33,7 +33,7 @@ fn skills(args: &[&str]) -> (i32, String, bool) {
 fn skills_prints_the_skill_body_without_frontmatter_and_writes_nothing() {
     let (code, out, untouched) = skills(&[]);
     assert_eq!(code, 0);
-    assert!(untouched, "agboard skills wrote a file");
+    assert!(untouched, "agpj skills wrote a file");
     assert!(out.starts_with("# Agent Board\n"), "{}", &out[..80]);
     assert!(!out.starts_with("---"));
     assert!(out.contains("## 1. Resolve the project from the working folder"));
@@ -57,7 +57,7 @@ fn skills_prints_the_skill_body_without_frontmatter_and_writes_nothing() {
         "waiting",
     ] {
         assert!(
-            out.contains(&format!("agboard skills {topic}")),
+            out.contains(&format!("agpj skills {topic}")),
             "the body omits {topic}"
         );
     }
@@ -140,9 +140,9 @@ fn an_unknown_topic_exits_zero_and_lists_the_topics() {
         "resident",
         "enhancement-epic-template",
     ] {
-        assert!(out.contains(&format!("`agboard skills {topic}`")), "{out}");
+        assert!(out.contains(&format!("`agpj skills {topic}`")), "{out}");
     }
-    assert!(out.contains("upgrade agboard"));
+    assert!(out.contains("upgrade agpj"));
 }
 
 #[test]

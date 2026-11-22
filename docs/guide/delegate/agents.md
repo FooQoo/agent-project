@@ -8,19 +8,19 @@ This is how you hand work to an agent. You ask in the chat; the agent turns the 
 
 ## Set up your agents {#set-up-your-agents}
 
-Run `agboard setup` once on your computer. It installs the **Agent Board plugin** for Claude Code, Codex, or both. The plugin holds the **Skill** (`agent-board`, which tells the agent how to work) and the **Hook** (which hands the agent the progress table).
+Run `agpj setup` once on your computer. It installs the **Agent Project plugin** for Claude Code, Codex, or both. The plugin holds the **Skill** (`agent-project`, which tells the agent how to work) and the **Hook** (which hands the agent the progress table).
 
 ```sh
-agboard setup
+agpj setup
 ```
 
 `setup` works in any folder and needs no project. On a terminal it goes like this:
 
 1. **Agents.** It looks for `codex` and `claude` on your `PATH`. An agent it cannot find is named with the reason. When it finds both, choose **Codex**, **Claude Code**, or **Both** with the arrow keys and Enter. When it finds one, it uses that one.
 2. **Plan.** It shows, for each agent, how the plugin will be installed or updated, every settings file it will change, whether the Codex hooks will be trusted, and any step you have to take yourself.
-3. **Confirmation.** It asks **Apply these changes?** When Codex is in the plan, the question also says that the Agent Board hooks will be marked as trusted in Codex. Press `y` to go on. Any other answer, Esc, or Ctrl+C changes nothing.
+3. **Confirmation.** It asks **Apply these changes?** When Codex is in the plan, the question also says that the Agent Project hooks will be marked as trusted in Codex. Press `y` to go on. Any other answer, Esc, or Ctrl+C changes nothing.
 
-4. **Remote access (optional).** After the plugin is installed, it asks whether to set up the remote connection for your phone now; the default is no. If you answer yes, it shows what is saved and asks whether the phone connects through ngrok or Tailscale. For ngrok it then asks for the fixed domain and the ngrok token, which you type hidden; for Tailscale it checks that Tailscale is ready and says what to do next if it is not. Each question can be skipped. This is the same step as [`agboard setup remote`](../reference/cli#save-the-remote-access-settings), which you can also run later.
+4. **Remote access (optional).** After the plugin is installed, it asks whether to set up the remote connection for your phone now; the default is no. If you answer yes, it shows what is saved and asks whether the phone connects through ngrok or Tailscale. For ngrok it then asks for the fixed domain and the ngrok token, which you type hidden; for Tailscale it checks that Tailscale is ready and says what to do next if it is not. Each question can be skipped. This is the same step as [`agpj setup remote`](../reference/cli#save-the-remote-access-settings), which you can also run later.
 
 After the run, start a new agent session to load the plugin. Then create or bind a project in your working folder (see [Install and start](../getting-started#create-or-bind-a-project)).
 
@@ -29,42 +29,42 @@ Without a terminal, or with `--json`, `setup` asks nothing. Name the agent with 
 ### What setup changes
 
 - **The data folder.** It creates the data folder and its `shared` folder (see [Data and backups](../operations/data)).
-- **The plugin.** It installs the plugin with the agent's own plugin command. The marketplace is the Agent Board repository at the tag of your `agboard` version, so the plugin always matches the command. Codex runs `codex plugin marketplace add https://github.com/FooQoo/agent-board.git --ref vX.Y.Z` and `codex plugin add agent-board@agent-board`. Claude Code runs `claude plugin marketplace add https://github.com/FooQoo/agent-board.git#vX.Y.Z` and `claude plugin install agent-board@agent-board`. When the plugin of this version is installed already, nothing is installed.
+- **The plugin.** It installs the plugin with the agent's own plugin command. The marketplace is the Agent Project repository at the tag of your `agpj` version, so the plugin always matches the command. Codex runs `codex plugin marketplace add https://github.com/FooQoo/agent-project.git --ref vX.Y.Z` and `codex plugin add agent-project@agent-project`. Claude Code runs `claude plugin marketplace add https://github.com/FooQoo/agent-project.git#vX.Y.Z` and `claude plugin install agent-project@agent-project`. When the plugin of this version is installed already, nothing is installed.
 - **Access to the shared folder.** For Claude Code it adds the data folder to `permissions.additionalDirectories` in `~/.claude/settings.json`. For Codex it adds it to `sandbox_workspace_write.writable_roots` in `~/.codex/config.toml`. This works only with `sandbox_mode = "workspace-write"`. With any other mode, or a permission profile, setup leaves the file as it is and shows the step to take yourself; it never changes the sandbox mode. With `danger-full-access` nothing is needed, so nothing is written.
-- **The agboard command in Codex.** It writes `~/.codex/rules/agboard.rules`, which lets Codex run `agboard` without asking each time: `prefix_rule(pattern=["agboard"], decision="allow")`. A file you already have is kept as it is. It is not written for `danger-full-access`.
-- **Codex hook trust.** Codex runs a plugin's hook only after you trust it. With your consent, setup trusts the Agent Board hooks through Codex itself. Other hooks are not touched.
+- **The agpj command in Codex.** It writes `~/.codex/rules/agpj.rules`, which lets Codex run `agpj` without asking each time: `prefix_rule(pattern=["agpj"], decision="allow")`. A file you already have is kept as it is. It is not written for `danger-full-access`.
+- **Codex hook trust.** Codex runs a plugin's hook only after you trust it. With your consent, setup trusts the Agent Project hooks through Codex itself. Other hooks are not touched.
 
-`CLAUDE_CONFIG_DIR` and `CODEX_HOME` move the Claude Code and Codex paths. Before it changes a settings file, setup copies it next to the original as `<name>.agboard-backup…`. It keeps your other settings and comments. If a settings file cannot be read, nothing is written and the file is named.
+`CLAUDE_CONFIG_DIR` and `CODEX_HOME` move the Claude Code and Codex paths. Before it changes a settings file, setup copies it next to the original as `<name>.agpj-backup…`. It keeps your other settings and comments. If a settings file cannot be read, nothing is written and the file is named.
 
 Exit codes: `0` for success, nothing to change, or a cancel; `1` when an agent failed or no agent could be set up; `2` for a bad command line, or when the needed options are missing without a terminal. An agent whose command is missing is skipped with the reason, and the other agent is still set up.
 
 ### Trust hooks
 
-Writing the files does not mean the agent has loaded them. Start a new Claude Code session, or restart Codex, after setup. In Claude Code, review the Hook with `/hooks`. In Codex, setup has trusted the Agent Board hooks when you agreed; you can review them with `/hooks`.
+Writing the files does not mean the agent has loaded them. Start a new Claude Code session, or restart Codex, after setup. In Claude Code, review the Hook with `/hooks`. In Codex, setup has trusted the Agent Project hooks when you agreed; you can review them with `/hooks`.
 
 ### Update the plugin {#update-the-plugin}
 
-After `brew upgrade fooqoo/tap/agboard`, the plugin updates itself. When a new agent session starts, the Hook compares the plugin the agent runs with the one your `agboard` ships. If they differ, it reinstalls the plugin from the tag of your `agboard` version in the background, and the agent tells you so; the new plugin applies from the next session. Nothing is asked. For Codex, the update also marks the Agent Board hooks as trusted, but only when the hook definition it installed is exactly the one your `agboard` ships; your consent in `agboard setup` covers trusting Agent Board's own hook. A changed or unknown definition is never trusted. This is the same reinstall that `agboard update` does, so you can also run it yourself, which is needed in these cases:
+After `brew upgrade fooqoo/tap/agpj`, the plugin updates itself. When a new agent session starts, the Hook compares the plugin the agent runs with the one your `agpj` ships. If they differ, it reinstalls the plugin from the tag of your `agpj` version in the background, and the agent tells you so; the new plugin applies from the next session. Nothing is asked. For Codex, the update also marks the Agent Project hooks as trusted, but only when the hook definition it installed is exactly the one your `agpj` ships; your consent in `agpj setup` covers trusting Agent Project's own hook. A changed or unknown definition is never trusted. This is the same reinstall that `agpj update` does, so you can also run it yourself, which is needed in these cases:
 
-- **Codex, when the hook definition is not the one `agboard` ships.** Codex runs a plugin's hooks only after they are trusted, and the trust is tied to the hook definition. The definition rarely changes, and the automatic update trusts only the definition `agboard` ships. If the installed one differs, nothing is trusted and the agent tells you: run `agboard update` once (it asks the same question as `setup`).
-- **The automatic update could not finish.** The agent then tells you that it did not complete (for example, no network to GitHub). The update is not tried again for six hours; run `agboard update` to try now.
-- **The plugin is broken or was changed by hand.** `agboard update` always reinstalls it.
+- **Codex, when the hook definition is not the one `agpj` ships.** Codex runs a plugin's hooks only after they are trusted, and the trust is tied to the hook definition. The definition rarely changes, and the automatic update trusts only the definition `agpj` ships. If the installed one differs, nothing is trusted and the agent tells you: run `agpj update` once (it asks the same question as `setup`).
+- **The automatic update could not finish.** The agent then tells you that it did not complete (for example, no network to GitHub). The update is not tried again for six hours; run `agpj update` to try now.
+- **The plugin is broken or was changed by hand.** `agpj update` always reinstalls it.
 
-To turn the automatic update off, set `AGBOARD_NO_PLUGIN_AUTO_UPDATE=1` in the environment of the agent.
+To turn the automatic update off, set `AGPJ_NO_PLUGIN_AUTO_UPDATE=1` in the environment of the agent.
 
 ```sh
-agboard update
-agboard update --yes
+agpj update
+agpj update --yes
 ```
 
-`update` handles every agent that has the plugin; `--agent` limits it to one. It moves the marketplace to the tag of the new version, installs the new plugin, and trusts the new Codex hooks again. It shows the plan and asks the same way `setup` does; `--yes` answers in advance and `--dry-run` shows the plan only. It changes no settings file. An agent without the plugin is skipped with a note to run `agboard setup`.
+`update` handles every agent that has the plugin; `--agent` limits it to one. It moves the marketplace to the tag of the new version, installs the new plugin, and trusts the new Codex hooks again. It shows the plan and asks the same way `setup` does; `--yes` answers in advance and `--dry-run` shows the plan only. It changes no settings file. An agent without the plugin is skipped with a note to run `agpj setup`.
 
 
 ### What the hook does
 
-- **Folder resolution.** The hook command is fixed, `agboard hook --agent claude`, with no project name or session ID. It reads `cwd` from its input and uses the nearest registered ancestor folder; an explicit `--project NAME` overrides the binding. A folder with no binding at all is not an error: the hook prints nothing and exits normally, so the Hook does not disturb work in other folders. A broken binding, a bound project that was deleted, or an unreadable `cwd` returns `AGBOARD_ERROR`; the hook never guesses another project.
-- **Progress table.** The hook supplies the same concise table as `agboard progress`. Done, archived, and Awaiting answer tasks are left out unless you add `--include-awaiting-answer` or `--include-done COUNT` to the hook command (see [Epics and progress](../watch/epics)). If the table exceeds 256 KiB or cannot be read, the agent gets `AGBOARD_ERROR` and must not make board-dependent changes.
-- **Turn-end checklist.** When an agent ends a turn, the hook checks a short list of rules and, if any gives an item, returns a checklist once before the agent stops. Items under `Found` (`NG:`) are confirmed by the hook; items under `Check` (`[ ]`) are triggered by the turn and the agent decides whether they apply. The rules cover a question that was put only in the chat instead of on the board, and a result that was not recorded (the turn opened a pull request, pushed, or wrote an image while a task was running, or a finished task has no final result). It reminds at most once per turn, and does nothing in a folder with no project. Codex needs this hook trusted: run `agboard update` after upgrading.
+- **Folder resolution.** The hook command is fixed, `agpj hook --agent claude`, with no project name or session ID. It reads `cwd` from its input and uses the nearest registered ancestor folder; an explicit `--project NAME` overrides the binding. A folder with no binding at all is not an error: the hook prints nothing and exits normally, so the Hook does not disturb work in other folders. A broken binding, a bound project that was deleted, or an unreadable `cwd` returns `AGPJ_ERROR`; the hook never guesses another project.
+- **Progress table.** The hook supplies the same concise table as `agpj progress`. Done, archived, and Awaiting answer tasks are left out unless you add `--include-awaiting-answer` or `--include-done COUNT` to the hook command (see [Epics and progress](../watch/epics)). If the table exceeds 256 KiB or cannot be read, the agent gets `AGPJ_ERROR` and must not make board-dependent changes.
+- **Turn-end checklist.** When an agent ends a turn, the hook checks a short list of rules and, if any gives an item, returns a checklist once before the agent stops. Items under `Found` (`NG:`) are confirmed by the hook; items under `Check` (`[ ]`) are triggered by the turn and the agent decides whether they apply. The rules cover a question that was put only in the chat instead of on the board, and a result that was not recorded (the turn opened a pull request, pushed, or wrote an image while a task was running, or a finished task has no final result). It reminds at most once per turn, and does nothing in a folder with no project. Codex needs this hook trusted: run `agpj update` after upgrading.
 
 ### What agents may edit
 
@@ -95,7 +95,7 @@ flowchart TD
     W --> P
 ```
 
-1. **Choose.** Read `agboard progress --json` and select a ready AI-owned task, following its epic's saved task order. Read only the selected epic's `EPIC.md` and the task's `TASK.md`; use `show` when you need its history or an open question.
+1. **Choose.** Read `agpj progress --json` and select a ready AI-owned task, following its epic's saved task order. Read only the selected epic's `EPIC.md` and the task's `TASK.md`; use `show` when you need its history or an open question.
 2. **Start.** Move the task to Doing with a reason, then report Running. Review a user-owned task only when it affects the work.
 3. **Work and record.** Put the grounds for a move or state change in its `--reason`; that entry is the record. Add `history add` only for a decision that changes no state but matters later, such as keeping a card in Todo, with the grounds, the decision, and when known the condition for reconsidering. Reading the list needs no entry, and `result add` records itself. Keep the plan and concise verification results in the body; attach images when visual proof is useful.
 4. **Ask when blocked.** Ask with `message ask` when you need a decision; the task shows Awaiting answer until you answer (see [Decisions](./decisions)).
@@ -113,7 +113,7 @@ When you ask an agent for work that is more than one task, it decides what you a
 
 1. **Questions about the plan.** The agent asks what it cannot settle itself, as ordinary questions with choices and a recommendation. A task that refers to an open question shows **Awaiting answer** until you answer.
 2. **Revisions.** The agent changes the epic and the tasks as your answers say, and asks more questions if something is still open.
-3. **Send.** Only you send a Backlog plan to Todo, with `agboard epic send <EPIC-ID> --actor human` for the epic or `agboard mv <id> todo --actor human` for one task. An agent that tries gets `human_only`. If a question on one of the tasks is still open, the send is refused (`send_with_open_questions`) until you confirm it with `--force`. The history records "A person sent the task to Todo."
+3. **Send.** Only you send a Backlog plan to Todo, with `agpj epic send <EPIC-ID> --actor human` for the epic or `agpj mv <id> todo --actor human` for one task. An agent that tries gets `human_only`. If a question on one of the tasks is still open, the send is refused (`send_with_open_questions`) until you confirm it with `--force`. The history records "A person sent the task to Todo."
 4. **Work.** After the send, the agent works through the tasks in the epic's order without asking each time.
 
 After the start, the agent calls you only when:
@@ -148,14 +148,14 @@ The agent uses `--no-wait` only when you explicitly ask it to register a questio
 ## Wait for changes
 
 ```sh
-agboard --project "My project" snapshot --json
-agboard --project "My project" wait --after "<cursor>" --json
+agpj --project "My project" snapshot --json
+agpj --project "My project" wait --after "<cursor>" --json
 ```
 
 A cursor has the format `f1:<project-id>:<version>`. Use the value that `snapshot` returns; do not construct one.
 
 - `wait` needs the server of the same data area. It starts one in the background when none runs, then listens for changes without polling.
-- A server started in the background, by `wait`, a question that waits, or the hook, opens the project's board in your browser once, unless a board tab is already connected. See [Open the board in the browser](../reference/cli#open-the-board-in-the-browser) for when it does not, and for `agboard open`.
+- A server started in the background, by `wait`, a question that waits, or the hook, opens the project's board in your browser once, unless a board tab is already connected. See [Open the board in the browser](../reference/cli#open-the-board-in-the-browser) for when it does not, and for `agpj open`.
 - It follows the same project through a rename, so update the name in future commands and hooks. Changes to other projects do not end it. If the project is deleted, it fails with `project_not_found`.
 - `wait_timeout`, `board_unavailable`, `cursor_invalid`, and `project_not_found` are errors, never answers.
 - When `wait` returns, read the full snapshot and history, reconsider the user's reason, then resume or ask a follow-up question.
@@ -165,22 +165,22 @@ A cursor has the format `f1:<project-id>:<version>`. Use the value that `snapsho
 You can keep one already-open Codex or Claude Code session working through AI tasks in one project. Start listening explicitly (the command starts the server of the same data area if none runs) and choose how many seconds the board must have no eligible task before the command ends:
 
 ```sh
-agboard --project "My project" wait --until task --idle-timeout 300 --json
+agpj --project "My project" wait --until task --idle-timeout 300 --json
 ```
 
-The timeout is required and must be from 1 to 86,400 seconds; there is no default. A task already in Todo is returned immediately, so tasks created before listening are included. An AI task already in Doing is also eligible when its `agentStatus` is `idle` or `paused`. Before starting or resuming the listener, inspect AI tasks by `agentStatus`: if any task is `running` or `awaiting_answer`, resolve that work first. A Doing lane by itself does not block the listener. Each successful call returns one task. Finish or pause that task, then call `wait` again in the same session to take the next one. The selector follows the same order as the progress table: epics sorted by ID, each epic's saved waves and then task ID, followed by ungrouped tasks by ID. It selects only AI-owned Todo/Doing tasks with `agentStatus` of `idle`, `paused`, or `ran` that are non-draft and non-archived. It does not claim or edit the task; read its epic's `EPIC.md` when it has one, its body, attachments, and current state before deciding whether its work is approved and ready to start. A task created with `agboard add` is the same kind of task, and the listener can pick it up later.
+The timeout is required and must be from 1 to 86,400 seconds; there is no default. A task already in Todo is returned immediately, so tasks created before listening are included. An AI task already in Doing is also eligible when its `agentStatus` is `idle` or `paused`. Before starting or resuming the listener, inspect AI tasks by `agentStatus`: if any task is `running` or `awaiting_answer`, resolve that work first. A Doing lane by itself does not block the listener. Each successful call returns one task. Finish or pause that task, then call `wait` again in the same session to take the next one. The selector follows the same order as the progress table: epics sorted by ID, each epic's saved waves and then task ID, followed by ungrouped tasks by ID. It selects only AI-owned Todo/Doing tasks with `agentStatus` of `idle`, `paused`, or `ran` that are non-draft and non-archived. It does not claim or edit the task; read its epic's `EPIC.md` when it has one, its body, attachments, and current state before deciding whether its work is approved and ready to start. A task created with `agpj add` is the same kind of task, and the listener can pick it up later.
 
-Use the listener procedure of the agent-board skill (printed by `agboard skills listening`) for the full loop, including decisions waiting for an answer and recovery after a session is interrupted. An Awaiting answer task keeps the same session waiting for the answer; it is not another task to skip to, and its time does not count toward idle timeout. After the answer, read it and resume that task before listening again. A task the session paused itself stays eligible, so the session does not take it again until something about it changes: an answer, a change by a person, or new history. When the pause waits on a person, the session asks a question so that the task becomes Awaiting answer.
+Use the listener procedure of the agent-project skill (printed by `agpj skills listening`) for the full loop, including decisions waiting for an answer and recovery after a session is interrupted. An Awaiting answer task keeps the same session waiting for the answer; it is not another task to skip to, and its time does not count toward idle timeout. After the answer, read it and resume that task before listening again. A task the session paused itself stays eligible, so the session does not take it again until something about it changes: an answer, a change by a person, or new history. When the pause waits on a person, the session asks a question so that the task becomes Awaiting answer.
 
-To keep a session on the board without typing the command, invoke the plugin's `wait` skill (`/agent-board:wait` in Claude Code). It follows the listener procedure with a 3600-second idle timeout when you give none, and starts the wait again after each `idle_timeout`, so the session stays attached until you interrupt it or an error stops it. It handles answers and requests before tasks.
+To keep a session on the board without typing the command, invoke the plugin's `wait` skill (`/agent-project:wait` in Claude Code). It follows the listener procedure with a 3600-second idle timeout when you give none, and starts the wait again after each `idle_timeout`, so the session stays attached until you interrupt it or an error stops it. It handles answers and requests before tasks.
 
 `idle_timeout` is a normal exit with code 0. It says only that no eligible task appeared for the full requested interval. A lost server connection, invalid board data, deleted project, or invalid command is an error; it must not be reported as an empty board. See the [CLI reference](../reference/cli#wait-for-changes-or-a-task) for the output and error codes.
 
 ## Sessions the board starts {#sessions-the-board-starts}
 
-Instead of starting an agent yourself, the board can start a headless Claude Code or Codex session in a project's folder. The session stays attached to the board and works on what you hand it. The board sends it your requests, the answers to its questions, and ready tasks, one at a time and only when the session is idle, so there is no `wait` command to run or keep alive. A session you started yourself in a terminal still waits on the board with `agboard wait`. The board keeps at most one such session in total, whichever tool or project, and the session needs the `claude` or `codex` command on the `PATH` of the server and a login in that tool.
+Instead of starting an agent yourself, the board can start a headless Claude Code or Codex session in a project's folder. The session stays attached to the board and works on what you hand it. The board sends it your requests, the answers to its questions, and ready tasks, one at a time and only when the session is idle, so there is no `wait` command to run or keep alive. A session you started yourself in a terminal still waits on the board with `agpj wait`. The board keeps at most one such session in total, whichever tool or project, and the session needs the `claude` or `codex` command on the `PATH` of the server and a login in that tool.
 
-> **Warning: nobody watches a session the board starts, and its approvals are automatic.** Claude Code runs in auto mode: a reviewer checks each action, and anything that would ask you is refused instead. Codex runs in its workspace-write sandbox with automatic review, and the board's data folder is added as writable so the agent can use `agboard`. Neither stops to ask you. Automatic review can approve actions you would not, and a mistaken instruction, for example one in a task or a web page the agent reads, can still do harm. Start sessions only in projects you trust, and stop one from the board when you are done. When the board server stops, it stops the sessions it started.
+> **Warning: nobody watches a session the board starts, and its approvals are automatic.** Claude Code runs in auto mode: a reviewer checks each action, and anything that would ask you is refused instead. Codex runs in its workspace-write sandbox with automatic review, and the board's data folder is added as writable so the agent can use `agpj`. Neither stops to ask you. Automatic review can approve actions you would not, and a mistaken instruction, for example one in a task or a web page the agent reads, can still do harm. Start sessions only in projects you trust, and stop one from the board when you are done. When the board server stops, it stops the sessions it started.
 
 Only the board on your own computer can start or stop these sessions. The phone connection cannot. The agent's output is written to `resident/<tool>.log` in the data folder; each launch starts a new file, and the four before it stay as `<tool>.1.log` to `<tool>.4.log`. When the agent stops or exits, the server records the time and the reason in its standard error, which is `serve.log` in the data folder for a background server (`serve -d`) and the terminal for a foreground one; such as your stop, a restart, a model change, the server closing, or an unexpected exit.
 
@@ -190,7 +190,7 @@ A draft a person is writing (`draft: "human"`) is read-only for agents: `edit`, 
 
 A Backlog card is read-only for agents' moves: `mv` and `state` fail with `task_in_backlog`, while `edit` and `history add` work. An agent creates a Backlog card with `add --actor ai --backlog` only for a request for the plan; without `--backlog` its `add` creates an ordinary Todo task, also when it is for the user. Only a person sends a card to Todo (`mv <id> todo`, `epic send`); an agent's `mv <id> todo` and `epic send` fail with `human_only`.
 
-On `AGBOARD_ERROR`, a missing project, a technical connection failure, or an unreadable board, report the problem and stop board-dependent changes until a valid progress table is available. A timeout or an interrupted wait does not answer or expire a question. For causes and fixes, see [Troubleshooting](../operations/troubleshooting).
+On `AGPJ_ERROR`, a missing project, a technical connection failure, or an unreadable board, report the problem and stop board-dependent changes until a valid progress table is available. A timeout or an interrupted wait does not answer or expire a question. For causes and fixes, see [Troubleshooting](../operations/troubleshooting).
 
 ## Next
 

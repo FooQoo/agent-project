@@ -6,7 +6,7 @@ title: Quickstart
 
 In about ten minutes you delegate your first piece of work: you ask for what you want with **Ask AI**, the agent puts a plan on the board, you answer its questions, the agent starts the plan, and you watch it work until the tasks reach Done.
 
-You need a running installation and an agent. If you have not installed `agboard` and set up your agent, start with [Install and start](./getting-started) and [Working with agents](./delegate/agents#set-up-your-agents).
+You need a running installation and an agent. If you have not installed `agpj` and set up your agent, start with [Install and start](./getting-started) and [Working with agents](./delegate/agents#set-up-your-agents).
 
 ## 1. Open a project and the board
 
@@ -14,8 +14,8 @@ Create a project for the folder you want the agent to work in, and open the boar
 
 ```sh
 cd path/to/your/project
-agboard project create "My project"
-agboard serve
+agpj project create "My project"
+agpj serve
 ```
 
 Open [http://127.0.0.1:7420/](http://127.0.0.1:7420/) and select **My project** in the header. The board is empty for now. The agent writes the plan, so you do not need to add any tasks yourself.
@@ -40,7 +40,7 @@ The agent changes the plan as your answers say, and may ask a little more. If it
 
 ## 4. The agent starts the plan
 
-Once your questions are answered and you are happy with the plan, you send it to Todo yourself with `agboard epic send <EPIC-ID> --actor human`; an agent cannot send it. If a question is still open, the send is refused until you confirm it with `--force`. The history records that a person sent the task to Todo. If you want something changed first, send the agent a request with **Ask AI** or tell it in the chat.
+Once your questions are answered and you are happy with the plan, you send it to Todo yourself with `agpj epic send <EPIC-ID> --actor human`; an agent cannot send it. If a question is still open, the send is refused until you confirm it with `--force`. The history records that a person sent the task to Todo. If you want something changed first, send the agent a request with **Ask AI** or tell it in the chat.
 
 ## 5. Watch it run
 
@@ -54,7 +54,7 @@ When the agent has verified every acceptance condition of a task and nothing is 
 
 ## Practice the loop by hand
 
-If you want to see the loop without an agent, you can play the agent yourself with a few `agboard` commands. This is a way to learn the mechanics, not how you normally work. To keep your own board untouched, create one temporary data folder first: run `export AGPJ_HOME="$(mktemp -d)"` and `echo "$AGPJ_HOME"` in the first terminal. In every other terminal you use below, run `export AGPJ_HOME="<the printed path>"` so that all of them share that folder. Skip this to use your real board.
+If you want to see the loop without an agent, you can play the agent yourself with a few `agpj` commands. This is a way to learn the mechanics, not how you normally work. To keep your own board untouched, create one temporary data folder first: run `export AGPJ_HOME="$(mktemp -d)"` and `echo "$AGPJ_HOME"` in the first terminal. In every other terminal you use below, run `export AGPJ_HOME="<the printed path>"` so that all of them share that folder. Skip this to use your real board.
 
 ### The first-run guide
 
@@ -68,8 +68,8 @@ You can open the guide again at any time, on the screen you are using, whatever 
 ### 1. Start the board by hand
 
 ```sh
-agboard project create "Quickstart"
-agboard serve --port 7420
+agpj project create "Quickstart"
+agpj serve --port 7420
 ```
 
 Leave the server running and open [http://127.0.0.1:7420/](http://127.0.0.1:7420/). Select **Quickstart** in the header. The board is empty. Use a second terminal for the commands below.
@@ -83,8 +83,8 @@ In the browser, choose **Ask AI**, write `Check that the install steps work`, an
 In the second terminal, list the messages and accept the request, as an agent does when it takes one:
 
 ```sh
-agboard --project "Quickstart" message ls
-agboard --project "Quickstart" message accept Q-1 --actor ai
+agpj --project "Quickstart" message ls
+agpj --project "Quickstart" message accept Q-1 --actor ai
 ```
 
 The request leaves **Your requests**. Now plan the work as a task. Create a file `task.md` that contains one acceptance condition:
@@ -104,7 +104,7 @@ Walk through the install steps and note anything that is unclear.
 Add it as an AI-owned task, as the agent would:
 
 ```sh
-agboard --project "Quickstart" add "Check the install steps" --assignee ai --actor ai --desc-file task.md
+agpj --project "Quickstart" add "Check the install steps" --assignee ai --actor ai --desc-file task.md
 ```
 
 The command prints the new task's ID; this page assumes **#1**. The task appears in Todo with an AI icon, a **Draft** badge, and `0/1` conditions.
@@ -114,9 +114,9 @@ The command prints the new task's ID; this page assumes **#1**. The task appears
 An agent moves the task to Doing, and reports that it is running:
 
 ```sh
-agboard --project "Quickstart" mv 1 doing --actor ai --reason "Start checking the install steps"
-agboard --project "Quickstart" state 1 running --actor ai --reason "Following the install page"
-agboard --project "Quickstart" history add 1 --reason "Built the web UI and installed agboard without errors"
+agpj --project "Quickstart" mv 1 doing --actor ai --reason "Start checking the install steps"
+agpj --project "Quickstart" state 1 running --actor ai --reason "Following the install page"
+agpj --project "Quickstart" history add 1 --reason "Built the web UI and installed agpj without errors"
 ```
 
 In the browser, task #1 moves to Doing and shows **Running**. Select it and open the **History** tab: each step is there with its time and reason.
@@ -126,7 +126,7 @@ In the browser, task #1 moves to Doing and shows **Running**. Select it and open
 When an agent needs a decision, it asks a question with choices:
 
 ```sh
-agboard --project "Quickstart" message ask --actor ai --task 1 --questions-json '{"questions":[{"body":"Should the guide also cover Windows?","choices":[{"id":"yes","label":"Yes, include Windows"},{"id":"no","label":"No, macOS only"}]}]}'
+agpj --project "Quickstart" message ask --actor ai --task 1 --questions-json '{"questions":[{"body":"Should the guide also cover Windows?","choices":[{"id":"yes","label":"Yes, include Windows"},{"id":"no","label":"No, macOS only"}]}]}'
 ```
 
 This command waits for your answer, up to 10 minutes by default, through the server you started. (Without one, it would start a server in the background.) Task #1 shows **Awaiting answer** and the question with its two options. In the browser, choose an option, optionally write a note, and send the answer. The command prints the answer and ends, and the task returns to **Idle**.
@@ -134,8 +134,8 @@ This command waits for your answer, up to 10 minutes by default, through the ser
 The agent reads the answer in the task's history and resumes:
 
 ```sh
-agboard --project "Quickstart" show 1
-agboard --project "Quickstart" state 1 running --actor ai --reason "Windows is not needed; continuing with macOS"
+agpj --project "Quickstart" show 1
+agpj --project "Quickstart" state 1 running --actor ai --reason "Windows is not needed; continuing with macOS"
 ```
 
 ### 6. Finish: check the condition
@@ -143,9 +143,9 @@ agboard --project "Quickstart" state 1 running --actor ai --reason "Windows is n
 When the agent has verified a condition, it records the verification and marks the condition done. Mark it done in a copy of the file and apply it:
 
 ```sh
-agboard --project "Quickstart" history add 1 --reason "Verified the install steps on a clean machine"
+agpj --project "Quickstart" history add 1 --reason "Verified the install steps on a clean machine"
 sed 's/done: false/done: true/' task.md > task-done.md
-agboard --project "Quickstart" edit 1 --desc-file task-done.md
+agpj --project "Quickstart" edit 1 --desc-file task-done.md
 ```
 
 With the server running, task #1 moves to Done by itself: every condition is done, so there is nothing left for you to do. This works for AI-owned tasks that are not drafts.
@@ -155,7 +155,7 @@ With the server running, task #1 moves to Done by itself: every condition is don
 Press Ctrl+C in the server's terminal. If you used a temporary `AGPJ_HOME`, there is nothing more to do. Otherwise, delete the practice project (it asks for your confirmation, and agents cannot do it):
 
 ```sh
-agboard --project "Quickstart" project rm
+agpj --project "Quickstart" project rm
 ```
 
 ## What you learned

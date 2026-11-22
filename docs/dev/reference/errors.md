@@ -79,9 +79,9 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 
 | Code | When | Exit | HTTP |
 | --- | --- | --- | --- |
-| `already_serving` | Another `serve` already runs on this data area. When it was started automatically, the reason says to run `agboard serve -d` to keep it. | 1 | n/a |
+| `already_serving` | Another `serve` already runs on this data area. When it was started automatically, the reason says to run `agpj serve -d` to keep it. | 1 | n/a |
 | `port_in_use` | The port given to `serve` is taken. The reason names what holds it: another Agent Board server with a different data area (with its pid), or another program. An automatic server takes another port instead. | 1 | n/a |
-| `local_network_denied` | The OS or a sandbox refused to let `agboard` listen on or connect to `127.0.0.1` (`EACCES` or `EPERM`). In Codex, `agboard setup` allows `agboard` to run outside the sandbox. | 1 | n/a |
+| `local_network_denied` | The OS or a sandbox refused to let `agpj` listen on or connect to `127.0.0.1` (`EACCES` or `EPERM`). In Codex, `agpj setup` allows `agpj` to run outside the sandbox. | 1 | n/a |
 | `board_unavailable` | A waiting `message ask`, `message wait`, `wait`, `open`, or the hook cannot reach the server: autostart is off (`AGPJ_AUTOSTART=0`), the server could not start (the reason names `serve.log`), the server named in `serve.json` does not answer, or the connection failed. A waiting `message ask` checks the server before saving, so an unavailable server leaves no question; `--no-wait` needs no server. | 1 | n/a |
 | `remote_unavailable` | `show remote` with `--project` has no ready ngrok connection to report: no server is running, or the connection is not `ready` (disabled, starting, reconnecting, failed, and so on). The reason says which; when the connection failed, it names the failure code. Nothing is started, and no address or passcode is printed. | 1 | n/a |
 | `invalid_domain` | `setup remote --domain` is not a bare host name: it has a scheme, a path, a port, a wildcard, or spaces. The board's settings API returns the same code with HTTP 422. Nothing is saved. | 2 | 422 |
@@ -91,7 +91,7 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `agent_cli_logged_out` | The agent CLI is installed but not logged in (`claude auth status` reports `loggedIn` false, or `codex login status` fails). The reason says to log in in a terminal. | 1 | 409 |
 | `session_launch_refused` | The board already keeps a launched session, of either tool, and it is running, restarting, or attached. Board-launched sessions are limited to one in total over both tools and all projects. The reason names the tool and says to stop it first. | 1 | 409 |
 | `session_launch_failed` | The agent CLI could not be started, its log file could not be written, or its login check did not finish within 20 seconds. | 1 | 500 |
-| `project_has_no_folder` | A session cannot be launched because the project has no bound folder that still exists. Bind one with `agboard project bind`. | 1 | 409 |
+| `project_has_no_folder` | A session cannot be launched because the project has no bound folder that still exists. Bind one with `agpj project bind`. | 1 | 409 |
 | `cursor_invalid` | The cursor is malformed or belongs to another project. | 1 | n/a |
 | `wait_timeout` | Change mode (`wait --after`) reached its optional `--timeout` with no change, with no change. A `message ask` or `message wait` that reaches its `--timeout` is not an error: it prints a `timeout` event and exits 5. | 1 | n/a |
 | `hook_cwd_unavailable` | The hook's input `cwd` is an absolute path that does not exist or cannot be read. It is reported as `AGPJ_ERROR`; a folder that cannot be checked is never treated as unbound. | n/a (hook output) | n/a |

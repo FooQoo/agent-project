@@ -14,7 +14,7 @@ The board is where you watch the work and step in while the agent keeps going. Y
 
 On a phone, choosing another item in the bottom bar while the request form is open closes the form and shows that item. If you have typed text or attached an image, the board asks before discarding them, and choosing to keep editing leaves you on the form.
 
-The board has no form for adding a task by hand. Agents create tasks from your requests, and you can also add one with `agboard add` (see [CLI](../reference/cli)). A new task appears at the end of Todo. The owner cannot be changed after the task is created.
+The board has no form for adding a task by hand. Agents create tasks from your requests, and you can also add one with `agpj add` (see [CLI](../reference/cli)). A new task appears at the end of Todo. The owner cannot be changed after the task is created.
 
 ## Read a task {#read-a-task}
 
@@ -44,7 +44,7 @@ Each tab loads its text when you open it. The number on the **History** tab appe
 
 ### Read a result {#read-a-result}
 
-When an agent delivers a result with `agboard result add` (see [Deliver a result](../reference/cli.md#deliver-a-result)), it appears in the **Results** tab. Results are listed newest first. Each one shows:
+When an agent delivers a result with `agpj result add` (see [Deliver a result](../reference/cli.md#deliver-a-result)), it appears in the **Results** tab. Results are listed newest first. Each one shows:
 
 - a badge, **In progress** or **Final**, with its version and the time it was delivered;
 - the title, as the heading of the result: the title the agent gave, or the first sentence of the summary when it gave none;
@@ -122,7 +122,7 @@ If a card you send, alone or in a group, still has an open question, a window (o
 
 You can also take a card back. Only you can do it, and only for a Todo card that has not been started: on the board, drag it onto the Backlog lane; on the phone, hold the card and swipe it to the right, then choose the Backlog button. The card becomes a Backlog plan again and agents stop treating it as work to pick up. A card that has been started, or one an agent tried to move, is refused, and the notice shows the reason the server gave.
 
-You can also send a plan from the command line: `agboard mv <id> todo --actor human` for a card, or `agboard epic send <EPIC-ID> --actor human` for an epic (see [CLI](../reference/cli)). With open questions, the command is refused until you confirm it with `--force`. `agboard mv <id> doing --actor human` (or `done`) moves a Backlog card straight to that lane; it is refused while the card has an open question.
+You can also send a plan from the command line: `agpj mv <id> todo --actor human` for a card, or `agpj epic send <EPIC-ID> --actor human` for an epic (see [CLI](../reference/cli)). With open questions, the command is refused until you confirm it with `--force`. `agpj mv <id> doing --actor human` (or `done`) moves a Backlog card straight to that lane; it is refused while the card has an open question.
 
 ## Archive
 

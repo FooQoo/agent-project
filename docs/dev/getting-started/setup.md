@@ -15,7 +15,7 @@ Two habits keep your own board safe while you work:
 
 - **Use a temporary data area.** The default data area (`~/.agent-board/` on macOS, `%USERPROFILE%\.agent-board\` on Windows) is your real board. For experiments and tests, set `AGPJ_HOME` to a temporary directory. The variable applies to the current shell only.
 - **Leave port 7420 free.** It is the default port for normal use. Use another port, or port 0 in tests.
-- **Know that commands start a server.** `wait`, a question that waits, and the hook start a background server for the data area when none runs. Such a server also opens the board in your browser. Set `AGPJ_AUTOSTART=0` while you experiment if you do not want a server, or `AGPJ_OPEN_BROWSER=0` if you only do not want the browser, and `agboard stop` ends one.
+- **Know that commands start a server.** `wait`, a question that waits, and the hook start a background server for the data area when none runs. Such a server also opens the board in your browser. Set `AGPJ_AUTOSTART=0` while you experiment if you do not want a server, or `AGPJ_OPEN_BROWSER=0` if you only do not want the browser, and `agpj stop` ends one.
 
 ## Build
 
@@ -133,7 +133,7 @@ Users install Agent Board with Homebrew (see [Install and start](../../guide/get
 
 - **Version.** `Cargo.toml` and `Cargo.lock` hold the version, and the tag is `v` plus that version. `scripts/release/check-version.py --tag vX.Y.Z` fails on any mismatch. The version on `main` is a development version; only a published GitHub Release is a released version.
 - **Build.** Each CPU builds on its own macOS runner (`macos-15` for Apple Silicon, `macos-15-intel` for Intel), web UI first, then `cargo build --release --locked`, with `MACOSX_DEPLOYMENT_TARGET=15.0`. The minimum supported macOS is 15 on both CPUs. Strip, if any, runs before signing.
-- **Archive.** `package.sh` writes `agboard-<version>-<target>.tar.gz` holding exactly `agboard`, `LICENSE`, and `THIRD_PARTY_NOTICES.txt`; the web UI, Skill, and Hook templates are inside the binary. `verify-artifact.sh` checks the names, the two license files, the CPU, the deployment target, that only system libraries are linked, and, where it can run, `--version` and the embedded web UI.
+- **Archive.** `package.sh` writes `agpj-<version>-<target>.tar.gz` holding exactly `agpj`, `LICENSE`, and `THIRD_PARTY_NOTICES.txt`; the web UI, Skill, and Hook templates are inside the binary. `verify-artifact.sh` checks the names, the two license files, the CPU, the deployment target, that only system libraries are linked, and, where it can run, `--version` and the embedded web UI.
 - **Notices.** `generate-notices.py` builds `THIRD_PARTY_NOTICES.txt`; `--check` fails when it is out of date. The MIT text is in `LICENSE`; its copyright line must hold the real holder and year before a release.
 - **Actions.** Every `uses:` in `release.yml` is pinned to a full 40-character commit SHA with the version as a trailing comment (`actions/checkout@<sha> # v7.0.1`). When you update one, resolve the tag to its commit (the peeled commit for an annotated tag) and change the SHA and the comment together.
 - **Candidate or release.** Pull requests and manual runs produce only an unsigned candidate (`candidate.json` says `signed: false`). A candidate is never a release file.
@@ -152,13 +152,13 @@ A single command-line binary cannot carry a stapled ticket, so macOS checks the 
 
 ### Publish to Homebrew
 
-After the Release is published, `.github/workflows/homebrew-tap.yml` publishes the Formula by itself. `scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agboard.rb` renders the Formula from the published files and refuses a missing CPU, a wrong version, or a hash mismatch. The Formula selects the archive by CPU in `on_macos`, requires macOS 15 (`depends_on macos: :sequoia`), declares MIT, installs `agboard` into `bin` and the two license files into `pkgshare`, and has a `test do` block that checks `--version` and uses a temporary `AGPJ_HOME`.
+After the Release is published, `.github/workflows/homebrew-tap.yml` publishes the Formula by itself. `scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agboard.rb` renders the Formula from the published files and refuses a missing CPU, a wrong version, or a hash mismatch. The Formula selects the archive by CPU in `on_macos`, requires macOS 15 (`depends_on macos: :sequoia`), declares MIT, installs `agpj` into `bin` and the two license files into `pkgshare`, and has a `test do` block that checks `--version` and uses a temporary `AGPJ_HOME`.
 
 The workflow runs when a Release is published, and skips drafts and prereleases. It does these steps in order:
 
 1. Downloads the two archives and `SHA256SUMS` of the tag with `gh release download`.
 2. Renders the Formula, then runs `scripts/release/test-formula.sh` and `ruby -c` on macOS 15.
-3. Clones `FooQoo/homebrew-tap` over SSH, copies `Formula/agboard.rb`, and, only when the file changed, commits `agboard X.Y.Z` as `github-actions[bot]` and pushes it directly to the default branch.
+3. Clones `FooQoo/homebrew-tap` over SSH, copies `Formula/agboard.rb`, and, only when the file changed, commits `agpj X.Y.Z` as `github-actions[bot]` and pushes it directly to the default branch.
 
 The job runs in the `homebrew-tap` Environment, which accepts only `v*` tags and holds the secret `HOMEBREW_TAP_DEPLOY_KEY`. The secret is a read-write deploy key of the tap repository; it is written to a temporary file with mode 0600 for the push and removed at the end of the job. SSH accepts only the pinned GitHub host key. The job has `contents: read` only, and no secret appears on a command line. `release.yml` does not take part.
 
@@ -174,18 +174,18 @@ To rotate the key, generate a new pair with `ssh-keygen -t ed25519 -N "" -C home
 
 ## Install from source
 
-Agents and hooks run `agboard` from your `PATH`, so to try a change through an agent, install your build:
+Agents and hooks run `agpj` from your `PATH`, so to try a change through an agent, install your build:
 
 ```sh
 pnpm --dir web install
 pnpm --dir web build
 cargo install --path . --locked --force
-command -v agboard
+command -v agpj
 ```
 
-`cargo install` writes to `~/.cargo/bin` (or `$CARGO_HOME/bin`), which must be on your `PATH`. If `command -v agboard` prints nothing, add it, for example `export PATH="$HOME/.cargo/bin:$PATH"`, and open a new shell.
+`cargo install` writes to `~/.cargo/bin` (or `$CARGO_HOME/bin`), which must be on your `PATH`. If `command -v agpj` prints nothing, add it, for example `export PATH="$HOME/.cargo/bin:$PATH"`, and open a new shell.
 
-The installed `agboard` and your development build are separate files. Hooks call the installed one, while `cargo build`, `cargo run`, and `target/debug/agpj` use the working tree. Reinstall before checking a change through a hook.
+The installed `agpj` and your development build are separate files. Hooks call the installed one, while `cargo build`, `cargo run`, and `target/debug/agpj` use the working tree. Reinstall before checking a change through a hook.
 
 ### Keep the Keychain grant on macOS
 
@@ -210,7 +210,7 @@ To try an installation without touching `~/.cargo/bin` or your board:
 root="$(mktemp -d)"
 cargo install --path . --locked --root "$root"
 export AGPJ_HOME="$(mktemp -d)"
-"$root/bin/agboard" --help
-"$root/bin/agboard" project create demo
-"$root/bin/agboard" --project demo ls
+"$root/bin/agpj" --help
+"$root/bin/agpj" project create demo
+"$root/bin/agpj" --project demo ls
 ```

@@ -1,9 +1,9 @@
-//! `agboard skills`: the text of the Agent Board Skill, served by the binary.
+//! `agpj skills`: the text of the Agent Board Skill, served by the binary.
 //!
 //! The authoritative text is embedded at build time: `agent-board.md` is the
 //! Skill body, and `topics/` holds the references and templates it points to
-//! with `agboard skills <topic>`. The plugin's `SKILL.md` is only a thin entry
-//! that runs `agboard skills`, so the instructions always match the binary
+//! with `agpj skills <topic>`. The plugin's `SKILL.md` is only a thin entry
+//! that runs `agpj skills`, so the instructions always match the binary
 //! that runs them.
 //!
 //! Printing reads nothing and writes nothing, and every answer, an unknown
@@ -45,7 +45,7 @@ pub const TOPICS: &[(&str, &str)] = &[
     ),
 ];
 
-/// What `agboard skills [TOPIC]` prints: the main text, a topic, or, for a
+/// What `agpj skills [TOPIC]` prints: the main text, a topic, or, for a
 /// name that is no topic, the list of topics.
 pub fn render(topic: Option<&str>) -> String {
     let Some(topic) = topic else {
@@ -60,10 +60,10 @@ pub fn render(topic: Option<&str>) -> String {
 fn unknown(topic: &str) -> String {
     let list: Vec<String> = TOPICS
         .iter()
-        .map(|(name, _)| format!("- `agboard skills {name}`"))
+        .map(|(name, _)| format!("- `agpj skills {name}`"))
         .collect();
     format!(
-        "# No topic named `{topic}`\n\nThe topics of this agboard (version {}) are:\n\n{}\n\n`agboard skills` without a topic prints the main instructions. If a topic you were told to read is missing, this agboard may be older than the plugin that named it: ask the user to upgrade agboard.\n",
+        "# No topic named `{topic}`\n\nThe topics of this agpj (version {}) are:\n\n{}\n\n`agpj skills` without a topic prints the main instructions. If a topic you were told to read is missing, this agpj may be older than the plugin that named it: ask the user to upgrade agpj.\n",
         env!("CARGO_PKG_VERSION"),
         list.join("\n"),
     )
@@ -91,8 +91,8 @@ mod tests {
     fn every_topic_the_text_names_exists() {
         let all = std::iter::once(AGENT_BOARD).chain(TOPICS.iter().map(|(_, text)| *text));
         for text in all {
-            for (at, _) in text.match_indices("agboard skills ") {
-                let name: String = text[at + 15..]
+            for (at, _) in text.match_indices("agpj skills ") {
+                let name: String = text[at + 12..]
                     .chars()
                     .take_while(|c| c.is_ascii_lowercase() || *c == '-')
                     .collect();
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn every_topic_is_named_by_the_main_text_or_another_topic() {
         for (name, _) in TOPICS {
-            let command = format!("agboard skills {name}");
+            let command = format!("agpj skills {name}");
             assert!(
                 AGENT_BOARD.contains(&command)
                     || TOPICS.iter().any(|(_, text)| text.contains(&command)),

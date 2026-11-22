@@ -2,10 +2,10 @@
 
 There are two kinds of resident agent, and the environment tells them apart:
 
-- **Launched by the board** (`AGPJ_RESIDENT_ID` and `AGPJ_SESSION_ORIGIN=board` are set). The board watches the project for you and sends each piece of work as a message when you are idle. Follow "Work the board pushes" below, and never run `agboard wait`.
+- **Launched by the board** (`AGPJ_RESIDENT_ID` and `AGPJ_SESSION_ORIGIN=board` are set). The board watches the project for you and sends each piece of work as a message when you are idle. Follow "Work the board pushes" below, and never run `agpj wait`.
 - **Opened by a person** who told you to stay on the board. Nothing sends you work, so you wait for it yourself. Follow "Wait for work yourself" below.
 
-Both keep one session attached to one project and working until the board stops the process. Neither ends when the board is idle; that is the difference from `agboard skills listening`, which ends at `idle_timeout` and is for an explicit one-off request.
+Both keep one session attached to one project and working until the board stops the process. Neither ends when the board is idle; that is the difference from `agpj skills listening`, which ends at `idle_timeout` and is for an explicit one-off request.
 
 Nobody watches a board-launched session. It runs headless with automatic approval: a prompt for permission is refused rather than shown. So never ask a person anything in the chat. Every question for a person goes on the board with `message ask`, as the main Skill describes.
 
@@ -13,11 +13,11 @@ Nobody watches a board-launched session. It runs headless with automatic approva
 
 Only a session the board launched follows this part.
 
-1. Resolve the project as the main Skill describes (`agboard skills`), read the complete project snapshot, and inspect every AI task's `agentStatus`. Resolve work that is `running` or `awaiting_answer` first, as `agboard skills listening` describes for a resumed session. Then end your turn. Do not start a wait: the board sends the next message when it has work.
-2. A message that starts with "Agent Board has work for you" carries one JSON object, of the same shape `wait --until task --json` returns. Handle it as follows, then end your turn:
+1. Resolve the project as the main Skill describes (`agpj skills`), read the complete project snapshot, and inspect every AI task's `agentStatus`. Resolve work that is `running` or `awaiting_answer` first, as `agpj skills listening` describes for a resumed session. Then end your turn. Do not start a wait: the board sends the next message when it has work.
+2. A message that starts with "Agent Project has work for you" carries one JSON object, of the same shape `wait --until task --json` returns. Handle it as follows, then end your turn:
    - `"kind":"answers"`: answers to questions you asked. Read each with `message show <id>`, act on it, and take it in with `message accept <id> --actor ai`.
-   - `"kind":"requests"`: open requests. Read each with `message show <id>`, take it with `message accept <id> --actor ai`, and plan it as `agboard skills planning` describes. If `message accept` says another session already took it, drop it.
-   - `"kind":"task"`: a ready task. Work it as `agboard skills listening` describes under "Process one returned task".
+   - `"kind":"requests"`: open requests. Read each with `message show <id>`, take it with `message accept <id> --actor ai`, and plan it as `agpj skills planning` describes. If `message accept` says another session already took it, drop it.
+   - `"kind":"task"`: a ready task. Work it as `agpj skills listening` describes under "Process one returned task".
 3. The board never sends a message while you are working, so the next one arrives after your turn ends. A turn that ends with the item still open (for example a request you did not accept) is sent again after a delay, and the board gives up after three tries, so finish what you were given or say on the board why you cannot.
    - If the item waits for a person (a check on a real device, a decision, a review), you cannot advance it, and leaving it Doing or Idle only makes the board send it again. Ask what you need with `message ask --no-wait --task <id> ...`, record that the task waits for the answer, and end your turn. A task with an open question is awaiting an answer, so the board stops sending it until the person answers.
 4. Ending your turn is how you stay attached. Do not run a wait, and do not poll the board.
@@ -30,15 +30,15 @@ Only a session a person opened and told to stay on the board follows this part a
 
 ### Start
 
-1. Resolve the project as the main Skill describes (`agboard skills`). Never broaden the session to other projects. If the folder is not bound (`folder_unbound`), report it and stop; there is nobody to retry for you.
-2. Read the complete project snapshot and inspect every AI task's `agentStatus`. Resolve work that is `running` or `awaiting_answer` before waiting, as `agboard skills listening` describes for a resumed session.
+1. Resolve the project as the main Skill describes (`agpj skills`). Never broaden the session to other projects. If the folder is not bound (`folder_unbound`), report it and stop; there is nobody to retry for you.
+2. Read the complete project snapshot and inspect every AI task's `agentStatus`. Resolve work that is `running` or `awaiting_answer` before waiting, as `agpj skills listening` describes for a resumed session.
 
 ### The loop
 
 Run this wait, and nothing else, as the way to wait for work:
 
 ```sh
-agboard --project "<current project name>" wait --until task --idle-timeout 3600 --json
+agpj --project "<current project name>" wait --until task --idle-timeout 3600 --json
 ```
 
 - **Claude Code**: a long command in the foreground is stopped by the harness. Run the wait with the Bash tool's `run_in_background` option, end your turn, and continue when its completion notification arrives. Read the result from the notification's output. A background command has its own time limit, so give it a `timeout` longer than the wait (3900000 milliseconds for 3600 seconds). If the harness stops the wait anyway, treat that like `idle_timeout` and wait again.
@@ -47,8 +47,8 @@ agboard --project "<current project name>" wait --until task --idle-timeout 3600
 Then handle the result:
 
 - `{"kind":"answers", ...}`: read each answer with `message show <id>`, act on it, and take it in with `message accept <id> --actor ai` (Take in an answer, in the main Skill). Until accepted, the next wait returns it again.
-- `{"kind":"requests", ...}`: read each with `message show <id>`, take it with `message accept <id> --actor ai` (Accept a request, in the main Skill), and plan it as `agboard skills planning` describes (a Backlog plan only when the request asks for the plan only). Ask the questions that change the plan with `message ask`.
-- `{"kind":"task", ...}`: work the task as `agboard skills listening` describes under "Process one returned task": re-read it, check that it is still ready, move it to Doing and Running, work with history, verify, and record the result. Let Agent Board complete it; do not move it to Done by hand.
+- `{"kind":"requests", ...}`: read each with `message show <id>`, take it with `message accept <id> --actor ai` (Accept a request, in the main Skill), and plan it as `agpj skills planning` describes (a Backlog plan only when the request asks for the plan only). Ask the questions that change the plan with `message ask`.
+- `{"kind":"task", ...}`: work the task as `agpj skills listening` describes under "Process one returned task": re-read it, check that it is still ready, move it to Doing and Running, work with history, verify, and record the result. Let Agent Project complete it; do not move it to Done by hand.
 - `{"kind":"idle_timeout", ...}`: nothing to do. This is not an ending.
 
 Answers come before requests, and requests before tasks. When you have handled the result, wait again.

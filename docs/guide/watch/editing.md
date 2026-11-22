@@ -73,9 +73,9 @@ In the browser editor, select, drop, or paste an image, then insert it into the 
 From the command line:
 
 ```sh
-agboard --project "My project" attachment add 1 --file diagram.png --actor ai
-agboard --project "My project" attachment ls 1 --json
-agboard --project "My project" attachment get 1 "<attachment-id>" --output diagram-copy.png
+agpj --project "My project" attachment add 1 --file diagram.png --actor ai
+agpj --project "My project" attachment ls 1 --json
+agpj --project "My project" attachment get 1 "<attachment-id>" --output diagram-copy.png
 ```
 
 Images are referenced in the Markdown as `attachment:<attachment-id>`, and the image bytes stay in local files. Snapshots include the image metadata; the progress table and hooks leave it out. `attachment get` never overwrites an existing output file.
@@ -101,7 +101,7 @@ The project's current version is changed in the **Current version** menu in the 
 Agents, and you, can also edit a task's `TASK.md` and an epic's `EPIC.md` as plain files; the board notices the change. Find the project's folder instead of guessing its location:
 
 ```sh
-agboard --project "My project" workspace --json
+agpj --project "My project" workspace --json
 ```
 
 The result contains `folder` (the project's absolute path), `projectId`, `readme`, `tasks`, and `epics`. Read the project's `README.md` first. Write a temporary file in the same folder and rename it over the original, so that the board never reads a half-written file. Use the CLI for metadata and status changes; never edit `task.json`, `epic.json`, `project.json`, or the lock files, and never delete task or epic folders by hand. Keep personal absolute paths out of shared files.

@@ -47,7 +47,7 @@ Only the `TASK.md`/`task.json` pair, and a message change with the task pairs it
 
 ## Format versions and the draft mark
 
-A `task.json` or `epic.json` that uses the Backlog has `formatVersion: 2`; the files of ordinary cards stay at `formatVersion: 1`, and both are read. Any other version is `format_unsupported`, and the message says "Only formatVersion 2 is supported". An earlier version of `agboard` cannot read a version-2 file.
+A `task.json` or `epic.json` that uses the Backlog has `formatVersion: 2`; the files of ordinary cards stay at `formatVersion: 1`, and both are read. Any other version is `format_unsupported`, and the message says "Only formatVersion 2 is supported". An earlier version of `agpj` cannot read a version-2 file.
 
 `draft` is `null` or `"human"`. A `draft: "ai"` is not a valid value: that `task.json` or `epic.json` fails to parse like any other invalid file, so it is reported in `problems`, left out of the board, and never rewritten. Nothing else in the project is affected.
 
@@ -101,7 +101,7 @@ Releases before this format kept a whole run in the file, with sample cards on t
 | --- | --- |
 | `serve` is not running, `serve.json` is stale, or a notification is lost | The CLI still succeeds and keeps the save. Changes are picked up from OS events, or when the server starts. |
 | `serve` crashed and left `serve.json` | CLI notifications fail to connect and are ignored; the next `serve` overwrites the file. A command that needs the server starts a new one, because the pid is gone or `lifecycle.lock` is free. |
-| The pid in `serve.json` is alive and holds `lifecycle.lock` but does not answer | A command that needs the server waits up to 10 seconds, then fails with `board_unavailable` naming the pid and `agboard stop`. It does not start a second server. |
+| The pid in `serve.json` is alive and holds `lifecycle.lock` but does not answer | A command that needs the server waits up to 10 seconds, then fails with `board_unavailable` naming the pid and `agpj stop`. It does not start a second server. |
 | An automatic server could not start | The command fails with `board_unavailable` that names `serve.log`, or with `local_network_denied` or `port_in_use`. Nothing was saved. |
 | The watcher cannot be registered | `serve` exits with an error. |
 | The watcher reports an error while running | Every project is reloaded and the error is logged. |

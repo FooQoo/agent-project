@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "agboard hook --agent codex",
+            "command": "agpj hook --agent codex",
             "timeout": 10,
             "additionalContextLimit": 0
           }
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "agboard hook --agent codex",
+            "command": "agpj hook --agent codex",
             "timeout": 10,
             "additionalContextLimit": 0
           }
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "agboard hook --agent codex",
+            "command": "agpj hook --agent codex",
             "timeout": 10,
             "additionalContextLimit": 0
           }

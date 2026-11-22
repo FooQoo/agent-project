@@ -56,7 +56,7 @@ The dialog does not edit files. Choose **Open in editor** in the footer to open 
 To add, rename, move, or delete files and folders, use the folder itself, with Finder, Explorer, a text editor, or an agent:
 
 ```sh
-agboard --project "My project" workspace --json
+agpj --project "My project" workspace --json
 ```
 
 The `folder` in the result is the project's folder; its documents are in `docs/` inside it.
@@ -73,7 +73,7 @@ While the dialog is open, it follows the `docs/` folder:
 
 - A Markdown or MDX file of up to 2 MiB can be shown. It must be UTF-8 text. An image can be up to 10 MiB.
 - Agent Board creates `docs/` when the project is created, with a short `README.md` in the app's language. If an older project has no `docs/`, the server creates it at startup. A `README.md` you deleted is not put back.
-- Deleting the project with `agboard project rm` also deletes its `docs/` folder. Copy anything you want to keep first.
+- Deleting the project with `agpj project rm` also deletes its `docs/` folder. Copy anything you want to keep first.
 - Docs are not shown on the phone screen of [remote access](./remote-access). Opened at 768px or wider, remote access shows the same board as the PC, Docs included; only opening a document in an app on the PC stays on the PC.
 
 ## Next

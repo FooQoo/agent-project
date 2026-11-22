@@ -27,7 +27,7 @@ If the agent is in the middle of a turn (the state is **Working on a task**), **
 
 The tool and model you choose apply from the next start. While a session runs with another choice, the dialog shows `Next start: …`.
 
-If the tool is not installed or not logged in, the card says so with the reason and the command to run in a terminal. Choose **Check again** after you fix it. A project without a bound folder cannot start a session; bind one with `agboard project bind`.
+If the tool is not installed or not logged in, the card says so with the reason and the command to run in a terminal. Choose **Check again** after you fix it. A project without a bound folder cannot start a session; bind one with `agpj project bind`.
 
 ## Read the agent's log {#log}
 
@@ -50,7 +50,7 @@ Turn on **Start automatically when Agent Board starts** to start the session eac
 | **Stopped** | Nothing is running. |
 | **Failed** | The board gave up, for example after the session ended repeatedly in a short time. The reason is shown. Fix the cause, then choose **Restart**. |
 
-The dialog also counts the sessions attached to the board, split into those the board started and **External sessions** you started yourself. An external session is counted while it waits on the board, and also when it used the board in the last 5 minutes: any `agboard` command or hook of an ordinary Claude Code or Codex session counts, so a session that works on the board without waiting appears while it is active and drops out after 5 minutes without use. Only a session of an agent that exposes its own session ID (Claude Code and Codex do) is counted this way; a command run by hand in a plain terminal is not. The footer of the board shows a dot followed by the tool, just left of the sync state, while a session is launched or auto-start is on; click it to open the dialog.
+The dialog also counts the sessions attached to the board, split into those the board started and **External sessions** you started yourself. An external session is counted while it waits on the board, and also when it used the board in the last 5 minutes: any `agpj` command or hook of an ordinary Claude Code or Codex session counts, so a session that works on the board without waiting appears while it is active and drops out after 5 minutes without use. Only a session of an agent that exposes its own session ID (Claude Code and Codex do) is counted this way; a command run by hand in a plain terminal is not. The footer of the board shows a dot followed by the tool, just left of the sync state, while a session is launched or auto-start is on; click it to open the dialog.
 
 ## When a session does not handle something {#not-handled}
 

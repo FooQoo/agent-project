@@ -2,12 +2,12 @@
 
 This chapter explains the architecture, implementation, and verification needed to develop Agent Board. If you only want to use the board, read the [guide](../guide/index.md) instead.
 
-Agent Board is a single Rust program, `agboard`, that is both a CLI and a web server. All data is stored in files; the CLI, direct Markdown edits, and the browser work with the same data:
+Agent Board is a single Rust program, `agpj`, that is both a CLI and a web server. All data is stored in files; the CLI, direct Markdown edits, and the browser work with the same data:
 
 ```mermaid
 flowchart LR
     CLI["CLI"] --> Files[("Files")]
-    Files <--> Serve["agboard serve"]
+    Files <--> Serve["agpj serve"]
     Serve <--> Browser["Browser"]
 ```
 

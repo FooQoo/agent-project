@@ -28,4 +28,4 @@ Start the `EPIC.md` of a new epic from this template.
 (Decisions that changed this epic, with the date and the task where each was made.)
 ```
 
-The epics `BUG` and `ENHANCEMENT` use a fixed body instead: see `agboard skills bug-epic-template` and `agboard skills enhancement-epic-template`.
+The epics `BUG` and `ENHANCEMENT` use a fixed body instead: see `agpj skills bug-epic-template` and `agpj skills enhancement-epic-template`.

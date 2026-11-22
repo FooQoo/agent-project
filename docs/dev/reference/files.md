@@ -68,10 +68,10 @@ The data area is `.agent-board/` in the home directory on every OS, or a non-emp
 ```
 
 - JSON is UTF-8, camelCase, two-space indented, with one trailing newline. Unknown fields are rejected.
-- `workspace.json` is `{"format":"agboard-files","formatVersion":1}`. `project.json` has `formatVersion: 1`. A `task.json` or `epic.json` that uses the Backlog has `formatVersion: 2`; the files of ordinary cards stay at `formatVersion: 1`, and both are read. Any other version is rejected with `format_unsupported`, reported, and left untouched. An earlier version of `agboard` cannot read a version-2 file. Old AI drafts are converted once, automatically (see [Saving and recovery](../concepts/saving-and-recovery.md#format-versions-and-the-draft-mark)).
+- `workspace.json` is `{"format":"agboard-files","formatVersion":1}`. `project.json` has `formatVersion: 1`. A `task.json` or `epic.json` that uses the Backlog has `formatVersion: 2`; the files of ordinary cards stay at `formatVersion: 1`, and both are read. Any other version is rejected with `format_unsupported`, reported, and left untouched. An earlier version of `agpj` cannot read a version-2 file. Old AI drafts are converted once, automatically (see [Saving and recovery](../concepts/saving-and-recovery.md#format-versions-and-the-draft-mark)).
 - Names starting with `.` are not source files. `README.md` describes the folder and its editing rules; the product writes it at creation.
 - Images live in the owner's `assets/`. Bodies reference images as `assets/<attachment-id>.<ext>` (or the older `attachment:<id>`). Images are PNG, JPEG, WebP, or GIF; at most 10 MiB each, 20 per owner, and 50 MiB in total.
-- `bindings.json` and `serve.json` are machine-local. `serve.json` tells the CLI where to notify and `wait` where to connect; it never holds a token. `agboard stop` finds the server through it.
+- `bindings.json` and `serve.json` are machine-local. `serve.json` tells the CLI where to notify and `wait` where to connect; it never holds a token. `agpj stop` finds the server through it.
 
   ```json
   {"pid":41235,"port":7420,"started_at":"2026-11-14T03:00:00Z","mode":"auto","idleTimeoutSeconds":1800}
@@ -80,7 +80,7 @@ The data area is `.agent-board/` in the home directory on every OS, or a non-emp
   `mode` is `auto` for a server a command started and `manual` for `serve` and `serve -d`; a file without it is read as `manual`. `idleTimeoutSeconds` is present only for an automatic server.
 - `serve.log` is the output of a server started in the background, by `serve -d` or by a command (owner-only, replaced at every start). An automatic server writes there why it took another port and when it stopped. Every server also writes one line, with the time in UTC, to its standard error each time a resident agent starts, is asked to stop, or exits. A background server (`serve -d`) sends its standard error to `serve.log`; a foreground server prints it to its terminal (see [Launching resident agents](../concepts/agents.md#launching-resident-agents)).
 - `resident/<tool>.log` (`claude-code.log` or `codex.log`) is the output of the session the board launched for that tool: its standard output and error (owner-only). Each launch starts a new file and keeps the four before it as `<tool>.1.log` (the previous launch) to `<tool>.4.log`. It can hold what the agent printed, so treat it like any other output of an agent running with your account. See [Launching resident agents](../concepts/agents.md#launching-resident-agents).
-- `autostart.lock` orders commands that start the server at the same time. `autostart.paused` is left by `agboard stop` so that the hook does not start the server again; a command that waits, `serve`, or `serve -d` removes it. See [Server and web UI](../concepts/server-and-ui.md#starting-and-stopping-serve).
+- `autostart.lock` orders commands that start the server at the same time. `autostart.paused` is left by `agpj stop` so that the hook does not start the server again; a command that waits, `serve`, or `serve -d` removes it. See [Server and web UI](../concepts/server-and-ui.md#starting-and-stopping-serve).
 
 `docs/` holds the project's own Markdown documents, which the Docs dialog reads (see [Project docs](#project-docs)).
 
@@ -166,7 +166,7 @@ history:
 
 ### Results {#results}
 
-A result is something the requester can look at, delivered by an agent with `agboard result add` (see [Deliver a result](../../guide/reference/cli.md#deliver-a-result)). Results are stored in `task.json` rather than in `TASK.md`, because they are structured data a client reads by version; history stays the only time-ordered text in `TASK.md`. Each entry of `results` has:
+A result is something the requester can look at, delivered by an agent with `agpj result add` (see [Deliver a result](../../guide/reference/cli.md#deliver-a-result)). Results are stored in `task.json` rather than in `TASK.md`, because they are structured data a client reads by version; history stays the only time-ordered text in `TASK.md`. Each entry of `results` has:
 
 | Field | Meaning |
 | --- | --- |
@@ -257,7 +257,7 @@ Back up a project by copying `shared/projects/<project-id>/`; restore it by stop
 
 ## Monitor connection settings
 
-The ngrok remote connection keeps its non-secret settings in `<data-root>/.internal/monitor-connection.json`. The file belongs to the application: it is written by the PC settings screen, by `serve`, and by [`agboard setup remote`](../../guide/reference/cli.md#save-the-remote-access-settings), not by hand, and it is not part of the shared area, so it is not backed up with a project. It is replaced atomically with owner-only permissions (`0600` where the OS has them).
+The ngrok remote connection keeps its non-secret settings in `<data-root>/.internal/monitor-connection.json`. The file belongs to the application: it is written by the PC settings screen, by `serve`, and by [`agpj setup remote`](../../guide/reference/cli.md#save-the-remote-access-settings), not by hand, and it is not part of the shared area, so it is not backed up with a project. It is replaced atomically with owner-only permissions (`0600` where the OS has them).
 
 ```json
 {
@@ -421,7 +421,7 @@ The saved language and color theme live in `<data-root>/.internal/preferences.js
 | `theme.mode` | `light` or `dark`. The default is `light`. |
 | `theme.accent` | One of the 12 accents: `blue`, `sky`, `cyan`, `teal`, `green`, `lime`, `yellow`, `orange`, `red`, `pink`, `purple`, `gray`. The default is `blue`. |
 
-The progress table reads the file too: `agboard progress --json` and the hook add `locale` to the table when the saved language is not English, so an agent keeps replying in the user's language (see [Hook, progress, and wait output](./agent-output.md#progress-table)). Like the README language, this is a read of the file alone; the server need not run, and a missing or invalid file simply leaves the field out.
+The progress table reads the file too: `agpj progress --json` and the hook add `locale` to the table when the saved language is not English, so an agent keeps replying in the user's language (see [Hook, progress, and wait output](./agent-output.md#progress-table)). Like the README language, this is a read of the file alone; the server need not run, and a missing or invalid file simply leaves the field out.
 
 A save changes only the fields it sends; the others keep their saved values. The last save wins, and there is no conflict check. The preferences hold no secret, and the file never holds a token, a passcode, or a session.
 
@@ -464,22 +464,22 @@ The CLI, web API, and hook share one camelCase task representation: the `task.js
 
 ## Files that setup writes {#agent-settings}
 
-`agboard setup` keeps no record of its own. Each agent's plugin list says what is installed, and these files outside the data area are the only ones it changes:
+`agpj setup` keeps no record of its own. Each agent's plugin list says what is installed, and these files outside the data area are the only ones it changes:
 
 | File | Change |
 | --- | --- |
 | `$CODEX_HOME/config.toml` (normally `~/.codex/config.toml`) | The data folder is added to `sandbox_workspace_write.writable_roots`, only with `workspace-write` and no permission profile. |
-| `$CODEX_HOME/rules/agboard.rules` | Created with `prefix_rule(pattern=["agboard"], decision="allow")` when it does not exist. Not written under full access. |
+| `$CODEX_HOME/rules/agboard.rules` | Created with `prefix_rule(pattern=["agpj"], decision="allow")` when it does not exist. Not written under full access. |
 | `$CLAUDE_CONFIG_DIR/settings.json` (normally `~/.claude/settings.json`) | The data folder is added to `permissions.additionalDirectories`. |
 
 - Each changed file is first backed up next to itself as `<file>.agboard-backup…`, with the original file's access rights. A new file is created owner-only.
 - Codex's hook trust is stored by Codex itself, under `hooks.state` in its configuration, through `codex app-server`.
-- The installed plugin lives where each agent keeps its plugins; agboard does not write there.
-- `agboard update` changes none of these files.
+- The installed plugin lives where each agent keeps its plugins; agpj does not write there.
+- `agpj update` changes none of these files.
 
 ## Folder bindings
 
-A folder binding maps a real folder to a ProjectId so the hook and `agboard progress` know which project a working folder belongs to. It is stored only in the machine-local data area, never in the shared area or tracked files. Because it stores the ProjectId, it follows renames and never moves to a re-created project with the same name. The nearest bound ancestor folder wins. Missing folders, broken bindings, and deleted ProjectIds are explained errors.
+A folder binding maps a real folder to a ProjectId so the hook and `agpj progress` know which project a working folder belongs to. It is stored only in the machine-local data area, never in the shared area or tracked files. Because it stores the ProjectId, it follows renames and never moves to a re-created project with the same name. The nearest bound ancestor folder wins. Missing folders, broken bindings, and deleted ProjectIds are explained errors.
 
 ## Project docs
 

@@ -64,7 +64,7 @@ fn every_template_command_uses_cwd_resolution_and_is_fixed() {
         for (event, hook) in handlers(&template) {
             assert_eq!(
                 command(&hook),
-                format!("agboard hook --agent {agent}"),
+                format!("agpj hook --agent {agent}"),
                 "{agent} {event}"
             );
             assert_eq!(hook["type"], "command");
@@ -123,8 +123,8 @@ fn the_skill_sends_an_unbound_folder_to_the_users_own_setup_run() {
             text.contains("folder_unbound"),
             "{name} omits folder_unbound"
         );
-        assert!(text.contains("agboard setup"), "{name} omits setup");
-        assert!(!text.contains("agboard connect"), "{name} names connect");
+        assert!(text.contains("agpj setup"), "{name} omits setup");
+        assert!(!text.contains("agpj connect"), "{name} names connect");
     }
     let skill = agent_project::skills::AGENT_BOARD;
     assert!(

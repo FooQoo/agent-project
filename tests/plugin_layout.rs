@@ -2,7 +2,7 @@
 //! catalogs name one shared plugin folder, every version in them is the crate
 //! version (setup installs the plugin from the tag `v<version>`), the Hook
 //! commands carry no version, and the Skill is a thin entry that runs
-//! `agboard skills`.
+//! `agpj skills`.
 
 use std::path::{Path, PathBuf};
 
@@ -59,7 +59,7 @@ fn every_plugin_version_is_the_crate_version() {
             "{path}: set the version to {VERSION} when the crate version changes"
         );
     }
-    let expected = |agent: &str| format!("agboard hook --agent {agent}");
+    let expected = |agent: &str| format!("agpj hook --agent {agent}");
     for (path, agent) in [
         ("plugins/agent-board/hooks/claude.json", "claude"),
         ("plugins/agent-board/hooks/codex.json", "codex"),
@@ -91,10 +91,10 @@ fn the_skill_is_a_thin_entry_that_runs_agpj_skills() {
     for key in ["name: agent-board\n", "description: ", "compatibility: "] {
         assert!(frontmatter.contains(key), "the frontmatter omits {key}");
     }
-    assert!(frontmatter.contains("\nallowed-tools: Bash(agboard *)"));
+    assert!(frontmatter.contains("\nallowed-tools: Bash(agpj *)"));
     // The one line Claude Code replaces with the command's output.
-    assert!(body.lines().any(|line| line == "!`agboard skills`"));
-    assert!(body.contains("run `agboard skills` and follow its output"));
+    assert!(body.lines().any(|line| line == "!`agpj skills`"));
+    assert!(body.contains("run `agpj skills` and follow its output"));
     assert!(
         body.len() < 400,
         "the entry holds instructions; they belong in the binary"
@@ -144,13 +144,13 @@ fn the_remote_skill_hands_out_the_address_without_starting_anything() {
     let skill = std::fs::read_to_string(path).unwrap();
     assert!(skill.starts_with("---\nname: remote\n"));
     for needed in [
-        "agboard progress --json",
-        "agboard --project \"<name>\" show remote --json",
+        "agpj progress --json",
+        "agpj --project \"<name>\" show remote --json",
         "`ready`",
         "anyone who can read this chat",
         "remote_unavailable",
         "Never ask for, print, or store the ngrok token",
-        "Never start `agboard serve`",
+        "Never start `agpj serve`",
     ] {
         assert!(skill.contains(needed), "the remote Skill omits {needed}");
     }
@@ -162,8 +162,8 @@ fn the_wait_skill_keeps_listening_after_an_idle_timeout() {
     let skill = std::fs::read_to_string(path).unwrap();
     assert!(skill.starts_with("---\nname: wait\n"));
     for needed in [
-        "allowed-tools: Bash(agboard *)",
-        "agboard skills resident",
+        "allowed-tools: Bash(agpj *)",
+        "agpj skills resident",
         "idle_timeout",
         "3600",
         "board_unavailable",

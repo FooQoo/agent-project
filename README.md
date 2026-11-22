@@ -1,20 +1,20 @@
 <div align="center">
 
-<img src="web/public/logo.png" alt="Agent Board logo" width="120">
+<img src="web/public/logo.png" alt="Agent Project logo" width="120">
 
-# Agent Board
+# Agent Project
 
-[![CI](https://github.com/FooQoo/agent-board/actions/workflows/ci.yml/badge.svg)](https://github.com/FooQoo/agent-board/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/FooQoo/agent-board/graph/badge.svg)](https://codecov.io/gh/FooQoo/agent-board) [![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/FooQoo/agent-board?utm_source=oss&utm_medium=github&utm_campaign=FooQoo%2Fagent-board&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)](https://coderabbit.ai)
+[![CI](https://github.com/FooQoo/agent-project/actions/workflows/ci.yml/badge.svg)](https://github.com/FooQoo/agent-project/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/FooQoo/agent-project/graph/badge.svg)](https://codecov.io/gh/FooQoo/agent-project) [![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/FooQoo/agent-project?utm_source=oss&utm_medium=github&utm_campaign=FooQoo%2Fagent-project&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)](https://coderabbit.ai)
 
 **Delegate big work. Stop babysitting it.**
 
-Agent Board is a shared workspace where your AI agent plans and reports, and you answer. It turns your request into a plan with acceptance conditions, starts it once your questions are answered, and stops for you only when it must. Watch and answer from your PC, your phone, or the chat.
+Agent Project is a shared workspace where your AI agent plans and reports, and you answer. It turns your request into a plan with acceptance conditions, starts it once your questions are answered, and stops for you only when it must. Watch and answer from your PC, your phone, or the chat.
 
 ```sh
-brew install fooqoo/tap/agboard
+brew install fooqoo/tap/agpj
 ```
 
-[日本語](README.ja.md) · [Try the demo](https://fooqoo.github.io/agent-board/demo/) · [Usage guide](https://fooqoo.github.io/agent-board/guide/) · [Contributing](CONTRIBUTING.md) · [GitHub repository](https://github.com/FooQoo/agent-board)
+[日本語](README.ja.md) · [Try the demo](https://fooqoo.github.io/agent-project/demo/) · [Usage guide](https://fooqoo.github.io/agent-project/guide/) · [Contributing](CONTRIBUTING.md) · [GitHub repository](https://github.com/FooQoo/agent-project)
 
 ![Local only](https://img.shields.io/badge/data-local%20only-1f6feb)
 ![Plain files](https://img.shields.io/badge/storage-plain%20files-1f6feb)
@@ -24,19 +24,19 @@ brew install fooqoo/tap/agboard
 
 </div>
 
-## What is Agent Board?
+## What is Agent Project?
 
 You can hand big work to an AI agent, but it rarely finishes unless someone keeps watching: turning the request into a plan, noticing when it is stuck, catching a question buried in the log, explaining the work again in the next session, and checking at the end that it is really done.
 
-Agent Board is a **shared workspace** that sits alongside your agent, such as Claude Code or Codex: the agent plans and reports there, and you answer. It does not run the agent. It holds the work in one place that both of you read and write: a plan (epics and tasks in order), acceptance conditions that say when each task is done, questions the agent must stop for, and a history of what happened and why. It all lives in plain files on your machine, with no account or hosted service.
+Agent Project is a **shared workspace** that sits alongside your agent, such as Claude Code or Codex: the agent plans and reports there, and you answer. It does not run the agent. It holds the work in one place that both of you read and write: a plan (epics and tasks in order), acceptance conditions that say when each task is done, questions the agent must stop for, and a history of what happened and why. It all lives in plain files on your machine, with no account or hosted service.
 
 ```mermaid
 flowchart LR
-    A["AI agent"] -- "agboard CLI + hooks" --> M[("Work model: plain files")]
+    A["AI agent"] -- "agpj CLI + hooks" --> M[("Work model: plain files")]
     U["You: board, phone, chat, CLI"] --> M
 ```
 
-To see it for yourself, [try the demo](https://fooqoo.github.io/agent-board/demo/) in your browser, with nothing to install. It walks you through the first-run guide on sample data, and reloading the page starts it over.
+To see it for yourself, [try the demo](https://fooqoo.github.io/agent-project/demo/) in your browser, with nothing to install. It walks you through the first-run guide on sample data, and reloading the page starts it over.
 
 ## How delegation works
 
@@ -46,20 +46,20 @@ To see it for yourself, [try the demo](https://fooqoo.github.io/agent-board/demo
 4. **Work in order.** The agent works through the tasks and stops for you only when your intent is unclear, your preference decides it, an action cannot be undone, or the work grows beyond what you asked.
 5. **Done on its own.** When the agent has verified every acceptance condition of a task and nothing is waiting on you, the task moves to Done by itself.
 
-You take part in two ways. When the agent stops to ask, you answer wherever is easiest, and the answer is recorded once (human in the loop). While it works, you can watch, move a card back, check a condition, or rewrite a plan without stopping it, and the agent follows the change (human on the loop). See [The work model](https://fooqoo.github.io/agent-board/guide/work-model) and the [Quickstart](https://fooqoo.github.io/agent-board/guide/quickstart).
+You take part in two ways. When the agent stops to ask, you answer wherever is easiest, and the answer is recorded once (human in the loop). While it works, you can watch, move a card back, check a condition, or rewrite a plan without stopping it, and the agent follows the change (human on the loop). See [The work model](https://fooqoo.github.io/agent-project/guide/work-model) and the [Quickstart](https://fooqoo.github.io/agent-project/guide/quickstart).
 
 ## Monitors for the work
 
 The board is one monitor for the work, not the whole of it. A monitor is a place to watch, answer, and step in.
 
-- **The board.** Watch the work move through Todo, Doing, and Done. Step in on a card without stopping the agent, and answer questions right on the task. [Using the board](https://fooqoo.github.io/agent-board/guide/watch/board)
-- **Epics and progress.** An epic holds the plan and the order of its tasks, and the progress table returns the work that can move next to your agent. [Epics and progress](https://fooqoo.github.io/agent-board/guide/watch/epics)
-- **Check from anywhere.** Away from your desk, watch the work and answer the agent from your phone or tablet with remote access. [Remote access](https://fooqoo.github.io/agent-board/guide/watch/remote-access)
-- **Project docs.** Open the design notes and specs in your project's `docs/` folder right from the board. In public preview. [Project docs](https://fooqoo.github.io/agent-board/guide/watch/docs)
+- **The board.** Watch the work move through Todo, Doing, and Done. Step in on a card without stopping the agent, and answer questions right on the task. [Using the board](https://fooqoo.github.io/agent-project/guide/watch/board)
+- **Epics and progress.** An epic holds the plan and the order of its tasks, and the progress table returns the work that can move next to your agent. [Epics and progress](https://fooqoo.github.io/agent-project/guide/watch/epics)
+- **Check from anywhere.** Away from your desk, watch the work and answer the agent from your phone or tablet with remote access. [Remote access](https://fooqoo.github.io/agent-project/guide/watch/remote-access)
+- **Project docs.** Open the design notes and specs in your project's `docs/` folder right from the board. In public preview. [Project docs](https://fooqoo.github.io/agent-project/guide/watch/docs)
 
-You can also answer in the chat with your agent, and the `agboard` command is what the agent and your scripts use. Plans and results are Markdown files on your machine (`EPIC.md` and `TASK.md`), with acceptance conditions and history in the frontmatter.
+You can also answer in the chat with your agent, and the `agpj` command is what the agent and your scripts use. Plans and results are Markdown files on your machine (`EPIC.md` and `TASK.md`), with acceptance conditions and history in the frontmatter.
 
-See the [usage guide](https://fooqoo.github.io/agent-board/guide/) for editing, attachments, archiving, and settings.
+See the [usage guide](https://fooqoo.github.io/agent-project/guide/) for editing, attachments, archiving, and settings.
 
 <details>
 <summary>Epic progress and mobile drawer screenshots</summary>
@@ -72,61 +72,61 @@ See the [usage guide](https://fooqoo.github.io/agent-board/guide/) for editing, 
 
 ## Install
 
-Agent Board runs on macOS 15 or later, on Apple Silicon and Intel. Install it with [Homebrew](https://brew.sh). You do not need Rust or Node.js, and you do not build anything.
+Agent Project runs on macOS 15 or later, on Apple Silicon and Intel. Install it with [Homebrew](https://brew.sh). You do not need Rust or Node.js, and you do not build anything.
 
 ```sh
-brew install fooqoo/tap/agboard
-agboard --version
+brew install fooqoo/tap/agpj
+agpj --version
 ```
 
-Homebrew has its own requirements, such as the Command Line Tools on some Macs; see its documentation. To build from source, see the [developer guide](https://fooqoo.github.io/agent-board/dev/getting-started/setup).
+Homebrew has its own requirements, such as the Command Line Tools on some Macs; see its documentation. To build from source, see the [developer guide](https://fooqoo.github.io/agent-project/dev/getting-started/setup).
 
 ## Set up
 
 Set up your agents once, then create a project for your working folder:
 
 ```sh
-agboard setup
+agpj setup
 cd my-project
-agboard project create "My project"
+agpj project create "My project"
 ```
 
-`setup` creates the data folder and asks which agents you use (Codex, Claude Code, or both). It shows the plan, and after you answer `y` it installs the Agent Board plugin (the Skill and the Hook) with each agent's own plugin command, lets the agents use the shared folder, and, for Codex, trusts the plugin's hooks. It works in any folder and needs no project. `project create` binds the current folder to a project; for an existing project, run `agboard project bind "My project"`. See [Working with agents](https://fooqoo.github.io/agent-board/guide/delegate/agents#set-up-your-agents).
+`setup` creates the data folder and asks which agents you use (Codex, Claude Code, or both). It shows the plan, and after you answer `y` it installs the Agent Project plugin (the Skill and the Hook) with each agent's own plugin command, lets the agents use the shared folder, and, for Codex, trusts the plugin's hooks. It works in any folder and needs no project. `project create` binds the current folder to a project; for an existing project, run `agpj project bind "My project"`. See [Working with agents](https://fooqoo.github.io/agent-project/guide/delegate/agents#set-up-your-agents).
 
 ## Start
 
 ```sh
-agboard serve
+agpj serve
 ```
 
-Open [http://127.0.0.1:7420/](http://127.0.0.1:7420/), select your project, and choose **Ask AI**. Agents do not need you to keep it running: a command that waits for you, and the agent hook, start the server in the background, and it stops by itself after 30 minutes without use. A server started this way opens the project's board in your browser unless a board tab is already open, and `agboard open` opens it at any time. Most board commands use `--project NAME`; `agboard progress` and hooks resolve the project from the current folder unless explicitly overridden.
+Open [http://127.0.0.1:7420/](http://127.0.0.1:7420/), select your project, and choose **Ask AI**. Agents do not need you to keep it running: a command that waits for you, and the agent hook, start the server in the background, and it stops by itself after 30 minutes without use. A server started this way opens the project's board in your browser unless a board tab is already open, and `agpj open` opens it at any time. Most board commands use `--project NAME`; `agpj progress` and hooks resolve the project from the current folder unless explicitly overridden.
 
-To check progress and answer questions from your phone, open **Settings** → **Remote connection** and connect with ngrok (your ngrok authtoken) or Tailscale (a private address on your own Tailscale network). The phone has to enter a 4-digit passcode that the board shows on your computer and that changes each time the connection starts; the full board stays on your computer. You can also start it with `NGROK_AUTHTOKEN` set and `agboard serve --monitor ngrok`, which prints the passcode. A 4-digit passcode is weaker than an account sign-in, so keep the address private; the [remote access guide](https://fooqoo.github.io/agent-board/guide/watch/remote-access) explains the limits.
+To check progress and answer questions from your phone, open **Settings** → **Remote connection** and connect with ngrok (your ngrok authtoken) or Tailscale (a private address on your own Tailscale network). The phone has to enter a 4-digit passcode that the board shows on your computer and that changes each time the connection starts; the full board stays on your computer. You can also start it with `NGROK_AUTHTOKEN` set and `agpj serve --monitor ngrok`, which prints the passcode. A 4-digit passcode is weaker than an account sign-in, so keep the address private; the [remote access guide](https://fooqoo.github.io/agent-project/guide/watch/remote-access) explains the limits.
 
 ## Update
 
-Update the command. The Agent Board plugin follows it:
+Update the command. The Agent Project plugin follows it:
 
 ```sh
-brew upgrade fooqoo/tap/agboard
+brew upgrade fooqoo/tap/agpj
 ```
 
-The plugin updates itself: when a new agent session starts and the plugin differs from the one your `agboard` ships, it is reinstalled in the background and applies from the next session. Run `agboard update` yourself only when the automatic update could not finish, for example when Codex has to trust a changed hook definition, or to repair the plugin. It shows what will change and asks before it runs; `agboard update --yes` answers the question in advance. Restart `agboard serve` after an upgrade.
+The plugin updates itself: when a new agent session starts and the plugin differs from the one your `agpj` ships, it is reinstalled in the background and applies from the next session. Run `agpj update` yourself only when the automatic update could not finish, for example when Codex has to trust a changed hook definition, or to repair the plugin. It shows what will change and asks before it runs; `agpj update --yes` answers the question in advance. Restart `agpj serve` after an upgrade.
 
 ## Feature stages
 
-Agent Board mixes generally available (GA) features and features in public preview. Docs, resident agents, and questions and requests are in public preview and may change. GA is not a promise that nothing changes or that nothing is broken. See [Feature stages](https://fooqoo.github.io/agent-board/guide/feature-stages).
+Agent Project mixes generally available (GA) features and features in public preview. Docs, resident agents, and questions and requests are in public preview and may change. GA is not a promise that nothing changes or that nothing is broken. See [Feature stages](https://fooqoo.github.io/agent-project/guide/feature-stages).
 
 ## License
 
-Agent Board is licensed under the [MIT License](LICENSE).
+Agent Project is licensed under the [MIT License](LICENSE).
 Bundled third-party components retain their respective licenses;
 see [Third-party notices](THIRD_PARTY_NOTICES.txt).
 
 ## Documentation
 
-- [Usage guide](https://fooqoo.github.io/agent-board/guide/) — browser operations, CLI examples, agent workflow, shared files, and backups.
-- [Remote access](https://fooqoo.github.io/agent-board/guide/watch/remote-access) — connect a phone with ngrok or Tailscale and a passcode, what the monitor shows, and how to check it.
-- [Releases](https://github.com/FooQoo/agent-board/releases) — what each published version changes.
-- [The Agent Board plugin](plugins/agent-board/README.md) — what `setup` installs for Claude Code and Codex, and how the hooks work.
+- [Usage guide](https://fooqoo.github.io/agent-project/guide/) — browser operations, CLI examples, agent workflow, shared files, and backups.
+- [Remote access](https://fooqoo.github.io/agent-project/guide/watch/remote-access) — connect a phone with ngrok or Tailscale and a passcode, what the monitor shows, and how to check it.
+- [Releases](https://github.com/FooQoo/agent-project/releases) — what each published version changes.
+- [The Agent Project plugin](plugins/agent-project/README.md) — what `setup` installs for Claude Code and Codex, and how the hooks work.
 - [Contributing](CONTRIBUTING.md) — development and verification.

@@ -10,7 +10,7 @@ or an archive of another version fails the check.
 The Agent Board plugin's manifests and its Claude Code catalog entry must name
 the same version, because setup installs the plugin from the tag of that
 version. Its Hook commands carry no version: they must be exactly
-"agboard hook --agent <agent>".
+"agpj hook --agent <agent>".
 
 The tag must be exactly "v" followed by a plain MAJOR.MINOR.PATCH version.
 Prints the version on success; exits 1 with a reason on any mismatch.
@@ -64,8 +64,8 @@ def check_plugin(root, version):
         for group in data["hooks"].values():
             for entry in group:
                 for hook in entry["hooks"]:
-                    if hook["command"] != f"agboard hook --agent {agent}":
-                        fail(f"{path} runs {hook['command']!r}, not 'agboard hook --agent {agent}'")
+                    if hook["command"] != f"agpj hook --agent {agent}":
+                        fail(f"{path} runs {hook['command']!r}, not 'agpj hook --agent {agent}'")
 
 
 def check_assets(directory, version):
