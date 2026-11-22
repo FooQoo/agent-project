@@ -93,7 +93,7 @@ function useLaneFixture(
           'API refactoring',
           'doing',
           {
-            agentStatus: 'pending',
+            agentStatus: 'awaiting_answer',
             pendingReason: 'How much compatibility should v2 keep?',
             pendingRequestId: 'request-11',
           },
@@ -342,7 +342,7 @@ export const DoingLane: Story = {
   args: { initialLane: 'doing' },
   play: async ({ canvasElement }) => {
     const waiting = cardOf(canvasElement, 11);
-    await expect(waiting.querySelector('[data-agent-status="pending"]')).not.toBeNull();
+    await expect(waiting.querySelector('[data-agent-status="awaiting_answer"]')).not.toBeNull();
     await expect(
       cardOf(canvasElement, 12).querySelector('[data-agent-status="running"]'),
     ).not.toBeNull();

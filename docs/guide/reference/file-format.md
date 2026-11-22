@@ -59,7 +59,7 @@ questions: [Q-12, Q-15]
 
 - Each value is a question ID such as `Q-12`, and a list must not repeat one. Leaving the key out, `null`, and an empty list all mean no questions.
 - `message ask --task` and `message link`/`message unlink` change this list for you. You can also edit it like any other part of the file.
-- An AI-owned task in Todo or Doing shows Pending while any question it lists is open. Answered and withdrawn questions do not keep it waiting. A listed message file that cannot be read keeps it waiting too.
+- An AI-owned task in Todo or Doing shows Awaiting answer while any question it lists is open. Answered and withdrawn questions do not keep it waiting. A listed message file that cannot be read keeps it waiting too.
 - The questions themselves are stored in the project, not in the task; see [Decisions](../delegate/decisions).
 
 ### History

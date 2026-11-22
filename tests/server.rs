@@ -637,7 +637,7 @@ fn protected_api_creates_moves_and_answers_questions_with_full_history() {
     let pending = server.send_json(
         "POST",
         &server.api("/tasks/4/agent-status"),
-        r#"{"agentStatus":"pending","actor":"ai","reason":"Need direction"}"#,
+        r#"{"agentStatus":"awaiting_answer","actor":"ai","reason":"Need direction"}"#,
         Some(&token),
     );
     assert_eq!(pending.status, 422, "{}", pending.body);

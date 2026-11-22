@@ -91,7 +91,7 @@ pub fn task_value(task: &TaskView) -> Value {
 
 pub fn state_text(state: RunState, reason: Option<&str>) -> String {
     match (state, reason) {
-        (RunState::Pending, Some(reason)) => format!("pending: {reason}"),
+        (RunState::AwaitingAnswer, Some(reason)) => format!("awaiting_answer: {reason}"),
         _ => state.as_str().to_string(),
     }
 }

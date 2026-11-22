@@ -531,7 +531,7 @@ fn every_project_comes_back_by_name_with_the_same_content_as_its_own_snapshot() 
             .contains("Apple: use the MIT license.")
     );
     let mango = task(entry(&list, "Mango"), 1);
-    assert_eq!(mango["agentStatus"], "pending");
+    assert_eq!(mango["agentStatus"], "awaiting_answer");
     assert_eq!(mango["pendingReason"], "Mango needs a decision");
     assert_eq!(mango["history"].as_array().unwrap().len(), 3);
     // A project without tasks is still there.
@@ -555,8 +555,8 @@ fn filters_apply_to_every_project_and_keep_the_projects_with_no_match() {
             Box::new(|c| c["taskStatus"] == "todo"),
         ),
         (
-            vec!["--state", "pending"],
-            Box::new(|c| c["agentStatus"] == "pending"),
+            vec!["--state", "awaiting_answer"],
+            Box::new(|c| c["agentStatus"] == "awaiting_answer"),
         ),
         (
             vec!["--state", "running"],
@@ -567,12 +567,12 @@ fn filters_apply_to_every_project_and_keep_the_projects_with_no_match() {
             Box::new(|c| c["agentStatus"] == "idle"),
         ),
         (
-            vec!["--column", "doing", "--state", "pending"],
-            Box::new(|c| c["taskStatus"] == "doing" && c["agentStatus"] == "pending"),
+            vec!["--column", "doing", "--state", "awaiting_answer"],
+            Box::new(|c| c["taskStatus"] == "doing" && c["agentStatus"] == "awaiting_answer"),
         ),
         (
-            vec!["--column", "done", "--state", "pending"],
-            Box::new(|c| c["taskStatus"] == "done" && c["agentStatus"] == "pending"),
+            vec!["--column", "done", "--state", "awaiting_answer"],
+            Box::new(|c| c["taskStatus"] == "done" && c["agentStatus"] == "awaiting_answer"),
         ),
     ];
     for (args, keep) in cases {
@@ -601,7 +601,7 @@ fn filters_apply_to_every_project_and_keep_the_projects_with_no_match() {
     }
 
     // The numbers behind the cases above: one waiting task (Mango), nothing waiting elsewhere.
-    let pending = all(home.path(), &["--state", "pending"]);
+    let pending = all(home.path(), &["--state", "awaiting_answer"]);
     let counts: Vec<usize> = pending["projects"]
         .as_array()
         .unwrap()
@@ -610,7 +610,10 @@ fn filters_apply_to_every_project_and_keep_the_projects_with_no_match() {
         .collect();
     assert_eq!(counts, [0, 0, 1, 0]);
     // A filter nothing matches leaves every project with an empty list.
-    let none = all(home.path(), &["--column", "done", "--state", "pending"]);
+    let none = all(
+        home.path(),
+        &["--column", "done", "--state", "awaiting_answer"],
+    );
     assert_eq!(none["projects"].as_array().unwrap().len(), 4);
     assert!(
         none["projects"]
@@ -703,7 +706,13 @@ fn listing_changes_nothing_and_tells_a_running_server_nothing() {
     for args in [
         vec!["ls", "--all-projects"],
         vec!["ls", "--all-projects", "--json"],
-        vec!["ls", "--all-projects", "--state", "pending", "--json"],
+        vec![
+            "ls",
+            "--all-projects",
+            "--state",
+            "awaiting_answer",
+            "--json",
+        ],
         vec!["ls", "--all-projects", "--column", "done"],
     ] {
         for _ in 0..3 {
@@ -849,7 +858,7 @@ fn only_a_list_may_ask_for_every_project_and_never_together_with_a_project() {
     // still need --project.
     for args in [
         vec!["--json", "ls"],
-        vec!["--json", "ls", "--state", "pending"],
+        vec!["--json", "ls", "--state", "awaiting_answer"],
         vec!["--json", "snapshot"],
         vec!["--json", "show", "1"],
         vec!["--json", "add", "x", "--assignee", "ai", "--actor", "human"],
@@ -899,13 +908,13 @@ fn the_text_listing_shows_each_project_under_its_name_with_the_columns_of_ls() {
         expected.push(format!("Project: {name}\n{own}"));
     }
     assert_eq!(text.trim_end(), expected.join("\n").trim_end());
-    assert!(text.contains("#1 Mango build [AI] [pending: Mango needs a decision]"));
+    assert!(text.contains("#1 Mango build [AI] [awaiting_answer: Mango needs a decision]"));
     assert!(text.contains("#2 Zebra review [User]"));
     // A project without tasks still shows the three columns.
     assert!(text.contains("Project: Kiwi\nTodo\nDoing\nDone\n"));
 
     // The filters show the same headings with fewer tasks.
-    let pending = all_text(home.path(), &["--state", "pending"]);
+    let pending = all_text(home.path(), &["--state", "awaiting_answer"]);
     assert_eq!(pending.matches("Project: ").count(), 4);
     assert_eq!(pending.matches("  #").count(), 1);
     assert!(pending.contains("Mango needs a decision"));

@@ -6,9 +6,9 @@ use super::view::{QuestionView, RequestView};
 use crate::domain::{Assignee, Column, RunState};
 use crate::file_store::model::{Problem, TaskView};
 
-/// Whether the shown run state of a task is `pending`: an AI task in Todo or Doing, not
+/// Whether the shown run state of a task is `awaiting_answer`: an AI task in Todo or Doing, not
 /// archived, that waits for a person.
-pub fn shows_pending(task: &TaskView, index: &QaIndex) -> bool {
+pub fn shows_awaiting_answer(task: &TaskView, index: &QaIndex) -> bool {
     task.assignee == Assignee::Ai
         && matches!(task.task_status, Column::Todo | Column::Doing)
         && task.archived_at.is_none()
@@ -23,8 +23,8 @@ pub fn apply(task: &mut TaskView, index: &QaIndex) {
     task.pending_request_id = None;
     task.pending_reason = None;
     task.pending_choices = Vec::new();
-    if shows_pending(task, index) {
-        task.agent_status = RunState::Pending;
+    if shows_awaiting_answer(task, index) {
+        task.agent_status = RunState::AwaitingAnswer;
         if let Some(question) = open.first() {
             task.pending_request_id = Some(question.id.clone());
             task.pending_reason = Some(question.body.clone());

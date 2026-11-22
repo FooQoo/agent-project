@@ -54,8 +54,14 @@ function bodyBlocks(long: boolean, id: number): FixtureBlock[] {
 function fixtureTask(id: number, status: ColumnName, long: boolean): FixtureTask {
   const at = `2026-10-11T00:${String(id % 60).padStart(2, '0')}:00Z`;
   const agentStatus =
-    status !== 'doing' ? 'idle' : id % 3 === 0 ? 'pending' : id % 2 === 0 ? 'running' : 'idle';
-  const pending = agentStatus === 'pending';
+    status !== 'doing'
+      ? 'idle'
+      : id % 3 === 0
+        ? 'awaiting_answer'
+        : id % 2 === 0
+          ? 'running'
+          : 'idle';
+  const pending = agentStatus === 'awaiting_answer';
   const acceptance =
     id === 2
       ? [

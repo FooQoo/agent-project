@@ -39,7 +39,7 @@ export function WaveTask({
       className={[
         'epic-progress__row',
         'card',
-        task.agentStatus === 'pending' && task.taskStatus !== 'done' ? 'card--pending' : '',
+        task.agentStatus === 'awaiting_answer' && task.taskStatus !== 'done' ? 'card--pending' : '',
         isDragging ? 'is-dragging' : '',
       ]
         .filter(Boolean)

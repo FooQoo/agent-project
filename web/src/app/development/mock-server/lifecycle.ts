@@ -118,7 +118,7 @@ function archiveDone(
       (item): Task => ({
         ...item,
         archivedAt,
-        agentStatus: 'idle',
+        agentStatus: item.agentStatus === 'idle' ? 'idle' : 'ran',
         pendingReason: null,
         pendingRequestId: null,
       }),

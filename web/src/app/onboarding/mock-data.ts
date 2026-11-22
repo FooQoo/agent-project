@@ -76,7 +76,7 @@ export const doneSample = {
 export const pendingSample = {
   ...samples.style,
   taskStatus: 'doing' as const,
-  agentStatus: 'pending' as const,
+  agentStatus: 'awaiting_answer' as const,
   pendingReason: '案内の文章は、どちらが読みやすいですか？',
   pendingRequestId: 'onboarding-sample-request',
   pendingChoices: [

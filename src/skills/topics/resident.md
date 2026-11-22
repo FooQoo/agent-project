@@ -13,13 +13,13 @@ Nobody watches a board-launched session. It runs headless with automatic approva
 
 Only a session the board launched follows this part.
 
-1. Resolve the project as the main Skill describes (`agboard skills`), read the complete project snapshot, and inspect every AI task's `agentStatus`. Resolve work that is `running` or `pending` first, as `agboard skills listening` describes for a resumed session. Then end your turn. Do not start a wait: the board sends the next message when it has work.
+1. Resolve the project as the main Skill describes (`agboard skills`), read the complete project snapshot, and inspect every AI task's `agentStatus`. Resolve work that is `running` or `awaiting_answer` first, as `agboard skills listening` describes for a resumed session. Then end your turn. Do not start a wait: the board sends the next message when it has work.
 2. A message that starts with "Agent Board has work for you" carries one JSON object, of the same shape `wait --until task --json` returns. Handle it as follows, then end your turn:
    - `"kind":"answers"`: answers to questions you asked. Read each with `message show <id>`, act on it, and take it in with `message accept <id> --actor ai`.
    - `"kind":"requests"`: open requests. Read each with `message show <id>`, take it with `message accept <id> --actor ai`, and plan it as `agboard skills planning` describes. If `message accept` says another session already took it, drop it.
    - `"kind":"task"`: a ready task. Work it as `agboard skills listening` describes under "Process one returned task".
 3. The board never sends a message while you are working, so the next one arrives after your turn ends. A turn that ends with the item still open (for example a request you did not accept) is sent again after a delay, and the board gives up after three tries, so finish what you were given or say on the board why you cannot.
-   - If the item waits for a person (a check on a real device, a decision, a review), you cannot advance it, and leaving it Doing or Idle only makes the board send it again. Ask what you need with `message ask --no-wait --task <id> ...`, record that the task waits for the answer, and end your turn. A task with an open question is Pending, so the board stops sending it until the person answers.
+   - If the item waits for a person (a check on a real device, a decision, a review), you cannot advance it, and leaving it Doing or Idle only makes the board send it again. Ask what you need with `message ask --no-wait --task <id> ...`, record that the task waits for the answer, and end your turn. A task with an open question is awaiting an answer, so the board stops sending it until the person answers.
 4. Ending your turn is how you stay attached. Do not run a wait, and do not poll the board.
 
 The board asks questions of people for you: use `message ask`, and the answer comes back to you as an `answers` message.
@@ -31,7 +31,7 @@ Only a session a person opened and told to stay on the board follows this part a
 ### Start
 
 1. Resolve the project as the main Skill describes (`agboard skills`). Never broaden the session to other projects. If the folder is not bound (`folder_unbound`), report it and stop; there is nobody to retry for you.
-2. Read the complete project snapshot and inspect every AI task's `agentStatus`. Resolve work that is `running` or `pending` before waiting, as `agboard skills listening` describes for a resumed session.
+2. Read the complete project snapshot and inspect every AI task's `agentStatus`. Resolve work that is `running` or `awaiting_answer` before waiting, as `agboard skills listening` describes for a resumed session.
 
 ### The loop
 
@@ -63,9 +63,9 @@ Run the next wait before long optional work, such as a final summary. Stop only 
 
 A session the board launched asks with `message ask --no-wait`, records that the task waits for the answer, and ends its turn; the answer arrives as an `answers` message. The rest of this section is for a session that waits for itself.
 
-When a task needs a decision that is a person's (one of the four cases in the main Skill), register it with `message ask --task <id> ...` and do not wait on it with the foreground command. Use `--no-wait`, record that the task is waiting for the answer, and go back to the loop. The answer comes back from `wait --until task` as an `answers` result; take it in, then resume that task with a reason. A task with an open question is Pending and is never returned, so the session keeps working on other tasks while it waits. Never block the whole session on one question, and never leave the loop to wait on one.
+When a task needs a decision that is a person's (one of the four cases in the main Skill), register it with `message ask --task <id> ...` and do not wait on it with the foreground command. Use `--no-wait`, record that the task is waiting for the answer, and go back to the loop. The answer comes back from `wait --until task` as an `answers` result; take it in, then resume that task with a reason. A task with an open question is awaiting an answer and is never returned, so the session keeps working on other tasks while it waits. Never block the whole session on one question, and never leave the loop to wait on one.
 
 ## Errors
 
 - `local_network_denied`, `board_unavailable`, malformed project data, a mismatched server, `project_not_found`, and invalid arguments are errors, not an empty board. Report the error and its recovery step, then stop. The board sees the session end and decides whether to start it again.
-- If the wait is interrupted, fetch a fresh snapshot, inspect every AI task by `agentStatus`, resolve `running` or `pending` work, and start the loop again.
+- If the wait is interrupted, fetch a fresh snapshot, inspect every AI task by `agentStatus`, resolve `running` or `awaiting_answer` work, and start the loop again.

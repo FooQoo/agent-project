@@ -120,7 +120,7 @@ pub struct RmArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo ls\n  agboard --project demo ls --column doing\n  agboard --project demo ls --state pending --json\n  agboard --project demo ls --current-version\n  agboard --project demo ls --version v1.8.0 --epic FILE-SHARE --json\n  agboard --project demo ls --unplanned\n  agboard ls --all-projects\n  agboard ls --all-projects --state pending --json"
+    after_help = "Examples:\n  agboard --project demo ls\n  agboard --project demo ls --column doing\n  agboard --project demo ls --state awaiting_answer --json\n  agboard --project demo ls --current-version\n  agboard --project demo ls --version v1.8.0 --epic FILE-SHARE --json\n  agboard --project demo ls --unplanned\n  agboard ls --all-projects\n  agboard ls --all-projects --state awaiting_answer --json"
 )]
 pub struct LsArgs {
     /// List the tasks of every project, read-only; do not give --project

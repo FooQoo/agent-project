@@ -29,7 +29,7 @@
       "id": 303,
       "title": "Which transport should the stream use?",
       "taskStatus": "doing",
-      "agentStatus": "pending",
+      "agentStatus": "awaiting_answer",
       "assignee": "ai",
       "draft": null,
       "position": 2,

@@ -76,6 +76,7 @@ pub(crate) fn agboard_error_response(error: &AgboardError) -> Response {
         | AgboardError::FileInvalid { .. }
         | AgboardError::InvalidStateForColumn { .. }
         | AgboardError::InvalidStateForAssignee
+        | AgboardError::InvalidStateChange { .. }
         | AgboardError::ChoiceUnknown { .. }
         | AgboardError::MessageTypeMismatch { .. }
         | AgboardError::AttachmentLimitExceeded => StatusCode::UNPROCESSABLE_ENTITY,

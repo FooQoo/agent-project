@@ -14,7 +14,7 @@ import type {
 import { bool, exact, fail, int, list, nullableStr, oneOf, str } from './guards';
 
 const STATUSES = ['backlog', 'todo', 'doing', 'done'] as const;
-const RUN_STATES = ['idle', 'running', 'pending'] as const;
+const RUN_STATES = ['idle', 'running', 'paused', 'ran', 'awaiting_answer'] as const;
 const ASSIGNEES = ['ai', 'human'] as const;
 const RESOURCES = ['task', 'epic', 'project', 'messages'] as const;
 const DRAFTS = ['human'] as const;

@@ -22,7 +22,7 @@ pub fn run(ctx: &Context, args: &ProgressCommandArgs) -> Result<Outcome, Agboard
         ctx.files.shared_dir(),
         ctx.clock.now(),
         Include {
-            pending: args.progress.include_pending,
+            awaiting_answer: args.progress.include_awaiting_answer,
             done: args.progress.include_done,
         },
         filter.as_ref(),
@@ -69,7 +69,7 @@ pub fn render(table: &Progress) -> String {
             write_task(&mut out, task);
         }
     }
-    if let Some(pending) = &table.pending {
+    if let Some(pending) = &table.awaiting_answer {
         out.push_str("Waiting for a decision\n");
         for task in pending {
             write_task(&mut out, task);
@@ -103,7 +103,9 @@ fn write_task(out: &mut String, task: &ProgressTask) {
     let state = match task.agent_status {
         RunState::Idle => "idle",
         RunState::Running => "running",
-        RunState::Pending => "pending",
+        RunState::Paused => "paused",
+        RunState::Ran => "ran",
+        RunState::AwaitingAnswer => "awaiting_answer",
     };
     let draft = match task.draft {
         None => "",

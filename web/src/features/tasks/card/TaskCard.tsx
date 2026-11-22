@@ -55,7 +55,7 @@ export function TaskCardContent({
   task,
   titleClassName = 'card__title',
   reasonClassName = 'card__reason',
-  showPendingReason = task.agentStatus === 'pending',
+  showPendingReason = task.agentStatus === 'awaiting_answer',
   titleActionDisabled,
   onTitleClick,
   children,
@@ -116,13 +116,13 @@ export function TaskCardView({
   cardRef,
   renderEpic,
   renderVersion,
-  showPendingReason = task.agentStatus === 'pending',
+  showPendingReason = task.agentStatus === 'awaiting_answer',
   selection,
   children,
 }: TaskCardViewProps) {
   const { t } = useTranslation();
   const showsState = stateLabel(task, t) !== null;
-  const pending = showsState && task.agentStatus === 'pending';
+  const pending = showsState && task.agentStatus === 'awaiting_answer';
   const className = [
     'card',
     pending ? 'card--pending' : '',
@@ -215,7 +215,7 @@ export function TaskCard({
 }: TaskCardProps) {
   const { t } = useTranslation();
   const showsState = stateLabel(task, t) !== null;
-  const pending = showsState && task.agentStatus === 'pending';
+  const pending = showsState && task.agentStatus === 'awaiting_answer';
   const showInlineAnswer = Boolean(projectId && onAnswer && pending && waitsOnQuestion(task));
   const { ref, isDragging } = useSortable({
     id: `card-${task.id}`,

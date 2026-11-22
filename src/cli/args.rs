@@ -107,7 +107,7 @@ pub enum Command {
     Workspace(WorkspaceArgs),
     /// Show the tasks an agent can pick up, by epic in wave order
     #[command(
-        after_help = "A version option only narrows what is shown: which tasks are ready is decided on the whole board first, so hiding a task never makes another one ready. Requests, answers, and epics to close are not narrowed.\n\nExamples:\n  agboard progress\n  agboard progress --json\n  agboard progress --include-pending --include-done 5\n  agboard progress --current-version\n  agboard progress --version v1.8.0 --json\n  agboard progress --unplanned\n  agboard --project \"My project\" progress --json"
+        after_help = "A version option only narrows what is shown: which tasks are ready is decided on the whole board first, so hiding a task never makes another one ready. Requests, answers, and epics to close are not narrowed.\n\nExamples:\n  agboard progress\n  agboard progress --json\n  agboard progress --include-awaiting-answer --include-done 5\n  agboard progress --current-version\n  agboard progress --version v1.8.0 --json\n  agboard progress --unplanned\n  agboard --project \"My project\" progress --json"
     )]
     Progress(ProgressCommandArgs),
     /// List the project's versions, add one, or show, set, or clear the current version

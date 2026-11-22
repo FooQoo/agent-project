@@ -512,7 +512,7 @@ test.describe('two projects with the same task numbers', () => {
     await expect.poll(() => projectParam(page)).toBe(alpha);
     await expect(switcher(page)).toHaveText('Alpha');
     await expect(answer).toBeHidden();
-    expect(listTasks('Beta', home).find(({ id }) => id === 2)?.agentStatus).toBe('pending');
+    expect(listTasks('Beta', home).find(({ id }) => id === 2)?.agentStatus).toBe('awaiting_answer');
     expect(snapshotOf('Alpha', home)).toEqual(alphaBefore);
 
     // Answered again in Beta, the answer goes to Beta's request and never to Alpha's card #2.
@@ -533,7 +533,7 @@ test.describe('two projects with the same task numbers', () => {
     await expect(switcher(page)).toHaveText('Alpha');
     // Alpha has its own pending #2, so an ID-only locator now resolves to Alpha's answer button.
     await expect(answerButton(page, 2)).toBeVisible();
-    expect(listTasks('Alpha', home).find(({ id }) => id === 2)?.agentStatus).toBe('pending');
+    expect(listTasks('Alpha', home).find(({ id }) => id === 2)?.agentStatus).toBe('awaiting_answer');
     expect(snapshotOf('Alpha', home)).toEqual(alphaBefore);
   });
 
@@ -874,7 +874,7 @@ test.describe('two projects with the same task numbers', () => {
     await expect(page.getByRole('menu', { name: 'Alpha' })).toContainText('プロジェクト');
     await menuItem(page, 'Beta').click();
     await expect(switcher(page)).toHaveText('Beta');
-    await expect(lane(page, '進行中').getByRole('button', { name: /^#2 AI 待機中 Beta: pick the database / })).toBeVisible();
+    await expect(lane(page, '進行中').getByRole('button', { name: /^#2 AI 回答待 Beta: pick the database / })).toBeVisible();
     // The answer, in Japanese and typed in place, for Beta's own request.
     await task(page, 2).click();
     const japanesePanel = page.getByRole('complementary', { name: 'タスクの詳細' });

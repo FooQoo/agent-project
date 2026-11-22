@@ -36,7 +36,7 @@ Keep history reasons concise, in Markdown where it helps. Put the grounds and th
 
 ## Parallel work
 
-While a question is open or something is pending, continue the tasks that do not depend on it. Pick up the ready tasks in `nextTasks` in parallel, after checking each `EPIC.md` for dependencies, and look at `nextTasks` again whenever a task completes. Start every task its dependencies allow, and give each one that changes a Git repository its own branch in its own worktree, so that parallel work never shares a working tree. Follow the repository's own branch rules for naming and merging those branches.
+While a question is open or something is awaiting an answer, continue the tasks that do not depend on it. Pick up the ready tasks in `nextTasks` in parallel, after checking each `EPIC.md` for dependencies, and look at `nextTasks` again whenever a task completes. Start every task its dependencies allow, and give each one that changes a Git repository its own branch in its own worktree, so that parallel work never shares a working tree. Follow the repository's own branch rules for naming and merging those branches.
 
 ## Main agent and subagents
 

@@ -24,7 +24,7 @@ fn short(detail: &str) -> String {
 impl FileStore {
     /// Record that the resident agent stopped on an error while it was working on task `id`.
     /// Only a task that is still Running in Doing and is the agent's own is touched: it gets one
-    /// history entry (in the language of the task body) and goes back to idle in the same save,
+    /// history entry (in the language of the task body) and becomes paused in the same save,
     /// so another agent can take it. Returns whether the task was changed. A task in any other
     /// state has nobody left hanging, so it is left alone.
     pub fn record_agent_stopped(
@@ -49,16 +49,16 @@ impl FileStore {
         let language = self.history_language(project, &task)?;
         let english = format!(
             "The resident agent stopped on an error ({detail}). Another agent needs to take over \
-             this task; the agent is idle again."
+             this task; the agent is paused."
         );
         let japanese = format!(
             "常駐エージェントがエラーで止まりました（{detail}）。別のエージェントがこのタスクを\
-             引き継ぐ必要があります。エージェントはidleに戻しました。"
+             引き継ぐ必要があります。エージェントは稼働待にしました。"
         );
         let at = stamp(now);
         let reason = super::reason_or_default(None, language.text(&english, &japanese).to_owned())?;
         task.history.push(HistoryRecord { at, reason });
-        task.agent_status = RunState::Idle;
+        task.agent_status = RunState::Paused;
         task.agent_status_changed_at = at;
         task.updated_at = at;
         save_task(shared, &project_dir, &task)?;
@@ -121,7 +121,7 @@ mod tests {
         assert_eq!(task.history.len(), before + 1);
         let note = &task.history.last().unwrap().reason;
         assert!(note.contains("常駐エージェントがエラーで止まりました（boom line）"));
-        assert_eq!(task.agent_status, RunState::Idle);
+        assert_eq!(task.agent_status, RunState::Paused);
         assert_eq!(task.task_status, Column::Doing);
         // Idle now, so a second report changes nothing.
         assert!(

@@ -19,9 +19,17 @@ use super::view;
 const ARCHIVE_REASON: &str = "Archived by user.";
 const RESTORE_REASON: &str = "Restored by user.";
 
+/// The run state an archived task keeps: idle when it never ran, otherwise has run.
+fn archived_state(old: RunState) -> RunState {
+    match old {
+        RunState::Idle | RunState::AwaitingAnswer => RunState::Idle,
+        _ => RunState::Ran,
+    }
+}
+
 impl FileStore {
-    /// Archive a task. Its lane and position stay as they are, and its agent
-    /// state returns to idle with its request released.
+    /// Archive a task. Its lane and position stay as they are. A task that
+    /// ran keeps no running or paused state: it becomes "has run"; a task that never ran stays idle.
     pub fn archive_task(
         &self,
         project: &ProjectId,
@@ -39,6 +47,7 @@ impl FileStore {
         }
         let at = stamp(now);
         let old_agent = task.agent_status;
+        let archived_state = archived_state(old_agent);
         let event = transition_event(Transition {
             language: self.history_language(project, &task)?,
             kind: HistoryKind::Archive,
@@ -49,13 +58,13 @@ impl FileStore {
             from_task: Some(task.task_status),
             to_task: task.task_status,
             from_agent: Some(old_agent),
-            to_agent: RunState::Idle,
+            to_agent: archived_state,
             at,
         })?;
         task.archived_at = Some(at);
-        task.agent_status = RunState::Idle;
+        task.agent_status = archived_state;
         task.updated_at = at;
-        if old_agent != RunState::Idle {
+        if old_agent != archived_state {
             task.agent_status_changed_at = at;
         }
         task.history.push(event);
@@ -84,6 +93,11 @@ impl FileStore {
         }
         let at = stamp(now);
         let position = lane_end(shared, project, task.task_status)?;
+        // A task that has run and comes back into Doing is paused, as after a lane move.
+        let restored_state = match (task.agent_status, task.task_status) {
+            (RunState::Ran, Column::Doing) => RunState::Paused,
+            (state, _) => state,
+        };
         let event = transition_event(Transition {
             language: self.history_language(project, &task)?,
             kind: HistoryKind::Restore,
@@ -93,11 +107,15 @@ impl FileStore {
             ),
             from_task: Some(task.task_status),
             to_task: task.task_status,
-            from_agent: Some(RunState::Idle),
-            to_agent: RunState::Idle,
+            from_agent: Some(task.agent_status),
+            to_agent: restored_state,
             at,
         })?;
         task.archived_at = None;
+        if task.agent_status != restored_state {
+            task.agent_status_changed_at = at;
+        }
+        task.agent_status = restored_state;
         task.position = position;
         task.updated_at = at;
         task.history.push(event);
@@ -161,6 +179,7 @@ impl FileStore {
                 continue;
             }
             let old_agent = task.agent_status;
+            let archived_state = archived_state(old_agent);
             let event = transition_event(Transition {
                 language: self.history_language(project, &task)?,
                 kind: HistoryKind::Archive,
@@ -171,13 +190,13 @@ impl FileStore {
                 from_task: Some(task.task_status),
                 to_task: task.task_status,
                 from_agent: Some(old_agent),
-                to_agent: RunState::Idle,
+                to_agent: archived_state,
                 at,
             })?;
             task.archived_at = Some(at);
-            task.agent_status = RunState::Idle;
+            task.agent_status = archived_state;
             task.updated_at = at;
-            if old_agent != RunState::Idle {
+            if old_agent != archived_state {
                 task.agent_status_changed_at = at;
             }
             task.history.push(event);

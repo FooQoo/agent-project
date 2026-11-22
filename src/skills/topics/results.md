@@ -48,4 +48,4 @@ Contrast the two:
 
 When the choice is visual (two mocks, a screenshot, a layout), attach the images to the question with `images` and show them in its `body` as `![description](attachments/<file name>)`. Do not send only a local link: the user may be on a phone where it does not open.
 
-Keep the question out of the result summary: only `message ask` is tracked as pending, answered, or withdrawn, and shown as a decision on the board. How to wait for the answer follows section 7 of the main instructions.
+Keep the question out of the result summary: only `message ask` is tracked as open, answered, or withdrawn, and shown as a decision on the board. How to wait for the answer follows section 7 of the main instructions.

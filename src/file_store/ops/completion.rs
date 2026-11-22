@@ -77,6 +77,7 @@ impl FileStore {
 
             let at = stamp(now);
             let position = lane_end(shared, project, Column::Done)?;
+            let next_state = RunState::Ran;
             let event = transition_event(Transition {
                 language: self.history_language(project, &task)?,
                 kind: HistoryKind::Lane,
@@ -87,15 +88,15 @@ impl FileStore {
                 from_task: Some(task.task_status),
                 to_task: Column::Done,
                 from_agent: Some(task.agent_status),
-                to_agent: RunState::Idle,
+                to_agent: next_state,
                 at,
             })?;
-            if task.agent_status != RunState::Idle {
+            if task.agent_status != next_state {
                 task.agent_status_changed_at = at;
             }
             task.task_status = Column::Done;
             task.task_status_changed_at = at;
-            task.agent_status = RunState::Idle;
+            task.agent_status = next_state;
             task.position = position;
             task.updated_at = at;
             task.history.push(event);

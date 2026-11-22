@@ -43,7 +43,7 @@ function stubViewport(narrow: boolean) {
   };
 }
 
-const pendingTask = fixtureBoard.tasks.find((task) => task.agentStatus === 'pending');
+const pendingTask = fixtureBoard.tasks.find((task) => task.agentStatus === 'awaiting_answer');
 const withCondition = makeTask({
   id: 90,
   title: 'Has a condition',

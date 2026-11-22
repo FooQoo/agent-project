@@ -29,7 +29,7 @@ test('an AI task in Todo asks, shows as pending there, and the answer returns it
   await waitForSync(page);
 
   // In Todo the card shows its pending state and the answer button, like a card in Doing; the question is in the dialog.
-  await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) })).toContainText('Pending');
+  await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) })).toContainText('Awaiting answer');
   await expect(answerButton(page, id)).toBeVisible();
   await expect(lane(page, 'Todo')).not.toContainText('Which plan before we start?');
 
@@ -43,7 +43,7 @@ test('an AI task in Todo asks, shows as pending there, and the answer returns it
 
   // The card is still in Todo, and idle again.
   expect(show(id)).toMatchObject({ taskStatus: 'todo', agentStatus: 'idle', pendingRequestId: null });
-  await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) })).not.toContainText('Pending');
+  await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) })).not.toContainText('Awaiting answer');
 });
 
 test('moving a task out of Todo keeps its question pending until the question is withdrawn', async ({ page }) => {
@@ -61,8 +61,8 @@ test('moving a task out of Todo keeps its question pending until the question is
   agboardOk(mainProject, ['mv', String(id), 'doing', '--actor', 'human', '--reason', 'Start now.']);
   await page.reload();
   await waitForSync(page);
-  expect(show(id)).toMatchObject({ taskStatus: 'doing', agentStatus: 'pending', pendingRequestId: question });
-  await expect(card()).toContainText('Pending');
+  expect(show(id)).toMatchObject({ taskStatus: 'doing', agentStatus: 'awaiting_answer', pendingRequestId: question });
+  await expect(card()).toContainText('Awaiting answer');
   await expect(answerButton(page, id)).toBeVisible();
 
   // Withdrawing the question ends the wait.
@@ -70,6 +70,6 @@ test('moving a task out of Todo keeps its question pending until the question is
   await page.reload();
   await waitForSync(page);
   expect(show(id)).toMatchObject({ taskStatus: 'doing', agentStatus: 'idle', pendingRequestId: null });
-  await expect(card()).not.toContainText('Pending');
+  await expect(card()).not.toContainText('Awaiting answer');
   await expect(answerButton(page, id)).toHaveCount(0);
 });

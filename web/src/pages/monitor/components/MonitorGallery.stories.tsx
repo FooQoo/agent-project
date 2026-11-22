@@ -45,7 +45,7 @@ function questionCard(
       id,
       title,
       taskStatus,
-      agentStatus: open.length > 0 ? 'pending' : 'idle',
+      agentStatus: open.length > 0 ? 'awaiting_answer' : 'idle',
       pendingReason: open.length > 0 ? 'How much compatibility should v2 keep?' : null,
       pendingRequestId: open.length > 0 ? `request-${id}` : null,
     }),

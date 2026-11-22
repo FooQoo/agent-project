@@ -31,8 +31,8 @@ export function MonitorTask({
         ? task.createdAt
         : task.agentStatusChangedAt;
   // Keep the AI run state visible within active lanes; lane position and run state answer different questions.
-  const showsState = section !== 'done' && task.assignee === 'ai';
-  const pending = showsState && task.agentStatus === 'pending';
+  const showsState = task.assignee === 'ai' && (section !== 'done' || task.agentStatus === 'ran');
+  const pending = showsState && task.agentStatus === 'awaiting_answer';
   const label = [
     `#${task.id}`,
     t(`monitor.status.${section}`),

@@ -165,11 +165,12 @@ impl From<&TaskFile> for TaskMetadata {
 }
 
 impl TaskMetadata {
-    /// Join persisted metadata with validated TASK.md events for operations. A `pending` run
-    /// state stored by an earlier version reads as idle: waiting is derived from the questions.
+    /// Join persisted metadata with validated TASK.md events for operations. An
+    /// `awaiting_answer` run state is never stored; one that is found reads as idle, because
+    /// waiting is derived from the questions.
     pub fn with_history(self, history: Vec<HistoryRecord>) -> TaskFile {
         let agent_status = match self.agent_status {
-            RunState::Pending => RunState::Idle,
+            RunState::AwaitingAnswer => RunState::Idle,
             other => other,
         };
         TaskFile {
@@ -226,7 +227,7 @@ pub struct TaskView {
     pub epic: Option<TaskEpic>,
     pub task_status: Column,
     pub position: i64,
-    /// The run state as shown: `pending` while an AI task in Todo or Doing waits for a person.
+    /// The run state as shown: `awaiting_answer` while an AI task in Todo or Doing waits for a person.
     pub agent_status: RunState,
     pub draft: Option<Draft>,
     /// The question IDs in the `questions` frontmatter.

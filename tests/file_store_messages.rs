@@ -655,13 +655,13 @@ fn a_task_waits_for_an_unanswered_question_and_for_nothing_else() {
     let request = f.send("Add a link.");
     let question = f.ask("Keep?", &[("keep", "Keep"), ("drop", "Drop")], &[task]);
     let state = |f: &Fixture| f.store.task(&f.project, task).unwrap().agent_status;
-    assert_eq!(state(&f), RunState::Pending);
+    assert_eq!(state(&f), RunState::AwaitingAnswer);
 
     f.answer(&question, Some("keep"), None).unwrap();
     assert_eq!(state(&f), RunState::Idle);
 
     let second = f.ask("Drop?", &[("yes", "Yes"), ("no", "No")], &[task]);
-    assert_eq!(state(&f), RunState::Pending);
+    assert_eq!(state(&f), RunState::AwaitingAnswer);
     f.withdraw(&second, Actor::Ai).unwrap();
     assert_eq!(state(&f), RunState::Idle);
 
@@ -688,7 +688,7 @@ fn a_task_waits_for_an_unanswered_question_and_for_nothing_else() {
         "broken",
     )
     .unwrap();
-    assert_eq!(state(&f), RunState::Pending);
+    assert_eq!(state(&f), RunState::AwaitingAnswer);
 }
 
 #[test]
@@ -713,7 +713,7 @@ fn linking_keeps_the_question_and_the_task_in_step() {
     assert!(f.file(&question).contains(&both), "{}", f.file(&question));
     assert_eq!(
         f.store.task(&f.project, second).unwrap().agent_status,
-        RunState::Pending
+        RunState::AwaitingAnswer
     );
     f.store
         .link_questions(

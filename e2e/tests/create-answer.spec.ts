@@ -54,7 +54,7 @@ test('a waiting card opens its answer in a dialog; Later closes it without sendi
   await laterButton(page).click();
   await expect(dialog).toBeHidden();
   await expect(answerButton(page)).toHaveText('Answer the question');
-  expect(show(12).agentStatus).toBe('pending');
+  expect(show(12).agentStatus).toBe('awaiting_answer');
   // The detail history remains readable.
   await expect(panel.getByRole('tabpanel').getByRole('listitem').first()).toContainText('Waiting for confirmation');
 
@@ -71,7 +71,7 @@ test('a waiting card opens its answer in a dialog; Later closes it without sendi
   await dialog.getByRole('button', { name: 'Clear', exact: true }).click();
   await expect(note).toHaveValue('');
   await expect(dialog.getByRole('button', { name: 'Clear', exact: true })).toHaveCount(0);
-  expect(show(12).agentStatus).toBe('pending');
+  expect(show(12).agentStatus).toBe('awaiting_answer');
   await fillAnswer(dialog, { choice: compat, text: 'Keep the current name.\nDo not migrate.' });
   await send(page);
   await closeMessages(page);
@@ -112,7 +112,7 @@ test('while it is sent the dialog cannot be sent twice; a failure keeps the answ
   // Failed: the answer and the dialog stay, the error is announced, and nothing changed.
   await expect(dialog.getByRole('alert')).toContainText('It could not be sent. Try again.');
   await expect(dialog).toContainText('My answer.');
-  expect(show(12).agentStatus).toBe('pending');
+  expect(show(12).agentStatus).toBe('awaiting_answer');
 
   // Sent again while the server is slow: the answer is sent once, and the form is locked meanwhile.
   mode = 'hold';
@@ -175,7 +175,7 @@ test('an answer sent from a page that missed the new request is refused by the s
   expect((await answered).status()).toBe(409);
   await expect(dialog.getByRole('alert')).toBeVisible();
   // Nothing was saved: still waiting, now with the new question.
-  expect(show(12)).toMatchObject({ agentStatus: 'pending', pendingReason: 'A different question now.' });
+  expect(show(12)).toMatchObject({ agentStatus: 'awaiting_answer', pendingReason: 'A different question now.' });
   expect(show(12).history.filter((event) => event.reason.includes('An answer to the old question.'))).toHaveLength(0);
 
   // Once the board can be read, the dialog no longer offers the old question.

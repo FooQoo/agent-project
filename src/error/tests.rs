@@ -25,6 +25,10 @@ pub(super) fn all_errors() -> Vec<AgboardError> {
             column: Column::Todo,
         },
         AgboardError::InvalidStateForAssignee,
+        AgboardError::InvalidStateChange {
+            from: RunState::Ran,
+            to: RunState::Idle,
+        },
         AgboardError::NoCurrentVersion,
         AgboardError::TaskIsDraft { id: 5 },
         AgboardError::TaskInBacklog { id: 5 },
@@ -194,6 +198,7 @@ fn codes_and_exit_codes_follow_the_design_table() {
             ("invalid_value", 2),
             ("invalid_state_for_column", 1),
             ("invalid_state_for_assignee", 2),
+            ("invalid_state_change", 2),
             ("no_current_version", 1),
             ("task_is_draft", 1),
             ("task_in_backlog", 1),

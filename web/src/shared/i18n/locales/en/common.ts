@@ -41,7 +41,9 @@ export const commonEn = {
   runState: {
     idle: 'Idle',
     running: 'Running',
-    pending: 'Pending',
+    paused: 'Paused',
+    ran: 'Has run',
+    awaiting_answer: 'Awaiting answer',
   },
   assignee: {
     ai: 'AI',

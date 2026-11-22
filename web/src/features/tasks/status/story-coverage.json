@@ -35,8 +35,18 @@
               "interaction": false
             },
             {
-              "id": "task-status-statuslabel--agent-pending",
-              "states": ["agent pending"],
+              "id": "task-status-statuslabel--agent-paused",
+              "states": ["agent paused"],
+              "interaction": false
+            },
+            {
+              "id": "task-status-statuslabel--agent-ran",
+              "states": ["agent has run"],
+              "interaction": false
+            },
+            {
+              "id": "task-status-statuslabel--agent-awaiting-answer",
+              "states": ["agent awaiting answer"],
               "interaction": false
             },
             {
@@ -45,8 +55,8 @@
               "interaction": false
             },
             {
-              "id": "task-status-statuslabel--monitor-pending",
-              "states": ["monitor wording", "agent pending"],
+              "id": "task-status-statuslabel--monitor-awaiting-answer",
+              "states": ["monitor wording", "agent awaiting answer"],
               "interaction": false
             },
             {
@@ -77,7 +87,7 @@
           "stories": [
             {
               "id": "task-status-dialogbadges--run-statuses",
-              "states": ["idle", "running", "pending"],
+              "states": ["idle", "running", "paused", "ran", "awaiting_answer"],
               "interaction": false
             }
           ]
