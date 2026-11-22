@@ -9,7 +9,7 @@ edition = "2024"
 autobins = false
 
 [[bin]]
-name = "agboard"
+name = "agpj"
 path = "src/main.rs"
 
 [dependencies]

@@ -191,7 +191,7 @@ jobs:
           cargo build --locked
           cargo test --locked --test monitor_phone_serve --no-run --message-format=json > build.json
           mkdir e2e-bin
-          cp target/debug/agboard e2e-bin/agboard
+          cp target/debug/agpj e2e-bin/agpj
           jq -r 'select(.executable != null and .target.name == "monitor_phone_serve") | .executable' build.json | tail -n 1 | xargs -I{} cp {} e2e-bin/monitor_phone_serve
           ls -l e2e-bin
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
@@ -211,7 +211,7 @@ jobs:
     env:
       # global-setup.ts uses the downloaded binaries instead of building.
       AGPJ_E2E_PREBUILT: "1"
-      AGPJ_E2E_BINARY: ${{ github.workspace }}/e2e-bin/agboard
+      AGPJ_E2E_BINARY: ${{ github.workspace }}/e2e-bin/agpj
       AGPJ_E2E_PHONE_BACKEND: ${{ github.workspace }}/e2e-bin/monitor_phone_serve
     # The suite is split across five runners. Each shard runs a quarter of the tests.
     strategy:
@@ -225,7 +225,7 @@ jobs:
           name: e2e-bin
           path: e2e-bin
       # An artifact does not keep the executable bit.
-      - run: chmod +x e2e-bin/agboard e2e-bin/monitor_phone_serve
+      - run: chmod +x e2e-bin/agpj e2e-bin/monitor_phone_serve
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
           version: ${{ env.PNPM_VERSION }}

@@ -184,7 +184,7 @@ fn a_stream_without_valid_session_headers_is_not_counted() {
 
 /// `agboard serve` as its own process, with the short grace period.
 fn serve(home: &std::path::Path) -> (ServeProcess, u16) {
-    let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -234,7 +234,7 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
     let _serial = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let home = tempdir().unwrap();
     let run = |args: &[&str]| {
-        Command::new(env!("CARGO_BIN_EXE_agboard"))
+        Command::new(env!("CARGO_BIN_EXE_agpj"))
             .env("AGPJ_AUTOSTART", "0")
             .env("AGPJ_OPEN_BROWSER", "0")
             .env("AGPJ_WATCH", "poll")
@@ -250,7 +250,7 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
     let project = snapshot["project"]["id"].as_str().unwrap().to_string();
     let (_server, port) = serve(home.path());
 
-    let waiter = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let waiter = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -308,7 +308,7 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
 
 /// One `agboard` command with the board's test settings and an agent session's variables.
 fn agpj_in_session(home: &std::path::Path, session: Option<&str>, args: &[&str]) -> Vec<u8> {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
     command
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")

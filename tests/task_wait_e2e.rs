@@ -16,7 +16,7 @@ use tempfile::TempDir;
 use serve_process::ServeProcess;
 
 fn run(home: &Path, args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_agboard"))
+    Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -60,7 +60,7 @@ fn fixture() -> TempDir {
 }
 
 fn serve(home: &Path) -> ServeProcess {
-    let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -81,7 +81,7 @@ fn serve(home: &Path) -> ServeProcess {
 }
 
 fn wait(home: &Path, timeout: &str) -> Child {
-    Command::new(env!("CARGO_BIN_EXE_agboard"))
+    Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")

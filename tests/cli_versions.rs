@@ -483,7 +483,7 @@ fn the_root_version_flag_still_prints_the_binary_version() {
     demo(home.path());
     let (code, out, _) = agboard(home.path(), &["--version"]);
     assert_eq!(code, 0);
-    assert!(out.starts_with("agboard "), "{out}");
+    assert!(out.starts_with("agpj "), "{out}");
     // The option of the subcommands is a different one.
     let (code, _, err) = agboard(
         home.path(),

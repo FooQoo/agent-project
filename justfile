@@ -76,6 +76,6 @@ serve-ngrok port="7450": build
         export NGROK_AUTHTOKEN
     fi
     echo "Temporary data area: $AGPJ_HOME"
-    ./target/debug/agboard project create dev
+    ./target/debug/agpj project create dev
     echo "The startup line shows the phone URL and its 4-digit passcode."
-    ./target/debug/agboard serve --port "{{port}}" --monitor ngrok
+    ./target/debug/agpj serve --port "{{port}}" --monitor ngrok

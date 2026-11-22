@@ -27,7 +27,7 @@ pnpm --dir web build
 cargo build
 ```
 
-実行ファイルは`target/debug/agboard`です。`cargo build`が`Run "pnpm --dir web build" first.`で止まったら、Web画面がまだビルドされていません。
+実行ファイルは`target/debug/agpj`です。`cargo build`が`Run "pnpm --dir web build" first.`で止まったら、Web画面がまだビルドされていません。
 
 開発用ビルドはデバッグ情報を行番号の表だけに絞っています（`Cargo.toml`の`[profile.dev]`）。panicやバックトレースにはファイル名と行番号が出たまま、`target/`が小さく済みます。それでも依存やブランチを切り替えるたびに`target/`は増え、worktreeごとに別に作られます。ディスクの空きが減ったら`cargo clean`で消してください。
 
@@ -185,7 +185,7 @@ command -v agboard
 
 `cargo install`は`~/.cargo/bin`（または`$CARGO_HOME/bin`）に書き込みます。そのディレクトリが`PATH`に入っている必要があります。`command -v agboard`が何も表示しなければ、例えば`export PATH="$HOME/.cargo/bin:$PATH"`で追加し、新しいシェルを開きます。
 
-インストールした`agboard`と開発中のビルドは別のファイルです。Hookはインストールした方を呼び、`cargo build`・`cargo run`・`target/debug/agboard`は作業ツリーを使います。Hookで変更を確かめる前に、インストールし直してください。
+インストールした`agboard`と開発中のビルドは別のファイルです。Hookはインストールした方を呼び、`cargo build`・`cargo run`・`target/debug/agpj`は作業ツリーを使います。Hookで変更を確かめる前に、インストールし直してください。
 
 ### macOSでキーチェーンの許可を保つ
 

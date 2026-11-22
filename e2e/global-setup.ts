@@ -24,6 +24,6 @@ export default async function globalSetup(): Promise<void> {
   // The binary embeds web/dist, so the screen is built first.
   run('corepack', ['pnpm', '--dir', 'web', 'build']);
   run('cargo', ['build']);
-  // Building the phone backend links target/debug/agboard again, so it happens here, before the workers use it.
+  // Building the phone backend links target/debug/agpj again, so it happens here, before the workers use it.
   process.env.AGPJ_E2E_PHONE_BACKEND = buildPhoneBackend();
 }

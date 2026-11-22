@@ -44,7 +44,7 @@ fn hook_table(shared: &Path) -> Value {
 }
 
 fn cli_table(home: &Path) -> Value {
-    let out = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let out = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")

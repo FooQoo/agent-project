@@ -44,7 +44,7 @@ fn fixture(agents: &[&str]) -> Fixture {
 
 impl Fixture {
     fn run(&self, extra: &[(&str, &str)], args: &[&str]) -> (i32, String, String) {
-        let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
+        let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
             .env_clear()
             .env("HOME", &self.home)
             .env("PATH", &self.fakes.bin)

@@ -10,7 +10,7 @@ import { setPreferences } from '../helpers/preferences.mjs';
 // Records the English and Japanese demo videos from the real UI.
 // Build web/ and the CLI first. Needs ffmpeg and ffprobe. Only disposable data is used.
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const binary = process.env.AGPJ_E2E_BINARY ?? path.join(repo, 'target/debug/agboard');
+const binary = process.env.AGPJ_E2E_BINARY ?? path.join(repo, 'target/debug/agpj');
 // AGPJ_MEDIA_OUT points the videos at another folder, so a check run does not touch the repository's files.
 const output = process.env.AGPJ_MEDIA_OUT ? path.resolve(process.env.AGPJ_MEDIA_OUT, 'videos') : path.join(repo, 'docs/public/videos');
 const project = 'release-demo';

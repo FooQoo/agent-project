@@ -8,7 +8,7 @@ use tempfile::tempdir;
 fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
     let home = tempdir().unwrap();
     for project in ["Agent Board", "Other"] {
-        let init = Command::new(env!("CARGO_BIN_EXE_agboard"))
+        let init = Command::new(env!("CARGO_BIN_EXE_agpj"))
             .env("AGPJ_AUTOSTART", "0")
             .env("AGPJ_OPEN_BROWSER", "0")
             .env("AGPJ_WATCH", "poll")
@@ -22,7 +22,7 @@ fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
         } else {
             "Question"
         };
-        let add = Command::new(env!("CARGO_BIN_EXE_agboard"))
+        let add = Command::new(env!("CARGO_BIN_EXE_agpj"))
             .env("AGPJ_AUTOSTART", "0")
             .env("AGPJ_OPEN_BROWSER", "0")
             .env("AGPJ_WATCH", "poll")
@@ -269,7 +269,7 @@ fn installed_binary_reads_a_large_hook_input_from_stdin_and_uses_its_cwd() {
 #[test]
 fn installed_binary_handles_hook_json_on_stdin() {
     let home = tempdir().unwrap();
-    let init = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let init = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -278,7 +278,7 @@ fn installed_binary_handles_hook_json_on_stdin() {
         .output()
         .unwrap();
     assert!(init.status.success());
-    let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -323,7 +323,7 @@ fn hook_process(
     stdin: Option<&str>,
 ) -> HookRun {
     use std::io::Write;
-    let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")

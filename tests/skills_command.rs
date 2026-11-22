@@ -8,7 +8,7 @@ use std::process::Command;
 /// whether the folder is still empty.
 fn skills(args: &[&str]) -> (i32, String, bool) {
     let home = tempfile::tempdir().unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env_clear()
         .env("HOME", home.path())
         .env("AGPJ_HOME", home.path().join("data"))
@@ -147,7 +147,7 @@ fn an_unknown_topic_exits_zero_and_lists_the_topics() {
 
 #[test]
 fn skills_works_without_a_data_directory() {
-    let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env_clear()
         .args(["skills"])
         .output()

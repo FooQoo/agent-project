@@ -124,12 +124,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
     let fake = tools.path().join(program);
     std::fs::write(
         &fake,
-        fake_session(
-            program,
-            env!("CARGO_BIN_EXE_agboard"),
-            home.path(),
-            log.path(),
-        ),
+        fake_session(program, env!("CARGO_BIN_EXE_agpj"), home.path(), log.path()),
     )
     .unwrap();
     std::fs::set_permissions(&fake, std::fs::Permissions::from_mode(0o755)).unwrap();
@@ -184,7 +179,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
     assert!(text.contains("Do not run `agboard wait`"), "{text}");
 
     // An external session still attaches with `wait` and is counted next to the board's own.
-    let mut external = std::process::Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let mut external = std::process::Command::new(env!("CARGO_BIN_EXE_agpj"))
         .args([
             "--project",
             "Demo",

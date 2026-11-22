@@ -19,7 +19,7 @@ use tempfile::{TempDir, tempdir};
 use serve_process::ServeProcess;
 
 fn agboard(home: &Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_agboard"))
+    Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -87,7 +87,7 @@ fn add(home: &Path, project: &str, title: &str, assignee: &str, epic: Option<&st
 }
 
 fn serve(home: &Path) -> ServeProcess {
-    let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -108,7 +108,7 @@ fn serve(home: &Path) -> ServeProcess {
 }
 
 fn wait(home: &Path, project: &str, timeout: &str) -> std::process::Child {
-    Command::new(env!("CARGO_BIN_EXE_agboard"))
+    Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")

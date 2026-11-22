@@ -27,7 +27,7 @@ pnpm --dir web build
 cargo build
 ```
 
-The binary is `target/debug/agboard`. If `cargo build` stops with `Run "pnpm --dir web build" first.`, the UI build is missing.
+The binary is `target/debug/agpj`. If `cargo build` stops with `Run "pnpm --dir web build" first.`, the UI build is missing.
 
 Development builds keep only line tables as debug info (`[profile.dev]` in `Cargo.toml`), so panics and backtraces still name files and lines while `target/` stays smaller. `target/` still grows with every dependency or branch change, and each worktree has its own; remove it with `cargo clean` when disk space runs low.
 
@@ -185,7 +185,7 @@ command -v agboard
 
 `cargo install` writes to `~/.cargo/bin` (or `$CARGO_HOME/bin`), which must be on your `PATH`. If `command -v agboard` prints nothing, add it, for example `export PATH="$HOME/.cargo/bin:$PATH"`, and open a new shell.
 
-The installed `agboard` and your development build are separate files. Hooks call the installed one, while `cargo build`, `cargo run`, and `target/debug/agboard` use the working tree. Reinstall before checking a change through a hook.
+The installed `agboard` and your development build are separate files. Hooks call the installed one, while `cargo build`, `cargo run`, and `target/debug/agpj` use the working tree. Reinstall before checking a change through a hook.
 
 ### Keep the Keychain grant on macOS
 

@@ -23,7 +23,7 @@ const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 let executable;
 
 /*
- * Builds the backend test binary and returns its path. `cargo test` also links target/debug/agboard again, so
+ * Builds the backend test binary and returns its path. `cargo test` also links target/debug/agpj again, so
  * global-setup.ts builds it before any worker starts and passes the path on in AGPJ_E2E_PHONE_BACKEND; a
  * build while other workers run the CLI would remove that file under them.
  */

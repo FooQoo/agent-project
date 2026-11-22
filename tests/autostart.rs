@@ -54,7 +54,7 @@ impl Board {
     }
 
     fn command(&self) -> Command {
-        let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+        let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
         command
             .env_remove("AGPJ_AUTOSTART")
             .env_remove("AGPJ_IDLE_TIMEOUT")

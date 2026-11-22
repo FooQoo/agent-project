@@ -17,7 +17,7 @@ fn agboard(home: &std::path::Path, args: &[&str]) -> std::process::Output {
 }
 
 fn agpj_for(home: &std::path::Path, project: &str, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_agboard"))
+    Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -30,7 +30,7 @@ fn agpj_for(home: &std::path::Path, project: &str, args: &[&str]) -> std::proces
 }
 
 fn start_server(home: &std::path::Path) -> ServeProcess {
-    let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -109,7 +109,7 @@ fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
     assert!(after.ends_with(&format!(":{}", baseline["version"].as_str().unwrap())));
     let _server = start_server(home.path());
 
-    let waiter = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let waiter = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -240,7 +240,7 @@ fn a_change_to_another_project_does_not_end_the_wait() {
     let after = baseline["cursor"].as_str().unwrap().to_string();
     let _server = start_server(home.path());
 
-    let waiter = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let waiter = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")

@@ -21,7 +21,7 @@ use tempfile::tempdir;
 // ---------------------------------------------------------------- harness
 
 fn bin() -> Command {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
     command
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0");

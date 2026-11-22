@@ -38,7 +38,7 @@ for arg in "$@"; do
   if [ "$prev" = "--root" ]; then install_root="$arg"; fi
   prev="$arg"
 done
-binary="$install_root/bin/agboard"
+binary="$install_root/bin/agpj"
 if [ ! -x "$binary" ]; then
   echo "install-local: $binary not found after install" >&2
   exit 1

@@ -34,7 +34,7 @@ fn fakes(home: &Path) -> FakeAgents {
 /// stdout, and stderr.
 fn setup(home: &Path, extra: &[(&str, &str)], args: &[&str]) -> (i32, String, String) {
     let fakes = fakes(home);
-    let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env_clear()
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
@@ -727,7 +727,7 @@ fn serve_and_the_cli_share_the_default_root_created_by_setup() {
     use std::io::{BufRead, BufReader};
     let (_tmp, home) = home_with_settings("home");
     setup_json(&home, &[], &[]);
-    let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env_clear()
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")

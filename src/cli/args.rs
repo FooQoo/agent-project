@@ -37,7 +37,7 @@ use crate::error::AgpjError;
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "agboard",
+    name = "agpj",
     version,
     disable_help_subcommand = true,
     override_help = TOP_HELP

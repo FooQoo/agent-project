@@ -88,7 +88,7 @@ impl Fixture {
         } else {
             "CLAUDE_PLUGIN_ROOT"
         };
-        let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+        let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
         command.env_clear();
         if self.use_override {
             command.env("AGPJ_PLUGIN_MARKETPLACE", &self.marketplace);
@@ -243,7 +243,7 @@ fn codex_falls_back_to_the_claude_plugin_root_variable() {
     let fx = fixture("codex", true);
     let root = fx.plugin_root.to_str().unwrap().to_string();
     // PLUGIN_ROOT is unset in this run; only CLAUDE_PLUGIN_ROOT names it.
-    let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env_clear()
         .env("HOME", &fx.home)
         .env("PATH", &fx.fakes.bin)

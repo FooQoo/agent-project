@@ -38,7 +38,7 @@ struct Waiter {
 
 impl Waiter {
     fn spawn(home: &Path, args: &[&str]) -> Waiter {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+        let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
             .env("AGPJ_AUTOSTART", "0")
             .env("AGPJ_OPEN_BROWSER", "0")
             .env("AGPJ_WATCH", "poll")
