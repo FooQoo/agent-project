@@ -86,7 +86,7 @@ function seed(home, text) {
   // Earlier work, so the board is not empty: two finished cards and one of yours still to do.
   run('add', e.doneHuman, '--assignee', 'human', '--actor', 'human');
   run('add', e.doneAi, '--assignee', 'ai', '--actor', 'ai');
-  run('start', '2', '--actor', 'ai');
+  run('mv', '2', 'doing', '--actor', 'ai');
   run('add', e.todoHuman, '--assignee', 'human', '--actor', 'human');
   for (const id of ['1', '2']) run('mv', id, 'done', '--actor', 'human', '--reason', 'Sample work completed');
   return meta.id;
@@ -191,7 +191,7 @@ async function record(browser, locale, tmp) {
     const lanes = page.locator('section.lane');
     const card = (id) => page.getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) });
     const task = card(heroId);
-    await expect(lanes).toHaveCount(3);
+    await expect(lanes).toHaveCount(4);
     await expect(card(3)).toBeVisible();
     await installOverlay(page);
     await page.evaluate(async () => { await document.fonts.ready; });
@@ -217,6 +217,13 @@ async function record(browser, locale, tmp) {
     await page.waitForTimeout(250);
     await send.click();
     await expect(ask).toBeHidden();
+    // Sending opens the Messages dialog on the sent request; close it so the board stays in view.
+    const sent = page.getByRole('dialog');
+    if (await sent.waitFor({ timeout: 2500 }).then(() => true, () => false)) {
+      await page.waitForTimeout(900);
+      await page.keyboard.press('Escape');
+      await expect(sent).toBeHidden();
+    }
     await page.mouse.move(size.width - 40, size.height - 120, { steps: 20 });
     await page.waitForTimeout(1200);
 
@@ -274,10 +281,9 @@ async function record(browser, locale, tmp) {
     // 4. The agent starts its plan and works through the first task's conditions.
     await caption(page, text.captions[3]);
     await page.waitForTimeout(900);
-    for (const offset of [0, 1, 2]) run('start', String(heroId + offset), '--actor', 'ai');
     run('mv', String(heroId), 'doing', '--actor', 'ai', '--reason', text.reasons.start);
     run('state', String(heroId), 'running', '--actor', 'ai', '--reason', text.reasons.resume);
-    await expect(lanes.nth(1).getByRole('button', { name: new RegExp(`^#${heroId}(?!\\d)`) })).toBeVisible();
+    await expect(lanes.nth(2).getByRole('button', { name: new RegExp(`^#${heroId}(?!\\d)`) })).toBeVisible();
     await page.waitForTimeout(1600);
     for (let done = 1; done <= 3; done++) {
       run('edit', String(heroId), `--desc=${markdown(text, done)}`);
@@ -289,7 +295,7 @@ async function record(browser, locale, tmp) {
 
     // 5. The last condition completes the card on its own.
     await caption(page, text.captions[4]);
-    await expect(lanes.nth(2).getByRole('button', { name: new RegExp(`^#${heroId}(?!\\d)`) })).toBeVisible();
+    await expect(lanes.nth(3).getByRole('button', { name: new RegExp(`^#${heroId}(?!\\d)`) })).toBeVisible();
     await page.waitForTimeout(800);
     run('mv', String(heroId + 1), 'doing', '--actor', 'ai', '--reason', text.reasons.start);
     run('state', String(heroId + 1), 'running', '--actor', 'ai', '--reason', text.reasons.running);
