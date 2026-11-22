@@ -9,7 +9,7 @@
 - メッセージは1件1ファイルで、`qa/Q-<n>/QA.md`に保存します。YAMLのfrontmatterとMarkdownの本文で構成します。依頼に添付した画像や、`message ask`の`images`で質問に付けた画像は`qa/Q-<n>/attachments/`に置きます。`ask`は先に質問のファイルを書き、そのあと用意しておいた画像フォルダを質問ごとに1回のrenameで移します。質問と依頼は`project.json`の`nextQuestionId`の1本の連番を共有し、番号は増えるだけです。
 - 質問は`from`、`to`、任意の`tasks`（質問の対象タスク）、任意で2〜10件の`choices`、任意の`recommended`、`reply`、`withdrawnAt`、`createdAt`を持ちます。本文が質問で、1〜5,000文字です。各選択肢は質問内で一意のID（`[A-Za-z0-9_-]`の1〜64文字）と1〜200文字のラベルを持ちます。`recommended`は選択肢のどれかを指します。
 - 依頼は`from`、`to`、`acceptedAt`、`withdrawnAt`、`createdAt`を持ちます。本文が依頼で、1〜20,000文字です。
-- `agboard message ask`は質問1件につき1ファイルを書き、1回に20件まで出せます。`--task <id>`または質問の`tasks`を指定すると、そのタスクのfrontmatterの`questions`に質問IDを足し、質問と選択肢を別々のブロックにした履歴を追加します。Runningのタスクは同じ保存でIdleに戻します。指定したタスクが存在しない、アーカイブ済み、下書き、またはAIの操作でDoneのときは、何も書きません。
+- `agboard message ask`は質問1件につき1ファイルを書き、1回に20件まで出せます。`--task <id>`または質問の`tasks`を指定すると、そのタスクのfrontmatterの`questions`に質問IDを足し、質問と選択肢を別々のブロックにした履歴を追加します。Runningのタスクは同じ保存でPausedになります。指定したタスクが存在しない、アーカイブ済み、下書き、またはAIの操作でDoneのときは、何も書きません。
 - 回答は`{choice, text, via, at}`に、任意の`images`と任意の`acceptedAt`を加えた形です。回答の画像は、回答を保存する前に質問の`attachments/`へ書かれ、保存に失敗したときは取り除かれます。選択肢のある質問には`choice`か`text`（または両方）が必要で、メモだけの回答は`choice`が`null`の回答になります。選択肢のない質問には`text`が必要です。`text`は前後の空白を除いて1〜2,000文字です。未知の選択肢は`choice_unknown`です。回答には選択肢のID、`via`（ボードとリモートアクセスからは`ui`、チャットで受けた回答をエージェントが記録したときは`chat`、端末からは`cli`）、時刻を保存します。質問を参照しているアーカイブされていないタスクには、質問・選んだラベル・メモを別々のブロックにした履歴を追加します。Doneのタスクにも追加します。
 - 回答を書けるのは人だけで、1回だけです。回答済みの質問に答えると`question_answered`で失敗します。まとめて送った回答は、全部書くか何も書かないかのどちらかです。
 - 依頼は、エージェントが`agboard message accept`で受け付けます。`acceptedAt`を記録します。受け付けは1回だけで、2回目は`request_accepted`で失敗します。
@@ -24,7 +24,7 @@
 
 AIタスクが人の判断待ちになるのは、回答のない質問を参照しているとき、読めないメッセージのファイルを参照しているとき、またはfrontmatterの`questions`を読めないときです。取り下げた質問では待ちになりません。すべてのメッセージのファイルが読める状態で、存在しないメッセージを指す参照も待ちにはならず、`problems`に載せます。
 
-`task.json`に保存するのは`idle`か`running`だけです。未着手か進行中のAIタスクが判断待ちのときは、Summary、snapshot、`show`、進捗表、hookのどれも`agentStatus`を`pending`として返し、`openQuestionIds`と、IDが最も小さい未回答の質問から`pendingReason`と`pendingChoices`を返します。判断待ちの間、AIによる`state <id> running`とDoneへの移動は`questions_unanswered`で失敗します。`idle`への変更と人の移動は通します。Done、アーカイブ済み、人のタスクは保存した状態を表示し、参照は記録として残ります。
+`task.json`に保存するのは`idle`・`running`・`paused`・`ran`のどれかで、`awaiting_answer`は保存しません。未着手か進行中のAIタスクが判断待ちのときは、Summary、snapshot、`show`、進捗表、hookのどれも`agentStatus`を`awaiting_answer`として返し、`openQuestionIds`と、IDが最も小さい未回答の質問から`pendingReason`と`pendingChoices`を返します。判断待ちの間、AIによる`state <id> running`とDoneへの移動は`questions_unanswered`で失敗します。Pausedへの変更と人の移動は通します。Done、アーカイブ済み、人のタスクは保存した状態を表示し、参照は記録として残ります。
 
 ワークフロー情報を履歴の文章から推測することはありません。メッセージは`QA.md`から、参照はfrontmatterの`questions`から読むので、履歴を編集してもこれらは変わりません。
 
@@ -39,7 +39,7 @@ ID・種別・actor・遷移・依頼IDなどの追加の項目は拒否しま�
 
 - 作成・列移動・稼働状態の変更・質問・回答・取り下げ・参照の変更・下書きの切り替え・エピックの変更・リリース予定の版の変更（そのエントリが、前の版・あとの版・時刻の記録です）・アーカイブ・復元・人による条件の付け外し・自動Doneは、履歴を自動で追加します。移動や状態の変更で理由を省くと、操作と現在の状態から生成します。
 - エージェントは、状態を変えないが後で効く判断を`agboard --project NAME history add ID [--reason TEXT | --reason-file PATH]`で追加します。日時はAgent Boardが自動で付け、下書き・アーカイブ済み・DoneのタスクへのAIの追加は拒否します。空白の理由は、現在のレーンと稼働状態から生成します。
-- 常駐エージェントがタスクを扱っている間にエラーで止まったときは、ボード自身が履歴を1件追記し、同じ保存でタスクをIdleに戻します。[プッシュモード](./agents.md#push-mode)を参照してください。
+- 常駐エージェントがタスクを扱っている間にエラーで止まったときは、ボード自身が履歴を1件追記し、同じ保存でタスクをPausedにします。[プッシュモード](./agents.md#push-mode)を参照してください。
 - `agboard result add`は、依頼者に届ける成果を記録し、版と要約の1行目を示す履歴を1件追加します。すでにある成果の再送では、履歴を追加しません。成果そのものは履歴ではなく`task.json`に保存します。[ファイル](../reference/files.md#results)を参照してください。
 - 履歴には判断と根拠を残し、作業の逐次報告は残しません。列や稼働状態を変える判断は`mv`や`state`の`--reason`に書き、操作が自動で追加した項目を唯一の記録とします。状態を変えないが後で効く判断は、根拠・判断・分かっていれば再検討の条件を添えて`history add`で一度だけ追加します。例:「公開文面は実機確認の結果で変わるため、確認が終わるまでTODOに置く」。一覧を見ただけでは追記せず、`result add`は自動で記録されます。検証根拠・成果・質問は、従来どおり本文・`result add`・`message ask`に残します。エージェントは、そのたびに承認を求めません。
 - 画面は日時と内容だけを新しい順に表示し、理由は本文と同じMarkdownで描きます。CLIの`show`とスナップショットは全履歴を返します。

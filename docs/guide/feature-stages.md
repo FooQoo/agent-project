@@ -40,7 +40,7 @@ Features that are GA show no notice.
 | Editing text and images | PC browser | Image size limits apply. | [Editing and image attachments](./watch/editing) |
 | Archive and delete | PC browser | Only a person deletes. | [Archive](./watch/board#archive) |
 | Decisions and answers | PC, remote access, CLI | An agent waits for your answer without a time limit by default. The waiting command starts the server when it is not running. | [Decisions](./delegate/decisions) |
-| Epics and progress table | PC browser, CLI | The progress table leaves out Pending tasks. | [Epics and progress](./watch/epics) |
+| Epics and progress table | PC browser, CLI | The progress table leaves out Awaiting answer tasks. | [Epics and progress](./watch/epics) |
 | Projects and working folders | CLI, PC browser | The nearest bound folder decides which project a folder belongs to. | [CLI reference](./reference/cli#projects) |
 | Saving and recovery of data | macOS | Only files with `formatVersion` 1 are supported. | [Data and backups](./operations/data) |
 | Language and themes | PC, remote access | English and Japanese, and 24 themes. | [Settings](./watch/board#settings) |

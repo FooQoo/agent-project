@@ -85,7 +85,7 @@ To finish, record the verification in `TASK.md` and set each verified acceptance
 
 ### Ask a question
 
-Use `message ask` to ask the user up to 20 questions. Each question is its own message, such as `Q-12`, and belongs to the project; `--task <id>` makes a task refer to them, and the task shows Pending until they are answered. The command prints one event per line (JSON Lines with `--json`) and waits until none is open, 600 seconds by default:
+Use `message ask` to ask the user up to 20 questions. Each question is its own message, such as `Q-12`, and belongs to the project; `--task <id>` makes a task refer to them, and the task shows Awaiting answer until they are answered. The command prints one event per line (JSON Lines with `--json`) and waits until none is open, 600 seconds by default:
 
 ```sh
 agboard --project "My project" message ask --actor ai --task 1 --questions-json - --json < questions.json
@@ -103,7 +103,7 @@ agboard --project "My project" edit 1 --desc-file task.md
 
 Descriptions allow up to 50,000 characters and epic details (`EPIC.md`) up to 100,000, and the file must follow the [Markdown file format](./file-format). Use `--desc -` to read a description from standard input.
 
-`edit --desc-file` replaces the body and acceptance conditions and keeps the latest history and the question references (`questions`) from `TASK.md`; `history` and `questions` in the input file are ignored, so a task that refers to an open question stays pending. Use `message link` and `message unlink` to change the references. Moves, state changes, and other operations from the CLI or the UI append history to `TASK.md`, and `show`, `snapshot`, and the browser read that same history.
+`edit --desc-file` replaces the body and acceptance conditions and keeps the latest history and the question references (`questions`) from `TASK.md`; `history` and `questions` in the input file are ignored, so a task that refers to an open question stays Awaiting answer. Use `message link` and `message unlink` to change the references. Moves, state changes, and other operations from the CLI or the UI append history to `TASK.md`, and `show`, `snapshot`, and the browser read that same history.
 
 ## Edit epic details
 
@@ -135,7 +135,7 @@ agboard --project "My project" epic send LAUNCH --actor human --tasks 1,2
 
 `mv <id> todo` sends one card; moving a card that is in the Backlog to any other lane is a person's move too. `epic send` sends the whole epic, or only the cards given with `--tasks`, in one save that either moves all of them or none. An agent that runs either gets `human_only`. A card that is already out of the Backlog is moved like any other card, and a card a person is editing in the browser (`draft: human`) cannot be sent (`task_is_draft`). The history records "A person sent the task to Todo."
 
-If the plan has open questions, the send is refused with `send_with_open_questions` (exit code 1) and the message lists the question IDs. Add `--force` to `mv` (or `epic send`) to send anyway; the questions stay open and the card is pending until they are answered:
+If the plan has open questions, the send is refused with `send_with_open_questions` (exit code 1) and the message lists the question IDs. Add `--force` to `mv` (or `epic send`) to send anyway; the questions stay open and the card is Awaiting answer until they are answered:
 
 ```sh
 agboard --project "My project" mv 12 todo --actor human --force
@@ -252,7 +252,7 @@ The `wait` command has two modes. `--after <cursor>` waits for a project change 
 agboard --project "My project" wait --until task --idle-timeout 300 --json
 ```
 
-`--idle-timeout` is required with `--until task` and accepts 1 to 86,400 seconds. It has no default. Each invocation returns at most one task, in the same order as the progress table; it does not claim or change the task. After resolving the returned task, call `wait` again to continue. See [Working with agents](../delegate/agents#listen-for-the-next-task) for the full session workflow and how Pending tasks are handled.
+`--idle-timeout` is required with `--until task` and accepts 1 to 86,400 seconds. It has no default. Each invocation returns at most one task, in the same order as the progress table; it does not claim or change the task. After resolving the returned task, call `wait` again to continue. See [Working with agents](../delegate/agents#listen-for-the-next-task) for the full session workflow and how Awaiting answer tasks are handled.
 
 On success, task mode prints one JSON object and exits 0:
 
