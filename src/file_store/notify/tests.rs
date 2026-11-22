@@ -55,6 +55,7 @@ impl Fixture {
                     link: None,
                     images: Vec::new(),
                     key: None,
+                    published: None,
                 },
                 when,
             )

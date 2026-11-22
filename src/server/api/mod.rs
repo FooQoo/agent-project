@@ -171,7 +171,7 @@ fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<
         )
         .route(
             "/api/projects/{project_id}/tasks/{id}/results",
-            get(list_task_results),
+            get(list_task_results).post(record_publication),
         )
         .route(
             "/api/projects/{project_id}/tasks/{id}/attachments/{attachment_id}",

@@ -18,7 +18,14 @@ agboard --project "<name>" result add <id> --actor ai --final --title "Released 
 Published: <V>" --link https://example.com/releases/<V>
 ```
 
-A Done card is read-only for agents, and a card that is Done and already has a final result takes no new result from anyone. So record the publication result while the card is still open, or ask a person to move the card out of Done, add the result, and move it back. Do not work around it by editing `task.json`. Never record `Published:` for something you did not see published; when the release is not out yet, report the card as unconfirmed.
+Prefer the explicit form, which checks the version and requires the link:
+
+```sh
+agboard --project "<name>" result add <id> --actor ai --published <V> \
+  --link https://example.com/releases/<V> --summary "Released."
+```
+
+It stores a progress result whose summary starts with `Published: <V>`. This is the one result a Done card still takes, even when it already has a final result; every other change to a Done card (other results, body, acceptance, column) stays refused, so do not ask a person to move the card just to record a publication. Do not work around anything by editing `task.json`. Never record `Published:` for something you did not see published; when the release is not out yet, report the card as unconfirmed.
 
 ## Theme retrospective
 

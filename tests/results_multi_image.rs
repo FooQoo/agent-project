@@ -252,6 +252,7 @@ fn an_image_used_by_any_image_of_a_result_cannot_be_deleted() {
                 link: None,
                 images,
                 key: None,
+                published: None,
             },
             at,
         )
