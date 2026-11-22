@@ -1,15 +1,16 @@
-//! `agboard setup remote`: save the ngrok connection settings, and the
-//! optional ngrok step of plain `agboard setup`.
+//! `agboard setup remote`: save the remote connection settings (ngrok or Tailscale), and the
+//! optional remote step of plain `agboard setup`.
 //!
 //! The settings are global to the data area, so no project is needed. Storage
 //! and validation are in [`crate::remote_settings`], which the interactive
 //! questions, the saving options and the board's own dialog all share. This
 //! starts and stops nothing.
 //!
-//! - `--domain`, `--clear-domain`, `--enabled`, `--token-stdin`: save at once, with no
+//! - `--provider`, `--domain`, `--clear-domain`, `--enabled`, `--token-stdin`: save at once, with no
 //!   question, for scripts.
-//! - No option: on a terminal, show the state and ask for the domain and the token
-//!   (typed hidden), each skippable. Without a terminal nothing is asked and the
+//! - No option: on a terminal, show the state, ask which way the phone connects, and then ask
+//!   only that way's settings: for ngrok the domain and the token (typed hidden), each
+//!   skippable; for Tailscale nothing more. Without a terminal nothing is asked and the
 //!   command says what to add, as `agboard setup` does.
 
 use std::io::{IsTerminal, Read};
@@ -21,6 +22,7 @@ use crate::cli::Outcome;
 use crate::cli::args::SetupRemoteArgs;
 use crate::error::AgboardError;
 use crate::remote_settings::{self as saved, APPLIES_NOTE, Change, Saved};
+use crate::server::monitor_connection::contracts::Provider;
 use crate::server::monitor_connection::keychain::TokenVault;
 use crate::server::monitor_connection::lifecycle::Secret;
 
@@ -48,7 +50,7 @@ pub fn run(
                     .map(Some)
             },
             enabled: args.enabled,
-            provider: None,
+            provider: args.provider.as_deref().and_then(Provider::parse),
             token: if args.token_stdin {
                 Some(read_token(stdin)?)
             } else {
@@ -60,7 +62,7 @@ pub fn run(
     let terminal = std::io::stdin().is_terminal() && std::io::stderr().is_terminal();
     if json || !terminal {
         return Err(AgboardError::InvalidArgument {
-            message: "setup remote asks questions and needs a terminal for it. Without a terminal or with --json, add --domain, --clear-domain, --enabled, or --token-stdin to save them.".to_string(),
+            message: "setup remote asks questions and needs a terminal for it. Without a terminal or with --json, add --provider, --domain, --clear-domain, --enabled, or --token-stdin to save them.".to_string(),
             command: Some("setup".to_string()),
         });
     }
@@ -78,7 +80,7 @@ fn save(data_dir: &Path, vault: &dyn TokenVault, change: Change) -> Result<Outco
         // Nothing on a board changed, so there is no project to notify.
         changed: false,
         human: format!(
-            "Saved the ngrok connection settings.\n{}{APPLIES_NOTE}\n",
+            "Saved the remote connection settings.\n{}{APPLIES_NOTE}\n",
             now.human()
         ),
         json,
@@ -110,6 +112,8 @@ fn read_token(stdin: &mut dyn Read) -> Result<Secret, AgboardError> {
 /// The answers of the questions: `None` leaves a setting as it is.
 #[derive(Default)]
 pub struct Answers {
+    /// The chosen provider, when it differs from the saved one.
+    pub provider: Option<Provider>,
     /// `Some("")` clears the domain, as typed after choosing to change an existing one.
     pub domain: Option<String>,
     pub token: Option<String>,
@@ -135,7 +139,7 @@ pub fn apply_answers(
     let change = Change {
         domain,
         enabled: None,
-        provider: None,
+        provider: answers.provider,
         token,
     };
     if change.is_empty() {
@@ -149,13 +153,12 @@ pub fn apply_answers(
 /// is reported and never fails the setup that already ran.
 pub fn offer(data_dir: &Path, vault: &dyn TokenVault) {
     let current = saved::read(data_dir, vault).ok();
-    let question = if current
-        .as_ref()
-        .is_some_and(|s| s.domain.is_some() || s.token_saved == Some(true))
-    {
-        "Change the ngrok connection settings for the phone?"
+    let question = if current.as_ref().is_some_and(|s| {
+        s.provider == Provider::Tailscale || s.domain.is_some() || s.token_saved == Some(true)
+    }) {
+        "Change the remote connection settings for the phone?"
     } else {
-        "Set up the ngrok connection for the phone now? You can skip this and do it later with \"agboard setup remote\"."
+        "Set up the remote connection for the phone (ngrok or Tailscale) now? You can skip this and do it later with \"agboard setup remote\"."
     };
     if !matches!(
         cliclack::confirm(question).initial_value(false).interact(),
@@ -172,9 +175,33 @@ pub fn offer(data_dir: &Path, vault: &dyn TokenVault) {
 /// only when the user says so, and each question can be skipped.
 fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgboardError> {
     let now = saved::read(data_dir, vault)?;
-    let _ = cliclack::note("Saved ngrok settings", now.human());
+    let _ = cliclack::note("Saved remote settings", now.human());
     let mut answers = Answers::default();
 
+    let chosen = cliclack::select("How does the phone connect?")
+        .initial_value(now.provider)
+        .item(Provider::Ngrok, "ngrok", "needs an ngrok account and token")
+        .item(
+            Provider::Tailscale,
+            "Tailscale",
+            "needs the Tailscale app, MagicDNS, and HTTPS certificates; no token",
+        )
+        .interact();
+    let Ok(chosen) = chosen else {
+        return cancelled();
+    };
+    answers.provider = (chosen != now.provider).then_some(chosen);
+
+    if chosen == Provider::Ngrok && !ask_ngrok(&now, &mut answers)? {
+        // A cancelled question saves nothing, not even the answers given before it.
+        return Ok(());
+    }
+    finish(data_dir, vault, &answers)
+}
+
+/// The ngrok-only questions: the fixed domain and the token.
+/// Returns `false` when a question was cancelled, so the caller saves nothing.
+fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<bool, AgboardError> {
     let change_domain = match &now.domain {
         Some(_) => confirm("Change the fixed domain?"),
         None => true,
@@ -199,7 +226,10 @@ fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgboardError> {
             // Empty means "skip" when nothing is saved, and "remove" when something is.
             Ok(text) if text.trim().is_empty() && now.domain.is_none() => {}
             Ok(text) => answers.domain = Some(text),
-            Err(_) => return cancelled(),
+            Err(_) => {
+                let _ = cancelled();
+                return Ok(false);
+            }
         }
     }
 
@@ -222,11 +252,18 @@ fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgboardError> {
             .interact();
         match typed {
             Ok(text) => answers.token = Some(text),
-            Err(_) => return cancelled(),
+            Err(_) => {
+                let _ = cancelled();
+                return Ok(false);
+            }
         }
     }
 
-    match apply_answers(data_dir, vault, &answers)? {
+    Ok(true)
+}
+
+fn finish(data_dir: &Path, vault: &dyn TokenVault, answers: &Answers) -> Result<(), AgboardError> {
+    match apply_answers(data_dir, vault, answers)? {
         Some(now) => {
             let _ = cliclack::note("Saved", format!("{}\n{APPLIES_NOTE}", now.human()));
             let _ = cliclack::outro("Done.");
@@ -279,6 +316,7 @@ mod tests {
 
     fn args() -> SetupRemoteArgs {
         SetupRemoteArgs {
+            provider: None,
             domain: None,
             clear_domain: false,
             enabled: None,
@@ -374,6 +412,7 @@ mod tests {
                 dir.path(),
                 &vault,
                 &Answers {
+                    provider: None,
                     domain: Some(String::new()),
                     token: Some("  ".into())
                 }
@@ -385,6 +424,7 @@ mod tests {
             dir.path(),
             &vault,
             &Answers {
+                provider: None,
                 domain: Some("a.ngrok-free.dev".into()),
                 token: Some("two words".into()),
             },
@@ -396,6 +436,7 @@ mod tests {
             dir.path(),
             &vault,
             &Answers {
+                provider: None,
                 domain: Some("a.ngrok-free.dev".into()),
                 token: Some(TOKEN.into()),
             },
@@ -420,5 +461,63 @@ mod tests {
         .unwrap();
         assert_eq!(error.code(), "invalid_argument");
         assert_eq!(error.exit_code(), 2);
+    }
+    #[test]
+    fn choosing_tailscale_saves_the_provider_and_shows_no_ngrok_settings() {
+        let dir = tempfile::tempdir().unwrap();
+        let vault = MemoryVault::default();
+        let out = run(
+            dir.path(),
+            &SetupRemoteArgs {
+                provider: Some("tailscale".into()),
+                enabled: Some(true),
+                ..args()
+            },
+            false,
+            &vault,
+            &mut std::io::empty(),
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(out.json["provider"], "tailscale");
+        assert!(out.human.contains("Provider: tailscale"), "{}", out.human);
+        assert!(!out.human.contains("Domain:") && !out.human.contains("Token:"));
+        assert_eq!(
+            saved::read(dir.path(), &vault).unwrap().provider,
+            Provider::Tailscale
+        );
+        // Going back to ngrok shows the ngrok settings again and keeps the rest.
+        let out = run(
+            dir.path(),
+            &SetupRemoteArgs {
+                provider: Some("ngrok".into()),
+                ..args()
+            },
+            false,
+            &vault,
+            &mut std::io::empty(),
+        )
+        .unwrap()
+        .unwrap();
+        assert!(out.human.contains("Domain:") && out.human.contains("Token:"));
+        assert_eq!(out.json["enabled"], true);
+    }
+
+    #[test]
+    fn the_answers_carry_the_provider_without_asking_for_ngrok_settings() {
+        let dir = tempfile::tempdir().unwrap();
+        let vault = MemoryVault::default();
+        let now = apply_answers(
+            dir.path(),
+            &vault,
+            &Answers {
+                provider: Some(Provider::Tailscale),
+                ..Answers::default()
+            },
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(now.provider, Provider::Tailscale);
+        assert_eq!((now.domain, now.token_saved), (None, Some(false)));
     }
 }

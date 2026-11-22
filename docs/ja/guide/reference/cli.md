@@ -23,7 +23,7 @@ title: CLIリファレンス
 | プロジェクトとフォルダを管理する | `project`、`workspace` |
 | ボードをブラウザーで開く | `open` |
 | スマホ用のアドレスと合言葉を確認する、リモートアクセスの設定を見る | `show remote` |
-| リモートアクセスの設定（ドメイン、トークン）を保存する | `setup remote` |
+| リモートアクセスの設定（ngrokかTailscale、ドメイン、トークン）を保存する | `setup remote` |
 | サーバーとHookを動かす | `serve`、`stop`、`hook` |
 | Agent Boardプラグインを導入・更新する | `setup`、`update` |
 | 削除する（人だけ） | `rm`、`project rm`、`epic rm`、`init` |
@@ -367,21 +367,23 @@ Connection: ready at https://….ngrok-free.dev
 
 ### リモートアクセスの設定を保存する {#save-the-remote-access-settings}
 
-`agboard setup remote`は、ボードの接続ダイアログも保存しているngrokの設定、つまり接続をオンにするか、固定ドメイン、ngrokのトークンを保存します。設定はデータフォルダ全体のものなのでプロジェクトは不要で、サーバーが動いていてもいなくても使えます。動いているボードには、再読み込みしなくても変更が反映されます。
+`agboard setup remote`は、ボードの接続ダイアログも保存しているリモートアクセスの設定、つまり接続をオンにするか、スマホがngrokとTailscaleのどちらで接続するか、ngrokの場合は固定ドメインとトークンを保存します。設定はデータフォルダ全体のものなのでプロジェクトは不要で、サーバーが動いていてもいなくても使えます。動いているボードには、再読み込みしなくても変更が反映されます。
 
 ```sh
 agboard setup remote
+agboard setup remote --provider tailscale --enabled true
 agboard setup remote --domain example.ngrok-free.dev --enabled true
 agboard setup remote --clear-domain
 printf '%s' "$NGROK_AUTHTOKEN" | agboard setup remote --token-stdin
 ```
 
-ターミナルでオプションなしの`agboard setup remote`を実行すると、保存済みの内容（ドメインと、トークンが保存されているかどうか。トークン自体は表示しません）を見せたうえで、ドメインとトークンを尋ねます。トークンは入力が表示されず、出力されることもありません。各質問は空のまま進めると飛ばせます。すでに保存してある値は、変えると答えたときだけ変更します。ターミナルがないときや`--json`を付けたときは何も尋ねず、終了コード`2`で終わるので、スクリプトが入力待ちで止まることはありません。
+ターミナルでオプションなしの`agboard setup remote`を実行すると、保存済みの内容（providerと、ドメインと、トークンが保存されているかどうか。トークン自体は表示しません）を見せたうえで、スマホがngrokとTailscaleのどちらで接続するかを尋ねます。続いて、選んだ方法の設定だけを尋ねます。ngrokではドメインとトークン、Tailscaleは両方とも要らないので、これ以上は尋ねません。トークンは入力が表示されず、出力されることもありません。各質問は空のまま進めると飛ばせます。すでに保存してある値は、変えると答えたときだけ変更します。ターミナルがないときや`--json`を付けたときは何も尋ねず、終了コード`2`で終わるので、スクリプトが入力待ちで止まることはありません。
 
 次のオプションは、何も尋ねずに保存します。
 
 | オプション | 意味 |
 | --- | --- |
+| `--provider ngrok\|tailscale` | スマホの接続方法を保存します。既定は`ngrok`です。`tailscale`ではドメインとトークンを使わず、`setup remote`もこの2つを表示しません。ほかの名前は終了コード2で終わります。[ngrokとTailscaleを選ぶ](../watch/remote-access#choose-a-way)を参照してください。 |
 | `--domain <host>` | ngrokアカウントが持つ固定ドメインを保存します。ホスト名だけを指定します。小文字にそろえ、`https://`、パス、ポートを含む値は`invalid_domain`として終了コード2で終わります。 |
 | `--clear-domain` | 保存してあるドメインを削除します。以後は開始のたびにngrokがアドレスを選びます。`--domain`とは同時に指定できません。 |
 | `--enabled true\|false` | 接続をオンにするかどうかを保存します。 |

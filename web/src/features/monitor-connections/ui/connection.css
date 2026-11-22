@@ -18,7 +18,7 @@
 
 /* The setup also holds the domain field, so it is taller than the connected and stopped views. */
 .modal.connection-dialog.connection-dialog--setup {
-  height: 700px;
+  height: 800px;
 }
 
 .connection-dialog .modal__header {
@@ -155,6 +155,34 @@
 
 .connection-dialog__field label {
   line-height: 16px;
+}
+
+.connection-dialog__provider {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.connection-dialog__provider-label {
+  margin: 0;
+  font-weight: 600;
+}
+
+.connection-dialog__provider-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.connection-dialog__provider-option label {
+  display: grid;
+  gap: 2px;
+  line-height: 1.4;
+}
+
+.connection-dialog__provider-hint {
+  font-weight: 400;
+  color: var(--muted-foreground, inherit);
 }
 
 .connection-dialog__domain {

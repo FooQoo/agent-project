@@ -4,7 +4,7 @@ title: Remote access
 
 # Remote access
 
-Remote access opens the board from another device when you are away from your desk, most often a phone. Use it to check progress and to answer an agent's question. This page explains what the phone screen shows, how to connect it with ngrok, how to use the board as a Home Screen app with notifications, and how to check that it works.
+Remote access opens the board from another device when you are away from your desk, most often a phone. Use it to check progress and to answer an agent's question. This page explains what the phone screen shows, how to connect it with ngrok or Tailscale, how to use the board as a Home Screen app with notifications, and how to check that it works.
 
 ## What the monitor shows
 
@@ -78,6 +78,21 @@ You need an ngrok account and its authtoken. The **Remote connection** dialog ha
 
 Agent Board uses ngrok to open a public HTTPS address that leads to the board, behind the passcode. The PC's own address of the board stays on `127.0.0.1`. Never expose the board to the public Internet and never use router port forwarding. ngrok ends the HTTPS connection, so ngrok can process the traffic; the connection is not end-to-end encrypted between your PC and your phone.
 
+## Choose ngrok or Tailscale {#choose-a-way}
+
+Agent Board can reach your phone in two ways. You choose one in the **Remote connection** dialog, or with `agboard setup remote`; ngrok is the default.
+
+| | ngrok | Tailscale |
+| --- | --- | --- |
+| Address | A public HTTPS address from your ngrok account | The `ts.net` address of this PC, reachable only from devices on your own Tailscale network |
+| You need | An ngrok account and its authtoken | The Tailscale app on the PC and on the phone, signed in to the same network, with MagicDNS and HTTPS certificates turned on |
+| Token | Yes | None |
+| Request limit | The free plan has a limit on requests | None from Agent Board |
+
+Both ways use the same passcode, registered phones, and notifications. Only the way the phone reaches the PC differs. Because the address differs, switching from one to the other makes the phone a new device: enter the passcode again and turn notifications on again.
+
+To use Tailscale, install Tailscale on the PC and the phone and sign in with the same account. In the Tailscale admin console, turn on MagicDNS and HTTPS certificates for your network. Then open **Remote connection**, choose **Tailscale**, and choose **Save and connect**. The dialog hides the token and the domain, which belong to ngrok. If Tailscale is not installed, not signed in, or has no HTTPS certificates, the dialog says which and does not connect. It also does not connect when another program already serves HTTPS on this PC through Tailscale, so that program is never replaced; turn that one off first, for example with `tailscale serve --https=443 off`. The phone must have Tailscale turned on to open the address.
+
 ## How the passcode protects the monitor
 
 The monitor is guarded by a 4-digit passcode. Agent Board does not use Google authentication or ngrok's sign-in, and it keeps no list of allowed accounts.
@@ -102,10 +117,11 @@ A program that is already running on your PC can send requests straight to the m
 ## Connect from the PC
 
 1. Open the board, then open **Settings**. In **Remote connection**, choose **Connection settings**. The settings dialog closes and the **Remote connection** dialog opens with **Not connected**.
-2. In step 1, **Get a token**, choose **Open the token page**. Sign in to ngrok and copy the authtoken.
-3. In step 2, **Paste and connect**, paste the token into **ngrok auth token**.
-4. Decide whether to keep the token with **Save the token on this PC** (see [Where the token is kept](#where-the-token-is-kept)).
-5. Choose **Save and connect**.
+2. Choose **ngrok** (the default). With **Tailscale**, skip to [Choose ngrok or Tailscale](#choose-a-way).
+3. In step 1, **Get a token**, choose **Open the token page**. Sign in to ngrok and copy the authtoken.
+4. In step 2, **Paste and connect**, paste the token into **ngrok auth token**.
+5. Decide whether to keep the token with **Save the token on this PC** (see [Where the token is kept](#where-the-token-is-kept)).
+6. Choose **Save and connect**.
 
 While it connects, the dialog shows **Connecting to ngrok…** in place of the two steps. When it is ready, the dialog shows **Accepting connections**. Step 1, **Scan the QR code**, has the QR code and **Copy URL**, which copies the address. The address includes the project selected on the PC. To monitor another project, select it on the PC, then scan the new QR code or copy its URL again. Step 2, **Enter the passcode**, shows the 4-digit passcode. The QR code only carries the address: the phone still has to enter the passcode, and the PC does not ask you to approve a device.
 

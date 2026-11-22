@@ -9,7 +9,15 @@ export type FailureCode =
   | 'public_url_invalid'
   | 'internal'
   | 'config_unreadable'
-  | 'config_invalid';
+  | 'config_invalid'
+  | 'tailscale_not_installed'
+  | 'tailscale_not_logged_in'
+  | 'tailscale_https_disabled'
+  | 'tailscale_serve_failed'
+  | 'tailscale_serve_busy';
+
+/** How the phone reaches the board. */
+export type Provider = 'ngrok' | 'tailscale';
 
 export type TokenSource = 'env' | 'keychain' | 'session';
 
@@ -23,6 +31,7 @@ export interface ConnectionSnapshot {
   revision: number;
   settings: {
     enabled: boolean;
+    provider: Provider;
     /** The saved ngrok domain, or null when none is saved (ngrok then chooses the address). */
     domain: string | null;
   };
@@ -104,6 +113,8 @@ export const getConnection = () => request(BASE, { method: 'GET' });
 export interface SettingsInput {
   enabled: boolean;
   revision: number;
+  /** The way to connect; left out, the saved one is kept. */
+  provider?: Provider;
   /** A host name to save; an empty string clears it; left out, the saved one is kept. */
   domain?: string;
 }

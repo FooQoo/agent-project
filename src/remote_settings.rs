@@ -70,10 +70,17 @@ impl Saved {
     }
 
     pub fn human(&self) -> String {
-        format!(
-            "Enabled: {}\nProvider: {}\nDomain: {}\nToken: {}\n",
+        let head = format!(
+            "Enabled: {}\nProvider: {}\n",
             if self.enabled { "yes" } else { "no" },
             self.provider.as_str(),
+        );
+        // The domain and the token are ngrok's; Tailscale has neither.
+        if self.provider == Provider::Tailscale {
+            return head;
+        }
+        format!(
+            "{head}Domain: {}\nToken: {}\n",
             self.domain
                 .as_deref()
                 .unwrap_or("none (ngrok chooses an address at each start)"),

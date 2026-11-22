@@ -13,7 +13,7 @@ import {
 
 /** The scheme is joined here so the source keeps no literal remote address. */
 const phoneUrl = `${'https'}://your-name.ngrok.app/monitor/`;
-const emptyDraft: ConnectionDraft = { token: '', save: false, domain: '' };
+const emptyDraft: ConnectionDraft = { provider: 'ngrok', token: '', save: false, domain: '' };
 
 /** A layout sample of a QR code: three finder squares and a few modules. It cannot be scanned. */
 const sampleQr: ConnectionQr = {
@@ -64,7 +64,7 @@ export const NeedsConfig: Story = {
     const view = within(document.body);
     const dialog = view.getByRole('dialog') as HTMLElement;
     // The design's size, and both steps with a divider as long as the 280px row.
-    await expect([dialog.offsetWidth, dialog.offsetHeight]).toEqual([680, 700]);
+    await expect([dialog.offsetWidth, dialog.offsetHeight]).toEqual([680, 800]);
     await expect(view.getByText('Not connected')).toBeInTheDocument();
     await expect(
       view.getByText('Open the board from your phone or tablet when you are away.'),
@@ -106,6 +106,7 @@ export const NeedsConfig: Story = {
     await userEvent.type(view.getByLabelText('ngrok auth token'), 'secret-token');
     await userEvent.click(view.getByRole('button', { name: 'Save and connect' }));
     await expect(args.onConnect).toHaveBeenCalledWith({
+      provider: 'ngrok',
       token: 'secret-token',
       save: false,
       domain: '',
@@ -121,10 +122,42 @@ export const WithDomain: Story = {
     await userEvent.type(view.getByLabelText('ngrok auth token'), 'secret-token');
     await userEvent.click(view.getByRole('button', { name: 'Save and connect' }));
     await expect(args.onConnect).toHaveBeenCalledWith({
+      provider: 'ngrok',
       token: 'secret-token',
       save: false,
       domain: 'example.ngrok-free.dev',
     });
+  },
+};
+
+/** Choosing Tailscale hides the token and the domain, and connecting sends no token. */
+export const TailscaleChosen: Story = {
+  play: async ({ args }) => {
+    const view = within(document.body);
+    await expect(view.getByRole('radio', { name: /ngrok/ })).toBeChecked();
+    await userEvent.click(view.getByRole('radio', { name: /Tailscale/ }));
+    await expect(view.getByRole('radio', { name: /Tailscale/ })).toBeChecked();
+    await expect(view.queryByLabelText('ngrok auth token')).toBeNull();
+    await expect(view.queryByLabelText('ngrok domain')).toBeNull();
+    await expect(view.getByRole('heading', { name: 'Check Tailscale' })).toBeInTheDocument();
+    await expect(view.getByTestId('tailscale-note')).toBeInTheDocument();
+    await userEvent.click(view.getByRole('button', { name: 'Save and connect' }));
+    await expect(args.onConnect).toHaveBeenCalledWith({
+      provider: 'tailscale',
+      token: '',
+      save: false,
+      domain: '',
+    });
+  },
+};
+
+/** Tailscale is the saved choice: the dialog opens on it, in Japanese too. */
+export const TailscaleSaved: Story = {
+  args: { draft: { ...emptyDraft, provider: 'tailscale' } },
+  play: async () => {
+    const view = within(document.body);
+    await expect(view.getByRole('radio', { name: /Tailscale/ })).toBeChecked();
+    await expect(view.queryByLabelText('ngrok auth token')).toBeNull();
   },
 };
 
@@ -166,7 +199,12 @@ export const Stopped: Story = {
     await expect(reconnect.offsetHeight).toBe(38);
     await expect(reconnect.offsetWidth).toBe(change.offsetWidth);
     await userEvent.click(reconnect);
-    await expect(args.onConnect).toHaveBeenCalledWith({ token: '', save: false, domain: '' });
+    await expect(args.onConnect).toHaveBeenCalledWith({
+      provider: 'ngrok',
+      token: '',
+      save: false,
+      domain: '',
+    });
   },
 };
 
