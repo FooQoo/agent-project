@@ -158,4 +158,33 @@ describe('the planned versions of an epic, in its editor', () => {
     expect(pending()).toBeNull();
     expect(next).not.toBeNull();
   });
+
+  it('keeps a task unchecked when another client changes the members', async () => {
+    const preview = vi.fn(async () => dry);
+    const props = {
+      current: 'v1.8.0',
+      versions: ['v1.8.0', 'v1.9.0'],
+      preview,
+      apply: vi.fn(async () => ({ ...dry, dryRun: false })),
+      onPending: vi.fn(),
+    };
+    const view = render(<EpicPlanField members={members} {...props} />);
+    fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
+    await screen.findByText('2 of 4 tasks will change to v1.9.0');
+    fireEvent.click(screen.getByRole('checkbox', { name: /Plan two/ }));
+    expect(screen.getByText('1 of 4 tasks will change to v1.9.0')).toBeTruthy();
+    // Task 4 is planned by someone else meanwhile: the members change, the checks stay.
+    const next = members.map((m) => (m.id === 3 ? { ...m, plannedVersion: 'v1.9.0' } : m));
+    view.rerender(<EpicPlanField members={next} {...props} />);
+    await waitFor(() => expect(preview).toHaveBeenCalledTimes(2));
+    await screen.findByText('1 of 4 tasks will change to v1.9.0');
+    expect(
+      (screen.getByRole('checkbox', { name: /Plan two/ }) as HTMLInputElement).getAttribute(
+        'aria-checked',
+      ),
+    ).toBe('false');
+    // Choosing another scope starts a different operation: every task is checked again.
+    fireEvent.click(screen.getByRole('radio', { name: /Every task in the epic/ }));
+    await screen.findByText('2 of 4 tasks will change to v1.9.0');
+  });
 });

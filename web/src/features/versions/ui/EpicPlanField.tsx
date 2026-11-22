@@ -93,7 +93,6 @@ export function EpicPlanField({
     const mine = ++serial.current;
     setRows(null);
     setFailed(false);
-    setUnchecked(new Set());
     if (target === null) return;
     previewRef
       .current(
@@ -132,7 +131,11 @@ export function EpicPlanField({
       <p className="ver-note">{t('versions.bulk.note')}</p>
       <RadioGroup
         value={keyOf(target)}
-        onValueChange={(key) => setTarget(targetOf(key))}
+        onValueChange={(key) => {
+          // A different bulk operation starts again with every task checked.
+          setUnchecked(new Set());
+          setTarget(targetOf(key));
+        }}
         disabled={disabled}
         className="ver-pills"
         aria-label={t('versions.bulk.target')}
@@ -159,7 +162,10 @@ export function EpicPlanField({
         <>
           <RadioGroup
             value={scope}
-            onValueChange={(next) => setScope(next === 'all' ? 'all' : 'unplanned-only')}
+            onValueChange={(next) => {
+              setUnchecked(new Set());
+              setScope(next === 'all' ? 'all' : 'unplanned-only');
+            }}
             disabled={disabled}
             className="ver-options"
             aria-label={t('versions.bulk.scope')}

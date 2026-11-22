@@ -106,4 +106,44 @@ describe('the epic editor saving the planned versions', () => {
     await waitFor(() => expect(plan).toHaveBeenCalledTimes(2));
     expect(api.save).toHaveBeenCalledTimes(2);
   });
+
+  it('still applies the accepted plan when the board clears it while the epic is being saved', async () => {
+    const plan = vi.fn(async () => undefined);
+    let report: PlanFieldArgs['onPending'] = () => {};
+    const api = {
+      save: vi.fn(async () => {
+        // A Summary update makes the field drop its pending change mid-save.
+        report(null);
+      }),
+      saveWaves: vi.fn(async () => undefined),
+      addImages: vi.fn(async () => undefined),
+      removeImage: vi.fn(async () => undefined),
+      enterDraft: vi.fn(async () => epic),
+      leaveDraft: vi.fn(async () => undefined),
+      remove: vi.fn(async () => undefined),
+    } as unknown as EpicApi;
+    const Field = ({ onPending }: PlanFieldArgs) => {
+      report = onPending;
+      useEffect(() => onPending(plan), [onPending]);
+      return <p>plan field</p>;
+    };
+    render(
+      <EpicDialog
+        epic={epic}
+        tasks={[]}
+        api={api}
+        projectId="p"
+        onOpenTask={() => {}}
+        onClose={() => {}}
+        renderTask={() => null}
+        renderPlan={(args) => <Field {...args} />}
+      />,
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), {
+      target: { value: 'Renamed' },
+    });
+    await waitFor(() => expect(save().disabled).toBe(false));
+    fireEvent.click(save());
+    await waitFor(() => expect(plan).toHaveBeenCalledTimes(1));
+  });
 });

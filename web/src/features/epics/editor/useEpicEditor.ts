@@ -167,6 +167,7 @@ export function useEpicEditor({
 
   const run = async () => {
     if (busy.current || !canSave) return;
+    const plan = planSave.current; // accepted now: a later board update cannot take it away
     busy.current = true;
     setSaving(true);
     setError(null);
@@ -213,7 +214,7 @@ export function useEpicEditor({
         setSaved((current) => ({ ...current, ...base, document: text }));
       }
       step = 'plan';
-      if (planSave.current) await planSave.current();
+      if (plan) await plan();
       busy.current = false;
       setSaving(false);
       setFinalizePending(false);
