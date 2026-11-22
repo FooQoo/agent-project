@@ -205,10 +205,7 @@ fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<bool, AgboardError> {
     let change_domain = match &now.domain {
         Some(_) => match confirm("Change the fixed domain?") {
             Some(answer) => answer,
-            None => {
-                let _ = cancelled();
-                return Ok(false);
-            }
+            None => return cancel_false(),
         },
         None => true,
     };
@@ -232,20 +229,14 @@ fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<bool, AgboardError> {
             // Empty means "skip" when nothing is saved, and "remove" when something is.
             Ok(text) if text.trim().is_empty() && now.domain.is_none() => {}
             Ok(text) => answers.domain = Some(text),
-            Err(_) => {
-                let _ = cancelled();
-                return Ok(false);
-            }
+            Err(_) => return cancel_false(),
         }
     }
 
     let change_token = if now.token_saved == Some(true) {
         match confirm("Replace the saved token?") {
             Some(answer) => answer,
-            None => {
-                let _ = cancelled();
-                return Ok(false);
-            }
+            None => return cancel_false(),
         }
     } else {
         true
@@ -264,10 +255,7 @@ fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<bool, AgboardError> {
             .interact();
         match typed {
             Ok(text) => answers.token = Some(text),
-            Err(_) => {
-                let _ = cancelled();
-                return Ok(false);
-            }
+            Err(_) => return cancel_false(),
         }
     }
 
@@ -293,6 +281,12 @@ fn confirm(question: &str) -> Option<bool> {
         .initial_value(false)
         .interact()
         .ok()
+}
+
+/// A cancelled question: say so and tell the caller to save nothing.
+fn cancel_false() -> Result<bool, AgboardError> {
+    let _ = cancelled();
+    Ok(false)
 }
 
 fn cancelled() -> Result<(), AgboardError> {
