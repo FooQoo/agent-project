@@ -49,7 +49,7 @@ async function notReloaded(page: Page): Promise<void> {
 
 test('agboard add shows a new task without reloading', async ({ page }) => {
   agboardOk(mainProject, ['add', 'Added while open', `--desc=From the CLI`]);
-  await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh} AI Added while open Updated \\d\\d\\/\\d\\d \\d\\d:\\d\\d$`) })).toBeVisible();
+  await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh} AI Added while open \\d\\d\\/\\d\\d \\d\\d:\\d\\d$`) })).toBeVisible();
   await expect(page.getByRole('contentinfo')).toContainText('9 tasks');
   await expect(lane(page, 'Todo').getByText('4', { exact: true })).toBeVisible();
   // New Todo cards go to the end.
