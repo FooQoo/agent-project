@@ -53,3 +53,11 @@ export function snapshotOfEpic(epic: Epic, members: readonly TaskSummary[]): str
     waves: normalizeWaves(epic.waves, members),
   });
 }
+
+/** The text of each save step, for the message that says where a save stopped. */
+export const STEP_KEYS = {
+  images: 'epic.stepImages',
+  order: 'epic.stepOrder',
+  epic: 'epic.stepDocument',
+  plan: 'epic.stepPlan',
+} as const;

@@ -19,6 +19,7 @@ import {
   snapshotOfEpic,
   storedOf,
   type EpicEditorPanel,
+  STEP_KEYS,
   type EpicSaveStep,
 } from './epicEditorModel';
 import { normalizeWaves, unlistedOf, type Waves } from './waveModel';
@@ -72,6 +73,7 @@ export function useEpicEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const busy = useRef(false);
+  const epicSent = useRef(false);
   // The planned versions of the epic's tasks are saved by their own request, last of all.
   const { save: planSave, pending: planPending, onPending: onPlanPending } = usePendingPlan();
   const somethingSaved = useRef(false);
@@ -129,7 +131,7 @@ export function useEpicEditor({
     valid &&
     (lock.canSave ||
       (finalizePending && lock.entered && lock.problem === null) ||
-      (planPending && lock.problem === null));
+      (planPending && !dirty && lock.problem === null));
 
   const { updatedAt } = useFollowLatest<Epic>({
     subscribe,
@@ -161,14 +163,7 @@ export function useEpicEditor({
     },
   });
 
-  const stepName = (step: EpicSaveStep): string =>
-    step === 'images'
-      ? t('epic.stepImages')
-      : step === 'order'
-        ? t('epic.stepOrder')
-        : step === 'plan'
-          ? t('epic.stepPlan')
-          : t('epic.stepDocument');
+  const stepName = (step: EpicSaveStep): string => t(STEP_KEYS[step]);
 
   const run = async () => {
     if (busy.current || !canSave) return;
@@ -177,6 +172,8 @@ export function useEpicEditor({
     setError(null);
     onSavingChange?.(true);
     let step: EpicSaveStep = 'images';
+    // New edits since the epic was sent are saved again.
+    if (dirty) epicSent.current = false;
     try {
       if (imagesChanged) {
         for (const id of removed) {
@@ -203,13 +200,15 @@ export function useEpicEditor({
       step = 'epic';
       // A change of the planned versions alone leaves the epic itself as it is.
       const planOnly = !dirty && !wasDraft && !lock.entered && !finalizePending;
-      if (!planOnly && (!wasDraft || documentChanged || detailsChanged)) {
+      const sentAlready = epicSent.current && !dirty && !finalizePending;
+      if (!planOnly && !sentAlready && (!wasDraft || documentChanged || detailsChanged)) {
         const text = currentDocument();
         const base = { name: name.trim(), color: color.toUpperCase() };
         const input: EpicSaveInput = whole
           ? { ...base, document: text, ...(wasDraft ? {} : { draft: null }) }
           : { ...base, body: text, ...(wasDraft ? {} : { draft: null }) };
         await api.save(input);
+        epicSent.current = true;
         somethingSaved.current = true;
         setSaved((current) => ({ ...current, ...base, document: text }));
       }

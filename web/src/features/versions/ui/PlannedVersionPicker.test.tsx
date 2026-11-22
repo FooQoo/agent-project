@@ -119,4 +119,18 @@ describe('the planned version field of the task editor', () => {
     await expect(pending()?.()).rejects.toThrow('network');
     expect((await screen.findByRole('alert')).textContent).toContain('Could not save');
   });
+
+  it('keeps versions named like the controls apart from the controls', async () => {
+    const { onSave, pending } = picker({
+      versions: ['v1.8.0', '__none__', 'c:current'],
+      planned: '__none__',
+    });
+    // The task is planned for the version named "__none__", not unplanned.
+    expect(screen.getByRole('radio', { name: '__none__' }).getAttribute('aria-checked')).toBe(
+      'true',
+    );
+    fireEvent.click(screen.getByRole('radio', { name: 'c:current' }));
+    await pending()?.();
+    expect(onSave).toHaveBeenLastCalledWith({ choice: 'named', version: 'c:current' }, '__none__');
+  });
 });

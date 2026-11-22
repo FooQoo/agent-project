@@ -39,22 +39,23 @@ export interface EpicPlanFieldProps {
   onPending: (pending: PendingSave | null) => void;
 }
 
-const KEEP = '__keep__';
-const NONE = '__none__';
-const CURRENT = '__current__';
+// Controls and versions have disjoint values, so a version may be named anything.
+const KEEP = 'c:keep';
+const NONE = 'c:none';
+const CURRENT = 'c:current';
 
 function keyOf(target: BulkTarget | null): string {
   if (target === null) return KEEP;
   if (target.kind === 'unset') return NONE;
   if (target.kind === 'current') return CURRENT;
-  return target.version;
+  return `v:${target.version}`;
 }
 
 function targetOf(key: string): BulkTarget | null {
   if (key === KEEP) return null;
   if (key === NONE) return { kind: 'unset' };
   if (key === CURRENT) return { kind: 'current' };
-  return { kind: 'named', version: key };
+  return { kind: 'named', version: key.slice(2) };
 }
 
 /**
@@ -147,7 +148,7 @@ export function EpicPlanField({
         {named.map((version) => (
           <PillRow
             key={version}
-            value={version}
+            value={`v:${version}`}
             checked={target?.kind === 'named' && target.version === version}
             label={version}
           />

@@ -7,8 +7,9 @@ import { sortVersions } from '../model/order';
 import { OptionRow } from './Options';
 import './versions.css';
 
-const NONE = '__none__';
-const CURRENT = '__current__';
+// Controls and versions have disjoint values, so a version may be named anything.
+const NONE = 'c:none';
+const CURRENT = 'c:current';
 
 export interface PlannedVersionPickerProps {
   taskId: number;
@@ -31,13 +32,13 @@ export interface PlannedVersionPickerProps {
 /** What the saved state looks like among the rows. */
 function savedKey(planned: string | null, current: string | null): string {
   if (planned === null) return NONE;
-  return planned === current ? CURRENT : planned;
+  return planned === current ? CURRENT : `v:${planned}`;
 }
 
 export function choiceOf(key: string): VersionChoice {
   if (key === NONE) return { choice: 'unset' };
   if (key === CURRENT) return { choice: 'current' };
-  return { choice: 'named', version: key };
+  return { choice: 'named', version: key.slice(2) };
 }
 
 type Notice = { kind: 'failed' } | { kind: 'conflict'; version: string | null };
@@ -133,7 +134,12 @@ export function PlannedVersionPicker({
           }
         />
         {rows.map((version) => (
-          <OptionRow key={version} value={version} checked={value === version} label={version} />
+          <OptionRow
+            key={version}
+            value={`v:${version}`}
+            checked={value === `v:${version}`}
+            label={version}
+          />
         ))}
         <OptionRow value={NONE} checked={value === NONE} label={t('versions.detail.none')} />
       </RadioGroup>

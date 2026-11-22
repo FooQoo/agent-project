@@ -209,7 +209,7 @@ test.describe('in a Japanese browser', () => {
     await expect(panel.getByRole('checkbox', { name: '履歴に理由が残る' })).toBeVisible();
 
     // Switching to English changes the screens at once; the sample data keeps its words.
-    await page.getByRole('banner').getByRole('button', { name: '設定' }).click();
+    await page.getByRole('banner').getByRole('button', { name: '設定', exact: true }).click();
     const settings = page.getByRole('dialog', { name: '設定' });
     await settings.getByRole('radio', { name: 'English' }).click();
     await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();

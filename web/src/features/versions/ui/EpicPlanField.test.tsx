@@ -122,4 +122,40 @@ describe('the planned versions of an epic, in its editor', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'v1.9.0' }));
     expect((await screen.findByRole('alert')).textContent).toContain('Nothing was changed');
   });
+
+  it('keeps versions named like the controls apart from the controls', async () => {
+    const { pending, preview } = field();
+    cleanup();
+    let next: PendingSave | null = null;
+    render(
+      <EpicPlanField
+        members={members}
+        current={null}
+        versions={['__none__', 'c:none', '__keep__']}
+        preview={preview}
+        apply={vi.fn(async () => ({ ...dry, dryRun: false }))}
+        onPending={(p) => {
+          next = p;
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('radio', { name: 'c:none' }));
+    await waitFor(() =>
+      expect(preview).toHaveBeenLastCalledWith(
+        { choice: 'named', version: 'c:none' },
+        'unplanned-only',
+        [1, 2, 3, 4],
+      ),
+    );
+    fireEvent.click(screen.getByRole('radio', { name: '__none__' }));
+    await waitFor(() =>
+      expect(preview).toHaveBeenLastCalledWith(
+        { choice: 'named', version: '__none__' },
+        'unplanned-only',
+        [1, 2, 3, 4],
+      ),
+    );
+    expect(pending()).toBeNull();
+    expect(next).not.toBeNull();
+  });
 });
