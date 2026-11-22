@@ -10,7 +10,7 @@
 # install byte-identical, LICENSE and THIRD_PARTY_NOTICES.txt must land in
 # pkgshare, and the version and temporary-data checks must pass.
 #
-# It never touches the network, the Tap, or a real Homebrew. Set AGBOARD_BIN to
+# It never touches the network, the Tap, or a real Homebrew. Set AGPJ_BIN to
 # replay the test block against a real binary instead of the stand-in script.
 # RUBY overrides the Ruby used for `ruby -c` (default: /usr/bin/ruby, then ruby).
 set -euo pipefail
@@ -61,8 +61,8 @@ other=x86_64-apple-darwin
 
 stage="$work/stage"
 mkdir -p "$stage" "$work/assets"
-if [ -n "${AGBOARD_BIN:-}" ]; then
-  cp "$AGBOARD_BIN" "$stage/agboard"
+if [ -n "${AGPJ_BIN:-}" ]; then
+  cp "$AGPJ_BIN" "$stage/agboard"
 else
   cat > "$stage/agboard" <<'STUB'
 #!/bin/sh

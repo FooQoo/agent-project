@@ -1,6 +1,6 @@
 //! `agboard open`: open the project's board in the browser. The server is
 //! started in the background when none runs, as a command that waits starts
-//! it; with `AGBOARD_AUTOSTART=0` a server must already run. The address is
+//! it; with `AGPJ_AUTOSTART=0` a server must already run. The address is
 //! always printed, and `--print` only prints it.
 
 use serde_json::json;
@@ -71,6 +71,6 @@ fn serving(ctx: &Context) -> Result<ServeInfo, AgpjError> {
     crate::paths::read_serve_info_in(&dir)
         .filter(crate::server::is_serving)
         .ok_or_else(|| AgpjError::BoardUnavailable {
-            reason: "No server is running and AGBOARD_AUTOSTART=0 keeps one from starting. Run \"agboard serve -d\" first.".into(),
+            reason: "No server is running and AGPJ_AUTOSTART=0 keeps one from starting. Run \"agboard serve -d\" first.".into(),
         })
 }

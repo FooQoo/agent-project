@@ -103,7 +103,7 @@ export const monitorJa = {
     domainPlaceholder: 'example.ngrok-free.dev',
     domainHint:
       '任意です。空のままだと、接続を開始するたびにアドレスが変わり、スマホのブックマークやホーム画面のアイコンから開けなくなります。ngrokのダッシュボードにある無料の固定ドメインなど、ngrokアカウントが持つドメインを指定してください。',
-    domainFromEnv: '環境変数 AGBOARD_NGROK_DOMAIN を使います。保存したドメインより優先されます。',
+    domainFromEnv: '環境変数 AGPJ_NGROK_DOMAIN を使います。保存したドメインより優先されます。',
     save: '保存して接続',
     connecting: '接続しています…',
     startingTitle: 'ngrokに接続しています…',

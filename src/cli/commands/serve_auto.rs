@@ -21,8 +21,8 @@ const SWITCH_TIMEOUT: Duration = Duration::from_secs(5);
 /// open to reconnect before it opens one.
 const OPEN_GRACE: Duration = Duration::from_secs(3);
 
-/// Serve as a server another command started: prefer `AGBOARD_AUTOSTART_PORT`
-/// (7420), and stop after `AGBOARD_IDLE_TIMEOUT` without use. The startup line
+/// Serve as a server another command started: prefer `AGPJ_AUTOSTART_PORT`
+/// (7420), and stop after `AGPJ_IDLE_TIMEOUT` without use. The startup line
 /// is JSON, for the command that waits for it; the command's lock is let go of
 /// once the server is ready. With `open`, the project's board is opened in the
 /// browser once, unless a board page connects within a short time.
@@ -62,10 +62,10 @@ pub fn run(open: Option<ProjectId>) -> Result<(), AgpjError> {
     Ok(())
 }
 
-/// The wait before opening: `AGBOARD_OPEN_GRACE_MS` for the tests, up to a
+/// The wait before opening: `AGPJ_OPEN_GRACE_MS` for the tests, up to a
 /// minute, or three seconds.
 fn open_grace(env: &dyn Fn(&str) -> Option<String>) -> Duration {
-    env("AGBOARD_OPEN_GRACE_MS")
+    env("AGPJ_OPEN_GRACE_MS")
         .and_then(|value| value.trim().parse::<u64>().ok())
         .filter(|ms| *ms <= 60_000)
         .map_or(OPEN_GRACE, Duration::from_millis)
@@ -147,7 +147,7 @@ mod tests {
     #[test]
     fn the_wait_before_opening_comes_from_the_environment() {
         let with = |value: &'static str| {
-            open_grace(&move |name| (name == "AGBOARD_OPEN_GRACE_MS").then(|| value.into()))
+            open_grace(&move |name| (name == "AGPJ_OPEN_GRACE_MS").then(|| value.into()))
         };
         assert_eq!(open_grace(&|_| None), Duration::from_secs(3));
         assert_eq!(with("200"), Duration::from_millis(200));

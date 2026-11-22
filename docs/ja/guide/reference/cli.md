@@ -273,7 +273,7 @@ agboard --project "My project" wait --until task --idle-timeout 300 --json
 Started the Agent Board server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
 ```
 
-こうして起動したサーバーは、ブラウザーでボードを開いている間、エージェントが待っている間、スマホが接続している間は動き続けます。どれもない状態が30分続くと止まります。`AGBOARD_IDLE_TIMEOUT`（60〜86,400秒）で変えられます。ポート7420が使われていれば、空いているポートを使い、そのことを表示します。`AGBOARD_AUTOSTART=0`で自動の起動を止められます。このとき、サーバーが要るコマンドは、サーバーがないときと同じく`board_unavailable`で失敗します。`add`・`mv`・`ls`などのほかのコマンドは、サーバーを起動しません。
+こうして起動したサーバーは、ブラウザーでボードを開いている間、エージェントが待っている間、スマホが接続している間は動き続けます。どれもない状態が30分続くと止まります。`AGPJ_IDLE_TIMEOUT`（60〜86,400秒）で変えられます。ポート7420が使われていれば、空いているポートを使い、そのことを表示します。`AGPJ_AUTOSTART=0`で自動の起動を止められます。このとき、サーバーが要るコマンドは、サーバーがないときと同じく`board_unavailable`で失敗します。`add`・`mv`・`ls`などのほかのコマンドは、サーバーを起動しません。
 
 ### ボードをブラウザーで開く {#open-the-board-in-the-browser}
 
@@ -281,7 +281,7 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 
 次のときは、ブラウザーを開きません。
 
-- `AGBOARD_OPEN_BROWSER=0`を設定しているとき
+- `AGPJ_OPEN_BROWSER=0`を設定しているとき
 - SSH越しにコマンドを実行しているとき（`SSH_CONNECTION`か`SSH_TTY`が設定されている）
 - Linuxで画面がないとき（`DISPLAY`も`WAYLAND_DISPLAY`も設定されていない）
 
@@ -295,9 +295,9 @@ agboard --project "My project" open
 agboard open --print
 ```
 
-開いたときも、`http://127.0.0.1:7420/?project=<id>`のようなボードのアドレスを表示します。`--print`はアドレスを表示するだけです。`--json`では`{"url":"…","projectId":"…","opened":true}`を出します。ブラウザーを開かなかったときは`opened`が`false`になり、`notice`に理由が入ります。`AGBOARD_AUTOSTART=0`でサーバーが動いていなければ`board_unavailable`で失敗します。開くためのプログラムを起動できなければ`browser_open_failed`で失敗し、自分で開くアドレスをメッセージに示します。
+開いたときも、`http://127.0.0.1:7420/?project=<id>`のようなボードのアドレスを表示します。`--print`はアドレスを表示するだけです。`--json`では`{"url":"…","projectId":"…","opened":true}`を出します。ブラウザーを開かなかったときは`opened`が`false`になり、`notice`に理由が入ります。`AGPJ_AUTOSTART=0`でサーバーが動いていなければ`board_unavailable`で失敗します。開くためのプログラムを起動できなければ`browser_open_failed`で失敗し、自分で開くアドレスをメッセージに示します。
 
-macOSでは`open`、Linuxでは`xdg-open`を使います。ほかのプログラムを使うには、`AGBOARD_BROWSER_OPENER`にそのプログラムを設定します。アドレスだけを引数にして実行し、SSH越しや画面がないときも使います。
+macOSでは`open`、Linuxでは`xdg-open`を使います。ほかのプログラムを使うには、`AGPJ_BROWSER_OPENER`にそのプログラムを設定します。アドレスだけを引数にして実行し、SSH越しや画面がないときも使います。
 
 ### 自分でサーバーを起動する
 
@@ -307,7 +307,7 @@ macOSでは`open`、Linuxでは`xdg-open`を使います。ほかのプログラ
 
 | オプション | 意味 |
 | --- | --- |
-| `--monitor ngrok` | リモートアクセスの接続を始めます。指定できるのは`ngrok`だけです。環境変数`NGROK_AUTHTOKEN`が必要で、トークンを引数で渡すことはできません。開始のたびに同じアドレスにするには、ngrokアカウントが持つドメインをダイアログに入力するか、環境変数`AGBOARD_NGROK_DOMAIN`に設定するか、[`agboard setup remote`](#save-the-remote-access-settings)でコマンドラインから保存します。[同じアドレスを使い続ける](../watch/remote-access#同じアドレスを使い続ける)を参照してください。 |
+| `--monitor ngrok` | リモートアクセスの接続を始めます。指定できるのは`ngrok`だけです。環境変数`NGROK_AUTHTOKEN`が必要で、トークンを引数で渡すことはできません。開始のたびに同じアドレスにするには、ngrokアカウントが持つドメインをダイアログに入力するか、環境変数`AGPJ_NGROK_DOMAIN`に設定するか、[`agboard setup remote`](#save-the-remote-access-settings)でコマンドラインから保存します。[同じアドレスを使い続ける](../watch/remote-access#同じアドレスを使い続ける)を参照してください。 |
 
 スマホは、起動ごとに作る4桁の合言葉で守られます。サインイン用のオプションはありません。`--monitor`の不正な値、`NGROK_AUTHTOKEN`がないこと、未知のオプションは、終了コード2で終了します。接続を開始できなければ、`serve`は起動せず終了コード1で終了します。
 

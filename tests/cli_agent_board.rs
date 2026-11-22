@@ -12,13 +12,13 @@ fn invoke(home: &std::path::Path, args: &[&str]) -> assert_cmd::assert::Assert {
 fn invoke_for(home: &std::path::Path, project: &str, args: &[&str]) -> assert_cmd::assert::Assert {
     let mut command = Command::cargo_bin("agboard").unwrap();
     command
-        .env("AGBOARD_AUTOSTART", "0")
+        .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
         .env_remove("AGBOARD_RESIDENT_ID")
-        .env("AGBOARD_OPEN_BROWSER", "0");
+        .env("AGPJ_OPEN_BROWSER", "0");
     command
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["--project", project])
@@ -222,12 +222,12 @@ fn a_command_needs_a_project_that_exists_and_never_guesses_one() {
     // No --project: refused even though exactly one project exists.
     Command::cargo_bin("agboard")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
+        .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
         .env_remove("AGBOARD_RESIDENT_ID")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home.path())
         .args(["ls"])
         .assert()
@@ -266,12 +266,12 @@ fn make_draft(home: &std::path::Path, project: &str, id: i64) {
 fn invoke_none(home: &std::path::Path, args: &[&str]) -> assert_cmd::assert::Assert {
     Command::cargo_bin("agboard")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
+        .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
         .env_remove("AGBOARD_RESIDENT_ID")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(args)
@@ -433,12 +433,12 @@ fn descriptions_up_to_the_limit_pass_through_every_input() {
     );
     let piped = Command::cargo_bin("agboard")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
+        .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
         .env_remove("AGBOARD_RESIDENT_ID")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home.path())
         .args([
             "--project",
@@ -480,11 +480,11 @@ fn help_describes_markdown_limits_and_drafts() {
     let help = |args: &[&str]| {
         let out = Command::cargo_bin("agboard")
             .unwrap()
-            .env("AGBOARD_AUTOSTART", "0")
+            .env("AGPJ_AUTOSTART", "0")
             .env_remove("CLAUDE_CODE_SESSION_ID")
             .env_remove("CODEX_THREAD_ID")
             .env_remove("AGBOARD_RESIDENT_ID")
-            .env("AGBOARD_OPEN_BROWSER", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
             .args(args)
             .assert()
             .success();

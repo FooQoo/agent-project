@@ -185,9 +185,9 @@ fn a_stream_without_valid_session_headers_is_not_counted() {
 /// `agboard serve` as its own process, with the short grace period.
 fn serve(home: &std::path::Path) -> (ServeProcess, u16) {
     let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("AGBOARD_SESSION_GRACE_MS", GRACE_MS.to_string())
         .args(["serve", "--port", "0"])
@@ -235,9 +235,9 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
     let home = tempdir().unwrap();
     let run = |args: &[&str]| {
         Command::new(env!("CARGO_BIN_EXE_agboard"))
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
-            .env("AGBOARD_WATCH", "poll")
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
+            .env("AGPJ_WATCH", "poll")
             .env("AGPJ_HOME", home.path())
             .env("TZ", "UTC")
             .args(["--project", "Agent Board"])
@@ -251,9 +251,9 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
     let (_server, port) = serve(home.path());
 
     let waiter = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home.path())
         .env("CLAUDECODE", "1")
         .env("CLAUDE_CODE_SESSION_ID", "session-under-test")
@@ -310,9 +310,9 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
 fn agboard_in_session(home: &std::path::Path, session: Option<&str>, args: &[&str]) -> Vec<u8> {
     let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
     command
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .env_remove("AGBOARD_RESIDENT_ID")

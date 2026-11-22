@@ -13,9 +13,9 @@ use tempfile::{TempDir, tempdir};
 fn agboard(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
     Command::cargo_bin("agboard")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)

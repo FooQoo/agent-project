@@ -23,8 +23,8 @@ use tempfile::tempdir;
 fn bin() -> Command {
     let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
     command
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0");
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0");
     command
 }
 
@@ -39,7 +39,7 @@ fn fixture(name: &str) -> PathBuf {
 fn run(home: &Path, project: Option<&str>, args: &[&str]) -> Output {
     let mut command = bin();
     command
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC");
     if let Some(project) = project {
@@ -229,7 +229,7 @@ impl Drop for Serve {
 
 fn serve(home: &Path) -> Serve {
     let mut child = bin()
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
@@ -430,7 +430,7 @@ fn finish(mut child: Child, limit: Duration) -> Output {
 fn spawn_wait(home: &Path, project: &str, after: &str, timeout: Option<&str>) -> Child {
     let mut command = bin();
     command
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .args(["--project", project, "--json", "wait", "--after", after]);
     if let Some(timeout) = timeout {
@@ -451,7 +451,7 @@ fn still_running(child: &mut Child, for_how_long: Duration) -> bool {
 
 fn hook(home: &Path, project: &str, agent: &str) -> String {
     let mut child = bin()
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .args(["--project", project, "hook", "--agent", agent])
         .stdin(Stdio::piped())
@@ -494,7 +494,7 @@ fn on_terminal(home: &Path, project: &str, answer: &str, args: &[&str]) -> (i32,
 
     let mut command = bin();
     command
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["--project", project])
@@ -612,9 +612,9 @@ fn every_command_that_works_on_a_project_refuses_to_guess_one() {
         // Not the environment, not a project the server shows, not the current directory.
         let mut command = bin();
         command
-            .env("AGBOARD_WATCH", "poll")
+            .env("AGPJ_WATCH", "poll")
             .env("AGPJ_HOME", home.path())
-            .env("AGBOARD_PROJECT", "Alpha")
+            .env("AGPJ_PROJECT", "Alpha")
             .current_dir(home.path())
             .arg("--json")
             .args(&args)
@@ -625,7 +625,7 @@ fn every_command_that_works_on_a_project_refuses_to_guess_one() {
             ok(&output);
             let text = String::from_utf8_lossy(&output.stdout).into_owned();
             assert!(text.contains("AGBOARD_ERROR"), "{text}");
-            assert!(!text.contains("AGBOARD_SNAPSHOT"), "{text}");
+            assert!(!text.contains("AGPJ_SNAPSHOT"), "{text}");
             continue;
         }
         if args.first() == Some(&"wait") {

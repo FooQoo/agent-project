@@ -45,9 +45,9 @@ fn hook_table(shared: &Path) -> Value {
 
 fn cli_table(home: &Path) -> Value {
     let out = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .args(["--project", "Agent Board", "progress", "--json"])
         .output()

@@ -18,7 +18,7 @@ use crate::error::{AgpjError, PortHolder};
 use crate::file_store::lock::AutostartLock;
 
 /// The variable that tells the child which descriptor holds `autostart.lock`.
-const LOCK_FD: &str = "AGBOARD_AUTOSTART_LOCK_FD";
+const LOCK_FD: &str = "AGPJ_AUTOSTART_LOCK_FD";
 
 /// What the child said once it was ready.
 #[derive(Debug, Default, PartialEq, Eq)]

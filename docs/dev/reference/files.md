@@ -275,7 +275,7 @@ The ngrok remote connection keeps its non-secret settings in `<data-root>/.inter
 | `revision` | Increases with each save, including a save from the command line that only changes the token. The settings API uses it to detect a change made on another screen, and a running server uses it to notice a change made by the command line. |
 | `enabled` | Whether the connection starts again with the next `serve`. A stop saves `false`. |
 | `provider` | Optional. `ngrok` (the default when left out) or `tailscale`: how the phone reaches the board. Any other value makes the file unreadable. |
-| `domain` | Optional. The ngrok domain the endpoint is requested on, a bare lower-case host name, so the public address is the same at every start. Left out when none is saved. A saved value that is not a bare host name is ignored when read. `AGBOARD_NGROK_DOMAIN`, when set, is used instead of it and is never written to the file. |
+| `domain` | Optional. The ngrok domain the endpoint is requested on, a bare lower-case host name, so the public address is the same at every start. Left out when none is saved. A saved value that is not a bare host name is ignored when read. `AGPJ_NGROK_DOMAIN`, when set, is used instead of it and is never written to the file. |
 
 The file never holds the ngrok token, the phone passcode, a session, or a CSRF token. A token the user chooses to save lives in the PC's secure storage (the OS credential store) instead (service `agent-board`, account `ngrok-authtoken`). There is no `monitor/config.json`.
 

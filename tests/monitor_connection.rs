@@ -23,14 +23,13 @@ use support::home;
 
 fn agboard(home: &Path) -> Command {
     let mut cmd = Command::cargo_bin("agboard").unwrap();
-    cmd.env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0");
-    cmd.env("AGBOARD_WATCH", "poll")
+    cmd.env("AGPJ_AUTOSTART", "0").env("AGPJ_OPEN_BROWSER", "0");
+    cmd.env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .env_remove("NGROK_AUTHTOKEN")
-        .env_remove("AGBOARD_GOOGLE_CLIENT_ID")
-        .env_remove("AGBOARD_GOOGLE_CLIENT_SECRET")
+        .env_remove("AGPJ_GOOGLE_CLIENT_ID")
+        .env_remove("AGPJ_GOOGLE_CLIENT_SECRET")
         .current_dir(home);
     cmd
 }
@@ -91,8 +90,8 @@ fn bad_command_lines_exit_with_2_and_never_print_the_token() {
     let (code, text) = exit_of(
         &["--monitor", "ngrok"],
         &[
-            ("AGBOARD_GOOGLE_CLIENT_ID", "gid"),
-            ("AGBOARD_GOOGLE_CLIENT_SECRET", "gsecret"),
+            ("AGPJ_GOOGLE_CLIENT_ID", "gid"),
+            ("AGPJ_GOOGLE_CLIENT_SECRET", "gsecret"),
         ],
     );
     assert_eq!(code, 2);

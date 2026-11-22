@@ -74,7 +74,7 @@ done
 case "$1" in
   auth|login) echo '{{"loggedIn":true}}'; exit 0 ;;
 esac
-export AGPJ_HOME='{home}' AGBOARD_AUTOSTART=0 AGBOARD_OPEN_BROWSER=0 AGBOARD_WATCH=poll TZ=UTC
+export AGPJ_HOME='{home}' AGPJ_AUTOSTART=0 AGPJ_OPEN_BROWSER=0 AGPJ_WATCH=poll TZ=UTC
 LOG='{log}'
 echo $$ >> '{log}/starts'
 echo "$AGBOARD_SESSION_ORIGIN $AGBOARD_SESSION_TOOL" >> '{log}/env'
@@ -114,7 +114,7 @@ fn sessions(server: &Running, base: &str) -> Value {
 #[test]
 fn a_launched_session_is_pushed_work_is_restarted_and_stops() {
     scenario("claude-code", "claude", "AGBOARD_CLAUDE_BIN");
-    scenario("codex", "codex", "AGBOARD_CODEX_BIN");
+    scenario("codex", "codex", "AGPJ_CODEX_BIN");
 }
 
 fn scenario(tool: &str, program: &str, bin_var: &str) {
@@ -195,8 +195,8 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
             "60",
         ])
         .env("AGPJ_HOME", home.path())
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("TZ", "UTC")
         .env_remove("AGBOARD_RESIDENT_ID")
         .env_remove("AGBOARD_SESSION_ORIGIN")

@@ -14,8 +14,8 @@ const FILE: &str = ".internal/monitor-connection.json";
 
 fn agboard(home: &Path) -> Command {
     let mut cmd = Command::cargo_bin("agboard").unwrap();
-    cmd.env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
+    cmd.env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGBOARD_KEYCHAIN", "none")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")

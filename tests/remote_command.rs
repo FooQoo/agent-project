@@ -19,10 +19,10 @@ use harness::*;
 
 fn agboard(home: &Path, args: &[&str]) -> Output {
     let mut cmd = Command::cargo_bin("agboard").unwrap();
-    cmd.env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
+    cmd.env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGBOARD_KEYCHAIN", "none")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .env_remove("NGROK_AUTHTOKEN")

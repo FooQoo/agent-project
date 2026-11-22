@@ -166,11 +166,11 @@ async function record(browser, locale, tmp) {
   let context;
   try {
     const projectId = seed(home, text);
-    const port = await freePort(Number(process.env.AGBOARD_MEDIA_PORT ?? 0));
+    const port = await freePort(Number(process.env.AGPJ_MEDIA_PORT ?? 0));
     const origin = `http://127.0.0.1:${port}`;
     let stderr = '';
     server = spawn(binary, ['serve', '--port', String(port)], {
-      cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC', AGBOARD_WATCH: 'poll' }, stdio: ['ignore', 'ignore', 'pipe'],
+      cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC', AGPJ_WATCH: 'poll' }, stdio: ['ignore', 'ignore', 'pipe'],
     });
     server.stderr.on('data', (chunk) => { stderr += chunk; });
     await expect.poll(async () => {

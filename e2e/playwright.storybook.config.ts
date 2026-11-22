@@ -5,7 +5,7 @@ import { defineConfig } from '@playwright/test';
 
 const e2eDir = path.dirname(fileURLToPath(import.meta.url));
 const webDir = path.resolve(e2eDir, '../web');
-const port = Number(process.env.AGBOARD_STORYBOOK_E2E_PORT ?? 8670);
+const port = Number(process.env.AGPJ_STORYBOOK_E2E_PORT ?? 8670);
 const origin = `http://127.0.0.1:${port}`;
 
 export default defineConfig({

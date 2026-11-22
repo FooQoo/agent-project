@@ -261,9 +261,9 @@ struct Server {
 impl Server {
     fn start(home: &Path) -> Server {
         let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
-            .env("AGBOARD_WATCH", "poll")
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
+            .env("AGPJ_WATCH", "poll")
             .env("AGPJ_HOME", home)
             .env("TZ", "UTC")
             .args(["serve", "--port", "0"])

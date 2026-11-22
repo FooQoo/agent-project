@@ -272,7 +272,7 @@ You rarely need to start the server yourself. `wait`, a question that waits for 
 Started the Agent Board server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
 ```
 
-A server started this way keeps running while the board is open in a browser, while an agent waits, or while the phone is connected. It stops after 30 minutes without any of these; set `AGBOARD_IDLE_TIMEOUT` (60 to 86,400 seconds) to change that. If port 7420 is taken, it uses a free port and says so. Set `AGBOARD_AUTOSTART=0` to turn automatic starts off; commands that need the server then fail with `board_unavailable`, as when no server runs. Other commands, such as `add`, `mv`, and `ls`, never start the server.
+A server started this way keeps running while the board is open in a browser, while an agent waits, or while the phone is connected. It stops after 30 minutes without any of these; set `AGPJ_IDLE_TIMEOUT` (60 to 86,400 seconds) to change that. If port 7420 is taken, it uses a free port and says so. Set `AGPJ_AUTOSTART=0` to turn automatic starts off; commands that need the server then fail with `board_unavailable`, as when no server runs. Other commands, such as `add`, `mv`, and `ls`, never start the server.
 
 ### Open the board in the browser
 
@@ -280,7 +280,7 @@ A server that starts in the background opens the board of the project it started
 
 The browser is not opened when:
 
-- `AGBOARD_OPEN_BROWSER=0` is set;
+- `AGPJ_OPEN_BROWSER=0` is set;
 - the command runs in an SSH session (`SSH_CONNECTION` or `SSH_TTY` is set);
 - on Linux, no display is available (`DISPLAY` and `WAYLAND_DISPLAY` are unset).
 
@@ -294,9 +294,9 @@ agboard --project "My project" open
 agboard open --print
 ```
 
-It prints the board's address, such as `http://127.0.0.1:7420/?project=<id>`, even when it opens it. `--print` only prints the address. With `--json`, it prints `{"url":"…","projectId":"…","opened":true}`; when the browser was not opened, `opened` is `false` and `notice` says why. With `AGBOARD_AUTOSTART=0` and no server running, it fails with `board_unavailable`; a program that cannot be started fails with `browser_open_failed`, and the message names the address to open yourself.
+It prints the board's address, such as `http://127.0.0.1:7420/?project=<id>`, even when it opens it. `--print` only prints the address. With `--json`, it prints `{"url":"…","projectId":"…","opened":true}`; when the browser was not opened, `opened` is `false` and `notice` says why. With `AGPJ_AUTOSTART=0` and no server running, it fails with `board_unavailable`; a program that cannot be started fails with `browser_open_failed`, and the message names the address to open yourself.
 
-Agent Board uses `open` on macOS and `xdg-open` on Linux. To use another program, set `AGBOARD_BROWSER_OPENER` to it; Agent Board runs it with the address as its only argument, also over SSH or without a display.
+Agent Board uses `open` on macOS and `xdg-open` on Linux. To use another program, set `AGPJ_BROWSER_OPENER` to it; Agent Board runs it with the address as its only argument, also over SSH or without a display.
 
 ### Start the server yourself
 
@@ -306,7 +306,7 @@ Start it yourself to keep it running, to choose the port, or to connect a phone 
 
 | Option | Meaning |
 | --- | --- |
-| `--monitor ngrok` | Starts the remote access connection. `ngrok` is the only mode. Needs `NGROK_AUTHTOKEN` in the environment; the token is never passed as an argument. To keep the same address at every start, enter a domain your ngrok account owns in the dialog, or set `AGBOARD_NGROK_DOMAIN`, or save it from the command line with [`agboard setup remote`](#save-the-remote-access-settings); see [Keep the same address](../watch/remote-access#keep-the-same-address). |
+| `--monitor ngrok` | Starts the remote access connection. `ngrok` is the only mode. Needs `NGROK_AUTHTOKEN` in the environment; the token is never passed as an argument. To keep the same address at every start, enter a domain your ngrok account owns in the dialog, or set `AGPJ_NGROK_DOMAIN`, or save it from the command line with [`agboard setup remote`](#save-the-remote-access-settings); see [Keep the same address](../watch/remote-access#keep-the-same-address). |
 
 The phone is guarded by a 4-digit passcode that is made for each start; there is no sign-in option. An invalid `--monitor` value, a missing `NGROK_AUTHTOKEN`, or an unknown option exits with code 2. If the connection cannot start, `serve` exits with code 1 and does not start.
 

@@ -6,7 +6,7 @@
 //! alone and starts nothing. A server started this way stops by itself after it
 //! has gone unused (see `server::idle`).
 //!
-//! `AGBOARD_AUTOSTART=0` turns all of this off. Only the real command line
+//! `AGPJ_AUTOSTART=0` turns all of this off. Only the real command line
 //! allows it at all: the library embedded in a test never starts a server.
 
 mod spawn;
@@ -54,16 +54,15 @@ pub fn in_command_line() -> bool {
 }
 
 /// Whether a command may start a server: only in the `agboard` command line,
-/// and not with `AGBOARD_AUTOSTART=0`.
+/// and not with `AGPJ_AUTOSTART=0`.
 pub fn enabled() -> bool {
-    in_command_line()
-        && std::env::var("AGBOARD_AUTOSTART").map_or(true, |value| value.trim() != "0")
+    in_command_line() && std::env::var("AGPJ_AUTOSTART").map_or(true, |value| value.trim() != "0")
 }
 
-/// The port an automatic server tries first: `AGBOARD_AUTOSTART_PORT`, or 7420.
+/// The port an automatic server tries first: `AGPJ_AUTOSTART_PORT`, or 7420.
 /// Port 0 lets the OS choose, which is what the tests use.
 pub fn preferred_port(env: &dyn Fn(&str) -> Option<String>) -> u16 {
-    env("AGBOARD_AUTOSTART_PORT")
+    env("AGPJ_AUTOSTART_PORT")
         .and_then(|value| value.trim().parse::<u16>().ok())
         .unwrap_or(DEFAULT_PORT)
 }
@@ -235,7 +234,7 @@ mod tests {
     fn the_preferred_port_comes_from_the_environment() {
         assert_eq!(preferred_port(&|_| None), 7420);
         let with = |value: &'static str| {
-            preferred_port(&move |name| (name == "AGBOARD_AUTOSTART_PORT").then(|| value.into()))
+            preferred_port(&move |name| (name == "AGPJ_AUTOSTART_PORT").then(|| value.into()))
         };
         assert_eq!(with("0"), 0);
         assert_eq!(with("7661"), 7661);

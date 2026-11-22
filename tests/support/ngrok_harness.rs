@@ -243,7 +243,7 @@ impl TokenVault for MockVault {
 pub struct Opts {
     pub vault: Arc<MockVault>,
     pub env_token: bool,
-    /// `AGBOARD_NGROK_DOMAIN`.
+    /// `AGPJ_NGROK_DOMAIN`.
     pub env_domain: Option<String>,
     pub explicit: bool,
     pub mock: Arc<MockConnector>,

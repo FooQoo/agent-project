@@ -14,10 +14,10 @@ use serve_process::ServeProcess;
 fn bin(home: &Path) -> Command {
     let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
     command
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0");
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0");
     command
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC");
     command

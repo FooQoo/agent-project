@@ -18,9 +18,9 @@ fn agboard(home: &std::path::Path, args: &[&str]) -> std::process::Output {
 
 fn agboard_for(home: &std::path::Path, project: &str, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["--project", project])
@@ -31,9 +31,9 @@ fn agboard_for(home: &std::path::Path, project: &str, args: &[&str]) -> std::pro
 
 fn start_server(home: &std::path::Path) -> ServeProcess {
     let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
@@ -110,9 +110,9 @@ fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
     let _server = start_server(home.path());
 
     let waiter = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home.path())
         .args([
             "--project",
@@ -245,9 +245,9 @@ fn a_change_to_another_project_does_not_end_the_wait() {
     let _server = start_server(home.path());
 
     let waiter = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home.path())
         .args([
             "--project",

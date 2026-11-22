@@ -29,9 +29,9 @@ fn all_task_text(home: &Path) -> String {
 /// Run `agboard` with `input` on standard input.
 fn agboard_stdin(home: &Path, args: &[&str], input: &str) -> (i32, String, String) {
     let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)

@@ -25,25 +25,25 @@ pub struct IdleStop {
     pub check_every: Duration,
 }
 
-/// The shortest and longest idle time `AGBOARD_IDLE_TIMEOUT` may set, in seconds.
+/// The shortest and longest idle time `AGPJ_IDLE_TIMEOUT` may set, in seconds.
 pub const IDLE_TIMEOUT_RANGE: std::ops::RangeInclusive<u64> = 60..=86_400;
 
-/// The idle time when `AGBOARD_IDLE_TIMEOUT` is unset or not usable: 30 minutes.
+/// The idle time when `AGPJ_IDLE_TIMEOUT` is unset or not usable: 30 minutes.
 pub const DEFAULT_IDLE_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 
 /// How often an automatic server checks whether it is still used.
 pub const DEFAULT_CHECK_EVERY: Duration = Duration::from_secs(30);
 
 impl IdleStop {
-    /// The idle stop from `AGBOARD_IDLE_TIMEOUT` (seconds) and, for tests,
-    /// `AGBOARD_IDLE_CHECK_MS`. A value that is not a whole number in range is
+    /// The idle stop from `AGPJ_IDLE_TIMEOUT` (seconds) and, for tests,
+    /// `AGPJ_IDLE_CHECK_MS`. A value that is not a whole number in range is
     /// ignored and the default is used.
     pub fn from_env(env: &dyn Fn(&str) -> Option<String>) -> IdleStop {
-        let timeout = env("AGBOARD_IDLE_TIMEOUT")
+        let timeout = env("AGPJ_IDLE_TIMEOUT")
             .and_then(|value| value.trim().parse::<u64>().ok())
             .filter(|seconds| IDLE_TIMEOUT_RANGE.contains(seconds))
             .map_or(DEFAULT_IDLE_TIMEOUT, Duration::from_secs);
-        let check_every = env("AGBOARD_IDLE_CHECK_MS")
+        let check_every = env("AGPJ_IDLE_CHECK_MS")
             .and_then(|value| value.trim().parse::<u64>().ok())
             .filter(|ms| *ms > 0)
             .map_or(DEFAULT_CHECK_EVERY, Duration::from_millis)
@@ -241,7 +241,7 @@ mod tests {
     #[test]
     fn the_idle_time_comes_from_the_environment_within_its_range() {
         let with = |value: &'static str| {
-            IdleStop::from_env(&move |name| (name == "AGBOARD_IDLE_TIMEOUT").then(|| value.into()))
+            IdleStop::from_env(&move |name| (name == "AGPJ_IDLE_TIMEOUT").then(|| value.into()))
         };
         assert_eq!(IdleStop::from_env(&|_| None).timeout, DEFAULT_IDLE_TIMEOUT);
         assert_eq!(with("60").timeout, Duration::from_secs(60));
@@ -254,7 +254,7 @@ mod tests {
             DEFAULT_CHECK_EVERY
         );
         let quick =
-            IdleStop::from_env(&|name| (name == "AGBOARD_IDLE_CHECK_MS").then(|| "200".into()));
+            IdleStop::from_env(&|name| (name == "AGPJ_IDLE_CHECK_MS").then(|| "200".into()));
         assert_eq!(quick.check_every, Duration::from_millis(200));
     }
 

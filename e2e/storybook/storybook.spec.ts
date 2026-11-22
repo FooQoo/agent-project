@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
-const storybookOrigin = process.env.AGBOARD_STORYBOOK_E2E_PORT
-  ? `http://127.0.0.1:${process.env.AGBOARD_STORYBOOK_E2E_PORT}`
+const storybookOrigin = process.env.AGPJ_STORYBOOK_E2E_PORT
+  ? `http://127.0.0.1:${process.env.AGPJ_STORYBOOK_E2E_PORT}`
   : 'http://127.0.0.1:8670';
 
 function storyUrl(id: string, globals: string) {

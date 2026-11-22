@@ -31,12 +31,12 @@ fn serial() -> MutexGuard<'static, ()> {
 
 fn agboard(home: &Path) -> Command {
     let mut cmd = Command::cargo_bin("agboard").unwrap();
-    cmd.env("AGBOARD_AUTOSTART", "0")
+    cmd.env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
         .env_remove("AGBOARD_RESIDENT_ID")
-        .env("AGBOARD_OPEN_BROWSER", "0");
-    cmd.env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_OPEN_BROWSER", "0");
+    cmd.env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home);
@@ -198,13 +198,13 @@ impl Serving {
 
     fn spawn(home: &Path, args: &[&str]) -> Serving {
         let mut child = StdCommand::new(assert_cmd::cargo::cargo_bin("agboard"))
-            .env("AGBOARD_AUTOSTART", "0")
+            .env("AGPJ_AUTOSTART", "0")
             .env_remove("CLAUDE_CODE_SESSION_ID")
             .env_remove("CODEX_THREAD_ID")
             .env_remove("AGBOARD_RESIDENT_ID")
-            .env("AGBOARD_OPEN_BROWSER", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
             .args(args)
-            .env("AGBOARD_WATCH", "poll")
+            .env("AGPJ_WATCH", "poll")
             .env("AGPJ_HOME", home)
             .env("TZ", "UTC")
             .current_dir(home)

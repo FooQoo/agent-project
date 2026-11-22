@@ -33,23 +33,23 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 
 If the connection fails after a command has read `serve.json`, for example because the server stopped in between, the command starts a server once more. The hook starts the server without waiting: it only checks that the pid in `serve.json` is alive and that `autostart.lock` is free, and it starts nothing after `agboard stop` (see below). Failures are left in `serve.log`.
 
-`AGBOARD_AUTOSTART=0` turns all of this off: commands report `board_unavailable` as before, and the hook starts nothing. The library never starts a server by itself; only the `agboard` command line does.
+`AGPJ_AUTOSTART=0` turns all of this off: commands report `board_unavailable` as before, and the hook starts nothing. The library never starts a server by itself; only the `agboard` command line does.
 
 ### Opening the board
 
 An automatic server opens the board of the project it was started for, once. The user-facing rules are in the [CLI reference](../../guide/reference/cli.md#open-the-board-in-the-browser).
 
 - The command that starts the server passes the project ID as the hidden `serve --auto --open-board=<projectId>`: a waiting command passes the project it follows, `message ask` and `message wait` the project of the questions, and the hook the project of the progress table it printed. `agboard open` passes none, because it opens the page itself.
-- Once the server is ready and has released `autostart.lock`, a thread waits 3 seconds (`AGBOARD_OPEN_GRACE_MS` changes it for the tests, up to 60,000 ms). Then it opens `http://127.0.0.1:<port>/?project=<projectId>` unless a board page has connected since the start. A tab that connected and closed again still counts, because it may reconnect.
+- Once the server is ready and has released `autostart.lock`, a thread waits 3 seconds (`AGPJ_OPEN_GRACE_MS` changes it for the tests, up to 60,000 ms). Then it opens `http://127.0.0.1:<port>/?project=<projectId>` unless a board page has connected since the start. A tab that connected and closed again still counts, because it may reconnect.
 - A board page is a `GET /api/events` stream without the `X-Agboard-Wait` header. The waiting commands send that header, so their own stream, which opens right after the start, is not taken for a tab. A phone's page through the ngrok entrance is the same stream behind the session and counts the same way.
-- `src/interact/browser.rs` decides whether a browser can be opened, in this order: `AGBOARD_OPEN_BROWSER=0` opens nothing; `AGBOARD_BROWSER_OPENER` names a program that replaces the system's opener; `SSH_CONNECTION` or `SSH_TTY` opens nothing; on systems other than macOS and Windows, no `DISPLAY` and no `WAYLAND_DISPLAY` opens nothing. Otherwise it runs `open` (macOS), `explorer` (Windows), or `xdg-open`, with the address as its only argument and no shell, and does not wait for it.
+- `src/interact/browser.rs` decides whether a browser can be opened, in this order: `AGPJ_OPEN_BROWSER=0` opens nothing; `AGPJ_BROWSER_OPENER` names a program that replaces the system's opener; `SSH_CONNECTION` or `SSH_TTY` opens nothing; on systems other than macOS and Windows, no `DISPLAY` and no `WAYLAND_DISPLAY` opens nothing. Otherwise it runs `open` (macOS), `explorer` (Windows), or `xdg-open`, with the address as its only argument and no shell, and does not wait for it.
 - The outcome is one line in `serve.log`: `Opened … in the browser.`, `Did not open … in the browser.` with the reason, or `Could not open …` when the program could not be started.
-- Like starting a server, only the `agboard` command line opens a browser; the library embedded in a test never does. The tests set `AGBOARD_OPEN_BROWSER=0`, and the tests of opening point `AGBOARD_BROWSER_OPENER` at a script that records the address.
+- Like starting a server, only the `agboard` command line opens a browser; the library embedded in a test never does. The tests set `AGPJ_OPEN_BROWSER=0`, and the tests of opening point `AGPJ_BROWSER_OPENER` at a script that records the address.
 
 ### Ports
 
 - A manual server listens on `--port` (7420 by default) and nothing else. A taken port is `port_in_use`, and the reason names what holds it: another Agent Board server (with its pid) whose data area is different, or another program.
-- An automatic server tries 7420 first (`AGBOARD_AUTOSTART_PORT` changes it; tests use 0). When it is taken, the server listens on a port the OS chooses and prints why, for example `Port 7420 is used by another program, so this server uses port 52114.`
+- An automatic server tries 7420 first (`AGPJ_AUTOSTART_PORT` changes it; tests use 0). When it is taken, the server listens on a port the OS chooses and prints why, for example `Port 7420 is used by another program, so this server uses port 52114.`
 - A refusal by the OS or a sandbox (`EACCES` or `EPERM`) is `local_network_denied`. Any other failure to listen is `board_unavailable` with the OS message.
 
 ### Stopping by itself
@@ -61,7 +61,7 @@ An automatic server is in use while any of these is true:
 - the remote access connection is starting, ready, reconnecting, or stopping;
 - the file watcher saw a change to the board or the Docs within the idle time, so an agent that edits files keeps the server running for automatic Done.
 
-The idle time is 30 minutes; `AGBOARD_IDLE_TIMEOUT` sets it from 60 to 86400 seconds. The check runs every 30 seconds on a monotonic clock. When the server has been unused for the idle time, it removes `serve.json` first (so a new command starts a new server instead of connecting to this one), answers new requests with `503 board_unavailable`, ends the monitor connection, releases `lifecycle.lock`, and writes `Stopped after 30 minutes without use.` to `serve.log`.
+The idle time is 30 minutes; `AGPJ_IDLE_TIMEOUT` sets it from 60 to 86400 seconds. The check runs every 30 seconds on a monotonic clock. When the server has been unused for the idle time, it removes `serve.json` first (so a new command starts a new server instead of connecting to this one), answers new requests with `503 board_unavailable`, ends the monitor connection, releases `lifecycle.lock`, and writes `Stopped after 30 minutes without use.` to `serve.log`.
 
 ### stop
 

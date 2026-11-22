@@ -36,8 +36,8 @@ fn setup(home: &Path, extra: &[(&str, &str)], args: &[&str]) -> (i32, String, St
     let fakes = fakes(home);
     let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
         .env_clear()
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
         .env("HOME", home)
         .env("PATH", &fakes.bin)
         .env("TZ", "UTC")
@@ -729,8 +729,8 @@ fn serve_and_the_cli_share_the_default_root_created_by_setup() {
     setup_json(&home, &[], &[]);
     let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
         .env_clear()
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
         .env("HOME", &home)
         .env("TZ", "UTC")
         .current_dir(&home)

@@ -240,7 +240,7 @@ By default ngrok chooses a new address at every start, so a bookmark or a home-s
 
 The value is a bare host name, without a scheme, a path, or a port. When the connection starts, Agent Board asks ngrok for that domain, so the address is the same after you stop and start the connection and after the server restarts.
 
-As alternatives to the dialog, save it from the command line, or set the `AGBOARD_NGROK_DOMAIN` environment variable before the server starts. This saves the domain, with or without a running server, and the board shows it without a reload:
+As alternatives to the dialog, save it from the command line, or set the `AGPJ_NGROK_DOMAIN` environment variable before the server starts. This saves the domain, with or without a running server, and the board shows it without a reload:
 
 ```sh
 agboard setup remote --domain <your domain, for example name.ngrok-free.dev>
@@ -249,7 +249,7 @@ agboard setup remote --domain <your domain, for example name.ngrok-free.dev>
 Run `agboard setup remote` with no option on a terminal to be asked for the domain and the token instead; see [Save the remote access settings](../reference/cli#save-the-remote-access-settings). `agboard show remote` shows what is saved. Saving does not replace a connection that is already up; the new domain applies the next time the connection starts. The environment variable does the same for one server only:
 
 ```sh
-export AGBOARD_NGROK_DOMAIN=<your domain, for example name.ngrok-free.dev>
+export AGPJ_NGROK_DOMAIN=<your domain, for example name.ngrok-free.dev>
 ```
 
 If the variable is set, it is used instead of the saved domain. The dialog then shows it and the field cannot be edited. Opening the address still shows the passcode screen, and the passcode is new at every start. When you stop the connection, the address no longer reaches the board.

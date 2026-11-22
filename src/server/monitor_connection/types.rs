@@ -41,7 +41,7 @@ impl fmt::Debug for Secret {
 pub struct MonitorEnv {
     /// `NGROK_AUTHTOKEN`.
     pub token: Option<Secret>,
-    /// `AGBOARD_NGROK_DOMAIN`: the ngrok domain to open the endpoint on, so the public
+    /// `AGPJ_NGROK_DOMAIN`: the ngrok domain to open the endpoint on, so the public
     /// address is the same at every start. Anything that is not a bare host name is ignored.
     pub domain: Option<String>,
 }
@@ -51,7 +51,7 @@ impl MonitorEnv {
         let get = |name: &str| std::env::var(name).ok().filter(|v| !v.is_empty());
         Self {
             token: get("NGROK_AUTHTOKEN").map(Secret::new),
-            domain: get("AGBOARD_NGROK_DOMAIN").and_then(|v| parse_domain(&v)),
+            domain: get("AGPJ_NGROK_DOMAIN").and_then(|v| parse_domain(&v)),
         }
     }
 }
@@ -178,7 +178,7 @@ pub struct Snapshot {
     pub url: Option<String>,
     pub revision: u64,
     pub settings: Settings,
-    /// The domain from `AGBOARD_NGROK_DOMAIN`. When set it is the one used, over the saved one.
+    /// The domain from `AGPJ_NGROK_DOMAIN`. When set it is the one used, over the saved one.
     pub domain_env: Option<String>,
     pub token_configured: bool,
     /// Which token a start would use; `None` when there is none. Never the value.

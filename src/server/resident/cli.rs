@@ -15,7 +15,7 @@ use crate::setup::agent_cli;
 /// Overrides the `claude` executable (tests point it at a fake script).
 pub const CLAUDE_BIN_ENV: &str = "AGBOARD_CLAUDE_BIN";
 /// Overrides the `codex` executable.
-pub const CODEX_BIN_ENV: &str = "AGBOARD_CODEX_BIN";
+pub const CODEX_BIN_ENV: &str = "AGPJ_CODEX_BIN";
 
 /// The model aliases `claude` accepts; it has no command that lists them.
 const CLAUDE_MODELS: [&str; 4] = ["opus", "sonnet", "haiku", "fable"];
@@ -63,7 +63,7 @@ pub struct Executables {
 const CHECK_TIMEOUT: Duration = Duration::from_secs(20);
 
 impl Executables {
-    /// `AGBOARD_CLAUDE_BIN` and `AGBOARD_CODEX_BIN` when set, else the server's `PATH`.
+    /// `AGBOARD_CLAUDE_BIN` and `AGPJ_CODEX_BIN` when set, else the server's `PATH`.
     pub fn from_env() -> Executables {
         let var = |name: &str| {
             std::env::var_os(name)

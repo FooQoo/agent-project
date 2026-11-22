@@ -115,13 +115,13 @@ The timeout is required and ranges from 1 to 86,400 seconds. Connection, project
 
 ## Open
 
-`agboard open --json` starts the server when none runs (unless `AGBOARD_AUTOSTART=0`), opens the board of the bound or named project, and prints one object:
+`agboard open --json` starts the server when none runs (unless `AGPJ_AUTOSTART=0`), opens the board of the bound or named project, and prints one object:
 
 ```json
 {"url":"http://127.0.0.1:7420/?project=<id>","projectId":"<id>","opened":true}
 ```
 
-`opened` is `false` with `--print`, and when the browser may not be opened; then `notice` says why, for example `"AGBOARD_OPEN_BROWSER=0 turns opening the browser off."`. A server that cannot be reached is `board_unavailable`, and a program that cannot be started is `browser_open_failed`. See [Error codes](./errors.md#server-and-waiting).
+`opened` is `false` with `--print`, and when the browser may not be opened; then `notice` says why, for example `"AGPJ_OPEN_BROWSER=0 turns opening the browser off."`. A server that cannot be reached is `board_unavailable`, and a program that cannot be started is `browser_open_failed`. See [Error codes](./errors.md#server-and-waiting).
 
 ## Remote
 

@@ -252,7 +252,7 @@ The state object has these fields:
 | `revision` | The settings revision, for `PUT`. |
 | `settings` | `enabled`, `provider` (`ngrok` or `tailscale`), and `domain` (the saved ngrok domain, or `null`). |
 | `activeProvider` | The provider of the connection that is `starting`, `ready`, or `reconnecting`; otherwise `null`. It can differ from `settings.provider`, which is only what is saved: saving another provider does not touch a live connection, and a start is what replaces it. A client that wants the saved provider to be the live one starts when `activeProvider` differs from it. |
-| `domainEnv` | The domain from `AGBOARD_NGROK_DOMAIN`, or `null`. When it is set, a start uses it instead of `settings.domain`. |
+| `domainEnv` | The domain from `AGPJ_NGROK_DOMAIN`, or `null`. When it is set, a start uses it instead of `settings.domain`. |
 | `tokenConfigured` | Whether a start would find a token. |
 | `tokenSource` | `env` (`NGROK_AUTHTOKEN`), `keychain` (the secure storage), `session` (typed for this run), or `null`. Never the value. |
 | `keychainAvailable` | Whether this PC has a secure storage (the OS credential store) that can hold a token. |

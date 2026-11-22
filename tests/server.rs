@@ -1659,11 +1659,11 @@ use std::process::{Child, Stdio};
 /// Start `agboard serve` with `args`, serving the data area in `home`.
 fn spawn_serve(home: &Path, args: &[&str]) -> ServeProcess {
     let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
         .arg("serve")
         .args(args)
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .stdout(Stdio::null())

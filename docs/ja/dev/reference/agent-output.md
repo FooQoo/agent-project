@@ -115,13 +115,13 @@ taskの項目を省略した例です。
 
 ## open
 
-`agboard open --json`は、サーバーが動いていなければ起動し（`AGBOARD_AUTOSTART=0`のときを除く）、登録されたプロジェクトか指定したプロジェクトのボードを開いて、オブジェクトを一つ出します。
+`agboard open --json`は、サーバーが動いていなければ起動し（`AGPJ_AUTOSTART=0`のときを除く）、登録されたプロジェクトか指定したプロジェクトのボードを開いて、オブジェクトを一つ出します。
 
 ```json
 {"url":"http://127.0.0.1:7420/?project=<id>","projectId":"<id>","opened":true}
 ```
 
-`--print`のときと、ブラウザーを開いてはいけないときは`opened`が`false`になり、`notice`に理由が入ります。例：`"AGBOARD_OPEN_BROWSER=0 turns opening the browser off."`。サーバーに届かなければ`board_unavailable`、開くためのプログラムを起動できなければ`browser_open_failed`です。[エラーコード](./errors.md#サーバーと待機)を参照してください。
+`--print`のときと、ブラウザーを開いてはいけないときは`opened`が`false`になり、`notice`に理由が入ります。例：`"AGPJ_OPEN_BROWSER=0 turns opening the browser off."`。サーバーに届かなければ`board_unavailable`、開くためのプログラムを起動できなければ`browser_open_failed`です。[エラーコード](./errors.md#サーバーと待機)を参照してください。
 
 ## remote
 

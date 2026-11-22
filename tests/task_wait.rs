@@ -20,9 +20,9 @@ use serve_process::ServeProcess;
 
 fn agboard(home: &Path, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(args)
@@ -88,9 +88,9 @@ fn add(home: &Path, project: &str, title: &str, assignee: &str, epic: Option<&st
 
 fn serve(home: &Path) -> ServeProcess {
     let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["serve", "--port", "0"])
@@ -109,9 +109,9 @@ fn serve(home: &Path) -> ServeProcess {
 
 fn wait(home: &Path, project: &str, timeout: &str) -> std::process::Child {
     Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args([
@@ -689,9 +689,9 @@ fn errors_and_invalid_cli_inputs_are_not_idle_completions() {
     ] {
         let output = AssertCommand::cargo_bin("agboard")
             .unwrap()
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
-            .env("AGBOARD_WATCH", "poll")
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
+            .env("AGPJ_WATCH", "poll")
             .env("AGPJ_HOME", home.path())
             .env("TZ", "UTC")
             .args(args)

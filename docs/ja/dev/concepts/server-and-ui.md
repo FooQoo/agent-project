@@ -33,23 +33,23 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 
 `serve.json`を読んだ後に接続が失敗したとき（その間にサーバーが止まったときなど）は、もう一度だけ起動します。Hookは待たずに起動します。確かめるのは`serve.json`のpidが生きているかと`autostart.lock`が空いているかだけで、`agboard stop`の後は起動しません（後述）。失敗は`serve.log`に残ります。
 
-`AGBOARD_AUTOSTART=0`にすると、これらはすべて止まります。コマンドはこれまでどおり`board_unavailable`を返し、Hookは何も起動しません。ライブラリが自分でサーバーを起動することはなく、起動するのは`agboard`のコマンドラインだけです。
+`AGPJ_AUTOSTART=0`にすると、これらはすべて止まります。コマンドはこれまでどおり`board_unavailable`を返し、Hookは何も起動しません。ライブラリが自分でサーバーを起動することはなく、起動するのは`agboard`のコマンドラインだけです。
 
 ### ボードを開く {#opening-the-board}
 
 自動のサーバーは、起動のきっかけになったプロジェクトのボードを一度だけ開きます。利用者から見た決まりは[CLIリファレンス](../../guide/reference/cli.md#open-the-board-in-the-browser)にあります。
 
 - サーバーを起動するコマンドは、隠しオプション`serve --auto --open-board=<projectId>`でプロジェクトIDを渡します。待つコマンドは待っているプロジェクト、`message ask`と`message wait`は質問のプロジェクト、Hookは出力した進行表のプロジェクトを渡します。`agboard open`は自分でページを開くので、何も渡しません。
-- サーバーの準備ができて`autostart.lock`を外した後、スレッドが3秒待ちます（試験では`AGBOARD_OPEN_GRACE_MS`で変えられ、上限は60,000ミリ秒）。起動してからボードのページが一度もつながっていなければ、`http://127.0.0.1:<port>/?project=<projectId>`を開きます。つながってから閉じたタブも、つながり直すかもしれないので数に入れます。
+- サーバーの準備ができて`autostart.lock`を外した後、スレッドが3秒待ちます（試験では`AGPJ_OPEN_GRACE_MS`で変えられ、上限は60,000ミリ秒）。起動してからボードのページが一度もつながっていなければ、`http://127.0.0.1:<port>/?project=<projectId>`を開きます。つながってから閉じたタブも、つながり直すかもしれないので数に入れます。
 - ボードのページとは、`X-Agboard-Wait`ヘッダーのない`GET /api/events`のストリームです。待つコマンドはこのヘッダーを付けるので、起動の直後に開く自分のストリームがタブと取り違えられることはありません。スマホのページがngrokの入口を通して開くのは、sessionの背後にある同じストリームで、同じように数えます。
-- ブラウザーを開けるかどうかは`src/interact/browser.rs`が次の順で決めます。`AGBOARD_OPEN_BROWSER=0`なら開きません。`AGBOARD_BROWSER_OPENER`があれば、そのプログラムをシステムのものの代わりに使います。`SSH_CONNECTION`か`SSH_TTY`があれば開きません。macOSとWindows以外では、`DISPLAY`も`WAYLAND_DISPLAY`もなければ開きません。それ以外なら`open`（macOS）、`explorer`（Windows）、`xdg-open`を、アドレスだけを引数にしてシェルを通さずに起動し、終わるのを待ちません。
+- ブラウザーを開けるかどうかは`src/interact/browser.rs`が次の順で決めます。`AGPJ_OPEN_BROWSER=0`なら開きません。`AGPJ_BROWSER_OPENER`があれば、そのプログラムをシステムのものの代わりに使います。`SSH_CONNECTION`か`SSH_TTY`があれば開きません。macOSとWindows以外では、`DISPLAY`も`WAYLAND_DISPLAY`もなければ開きません。それ以外なら`open`（macOS）、`explorer`（Windows）、`xdg-open`を、アドレスだけを引数にしてシェルを通さずに起動し、終わるのを待ちません。
 - 結果は`serve.log`に1行残ります。`Opened … in the browser.`、理由つきの`Did not open … in the browser.`、プログラムを起動できなかったときの`Could not open …`のどれかです。
-- サーバーの起動と同じく、ブラウザーを開くのは`agboard`のコマンドラインだけで、試験に組み込んだライブラリは開きません。試験は`AGBOARD_OPEN_BROWSER=0`を設定し、開く処理の試験は`AGBOARD_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。
+- サーバーの起動と同じく、ブラウザーを開くのは`agboard`のコマンドラインだけで、試験に組み込んだライブラリは開きません。試験は`AGPJ_OPEN_BROWSER=0`を設定し、開く処理の試験は`AGPJ_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。
 
 ### ポート
 
 - 手動のサーバーは`--port`（既定は7420）だけで待ち受けます。使われているポートは`port_in_use`で、理由には使っているものを示します。データ領域の違う別のAgent Boardのサーバー（pidつき）か、別のプログラムです。
-- 自動のサーバーはまず7420を試します（`AGBOARD_AUTOSTART_PORT`で変えられ、試験では0を使います）。使われていれば、OSが選んだポートで待ち受け、その理由を出します。例：`Port 7420 is used by another program, so this server uses port 52114.`
+- 自動のサーバーはまず7420を試します（`AGPJ_AUTOSTART_PORT`で変えられ、試験では0を使います）。使われていれば、OSが選んだポートで待ち受け、その理由を出します。例：`Port 7420 is used by another program, so this server uses port 52114.`
 - OSやサンドボックスによる拒否（`EACCES`か`EPERM`）は`local_network_denied`です。そのほかの待ち受けの失敗は、OSのメッセージつきの`board_unavailable`です。
 
 ### 自動での停止
@@ -61,7 +61,7 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 - 携帯モニターの接続が、開始中・接続済み・再接続中・停止中のどれかである。
 - ファイルの監視が、上限内にボードかDocsの変更を見つけた。ファイルを直接編集するエージェントのために、自動Doneが働くようサーバーを残します。
 
-上限は30分で、`AGBOARD_IDLE_TIMEOUT`で60〜86400秒に変えられます。確認は30秒ごとで、単調増加の時計を使います。上限の間使われなかったときは、まず`serve.json`を消します（新しいコマンドがこのサーバーにつながず、新しく起動するためです）。続けて新しいリクエストに`503 board_unavailable`を返し、モニターの接続を終え、`lifecycle.lock`を外し、`serve.log`に`Stopped after 30 minutes without use.`と書きます。
+上限は30分で、`AGPJ_IDLE_TIMEOUT`で60〜86400秒に変えられます。確認は30秒ごとで、単調増加の時計を使います。上限の間使われなかったときは、まず`serve.json`を消します（新しいコマンドがこのサーバーにつながず、新しく起動するためです）。続けて新しいリクエストに`503 board_unavailable`を返し、モニターの接続を終え、`lifecycle.lock`を外し、`serve.log`に`Stopped after 30 minutes without use.`と書きます。
 
 ### stop
 

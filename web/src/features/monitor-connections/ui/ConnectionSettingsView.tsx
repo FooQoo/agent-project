@@ -35,7 +35,7 @@ export interface ConnectionSettingsViewProps {
   passcode?: string | null;
   qr?: ConnectionQr | null;
   tokenInfo?: TokenInfo;
-  /** The domain from the AGBOARD_NGROK_DOMAIN environment variable; when set, the field only shows it. */
+  /** The domain from the AGPJ_NGROK_DOMAIN environment variable; when set, the field only shows it. */
   domainEnv?: string | null;
   /** Delete the token saved in this PC's secure storage. */
   onDeleteToken?: () => void;

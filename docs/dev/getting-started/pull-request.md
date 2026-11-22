@@ -70,8 +70,8 @@ Rules for tests:
 
 - Set `TZ=UTC` so displayed times are fixed.
 - Never use the default data area: each test sets `AGPJ_HOME` to a temporary directory.
-- A test that runs the `agboard` binary sets `AGBOARD_AUTOSTART=0`, so that a wait or the hook does not start a server by itself, and `AGBOARD_OPEN_BROWSER=0`, so that nothing opens a browser. The Playwright config sets both for the whole suite. A test of autostart itself leaves `AGBOARD_AUTOSTART` unset and sets `AGBOARD_AUTOSTART_PORT=0`, and stops every server it started. A test that runs `setup remote` or `show remote` sets `AGBOARD_KEYCHAIN=none`, so that the OS keychain is never read or written. A test of opening the board points `AGBOARD_BROWSER_OPENER` at a script that records the address, as `tests/open_board.rs` does; no test opens a real browser.
-- A test that starts `agboard serve` sets `AGBOARD_WATCH=poll`, and an embedded server is started with `server::run_until_in` and `WatchMode::Poll`. Only `tests/file_watch.rs` uses the platform's file events.
+- A test that runs the `agboard` binary sets `AGPJ_AUTOSTART=0`, so that a wait or the hook does not start a server by itself, and `AGPJ_OPEN_BROWSER=0`, so that nothing opens a browser. The Playwright config sets both for the whole suite. A test of autostart itself leaves `AGPJ_AUTOSTART` unset and sets `AGPJ_AUTOSTART_PORT=0`, and stops every server it started. A test that runs `setup remote` or `show remote` sets `AGBOARD_KEYCHAIN=none`, so that the OS keychain is never read or written. A test of opening the board points `AGPJ_BROWSER_OPENER` at a script that records the address, as `tests/open_board.rs` does; no test opens a real browser.
+- A test that starts `agboard serve` sets `AGPJ_WATCH=poll`, and an embedded server is started with `server::run_until_in` and `WatchMode::Poll`. Only `tests/file_watch.rs` uses the platform's file events.
 - `agboard serve` listens only on `127.0.0.1`. Do not use port 7420; use an available port or port 0, and connect to `http://127.0.0.1:<port>/` rather than `localhost`.
 - Test what the product does now. When you remove a feature, delete its tests along with it, and do not add a test that checks the removed route, field, or screen is gone.
 
@@ -80,7 +80,7 @@ The Playwright suites live in `e2e/`. Install them once with `pnpm --dir e2e ins
 The app suite runs its spec files on several Playwright workers at once:
 
 - Each worker has its own temporary data area and its own `agboard serve` on port 0. The suite uses no fixed port, so two checkouts can run it at the same time.
-- The number of workers defaults to half the CPUs. Set `AGBOARD_E2E_WORKERS`, or pass `--workers`, to change it. The tests in one file run in order on one worker, because they share that worker's board.
+- The number of workers defaults to half the CPUs. Set `AGPJ_E2E_WORKERS`, or pass `--workers`, to change it. The tests in one file run in order on one worker, because they share that worker's board.
 - `AGBOARD_E2E_BINARY` selects a different `agboard` binary. With `AGBOARD_E2E_PREBUILT=1` (used by CI) the global setup builds nothing and requires `AGBOARD_E2E_BINARY` and `AGBOARD_E2E_PHONE_BACKEND` to name existing files. The worker fixture sets `AGBOARD_E2E_HOME` and `AGBOARD_E2E_MAIN_URL` itself; do not set them.
 - Results and traces go to `agent-board-e2e-results-<checkout>` in the system's temporary directory, one folder for each checkout.
 

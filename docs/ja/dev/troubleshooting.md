@@ -37,8 +37,8 @@
 | `port_in_use` | `serve`に指定したポートが使われている。理由に、別のAgent Boardのサーバーか別のプログラムかが出る。 | `--port`でほかのポートを選びます。7420は通常の利用のために空けておき、テストでは別のポートかポート0を使います。 |
 | `local_network_denied` | OSやサンドボックスが、`agboard`に`127.0.0.1`を使わせない。 | Codexでは`agboard setup`を実行します。それ以外では、サンドボックスの外でコマンドを実行します。 |
 | `wait`・`message ask`・`message wait`・Hookの`board_unavailable` | 自動起動が無効、サーバーを起動できない、`serve.json`のサーバーが応えない、接続に失敗した、のどれか。技術的な失敗で、回答ではない。 | 理由を読みます。`serve.log`が示されていればそのファイルを、pidが示されていれば`agboard stop`を実行します。そのうえで`wait`を実行し直します。保存済みの質問は`message wait <question-id>`で待ち直します。 |
-| テストが7420でサーバーを起動する | テストが`AGBOARD_AUTOSTART=0`を付けずに`agboard`を実行している。 | `AGBOARD_AUTOSTART=0`を付けます。自動起動そのものの試験では`AGBOARD_AUTOSTART_PORT=0`を付けます。 |
-| テストがブラウザーのウィンドウを開く | 自動起動を有効にしたまま、`AGBOARD_OPEN_BROWSER=0`を付けずに`agboard`を実行している。 | `AGBOARD_OPEN_BROWSER=0`を付けます。開く処理の試験では、代わりに`AGBOARD_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。 |
+| テストが7420でサーバーを起動する | テストが`AGPJ_AUTOSTART=0`を付けずに`agboard`を実行している。 | `AGPJ_AUTOSTART=0`を付けます。自動起動そのものの試験では`AGPJ_AUTOSTART_PORT=0`を付けます。 |
+| テストがブラウザーのウィンドウを開く | 自動起動を有効にしたまま、`AGPJ_OPEN_BROWSER=0`を付けずに`agboard`を実行している。 | `AGPJ_OPEN_BROWSER=0`を付けます。開く処理の試験では、代わりに`AGPJ_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。 |
 | 自動のサーバーがボードを開かなかった | 待つ時間のうちにボードのページがつながった、または開く処理が無効になっている。 | `serve.log`を読みます。`Opened …`、理由つきの`Did not open …`、`Could not open …`のどれかが書かれています。[ボードを開く](./concepts/server-and-ui.md#opening-the-board)を参照。 |
 | 常駐エージェントが止まったが理由がわからない | 人の停止、再起動、モデルの変更、サーバーの終了、一度もつながらなかったセッションをボードが終わらせた、クラッシュのどれか。 | `serve.log`を読みます（バックグラウンドのサーバーの場合。フォアグラウンドのサーバーは同じ行を端末に表示します）。起動・停止の要求・終了ごとに、時刻（UTC）、ツール、起動ID、理由が1行で残っています。`exited abnormally`はクラッシュで、`ended after a stop`は直前の`stop requested`の行に続きます。直近5回の起動分のエージェントの出力は`resident/<ツール>.log`と`resident/<ツール>.1.log`〜`.4.log`にあります。 |
 | `cursor_invalid` | cursorの形式が誤っている、または別のプロジェクトのもの。 | 同じプロジェクトの`snapshot`から新しい`cursor`を取ります。 |

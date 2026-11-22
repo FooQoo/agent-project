@@ -89,11 +89,11 @@ function agboardEnv(home: string): NodeJS.ProcessEnv {
 }
 
 /**
- * The environment of an `agboard serve` the tests start. `AGBOARD_WATCH=poll` makes the serve poll the shared
+ * The environment of an `agboard serve` the tests start. `AGPJ_WATCH=poll` makes the serve poll the shared
  * folder instead of registering a macOS FSEvents watch, which can take tens of seconds per start.
  */
 export function serveEnv(home: string): NodeJS.ProcessEnv {
-  return { ...agboardEnv(home), AGBOARD_WATCH: 'poll' };
+  return { ...agboardEnv(home), AGPJ_WATCH: 'poll' };
 }
 
 export interface AgboardResult {

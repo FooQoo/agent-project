@@ -169,7 +169,7 @@ export const DomainFromEnvironment: Story = {
     const field = view.getByLabelText('ngrok domain');
     await expect(field).toHaveValue('example.ngrok-free.dev');
     await expect(field).toBeDisabled();
-    await expect(view.getByTestId('domain-note')).toHaveTextContent('AGBOARD_NGROK_DOMAIN');
+    await expect(view.getByTestId('domain-note')).toHaveTextContent('AGPJ_NGROK_DOMAIN');
   },
 };
 

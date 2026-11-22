@@ -1,7 +1,7 @@
 //! Starting the server when a command needs it, and its stopping by itself.
 //!
 //! These tests run the real binary with `AGPJ_HOME` in a temporary
-//! directory and with autostart on. `AGBOARD_AUTOSTART_PORT=0` makes every
+//! directory and with autostart on. `AGPJ_AUTOSTART_PORT=0` makes every
 //! automatic server listen on a port the OS picks, never 7420. A guard kills
 //! every server a test started, even when the test fails.
 
@@ -33,8 +33,8 @@ impl Board {
         let folder = home.path().join("project-folder");
         std::fs::create_dir_all(&folder).unwrap();
         let mut env = vec![
-            ("AGBOARD_AUTOSTART_PORT", "0".to_string()),
-            ("AGBOARD_OPEN_BROWSER", "0".to_string()),
+            ("AGPJ_AUTOSTART_PORT", "0".to_string()),
+            ("AGPJ_OPEN_BROWSER", "0".to_string()),
         ];
         env.extend(extra.iter().map(|(k, v)| (*k, v.to_string())));
         let board = Self { home, folder, env };
@@ -56,9 +56,9 @@ impl Board {
     fn command(&self) -> Command {
         let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
         command
-            .env_remove("AGBOARD_AUTOSTART")
-            .env_remove("AGBOARD_IDLE_TIMEOUT")
-            .env("AGBOARD_WATCH", "poll")
+            .env_remove("AGPJ_AUTOSTART")
+            .env_remove("AGPJ_IDLE_TIMEOUT")
+            .env("AGPJ_WATCH", "poll")
             .env("AGPJ_HOME", self.dir())
             .env("TZ", "UTC")
             .envs(self.env.iter().map(|(k, v)| (*k, v.as_str())))
@@ -344,10 +344,7 @@ fn commands_started_together_share_one_server() {
 
 #[test]
 fn an_unused_server_stops_by_itself_and_the_next_wait_starts_another() {
-    let board = Board::with_env(&[
-        ("AGBOARD_IDLE_TIMEOUT", "60"),
-        ("AGBOARD_IDLE_CHECK_MS", "500"),
-    ]);
+    let board = Board::with_env(&[("AGPJ_IDLE_TIMEOUT", "60"), ("AGPJ_IDLE_CHECK_MS", "500")]);
     let output = board.run(&Board::wait_args("1"));
     let stderr = text(&output.stderr);
     assert!(
@@ -372,10 +369,7 @@ fn an_unused_server_stops_by_itself_and_the_next_wait_starts_another() {
 
 #[test]
 fn an_open_event_stream_keeps_the_server_running() {
-    let board = Board::with_env(&[
-        ("AGBOARD_IDLE_TIMEOUT", "60"),
-        ("AGBOARD_IDLE_CHECK_MS", "500"),
-    ]);
+    let board = Board::with_env(&[("AGPJ_IDLE_TIMEOUT", "60"), ("AGPJ_IDLE_CHECK_MS", "500")]);
     let port = start_by_waiting(&board);
     let pid = board.serve_info().unwrap()["pid"].as_u64().unwrap();
     let mut stream = TcpStream::connect((Ipv4Addr::LOCALHOST, port)).unwrap();
@@ -465,7 +459,7 @@ fn the_hook_starts_the_server_in_the_background_but_not_after_stop() {
 
 #[test]
 fn autostart_off_keeps_the_old_error() {
-    let board = Board::with_env(&[("AGBOARD_AUTOSTART", "0")]);
+    let board = Board::with_env(&[("AGPJ_AUTOSTART", "0")]);
     let output = board.run(&Board::wait_args("1"));
     assert!(!output.status.success(), "{output:?}");
     let error: Value = serde_json::from_slice(&output.stderr).unwrap();
@@ -488,7 +482,7 @@ fn autostart_off_keeps_the_old_error() {
 fn a_taken_preferred_port_gives_another_and_says_why() {
     let held = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
     let taken = held.local_addr().unwrap().port();
-    let board = Board::with_env(&[("AGBOARD_AUTOSTART_PORT", &taken.to_string())]);
+    let board = Board::with_env(&[("AGPJ_AUTOSTART_PORT", &taken.to_string())]);
     let output = board.run(&Board::wait_args("1"));
     let stderr = text(&output.stderr);
     let port = started_port(&stderr);
