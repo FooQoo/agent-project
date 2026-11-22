@@ -3,8 +3,8 @@ import { withMermaid } from 'vitepress-plugin-mermaid'
 import { languageRedirectScript } from './theme/languageChoice'
 import { writeRedirects } from './redirects'
 
-const repo = 'https://github.com/FooQoo/agent-board'
-const base = '/agent-board/'
+const repo = 'https://github.com/FooQoo/agent-project'
+const base = '/agent-project/'
 
 type Page = { file: string; en: string; ja: string }
 type Group = { en: string; ja: string; pages: Page[] }
@@ -76,7 +76,7 @@ const devGroups: Group[] = [
     en: 'Concepts',
     ja: '基本の考え方',
     pages: [
-      { file: 'concepts/overview', en: 'How Agent Board works', ja: 'Agent Boardの仕組み' },
+      { file: 'concepts/overview', en: 'How Agent Project works', ja: 'Agent Projectの仕組み' },
       { file: 'concepts/work-model', en: 'The work model in code', ja: '仕事のモデルと実装' },
       { file: 'concepts/tasks-and-states', en: 'Tasks and states', ja: 'タスクと状態' },
       { file: 'concepts/history-and-decisions', en: 'History and decisions', ja: '履歴と判断依頼' },
@@ -128,7 +128,7 @@ function sidebar(prefix: string, chapter: string, lang: 'en' | 'ja', groups: Gro
 // https://vitepress.dev/reference/site-config
 export default withMermaid(
   defineConfig({
-    title: 'Agent Board',
+    title: 'Agent Project',
     base,
     cleanUrls: true,
     mermaid: {
@@ -222,7 +222,7 @@ export default withMermaid(
     },
 
     themeConfig: {
-      logo: { light: '/logo.png', dark: '/logo-white.png', alt: 'Agent Board' },
+      logo: { light: '/logo.png', dark: '/logo-white.png', alt: 'Agent Project' },
       socialLinks: [{ icon: 'github', link: repo }],
       search: {
         provider: 'local',

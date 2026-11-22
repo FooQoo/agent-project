@@ -12,7 +12,7 @@
   - Rust: `tests/file_size.rs`が確認し、`#[cfg(test)]`モジュールより前の行だけを数えます。
   - Web画面: `web/biome.json`のBiomeのルール`noExcessiveLinesPerFile`が確認するので、`pnpm --dir web check`で検出されます。同じコマンドが、続けて`web/src/`のimportの層と循環も検査します（[Webコードの置き場所](../concepts/server-and-ui.md#webコードの置き場所)）。
   - どうしても長いままにするファイルは、先頭行に理由つきでその旨を書きます。Rustでは`// file-size: allow (理由)`、Web画面では`// biome-ignore lint/style/noExcessiveLinesPerFile: 理由`です。この指定をしたファイルには上限がかからないので、できるだけ責務ごとに分けてください。Rustのテストは、理由のない指定や、上限に収まっているファイルに残った指定も失敗にします。
-- `docs/dev/reference/`の開発者向けリファレンスは、Agent Boardの現在の仕組みを記述します。振る舞いを変えるときは、同じ変更でリファレンスと`docs/ja/dev/reference/`の日本語訳を更新します。
+- `docs/dev/reference/`の開発者向けリファレンスは、Agent Projectの現在の仕組みを記述します。振る舞いを変えるときは、同じ変更でリファレンスと`docs/ja/dev/reference/`の日本語訳を更新します。
 - Hook、設定、スクリプト、文書、生成物に、マシン固有の絶対パスをコミットしないでください。個人のホームディレクトリやローカルのチェックアウト先も含みます。
 - プロジェクトのファイルや実行ファイルにはリポジトリ相対のパス、インストール済みのコマンドには`PATH`、実行時に解決する値には環境変数を使います。マシン固有の設定は、Gitの追跡対象から除外したローカルファイルに置きます。
 - コミット前にステージした差分を確認し、`/Users/`や`/home/`などの個人のパスを取り除きます。変更したHookのコマンドが、特定の利用者のディレクトリ構成に依存せずに動くことを確かめます。
@@ -46,15 +46,15 @@ pnpm --dir web build-storybook
 
 Webのフォーマットを適用するには`pnpm --dir web format`を実行します。手元でカバレッジを測るには、Webは`pnpm --dir web test:coverage`（結果は`web/coverage/`に出ます）、Rustは`cargo llvm-cov nextest`を実行します（[cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov)は`cargo install cargo-llvm-cov --locked`でインストールします）。
 
-[CIのワークフロー](https://github.com/FooQoo/agent-board/blob/main/.github/workflows/ci.yml)は、プルリクエストと`main`へのpushのたびに、同じ確認を実行します。
+[CIのワークフロー](https://github.com/FooQoo/agent-project/blob/main/.github/workflows/ci.yml)は、プルリクエストと`main`へのpushのたびに、同じ確認を実行します。
 
 - Rustのジョブは、Linux（`ubuntu-latest`）で`cargo fmt`、`cargo clippy`、`cargo nextest run`を実行します。
 - Webのジョブは、型チェック、リンター、単体テスト、Storybookのテストとビルドを実行します。Chromiumとそのシステムライブラリがあらかじめ入っている公式Playwrightコンテナイメージの中で動くため、ブラウザのインストールはしません。
 - E2Eビルドのジョブは、WebのUIとCLI、およびスマホ向けのスペックが使うテスト用バイナリ`monitor_phone_serve`を一度だけビルドし、成果物としてアップロードします。続くE2Eのジョブは、LinuxでPlaywrightのアプリのスイート（`pnpm --dir e2e test`）を実行します。スイートは5つのシャードに分け、Playwrightのコンテナイメージの中で並行して実行します。各シャードは成果物をダウンロードして`AGPJ_E2E_PREBUILT=1`を設定するため、グローバルセットアップはビルドを省き、`AGPJ_E2E_BINARY`と`AGPJ_E2E_PHONE_BACKEND`が指すバイナリを使います（イメージにRustのツールチェーンはありません）。どちらのジョブも、すべてのプルリクエスト、`main`へのpush、手動実行で動きます。
 - イメージのタグ（`mcr.microsoft.com/playwright:v<バージョン>-noble`、ダイジェストで固定）は、`web/package.json`と`e2e/package.json`のPlaywrightのバージョンと一致させます。Playwrightを更新するときは、同じ変更で`ci.yml`の2つのコンテナのジョブのタグも更新します。
-- カバレッジのジョブは、Rustのテストを`cargo llvm-cov nextest`で、Webの単体テストを`pnpm --dir web test:coverage`で計測し、両方の結果を[Codecov](https://codecov.io/gh/FooQoo/agent-board)に送ります。数値を報告するだけで、カバレッジが低くても実行は失敗しません。
+- カバレッジのジョブは、Rustのテストを`cargo llvm-cov nextest`で、Webの単体テストを`pnpm --dir web test:coverage`で計測し、両方の結果を[Codecov](https://codecov.io/gh/FooQoo/agent-project)に送ります。数値を報告するだけで、カバレッジが低くても実行は失敗しません。
 
-プルリクエストに新しいコミットが届くと、実行中のCIは取り消されます。`main`のCIは取り消されず、新しいpushは前の実行が終わるのを待ちます。そのため、マージのたびに最後まで走ったCIが残ります。プルリクエストがマージまたはクローズされると、[Cancel CI of a closed pull request](https://github.com/FooQoo/agent-board/blob/main/.github/workflows/cancel-closed-pr.yml)のワークフローがそのプルリクエストの残りのCIとRelease buildを取り消します。これで、`main`のCIが必要とするmacOSのランナーを占有し続けることはありません。
+プルリクエストに新しいコミットが届くと、実行中のCIは取り消されます。`main`のCIは取り消されず、新しいpushは前の実行が終わるのを待ちます。そのため、マージのたびに最後まで走ったCIが残ります。プルリクエストがマージまたはクローズされると、[Cancel CI of a closed pull request](https://github.com/FooQoo/agent-project/blob/main/.github/workflows/cancel-closed-pr.yml)のワークフローがそのプルリクエストの残りのCIとRelease buildを取り消します。これで、`main`のCIが必要とするmacOSのランナーを占有し続けることはありません。
 
 `main`へのプルリクエストと、スタックで`feature/`ブランチに向けたプルリクエストには、[CodeRabbit](https://www.coderabbit.ai/)も英語でレビューのコメントを付けます。ドラフトのプルリクエストと、それ以外のブランチへのプルリクエストは自動ではレビューされません。ドラフトのレビューが欲しいときは、レビュー可能な状態に切り替えてください。設定は`.coderabbit.yaml`にあります。
 
@@ -84,7 +84,7 @@ Playwrightのテストは`e2e/`にあります。初回は`pnpm --dir e2e instal
 - ワーカーごとに、一時的なデータ領域と、ポート0で起動した`agpj serve`を1つずつ持ちます。固定のポートは使わないため、2つのチェックアウトで同時に実行できます。
 - ワーカー数の既定値はCPU数の半分です。変えるときは`AGPJ_E2E_WORKERS`を設定するか、`--workers`を指定します。1つのファイルのテストは同じワーカーのボードを共有するため、1つのワーカーで順に実行されます。
 - 別の`agpj`バイナリを使うときは`AGPJ_E2E_BINARY`を指定します。`AGPJ_E2E_PREBUILT=1`（CIで使います）を設定すると、グローバルセットアップはビルドをせず、`AGPJ_E2E_BINARY`と`AGPJ_E2E_PHONE_BACKEND`が既存のファイルを指していることを求めます。`AGPJ_E2E_HOME`と`AGPJ_E2E_MAIN_URL`はワーカーのフィクスチャが設定するので、自分では設定しません。
-- 結果とトレースは、システムの一時ディレクトリにある`agent-board-e2e-results-<チェックアウト>`に、チェックアウトごとに保存されます。
+- 結果とトレースは、システムの一時ディレクトリにある`agent-project-e2e-results-<チェックアウト>`に、チェックアウトごとに保存されます。
 
 アプリのテストを書くときは、次の点を守ります。
 

@@ -1,6 +1,6 @@
 # 開発環境のセットアップ
 
-Agent Boardの開発に必要な環境を用意し、ビルド・動作確認・ソースからのインストールまでを行います。動作確認には一時的なボードを使います。コマンドはすべてリポジトリのルートで実行します。
+Agent Projectの開発に必要な環境を用意し、ビルド・動作確認・ソースからのインストールまでを行います。動作確認には一時的なボードを使います。コマンドはすべてリポジトリのルートで実行します。
 
 ## 始める前に
 
@@ -13,7 +13,7 @@ Agent Boardの開発に必要な環境を用意し、ビルド・動作確認・
 
 普段使っているボードへの影響を避けるため、次の二点を守ってください。
 
-- **一時的なデータ領域を使う。** 既定のデータ領域（macOSは`~/.agent-board/`、Windowsは`%USERPROFILE%\.agent-board\`）は普段使っているボードの保存先です。試すときやテストでは、`AGPJ_HOME`に一時ディレクトリを設定してください。この設定は現在のシェル内で有効です。
+- **一時的なデータ領域を使う。** 既定のデータ領域（macOSは`~/.agent-project/`、Windowsは`%USERPROFILE%\.agent-project\`）は普段使っているボードの保存先です。試すときやテストでは、`AGPJ_HOME`に一時ディレクトリを設定してください。この設定は現在のシェル内で有効です。
 - **ポート7420を空けておく。** 通常の利用の既定のポートです。ほかのポートか、テストではポート0を使ってください。
 - **コマンドがサーバーを起動することを知っておく。** `wait`、答えを待つ質問、Hookは、サーバーが動いていなければ、そのデータ領域のサーバーを裏で起動します。こうして起動したサーバーは、ボードをブラウザーでも開きます。試している間にサーバーを起動させたくなければ`AGPJ_AUTOSTART=0`を、ブラウザーだけ開かせたくなければ`AGPJ_OPEN_BROWSER=0`を設定してください。`agpj stop`で止められます。
 
@@ -44,7 +44,7 @@ just serve        # 保存されたボードとViteのHMR、Rustの監視(ポー
 ```
 
 - `just dev`はサンプルデータを配信し、Webのファイルが変わるとHMRでブラウザを更新します。
-- `just docs`はドキュメントサイトを`http://127.0.0.1:8662/agent-board/`で配信します。必要なら`just docs 8663`のように別のポートを指定できます。
+- `just docs`はドキュメントサイトを`http://127.0.0.1:8662/agent-project/`で配信します。必要なら`just docs 8663`のように別のポートを指定できます。
 - `just storybook`は部品とページのStoryを`http://127.0.0.1:8610/`で配信します。
 - `just serve`は実際のAPIに接続します。Rustのファイルが変わるとRustのサーバーを起動し直し、画面はViteのHMRで配信します。`http://127.0.0.1:7420/`を開きます。RustのAPIはポート7421を使います。ボードは通常の場所、または設定されていれば`AGPJ_HOME`から読みます。Rustが起動し直すと、書き込み用トークンを更新するためにページが再読み込みされます。
 - ほかのポートは引数で渡します。例: `just dev 5174`、`just serve 7500 7501`（Webのポート、RustのAPIのポートの順）。
@@ -70,16 +70,16 @@ cargo run -- serve --port <port>
 
 ## デモビルド {#demo-build}
 
-デモビルドは、同じサンプルデータのボードをサーバーなしの静的サイトで動かします。ドキュメントサイトの`/agent-board/demo/`で公開するのはこの版です。
+デモビルドは、同じサンプルデータのボードをサーバーなしの静的サイトで動かします。ドキュメントサイトの`/agent-project/demo/`で公開するのはこの版です。
 
 ```sh
 pnpm --dir web build:demo     # web/dist-demo/ に書き出す
-pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-board/demo/
+pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-project/demo/
 ```
 
 製品のビルドとの違いは次のとおりです。
 
-- ページは`/agent-board/demo/`から配信します。別のフォルダで配信するときは、ビルド時に`AGPJ_DEMO_BASE`を指定します（例: `AGPJ_DEMO_BASE=/demo/`）。
+- ページは`/agent-project/demo/`から配信します。別のフォルダで配信するときは、ビルド時に`AGPJ_DEMO_BASE`を指定します（例: `AGPJ_DEMO_BASE=/demo/`）。
 - サンプルデータのサーバーは、ページの中のService Worker（MSW）の後ろで動き、`/api/`へのリクエスト、ライブ更新、添付画像に応答します。ワーカーのスクリプトは`index.html`の隣に書き出します。Service Workerに対応しないブラウザでは、ボードの代わりにお知らせを表示します。
 - トークンは固定で、ビルドIDは空です。そのため新しいビルドを理由に再読み込みすることはありません。ページを再読み込みするとサンプルデータが元に戻り、初回の案内がもう一度表示されます。
 - パソコンが必要な機能は表示しません。対象は、プロジェクトのDocs（ファイルやフォルダを開くボタンを含む）、リモートアクセスの接続、貼り付けやドロップした画像の保存です。
@@ -127,7 +127,7 @@ Storyで使う架空の画像は`web/.storybook/static/`にあります。Storyb
 
 ## リリースをビルドする {#build-release}
 
-利用者はHomebrewでAgent Boardをインストールします（[インストールと起動](../../guide/getting-started.md)を参照）。この節は、リリースをビルドして公開する人のためのものです。ワークフローは`.github/workflows/release.yml`、スクリプトは`scripts/release/`にあります。
+利用者はHomebrewでAgent Projectをインストールします（[インストールと起動](../../guide/getting-started.md)を参照）。この節は、リリースをビルドして公開する人のためのものです。ワークフローは`.github/workflows/release.yml`、スクリプトは`scripts/release/`にあります。
 
 ### アーカイブと検査
 
@@ -158,7 +158,7 @@ Releaseを公開すると、`.github/workflows/homebrew-tap.yml`がFormulaを自
 
 1. `gh release download`で、そのタグの2つのアーカイブと`SHA256SUMS`を取得します。
 2. macOS 15でFormulaを作り、`scripts/release/test-formula.sh`と`ruby -c`で確認します。
-3. SSHで`FooQoo/homebrew-tap`をcloneし、`Formula/agpj.rb`をコピーします。ファイルが変わったときだけ、`github-actions[bot]`として`agpj X.Y.Z`をコミットし、既定ブランチへ直接pushします。保存してあるv1.1.1に固定した`Formula/agboard.rb`は書き換えません。`Formula/agpj.rb`以外が変わった場合はジョブが止まります。
+3. SSHで`FooQoo/homebrew-tap`をcloneし、`Formula/agpj.rb`をコピーします。ファイルが変わったときだけ、`github-actions[bot]`として`agpj X.Y.Z`をコミットし、既定ブランチへ直接pushします。
 
 ジョブは`homebrew-tap` Environmentで動きます。このEnvironmentは`v*`タグだけを受け付け、シークレット`HOMEBREW_TAP_DEPLOY_KEY`を持ちます。これはtapリポジトリの読み書きできるデプロイキーで、pushのあいだだけ権限0600の一時ファイルに書き、ジョブの最後に削除します。SSHは固定したGitHubのホスト鍵だけを受け入れます。権限は`contents: read`だけで、コマンドラインにシークレットは現れません。`release.yml`は関与しません。
 

@@ -10,7 +10,7 @@ title: トラブルシューティング
 
 | 症状 | 原因 | 対処 |
 | --- | --- | --- |
-| タスクがボードにない | ファイルが壊れている、またはサポートされない`formatVersion`を持つ。 | `agpj --project "My project" snapshot --json`を開き、`problems`を読みます。ファイル・項目・理由が書かれています。ファイルを手で直してください。Agent Boardは書き換えません。[ファイルに不備があるとき](../reference/file-format#ファイルに不備があるとき)を参照。 |
+| タスクがボードにない | ファイルが壊れている、またはサポートされない`formatVersion`を持つ。 | `agpj --project "My project" snapshot --json`を開き、`problems`を読みます。ファイル・項目・理由が書かれています。ファイルを手で直してください。Agent Projectは書き換えません。[ファイルに不備があるとき](../reference/file-format#ファイルに不備があるとき)を参照。 |
 | タスクに警告が出て、条件がない | `TASK.md`のfrontmatterが正しいYAMLでない。 | frontmatterを直します。その間も本文は表示されます。 |
 | エージェントが変更してもボードが更新されない | サーバーが動いていない、またはファイルがネットワークドライブにある。 | ページを再読み込みします。サーバーは、エージェントが待つときやHookが動くときに起動します。`agpj serve -d`で起動することもできます。ネットワークドライブは、ファイルの変更を知らせないことがあります。 |
 | ボードが勝手にブラウザーで開いた | エージェントのコマンドかHookがサーバーを裏で起動し、ボードのタブがつながっていなかった。起動のたびに一度だけ開きます。 | タブを開いたままにするか、`AGPJ_OPEN_BROWSER=0`を設定して止めます。[ボードをブラウザーで開く](../reference/cli#open-the-board-in-the-browser)を参照。 |
@@ -45,7 +45,7 @@ title: トラブルシューティング
 | エラー | 原因 | 対処 |
 | --- | --- | --- |
 | `already_serving` | このデータフォルダで、すでに別のサーバーが動いている。 | そちらを使うか、`agpj stop`で先に止めます。コマンドが起動したサーバーなら、`agpj serve -d`で動かし続けられます。それ以外では、ターミナルで`agpj serve -d`を実行すると、置き換えるかどうかを確認します。 |
-| `port_in_use` | `agpj serve`に指定したポートが使われている。メッセージに、データフォルダの違う別のAgent Boardのサーバーか、別のプログラムかが出る。 | 別のポートを選びます: `agpj serve --port 7421`。 |
+| `port_in_use` | `agpj serve`に指定したポートが使われている。メッセージに、データフォルダの違う別のAgent Projectのサーバーか、別のプログラムかが出る。 | 別のポートを選びます: `agpj serve --port 7421`。 |
 | `local_network_denied` | ローカルのネットワーク接続が許されていない環境なので、サーバーを起動することも、つなぐこともできない。 | Codexでは`agpj setup`を実行し、`agpj`をサンドボックスの外で動かせるようにします。 |
 | `database_busy` | ほかのコマンドがプロジェクトの書き込みロックを5秒以上保持している。 | コマンドをもう一度実行します。 |
 | `browser_open_failed` | `agpj open`が、ブラウザーを開くプログラム（`open`、`xdg-open`、`AGPJ_BROWSER_OPENER`）を起動できなかった。 | メッセージのアドレスを自分で開くか、そのプログラムを入れ直します。 |
@@ -68,10 +68,10 @@ title: トラブルシューティング
 | --- | --- | --- |
 | `setup asks which agent to set up and needs a terminal`や`asks for a confirmation and needs a terminal`（終了コード2） | パイプ、スクリプト、エージェントから、または`--json`付きで、質問の代わりになるオプションなしに起動されました。 | ターミナルで自分で実行するか、`--agent`と`--yes`（または`--dry-run`）を付けてください。 |
 | `The codex command was not found on PATH`（または`claude`）と表示され、エージェントが`skipped`になる | エージェントがインストールされていないか、コマンドが`PATH`上にありません。 | インストールするか`PATH`を直してから、もう一度実行してください。 |
-| `update`が`The Agent Board plugin is not installed`と表示する | `update`は、導入済みのプラグインだけを更新します。 | そのエージェントで`agpj setup`を実行してください。 |
+| `update`が`The Agent Project plugin is not installed`と表示する | `update`は、導入済みのプラグインだけを更新します。 | そのエージェントで`agpj setup`を実行してください。 |
 | エージェントが`failed`になり、理由に`codex plugin …`や`claude plugin …`がある | エージェント自身のプラグインコマンドが失敗しました。たとえばGitHubへのネットワーク接続がない場合です。メッセージの末尾に、そのコマンドの出力があります。 | 原因を取り除いてから、もう一度実行してください。すでに書き込んだ設定ファイルは、そのままで正しく使えます。 |
 | `sandbox_mode`や権限プロファイルについての手作業の手順 | Codexの権限設定では、データフォルダに書き込めません。setupはその設定を変えません。 | Codexの`config.toml`で`sandbox_mode = "workspace-write"`を自分で設定するか、権限プロファイルにデータフォルダを追加してから、もう一度`agpj setup`を実行してください。 |
-| `Codex lists no hooks of the Agent Board plugin`や`still does not trust the hook` | Codexでプラグインが有効になっていないか、Codexが信頼の設定を受け付けませんでした。 | `codex plugin list`でプラグインを確認し、Codexの`/hooks`でHookを確認してください。 |
+| `Codex lists no hooks of the Agent Project plugin`や`still does not trust the hook` | Codexでプラグインが有効になっていないか、Codexが信頼の設定を受け付けませんでした。 | `codex plugin list`でプラグインを確認し、Codexの`/hooks`でHookを確認してください。 |
 | エージェントがHookを実行しない | エージェントを再起動していないか、Claude CodeのHookを確認していません。 | 新しいセッションを始める（Claude Code）かCodexを再起動してから、`/hooks`でHookを確認してください。 |
 | 新しいセッションで、プラグインを更新中、または自動更新が完了しなかったと言われる | `agpj`を更新したあと、Hookが違うプラグインを見つけました。更新はバックグラウンドで動きます。終わらなかった、またはCodexのhookの信頼が必要です。 | 新しいセッションを始めると更新が有効になります。完了しなかったとき、またはCodexを使うときは、`agpj update`を実行してから、新しいセッションを始めてください。 |
 
@@ -79,10 +79,10 @@ title: トラブルシューティング
 
 ## macOSがagpjの実行を拒否する {#macos-will-not-run-agpj}
 
-Homebrewで入るコマンドは、Developer ID証明書で署名され、Appleの公証を受けています。macOSが実行を止めたときは、Gatekeeperを無効にしたり、隔離属性を自分で外したりしないでください。まず、`brew install fooqoo/tap/agboard`がエラーなく終わったか、MacがmacOS 15以降か、`agpj --version`が動くかを確認します。初回の起動では、macOSが公証を確認するためにネットワーク接続が必要な場合があります。それでも止まるときは、macOSの版とメッセージを添えて、[Issueを作成](https://github.com/FooQoo/agent-board/issues)してください。
+Homebrewで入るコマンドは、Developer ID証明書で署名され、Appleの公証を受けています。macOSが実行を止めたときは、Gatekeeperを無効にしたり、隔離属性を自分で外したりしないでください。まず、`brew install fooqoo/tap/agpj`がエラーなく終わったか、MacがmacOS 15以降か、`agpj --version`が動くかを確認します。初回の起動では、macOSが公証を確認するためにネットワーク接続が必要な場合があります。それでも止まるときは、macOSの版とメッセージを添えて、[Issueを作成](https://github.com/FooQoo/agent-project/issues)してください。
 
 ## それでも解決しないとき
 
 - `snapshot --json`の`problems`を読みます。ファイルや形式のエラーを説明しています。
 - どのデータフォルダを使っているか確かめます。CLI・サーバー・Hookは、同じ`AGPJ_HOME`を共有していなければなりません。[データとバックアップ](./data#データの保存先)を参照してください。
-- Agent Board自体を開発しているなら、[開発者向けのトラブルシューティング](../../dev/troubleshooting)が、ビルド・テスト・内部の失敗を扱います。
+- Agent Project自体を開発しているなら、[開発者向けのトラブルシューティング](../../dev/troubleshooting)が、ビルド・テスト・内部の失敗を扱います。

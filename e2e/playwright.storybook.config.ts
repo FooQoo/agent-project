@@ -15,7 +15,7 @@ export default defineConfig({
   retries: 0,
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  outputDir: path.join(os.tmpdir(), 'agent-board-storybook-e2e-results'),
+  outputDir: path.join(os.tmpdir(), 'agent-project-storybook-e2e-results'),
   reporter: [['list']],
   webServer: {
     command: `pnpm exec vite preview --host 127.0.0.1 --port ${port} --strictPort --outDir storybook-static`,

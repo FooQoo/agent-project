@@ -4,7 +4,7 @@
 
 ## ドキュメントサイト
 
-ドキュメントサイトは`docs/`にあり、VitePressでビルドします。利用者向けのガイド（`docs/guide/`）と、この開発者向けの章（`docs/dev/`）があります。英語が正本で、英語を変えるたびに`docs/ja/`の日本語ページも揃えます。`main`から`.github/workflows/docs.yml`でGitHub Pagesに公開し、`docs/**`、`web/**`、デモのスイートを変えるプルリクエストではビルドとテストだけを行います。同じワークフローが、サイトのあとに[デモ](./getting-started/setup.md#demo-build)をビルドし、`web/dist-demo/`を`docs/.vitepress/dist/demo/`へコピーするので、デモは`/agent-board/demo/`で配信されます。続けてその出力に対してデモのスイートを実行し、失敗したときはアップロードの前に止まります。詳しくは[ブラウザのデモ](./concepts/demo.md#手元で確かめる)を参照してください。デモはVitePressのページではないため、ガイドからのリンクには完全なURLを使います。
+ドキュメントサイトは`docs/`にあり、VitePressでビルドします。利用者向けのガイド（`docs/guide/`）と、この開発者向けの章（`docs/dev/`）があります。英語が正本で、英語を変えるたびに`docs/ja/`の日本語ページも揃えます。`main`から`.github/workflows/docs.yml`でGitHub Pagesに公開し、`docs/**`、`web/**`、デモのスイートを変えるプルリクエストではビルドとテストだけを行います。同じワークフローが、サイトのあとに[デモ](./getting-started/setup.md#demo-build)をビルドし、`web/dist-demo/`を`docs/.vitepress/dist/demo/`へコピーするので、デモは`/agent-project/demo/`で配信されます。続けてその出力に対してデモのスイートを実行し、失敗したときはアップロードの前に止まります。詳しくは[ブラウザのデモ](./concepts/demo.md#手元で確かめる)を参照してください。デモはVitePressのページではないため、ガイドからのリンクには完全なURLを使います。
 
 ```sh
 pnpm --dir docs install
@@ -17,10 +17,10 @@ pnpm --dir docs preview --port <port>   # ビルドしたサイトを配信
 
 トップページにはMarkdownの本文がありません。文言は`docs/index.md`と`docs/ja/index.md`のfrontmatterにある`landing`に置き、`docs/.vitepress/theme/LandingPage.vue`がそれを配置します。言語に合ったスクリーンショットを選び、ダークテーマではボードの画像をダーク版に切り替えるのもこのコンポーネントです。文言は両方のファイルで直し、キーをそろえてください。frontmatterのリンクはbuildのリンク切れ検査の対象外なので、サイトのテストがトップページのすべてのリンクを開いて確かめます。配色は`custom.css`の`--lp-*`変数で、アプリの列と待機中の色に合わせています。
 
-英語のトップページ(`/agent-board/`)は、ブラウザの中で表示する言語を選びます。
+英語のトップページ(`/agent-project/`)は、ブラウザの中で表示する言語を選びます。
 
-- ブラウザの優先言語が日本語(`navigator.languages`の先頭が`ja`で始まる)なら、`/agent-board/ja/`へ移ります。
-- ナビの言語切り替え(PCでもスマートフォンでも)で選んだ言語は、`localStorage`の`agent-board-docs-lang`に保存します。以後はブラウザの言語より保存した選択を優先します。
+- ブラウザの優先言語が日本語(`navigator.languages`の先頭が`ja`で始まる)なら、`/agent-project/ja/`へ移ります。
+- ナビの言語切り替え(PCでもスマートフォンでも)で選んだ言語は、`localStorage`の`agent-project-docs-lang`に保存します。以後はブラウザの言語より保存した選択を優先します。
 - 移動するのは英語のトップページだけです。個別ページへの直接のリンク、日本語のページ、サイト内の移動では移りません。ストレージが使えないときは選択を保存せず、ブラウザの言語で決めます。
 
 移動はブラウザの中だけで行うため、どのページもビルドしたHTMLは検索エンジン向けに変わりません。仕組みは`docs/.vitepress/theme/languageChoice.ts`にまとめています。`config.ts`がトップページにだけ、charsetの直後、スタイルシートより前に移動用のスクリプトを埋め込むので、英語のページはほとんど見えないうちに移ります。スクリプトは設定の`base`を使います。選択の保存は、テーマの`enhanceApp`が言語切り替えのリンクのクリックを受けて行います。`e2e/docs/language.spec.ts`のサイトテストが、日本語と英語のブラウザ、保存した選択、スマートフォンのメニュー、ストレージが使えない場合、直接のリンクを確かめます。
@@ -54,7 +54,7 @@ node e2e/scripts/demo-video.mjs         # docs/public/videos/(ffmpegも必要)
 - サイトのリリースノートのページ。`docs/releases.md`とその日本語訳の`docs/ja/releases.md`で、公開済みの版を新しい順に並べます。Releaseを公開したら、新しい版を両方のページに書き足してください。スクリプトはこのページを書きません。
 
 ```sh
-node scripts/release/docs-release.mjs --github --repo FooQoo/agent-board   # 公開するサイト
+node scripts/release/docs-release.mjs --github --repo FooQoo/agent-project   # 公開するサイト
 node scripts/release/docs-release.mjs --fixture                              # 公開済みの状態を手元で確認
 node scripts/release/docs-release.mjs --none                                 # リリース前の状態（既定）
 pnpm --dir docs build

@@ -80,7 +80,7 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | Code | When | Exit | HTTP |
 | --- | --- | --- | --- |
 | `already_serving` | Another `serve` already runs on this data area. When it was started automatically, the reason says to run `agpj serve -d` to keep it. | 1 | n/a |
-| `port_in_use` | The port given to `serve` is taken. The reason names what holds it: another Agent Board server with a different data area (with its pid), or another program. An automatic server takes another port instead. | 1 | n/a |
+| `port_in_use` | The port given to `serve` is taken. The reason names what holds it: another Agent Project server with a different data area (with its pid), or another program. An automatic server takes another port instead. | 1 | n/a |
 | `local_network_denied` | The OS or a sandbox refused to let `agpj` listen on or connect to `127.0.0.1` (`EACCES` or `EPERM`). In Codex, `agpj setup` allows `agpj` to run outside the sandbox. | 1 | n/a |
 | `board_unavailable` | A waiting `message ask`, `message wait`, `wait`, `open`, or the hook cannot reach the server: autostart is off (`AGPJ_AUTOSTART=0`), the server could not start (the reason names `serve.log`), the server named in `serve.json` does not answer, or the connection failed. A waiting `message ask` checks the server before saving, so an unavailable server leaves no question; `--no-wait` needs no server. | 1 | n/a |
 | `remote_unavailable` | `show remote` with `--project` has no ready ngrok connection to report: no server is running, or the connection is not `ready` (disabled, starting, reconnecting, failed, and so on). The reason says which; when the connection failed, it names the failure code. Nothing is started, and no address or passcode is printed. | 1 | n/a |
@@ -132,7 +132,7 @@ These are returned by the `/api/projects/{projectId}/docs/…` routes (see [Web 
 | `docs_not_markdown` | The file routes were given a name that does not end in `.md` or `.mdx`. | n/a | 415 |
 | `docs_asset_type` | The image route was given a file that is not PNG, JPEG, WebP, GIF, AVIF, or SVG. | n/a | 415 |
 | `docs_open_failed` | The open route could not open `docs/` or the file: the folder does not exist, or the program could not be started. The `reason` says which. | n/a | 500 |
-| `release_doc_refused` | `release doc` did not write the release document: its `agboard:generated` marker lines are not exactly one start line followed by one end line, the path is not a regular file, or the file changed while it was generated. The file is left as it was. Fix the markers or run the command again. | 1 | 409 |
+| `release_doc_refused` | `release doc` did not write the release document: its `agpj:generated` marker lines are not exactly one start line followed by one end line, the path is not a regular file, or the file changed while it was generated. The file is left as it was. Fix the markers or run the command again. | 1 | 409 |
 | `docs_too_large` | A file over 2 MiB, or an image over 10 MiB. | n/a | 413 |
 | `docs_not_utf8` | The file is not valid UTF-8 text. It is not changed. | n/a | 422 |
 

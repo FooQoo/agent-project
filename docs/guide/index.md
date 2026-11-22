@@ -12,24 +12,24 @@ import { withBase } from 'vitepress'
 
 From a request to Done: you ask for the work with **Ask AI**, the agent turns it into tasks on the board and asks what only you can decide, and you answer on the task. The agent then starts its plan, and when every acceptance condition of a task is checked, the task moves to Done on its own.
 
-Want to see it for yourself? [Try the demo](https://fooqoo.github.io/agent-board/demo/) in your browser, with nothing to install. It opens the first-run guide on sample data, in Japanese when your browser prefers Japanese and in English otherwise. Reloading the page starts it over.
+Want to see it for yourself? [Try the demo](https://fooqoo.github.io/agent-project/demo/) in your browser, with nothing to install. It opens the first-run guide on sample data, in Japanese when your browser prefers Japanese and in English otherwise. Reloading the page starts it over.
 
 ## The problem: big work does not finish without you
 
 You can hand a big piece of work to an AI agent, but it rarely runs to the end on its own. Someone has to turn the request into a plan, notice when the agent is stuck or off course, catch the question that scrolled past in the chat, explain the work again after a new session starts, and check at the end whether it is really done. The agent works, and you keep watching.
 
-Agent Board is built to cut that watching down. It does not run the agent. It gives the agent a structure to work inside, so that you can ask for the work, answer when you are asked, and stay away the rest of the time.
+Agent Project is built to cut that watching down. It does not run the agent. It gives the agent a structure to work inside, so that you can ask for the work, answer when you are asked, and stay away the rest of the time.
 
-## Agent Board: a shared workspace
+## Agent Project: a shared workspace
 
-An agent such as Claude Code or Codex already has what it needs to act: tools, context, and a loop. What it lacks is a shared model of the work itself. Agent Board is that layer: a **shared workspace** where your agent plans and reports, and you answer. It does not run the agent. It keeps four things in one place:
+An agent such as Claude Code or Codex already has what it needs to act: tools, context, and a loop. What it lacks is a shared model of the work itself. Agent Project is that layer: a **shared workspace** where your agent plans and reports, and you answer. It does not run the agent. It keeps four things in one place:
 
 - **A plan.** Epics group the work and set its order, and tasks are the pieces that can be reviewed on their own. The agent reads the order to know what to do next.
 - **Acceptance conditions.** Each task says up front what has to be true for it to be finished, and the agent checks them before it calls the task done.
 - **Questions the agent must stop for.** When a decision is yours, the agent asks with choices and waits. The question and your answer are recorded once, whichever monitor you answer in.
 - **A history.** Every move, question, answer, and check is recorded with its reason, so a new session or a different agent can continue from where the last one stopped, and you can read back what happened.
 
-Everything is stored as plain files on your machine, and you and the agent read and write the same files. See [The work model](./work-model) for the elements, the states, and what Agent Board guarantees.
+Everything is stored as plain files on your machine, and you and the agent read and write the same files. See [The work model](./work-model) for the elements, the states, and what Agent Project guarantees.
 
 ## How delegation works
 
@@ -90,4 +90,4 @@ New here? Read the first four pages in order.
 | Know where files live, back them up | [Data and backups](./operations/data) |
 | Fix something that does not work | [Troubleshooting](./operations/troubleshooting) |
 
-For what the Agent Board plugin installs in Claude Code and Codex, see the [plugin guide](https://github.com/FooQoo/agent-board/blob/main/plugins/agent-board/README.md). If you want to change Agent Board itself, read the [developer guide](../dev/).
+For what the Agent Project plugin installs in Claude Code and Codex, see the [plugin guide](https://github.com/FooQoo/agent-project/blob/main/plugins/agent-project/README.md). If you want to change Agent Project itself, read the [developer guide](../dev/).

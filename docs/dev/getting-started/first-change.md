@@ -2,7 +2,7 @@
 
 This tutorial traces one existing rule through the code, from the command to the file to its test, so that you learn where things are before you change something. The rule: **an AI agent cannot move a task to Done while an acceptance condition is unmet.**
 
-You need a working build. If you have not built Agent Board yet, start with [Set up and run](./setup.md).
+You need a working build. If you have not built Agent Project yet, start with [Set up and run](./setup.md).
 
 ## 1. See the rule in action
 
@@ -64,7 +64,7 @@ Suppose a person also had to confirm Done when conditions are unmet. A real chan
 3. Run `TZ=UTC cargo test --test acceptance_cli`, then the whole suite.
 4. Update the page that describes the rule. This one is in [History and decisions](../concepts/history-and-decisions.md#acceptance-conditions-and-automatic-done), and its Japanese translation in `docs/ja/dev/`.
 
-You do not need to make this change; the point is the path: **command → shared rule in `file_store` → error code → test → documentation.** Almost every change in Agent Board follows it.
+You do not need to make this change; the point is the path: **command → shared rule in `file_store` → error code → test → documentation.** Almost every change in Agent Project follows it.
 
 ## Where to go next
 

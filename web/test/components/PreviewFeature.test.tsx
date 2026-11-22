@@ -15,8 +15,8 @@ import {
   type PreviewFeature,
 } from '../../src/shared/ui/preview-feature/feature-stage';
 
-const EN = 'https://fooqoo.github.io/agent-board/guide/feature-stages';
-const JA = 'https://fooqoo.github.io/agent-board/ja/guide/feature-stages';
+const EN = 'https://fooqoo.github.io/agent-project/guide/feature-stages';
+const JA = 'https://fooqoo.github.io/agent-project/ja/guide/feature-stages';
 
 beforeAll(() => {
   // jsdom has no matchMedia; the Docs dialog asks for the phone layout through it.

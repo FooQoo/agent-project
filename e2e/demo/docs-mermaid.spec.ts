@@ -19,7 +19,7 @@ const pages = [
 for (const width of [390, 1280]) {
   for (const locale of ['', 'ja/']) {
     for (const page of pages) {
-      const path = `/agent-board/${locale}${page}`;
+      const path = `/agent-project/${locale}${page}`;
       test(`Mermaid labels are not clipped at ${width}px: ${path}`, async ({ page: browserPage }) => {
         await browserPage.setViewportSize({ width, height: 900 });
         await browserPage.goto(path);

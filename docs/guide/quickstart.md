@@ -28,7 +28,7 @@ Choose **Ask AI** in the board's header and ask for a piece of work that is more
 
 > Add a dark mode to the settings page, and update the docs.
 
-Choose **Send request**. The request counts under **Your requests** in the **Messages** band until an agent takes it. A session that waits on the board takes it at once: one you keep there with `/agent-board:wait`, or a resident agent started from **Settings** (see [Working with agents](./delegate/agents)). You can also ask in the agent's chat instead.
+Choose **Send request**. The request counts under **Your requests** in the **Messages** band until an agent takes it. A session that waits on the board takes it at once: one you keep there with `/agent-project:wait`, or a resident agent started from **Settings** (see [Working with agents](./delegate/agents)). You can also ask in the agent's chat instead.
 
 You do not set up tasks or conditions. The agent reads the board, and for a request of this size it registers a plan at once: an epic with its goal and scope, and the tasks in the order they will be done, each with its acceptance conditions. If you asked for the plan only, the cards wait in the Backlog, which means "do not start", so none of them starts yet. On the board they are ordinary cards in Todo with a **Draft** badge for now. Open them to read the plan while the agent asks about it.
 
@@ -58,7 +58,7 @@ If you want to see the loop without an agent, you can play the agent yourself wi
 
 ### The first-run guide
 
-The first time you open a board in this data area, Agent Board offers a short guide. Choose **Start guide** to see the whole loop: you send a request with **Ask AI**, the agent turns it into a plan on the board, asks you a question, and then does the work. The guide runs in your browser: it simulates the agent and draws the plan over the board. Your board and your data are never changed. No AI agent or API key is needed. You send a prepared sample request from the real **Ask AI** window (you can attach the sample cards to it with **Attach task**) and answer the agent's question in the same answer form you use for real questions, and nothing you send or choose there goes anywhere.
+The first time you open a board in this data area, Agent Project offers a short guide. Choose **Start guide** to see the whole loop: you send a request with **Ask AI**, the agent turns it into a plan on the board, asks you a question, and then does the work. The guide runs in your browser: it simulates the agent and draws the plan over the board. Your board and your data are never changed. No AI agent or API key is needed. You send a prepared sample request from the real **Ask AI** window (you can attach the sample cards to it with **Attach task**) and answer the agent's question in the same answer form you use for real questions, and nothing you send or choose there goes anywhere.
 
 - **Skip** closes the guide. The guide is not shown again in this data area.
 - **End guide** ends the guide early, and so does Escape, unless you are typing in an answer field. Like **Skip**, it closes the guide for good. **Finish and get started** at the last step also closes it for good.

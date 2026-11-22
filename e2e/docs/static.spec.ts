@@ -146,7 +146,7 @@ test.describe('removed documents (AC-10)', () => {
   });
 
   test('the READMEs link to the site', () => {
-    const site = 'https://fooqoo.github.io/agent-board/';
+    const site = 'https://fooqoo.github.io/agent-project/';
     for (const file of ['README.md', 'README.ja.md']) {
       expect(readRepoFile(file), file).toContain(site);
     }
@@ -201,8 +201,8 @@ test.describe('contributor instructions (AC-10)', () => {
   }
 
   for (const [file, site] of [
-    ['CONTRIBUTING.md', 'https://fooqoo.github.io/agent-board/dev/getting-started/setup'],
-    ['CONTRIBUTING.ja.md', 'https://fooqoo.github.io/agent-board/ja/dev/getting-started/setup'],
+    ['CONTRIBUTING.md', 'https://fooqoo.github.io/agent-project/dev/getting-started/setup'],
+    ['CONTRIBUTING.ja.md', 'https://fooqoo.github.io/agent-project/ja/dev/getting-started/setup'],
   ]) {
     test(`${file} points to the contributor guide on the site`, () => {
       expect(readRepoFile(file)).toContain(site);
@@ -258,9 +258,9 @@ test.describe('site sources', () => {
     expect(pairs).toHaveLength(11);
     for (const [from, to] of pairs.flatMap(([f, t]) => [[f, t], [`ja/${f}`, `ja/${t}`]])) {
       const html = fs.readFileSync(path.join(dist, `${from}.html`), 'utf8');
-      expect(html, from).toContain(`<link rel="canonical" href="/agent-board/${to}">`);
-      expect(html, from).toContain(`http-equiv="refresh" content="0; url=/agent-board/${to}"`);
-      expect(html, from).toContain(`<a href="/agent-board/${to}">`);
+      expect(html, from).toContain(`<link rel="canonical" href="/agent-project/${to}">`);
+      expect(html, from).toContain(`http-equiv="refresh" content="0; url=/agent-project/${to}"`);
+      expect(html, from).toContain(`<a href="/agent-project/${to}">`);
       expect(fs.existsSync(path.join(dist, `${to}.html`)), to).toBe(true);
     }
   });

@@ -65,7 +65,7 @@ flowchart LR
 | 配信の台帳（どの端末に何を送ったか） | `<データ領域>/.internal/push-ledger.json`。所有者だけが読み書きでき、アトミックに置き換える。[共有ファイル](../reference/files.md#プッシュ配信の台帳)を参照。 |
 | Web Pushの購読（端末ごとのendpointと鍵）とVAPID鍵ペア | `<データ領域>/.internal/push-subscriptions.json`と`vapid-key.json`。所有者だけが読み書きできる、アプリの内部ファイル。原子的に置き換える。[共有ファイル](../reference/files.md#web-pushの購読)を参照。 |
 | `enabled`、`revision` | `<データ領域>/.internal/monitor-connection.json`。所有者だけが読み書きできる、アプリの内部ファイル。[共有ファイル](../reference/files.md#モニター接続の設定)を参照。 |
-| ngrokのトークン | 利用者が保存しない限り、メモリーだけ。保存したトークンは、このPCの安全な保管場所であるOSの資格情報ストア（service `agent-board`、account `ngrok-authtoken`）。 |
+| ngrokのトークン | 利用者が保存しない限り、メモリーだけ。保存したトークンは、このPCの安全な保管場所であるOSの資格情報ストア（service `agent-project`、account `ngrok-authtoken`）。 |
 | スマホの合言葉とその間違いの回数、アプリsession、CSRFトークン | 一回の起動の間、メモリーだけ。 |
 | 言語とカラーテーマ | `<データ領域>/.internal/preferences.json`。PCまたはスマホからの保存で書き込む。[共有ファイル](../reference/files.md#表示設定)を参照。 |
 

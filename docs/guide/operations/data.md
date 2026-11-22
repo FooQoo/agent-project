@@ -4,21 +4,21 @@ title: Data and backups
 
 # Data and backups
 
-Agent Board keeps everything as plain files in one folder on your machine. This page shows where they are, how projects and folders are registered, how to give agents access to the folder, and how to back it up.
+Agent Project keeps everything as plain files in one folder on your machine. This page shows where they are, how projects and folders are registered, how to give agents access to the folder, and how to back it up.
 
 ## Where the data lives
 
-The default data folder is `.agent-board/` directly in your home directory:
+The default data folder is `.agent-project/` directly in your home directory:
 
 | OS | Default folder |
 | --- | --- |
-| macOS | `~/.agent-board/` |
-| Windows | `%USERPROFILE%\.agent-board\` |
+| macOS | `~/.agent-project/` |
+| Windows | `%USERPROFILE%\.agent-project\` |
 
 Set `AGPJ_HOME` to use another data folder. An empty value counts as unset. The CLI, server, hooks, and `agpj setup` must use the same folder to share a board.
 
 ```text
-.agent-board/
+.agent-project/
   bindings.json          folder registrations (machine-specific)
   serve.json             how the CLI finds a running agpj serve
   serve.log              output of a server started in the background
@@ -57,7 +57,7 @@ Projects that were saved by an earlier build are converted once, the first time 
 
 A `task.json` or `epic.json` that holds `"draft": "ai"` is an invalid file: the board reports it, leaves it out, and leaves it unchanged.
 
-Each project's `docs/` folder holds your own Markdown documents, which you read and edit from **Docs** in the board header. Agent Board creates the folder with a short `README.md` and an empty `docs/release/` folder (an existing project gets `docs/release/` the first time you add or generate a version), but it does not treat the files as board data: changing them never changes the board, with one exception: the `*.md` files directly inside `docs/release/` are the project's list of versions (`v1.8.0.md` lists `v1.8.0`), so adding or removing one changes that list. See [Project docs](../watch/docs).
+Each project's `docs/` folder holds your own Markdown documents, which you read and edit from **Docs** in the board header. Agent Project creates the folder with a short `README.md` and an empty `docs/release/` folder (an existing project gets `docs/release/` the first time you add or generate a version), but it does not treat the files as board data: changing them never changes the board, with one exception: the `*.md` files directly inside `docs/release/` are the project's list of versions (`v1.8.0.md` lists `v1.8.0`), so adding or removing one changes that list. See [Project docs](../watch/docs).
 
 ## Projects and folders
 
@@ -87,11 +87,11 @@ Registrations live separately in `bindings.json` in the data folder and contain 
 
 ## Set up the shared folder
 
-`agpj setup` prepares the data folder for Codex and Claude Code, and installs the Agent Board plugin (see [Working with agents](../delegate/agents#set-up-your-agents)). It needs no project. For the data folder it does the following:
+`agpj setup` prepares the data folder for Codex and Claude Code, and installs the Agent Project plugin (see [Working with agents](../delegate/agents#set-up-your-agents)). It needs no project. For the data folder it does the following:
 
 - creates the data folder and its `shared/` folder;
 - adds the data folder to `sandbox_workspace_write.writable_roots` in Codex's `config.toml`, in `$CODEX_HOME` or `~/.codex`;
-- writes `rules/agboard.rules` in the same Codex folder, so that Codex runs `agpj` without asking, unless the file exists already;
+- writes `rules/agpj.rules` in the same Codex folder, so that Codex runs `agpj` without asking, unless the file exists already;
 - adds the data folder to `permissions.additionalDirectories` in Claude Code's `settings.json`, in `$CLAUDE_CONFIG_DIR` or `~/.claude`.
 
 ```sh
@@ -103,21 +103,21 @@ agpj setup
 
 ```text
 Dry run: nothing was installed, created, or changed.
-Data directory: <home>/.agent-board
-Shared folder: <home>/.agent-board/shared
+Data directory: <home>/.agent-project
+Shared folder: <home>/.agent-project/shared
 Codex: planned
-  plugin: install version X.Y.Z from https://github.com/FooQoo/agent-board.git at vX.Y.Z
+  plugin: install version X.Y.Z from https://github.com/FooQoo/agent-project.git at vX.Y.Z
   planned <home>/.codex/config.toml
-    - add "<home>/.agent-board" to sandbox_workspace_write.writable_roots
-  planned <home>/.codex/rules/agboard.rules
+    - add "<home>/.agent-project" to sandbox_workspace_write.writable_roots
+  planned <home>/.codex/rules/agpj.rules
     - allow the agpj command (prefix_rule)
 Claude Code: planned
-  plugin: install version X.Y.Z from https://github.com/FooQoo/agent-board.git at vX.Y.Z
+  plugin: install version X.Y.Z from https://github.com/FooQoo/agent-project.git at vX.Y.Z
   planned <home>/.claude/settings.json
-    - add "<home>/.agent-board" to permissions.additionalDirectories
+    - add "<home>/.agent-project" to permissions.additionalDirectories
 ```
 
-Setup keeps every existing setting and changes only the arrays above. Before it changes an existing settings file, it writes a backup next to that file, named `<file>.agboard-backup…`. The backup holds your original settings, so keep it out of shared folders. Running setup again changes nothing, and each file is reported as `unchanged`. If a settings file cannot be read or has the wrong shape, setup writes nothing at all and names the file.
+Setup keeps every existing setting and changes only the arrays above. Before it changes an existing settings file, it writes a backup next to that file, named `<file>.agpj-backup…`. The backup holds your original settings, so keep it out of shared folders. Running setup again changes nothing, and each file is reported as `unchanged`. If a settings file cannot be read or has the wrong shape, setup writes nothing at all and names the file.
 
 Setup changes Codex's `config.toml` only when `sandbox_mode` is `"workspace-write"` and no permission profile (`default_permissions`, `permissions`, `profile`, or `profiles`) is set. Otherwise it leaves the file as it is and shows the manual step; the plugin is still installed. Setup never changes `sandbox_mode` itself. With `sandbox_mode = "danger-full-access"`, Codex already reaches every folder, so setup writes neither the permission nor the rule file.
 

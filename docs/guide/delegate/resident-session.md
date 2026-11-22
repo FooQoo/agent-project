@@ -4,7 +4,7 @@ title: Resident agent
 
 # Resident agent
 
-A resident agent is an agent session that Agent Board starts for you and keeps attached to the board. The board sends it your requests, the answers to its questions, and the tasks that are ready, only while it is idle: the open requests together in one message, the answers together in one message, and tasks one at a time. So you do not have to start an agent in a terminal first or keep a wait command running. A session you started yourself in a terminal is not affected: it keeps waiting on the board and is counted as an external session (see below). You start and stop it from **Settings**.
+A resident agent is an agent session that Agent Project starts for you and keeps attached to the board. The board sends it your requests, the answers to its questions, and the tasks that are ready, only while it is idle: the open requests together in one message, the answers together in one message, and tasks one at a time. So you do not have to start an agent in a terminal first or keep a wait command running. A session you started yourself in a terminal is not affected: it keeps waiting on the board and is counted as an external session (see below). You start and stop it from **Settings**.
 
 ::: info Public preview
 This feature is in public preview. Its behavior and specifications may change. See [Feature stages](../feature-stages#resident-sessions) for its current limitations.
@@ -37,7 +37,7 @@ The log is read on the PC only, so the pane is not available through [remote acc
 
 ## Start automatically {#start-automatically}
 
-Turn on **Start automatically when Agent Board starts** to start the session each time the board starts. The board remembers one choice in total: the tool, the model, and the project you had open. Turning it off does not stop a running session.
+Turn on **Start automatically when Agent Project starts** to start the session each time the board starts. The board remembers one choice in total: the tool, the model, and the project you had open. Turning it off does not stop a running session.
 
 ## States {#states}
 

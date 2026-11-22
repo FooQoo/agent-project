@@ -1,6 +1,6 @@
 # Security model
 
-Agent Board is a local tool for one person working with cooperative agents. This page states what it protects, how each protection works, and what it deliberately does not prevent. Read it before changing anything that writes data, serves content, or touches agent settings.
+Agent Project is a local tool for one person working with cooperative agents. This page states what it protects, how each protection works, and what it deliberately does not prevent. Read it before changing anything that writes data, serves content, or touches agent settings.
 
 ## Assumptions and goals
 
@@ -50,7 +50,7 @@ Anyone who can open the ngrok address reaches ngrok's Edge first, not the board.
 - The passcode is shown to the PC only: in the local status answer while the connection is `ready`, in the connection dialog, and on the `serve` startup line. It is never written to a file, a log, `serve.json`, the page, or an error; the failed-guess count is never reported.
 - The passcode, sessions, CSRF tokens, and the ngrok token live only in memory. Stopping, starting again, or restarting the server drops them, ends open event streams, and makes a new passcode with a clean count.
 - The ngrok token is accepted only in the body of the local start request, is never returned or written to the settings file, and, when the user chooses to keep it, is stored in the PC's secure storage (the OS credential store). The `NGROK_AUTHTOKEN` environment variable takes priority over a saved token.
-- **Traffic Inspector.** ngrok ends the HTTPS connection, so it can process traffic, and its Traffic Inspector keeps request and response details when **Full Capture** is enabled for the account. Agent Board cannot turn that off; the user checks that it is disabled in the ngrok dashboard under **Settings** → **Observability**.
+- **Traffic Inspector.** ngrok ends the HTTPS connection, so it can process traffic, and its Traffic Inspector keeps request and response details when **Full Capture** is enabled for the account. Agent Project cannot turn that off; the user checks that it is disabled in the ngrok dashboard under **Settings** → **Observability**.
 - Without a session the entry serves only the page shell and its static files, and none of them holds a token or board data; every API and the event stream answer 401 until a session exists. Unknown routes are 404 and disallowed methods are 405, and authentication is evaluated before the target is looked up. A change needs the exact public Origin, `Sec-Fetch-Site: same-origin`, and the session's CSRF token; the local `X-Agpj-Token` plays no part and is removed.
 
 ## The Tailscale entrance
@@ -130,7 +130,7 @@ What is refused:
 - **No writes.** There is no route that writes, creates, renames, or deletes a file in the docs. A `PUT` to the file route is refused (405).
 - **Exposure.** The routes are on the board router. The ngrok entrance serves them behind its session, so a phone with a session can read the docs, but `docs/open`, which starts a program on the PC, is never served there.
 
-The root folder comes from the server's own data area and the ProjectId in the URL, never from the request body. The folder is the user's: Agent Board writes only the README, when it creates the folder.
+The root folder comes from the server's own data area and the ProjectId in the URL, never from the request body. The folder is the user's: Agent Project writes only the README, when it creates the folder.
 
 ### MDX in the Docs
 
@@ -153,7 +153,7 @@ What this protects: the token and the files stay out of reach of a document's co
 
 ## Agent access setup
 
-`setup` adds only the resolved Agent Board data area, never the whole home directory or other folders. That grants the agent access to all of the user's board data, so it is applied to the agent's user settings.
+`setup` adds only the resolved Agent Project data area, never the whole home directory or other folders. That grants the agent access to all of the user's board data, so it is applied to the agent's user settings.
 
 - Existing allow, deny, and ask rules, permission modes, models, hooks, and network settings are preserved. Full access, `bypassPermissions`, blanket Bash permissions, and relaxed managed policies are never added. If the folder cannot be added under the current scheme, setup does not report success.
 - Backups and temporary files may contain the same sensitive settings, so existing access restrictions are not widened.
@@ -162,12 +162,12 @@ What this protects: the token and the files stay out of reach of a document's co
 
 ## Plugin installation
 
-`setup` and `update` install the Agent Board plugin and change the settings of other programs, so their boundary is stated here. The mechanics are in [Setup and update](./agents.md#setup-and-update).
+`setup` and `update` install the Agent Project plugin and change the settings of other programs, so their boundary is stated here. The mechanics are in [Setup and update](./agents.md#setup-and-update).
 
 - **Where the plugin comes from.** The marketplace is this repository over HTTPS, pinned to the tag of the running version. The agents' own plugin commands fetch it; agpj downloads nothing itself. The integrity of the plugin rests on the repository and its release tags, not on a signature that agpj checks.
 - **What is protected.** The agent's existing settings and your own edits. Every settings file is validated before any write, backed up, and written through a temporary file and an atomic replace. A file that changed after planning is never overwritten, and a failed run undoes only what it wrote.
-- **What it adds.** The data folder as a writable or additional directory, and for Codex, `rules/agboard.rules` with one `prefix_rule` that allows commands starting with `agpj`. The rules file is written only when it does not exist, and not under full access. Permission modes, managed policies, and network settings are never changed, and a folder that cannot be added under the current scheme becomes a manual step instead.
-- **Hook trust needs consent.** Codex runs a plugin's hooks only after they are trusted. setup and update trust only the Agent Board plugin's hooks, through `codex app-server`, and only after the confirmation question, which names this step, or `--yes`.
+- **What it adds.** The data folder as a writable or additional directory, and for Codex, `rules/agpj.rules` with one `prefix_rule` that allows commands starting with `agpj`. The rules file is written only when it does not exist, and not under full access. Permission modes, managed policies, and network settings are never changed, and a folder that cannot be added under the current scheme becomes a manual step instead.
+- **Hook trust needs consent.** Codex runs a plugin's hooks only after they are trusted. setup and update trust only the Agent Project plugin's hooks, through `codex app-server`, and only after the confirmation question, which names this step, or `--yes`.
 - **Fixed commands.** The Hook command is fixed in the plugin and is never built from task text or tool input.
 - **Backups hold your settings.** They keep the original file's access rights, and are never put in a shared folder for you.
 

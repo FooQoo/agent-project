@@ -74,9 +74,9 @@ After you install a new version and restart `agpj serve`, an open monitor reload
 
 ## Before you start
 
-You need an ngrok account and its authtoken. The **Remote connection** dialog has a button that opens the ngrok page where you copy the token. Agent Board opens the address without any of ngrok's Traffic Policy features, including its Google sign-in (OAuth), which a free ngrok account cannot use. A free account can therefore run the monitor; the other limits and terms of your ngrok plan still apply.
+You need an ngrok account and its authtoken. The **Remote connection** dialog has a button that opens the ngrok page where you copy the token. Agent Project opens the address without any of ngrok's Traffic Policy features, including its Google sign-in (OAuth), which a free ngrok account cannot use. A free account can therefore run the monitor; the other limits and terms of your ngrok plan still apply.
 
-Agent Board uses ngrok to open a public HTTPS address that leads to the board, behind the passcode. The PC's own address of the board stays on `127.0.0.1`. Never expose the board to the public Internet and never use router port forwarding. ngrok ends the HTTPS connection, so ngrok can process the traffic; the connection is not end-to-end encrypted between your PC and your phone.
+Agent Project uses ngrok to open a public HTTPS address that leads to the board, behind the passcode. The PC's own address of the board stays on `127.0.0.1`. Never expose the board to the public Internet and never use router port forwarding. ngrok ends the HTTPS connection, so ngrok can process the traffic; the connection is not end-to-end encrypted between your PC and your phone.
 
 ## Choose ngrok or Tailscale {#choose-a-way}
 
@@ -95,9 +95,9 @@ To use Tailscale, install Tailscale on the PC and the phone and sign in with the
 
 ## How the passcode protects the monitor
 
-The monitor is guarded by a 4-digit passcode. Agent Board does not use Google authentication or ngrok's sign-in, and it keeps no list of allowed accounts.
+The monitor is guarded by a 4-digit passcode. Agent Project does not use Google authentication or ngrok's sign-in, and it keeps no list of allowed accounts.
 
-- Each time the connection starts, Agent Board makes a new passcode from the operating system's random source, from `0000` to `9999`. It is kept in memory only: it is not saved to a file, logged, or put in the monitor page.
+- Each time the connection starts, Agent Project makes a new passcode from the operating system's random source, from `0000` to `9999`. It is kept in memory only: it is not saved to a file, logged, or put in the monitor page.
 - You see it on the PC only: in the **Remote connection** dialog, in step 2 **Enter the passcode**, and on the startup line of `agpj serve --monitor ngrok`.
 - The phone opens the address, asks for the passcode, and shows nothing of the board until the passcode is right. The connection then lasts up to 12 hours, after which the phone asks for the passcode again.
 - After 5 wrong passcodes in a row, the monitor stops accepting any passcode, even the right one. Stop the connection and connect again (or restart `serve`) to get a new passcode and a fresh count.
@@ -110,9 +110,9 @@ A 4-digit passcode has only 10,000 possibilities, so it is weaker than signing i
 - Stop the connection when you are not using it.
 - Without a fixed domain, the address is one that ngrok chooses at random. It is harder to find, though it is not a secret you can rely on. With a fixed domain (see below) the address stays the same, so anyone who has seen it once can find it again; the passcode, which changes at every start, is what protects the board.
 
-Because ngrok adds nothing for Agent Board to check, the monitor checks two things itself: the request names exactly the public address, and the passcode. ngrok ends the HTTPS connection and can see the traffic, and anyone who manages your ngrok account can change how the address is served. The passcode does not protect against them.
+Because ngrok adds nothing for Agent Project to check, the monitor checks two things itself: the request names exactly the public address, and the passcode. ngrok ends the HTTPS connection and can see the traffic, and anyone who manages your ngrok account can change how the address is served. The passcode does not protect against them.
 
-A program that is already running on your PC can send requests straight to the monitor's local port without going through ngrok. It still needs the passcode to read anything, but it can use up the 5 tries, which closes the monitor to the phone until you stop and connect again. Agent Board trusts the person who uses the PC, so it adds no further protection against this. Run the connection only on a PC you trust.
+A program that is already running on your PC can send requests straight to the monitor's local port without going through ngrok. It still needs the passcode to read anything, but it can use up the 5 tries, which closes the monitor to the phone until you stop and connect again. Agent Project trusts the person who uses the PC, so it adds no further protection against this. Run the connection only on a PC you trust.
 
 ## Connect from the PC
 
@@ -127,20 +127,20 @@ While it connects, the dialog shows **Connecting to ngrok…** in place of the t
 
 The passcode is shown only while the connection is running. It is new every time the connection starts, so a stopped or failed connection has none.
 
-To give someone the address and passcode while the connection is up, run `agpj --project "<name>" show remote`; it prints both on this PC only. See [Give the phone address and passcode](../reference/cli#give-the-phone-address-and-passcode). You can also ask your agent for the remote access URL; the plugin's `remote` skill (`/agent-board:remote` in Claude Code) runs the same command and replies with both, and it never starts the connection. Sharing the passcode in a chat gives everyone who reads that chat access to the board until you stop the connection.
+To give someone the address and passcode while the connection is up, run `agpj --project "<name>" show remote`; it prints both on this PC only. See [Give the phone address and passcode](../reference/cli#give-the-phone-address-and-passcode). You can also ask your agent for the remote access URL; the plugin's `remote` skill (`/agent-project:remote` in Claude Code) runs the same command and replies with both, and it never starts the connection. Sharing the passcode in a chat gives everyone who reads that chat access to the board until you stop the connection.
 
 If ngrok cannot be reached, the dialog says so and gives the reason. Check the token and the internet connection, then choose **Save and connect** again. The board on the PC keeps working.
 
 ## Where the token is kept
 
-- A token you type is used only while Agent Board is running and is not saved.
+- A token you type is used only while Agent Project is running and is not saved.
 - To keep it, select **Save the token on this PC** before you connect, or pipe it to `agpj setup remote --token-stdin`. The token is stored in this PC's secure storage, the one your operating system provides. It is never written to the data folder.
 - If the `NGROK_AUTHTOKEN` environment variable is set, it takes priority over a saved token. The dialog then says it is using the environment variable, and you can leave the token field empty.
 - A saved token is shown as saved in this PC's secure storage. Choose **Delete the saved token** to remove it.
-- After Agent Board is updated or reinstalled, the operating system may ask whether Agent Board may use the saved token. The board keeps working while it asks. Once you answer, the dialog shows the saved token.
+- After Agent Project is updated or reinstalled, the operating system may ask whether Agent Project may use the saved token. The board keeps working while it asks. Once you answer, the dialog shows the saved token.
 - If the PC has no usable secure storage, the dialog says **This PC cannot save the token. Enter it each time.** and the save option is unavailable. Enter the token each time you connect.
 
-Whether the connection stays on is stored in Agent Board's internal area. You do not edit a file for it. The passcode is not stored anywhere.
+Whether the connection stays on is stored in Agent Project's internal area. You do not edit a file for it. The passcode is not stored anywhere.
 
 ## Open it on the phone
 
@@ -166,7 +166,7 @@ Knowing the address is not enough to read the board. A wrong passcode is refused
 
 ## Pause and resume
 
-Choose **Pause connection** in the dialog to stop public access. The dialog shows **Paused**, and the saved token and the registered phones stay on this PC. No phone can read the board or send answers while it is paused, registered or not, and the connection stays off the next time Agent Board starts. To resume with the saved token, choose **Resume**: registered phones come back without the passcode if the address is the same as when they registered (always with an ngrok domain; without one, ngrok may choose a new address), and a new passcode is made for phones that are not registered yet. To use another token, choose **Change settings**, paste the token, and choose **Save and connect**.
+Choose **Pause connection** in the dialog to stop public access. The dialog shows **Paused**, and the saved token and the registered phones stay on this PC. No phone can read the board or send answers while it is paused, registered or not, and the connection stays off the next time Agent Project starts. To resume with the saved token, choose **Resume**: registered phones come back without the passcode if the address is the same as when they registered (always with an ngrok domain; without one, ngrok may choose a new address), and a new passcode is made for phones that are not registered yet. To use another token, choose **Change settings**, paste the token, and choose **Save and connect**.
 
 ## Registered phones
 
@@ -176,7 +176,7 @@ Choose **Remove** to unregister a phone. It is signed out at once, even in the m
 
 If the connection drops, for example because the PC slept or the network changed, pause it and resume. To use another token while connected, choose **Reset token**, which shows the setup again, enter the new token, and choose **Save and connect**. This replaces the connection, so the phone has to enter the new passcode. Closing the dialog instead leaves the connection as it was.
 
-When the connection was left on, it starts again the next time Agent Board starts, as long as a token is available from the environment or this PC's secure storage. Without one, the dialog asks for the token.
+When the connection was left on, it starts again the next time Agent Project starts, as long as a token is available from the environment or this PC's secure storage. Without one, the dialog asks for the token.
 
 ## Use the board as a Home Screen app {#home-screen-app}
 
@@ -186,13 +186,13 @@ Adding the board's address to the phone's Home Screen gives it an icon of its ow
 
 1. Open the board's address in Safari.
 2. Tap Share, choose **Add to Home Screen**, and add it.
-3. Open **Agent Board** from the Home Screen icon, not from Safari.
+3. Open **Agent Project** from the Home Screen icon, not from Safari.
 
 **Android (Chrome)**
 
 1. Open the board's address in Chrome.
 2. Open the Chrome menu and choose **Add to Home screen** (on some versions, **Install app**), then confirm.
-3. Open **Agent Board** from the Home Screen icon.
+3. Open **Agent Project** from the Home Screen icon.
 
 The Home Screen app is the same board as in the browser, with the same address, passcode, and session. Because ngrok chooses a new address at every start unless you set a domain, the icon opens the old address after the connection restarts; see [Keep the same address](#keep-the-same-address). On an iPhone, a link to a web page, such as a result's link, opens in Safari rather than inside the app.
 
@@ -224,7 +224,7 @@ If one change matches several of the kinds you chose, for example a question tha
 
 ### Turn them off or remove the phone
 
-To turn them off, choose **Turn off** in the same dialog. If you chose Don't Allow, the board keeps working; to allow notifications later, open the phone's own settings, choose Agent Board, and turn on Notifications. Removing the phone in the dialog on the PC (see [Registered phones](#registered-phones)) also stops its notifications, and they keep working after the PC restarts.
+To turn them off, choose **Turn off** in the same dialog. If you chose Don't Allow, the board keeps working; to allow notifications later, open the phone's own settings, choose Agent Project, and turn on Notifications. Removing the phone in the dialog on the PC (see [Registered phones](#registered-phones)) also stops its notifications, and they keep working after the PC restarts.
 
 ### When nothing is sent
 
@@ -232,13 +232,13 @@ Notifications carry a link, so they are sent only while the remote connection is
 
 ## Check that ngrok keeps no traffic content
 
-ngrok's Traffic Inspector can keep request details if **Full Capture** is turned on for your account. Agent Board cannot turn it off for you. In the ngrok dashboard, open **Settings** → **Observability** and confirm that Full Capture is disabled. Do this before you use the monitor.
+ngrok's Traffic Inspector can keep request details if **Full Capture** is turned on for your account. Agent Project cannot turn it off for you. In the ngrok dashboard, open **Settings** → **Observability** and confirm that Full Capture is disabled. Do this before you use the monitor.
 
 ## Keep the same address
 
-By default ngrok chooses a new address at every start, so a bookmark or a home-screen icon on the phone stops working after the connection restarts. To keep one address, give Agent Board a domain that your ngrok account owns, such as the free static dev domain shown on the ngrok dashboard under **Domains**. The **Remote connection** dialog has an **ngrok domain** field marked **Recommended**. It is optional, but without it the address changes every time the connection starts. Enter the domain, for example `name.ngrok-free.dev`, and choose **Save and connect**. The domain is saved on this PC, so you do not enter it again.
+By default ngrok chooses a new address at every start, so a bookmark or a home-screen icon on the phone stops working after the connection restarts. To keep one address, give Agent Project a domain that your ngrok account owns, such as the free static dev domain shown on the ngrok dashboard under **Domains**. The **Remote connection** dialog has an **ngrok domain** field marked **Recommended**. It is optional, but without it the address changes every time the connection starts. Enter the domain, for example `name.ngrok-free.dev`, and choose **Save and connect**. The domain is saved on this PC, so you do not enter it again.
 
-The value is a bare host name, without a scheme, a path, or a port. When the connection starts, Agent Board asks ngrok for that domain, so the address is the same after you stop and start the connection and after the server restarts.
+The value is a bare host name, without a scheme, a path, or a port. When the connection starts, Agent Project asks ngrok for that domain, so the address is the same after you stop and start the connection and after the server restarts.
 
 As alternatives to the dialog, save it from the command line, or set the `AGPJ_NGROK_DOMAIN` environment variable before the server starts. This saves the domain, with or without a running server, and the board shows it without a reload:
 

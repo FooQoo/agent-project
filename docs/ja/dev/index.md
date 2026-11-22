@@ -1,8 +1,8 @@
 # 開発者ガイド
 
-この章では、Agent Boardの開発に必要な構成・実装・検証方法を説明します。ボードの使い方は、[利用ガイド](../guide/index.md)を読んでください。
+この章では、Agent Projectの開発に必要な構成・実装・検証方法を説明します。ボードの使い方は、[利用ガイド](../guide/index.md)を読んでください。
 
-Agent Boardは、CLIとWebサーバーを兼ねる一つのRust製プログラム`agpj`です。データはすべてファイルに保存され、CLI・Markdownの直接編集・ブラウザから同じデータを読み書きできます。
+Agent Projectは、CLIとWebサーバーを兼ねる一つのRust製プログラム`agpj`です。データはすべてファイルに保存され、CLI・Markdownの直接編集・ブラウザから同じデータを読み書きできます。
 
 ```mermaid
 flowchart LR
@@ -24,15 +24,15 @@ flowchart LR
 ## 初めて開発する場合の読み順
 
 1. [開発環境のセットアップ](./getting-started/setup.md): ビルドして、一時的なボードで動かします。
-2. [Agent Boardの仕組み](./concepts/overview.md): 全体像を読み、変更が各処理を経て画面に反映されるまでを確認します。
-3. [仕事のモデルと実装](./concepts/work-model.md): Agent Boardがどの規則を、どこで守り、どのテストが確かめているかを確認します。
+2. [Agent Projectの仕組み](./concepts/overview.md): 全体像を読み、変更が各処理を経て画面に反映されるまでを確認します。
+3. [仕事のモデルと実装](./concepts/work-model.md): Agent Projectがどの規則を、どこで守り、どのテストが確かめているかを確認します。
 4. [最初の変更を追う](./getting-started/first-change.md): 一つの規則を、CLIからファイル、テストまで追います。
 5. [タスクと状態](./concepts/tasks-and-states.md)を読み、変更する領域の解説に進みます。
 6. [検証とプルリクエスト](./getting-started/pull-request.md)。
 
 ## ドキュメントの更新方針
 
-- Agent Boardの**現在の**仕組みを記述します。計画と判断の経緯はリポジトリの外で管理します。
+- Agent Projectの**現在の**仕組みを記述します。計画と判断の経緯はリポジトリの外で管理します。
 - 振る舞いを変えるときは、同じ変更でこれらのページも更新します。
 - 英語版が正本で、`docs/ja/dev/`の日本語版は開発者向けの翻訳です。同じ変更で更新してください。
 - リポジトリの`AGENTS.md`は、コーディングエージェント向けにこれらのページの索引を持ちます。

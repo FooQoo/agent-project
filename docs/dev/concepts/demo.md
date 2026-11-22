@@ -1,6 +1,6 @@
 # The browser demo
 
-The browser demo is the board running on a static site, with no `agpj serve` behind it. It is published with this documentation site at [`/agent-board/demo/`](https://fooqoo.github.io/agent-board/demo/). The screens are the product's own; only the server is replaced, by the sample-data server running in the page.
+The browser demo is the board running on a static site, with no `agpj serve` behind it. It is published with this documentation site at [`/agent-project/demo/`](https://fooqoo.github.io/agent-project/demo/). The screens are the product's own; only the server is replaced, by the sample-data server running in the page.
 
 What a visitor sees is the [first-run guide](../../guide/quickstart.md#before-you-start-the-first-run-guide) followed by the ordinary board. This page explains how that is built, how to build it, and how to check it before it is published.
 
@@ -45,8 +45,8 @@ Each change is reported to subscribers in the shape of the SSE `changed` event, 
 
 `web/src/app/development/mocks/browser.ts` starts the worker before the first render, so the board's first request already has an answer:
 
-- The script is MSW's own `mockServiceWorker.js`. `web/mock-browser.ts` serves it from the installed `msw` package in the dev server and emits it into the demo build, so it sits in the demo's own folder, `/agent-board/demo/mockServiceWorker.js`, and no copy is committed. The page registers it with `import.meta.env.BASE_URL`, so its scope is the folder of the page and GitHub Pages needs no extra header.
-- The worker intercepts the page's requests to `/api/`, although that path is outside the scope: the scope limits which pages the worker controls, not which request URLs it sees. A documentation page outside `/agent-board/demo/` is not controlled, so the worker does not touch the rest of the site.
+- The script is MSW's own `mockServiceWorker.js`. `web/mock-browser.ts` serves it from the installed `msw` package in the dev server and emits it into the demo build, so it sits in the demo's own folder, `/agent-project/demo/mockServiceWorker.js`, and no copy is committed. The page registers it with `import.meta.env.BASE_URL`, so its scope is the folder of the page and GitHub Pages needs no extra header.
+- The worker intercepts the page's requests to `/api/`, although that path is outside the scope: the scope limits which pages the worker controls, not which request URLs it sees. A documentation page outside `/agent-project/demo/` is not controlled, so the worker does not touch the rest of the site.
 - A page loaded by a hard reload (Shift+Reload) is not controlled until the next load. If the page is not controlled after the worker starts, it reloads once (a flag in `sessionStorage` prevents a loop).
 - A browser with no Service Worker support, such as a Firefox private window or a page on a non-secure origin, or one that cannot transfer a `ReadableStream` to the worker (Safari before 27, where MSW would buffer the endless event stream), shows a short notice in English or Japanese instead of the board. The demo has no second transport. A worker that fails to register, for example because the browser blocks the script, shows a second notice ("the demo could not start"), and the board stays unrendered.
 
@@ -79,7 +79,7 @@ The page also has a fixed token and an empty build ID, so it never reloads for a
 
 ## Build it
 
-The commands and the base-path option are in [Set up and run: Demo build](../getting-started/setup.md#demo-build). In short, `pnpm --dir web build:demo` writes `web/dist-demo/` for the base `/agent-board/demo/`, and `AGPJ_DEMO_BASE` changes the base.
+The commands and the base-path option are in [Set up and run: Demo build](../getting-started/setup.md#demo-build). In short, `pnpm --dir web build:demo` writes `web/dist-demo/` for the base `/agent-project/demo/`, and `AGPJ_DEMO_BASE` changes the base.
 
 `.github/workflows/docs.yml` builds the documentation site, builds the demo, and copies `web/dist-demo/` into `docs/.vitepress/dist/demo/`. VitePress empties its output folder when it builds, so the copy comes after the site build. See [Documentation and images](../docs-and-images.md#documentation-site) for the rest of the site workflow.
 
@@ -97,7 +97,7 @@ cp -R web/dist-demo docs/.vitepress/dist/demo
 pnpm --dir e2e test:demo
 ```
 
-The suite (`e2e/playwright.demo.config.ts` and `e2e/demo/`) serves `docs/.vitepress/dist/` with `vitepress preview` on port 8446, or on `AGPJ_DEMO_E2E_PORT`, and opens `/agent-board/demo/` in Chromium. Like the documentation site suite, it needs no Rust build and no `AGPJ_HOME`, because the board lives in the page. Playwright allows Service Workers by default, and the demo does not render its board until the worker controls the page, so the tests need no extra wait; keep `serviceWorkers` out of the Playwright config. It checks that:
+The suite (`e2e/playwright.demo.config.ts` and `e2e/demo/`) serves `docs/.vitepress/dist/` with `vitepress preview` on port 8446, or on `AGPJ_DEMO_E2E_PORT`, and opens `/agent-project/demo/` in Chromium. Like the documentation site suite, it needs no Rust build and no `AGPJ_HOME`, because the board lives in the page. Playwright allows Service Workers by default, and the demo does not render its board until the worker controls the page, so the tests need no extra wait; keep `serviceWorkers` out of the Playwright config. It checks that:
 
 - the guide starts on page load and runs to the end, including sending its sample request in Ask AI and answering its question, at desktop width and at phone width
 - after the guide, a card can be dragged to another lane

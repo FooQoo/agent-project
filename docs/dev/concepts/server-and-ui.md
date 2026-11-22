@@ -28,7 +28,7 @@ Every other command works on the files alone and starts nothing.
 5. The command waits up to 30 seconds for the startup line in `serve.log`, then prints one line on standard error and continues. Standard output stays the command's own.
 
 ```text
-Started the Agent Board server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
+Started the Agent Project server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
 ```
 
 If the connection fails after a command has read `serve.json`, for example because the server stopped in between, the command starts a server once more. The hook starts the server without waiting: it only checks that the pid in `serve.json` is alive and that `autostart.lock` is free, and it starts nothing after `agpj stop` (see below). Failures are left in `serve.log`.
@@ -48,7 +48,7 @@ An automatic server opens the board of the project it was started for, once. The
 
 ### Ports
 
-- A manual server listens on `--port` (7420 by default) and nothing else. A taken port is `port_in_use`, and the reason names what holds it: another Agent Board server (with its pid) whose data area is different, or another program.
+- A manual server listens on `--port` (7420 by default) and nothing else. A taken port is `port_in_use`, and the reason names what holds it: another Agent Project server (with its pid) whose data area is different, or another program.
 - An automatic server tries 7420 first (`AGPJ_AUTOSTART_PORT` changes it; tests use 0). When it is taken, the server listens on a port the OS chooses and prints why, for example `Port 7420 is used by another program, so this server uses port 52114.`
 - A refusal by the OS or a sandbox (`EACCES` or `EPERM`) is `local_network_denied`. Any other failure to listen is `board_unavailable` with the OS message.
 

@@ -1,11 +1,11 @@
 {
-  "name": "agent-board-web",
+  "name": "agent-project-web",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FooQoo/agent-board.git"
+    "url": "git+https://github.com/FooQoo/agent-project.git"
   },
-  "homepage": "https://github.com/FooQoo/agent-board#readme",
+  "homepage": "https://github.com/FooQoo/agent-project#readme",
   "version": "0.0.0",
   "type": "module",
   "scripts": {

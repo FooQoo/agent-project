@@ -62,7 +62,7 @@ flowchart LR
 | What | Where |
 | --- | --- |
 | `enabled`, `revision` | `<data root>/.internal/monitor-connection.json`, an app-internal file with owner-only permissions. See [Shared files](../reference/files.md#monitor-connection-settings). |
-| ngrok token | Only in memory, unless the user saves it. A saved token lives in the PC's secure storage, the OS credential store (service `agent-board`, account `ngrok-authtoken`). |
+| ngrok token | Only in memory, unless the user saves it. A saved token lives in the PC's secure storage, the OS credential store (service `agent-project`, account `ngrok-authtoken`). |
 | Phone passcode and its count of wrong guesses, application sessions, CSRF tokens | Only in memory, for one start. |
 | Registered devices: id, label, origin, two times, and the SHA-256 digest of the device token | `<data root>/.internal/remote-devices.json`, an app-internal file with owner-only permissions, replaced atomically. The raw device token is never stored. See [Shared files](../reference/files.md#registered-devices). |
 | The delivery ledger (what was sent to which device) | `<data root>/.internal/push-ledger.json`, owner-only, replaced atomically. See [Shared files](../reference/files.md#push-delivery-ledger). |

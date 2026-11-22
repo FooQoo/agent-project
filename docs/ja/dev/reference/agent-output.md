@@ -9,7 +9,7 @@
 ```json
 {
   "fetchedAt": "2026-10-17T00:48:47Z",
-  "project": { "id": "ef18518d…", "name": "agent-board", "createdAt": "2026-10-10T22:59:43Z" },
+  "project": { "id": "ef18518d…", "name": "agent-project", "createdAt": "2026-10-10T22:59:43Z" },
   "version": "781ad752…",
   "cursor": "f1:ef18518d…:781ad752…",
   "locale": "ja",

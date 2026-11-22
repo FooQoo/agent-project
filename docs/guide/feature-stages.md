@@ -4,7 +4,7 @@ title: Feature stages
 
 # Feature stages
 
-Every feature in Agent Board is in one of two stages: general availability (GA) or public preview. This page explains what each stage means, lists the features in each, and states the limits you should know before you rely on a preview feature. The product mixes both stages, so not every feature is GA.
+Every feature in Agent Project is in one of two stages: general availability (GA) or public preview. This page explains what each stage means, lists the features in each, and states the limits you should know before you rely on a preview feature. The product mixes both stages, so not every feature is GA.
 
 ## What the stages mean
 
@@ -61,7 +61,7 @@ The Docs dialog lets you browse and read the files in a project's `docs/` folder
 
 ### Resident agents {#resident-sessions}
 
-A resident agent is a Claude Code or Codex session that Agent Board starts and keeps attached to the board. The board sends it your requests, the answers to its questions, and ready tasks, one at a time.
+A resident agent is a Claude Code or Codex session that Agent Project starts and keeps attached to the board. The board sends it your requests, the answers to its questions, and ready tasks, one at a time.
 
 - **Supported range:** Claude Code and Codex on the computer that runs `agpj serve`. You start and stop the session from **Settings** on the PC; the phone connection cannot.
 - **Limits:** the session runs unattended and approves its actions automatically, so start it only in projects you trust. It depends on the `claude` stream-json interface and on `codex app-server`, which Codex marks as experimental, so it may change when those CLIs update. The board keeps one session at a time. An item that fails three times is skipped and shown in the dialog.
@@ -69,7 +69,7 @@ A resident agent is a Claude Code or Codex session that Agent Board starts and k
 
 ### Questions and requests {#questions-and-requests}
 
-An agent session you open yourself can keep itself on the board. One `agpj wait --until task` returns one of your requests, the answers to its questions, or a task, or ends with `idle_timeout`. The `wait` skill (`/agent-board:wait` in Claude Code) runs it again and again, so the session receives them one after another.
+An agent session you open yourself can keep itself on the board. One `agpj wait --until task` returns one of your requests, the answers to its questions, or a task, or ends with `idle_timeout`. The `wait` skill (`/agent-project:wait` in Claude Code) runs it again and again, so the session receives them one after another.
 
 - **Supported range:** Claude Code and Codex, following the procedure in the agent skill. A person starts it in the agent's session.
 - **Limits:** a task is not reserved when it is returned, so two sessions can still pick the same task. Only requests and answers are protected: the first `message accept` wins, and another session that tries gets `request_accepted` for a request and `answer_accepted` for an answer. The session ends when you interrupt it or when an error stops it.

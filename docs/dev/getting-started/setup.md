@@ -1,6 +1,6 @@
 # Set up and run
 
-Prepare your machine, build Agent Board (users install it with Homebrew; building from source is for development), run it against a temporary board, and install your build so that agents use it. Run every command from the repository root.
+Prepare your machine, build Agent Project (users install it with Homebrew; building from source is for development), run it against a temporary board, and install your build so that agents use it. Run every command from the repository root.
 
 ## Before you start
 
@@ -13,7 +13,7 @@ You need:
 
 Two habits keep your own board safe while you work:
 
-- **Use a temporary data area.** The default data area (`~/.agent-board/` on macOS, `%USERPROFILE%\.agent-board\` on Windows) is your real board. For experiments and tests, set `AGPJ_HOME` to a temporary directory. The variable applies to the current shell only.
+- **Use a temporary data area.** The default data area (`~/.agent-project/` on macOS, `%USERPROFILE%\.agent-project\` on Windows) is your real board. For experiments and tests, set `AGPJ_HOME` to a temporary directory. The variable applies to the current shell only.
 - **Leave port 7420 free.** It is the default port for normal use. Use another port, or port 0 in tests.
 - **Know that commands start a server.** `wait`, a question that waits, and the hook start a background server for the data area when none runs. Such a server also opens the board in your browser. Set `AGPJ_AUTOSTART=0` while you experiment if you do not want a server, or `AGPJ_OPEN_BROWSER=0` if you only do not want the browser, and `agpj stop` ends one.
 
@@ -44,7 +44,7 @@ just serve        # saved board with Vite HMR and Rust watch (port 7420)
 ```
 
 - `just dev` serves sample data and updates the browser through HMR when web files change.
-- `just docs` serves the documentation site at `http://127.0.0.1:8662/agent-board/`. Pass another port as an argument when needed, for example `just docs 8663`.
+- `just docs` serves the documentation site at `http://127.0.0.1:8662/agent-project/`. Pass another port as an argument when needed, for example `just docs 8663`.
 - `just storybook` serves the component and page Stories at `http://127.0.0.1:8610/`.
 - `just serve` uses the real API. It restarts the Rust server when Rust files change and serves the UI through Vite with HMR. Open `http://127.0.0.1:7420/`; the Rust API uses port 7421. The board comes from the normal location, or from `AGPJ_HOME` if set. A Rust restart reloads the page to refresh its write token.
 - Pass other ports as arguments, for example `just dev 5174` or `just serve 7500 7501` (web port, then Rust API port).
@@ -70,16 +70,16 @@ The data area holds `shared/` (the projects as plain files), `serve.json` while 
 
 ## Demo build
 
-The demo build runs the board with the same sample data on a static site, with no server. It is the version published on the documentation site, at `/agent-board/demo/`:
+The demo build runs the board with the same sample data on a static site, with no server. It is the version published on the documentation site, at `/agent-project/demo/`:
 
 ```sh
 pnpm --dir web build:demo     # writes web/dist-demo/
-pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-board/demo/
+pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-project/demo/
 ```
 
 How it differs from the product build:
 
-- The pages are served from `/agent-board/demo/`. Set `AGPJ_DEMO_BASE` (for example `AGPJ_DEMO_BASE=/demo/`) when building to use another folder.
+- The pages are served from `/agent-project/demo/`. Set `AGPJ_DEMO_BASE` (for example `AGPJ_DEMO_BASE=/demo/`) when building to use another folder.
 - The sample-data server runs in the page, behind a Service Worker (MSW) that answers `/api/` requests, the live stream, and attachment images. The worker script is emitted next to `index.html`. A browser with no Service Worker support shows a notice instead of the board.
 - The page has a fixed token and an empty build ID, so it never reloads for a new build. Reloading the page restores the sample data and opens the first-run guide again.
 - Features that need a computer are hidden: project Docs (with its buttons that open files and folders), the remote access connection, and saving pasted or dropped images.
@@ -127,7 +127,7 @@ A folder's `story-coverage.json` lists its source exports, the Stories that show
 
 ## Build release
 
-Users install Agent Board with Homebrew (see [Install and start](../../guide/getting-started.md)). This section is for the people who build and publish a release. The workflow is `.github/workflows/release.yml` and the scripts are in `scripts/release/`.
+Users install Agent Project with Homebrew (see [Install and start](../../guide/getting-started.md)). This section is for the people who build and publish a release. The workflow is `.github/workflows/release.yml` and the scripts are in `scripts/release/`.
 
 ### Archive and checks
 
@@ -158,7 +158,7 @@ The workflow runs when a Release is published, and skips drafts and prereleases.
 
 1. Downloads the two archives and `SHA256SUMS` of the tag with `gh release download`.
 2. Renders the Formula, then runs `scripts/release/test-formula.sh` and `ruby -c` on macOS 15.
-3. Clones `FooQoo/homebrew-tap` over SSH, copies `Formula/agpj.rb`, and, only when the file changed, commits `agpj X.Y.Z` as `github-actions[bot]` and pushes it directly to the default branch. It never writes `Formula/agboard.rb`, which stays pinned to the preserved v1.1.1, and the job stops if anything but `Formula/agpj.rb` changed.
+3. Clones `FooQoo/homebrew-tap` over SSH, copies `Formula/agpj.rb`, and, only when the file changed, commits `agpj X.Y.Z` as `github-actions[bot]` and pushes it directly to the default branch.
 
 The job runs in the `homebrew-tap` Environment, which accepts only `v*` tags and holds the secret `HOMEBREW_TAP_DEPLOY_KEY`. The secret is a read-write deploy key of the tap repository; it is written to a temporary file with mode 0600 for the push and removed at the end of the job. SSH accepts only the pinned GitHub host key. The job has `contents: read` only, and no secret appears on a command line. `release.yml` does not take part.
 

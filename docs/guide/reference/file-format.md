@@ -35,7 +35,7 @@ Any headings and text you need.
 ```
 
 - **Body.** The body holds the task plan, the results of checking each acceptance condition, and artifact references. No heading is required. Do not put a chronological log in the body; the history belongs in the frontmatter. Attach images when visual proof is useful.
-- **New tasks.** When you create a task, `history` may be omitted or empty; Agent Board adds the first history entry. A stored `TASK.md` must have a valid top-level `history` list, even when `acceptance` is empty.
+- **New tasks.** When you create a task, `history` may be omitted or empty; Agent Project adds the first history entry. A stored `TASK.md` must have a valid top-level `history` list, even when `acceptance` is empty.
 
 ### Acceptance conditions
 
@@ -76,7 +76,7 @@ history:
 - `reason` is the content, up to 10,000 characters.
 - The list may be empty in a stored file. The API and the CLI return history in the same `at`/`reason` shape.
 
-Agent Board adds an entry whenever an operation happens: a move, a state change, a question and its answer, archiving and restoring, and automatic completion. The browser's reason field is optional; a missing or blank reason is generated from the current state. The History tab, `show`, and `snapshot` all read the same history.
+Agent Project adds an entry whenever an operation happens: a move, a state change, a question and its answer, archiving and restoring, and automatic completion. The browser's reason field is optional; a missing or blank reason is generated from the current state. The History tab, `show`, and `snapshot` all read the same history.
 
 History keeps the decisions and grounds a reader needs later, not a log of every step. A decision that changes the lane or run state goes in the `--reason` of that move or state change, and the entry it records is the one record. A decision that changes no state but matters later is added once with [`history add`](./cli#report-work), with the grounds, the decision, and when known the condition for reconsidering. Example: "The public wording depends on the result of checking on a real device, so the card stays in Todo until that check is done." Reading the list needs no entry, and a result added with `result add` records itself. Agents do not ask for approval each time. The command assigns the timestamp, appends atomically, and applies AI write permissions: an AI cannot append to drafts, archived tasks, or Done tasks. A direct edit may append entries that have only `at` and `reason` and must keep the existing history, body, conditions, and other metadata; do not rewrite the whole file just to append history. Ordinary body and condition edits keep the latest history, and `edit --desc-file` ignores any `history` and `questions` in its input and keeps the stored ones.
 

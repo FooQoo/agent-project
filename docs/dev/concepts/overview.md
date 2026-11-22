@@ -1,16 +1,16 @@
-# How Agent Board works
+# How Agent Project works
 
-Start here. This page gives you the mental model: what Agent Board is for, what runs, where the data lives, and how one change travels from an agent to the browser. The other concept pages go deeper into each part.
+Start here. This page gives you the mental model: what Agent Project is for, what runs, where the data lives, and how one change travels from an agent to the browser. The other concept pages go deeper into each part.
 
 ## The agent's runtime and the shared workspace
 
 An AI agent such as Claude Code or Codex runs inside its own runtime: the tools it can call, the context it holds, and the loop that drives it. That runtime decides how the agent works inside one session. It does not decide what the work is, when it is finished, or when to ask a person, and it does not outlive the session.
 
-Agent Board is a **shared workspace** on top of it, where the agent plans and reports and a person answers. It keeps the plan, the acceptance conditions that say when a task is finished, the questions that stop the agent until a person answers, and the history that lets the next session continue. These live in files, outside any one agent, so a different agent or a new session can pick the work up where the last one stopped.
+Agent Project is a **shared workspace** on top of it, where the agent plans and reports and a person answers. It keeps the plan, the acceptance conditions that say when a task is finished, the questions that stop the agent until a person answers, and the history that lets the next session continue. These live in files, outside any one agent, so a different agent or a new session can pick the work up where the last one stopped.
 
 ```mermaid
 flowchart LR
-    Agent["Agent runtime<br/>tools, context, loop"] --> Work["Agent Board<br/>plan, conditions,<br/>questions, history"]
+    Agent["Agent runtime<br/>tools, context, loop"] --> Work["Agent Project<br/>plan, conditions,<br/>questions, history"]
     Work --> Monitors["Monitors<br/>board, phone, chat, CLI"]
     Person["Person"] --> Monitors
 ```
@@ -21,9 +21,9 @@ The rest of this page describes the implementation that carries the model.
 
 ## The big picture
 
-Agent Board is a single Rust executable, `agpj`. The same binary is the CLI that agents and people run, and the web server (`agpj serve`) that shows the board in a browser.
+Agent Project is a single Rust executable, `agpj`. The same binary is the CLI that agents and people run, and the web server (`agpj serve`) that shows the board in a browser.
 
-There is no database. Every project lives as plain files in the shared area, `.agent-board/shared/` in the user's home directory (or under `AGPJ_HOME`). Markdown holds what people and agents write: task bodies, acceptance conditions, history, and epic details. JSON holds the operational state: lanes, run states, and the project's questions and answers. Because the files are the source of truth, agents may also edit `TASK.md` and `EPIC.md` directly, and the server notices.
+There is no database. Every project lives as plain files in the shared area, `.agent-project/shared/` in the user's home directory (or under `AGPJ_HOME`). Markdown holds what people and agents write: task bodies, acceptance conditions, history, and epic details. JSON holds the operational state: lanes, run states, and the project's questions and answers. Because the files are the source of truth, agents may also edit `TASK.md` and `EPIC.md` directly, and the server notices.
 
 ### Reading and writing data
 

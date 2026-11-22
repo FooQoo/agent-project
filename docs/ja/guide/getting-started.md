@@ -14,18 +14,18 @@ title: インストールと起動
 - [Homebrew](https://brew.sh)。Homebrew自体にも、環境によってはCommand Line Toolsなどの前提があります。その内容はHomebrewのドキュメントに従ってください。
 - 設定の手順で使う、`PATH`上のClaude CodeまたはCodex（`claude`か`codex`のコマンド）と、GitHubへのネットワーク接続。
 
-Agent Boardを自分でビルドする必要はありません。Homebrewで入るのは、Web画面を内蔵したビルド済みのコマンドです。Rust、Node.js、pnpmは不要で、リポジトリをcloneすることもありません。ソースからビルドする場合は、[開発環境のセットアップ](../dev/getting-started/setup)を参照してください。
+Agent Projectを自分でビルドする必要はありません。Homebrewで入るのは、Web画面を内蔵したビルド済みのコマンドです。Rust、Node.js、pnpmは不要で、リポジトリをcloneすることもありません。ソースからビルドする場合は、[開発環境のセットアップ](../dev/getting-started/setup)を参照してください。
 
 ## インストール
 
 ```sh
-brew install fooqoo/tap/agboard
+brew install fooqoo/tap/agpj
 agpj --version
 ```
 
 このコマンドは、Developer ID証明書で署名され、Appleの公証を受けています。macOSが実行を拒否したときは、Gatekeeperを無効にせず、[トラブルシューティング](./operations/troubleshooting#macos-will-not-run-agpj)を参照してください。
 
-Agent BoardはMITライセンスで公開しています。ライセンスと、同梱する第三者コンポーネントの通知は、Homebrewのprefix配下の`share/agpj`（`$(brew --prefix)/share/agpj`）にインストールされます。
+Agent ProjectはMITライセンスで公開しています。ライセンスと、同梱する第三者コンポーネントの通知は、Homebrewのprefix配下の`share/agpj`（`$(brew --prefix)/share/agpj`）にインストールされます。
 
 ## プロジェクトを作成する、またはフォルダを登録する {#create-or-bind-a-project}
 
@@ -50,7 +50,7 @@ agpj project bind "My project"
 agpj setup
 ```
 
-`setup`は、使うエージェントを尋ねて計画を表示し、`y`と答えると、Claude Code、Codex、または両方にAgent Boardプラグイン（SkillとHook）を導入します。コンピューターごとに一度実行すればよく、どのフォルダでも実行できます。尋ねる内容、変更するもの、その後の操作は、[エージェントを設定する](./delegate/agents#set-up-your-agents)を参照してください。
+`setup`は、使うエージェントを尋ねて計画を表示し、`y`と答えると、Claude Code、Codex、または両方にAgent Projectプラグイン（SkillとHook）を導入します。コンピューターごとに一度実行すればよく、どのフォルダでも実行できます。尋ねる内容、変更するもの、その後の操作は、[エージェントを設定する](./delegate/agents#set-up-your-agents)を参照してください。
 
 ## ボードを開始する
 
@@ -62,7 +62,7 @@ agpj serve
 
 [http://127.0.0.1:7420/](http://127.0.0.1:7420/)を開き、ヘッダーでプロジェクトを選びます。止めるには、そのターミナルでCtrl+Cを押します。エージェントのために動かし続ける必要はありません。サーバーが動いていなければ、待つコマンドとエージェントのHookが裏で起動し、そのサーバーは30分使われないと自分で止まります。裏で動かし続けたいときは、`agpj serve -d`を使います。サーバーは`127.0.0.1`だけで待ち受けます。7420が使われているときは、`--port`で別のポートを選びます。
 
-![プロジェクトを選んだブラウザのAgent Board。未着手・進行中・完了にタスクが並ぶ](../../images/board.ja.png){.screenshot}
+![プロジェクトを選んだブラウザのAgent Project。未着手・進行中・完了にタスクが並ぶ](../../images/board.ja.png){.screenshot}
 
 選んだプロジェクトがヘッダーに表示されてボードが開きます。タスクは未着手・進行中・完了の列に並びます。
 
@@ -73,11 +73,11 @@ agpj serve
 Homebrewでコマンドを更新します。
 
 ```sh
-brew upgrade fooqoo/tap/agboard
+brew upgrade fooqoo/tap/agpj
 agpj --version
 ```
 
-`brew upgrade`が置き換えるのは、コマンドとその中のWeb画面です。エージェントのAgent Boardプラグインは、自分で更新されます。次にエージェントのセッションが始まるとき、Hookがプラグインの違いに気づき、バックグラウンドで入れ直します。新しいプラグインは、その次のセッションから有効になります。Agent Boardについてのエージェントへの指示はコマンド自身が出すので、すぐに新しいものになります。`agpj update`を自分で実行するのは、Codexのhookの信頼など自動更新ではできないとき、またはプラグインを直したいときだけです。詳しくは[プラグインを更新する](./delegate/agents#update-the-plugin)を参照してください。
+`brew upgrade`が置き換えるのは、コマンドとその中のWeb画面です。エージェントのAgent Projectプラグインは、自分で更新されます。次にエージェントのセッションが始まるとき、Hookがプラグインの違いに気づき、バックグラウンドで入れ直します。新しいプラグインは、その次のセッションから有効になります。Agent Projectについてのエージェントへの指示はコマンド自身が出すので、すぐに新しいものになります。`agpj update`を自分で実行するのは、Codexのhookの信頼など自動更新ではできないとき、またはプラグインを直したいときだけです。詳しくは[プラグインを更新する](./delegate/agents#update-the-plugin)を参照してください。
 
 更新したら、新しいコマンドと画面を使うために、`agpj serve`を止めて起動し直します。開いているボードやモニターは、サーバーが戻ると自動で再読み込みします。編集中や回答の入力中は、それが終わるまで待ちます。
 

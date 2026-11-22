@@ -28,7 +28,7 @@
 5. `serve.log`に起動の行が出るまで最大30秒待ち、標準エラーに1行出して続けます。標準出力はコマンド本来の出力のままです。
 
 ```text
-Started the Agent Board server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
+Started the Agent Project server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
 ```
 
 `serve.json`を読んだ後に接続が失敗したとき（その間にサーバーが止まったときなど）は、もう一度だけ起動します。Hookは待たずに起動します。確かめるのは`serve.json`のpidが生きているかと`autostart.lock`が空いているかだけで、`agpj stop`の後は起動しません（後述）。失敗は`serve.log`に残ります。
@@ -48,7 +48,7 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 
 ### ポート
 
-- 手動のサーバーは`--port`（既定は7420）だけで待ち受けます。使われているポートは`port_in_use`で、理由には使っているものを示します。データ領域の違う別のAgent Boardのサーバー（pidつき）か、別のプログラムです。
+- 手動のサーバーは`--port`（既定は7420）だけで待ち受けます。使われているポートは`port_in_use`で、理由には使っているものを示します。データ領域の違う別のAgent Projectのサーバー（pidつき）か、別のプログラムです。
 - 自動のサーバーはまず7420を試します（`AGPJ_AUTOSTART_PORT`で変えられ、試験では0を使います）。使われていれば、OSが選んだポートで待ち受け、その理由を出します。例：`Port 7420 is used by another program, so this server uses port 52114.`
 - OSやサンドボックスによる拒否（`EACCES`か`EPERM`）は`local_network_denied`です。そのほかの待ち受けの失敗は、OSのメッセージつきの`board_unavailable`です。
 

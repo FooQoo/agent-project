@@ -34,7 +34,7 @@ Find the symptom, read the cause, and do what the last column says. Error codes 
 | Symptom | Cause | What to do |
 | --- | --- | --- |
 | `already_serving` | Another `serve` runs on the same data area. | Use that one, or stop it first. If it was started automatically, `agpj serve -d` keeps it running. |
-| `port_in_use` | The port given to `serve` is taken; the reason says whether another Agent Board server or another program holds it. | Pick another port with `--port`. Keep 7420 free for normal use; tests must use another port or port 0. |
+| `port_in_use` | The port given to `serve` is taken; the reason says whether another Agent Project server or another program holds it. | Pick another port with `--port`. Keep 7420 free for normal use; tests must use another port or port 0. |
 | `local_network_denied` | The OS or a sandbox does not let `agpj` use `127.0.0.1`. | In Codex, run `agpj setup`. Elsewhere, run the command outside the sandbox. |
 | `board_unavailable` from `wait`, `message ask`, `message wait`, or the hook | Autostart is off, the server could not start, the server in `serve.json` does not answer, or the connection failed. It is a technical failure, not an answer. | Read the reason. When it names `serve.log`, read that file. When it names a pid, run `agpj stop`. Then run `wait` again. For questions already saved, run `message wait <question-id>`. |
 | A test starts a server on 7420 | The test runs `agpj` without `AGPJ_AUTOSTART=0`. | Set `AGPJ_AUTOSTART=0`, or `AGPJ_AUTOSTART_PORT=0` in a test of autostart itself. |

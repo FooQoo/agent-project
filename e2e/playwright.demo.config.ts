@@ -6,7 +6,7 @@ import { defineConfig } from '@playwright/test';
 
 // Browser demo tests. They run against the documentation site with the demo copied into
 // its demo/ folder, served by `vitepress preview` exactly as GitHub Pages serves it at
-// /agent-board/demo/. Build both first, as the Pages workflow does:
+// /agent-project/demo/. Build both first, as the Pages workflow does:
 //   pnpm --dir docs build && pnpm --dir web build:demo
 //   cp -R web/dist-demo docs/.vitepress/dist/demo
 // Like the docs suite, it needs no global setup, no Rust build, and no AGPJ_HOME: the demo
@@ -23,16 +23,16 @@ export default defineConfig({
   retries: 0,
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  outputDir: path.join(os.tmpdir(), `agent-board-demo-e2e-results-${checkout}`),
+  outputDir: path.join(os.tmpdir(), `agent-project-demo-e2e-results-${checkout}`),
   reporter: [['list']],
   webServer: {
     command: `pnpm --dir ../docs preview --port ${port} --strictPort --host 127.0.0.1`,
-    url: `http://127.0.0.1:${port}/agent-board/demo/`,
+    url: `http://127.0.0.1:${port}/agent-project/demo/`,
     reuseExistingServer: false,
     timeout: 60_000,
   },
   use: {
-    baseURL: `http://127.0.0.1:${port}/agent-board/demo/`,
+    baseURL: `http://127.0.0.1:${port}/agent-project/demo/`,
     timezoneId: 'UTC',
     locale: 'en-US',
     viewport: { width: 1280, height: 900 },

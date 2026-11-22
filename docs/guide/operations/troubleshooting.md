@@ -10,7 +10,7 @@ Find what you see, read the cause, and do what the last column says. The command
 
 | What you see | Cause | What to do |
 | --- | --- | --- |
-| A task is missing from the board | Its file is damaged, or it has an unsupported `formatVersion`. | Open `agpj --project "My project" snapshot --json` and read `problems`: it names the file, the item, and the reason. Fix the file by hand; Agent Board never rewrites it. See [When a file is invalid](../reference/file-format#when-a-file-is-invalid). |
+| A task is missing from the board | Its file is damaged, or it has an unsupported `formatVersion`. | Open `agpj --project "My project" snapshot --json` and read `problems`: it names the file, the item, and the reason. Fix the file by hand; Agent Project never rewrites it. See [When a file is invalid](../reference/file-format#when-a-file-is-invalid). |
 | A task shows a warning and no conditions | The frontmatter of its `TASK.md` is not valid YAML. | Fix the frontmatter. The body stays visible meanwhile. |
 | The board does not update after an agent changed something | The server is not running, or the files are on a network drive. | Reload the page. The server starts when an agent waits or its hook runs, or start it with `agpj serve -d`. Network drives may not report file changes. |
 | The board opened in the browser by itself | An agent's command or hook started the server in the background, and no board tab was connected. It opens once for each start. | Keep the tab open, or set `AGPJ_OPEN_BROWSER=0` to turn this off. See [Open the board in the browser](../reference/cli#open-the-board-in-the-browser). |
@@ -45,7 +45,7 @@ Find what you see, read the cause, and do what the last column says. The command
 | Error | Cause | What to do |
 | --- | --- | --- |
 | `already_serving` | Another server already runs on this data folder. | Use that one, or stop it first with `agpj stop`. If a command started it, `agpj serve -d` keeps it running. Otherwise, in a terminal, `agpj serve -d` offers to replace it. |
-| `port_in_use` | The port you gave `agpj serve` is taken. The message says whether another Agent Board server (with a different data folder) or another program uses it. | Choose another one: `agpj serve --port 7421`. |
+| `port_in_use` | The port you gave `agpj serve` is taken. The message says whether another Agent Project server (with a different data folder) or another program uses it. | Choose another one: `agpj serve --port 7421`. |
 | `local_network_denied` | The environment does not let `agpj` use local network connections, so the server cannot start or be reached. | In Codex, run `agpj setup` to allow `agpj` to run outside the sandbox. |
 | `database_busy` | Another command held the project for more than 5 seconds. | Run the command again. |
 | `browser_open_failed` | `agpj open` could not start the program that opens the browser (`open`, `xdg-open`, or `AGPJ_BROWSER_OPENER`). | Open the address in the message yourself, or install or fix that program. |
@@ -68,10 +68,10 @@ Find what you see, read the cause, and do what the last column says. The command
 | --- | --- | --- |
 | `setup asks which agent to set up and needs a terminal` or `asks for a confirmation and needs a terminal` (exit 2) | The command was started from a pipe, a script, or an agent, or with `--json`, without the options that replace the questions. | Run it yourself in a terminal, or add `--agent` and `--yes` (or `--dry-run`). |
 | `The codex command was not found on PATH` (or `claude`), and the agent is `skipped` | The agent is not installed, or its command is not on your `PATH`. | Install it or fix `PATH`, then run the command again. |
-| `The Agent Board plugin is not installed` from `update` | `update` only moves a plugin that is installed. | Run `agpj setup` for that agent. |
+| `The Agent Project plugin is not installed` from `update` | `update` only moves a plugin that is installed. | Run `agpj setup` for that agent. |
 | An agent is `failed` with `codex plugin …` or `claude plugin …` in the reason | The agent's own plugin command failed, for example without a network connection to GitHub. The message ends with that command's output. | Fix the cause and run the command again. The settings files already written stay correct. |
 | A manual step about `sandbox_mode` or a permission profile | Codex's permission settings do not let the data folder be written, and setup never changes them. | Set `sandbox_mode = "workspace-write"` in Codex's `config.toml` yourself, or add the data folder to your permission profile, then run `agpj setup` again. |
-| `Codex lists no hooks of the Agent Board plugin` or `still does not trust the hook` | The plugin is not enabled in Codex, or Codex refused the trust. | Check the plugin with `codex plugin list`, then review the hooks with `/hooks` in Codex. |
+| `Codex lists no hooks of the Agent Project plugin` or `still does not trust the hook` | The plugin is not enabled in Codex, or Codex refused the trust. | Check the plugin with `codex plugin list`, then review the hooks with `/hooks` in Codex. |
 | The agent does not run the Hook | The agent was not restarted, or the Claude Code Hook is not reviewed. | Start a new session (Claude Code) or restart Codex, then review the Hook with `/hooks`. |
 | A new session says the plugin is being updated, or that the automatic update did not complete | `agpj` was upgraded and the Hook found a different plugin. The update runs in the background; it did not finish, or Codex needs its hooks trusted. | Start a new session to use the update. If it did not complete or you use Codex, run `agpj update`, then start a new session. |
 
@@ -79,10 +79,10 @@ Exit codes of both commands are in the [CLI reference](../reference/cli#setup-an
 
 ## macOS will not run agpj
 
-The command from Homebrew is signed with a Developer ID certificate and notarized by Apple. If macOS blocks it, do not turn off Gatekeeper or remove the quarantine yourself. First check that `brew install fooqoo/tap/agboard` finished without an error, that your Mac runs macOS 15 or later, and that `agpj --version` runs. The first launch may need a network connection so that macOS can check the notarization. If it is still blocked, [open an issue](https://github.com/FooQoo/agent-board/issues) with the macOS version and the message.
+The command from Homebrew is signed with a Developer ID certificate and notarized by Apple. If macOS blocks it, do not turn off Gatekeeper or remove the quarantine yourself. First check that `brew install fooqoo/tap/agpj` finished without an error, that your Mac runs macOS 15 or later, and that `agpj --version` runs. The first launch may need a network connection so that macOS can check the notarization. If it is still blocked, [open an issue](https://github.com/FooQoo/agent-project/issues) with the macOS version and the message.
 
 ## Still stuck?
 
 - Read `problems` in `snapshot --json`: it explains file and format errors.
 - Check which data folder you use: the CLI, the server, and the hooks must share the same `AGPJ_HOME`. See [Data and backups](./data#where-the-data-lives).
-- If you work on Agent Board itself, the [developer troubleshooting page](../../dev/troubleshooting) covers building, testing, and internal failures.
+- If you work on Agent Project itself, the [developer troubleshooting page](../../dev/troubleshooting) covers building, testing, and internal failures.

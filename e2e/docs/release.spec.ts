@@ -24,7 +24,7 @@ function run(args: string[], out: string): { status: number; stderr: string } {
 }
 
 function tmp(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'agboard-docs-release-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'agent-project-docs-release-'));
 }
 
 const body = (extra = '') => `Opening.
@@ -46,7 +46,7 @@ function release(tag: string, over: Record<string, unknown> = {}) {
   return {
     tag_name: tag,
     body: body(),
-    html_url: `https://github.com/FooQoo/agent-board/releases/tag/${tag}`,
+    html_url: `https://github.com/FooQoo/agent-project/releases/tag/${tag}`,
     published_at: '2026-11-01T10:00:00Z',
     draft: false,
     prerelease: false,
@@ -99,7 +99,7 @@ test.describe('docs-release script', () => {
     expect(header).toEqual({
       state: 'published',
       version: '1.10.0',
-      url: 'https://github.com/FooQoo/agent-board/releases/tag/v1.10.0',
+      url: 'https://github.com/FooQoo/agent-project/releases/tag/v1.10.0',
     });
     const cargo = /^version = "(.*)"$/m.exec(readRepoFile('Cargo.toml'))![1];
     if (cargo !== '1.10.0') expect(header.version).not.toBe(cargo);
@@ -174,7 +174,7 @@ for (const lang of langs) {
     const label = lang === 'en' ? 'Release notes' : 'リリースノート';
     await page.goto(`${prefix}guide/`);
     const link = page.locator('.VPNavBarMenu').getByRole('link', { name: label, exact: true });
-    await expect(link).toHaveAttribute('href', `/agent-board/${prefix}releases`);
+    await expect(link).toHaveAttribute('href', `/agent-project/${prefix}releases`);
     await link.click();
     await expect(page.locator('.vp-doc h1')).toHaveText(label);
     await expect(page.locator('.vp-doc h2[id="v1-0-0"]')).toHaveCount(1);

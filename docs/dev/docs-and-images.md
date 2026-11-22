@@ -4,7 +4,7 @@ The documentation site lives in `docs/`. This page explains how to preview and b
 
 ## Documentation site
 
-The documentation site lives in `docs/` and is built with VitePress. It has the user guide (`docs/guide/`) and this developer chapter (`docs/dev/`). English is the source language; keep the Japanese pages in `docs/ja/` in step with every English change. It is published to GitHub Pages from `main` by `.github/workflows/docs.yml`; pull requests that change `docs/**`, `web/**`, or the demo suite only build and test it. The same workflow builds the [demo](./getting-started/setup.md#demo-build) after the site and copies `web/dist-demo/` into `docs/.vitepress/dist/demo/`, so it is served at `/agent-board/demo/`. It then runs the demo suite against that output and stops before the upload if the suite fails; see [The browser demo](./concepts/demo.md#check-it-locally). Links to the demo from the guide use its full URL, because the demo is not a VitePress page.
+The documentation site lives in `docs/` and is built with VitePress. It has the user guide (`docs/guide/`) and this developer chapter (`docs/dev/`). English is the source language; keep the Japanese pages in `docs/ja/` in step with every English change. It is published to GitHub Pages from `main` by `.github/workflows/docs.yml`; pull requests that change `docs/**`, `web/**`, or the demo suite only build and test it. The same workflow builds the [demo](./getting-started/setup.md#demo-build) after the site and copies `web/dist-demo/` into `docs/.vitepress/dist/demo/`, so it is served at `/agent-project/demo/`. It then runs the demo suite against that output and stops before the upload if the suite fails; see [The browser demo](./concepts/demo.md#check-it-locally). Links to the demo from the guide use its full URL, because the demo is not a VitePress page.
 
 ```sh
 pnpm --dir docs install
@@ -17,10 +17,10 @@ Run `pnpm --dir docs build` before committing any change under `docs/`. Links to
 
 The home page has no Markdown body. Its copy lives in the `landing` frontmatter of `docs/index.md` and `docs/ja/index.md`, and `docs/.vitepress/theme/LandingPage.vue` lays it out, picks the screenshots for the language, and swaps the board image for its dark version. Edit the copy in both files and keep their keys the same. The build's dead-link check does not see links in frontmatter, so the site tests open every link on the home page instead. Its colors are the `--lp-*` variables in `custom.css`, which follow the app's lane and pending colors.
 
-The English top page (`/agent-board/`) chooses its language in the browser:
+The English top page (`/agent-project/`) chooses its language in the browser:
 
-- A reader whose browser prefers Japanese (the first entry of `navigator.languages` starts with `ja`) is sent to `/agent-board/ja/`.
-- A language picked in the nav's language menu, on a desktop or a phone, is saved in `localStorage` under `agent-board-docs-lang`. From then on the saved choice wins over the browser language.
+- A reader whose browser prefers Japanese (the first entry of `navigator.languages` starts with `ja`) is sent to `/agent-project/ja/`.
+- A language picked in the nav's language menu, on a desktop or a phone, is saved in `localStorage` under `agent-project-docs-lang`. From then on the saved choice wins over the browser language.
 - Only the English top page moves. Deep links, the Japanese pages, and in-site navigation never redirect. When storage is blocked, the choice is not kept and the browser language decides.
 
 The redirect is client-side only, so the built HTML of every page stays the same for crawlers. `docs/.vitepress/theme/languageChoice.ts` holds both parts. `config.ts` inlines its redirect script right after the charset of the top page only, ahead of the stylesheets, so the English page barely shows before it moves. The script reads `base` from the config. The theme's `enhanceApp` saves the choice when a language menu link is clicked. The site tests in `e2e/docs/language.spec.ts` cover Japanese and English browsers, a saved choice, the phone menu, blocked storage, and deep links.
@@ -54,7 +54,7 @@ The release notes live in two places:
 - The site's release notes page, `docs/releases.md` and its Japanese translation `docs/ja/releases.md`, with every published version newest first. Add the new version to both pages when its Release is published; the script does not write them.
 
 ```sh
-node scripts/release/docs-release.mjs --github --repo FooQoo/agent-board   # the published site
+node scripts/release/docs-release.mjs --github --repo FooQoo/agent-project   # the published site
 node scripts/release/docs-release.mjs --fixture                              # local preview of a published state
 node scripts/release/docs-release.mjs --none                                 # the state before any release (default)
 pnpm --dir docs build

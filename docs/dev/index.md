@@ -1,8 +1,8 @@
 # Developer guide
 
-This chapter explains the architecture, implementation, and verification needed to develop Agent Board. If you only want to use the board, read the [guide](../guide/index.md) instead.
+This chapter explains the architecture, implementation, and verification needed to develop Agent Project. If you only want to use the board, read the [guide](../guide/index.md) instead.
 
-Agent Board is a single Rust program, `agpj`, that is both a CLI and a web server. All data is stored in files; the CLI, direct Markdown edits, and the browser work with the same data:
+Agent Project is a single Rust program, `agpj`, that is both a CLI and a web server. All data is stored in files; the CLI, direct Markdown edits, and the browser work with the same data:
 
 ```mermaid
 flowchart LR
@@ -24,15 +24,15 @@ flowchart LR
 ## A path for your first day
 
 1. [Set up and run](./getting-started/setup.md): build it and run it against a temporary board.
-2. [How Agent Board works](./concepts/overview.md): read the overview and follow one change through the system.
-3. [The work model in code](./concepts/work-model.md): see which rules Agent Board enforces, where, and which tests cover them.
+2. [How Agent Project works](./concepts/overview.md): read the overview and follow one change through the system.
+3. [The work model in code](./concepts/work-model.md): see which rules Agent Project enforces, where, and which tests cover them.
 4. [Follow your first change](./getting-started/first-change.md): trace one rule from the CLI to the file and to its test.
 5. [Tasks and states](./concepts/tasks-and-states.md), then the concept page of the area you will touch.
 6. [Verify and open a pull request](./getting-started/pull-request.md).
 
 ## Keeping these pages current
 
-- They describe how Agent Board works **now**. Plans and the history of decisions are kept outside the repository.
+- They describe how Agent Project works **now**. Plans and the history of decisions are kept outside the repository.
 - Update them in the same change as the behavior they describe.
 - English is the source. The Japanese pages in `docs/ja/dev/` are translations for developers; update them in the same change.
 - The repository's `AGENTS.md` indexes these pages for coding agents.

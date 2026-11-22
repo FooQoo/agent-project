@@ -12,7 +12,7 @@ Before you change behavior, read the [developer reference](../index.md) for the 
   - Rust: `tests/file_size.rs` counts the lines before a file's `#[cfg(test)]` module.
   - Web UI: Biome's `noExcessiveLinesPerFile` rule in `web/biome.json` checks the files, so `pnpm --dir web check` reports them. The same command then checks the import layers and cycles of `web/src/` (see [Where the web code lives](../concepts/server-and-ui.md#where-the-web-code-lives)).
   - A file that must stay longer says so on its first line, with a reason: `// file-size: allow (reason)` in Rust, and `// biome-ignore lint/style/noExcessiveLinesPerFile: reason` in the web UI. Such a file has no limit, so prefer splitting it by responsibility. The Rust test also fails when a marker has no reason, or when its file fits the limit.
-- The developer reference in `docs/dev/reference/` describes how Agent Board works now. Update it, and its Japanese translation in `docs/ja/dev/reference/`, in the same change as the behavior it describes.
+- The developer reference in `docs/dev/reference/` describes how Agent Project works now. Update it, and its Japanese translation in `docs/ja/dev/reference/`, in the same change as the behavior it describes.
 - Never commit machine-specific absolute paths to hooks, configuration, scripts, documentation, or generated artifacts, including personal home directories and local checkout paths.
 - Use repository-relative paths for project files and executables, `PATH` for installed commands, or environment variables resolved at runtime. Keep machine-specific overrides in ignored local files.
 - Before committing, inspect the staged diff for personal paths such as `/Users/` and `/home/`, and remove them. Check that changed hook commands work without depending on a particular user's directory layout.
@@ -46,15 +46,15 @@ pnpm --dir web build-storybook
 
 Run `pnpm --dir web format` to apply the web formatter. To measure coverage locally, run `pnpm --dir web test:coverage` for the web UI (the report goes to `web/coverage/`) and `cargo llvm-cov nextest` for Rust ([cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov) is installed with `cargo install cargo-llvm-cov --locked`).
 
-The [CI workflow](https://github.com/FooQoo/agent-board/blob/main/.github/workflows/ci.yml) runs the same checks on every pull request and every push to `main`:
+The [CI workflow](https://github.com/FooQoo/agent-project/blob/main/.github/workflows/ci.yml) runs the same checks on every pull request and every push to `main`:
 
 - The Rust job runs `cargo fmt`, `cargo clippy`, and `cargo nextest run` on Linux (`ubuntu-latest`).
 - The web job runs the type checks, the linter, the unit tests, and the Storybook tests and build. It runs in the official Playwright container image, which already holds Chromium and its system libraries, so the job installs no browser.
 - The E2E build job builds the web UI and the CLI once, plus the `monitor_phone_serve` test binary the phone specs use, and uploads them as an artifact. The E2E job then runs the Playwright app suite (`pnpm --dir e2e test`) on Linux, split into five shards that run side by side in the Playwright container image. Each shard downloads the artifact and sets `AGPJ_E2E_PREBUILT=1`, so the global setup skips the build and uses the binaries named by `AGPJ_E2E_BINARY` and `AGPJ_E2E_PHONE_BACKEND`; the image has no Rust toolchain. The jobs run on every pull request, on pushes to `main`, and on manual runs.
 - The image tag (`mcr.microsoft.com/playwright:v<version>-noble`, pinned by digest) must match the Playwright version in `web/package.json` and `e2e/package.json`. When you update Playwright, update the tag in both container jobs of `ci.yml` in the same change.
-- The coverage job measures the Rust tests with `cargo llvm-cov nextest` and the web unit tests with `pnpm --dir web test:coverage`, then sends both reports to [Codecov](https://codecov.io/gh/FooQoo/agent-board). It reports the numbers and does not fail the run for a low coverage.
+- The coverage job measures the Rust tests with `cargo llvm-cov nextest` and the web unit tests with `pnpm --dir web test:coverage`, then sends both reports to [Codecov](https://codecov.io/gh/FooQoo/agent-project). It reports the numbers and does not fail the run for a low coverage.
 
-On a pull request, a newer commit cancels the run in progress. On `main`, a run is never cancelled; a newer push waits for it, so every merge gets a finished run. When a pull request is merged or closed, the [Cancel CI of a closed pull request](https://github.com/FooQoo/agent-board/blob/main/.github/workflows/cancel-closed-pr.yml) workflow cancels its remaining CI and Release build runs, so they do not hold the runners that the run on `main` needs.
+On a pull request, a newer commit cancels the run in progress. On `main`, a run is never cancelled; a newer push waits for it, so every merge gets a finished run. When a pull request is merged or closed, the [Cancel CI of a closed pull request](https://github.com/FooQoo/agent-project/blob/main/.github/workflows/cancel-closed-pr.yml) workflow cancels its remaining CI and Release build runs, so they do not hold the runners that the run on `main` needs.
 
 [CodeRabbit](https://www.coderabbit.ai/) also reviews pull requests to `main`, and those to a `feature/` branch in a stack, and comments on them in English. Draft pull requests and pull requests to other branches are not reviewed automatically; mark a draft ready for review when you want its review. The settings are in `.coderabbit.yaml`.
 
@@ -82,7 +82,7 @@ The app suite runs its spec files on several Playwright workers at once:
 - Each worker has its own temporary data area and its own `agpj serve` on port 0. The suite uses no fixed port, so two checkouts can run it at the same time.
 - The number of workers defaults to half the CPUs. Set `AGPJ_E2E_WORKERS`, or pass `--workers`, to change it. The tests in one file run in order on one worker, because they share that worker's board.
 - `AGPJ_E2E_BINARY` selects a different `agpj` binary. With `AGPJ_E2E_PREBUILT=1` (used by CI) the global setup builds nothing and requires `AGPJ_E2E_BINARY` and `AGPJ_E2E_PHONE_BACKEND` to name existing files. The worker fixture sets `AGPJ_E2E_HOME` and `AGPJ_E2E_MAIN_URL` itself; do not set them.
-- Results and traces go to `agent-board-e2e-results-<checkout>` in the system's temporary directory, one folder for each checkout.
+- Results and traces go to `agent-project-e2e-results-<checkout>` in the system's temporary directory, one folder for each checkout.
 
 When you write an app spec:
 

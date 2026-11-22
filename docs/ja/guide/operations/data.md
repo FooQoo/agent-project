@@ -4,21 +4,21 @@ title: データとバックアップ
 
 # データとバックアップ
 
-Agent Boardのデータは、すべて手元のマシンの一つのフォルダに保存されます。このページでは、ファイルの場所、プロジェクトとフォルダの登録、エージェントにフォルダへのアクセスを許可する方法、バックアップの取り方を示します。
+Agent Projectのデータは、すべて手元のマシンの一つのフォルダに保存されます。このページでは、ファイルの場所、プロジェクトとフォルダの登録、エージェントにフォルダへのアクセスを許可する方法、バックアップの取り方を示します。
 
 ## データの保存先
 
-既定のデータフォルダは、ホームフォルダ直下の`.agent-board/`です。
+既定のデータフォルダは、ホームフォルダ直下の`.agent-project/`です。
 
 | OS | 既定のフォルダ |
 | --- | --- |
-| macOS | `~/.agent-board/` |
-| Windows | `%USERPROFILE%\.agent-board\` |
+| macOS | `~/.agent-project/` |
+| Windows | `%USERPROFILE%\.agent-project\` |
 
 別のデータフォルダを使うには`AGPJ_HOME`を設定します。空の値は未設定として扱います。ボードを共有するには、CLI、サーバー、Hook、`agpj setup`が同じフォルダを使う必要があります。
 
 ```text
-.agent-board/
+.agent-project/
   bindings.json          フォルダの登録(マシン固有)
   serve.json             CLIが起動中のagpj serveを見つける情報
   serve.log              裏で起動したサーバーの出力
@@ -57,7 +57,7 @@ Agent Boardのデータは、すべて手元のマシンの一つのフォルダ
 
 `"draft": "ai"`を持つ`task.json`・`epic.json`は不正なファイルです。ボードはそれを報告し、一覧から除き、書き換えません。
 
-各プロジェクトの`docs/`には、自分のMarkdown文書を置きます。ボードのヘッダーの**ドキュメント**から読んだり編集したりできます。フォルダは短い`README.md`と空の`docs/release/`フォルダとともにAgent Boardが作ります（既存のプロジェクトでは、版を追加するか生成した最初のときに`docs/release/`ができます）が、中のファイルはボードのデータとして扱いません。変更してもボードは変わりませんが、例外として`docs/release/`直下の`*.md`ファイルはプロジェクトの版の一覧です（`v1.8.0.md`は`v1.8.0`を載せます）。追加・削除するとその一覧が変わります。詳しくは[プロジェクトのドキュメント](../watch/docs)を参照してください。
+各プロジェクトの`docs/`には、自分のMarkdown文書を置きます。ボードのヘッダーの**ドキュメント**から読んだり編集したりできます。フォルダは短い`README.md`と空の`docs/release/`フォルダとともにAgent Projectが作ります（既存のプロジェクトでは、版を追加するか生成した最初のときに`docs/release/`ができます）が、中のファイルはボードのデータとして扱いません。変更してもボードは変わりませんが、例外として`docs/release/`直下の`*.md`ファイルはプロジェクトの版の一覧です（`v1.8.0.md`は`v1.8.0`を載せます）。追加・削除するとその一覧が変わります。詳しくは[プロジェクトのドキュメント](../watch/docs)を参照してください。
 
 ## プロジェクトとフォルダ {#projects-and-folders}
 
@@ -87,11 +87,11 @@ agpj project bind "My project" --folder ./docs
 
 ## 共有フォルダをセットアップする
 
-`agpj setup`は、CodexとClaude Codeのためにデータフォルダを準備し、Agent Boardプラグインを導入します（[エージェントとの連携](../delegate/agents#set-up-your-agents)を参照）。プロジェクトは不要です。データフォルダについては、次のことを行います。
+`agpj setup`は、CodexとClaude Codeのためにデータフォルダを準備し、Agent Projectプラグインを導入します（[エージェントとの連携](../delegate/agents#set-up-your-agents)を参照）。プロジェクトは不要です。データフォルダについては、次のことを行います。
 
 - データフォルダと、その中の`shared/`フォルダを作成します。
 - `$CODEX_HOME`または`~/.codex`にあるCodexの`config.toml`で、`sandbox_workspace_write.writable_roots`にデータフォルダを追加します。
-- 同じCodexのフォルダに`rules/agboard.rules`を書き込み、Codexが確認なしで`agpj`を実行できるようにします。ファイルがすでにあるときは書き込みません。
+- 同じCodexのフォルダに`rules/agpj.rules`を書き込み、Codexが確認なしで`agpj`を実行できるようにします。ファイルがすでにあるときは書き込みません。
 - `$CLAUDE_CONFIG_DIR`または`~/.claude`にあるClaude Codeの`settings.json`で、`permissions.additionalDirectories`にデータフォルダを追加します。
 
 ```sh
@@ -103,21 +103,21 @@ agpj setup
 
 ```text
 Dry run: nothing was installed, created, or changed.
-Data directory: <home>/.agent-board
-Shared folder: <home>/.agent-board/shared
+Data directory: <home>/.agent-project
+Shared folder: <home>/.agent-project/shared
 Codex: planned
-  plugin: install version X.Y.Z from https://github.com/FooQoo/agent-board.git at vX.Y.Z
+  plugin: install version X.Y.Z from https://github.com/FooQoo/agent-project.git at vX.Y.Z
   planned <home>/.codex/config.toml
-    - add "<home>/.agent-board" to sandbox_workspace_write.writable_roots
-  planned <home>/.codex/rules/agboard.rules
+    - add "<home>/.agent-project" to sandbox_workspace_write.writable_roots
+  planned <home>/.codex/rules/agpj.rules
     - allow the agpj command (prefix_rule)
 Claude Code: planned
-  plugin: install version X.Y.Z from https://github.com/FooQoo/agent-board.git at vX.Y.Z
+  plugin: install version X.Y.Z from https://github.com/FooQoo/agent-project.git at vX.Y.Z
   planned <home>/.claude/settings.json
-    - add "<home>/.agent-board" to permissions.additionalDirectories
+    - add "<home>/.agent-project" to permissions.additionalDirectories
 ```
 
-setupは既存の設定をすべて残し、上の配列だけを変更します。既存の設定ファイルを変更する前に、そのファイルの隣へ`<file>.agboard-backup…`という名前でバックアップを書き込みます。バックアップには元の設定が入っているので、共有フォルダには置かないでください。もう一度実行しても何も変わらず、各ファイルは`unchanged`と表示されます。読めない、または形の誤った設定ファイルがあるときは、何も書き込まずにそのファイルを示します。
+setupは既存の設定をすべて残し、上の配列だけを変更します。既存の設定ファイルを変更する前に、そのファイルの隣へ`<file>.agpj-backup…`という名前でバックアップを書き込みます。バックアップには元の設定が入っているので、共有フォルダには置かないでください。もう一度実行しても何も変わらず、各ファイルは`unchanged`と表示されます。読めない、または形の誤った設定ファイルがあるときは、何も書き込まずにそのファイルを示します。
 
 setupがCodexの`config.toml`を変更するのは、`sandbox_mode`が`"workspace-write"`で、権限プロファイル（`default_permissions`、`permissions`、`profile`、`profiles`）を設定していないときだけです。そうでないときは、ファイルをそのままにして、手作業の手順を表示します。プラグインは導入します。setupが`sandbox_mode`自体を変えることはありません。`sandbox_mode = "danger-full-access"`では、Codexはすでにすべてのフォルダを扱えるので、権限もルールファイルも書き込みません。
 

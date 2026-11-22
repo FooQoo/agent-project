@@ -2,9 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 
 // The top page picks its language in the browser: a Japanese browser opens the Japanese top
 // page, a choice made in the nav's language menu wins afterwards, and deep links never move.
-const storageKey = 'agent-board-docs-lang';
-const enTop = /\/agent-board\/$/;
-const jaTop = /\/agent-board\/ja\/$/;
+const storageKey = 'agent-project-docs-lang';
+const enTop = /\/agent-project\/$/;
+const jaTop = /\/agent-project\/ja\/$/;
 
 async function savedChoice(page: Page): Promise<string | null> {
   return page.evaluate((key) => localStorage.getItem(key), storageKey);
@@ -28,14 +28,14 @@ test.describe('a Japanese browser', () => {
 
   test('keeps the query and the fragment when it moves', async ({ page }) => {
     await page.goto('?from=readme#install');
-    await expect(page).toHaveURL(/\/agent-board\/ja\/\?from=readme#install$/);
+    await expect(page).toHaveURL(/\/agent-project\/ja\/\?from=readme#install$/);
   });
 
   for (const deepLink of ['guide/', 'guide/watch/board', 'dev/', 'releases']) {
     test(`stays on the deep link ${deepLink}`, async ({ page }) => {
       await page.goto(deepLink);
       await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-      expect(new URL(page.url()).pathname).toBe(`/agent-board/${deepLink}`);
+      expect(new URL(page.url()).pathname).toBe(`/agent-project/${deepLink}`);
     });
   }
 
@@ -49,7 +49,7 @@ test.describe('a Japanese browser', () => {
     // A fresh load of the top page now follows the saved choice, not the browser.
     await page.goto('');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    expect(new URL(page.url()).pathname).toBe('/agent-board/');
+    expect(new URL(page.url()).pathname).toBe('/agent-project/');
   });
 
   test('remembers a choice made in the phone menu', async ({ page }) => {
@@ -74,13 +74,13 @@ test.describe('an English browser', () => {
   test('stays on the English top page', async ({ page }) => {
     await page.goto('');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    expect(new URL(page.url()).pathname).toBe('/agent-board/');
+    expect(new URL(page.url()).pathname).toBe('/agent-project/');
   });
 
   test('opens the Japanese top page after Japanese is picked in the language menu', async ({ page }) => {
     await page.goto('guide/');
     await pickInDesktopMenu(page, 'Change language', '日本語');
-    await expect(page).toHaveURL(/\/agent-board\/ja\/guide\/$/);
+    await expect(page).toHaveURL(/\/agent-project\/ja\/guide\/$/);
     expect(await savedChoice(page)).toBe('ja');
 
     await page.goto('');
@@ -89,7 +89,7 @@ test.describe('an English browser', () => {
 
     // The saved choice moves only the top page; a deep link still opens as linked.
     await page.goto('guide/watch/board');
-    expect(new URL(page.url()).pathname).toBe('/agent-board/guide/watch/board');
+    expect(new URL(page.url()).pathname).toBe('/agent-project/guide/watch/board');
   });
 
   test('still opens the top page when storage is blocked', async ({ page }) => {
@@ -102,9 +102,9 @@ test.describe('an English browser', () => {
     });
     await page.goto('guide/');
     await pickInDesktopMenu(page, 'Change language', '日本語');
-    await expect(page).toHaveURL(/\/agent-board\/ja\/guide\/$/);
+    await expect(page).toHaveURL(/\/agent-project\/ja\/guide\/$/);
     await page.goto('');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    expect(new URL(page.url()).pathname).toBe('/agent-board/');
+    expect(new URL(page.url()).pathname).toBe('/agent-project/');
   });
 });
