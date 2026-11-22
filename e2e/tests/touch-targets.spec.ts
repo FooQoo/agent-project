@@ -76,7 +76,7 @@ test('a pending card keeps its badge and its answer button whole beside the open
   const pending = page.locator('.card--pending').first();
   await expect(pending).toBeVisible();
   const badge = pending.locator('.status-label');
-  await expect(badge).toHaveText(/Pending/);
+  await expect(badge).toHaveText(/Awaiting answer/);
   expect(await badge.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   const button = answerButton(page, 12);
   await expect(button).toBeVisible();

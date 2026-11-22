@@ -42,7 +42,7 @@ test('the panel shows the run state and the reason for Doing tasks, and an empty
   const panel = details(page);
 
   await task(page, 12).click();
-  await expect(panel).toContainText('Pending');
+  await expect(panel).toContainText('Awaiting answer');
   // The pause icon shows on the card and in the detail alike.
   await expect(task(page, 12).locator('.status-label svg')).toHaveCount(1);
   await expect(panel.locator('.detail__meta .status-label--awaiting_answer svg')).toHaveCount(1);
@@ -93,7 +93,7 @@ test('the panel shows the run state and the reason for Doing tasks, and an empty
   expect(archiveBox.x).toBeGreaterThan(previewBox.x + previewBox.width - 1);
   // The actions sit in the panel header, above the tabs.
   expect(archiveBox.y).toBeLessThan(tabsBox.y);
-  await expect(panel.getByText(/^(Idle|Running|Pending)$/)).toHaveCount(0);
+  await expect(panel.getByText(/^(Idle|Running|Paused|Has run|Awaiting answer)$/)).toHaveCount(0);
 });
 
 test('History shows datetime and recorded reasons newest first', async ({

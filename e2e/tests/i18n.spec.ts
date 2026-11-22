@@ -56,7 +56,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   await expect(lane(page, '進行中').getByRole('heading', { level: 2 })).toHaveText('進行中');
   await expect(lane(page, '完了').getByRole('heading', { level: 2 })).toHaveText('完了');
   await expect(task(page, 11)).toContainText('稼働中');
-  await expect(task(page, 12)).toContainText('待機中');
+  await expect(task(page, 12)).toContainText('回答待');
   await expect(task(page, 13)).toContainText('未稼働');
   await expect(task(page, 12).locator('..').getByRole('button', { name: '質問に回答する' })).toBeVisible();
   await expect(task(page, 12).locator('..')).not.toContainText('Waiting for confirmation on how to replace a board.');
@@ -68,7 +68,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   const panel = page.getByRole('complementary', { name: 'タスクの詳細' });
   await expect(panel.getByRole('heading', { level: 2 })).toHaveText('Restore a board from JSON');
   await expect(panel).toContainText('進行中');
-  await expect(panel).toContainText('待機中');
+  await expect(panel).toContainText('回答待');
   // The question sits on the card (checked above) and in the history, which is read when its tab opens: only the
   // open tab is drawn, so the panel does not hold the history text before then.
   await expect(panel.getByRole('tab', { name: '本文' })).toHaveAttribute('aria-selected', 'true');
@@ -100,7 +100,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   await expect(page.getByRole('contentinfo').getByRole('status')).toHaveText(/^同期済み/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
   await expect(lane(page, '未着手')).toBeVisible();
-  await expect(task(page, 12)).toContainText('待機中');
+  await expect(task(page, 12)).toContainText('回答待');
 
   await page.getByRole('button', { name: '設定', exact: true }).click();
   await page.getByRole('radio', { name: 'English' }).click();
@@ -109,7 +109,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(lane(page, 'Todo')).toBeVisible();
-  await expect(task(page, 12)).toContainText('Pending');
+  await expect(task(page, 12)).toContainText('Awaiting answer');
   expect(listTasks(mainProject).find(({ id }) => id === 12)).toMatchObject({ taskStatus: 'doing', agentStatus: 'awaiting_answer' });
 });
 
