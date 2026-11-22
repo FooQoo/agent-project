@@ -68,6 +68,7 @@ impl AgboardError {
             AgboardError::DocsAssetType { .. } => "docs_asset_type",
             AgboardError::DocsNotImplemented => "docs_not_implemented",
             AgboardError::DocsOpenFailed { .. } => "docs_open_failed",
+            AgboardError::ReleaseDocRefused { .. } => "release_doc_refused",
             AgboardError::RemoteUnavailable { .. } => "remote_unavailable",
             AgboardError::InvalidDomain => "invalid_domain",
             AgboardError::KeychainUnavailable { .. } => "keychain_unavailable",

@@ -108,6 +108,10 @@ pub const COMMANDS: &[(&str, Cover)] = &[
         Rules(&["final-result", "result-pr", "result-artifact"]),
     ),
     ("result ls", READ_ONLY),
+    (
+        "release doc",
+        NoRule("generates a document from the board; nothing to forget"),
+    ),
     ("rm", NoRule("humans only; a person confirms it")),
     ("serve", NoRule("runs the server")),
     ("setup", NoRule("installation by a person")),

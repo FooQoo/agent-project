@@ -57,7 +57,7 @@ Projects that were saved by an earlier build are converted once, the first time 
 
 A `task.json` or `epic.json` that holds `"draft": "ai"` is an invalid file: the board reports it, leaves it out, and leaves it unchanged.
 
-Each project's `docs/` folder holds your own Markdown documents, which you read and edit from **Docs** in the board header. Agent Board creates the folder with a short `README.md`, but it does not treat the files as board data: changing them never changes the board, with one exception: the `*.md` files directly inside `docs/release/` are the project's list of versions (`v1.8.0.md` lists `v1.8.0`), so adding or removing one changes that list. See [Project docs](../watch/docs).
+Each project's `docs/` folder holds your own Markdown documents, which you read and edit from **Docs** in the board header. Agent Board creates the folder with a short `README.md` and an empty `docs/release/` folder (an existing project gets `docs/release/` the first time you add or generate a version), but it does not treat the files as board data: changing them never changes the board, with one exception: the `*.md` files directly inside `docs/release/` are the project's list of versions (`v1.8.0.md` lists `v1.8.0`), so adding or removing one changes that list. See [Project docs](../watch/docs).
 
 ## Projects and folders
 

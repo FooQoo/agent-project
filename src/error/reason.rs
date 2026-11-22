@@ -175,6 +175,7 @@ impl AgboardError {
                 "The Docs API is still being built. Try again in a later version.".to_string()
             }
             AgboardError::DocsOpenFailed { reason } => reason.clone(),
+            AgboardError::ReleaseDocRefused { reason, .. } => reason.clone(),
             AgboardError::RemoteUnavailable { reason } => reason.clone(),
             AgboardError::InvalidDomain => "Give a host name only, such as example.ngrok-free.dev, without https://, a path, or a port.".to_string(),
             AgboardError::KeychainUnavailable { reason } => reason.clone(),

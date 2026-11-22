@@ -145,6 +145,10 @@ pub(super) fn all_errors() -> Vec<AgboardError> {
         AgboardError::DocsOpenFailed {
             reason: "xdg-open is not installed".into(),
         },
+        AgboardError::ReleaseDocRefused {
+            file: "docs/release/v1.8.0.md".into(),
+            reason: "The file changed while it was generated.".into(),
+        },
         AgboardError::RemoteUnavailable {
             reason: "No server is running.".into(),
         },
@@ -236,6 +240,7 @@ fn codes_and_exit_codes_follow_the_design_table() {
             ("docs_asset_type", 1),
             ("docs_not_implemented", 1),
             ("docs_open_failed", 1),
+            ("release_doc_refused", 1),
             ("remote_unavailable", 1),
             ("invalid_domain", 2),
             ("keychain_unavailable", 1),

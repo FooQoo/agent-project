@@ -108,6 +108,7 @@ impl FileStore {
                 docs_locale.readme().as_bytes(),
                 &format!("{label}/docs/README.md"),
             )?;
+            fs::create_dir(layout::release_dir(&temp)).map_err(|e| io::write_error(&label, e))?;
             let file = ProjectFile {
                 format_version: FORMAT_VERSION,
                 id: id.clone(),

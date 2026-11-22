@@ -202,6 +202,10 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         ("cannot open the Docs folder.", "xdg-open is not installed"),
         (
+            "did not write docs/release/v1.8.0.md.",
+            "The file changed while it was generated.",
+        ),
+        (
             "the ngrok connection is not available.",
             "No server is running.",
         ),

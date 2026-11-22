@@ -82,6 +82,7 @@ pub(crate) fn agboard_error_response(error: &AgboardError) -> Response {
         AgboardError::DatabaseBusy => StatusCode::SERVICE_UNAVAILABLE,
         AgboardError::DocsPathInvalid { .. } => StatusCode::BAD_REQUEST,
         AgboardError::DocsNotFound { .. } => StatusCode::NOT_FOUND,
+        AgboardError::ReleaseDocRefused { .. } => StatusCode::CONFLICT,
         AgboardError::DocsNotMarkdown { .. } | AgboardError::DocsAssetType { .. } => {
             StatusCode::UNSUPPORTED_MEDIA_TYPE
         }

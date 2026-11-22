@@ -265,6 +265,12 @@ pub enum AgboardError {
         path: String,
     },
     DocsNotImplemented,
+    /// A release document was not written: its markers are damaged, or the file changed while
+    /// it was being generated. The existing file is left as it was.
+    ReleaseDocRefused {
+        file: String,
+        reason: String,
+    },
     /// The Docs folder could not be opened in the file manager.
     DocsOpenFailed {
         reason: String,

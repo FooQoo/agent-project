@@ -122,6 +122,7 @@ impl AgboardError {
                 "this document operation is not available yet.".to_string()
             }
             AgboardError::DocsOpenFailed { .. } => "cannot open the Docs folder.".to_string(),
+            AgboardError::ReleaseDocRefused { file, .. } => format!("did not write {file}."),
             AgboardError::RemoteUnavailable { .. } => {
                 "the ngrok connection is not available.".to_string()
             }

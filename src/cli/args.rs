@@ -9,6 +9,7 @@ mod help;
 mod history;
 mod message;
 mod project;
+mod release;
 mod result;
 mod task;
 mod validate;
@@ -21,6 +22,7 @@ pub use self::epic::*;
 pub use self::history::*;
 pub use self::message::*;
 pub use self::project::*;
+pub use self::release::*;
 pub use self::result::*;
 pub use self::task::*;
 pub use self::validate::*;
@@ -110,6 +112,8 @@ pub enum Command {
     Progress(ProgressCommandArgs),
     /// List the project's versions, add one, or show, set, or clear the current version
     Version(VersionArgs),
+    /// Generate the release document of a version in docs/release/
+    Release(ReleaseArgs),
 }
 
 impl Command {
@@ -142,11 +146,12 @@ impl Command {
             Command::Workspace(_) => "workspace",
             Command::Progress(_) => "progress",
             Command::Version(_) => "version",
+            Command::Release(_) => "release",
         }
     }
 }
 
-pub const SUBCOMMAND_NAMES: [&str; 26] = [
+pub const SUBCOMMAND_NAMES: [&str; 27] = [
     "project",
     "init",
     "add",
@@ -170,6 +175,7 @@ pub const SUBCOMMAND_NAMES: [&str; 26] = [
     "workspace",
     "progress",
     "version",
+    "release",
     "setup",
     "update",
     "skills",
