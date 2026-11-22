@@ -25,6 +25,7 @@ mod task_acceptance;
 mod task_attachments;
 mod task_edit;
 mod task_multipart;
+mod task_publication;
 mod tasks;
 mod version_plan;
 mod versions;
@@ -59,6 +60,7 @@ use task_acceptance::*;
 use task_attachments::*;
 use task_edit::*;
 use task_multipart::*;
+use task_publication::*;
 use tasks::*;
 use version_plan::{set_epic_version, set_task_version};
 use versions::{add_version, generate_release_doc, get_versions, set_current_version};
@@ -171,7 +173,7 @@ fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<
         )
         .route(
             "/api/projects/{project_id}/tasks/{id}/results",
-            get(list_task_results),
+            get(list_task_results).post(record_publication),
         )
         .route(
             "/api/projects/{project_id}/tasks/{id}/attachments/{attachment_id}",

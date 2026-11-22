@@ -8,7 +8,7 @@ use super::enums::ActorArg;
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo result add 12 --title \"First draft\" --summary \"First 30 seconds are ready\" --link ./out/draft.mp4 --actor ai\n  agboard --project demo result add 12 --summary \"Top page capture\" --file top.png --key top-v1 --actor ai\n  agboard --project demo result add 12 --summary \"Mock screens\" --file 01.png --file 02.png --file 03.png --actor ai\n  agboard --project demo result add 12 --summary \"Finished\" --final --actor ai\n  agboard --project demo result ls 12"
+    after_help = "Examples:\n  agboard --project demo result add 12 --title \"First draft\" --summary \"First 30 seconds are ready\" --link ./out/draft.mp4 --actor ai\n  agboard --project demo result add 12 --summary \"Top page capture\" --file top.png --key top-v1 --actor ai\n  agboard --project demo result add 12 --summary \"Mock screens\" --file 01.png --file 02.png --file 03.png --actor ai\n  agboard --project demo result add 12 --summary \"Finished\" --final --actor ai\n  agboard --project demo result add 12 --published v1.8.0 --link https://example.com/releases/v1.8.0 --summary \"Released\" --actor ai\n  agboard --project demo result ls 12"
 )]
 pub struct ResultArgs {
     #[command(subcommand)]
@@ -45,6 +45,14 @@ pub struct ResultAddArgs {
     /// Link or storage location of the main artifact
     #[arg(long, value_name = "URL_OR_PATH")]
     pub link: Option<String>,
+    /// Record that the task was published in this version (needs --link to what was published); allowed even on a Done task, and the summary gains a `Published: VERSION` line
+    #[arg(
+        long,
+        value_name = "VERSION",
+        requires = "link",
+        conflicts_with = "is_final"
+    )]
+    pub published: Option<String>,
     /// Mark the result as the final one; without it the result is in progress
     #[arg(long = "final")]
     pub is_final: bool,

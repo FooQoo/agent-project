@@ -91,6 +91,7 @@ fn recording_continues_from_the_newest_stored_summary_and_skips_an_empty_window(
                     link: None,
                     images: Vec::new(),
                     key: None,
+                    published: None,
                 },
                 when,
             )
@@ -159,6 +160,7 @@ fn a_result_saved_just_before_the_end_of_a_window_is_in_its_summary() {
                 link: None,
                 images: Vec::new(),
                 key: None,
+                published: None,
             },
             at(10, 59),
         )

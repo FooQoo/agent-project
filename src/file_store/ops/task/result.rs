@@ -24,6 +24,7 @@ use super::result_text::{
     clean_key, clean_link, clean_text, clean_title, content_key, excerpt, invalid,
 };
 use super::view;
+use crate::domain::validate_version_name;
 use crate::domain::{
     Attachment, AttachmentInput, Draft, ProjectId, ResultKind, TaskResult, derive_result_title,
 };
@@ -38,6 +39,9 @@ pub const MAX_RESULT_KEY_CHARS: usize = 64;
 /// The most images one result holds.
 pub const MAX_RESULT_IMAGES: usize = 20;
 
+/// The line that states a publication in a result's summary; the release document reads it.
+pub const PUBLISHED_PREFIX: &str = "Published:";
+
 /// What the agent delivers.
 #[derive(Debug, Clone)]
 pub struct ResultInput {
@@ -50,6 +54,9 @@ pub struct ResultInput {
     pub images: Vec<AttachmentInput>,
     /// An explicit key for retries; `None` derives it from the content.
     pub key: Option<String>,
+    /// The version this result records the publication of. It needs a link and is a
+    /// progress result; it is the one result a Done task still takes.
+    pub published: Option<String>,
 }
 
 /// The outcome of recording a result.
@@ -67,7 +74,7 @@ impl FileStore {
     /// Record a result on a task, from the agent side (the CLI). A task that is
     /// archived, a draft, or Done refuses it, as for any agent change, except
     /// that a retry of a result that was already recorded succeeds quietly and
-    /// the first final result may be added to a Done task.
+    /// the first final result and a publication record may be added to a Done task.
     pub fn add_result(
         &self,
         project: &ProjectId,
@@ -75,8 +82,34 @@ impl FileStore {
         input: ResultInput,
         now: DateTime<Utc>,
     ) -> Result<RecordedResult, AgboardError> {
-        let summary = clean_text("summary", &input.summary)?;
+        let mut summary = clean_text("summary", &input.summary)?;
         let link = input.link.as_deref().map(clean_link).transpose()?;
+        let published = match input.published.as_deref() {
+            Some(version) => {
+                let version = validate_version_name(version)?;
+                if link.is_none() {
+                    return Err(invalid(
+                        "link",
+                        "A publication record needs a link to what was published.",
+                    ));
+                }
+                if input.kind == ResultKind::Final {
+                    return Err(invalid(
+                        "final",
+                        "A publication record cannot be the final result.",
+                    ));
+                }
+                summary = format!("{PUBLISHED_PREFIX} {version}\n{summary}");
+                if summary.chars().count() > MAX_RESULT_TEXT_CHARS {
+                    return Err(invalid(
+                        "summary",
+                        &format!("A summary must be 1 to {MAX_RESULT_TEXT_CHARS} characters."),
+                    ));
+                }
+                true
+            }
+            None => false,
+        };
         let title = match input.title.as_deref() {
             Some(title) => clean_title(title)?,
             None => derive_result_title(&summary),
@@ -145,7 +178,7 @@ impl FileStore {
         // can happen before the agent writes it.
         let late_final = input.kind == ResultKind::Final
             && !task.results.iter().any(|r| r.kind == ResultKind::Final);
-        if !late_final {
+        if !late_final && !published {
             ensure_ai_task_not_done(&task, crate::domain::Actor::Ai)?;
         }
         if task.draft == Some(Draft::Human) {
