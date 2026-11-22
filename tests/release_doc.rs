@@ -123,7 +123,7 @@ fn generating_groups_tasks_and_keeps_hand_written_text_on_regeneration() {
     };
     assert!(section("Verified").contains(&format!("#{done} Verified work")));
     assert!(section("Remaining").contains(&format!("#{open} Open work")));
-    let moved_section = section("Moved to the next version");
+    let moved_section = section("Moved to another version");
     assert!(moved_section.contains(&format!("#{moved} Moved work")));
     assert!(moved_section.contains("Moved to: v2"));
     assert!(section("Not confirmed as published").contains(&format!("#{done} Verified work")));

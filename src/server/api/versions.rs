@@ -159,6 +159,7 @@ pub(super) async fn generate_release_doc(
                     "changed": doc.changed,
                     "planned": doc.planned,
                     "verified": doc.verified,
+                    "doneWithoutAcceptance": doc.done_unchecked,
                     "remaining": doc.remaining,
                     "moved": doc.moved,
                     "published": doc.published,
