@@ -107,9 +107,9 @@ fn generating_groups_tasks_and_keeps_hand_written_text_on_regeneration() {
             &out["moved"]
         ),
         (
+            &Value::from(3),
+            &Value::from(1),
             &Value::from(2),
-            &Value::from(1),
-            &Value::from(1),
             &Value::from(1)
         )
     );
@@ -153,7 +153,7 @@ fn generating_groups_tasks_and_keeps_hand_written_text_on_regeneration() {
     // Another version gets its own file; the first is untouched.
     let before = fs::read_to_string(release(&home, "v1")).unwrap();
     let v2 = generate(&home, "v2");
-    assert_eq!(v2["planned"], 2);
+    assert_eq!(v2["planned"], 3);
     assert!(release(&home, "v2").is_file());
     assert_eq!(fs::read_to_string(release(&home, "v1")).unwrap(), before);
 }
@@ -251,7 +251,8 @@ fn archived_tasks_are_included_and_a_named_unlisted_version_is_listed() {
     let new = generate(&home, "v9");
     assert_eq!(new["created"], true);
     assert!(release(&home, "v9").is_file());
-    assert_eq!(new["planned"], 0);
+    // The release-notes card issued with the version is planned for it.
+    assert_eq!(new["planned"], 1);
 }
 
 #[test]
@@ -304,10 +305,10 @@ fn only_a_linked_publication_record_counts_as_published() {
     let out = generate(&home, "v1");
     assert_eq!(
         (&out["planned"], &out["published"]),
-        (&Value::from(4), &Value::from(1))
+        (&Value::from(5), &Value::from(1))
     );
     let text = fs::read_to_string(release(&home, "v1")).unwrap();
-    assert!(text.contains("- Published (with a publication record): 1 / 4"));
+    assert!(text.contains("- Published (with a publication record): 1 / 5"));
     let from = text.find("### Published\n").unwrap();
     let rest = &text[from..];
     let (published, unconfirmed) = rest.split_once("### Not confirmed as published").unwrap();

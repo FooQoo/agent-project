@@ -165,7 +165,7 @@ fn ac2_one_backlog_card_is_issued_for_a_new_version() {
     assert_eq!(task.title, "Write the release notes for v1.8.0");
     assert_eq!(task.assignee, Assignee::Ai);
     assert_eq!(task.task_status, Column::Backlog);
-    assert_eq!(task.planned_version, None);
+    assert_eq!(task.planned_version.as_deref(), Some("v1.8.0"));
     assert!(task.body.contains("docs/release/v1.8.0.md"));
     assert!(task.body.contains("TEMPLATE.md"));
     assert!(task.body.contains("sends it to Todo"));

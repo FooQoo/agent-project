@@ -8,6 +8,7 @@ use chrono::{DateTime, Utc};
 use crate::domain::{Column, NewTask, ProjectId, RunState, validate_title};
 use crate::error::AgboardError;
 use crate::file_store::FileStore;
+use crate::file_store::frontmatter;
 use crate::file_store::history::{ParseMode, compose_task, parse_task};
 use crate::file_store::history_language::HistoryLanguage;
 use crate::file_store::io;
@@ -56,6 +57,17 @@ fn write_new_task(
                 reason: defect.reason,
             }
         })?;
+        // The plan lives in the TASK.md frontmatter, so a task created with one writes the key.
+        let body =
+            match task.planned_version.as_deref() {
+                Some(version) => frontmatter::compose_planned_version(&body, Some(version))
+                    .map_err(|defect| AgboardError::FileInvalid {
+                        file: format!("{label}/TASK.md"),
+                        field: defect.field,
+                        reason: defect.reason,
+                    })?,
+                None => body,
+            };
         io::write_json(
             &layout::task_json(&temp),
             &TaskMetadata::from(task),
@@ -114,7 +126,7 @@ impl FileStore {
     }
 
     /// Create a task while the caller holds the project's write lock. `release_notes_version`
-    /// marks the card that creating a version issues.
+    /// marks the card that creating a version issues; that card is also planned for that version.
     pub(in crate::file_store) fn create_task_locked(
         &self,
         project_dir: &Path,
@@ -165,8 +177,8 @@ impl FileStore {
             results: Vec::new(),
             simple_request: None,
             onboarding_sample: None,
+            planned_version: release_notes_version.clone(),
             release_notes_version,
-            planned_version: None,
             history: vec![transition_event(Transition {
                 language,
                 kind: HistoryKind::Created,
