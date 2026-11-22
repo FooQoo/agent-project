@@ -87,6 +87,6 @@ fn backups(dir: &Path) -> Vec<PathBuf> {
     fs::read_dir(dir)
         .unwrap()
         .map(|entry| entry.unwrap().path())
-        .filter(|path| path.to_string_lossy().contains("agboard-"))
+        .filter(|path| path.to_string_lossy().contains("agpj-"))
         .collect()
 }

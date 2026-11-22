@@ -110,7 +110,7 @@ fn a_saved_change_says_when_the_recorded_server_is_gone() {
     );
     let stderr = String::from_utf8_lossy(&added.stderr);
     assert!(
-        stderr.contains("serve.json") && stderr.contains("agboard serve"),
+        stderr.contains("serve.json") && stderr.contains("agpj serve"),
         "{stderr}"
     );
     let listed = bin(home.path())

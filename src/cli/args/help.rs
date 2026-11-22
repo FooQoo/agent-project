@@ -1,10 +1,10 @@
-//! The text printed by `agboard --help`.
+//! The text printed by `agpj --help`.
 
-/// `agboard --help`: the board workflow for agents.
+/// `agpj --help`: the board workflow for agents.
 pub(super) const TOP_HELP: &str = "\
-agboard - a shared local work board for users and agents
+agpj - a shared local work board for users and agents
 
-Usage: agboard [--project NAME] [--json] <COMMAND>
+Usage: agpj [--project NAME] [--json] <COMMAND>
 
 Most board commands name a project with --project NAME. `progress`, `open`,
 and `hook` resolve the nearest registered folder binding when omitted; an
@@ -41,16 +41,16 @@ Commands:
   update  Update the installed Agent Board plugin to this version
 
 Workflow for agents:
-  agboard project ls --json
-  agboard --project NAME workspace --json
-  agboard progress --json
-  agboard --project NAME progress --json
-  agboard --project NAME ls --json
-  agboard ls --all-projects --json
-  agboard --project NAME show remote --json
-  agboard --project NAME mv <id> doing --actor ai --reason \"Start\"
-  agboard --project NAME state <id> running --actor ai --reason \"Working\"
-  agboard --project NAME message ask --actor ai --task <id> --json --questions-json '{\"questions\":[{\"body\":\"Which plan?\",\"choices\":[{\"id\":\"a\",\"label\":\"Plan A\"},{\"id\":\"b\",\"label\":\"Plan B\"}]}]}'
+  agpj project ls --json
+  agpj --project NAME workspace --json
+  agpj progress --json
+  agpj --project NAME progress --json
+  agpj --project NAME ls --json
+  agpj ls --all-projects --json
+  agpj --project NAME show remote --json
+  agpj --project NAME mv <id> doing --actor ai --reason \"Start\"
+  agpj --project NAME state <id> running --actor ai --reason \"Working\"
+  agpj --project NAME message ask --actor ai --task <id> --json --questions-json '{\"questions\":[{\"body\":\"Which plan?\",\"choices\":[{\"id\":\"a\",\"label\":\"Plan A\"},{\"id\":\"b\",\"label\":\"Plan B\"}]}]}'
 
 Rules for agents:
   - Move a task to doing before you report running.

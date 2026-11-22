@@ -1,4 +1,4 @@
-//! `agboard setup` and `agboard update` on the command line.
+//! `agpj setup` and `agpj update` on the command line.
 //!
 //! On a terminal the agents are chosen with a cliclack prompt (for setup,
 //! when `--agent` is not given), the plan is shown, and nothing happens until
@@ -82,7 +82,7 @@ pub fn run(request: &Request) -> Result<Finished, AgpjError> {
     };
     let prepared = setup::prepare(&env, &options)?;
     if interactive && !request.dry_run && !request.yes && prepared.has_work() {
-        let _ = cliclack::note(format!("agboard {command}"), prepared.describe());
+        let _ = cliclack::note(format!("agpj {command}"), prepared.describe());
         let question = if prepared.trusts_hooks() {
             "Apply these changes? This also marks the Agent Board plugin's hooks as trusted in Codex, so Codex runs them without asking."
         } else {
@@ -112,7 +112,7 @@ pub fn run(request: &Request) -> Result<Finished, AgpjError> {
 /// Asks which agents to set up, among those whose command is on `PATH`.
 /// `None` when the user cancels.
 fn choose_agents(env: &SetupEnv) -> Option<Vec<Agent>> {
-    let _ = cliclack::intro("agboard setup");
+    let _ = cliclack::intro("agpj setup");
     let found: Vec<Agent> = setup::available(env)
         .into_iter()
         .filter_map(|(agent, program)| {

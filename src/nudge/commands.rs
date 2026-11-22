@@ -1,4 +1,4 @@
-//! Matching helpers for the rules: question marks and `agboard` commands in
+//! Matching helpers for the rules: question marks and `agpj` commands in
 //! the text of a tool call.
 
 /// Whether the last non-empty line of `text` ends with a question mark, once
@@ -49,13 +49,13 @@ pub(super) fn contains_sequence(tokens: &[&str], sequence: &[&str]) -> bool {
     tokens.windows(sequence.len()).any(|w| w == sequence)
 }
 
-/// Whether `command` runs `agboard` with any of the subcommand sequences,
+/// Whether `command` runs `agpj` with any of the subcommand sequences,
 /// global flags in between allowed.
 pub fn runs_agpj(command: &str, sequences: &[&[&str]]) -> bool {
     let tokens = tokens(command);
     let Some(from) = tokens
         .iter()
-        .position(|t| *t == "agboard" || t.ends_with("/agboard"))
+        .position(|t| *t == "agpj" || t.ends_with("/agpj"))
     else {
         return false;
     };

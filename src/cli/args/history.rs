@@ -1,4 +1,4 @@
-//! Arguments of `agboard history`.
+//! Arguments of `agpj history`.
 
 use std::io::Read;
 use std::path::PathBuf;

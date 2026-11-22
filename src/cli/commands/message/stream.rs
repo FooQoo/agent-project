@@ -177,7 +177,7 @@ fn ensure_serving(ctx: &Context) -> Result<(), AgpjError> {
     } else {
         Err(AgpjError::BoardUnavailable {
             reason:
-                "A wait needs a running server. Run \"agboard serve\" first, or ask with --no-wait."
+                "A wait needs a running server. Run \"agpj serve\" first, or ask with --no-wait."
                     .into(),
         })
     }

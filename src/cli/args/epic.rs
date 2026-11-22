@@ -1,4 +1,4 @@
-//! Arguments of `agboard epic`.
+//! Arguments of `agpj epic`.
 
 use std::io::Read;
 use std::path::PathBuf;
@@ -11,7 +11,7 @@ use crate::error::{AgpjError, FileAction};
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo epic add file-share --name \"File share\" --actor human\n  agboard --project demo epic add file-share --name \"File share\" --color '#7C3AED' --actor human\n  agboard --project demo epic ls --json\n  agboard --project demo epic show FILE-SHARE\n  agboard --project demo epic edit FILE-SHARE --document-file epic.md\n  agboard --project demo epic rm FILE-SHARE"
+    after_help = "Examples:\n  agpj --project demo epic add file-share --name \"File share\" --actor human\n  agpj --project demo epic add file-share --name \"File share\" --color '#7C3AED' --actor human\n  agpj --project demo epic ls --json\n  agpj --project demo epic show FILE-SHARE\n  agpj --project demo epic edit FILE-SHARE --document-file epic.md\n  agpj --project demo epic rm FILE-SHARE"
 )]
 pub struct EpicArgs {
     #[command(subcommand)]
@@ -38,7 +38,7 @@ pub enum EpicCommand {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Sends the Backlog cards of the epic to Todo in one save: all of them, or only those named by --tasks. Only a person sends (an agent is refused with human_only). If any card cannot be sent, none is: a card a person is editing (task_is_draft), or an open question (send_with_open_questions until the person confirms with --force). Cards that are not in the Backlog stay as they are.\n\nExamples:\n  agboard --project demo epic send FILE-SHARE --actor human\n  agboard --project demo epic send FILE-SHARE --actor human --tasks 12,13 --force"
+    after_help = "Sends the Backlog cards of the epic to Todo in one save: all of them, or only those named by --tasks. Only a person sends (an agent is refused with human_only). If any card cannot be sent, none is: a card a person is editing (task_is_draft), or an open question (send_with_open_questions until the person confirms with --force). Cards that are not in the Backlog stay as they are.\n\nExamples:\n  agpj --project demo epic send FILE-SHARE --actor human\n  agpj --project demo epic send FILE-SHARE --actor human --tasks 12,13 --force"
 )]
 pub struct EpicSendArgs {
     /// The epic's EPIC-ID
@@ -56,7 +56,7 @@ pub struct EpicSendArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Sets the planned version of the epic's cards, each saved on its own: a failure part way leaves the earlier cards changed, and running the command again finishes the rest. Archived cards, Done cards, and cards a person is drafting are skipped, because they shipped or are not the agent's to change. With --only-unplanned, a card that already has a planned version is skipped as well. The result counts the changed, unchanged (already had the version), and skipped cards, and names them.\n\nExamples:\n  agboard --project demo epic plan FILE-SHARE --planned-version v1.9.0\n  agboard --project demo epic plan FILE-SHARE --current-version --only-unplanned\n  agboard --project demo epic plan FILE-SHARE --unplanned"
+    after_help = "Sets the planned version of the epic's cards, each saved on its own: a failure part way leaves the earlier cards changed, and running the command again finishes the rest. Archived cards, Done cards, and cards a person is drafting are skipped, because they shipped or are not the agent's to change. With --only-unplanned, a card that already has a planned version is skipped as well. The result counts the changed, unchanged (already had the version), and skipped cards, and names them.\n\nExamples:\n  agpj --project demo epic plan FILE-SHARE --planned-version v1.9.0\n  agpj --project demo epic plan FILE-SHARE --current-version --only-unplanned\n  agpj --project demo epic plan FILE-SHARE --unplanned"
 )]
 pub struct EpicPlanArgs {
     /// The epic's EPIC-ID

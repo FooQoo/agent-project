@@ -48,7 +48,7 @@ pub(crate) fn plan(
     match doc.get("sandbox_mode") {
         None => {
             return Ok(Planned::manual(format!(
-                "sandbox_mode is not set in {}, so writable_roots would have no effect and it was not changed. To let Codex edit the shared files, set sandbox_mode = \"{SUPPORTED_MODE}\" there and run agboard setup again.",
+                "sandbox_mode is not set in {}, so writable_roots would have no effect and it was not changed. To let Codex edit the shared files, set sandbox_mode = \"{SUPPORTED_MODE}\" there and run agpj setup again.",
                 config.display()
             )));
         }
@@ -57,7 +57,7 @@ pub(crate) fn plan(
             Some(FULL_ACCESS) => return Ok(Planned::full_access()),
             Some(other) => {
                 return Ok(Planned::manual(format!(
-                    "sandbox_mode is \"{other}\" in {}, which does not let writable_roots take effect, so it was not changed. To let Codex edit the shared files, set sandbox_mode = \"{SUPPORTED_MODE}\" yourself and run agboard setup again.",
+                    "sandbox_mode is \"{other}\" in {}, which does not let writable_roots take effect, so it was not changed. To let Codex edit the shared files, set sandbox_mode = \"{SUPPORTED_MODE}\" yourself and run agpj setup again.",
                     config.display()
                 )));
             }

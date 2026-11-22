@@ -1,6 +1,6 @@
 //! Installing and updating the Agent Board plugin with the agents' own
 //! commands. The repository is the marketplace of both agents; it is added
-//! at the tag of this agboard's version, so the plugin matches the binary.
+//! at the tag of this agpj's version, so the plugin matches the binary.
 //! A marketplace added at another tag is removed and added again, which is how
 //! both agents move a marketplace to a new tag.
 
@@ -61,7 +61,7 @@ pub struct Installed {
 }
 
 impl Installed {
-    /// Whether the installed plugin is the one this agboard ships: the same
+    /// Whether the installed plugin is the one this agpj ships: the same
     /// files when the folder is known, else the same version.
     pub fn is_current(&self) -> bool {
         match &self.path {

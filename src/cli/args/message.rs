@@ -55,7 +55,7 @@ impl MessageCommand {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Each question becomes its own message (Q-<n>). The command prints one event per line: registered first, then waiting every --heartbeat seconds, and last answered (exit 0), timeout (exit 5), withdrawn (exit 6), or error. With --json each line is JSON. A wait starts the local server in the background when none runs; --no-wait needs no server.\n\nExamples:\n  agboard --project demo message ask --actor ai --task 12 --questions-json '{\"questions\":[{\"body\":\"Which plan?\",\"choices\":[{\"id\":\"a\",\"label\":\"Plan A\"},{\"id\":\"b\",\"label\":\"Plan B\"}]}]}' --json\n  cat questions.json | agboard --project demo message ask --actor ai --questions-json - --timeout none --json\n  agboard --project demo message ask --actor ai --task 12 --questions-json - --no-wait"
+    after_help = "Each question becomes its own message (Q-<n>). The command prints one event per line: registered first, then waiting every --heartbeat seconds, and last answered (exit 0), timeout (exit 5), withdrawn (exit 6), or error. With --json each line is JSON. A wait starts the local server in the background when none runs; --no-wait needs no server.\n\nExamples:\n  agpj --project demo message ask --actor ai --task 12 --questions-json '{\"questions\":[{\"body\":\"Which plan?\",\"choices\":[{\"id\":\"a\",\"label\":\"Plan A\"},{\"id\":\"b\",\"label\":\"Plan B\"}]}]}' --json\n  cat questions.json | agpj --project demo message ask --actor ai --questions-json - --timeout none --json\n  agpj --project demo message ask --actor ai --task 12 --questions-json - --no-wait"
 )]
 pub struct MessageAskArgs {
     /// Who asks: only an agent
@@ -80,7 +80,7 @@ pub struct MessageAskArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo message wait Q-3 Q-4 --json\n  agboard --project demo message wait Q-3 --timeout none"
+    after_help = "Examples:\n  agpj --project demo message wait Q-3 Q-4 --json\n  agpj --project demo message wait Q-3 --timeout none"
 )]
 pub struct MessageWaitArgs {
     /// The questions that message ask registered
@@ -115,7 +115,7 @@ pub enum AnswerViaArg {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "The first recorded answer of a question is final: answering it again fails with question_answered (exit 1) and prints the recorded answer. A question with choices needs --choice; a question without choices needs --text.\n\nExamples:\n  agboard --project demo message answer Q-12 --actor human --via chat --choice a\n  agboard --project demo message answer Q-13 --actor human --via cli --text \"Use the smaller plan.\""
+    after_help = "The first recorded answer of a question is final: answering it again fails with question_answered (exit 1) and prints the recorded answer. A question with choices needs --choice; a question without choices needs --text.\n\nExamples:\n  agpj --project demo message answer Q-12 --actor human --via chat --choice a\n  agpj --project demo message answer Q-13 --actor human --via cli --text \"Use the smaller plan.\""
 )]
 pub struct MessageAnswerArgs {
     /// The question to answer
@@ -154,7 +154,7 @@ pub enum MessageTypeArg {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo message ls\n  agboard --project demo message ls --type request --status all --json\n  agboard --project demo message ls --task 12 --json"
+    after_help = "Examples:\n  agpj --project demo message ls\n  agpj --project demo message ls --type request --status all --json\n  agpj --project demo message ls --task 12 --json"
 )]
 pub struct MessageLsArgs {
     /// Which messages to list
@@ -170,7 +170,7 @@ pub struct MessageLsArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo message show Q-12\n  agboard --project demo message show Q-13 --json"
+    after_help = "Examples:\n  agpj --project demo message show Q-12\n  agpj --project demo message show Q-13 --json"
 )]
 pub struct MessageShowArgs {
     /// A message ID (Q-12)
@@ -179,7 +179,7 @@ pub struct MessageShowArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "An agent withdraws a question and a person withdraws a request. A message that has its reply cannot be withdrawn.\n\nExamples:\n  agboard --project demo message withdraw Q-12 --actor ai\n  agboard --project demo message withdraw Q-13 --actor human"
+    after_help = "An agent withdraws a question and a person withdraws a request. A message that has its reply cannot be withdrawn.\n\nExamples:\n  agpj --project demo message withdraw Q-12 --actor ai\n  agpj --project demo message withdraw Q-13 --actor human"
 )]
 pub struct MessageWithdrawArgs {
     /// The message to withdraw
@@ -191,7 +191,7 @@ pub struct MessageWithdrawArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "An agent cannot change a Done, draft, or archived task.\n\nExamples:\n  agboard --project demo message link Q-12 Q-13 --task 14\n  agboard --project demo message unlink Q-12 --task 14"
+    after_help = "An agent cannot change a Done, draft, or archived task.\n\nExamples:\n  agpj --project demo message link Q-12 Q-13 --task 14\n  agpj --project demo message unlink Q-12 --task 14"
 )]
 pub struct MessageLinkArgs {
     /// The questions
@@ -207,7 +207,7 @@ pub struct MessageLinkArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "The images are stored under the request's attachments/ folder; write ![](attachments/NAME) in the text to show one.\n\nExamples:\n  agboard --project demo message send --actor human --text \"Add a reset link to the login page.\"\n  agboard --project demo message send --actor human --text-file request.md --image login.png --json"
+    after_help = "The images are stored under the request's attachments/ folder; write ![](attachments/NAME) in the text to show one.\n\nExamples:\n  agpj --project demo message send --actor human --text \"Add a reset link to the login page.\"\n  agpj --project demo message send --actor human --text-file request.md --image login.png --json"
 )]
 pub struct MessageSendArgs {
     /// Who sends: only a person
@@ -231,7 +231,7 @@ pub struct MessageSendArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Accepting a request takes it, so two agents never take the same request: accepting again fails with request_accepted (exit 1). Accepting an answered question records that its answer was taken in, so it leaves the progress table and the hook; message ask and message wait do this for the answers they return.\n\nExamples:\n  agboard --project demo message accept Q-14 --actor ai"
+    after_help = "Accepting a request takes it, so two agents never take the same request: accepting again fails with request_accepted (exit 1). Accepting an answered question records that its answer was taken in, so it leaves the progress table and the hook; message ask and message wait do this for the answers they return.\n\nExamples:\n  agpj --project demo message accept Q-14 --actor ai"
 )]
 pub struct MessageAcceptArgs {
     /// The request, or the answered question, to accept

@@ -1,4 +1,4 @@
-//! Environment and path resolution for `agboard setup` and `agboard update`.
+//! Environment and path resolution for `agpj setup` and `agpj update`.
 //! The paths are resolved once per run and used as absolute paths from then on.
 
 use std::ffi::OsString;

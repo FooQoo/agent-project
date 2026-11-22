@@ -1,4 +1,4 @@
-//! Arguments of `agboard version` and the version options of the other commands.
+//! Arguments of `agpj version` and the version options of the other commands.
 
 use clap::{Args, Subcommand};
 
@@ -15,15 +15,15 @@ pub struct VersionArgs {
 pub enum VersionCommand {
     /// List the project's versions and its current one
     #[command(
-        after_help = "Examples:\n  agboard --project demo version ls\n  agboard --project demo version ls --json"
+        after_help = "Examples:\n  agpj --project demo version ls\n  agpj --project demo version ls --json"
     )]
     Ls,
     /// List a version in the project without making it current
-    #[command(after_help = "Examples:\n  agboard --project demo version add v1.9.0")]
+    #[command(after_help = "Examples:\n  agpj --project demo version add v1.9.0")]
     Add(VersionAddArgs),
     /// Show the project's current version, set it, or clear it
     #[command(
-        after_help = "A version that is not listed yet is listed when it is set. Tasks keep the version they were given: changing the current version moves none of them.\n\nExamples:\n  agboard --project demo version current\n  agboard --project demo version current v1.8.0\n  agboard --project demo version current --clear"
+        after_help = "A version that is not listed yet is listed when it is set. Tasks keep the version they were given: changing the current version moves none of them.\n\nExamples:\n  agpj --project demo version current\n  agpj --project demo version current v1.8.0\n  agpj --project demo version current --clear"
     )]
     Current(VersionCurrentArgs),
 }

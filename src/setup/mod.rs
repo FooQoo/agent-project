@@ -1,4 +1,4 @@
-//! `agboard setup` and `agboard update`: prepare the data directory, install
+//! `agpj setup` and `agpj update`: prepare the data directory, install
 //! the Agent Board plugin (the Skill and the Hook) with each agent's own
 //! plugin commands, give the agents access to the shared folder, and, for
 //! Codex, trust the plugin's hooks.
@@ -28,7 +28,7 @@ pub use execute::execute;
 pub use prepare::{AgentPlan, Prepared, available, prepare};
 pub use report::{AgentReport, FileReport, SetupReport, Status};
 
-/// The agboard version, which is also the version of the plugin it installs.
+/// The agpj version, which is also the version of the plugin it installs.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// An agent setup works with.

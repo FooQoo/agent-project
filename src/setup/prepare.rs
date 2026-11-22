@@ -121,7 +121,7 @@ fn plan_agent(
     };
     let Some(program) = planned.program.clone() else {
         planned.skipped = Some(format!(
-            "The {} command was not found on PATH. Install {}, then run agboard {} again.",
+            "The {} command was not found on PATH. Install {}, then run agpj {} again.",
             agent.key(),
             agent.label(),
             mode.command()
@@ -144,7 +144,7 @@ fn plan_agent(
     match mode {
         Mode::Update if planned.installed.is_none() => {
             planned.skipped = Some(format!(
-                "The Agent Board plugin is not installed in {}. Run agboard setup to install it.",
+                "The Agent Board plugin is not installed in {}. Run agpj setup to install it.",
                 agent.label()
             ));
             return Ok(planned);

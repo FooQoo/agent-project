@@ -1,5 +1,5 @@
 //! The automatic plugin update of the SessionStart hook: the hook compares the
-//! files of the plugin the agent runs with the ones this agboard ships and,
+//! files of the plugin the agent runs with the ones this agpj ships and,
 //! when they differ, reinstalls the plugin in a detached process. The agents
 //! are the fakes of `support/fake_agents.rs`, the only commands on PATH, and
 //! the marketplace override keeps the install off the network.
@@ -182,7 +182,7 @@ fn a_plugin_that_differs_is_reinstalled_in_the_background_from_the_next_session(
     let notice = Fixture::notice(&out).expect("a notice at session start");
     assert!(notice.contains(&format!("version {VERSION}")), "{notice}");
     assert!(notice.contains("next session"), "{notice}");
-    assert!(!notice.contains("agboard update"), "{notice}");
+    assert!(!notice.contains("agpj update"), "{notice}");
     let state = fx.wait_finished("claude");
     assert_eq!(
         state["hash"],
@@ -203,7 +203,7 @@ fn codex_is_told_to_trust_hooks_only_when_the_hook_definition_changed() {
     let out = fx.hook("codex", "SessionStart", &[]);
     let notice = Fixture::notice(&out).expect("a notice at session start");
     assert!(notice.contains("next session"), "{notice}");
-    assert!(!notice.contains("agboard update"), "{notice}");
+    assert!(!notice.contains("agpj update"), "{notice}");
     fx.wait_finished("codex");
     let log = fx.fakes.log("codex");
     assert!(log.iter().any(|l| l.starts_with("plugin add")), "{log:?}");
@@ -220,7 +220,7 @@ fn codex_is_told_to_trust_hooks_only_when_the_hook_definition_changed() {
     fs::write(&hooks, old).unwrap();
     let out = fx.hook("codex", "SessionStart", &[]);
     let notice = Fixture::notice(&out).expect("a notice at session start");
-    assert!(notice.contains("`agboard update`"), "{notice}");
+    assert!(notice.contains("`agpj update`"), "{notice}");
     fx.wait_finished("codex");
     assert!(fx.fakes.trust_writes().is_empty());
 }
@@ -335,7 +335,7 @@ fn a_recent_failure_is_not_retried_and_points_at_agpj_update() {
     .unwrap();
     let out = fx.hook("claude", "SessionStart", &[]);
     let notice = Fixture::notice(&out).expect("a notice about the failure");
-    assert!(notice.contains("`agboard update`"), "{notice}");
+    assert!(notice.contains("`agpj update`"), "{notice}");
     Fixture::settle();
     assert_eq!(fx.fakes.log("claude"), Vec::<String>::new());
 

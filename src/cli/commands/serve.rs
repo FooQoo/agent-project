@@ -44,7 +44,7 @@ pub fn run(json: bool, args: &ServeArgs) -> Result<(), AgpjError> {
 /// An ngrok connection can take a while to open.
 const DAEMON_READY_TIMEOUT: Duration = Duration::from_secs(30);
 
-/// Start `agboard serve` again as a detached process and return once its
+/// Start `agpj serve` again as a detached process and return once its
 /// startup line is in the log, so the caller sees the same address and
 /// passcode a foreground `serve` prints.
 ///
@@ -95,7 +95,7 @@ fn daemonize(json: bool, args: &ServeArgs) -> Result<(), AgpjError> {
         .try_clone()
         .map_err(|e| unavailable(format!("Cannot open serve.log: {e}")))?;
     let exe = std::env::current_exe()
-        .map_err(|e| unavailable(format!("Cannot find the agboard executable: {e}")))?;
+        .map_err(|e| unavailable(format!("Cannot find the agpj executable: {e}")))?;
 
     let mut command = process::Command::new(exe);
     // The startup line is the handshake, so the child always prints JSON.
@@ -201,7 +201,7 @@ pub(super) fn daemon_line(
         ));
     }
     line.push_str(&format!(
-        " in the background (pid {pid}, log {}; stop with \"agboard stop\")",
+        " in the background (pid {pid}, log {}; stop with \"agpj stop\")",
         log.display()
     ));
     line
@@ -321,7 +321,7 @@ mod tests {
         let log = Path::new("/data/serve.log");
         assert_eq!(
             daemon_line(startup.clone(), 42, log, false),
-            "Serving at http://127.0.0.1:7461/ in the background (pid 42, log /data/serve.log; stop with \"agboard stop\")"
+            "Serving at http://127.0.0.1:7461/ in the background (pid 42, log /data/serve.log; stop with \"agpj stop\")"
         );
         let value: serde_json::Value =
             serde_json::from_str(&daemon_line(startup, 42, log, true)).unwrap();

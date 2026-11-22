@@ -1,4 +1,4 @@
-//! `agboard setup` and `agboard update`: installing the Agent Board plugin with
+//! `agpj setup` and `agpj update`: installing the Agent Board plugin with
 //! the agents' own commands, trusting the Codex hooks, and what happens when
 //! an agent is missing or a command fails. The agents are the fakes of
 //! `support/fake_agents.rs`, the only commands on PATH, so nothing reaches a
@@ -321,7 +321,7 @@ fn update_skips_an_agent_without_the_plugin() {
     assert_eq!(code, 0, "{json}");
     let codex = fx.agent(&json, "codex");
     assert_eq!(codex["status"], "skipped");
-    assert!(codex["reason"].as_str().unwrap().contains("agboard setup"));
+    assert!(codex["reason"].as_str().unwrap().contains("agpj setup"));
     assert_eq!(fx.fakes.log("codex"), ["plugin list --json"]);
     assert_eq!(fx.agent(&json, "claude")["status"], "updated");
 }

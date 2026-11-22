@@ -1,4 +1,4 @@
-//! Arguments of `agboard project`.
+//! Arguments of `agpj project`.
 
 use std::path::PathBuf;
 
@@ -13,23 +13,23 @@ pub struct ProjectArgs {
 #[derive(Subcommand, Debug)]
 pub enum ProjectCommand {
     /// Create an empty project (no --project needed)
-    #[command(after_help = "Examples:\n  agboard project create \"My project\"")]
+    #[command(after_help = "Examples:\n  agpj project create \"My project\"")]
     Create(ProjectCreateArgs),
     /// List the projects (no --project needed)
-    #[command(after_help = "Examples:\n  agboard project ls\n  agboard project ls --json")]
+    #[command(after_help = "Examples:\n  agpj project ls\n  agpj project ls --json")]
     Ls,
     /// Bind an existing project to a folder (no --project needed)
     #[command(
-        after_help = "Examples:\n  agboard project bind \"My project\"\n  agboard project bind \"My project\" --folder ../other"
+        after_help = "Examples:\n  agpj project bind \"My project\"\n  agpj project bind \"My project\" --folder ../other"
     )]
     Bind(ProjectBindArgs),
     /// Rename the project named with --project
     #[command(
-        after_help = "Examples:\n  agboard --project \"My project\" project rename \"Renamed project\"\n\nHook commands name the project; update them after a rename."
+        after_help = "Examples:\n  agpj --project \"My project\" project rename \"Renamed project\"\n\nHook commands name the project; update them after a rename."
     )]
     Rename(ProjectRenameArgs),
     /// Delete the project named with --project and all its tasks (humans only)
-    #[command(after_help = "Examples:\n  agboard --project \"My project\" project rm")]
+    #[command(after_help = "Examples:\n  agpj --project \"My project\" project rm")]
     Rm,
 }
 

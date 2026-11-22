@@ -162,7 +162,7 @@ fn question(facts: &Facts) -> Vec<Finding> {
     }
     vec![
         Finding::new(
-            "Does your question wait on the user's answer? If so, put it on the board with `agboard message ask` and show it in the chat too.",
+            "Does your question wait on the user's answer? If so, put it on the board with `agpj message ask` and show it in the chat too.",
         ),
         Finding::new(
             "Does it ask about something visual (a screen, a mock, a design)? Attach the images to the question.",
@@ -180,7 +180,7 @@ fn final_result(facts: &Facts) -> Vec<Finding> {
         .iter()
         .map(|task| {
             Finding::new(format!(
-                "Task #{id} has all conditions met but no final result: record `agboard result add {id} --final ...`.",
+                "Task #{id} has all conditions met but no final result: record `agpj result add {id} --final ...`.",
                 id = task.id
             ))
             .task(task.id)
@@ -209,7 +209,7 @@ fn result_artifact(facts: &Facts) -> Vec<Finding> {
         return Vec::new();
     }
     vec![Finding::new(
-        "You pushed or produced an image. If it is something the requester can look at, record it with `agboard result add`.",
+        "You pushed or produced an image. If it is something the requester can look at, record it with `agpj result add`.",
     )]
 }
 

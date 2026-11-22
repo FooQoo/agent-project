@@ -1,5 +1,5 @@
-//! `agboard setup remote`: save the remote connection settings (ngrok or Tailscale), and the
-//! optional remote step of plain `agboard setup`.
+//! `agpj setup remote`: save the remote connection settings (ngrok or Tailscale), and the
+//! optional remote step of plain `agpj setup`.
 //!
 //! The settings are global to the data area, so no project is needed. Storage
 //! and validation are in [`crate::remote_settings`], which the interactive
@@ -11,7 +11,7 @@
 //! - No option: on a terminal, show the state, ask which way the phone connects, and then ask
 //!   only that way's settings: for ngrok the domain and the token (typed hidden), each
 //!   skippable; for Tailscale nothing more. Without a terminal nothing is asked and the
-//!   command says what to add, as `agboard setup` does.
+//!   command says what to add, as `agpj setup` does.
 
 use std::io::{IsTerminal, Read};
 use std::path::Path;
@@ -67,7 +67,7 @@ pub fn run(
             command: Some("setup".to_string()),
         });
     }
-    let _ = cliclack::intro("agboard setup remote");
+    let _ = cliclack::intro("agpj setup remote");
     ask(data_dir, vault)?;
     Ok(None)
 }
@@ -110,7 +110,7 @@ fn read_token(stdin: &mut dyn Read) -> Result<Secret, AgpjError> {
         })?;
     let text = String::from_utf8_lossy(&bytes);
     if bytes.len() as u64 > MAX_STDIN || text.trim().is_empty() {
-        return Err(invalid("--token-stdin needs the token on standard input, for example: printf '%s' \"$NGROK_AUTHTOKEN\" | agboard setup remote --token-stdin".to_string()));
+        return Err(invalid("--token-stdin needs the token on standard input, for example: printf '%s' \"$NGROK_AUTHTOKEN\" | agpj setup remote --token-stdin".to_string()));
     }
     saved::token_of(&text)
 }
@@ -154,8 +154,8 @@ pub fn apply_answers(
     saved::apply(data_dir, vault, change).map(Some)
 }
 
-/// The optional ngrok step of plain `agboard setup`: asks whether to set it up
-/// and, if so, runs the same questions as `agboard setup remote`. A problem here
+/// The optional ngrok step of plain `agpj setup`: asks whether to set it up
+/// and, if so, runs the same questions as `agpj setup remote`. A problem here
 /// is reported and never fails the setup that already ran.
 pub fn offer(data_dir: &Path, vault: &dyn TokenVault) {
     let current = saved::read(data_dir, vault).ok();
@@ -164,7 +164,7 @@ pub fn offer(data_dir: &Path, vault: &dyn TokenVault) {
     }) {
         "Change the remote connection settings for the phone?"
     } else {
-        "Set up the remote connection for the phone (ngrok or Tailscale) now? You can skip this and do it later with \"agboard setup remote\"."
+        "Set up the remote connection for the phone (ngrok or Tailscale) now? You can skip this and do it later with \"agpj setup remote\"."
     };
     if !matches!(
         cliclack::confirm(question).initial_value(false).interact(),

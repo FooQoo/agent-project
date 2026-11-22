@@ -54,7 +54,7 @@ pub fn execute_without_data_dir(
     }
 }
 
-/// The Markdown `agboard skills` prints.
+/// The Markdown `agpj skills` prints.
 fn skills_text(command: &Command) -> String {
     match command {
         Command::Skills(args) => crate::skills::render(args.topic.as_deref()),
@@ -139,7 +139,7 @@ pub fn execute(args: &[OsString], env: &mut Env) -> i32 {
             },
         );
         // At session start only: when the installed plugin is not the one this
-        // agboard ships, start its update in the background and say so.
+        // agpj ships, start its update in the background and say so.
         let notice = (run.event.as_deref() == Some("SessionStart"))
             .then(|| {
                 let agent = match args.agent {
@@ -265,7 +265,7 @@ pub(crate) fn fail(env: &mut Env, error: &AgpjError, json: bool) -> i32 {
     error.exit_code()
 }
 
-/// Print and flush; a closed pipe (`agboard ls | head`) is not an error.
+/// Print and flush; a closed pipe (`agpj ls | head`) is not an error.
 pub(crate) fn write_text(out: &mut dyn Write, text: &str) {
     let _ = out.write_all(text.as_bytes());
     if !text.ends_with('\n') {
@@ -275,7 +275,7 @@ pub(crate) fn write_text(out: &mut dyn Write, text: &str) {
 }
 
 /// Called once after a command that changed the board: tells a running
-/// `agboard serve` so open browsers refresh. Best effort, and the change is
+/// `agpj serve` so open browsers refresh. Best effort, and the change is
 /// already saved whatever happens here. When the server that `serve.json` names
 /// does not answer, the open board will not refresh, so a warning on stderr says
 /// why and what to do.
@@ -287,7 +287,7 @@ pub fn after_commit(_ctx: &Context, dir: &std::path::Path) {
         && !crate::server::is_serving(&info)
     {
         eprintln!(
-            "Saved. The open board is not updated: serve.json names the server on port {}, which is not running. Run \"agboard serve\" again.",
+            "Saved. The open board is not updated: serve.json names the server on port {}, which is not running. Run \"agpj serve\" again.",
             info.port
         );
     }

@@ -3,14 +3,14 @@
 //! The binary embeds a content hash of the plugin it ships (`plugin_hash`).
 //! At session start the hook hashes the same files of the plugin the agent
 //! runs (found through the plugin root variable the agent sets) and, when the
-//! hashes differ, starts `agboard update --agent <agent> --yes --background`
+//! hashes differ, starts `agpj update --agent <agent> --yes --background`
 //! as a detached process, so the hook returns within its time limit.
 //!
 //! The background run takes a lock in the data area, so concurrent sessions
 //! reinstall once, and records its attempt, so a failing update is not
-//! retried on every session. It reinstalls the plugin like `agboard update`
+//! retried on every session. It reinstalls the plugin like `agpj update`
 //! and trusts the Codex hooks only when the installed hook definition is
-//! byte-identical to the one this agboard embeds.
+//! byte-identical to the one this agpj embeds.
 
 use std::io;
 use std::os::unix::process::CommandExt;
@@ -55,7 +55,7 @@ pub fn plugin_root(agent: Agent) -> Option<PathBuf> {
     }
 }
 
-/// Whether the plugin in `root` has the files this agboard ships. A missing
+/// Whether the plugin in `root` has the files this agpj ships. A missing
 /// or unreadable file does not match.
 pub fn installed_matches(root: &Path) -> bool {
     crate::plugin_hash::hash_files(root, PLUGIN_FILES).as_deref() == Some(PLUGIN_HASH)
@@ -71,7 +71,7 @@ pub fn installed_from_marketplace(root: &Path) -> bool {
         .any(|w| w[0] == "plugins" && w[1] == "cache")
 }
 
-/// The Codex hook definition this agboard ships.
+/// The Codex hook definition this agpj ships.
 const SHIPPED_CODEX_HOOKS: &str = include_str!("../../plugins/agent-board/hooks/codex.json");
 
 /// Whether the Codex hook definition in `root` differs from the shipped one.
@@ -146,16 +146,16 @@ fn start(agent: Agent, root: &Path) -> Option<String> {
 fn started_notice(agent: Agent, hooks_changed: bool) -> String {
     let version = super::VERSION;
     let mut text = format!(
-        "AGPJ_NOTICE\nThe Agent Board plugin differs from the one this agboard (version {version}) ships. agboard started updating it to version {version} in the background; the update applies from the next session, and nothing needs to be done now."
+        "AGPJ_NOTICE\nThe Agent Board plugin differs from the one this agpj (version {version}) ships. agpj started updating it to version {version} in the background; the update applies from the next session, and nothing needs to be done now."
     );
     if agent == Agent::Codex && hooks_changed {
-        text.push_str(" The hook definition changed, and Codex runs a plugin's hooks only after they are trusted. agboard marks them trusted itself when the installed definition is identical to its own, and never otherwise. If the hooks do not run in the next session, tell the user to run `agboard update` in a terminal, then start a new session.");
+        text.push_str(" The hook definition changed, and Codex runs a plugin's hooks only after they are trusted. agpj marks them trusted itself when the installed definition is identical to its own, and never otherwise. If the hooks do not run in the next session, tell the user to run `agpj update` in a terminal, then start a new session.");
     }
     text
 }
 
 fn failed_notice() -> String {
-    "AGPJ_NOTICE\nThe automatic update of the Agent Board plugin did not complete. Tell the user to run `agboard update` in a terminal, then start a new session. Setting AGPJ_NO_PLUGIN_AUTO_UPDATE=1 turns the automatic update off.".to_string()
+    "AGPJ_NOTICE\nThe automatic update of the Agent Board plugin did not complete. Tell the user to run `agpj update` in a terminal, then start a new session. Setting AGPJ_NO_PLUGIN_AUTO_UPDATE=1 turns the automatic update off.".to_string()
 }
 
 /// Starts the background update as a process of its own, so it outlives the
@@ -227,8 +227,8 @@ pub fn release_tag_confirmed(
     }
 }
 
-/// The body of `agboard update --agent <agent> --yes --background`: the
-/// reinstall of `agboard update`, without a question and without trusting
+/// The body of `agpj update --agent <agent> --yes --background`: the
+/// reinstall of `agpj update`, without a question and without trusting
 /// Codex hooks. Does nothing when another update holds the lock. `None` when
 /// nothing was done.
 pub fn run_background(env: &SetupEnv, agent: Agent) -> Option<SetupReport> {

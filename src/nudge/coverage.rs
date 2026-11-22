@@ -1,4 +1,4 @@
-//! The coverage table: every `agboard` command and every top-level field of
+//! The coverage table: every `agpj` command and every top-level field of
 //! the progress table, mapped to the rules that watch what it creates, or to
 //! `NoRule` with the reason none is needed.
 //!
@@ -241,7 +241,7 @@ fn check(what: &str, actual: &[String], table: &[(&str, Cover)]) {
 
 #[test]
 fn every_command_is_in_the_coverage_table() {
-    check("agboard commands", &command_paths(), COMMANDS);
+    check("agpj commands", &command_paths(), COMMANDS);
 }
 
 #[test]

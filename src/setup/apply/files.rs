@@ -46,7 +46,7 @@ pub(crate) fn write_atomically(path: &Path, bytes: &[u8], mode: u32) -> io::Resu
         .file_name()
         .map(|name| name.to_string_lossy().into_owned())
         .unwrap_or_default();
-    let (temporary, mut file) = create_unique(dir, &format!(".{name}.agboard-tmp"), mode)?;
+    let (temporary, mut file) = create_unique(dir, &format!(".{name}.agpj-tmp"), mode)?;
     let result = file
         .write_all(bytes)
         .and_then(|()| file.sync_all())

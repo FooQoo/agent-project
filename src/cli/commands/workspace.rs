@@ -1,4 +1,4 @@
-//! `agboard --project NAME workspace`: where a project's shared files are.
+//! `agpj --project NAME workspace`: where a project's shared files are.
 //! Read-only; it names absolute paths so an agent can open the files directly.
 
 use serde_json::json;

@@ -97,17 +97,17 @@ pub enum Command {
     /// Open the project's board in your browser, starting the server when needed
     Open(OpenArgs),
     /// Stop the running server (the one started with serve, or serve -d)
-    #[command(after_help = "Examples:\n  agboard stop\n  agboard stop --json")]
+    #[command(after_help = "Examples:\n  agpj stop\n  agpj stop --json")]
     Stop(StopArgs),
-    /// Create the data folder and install the Agent Board plugin for Codex and Claude Code
+    /// Create the data folder and install the Agent Project plugin for Codex and Claude Code
     Setup(SetupArgs),
-    /// Update the installed Agent Board plugin to this version
+    /// Update the installed Agent Project plugin to this version
     Update(UpdateArgs),
     /// Show the project's shared folder and where its files are
     Workspace(WorkspaceArgs),
     /// Show the tasks an agent can pick up, by epic in wave order
     #[command(
-        after_help = "A version option only narrows what is shown: which tasks are ready is decided on the whole board first, so hiding a task never makes another one ready. Requests, answers, and epics to close are not narrowed.\n\nExamples:\n  agboard progress\n  agboard progress --json\n  agboard progress --include-awaiting-answer --include-done 5\n  agboard progress --current-version\n  agboard progress --version v1.8.0 --json\n  agboard progress --unplanned\n  agboard --project \"My project\" progress --json"
+        after_help = "A version option only narrows what is shown: which tasks are ready is decided on the whole board first, so hiding a task never makes another one ready. Requests, answers, and epics to close are not narrowed.\n\nExamples:\n  agpj progress\n  agpj progress --json\n  agpj progress --include-awaiting-answer --include-done 5\n  agpj progress --current-version\n  agpj progress --version v1.8.0 --json\n  agpj progress --unplanned\n  agpj --project \"My project\" progress --json"
     )]
     Progress(ProgressCommandArgs),
     /// List the project's versions, add one, or show, set, or clear the current version

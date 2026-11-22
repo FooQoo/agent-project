@@ -1,7 +1,7 @@
-//! End-to-end stories for `agboard ls --all-projects`.
+//! End-to-end stories for `agpj ls --all-projects`.
 //!
-//! Everything here runs the real `agboard` binary against the shared files in a temporary data area:
-//! the CLI, a real `agboard serve` on port 0 for the web answer and the change notifications, and a
+//! Everything here runs the real `agpj` binary against the shared files in a temporary data area:
+//! the CLI, a real `agpj serve` on port 0 for the web answer and the change notifications, and a
 //! pseudo-terminal for the commands that need a person. The projects are built the way a user builds them
 //! (create, add, move, report, answer, delete, create again), not by writing to the store directly.
 //! `tests/all_projects_list.rs` covers the store and the argument rules in detail; these stories check the
@@ -746,7 +746,7 @@ fn a_missing_data_area_lists_nothing_and_is_not_created_and_an_old_database_is_i
     assert_eq!(list["catalogVersion"], "e3b0c44298fc1c149afbf4c8996fb924");
     assert!(list["fetchedAt"].is_string());
     let text = all_text(&home, &[]);
-    assert!(text.contains("agboard project create"), "{text}");
+    assert!(text.contains("agpj project create"), "{text}");
     assert!(!home.exists(), "listing created the data area");
 
     // An existing, empty directory stays empty.
@@ -923,15 +923,15 @@ fn the_text_listing_shows_each_project_under_its_name_with_the_columns_of_ls() {
     let none = tempdir().unwrap();
     let guide = all_text(none.path(), &[]);
     assert!(guide.contains("No projects."), "{guide}");
-    assert!(guide.contains("agboard project create NAME"), "{guide}");
+    assert!(guide.contains("agpj project create NAME"), "{guide}");
     assert!(!guide.contains("Project:"), "{guide}");
 
     // The help shows how to ask for it.
     let help = stdout_text(&run(home.path(), &["ls", "--help"]));
     assert!(help.contains("--all-projects"), "{help}");
-    assert!(help.contains("agboard ls --all-projects"), "{help}");
+    assert!(help.contains("agpj ls --all-projects"), "{help}");
     let top = stdout_text(&run(home.path(), &["--help"]));
-    assert!(top.contains("agboard ls --all-projects --json"), "{top}");
+    assert!(top.contains("agpj ls --all-projects --json"), "{top}");
 }
 
 /// `project create` binds the folder it runs in, and one folder belongs to one

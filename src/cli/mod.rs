@@ -1,4 +1,4 @@
-//! The `agboard` command line interface.
+//! The `agpj` command line interface.
 
 pub mod args;
 pub mod commands;

@@ -35,7 +35,7 @@ pub fn question_images(facts: &Facts) -> Vec<Finding> {
         return Vec::new();
     }
     vec![Finding::new(
-        "You produced an image and asked a question with no image. If the question is about something visual, attach the images (`agboard attachment add`, then `images` or `![](attachment:<id>)`).",
+        "You produced an image and asked a question with no image. If the question is about something visual, attach the images (`agpj attachment add`, then `images` or `![](attachment:<id>)`).",
     )]
 }
 
@@ -68,7 +68,7 @@ pub fn question_wait(facts: &Facts) -> Vec<Finding> {
         return Vec::new();
     }
     vec![Finding::new(
-        "You asked with `--no-wait` and never waited. Wait for the answer with `agboard message wait <Q-id>` in the background, or explain why you do not.",
+        "You asked with `--no-wait` and never waited. Wait for the answer with `agpj message wait <Q-id>` in the background, or explain why you do not.",
     )]
 }
 

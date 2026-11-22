@@ -1,5 +1,5 @@
 //! Opening the board in the browser: once when a server starts automatically,
-//! and on request with `agboard open`.
+//! and on request with `agpj open`.
 //!
 //! These tests run the real binary with `AGPJ_HOME` in a temporary
 //! directory. No real browser is opened: `AGPJ_BROWSER_OPENER` names a
@@ -393,7 +393,7 @@ fn open_without_autostart_needs_a_running_server() {
         error["error"]["reason"]
             .as_str()
             .unwrap()
-            .contains("agboard serve -d"),
+            .contains("agpj serve -d"),
         "{error}"
     );
     assert!(board.serve_info().is_none());
@@ -404,7 +404,7 @@ fn open_without_autostart_needs_a_running_server() {
 fn an_opener_that_cannot_start_is_an_error_that_names_the_address() {
     let board = Board::with_env(&[
         ("AGPJ_OPEN_BROWSER", "1"),
-        ("AGPJ_BROWSER_OPENER", "/nonexistent/agboard-opener"),
+        ("AGPJ_BROWSER_OPENER", "/nonexistent/agpj-opener"),
     ]);
     let output = board.run(&["--json", "open"]);
     assert_eq!(output.status.code(), Some(1), "{output:?}");

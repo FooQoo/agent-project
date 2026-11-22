@@ -1,4 +1,4 @@
-//! `agboard setup` run as the real binary: the data directory and the agent
+//! `agpj setup` run as the real binary: the data directory and the agent
 //! settings files. Every run gets a cleared environment, a temporary HOME, and
 //! fake `codex` and `claude` commands as the only ones on PATH, so neither the
 //! real home, the real agents, nor the network is reachable. Sentinel contents
@@ -29,7 +29,7 @@ fn fakes(home: &Path) -> FakeAgents {
     FakeAgents::new(home.parent().unwrap(), &["codex", "claude"])
 }
 
-/// Runs `agboard` with a cleared environment: HOME is `home`, PATH holds only
+/// Runs `agpj` with a cleared environment: HOME is `home`, PATH holds only
 /// the fake agents, and only `extra` variables are added. Returns exit code,
 /// stdout, and stderr.
 fn setup(home: &Path, extra: &[(&str, &str)], args: &[&str]) -> (i32, String, String) {
@@ -54,7 +54,7 @@ fn setup(home: &Path, extra: &[(&str, &str)], args: &[&str]) -> (i32, String, St
     )
 }
 
-/// `agboard --json setup` with `--agent all` and `--yes` unless `args` name an
+/// `agpj --json setup` with `--agent all` and `--yes` unless `args` name an
 /// agent or a dry run.
 fn setup_json(home: &Path, extra: &[(&str, &str)], args: &[&str]) -> Value {
     let mut all = vec!["--json", "setup"];
@@ -140,7 +140,7 @@ fn default_root_is_directly_under_home_and_setup_creates_it() {
         assert_eq!(files[0]["status"], "updated");
         assert_eq!(files[0]["changes"].as_array().unwrap().len(), 1);
     }
-    // Codex also gets the rule that allows the agboard command.
+    // Codex also gets the rule that allows the agpj command.
     assert_eq!(agents[0]["files"].as_array().unwrap().len(), 2);
     assert_eq!(agents[1]["files"].as_array().unwrap().len(), 1);
 }
@@ -547,7 +547,7 @@ fn full_access_codex_needs_no_permission_and_no_rule() {
 fn an_existing_rule_file_is_kept_as_it_is() {
     let (_tmp, home) = home_with_settings("home");
     fs::create_dir_all(home.join(".codex/rules")).unwrap();
-    let mine = "# my own rules\nprefix_rule(pattern=[\"agboard\"], decision=\"prompt\")\n";
+    let mine = "# my own rules\nprefix_rule(pattern=[\"agpj\"], decision=\"prompt\")\n";
     fs::write(home.join(".codex/rules/agboard.rules"), mine).unwrap();
     let json = setup_json(&home, &[], &["--agent", "codex"]);
     assert_eq!(json["agents"][0]["files"][1]["status"], "unchanged");
@@ -563,7 +563,7 @@ fn the_written_rule_allows_the_agpj_command() {
     setup_json(&home, &[], &["--agent", "codex"]);
     let rules = fs::read_to_string(home.join(".codex/rules/agboard.rules")).unwrap();
     assert!(
-        rules.contains("prefix_rule(pattern=[\"agboard\"], decision=\"allow\")"),
+        rules.contains("prefix_rule(pattern=[\"agpj\"], decision=\"allow\")"),
         "{rules}"
     );
 }
@@ -689,7 +689,7 @@ fn a_dangling_symbolic_link_is_refused() {
 #[test]
 fn the_old_os_application_folder_is_neither_read_nor_changed() {
     let (_tmp, home) = home_with_settings("home");
-    let old = home.join("Library/Application Support/agboard");
+    let old = home.join("Library/Application Support/agpj");
     fs::create_dir_all(old.join("shared/projects")).unwrap();
     fs::write(old.join("shared/projects/sentinel.txt"), "old data").unwrap();
     fs::write(old.join("bindings.json"), "{\"sentinel\":true}").unwrap();

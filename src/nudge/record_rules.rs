@@ -21,7 +21,7 @@ pub(super) fn history(facts: &Facts) -> Vec<Finding> {
         return Vec::new();
     }
     vec![Finding::new(
-        "Record a decision that matters later once: this turn made a commit, ran tests, pushed, or opened a pull request and recorded nothing. A decision that changes state belongs in the `--reason` of `mv` or `state`; one that does not, such as keeping a card in Todo, goes in `agboard history add` with the grounds, the decision, and when known the condition for reconsidering. Skip it when there is no such decision.",
+        "Record a decision that matters later once: this turn made a commit, ran tests, pushed, or opened a pull request and recorded nothing. A decision that changes state belongs in the `--reason` of `mv` or `state`; one that does not, such as keeping a card in Todo, goes in `agpj history add` with the grounds, the decision, and when known the condition for reconsidering. Skip it when there is no such decision.",
     )]
 }
 
@@ -55,7 +55,7 @@ pub(super) fn start_task(facts: &Facts) -> Vec<Finding> {
         return Vec::new();
     }
     vec![Finding::new(
-        "You edited files but no AI task is in Doing and Running: start the task on the board (`agboard mv <id> doing`, `agboard state <id> running`) or create one.",
+        "You edited files but no AI task is in Doing and Running: start the task on the board (`agpj mv <id> doing`, `agpj state <id> running`) or create one.",
     )]
 }
 

@@ -1,4 +1,4 @@
-//! `agboard project create|ls|rename|rm`: managing the projects themselves.
+//! `agpj project create|ls|rename|rm`: managing the projects themselves.
 //!
 //! `create` and `ls` work on the catalog and name no project. `rename` and
 //! `rm` act on the one project resolved from `--project` before the command
@@ -113,7 +113,7 @@ pub fn ls(ctx: &Context) -> Result<Outcome, AgpjError> {
 }
 
 /// Shown instead of an empty project list.
-pub const NO_PROJECTS: &str = "No projects. Create one with: agboard project create NAME\n";
+pub const NO_PROJECTS: &str = "No projects. Create one with: agpj project create NAME\n";
 
 fn list_outcome<'a>(value: serde_json::Value, names: impl Iterator<Item = &'a str>) -> Outcome {
     let mut human = String::new();

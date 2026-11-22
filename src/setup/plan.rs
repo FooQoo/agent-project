@@ -98,16 +98,16 @@ pub(super) fn plan(
     })
 }
 
-/// The Codex rule that lets `agboard` run outside the sandbox without a
+/// The Codex rule that lets `agpj` run outside the sandbox without a
 /// prompt. Written only when the file does not exist yet; a file the user
 /// already has is kept as it is.
-pub(super) const CODEX_RULES: &str = "# Written by agboard setup: lets Codex run agboard without asking each time.\nprefix_rule(pattern=[\"agboard\"], decision=\"allow\")\n";
+pub(super) const CODEX_RULES: &str = "# Written by agpj setup: lets Codex run agpj without asking each time.\nprefix_rule(pattern=[\"agpj\"], decision=\"allow\")\n";
 
 pub(super) fn plan_rules(path: &Path) -> Result<Target, AgpjError> {
     let (file, original) = resolve_and_read(path)?;
     let planned = original.is_none().then(|| CODEX_RULES.as_bytes().to_vec());
     let changes = if planned.is_some() {
-        vec!["allow the agboard command (prefix_rule)".to_string()]
+        vec!["allow the agpj command (prefix_rule)".to_string()]
     } else {
         Vec::new()
     };

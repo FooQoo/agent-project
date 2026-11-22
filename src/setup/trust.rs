@@ -1,7 +1,7 @@
 //! Trusting the plugin's hooks in Codex. Codex runs a plugin's hook only after
 //! the user trusts it, and the trust is tied to the plugin's content, so every
 //! install or update needs it again. With the user's consent on the
-//! confirmation screen, agboard writes the trust through Codex's own
+//! confirmation screen, agpj writes the trust through Codex's own
 //! app-server: `hooks/list` gives each hook's current hash and
 //! `config/value/write` stores it under `hooks.state`. Only the Agent Board
 //! plugin's hooks are touched.
@@ -32,7 +32,7 @@ fn exchange(server: &mut Server, cwd: &Path) -> Result<usize, String> {
     server.request(
         0,
         "initialize",
-        json!({"clientInfo": {"name": "agboard", "version": env!("CARGO_PKG_VERSION")}}),
+        json!({"clientInfo": {"name": "agpj", "version": env!("CARGO_PKG_VERSION")}}),
     )?;
     server.notify("initialized")?;
     let hooks = list(server, 1, cwd)?;
