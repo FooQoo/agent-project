@@ -22,7 +22,7 @@ fn run(home: &Path, args: &[&str]) -> Value {
 fn demo() -> (tempfile::TempDir, PathBuf) {
     let root = tempfile::tempdir().unwrap();
     let home = root.path().to_path_buf();
-    let (code, _, err) = agboard(&home, &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(&home, &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
     (root, home)
 }

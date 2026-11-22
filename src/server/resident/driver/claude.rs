@@ -208,7 +208,7 @@ impl AgentDriver for ClaudeDriver {
         let n = self.requests.fetch_add(1, Ordering::SeqCst);
         self.send(&json!({
             "type": "control_request",
-            "request_id": format!("agboard-{n}"),
+            "request_id": format!("agpj-{n}"),
             "request": {"subtype": "interrupt"},
         }))
     }

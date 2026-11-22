@@ -24,8 +24,8 @@ const CLAUDE_MODELS: [&str; 4] = ["opus", "sonnet", "haiku", "fable"];
 pub fn prompt(project_name: &str) -> String {
     format!(
         "You were launched by Agent Board as a resident agent for project \"{project_name}\". \
-         Run `agboard skills resident` and read the part for a session the board launched. Do \
-         not run `agboard wait`: the board sends you each piece of work as a message, one at a \
+         Run `agpj skills resident` and read the part for a session the board launched. Do \
+         not run `agpj wait`: the board sends you each piece of work as a message, one at a \
          time, when you are idle. Once you have read the skill, end your turn and wait for \
          the next message. Ask a person only on the board with `message ask`, never in the \
          chat. Stop only when the board stops you."
@@ -265,7 +265,7 @@ pub fn codex_args() -> Vec<OsString> {
 }
 
 /// Whether the environment variable of the server's own agent session must not reach a child.
-/// These would make the child's `agboard wait` take it for another tool. Variables that only
+/// These would make the child's `agpj wait` take it for another tool. Variables that only
 /// configure the CLI (its home folder and keys) are kept.
 pub fn scrubbed(name: &str) -> bool {
     const KEPT: [&str; 3] = ["CODEX_HOME", "CODEX_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN"];
@@ -310,8 +310,8 @@ mod tests {
     fn the_prompt_tells_the_session_not_to_wait_because_the_board_sends_work() {
         let text = prompt("demo");
         assert!(text.contains("\"demo\""));
-        assert!(text.contains("agboard skills resident"));
-        assert!(text.contains("Do not run `agboard wait`"));
+        assert!(text.contains("agpj skills resident"));
+        assert!(text.contains("Do not run `agpj wait`"));
         assert!(text.contains("end your turn"));
         assert!(text.contains("`message ask`"));
         assert!(text.contains("Stop only when the board stops you"));

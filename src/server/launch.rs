@@ -261,7 +261,7 @@ async fn wait_until_unused(
     }
 }
 
-/// On SIGUSR1 (`agboard serve -d` while this server runs), stop counting idle
+/// On SIGUSR1 (`agpj serve -d` while this server runs), stop counting idle
 /// time and record the server as manual.
 fn switch_to_manual_on_signal(auto: Arc<AtomicBool>, serve_path: std::path::PathBuf, pid: u32) {
     use tokio::signal::unix::{SignalKind, signal};

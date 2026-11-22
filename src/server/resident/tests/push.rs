@@ -171,7 +171,7 @@ fn a_request_is_pushed_to_an_idle_session_once_it_is_taken() {
     let text = sent(&calls).remove(0);
     assert!(text.contains("\"kind\":\"requests\""), "{text}");
     assert!(text.contains(&id) && text.contains("Add a link"), "{text}");
-    assert!(text.contains("Do not run `agboard wait`"), "{text}");
+    assert!(text.contains("Do not run `agpj wait`"), "{text}");
     // The session takes it, so the board has nothing more to send.
     board.accept(&id);
     pause();

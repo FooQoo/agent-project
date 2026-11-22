@@ -7,7 +7,7 @@
 //! tool and project. [`cli`] is the only place that knows the CLIs' names and flags.
 //!
 //! A child lives in its own process group, so stopping it also stops the commands it started (for
-//! example its `agboard wait`). A thread reaps each child when it exits, whoever ends it, and
+//! example its `agpj wait`). A thread reaps each child when it exits, whoever ends it, and
 //! takes its entry out of the session registry so that a launch is possible again at once instead
 //! of after the registry's grace period.
 

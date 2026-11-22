@@ -39,7 +39,7 @@ impl Log {
 
     /// A note of the board's own, marked so it is not taken for CLI output.
     pub(super) fn note(&self, text: &str) {
-        self.line(&format!("agboard: {text}"));
+        self.line(&format!("agpj: {text}"));
     }
 }
 

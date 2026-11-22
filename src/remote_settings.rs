@@ -1,6 +1,6 @@
 //! The saved ngrok connection settings, read and written from the command line.
 //!
-//! `agboard setup remote` and the optional step of `agboard setup` both go
+//! `agpj setup remote` and the optional step of `agpj setup` both go
 //! through here, so they validate and store exactly as the board's connection
 //! dialog does: the non-secret settings in
 //! `<data-root>/.internal/monitor-connection.json` (the server's own

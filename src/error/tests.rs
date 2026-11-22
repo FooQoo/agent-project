@@ -265,7 +265,7 @@ fn invalid_argument_without_command_points_to_top_level_help() {
         message: "bad".into(),
         command: None,
     };
-    assert_eq!(e.reason(), "Run \"agboard --help\" for usage.");
+    assert_eq!(e.reason(), "Run \"agpj --help\" for usage.");
 }
 
 #[test]

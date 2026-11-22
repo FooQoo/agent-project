@@ -5,7 +5,7 @@ impl AgpjError {
     pub fn reason(&self) -> String {
         match self {
             AgpjError::ProjectNotFound { project } => format!(
-                "No project matches \"{project}\". Run \"agboard project ls\" to see the projects."
+                "No project matches \"{project}\". Run \"agpj project ls\" to see the projects."
             ),
             AgpjError::ProjectNameExists { .. } => {
                 "Project names must be unique. Choose another name.".to_string()
@@ -14,13 +14,13 @@ impl AgpjError {
                 "A folder belongs to one project. Choose another folder.".to_string()
             }
             AgpjError::FolderUnbound { .. } => {
-                "Create a project here with \"agboard project create NAME\", or bind this folder with \"agboard project bind NAME\".".to_string()
+                "Create a project here with \"agpj project create NAME\", or bind this folder with \"agpj project bind NAME\".".to_string()
             }
             AgpjError::BoundProjectMissing { .. } => {
-                "Bind this folder to a project with \"agboard project bind NAME\".".to_string()
+                "Bind this folder to a project with \"agpj project bind NAME\".".to_string()
             }
             AgpjError::TaskNotFound { id } => {
-                format!("No task has ID {id}. Run \"agboard ls\" to see the tasks.")
+                format!("No task has ID {id}. Run \"agpj ls\" to see the tasks.")
             }
             AgpjError::TaskArchived { .. } => "Restore the task before editing it.".into(),
             AgpjError::TaskNotArchived { .. } => "Only an archived task can be deleted here.".into(),
@@ -34,8 +34,8 @@ impl AgpjError {
             AgpjError::EpicNotFound { .. } => "No epic has this EPIC-ID in the project.".into(),
             AgpjError::EpicInUse { .. } => "Move or clear the tasks that belong to this epic first.".into(),
             AgpjError::InvalidArgument { command, .. } => match command {
-                Some(command) => format!("Run \"agboard {command} --help\" for usage."),
-                None => "Run \"agboard --help\" for usage.".to_string(),
+                Some(command) => format!("Run \"agpj {command} --help\" for usage."),
+                None => "Run \"agpj --help\" for usage.".to_string(),
             },
             AgpjError::InvalidValue { reason, .. } => reason.clone(),
             AgpjError::InvalidStateForColumn { id, column, .. } => format!(
@@ -52,7 +52,7 @@ impl AgpjError {
                 "Wait for the user to finalize it, then try again.".into()
             }
             AgpjError::TaskInBacklog { .. } => {
-                "Send it to Todo first (agboard mv <id> todo --actor human), then try again.".into()
+                "Send it to Todo first (agpj mv <id> todo --actor human), then try again.".into()
             }
             AgpjError::EpicIsDraft { .. } => {
                 "Wait for the user to finalize it, then try again.".into()
@@ -80,7 +80,7 @@ impl AgpjError {
                 "Only tasks whose agent status is idle can become drafts. #{id} is not idle."
             ),
             AgpjError::QuestionsUnanswered { .. } => {
-                "Wait for the answers with \"agboard message wait\", or see the questions with \"agboard message ls --task ID\".".into()
+                "Wait for the answers with \"agpj message wait\", or see the questions with \"agpj message ls --task ID\".".into()
             }
             AgpjError::QuestionAnswered { .. } => {
                 "The first recorded answer is kept. Compare it with the answer you have, and ask again if they differ.".into()
@@ -89,10 +89,10 @@ impl AgpjError {
                 "A withdrawn question takes no answer. Ask a new question if one is still needed.".into()
             }
             AgpjError::StartBlockedByQuestions { .. } => {
-                "Answer the questions (the board, or \"agboard message answer\"), then send again.".into()
+                "Answer the questions (the board, or \"agpj message answer\"), then send again.".into()
             }
             AgpjError::MessageNotFound { .. } => {
-                "Run \"agboard message ls --status all\" to see the messages of the project.".into()
+                "Run \"agpj message ls --status all\" to see the messages of the project.".into()
             }
             AgpjError::MessageClosed { .. } => {
                 "The message already has its reply; there is nothing to withdraw.".into()
@@ -104,10 +104,10 @@ impl AgpjError {
                 "Another agent accepted this request first. Leave it to that agent.".into()
             }
             AgpjError::AnswerAccepted { .. } => {
-                "An agent took this answer in before. Read it with \"agboard message show ID\".".into()
+                "An agent took this answer in before. Read it with \"agpj message show ID\".".into()
             }
             AgpjError::QuestionOpen { .. } => {
-                "Only an answered question can be accepted. Wait for the answer with \"agboard message wait\"."
+                "Only an answered question can be accepted. Wait for the answer with \"agpj message wait\"."
                     .into()
             }
             AgpjError::RequestWithdrawn { .. } => {
@@ -142,13 +142,13 @@ impl AgpjError {
             AgpjError::ChoiceUnknown { .. } => {
                 "Choose one of the choices of the question.".into()
             }
-            AgpjError::DatabaseBusy => "Another agboard command is writing. Try again.".to_string(),
+            AgpjError::DatabaseBusy => "Another agpj command is writing. Try again.".to_string(),
             AgpjError::DatabaseError { reason } => reason.clone(),
             AgpjError::AlreadyServing { port, auto: false } => {
-                format!("Open http://127.0.0.1:{port}/ or stop the other \"agboard serve\".")
+                format!("Open http://127.0.0.1:{port}/ or stop the other \"agpj serve\".")
             }
             AgpjError::AlreadyServing { port, auto: true } => format!(
-                "A server started automatically is running at http://127.0.0.1:{port}/. Run \"agboard serve -d\" to keep it running, or stop it with \"agboard stop\"."
+                "A server started automatically is running at http://127.0.0.1:{port}/. Run \"agpj serve -d\" to keep it running, or stop it with \"agpj stop\"."
             ),
             AgpjError::PortInUse { port, holder } => port_in_use_reason(*port, *holder),
             AgpjError::LocalNetworkDenied => LOCAL_NETWORK_DENIED.to_string(),
@@ -194,14 +194,14 @@ impl AgpjError {
             AgpjError::SessionLaunchRefused { reason } => reason.clone(),
             AgpjError::SessionLaunchFailed { reason } => reason.clone(),
             AgpjError::ProjectHasNoFolder { project } => format!(
-                "Bind a folder to project {project} with \"agboard project bind\" in that folder."
+                "Bind a folder to project {project} with \"agpj project bind\" in that folder."
             ),
         }
     }
 }
 
-/// Why `agboard` cannot listen on or reach 127.0.0.1, and the fix for Codex.
-const LOCAL_NETWORK_DENIED: &str = "This environment does not allow local network connections, so the Agent Board server cannot be started or reached. In Codex, run \"agboard setup\" to allow agboard to run outside the sandbox.";
+/// Why `agpj` cannot listen on or reach 127.0.0.1, and the fix for Codex.
+const LOCAL_NETWORK_DENIED: &str = "This environment does not allow local network connections, so the Agent Board server cannot be started or reached. In Codex, run \"agpj setup\" to allow agpj to run outside the sandbox.";
 
 fn port_in_use_reason(port: u16, holder: PortHolder) -> String {
     match holder {

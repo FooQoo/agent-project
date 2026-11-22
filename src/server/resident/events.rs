@@ -37,10 +37,10 @@ impl Events {
     }
 }
 
-/// One event line: `agboard: <time> resident <tool> <launch id> <what>`.
+/// One event line: `agpj: <time> resident <tool> <launch id> <what>`.
 fn line(tool: Tool, launch_id: &str, what: &str) -> String {
     format!(
-        "agboard: {} resident {} {launch_id} {what}",
+        "agpj: {} resident {} {launch_id} {what}",
         format_utc(SystemClock.now()),
         tool.as_str()
     )

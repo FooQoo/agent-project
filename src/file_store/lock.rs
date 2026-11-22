@@ -97,7 +97,7 @@ impl AutostartLock {
                 Err(TryLockError::WouldBlock) => {
                     return Err(AgpjError::BoardUnavailable {
                         reason: format!(
-                            "Another agboard command was still starting the server after {} seconds. Try again.",
+                            "Another agpj command was still starting the server after {} seconds. Try again.",
                             wait.as_secs()
                         ),
                     });

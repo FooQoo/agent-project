@@ -1,4 +1,4 @@
-//! Starting `agboard serve --auto` as a detached process and reading its
+//! Starting `agpj serve --auto` as a detached process and reading its
 //! startup line from `serve.log`.
 //!
 //! The child inherits the open `autostart.lock` and lets go of it once it is
@@ -80,7 +80,7 @@ impl Failure {
     }
 }
 
-/// Start `agboard serve --auto` for `data_dir`, detached from the terminal,
+/// Start `agpj serve --auto` for `data_dir`, detached from the terminal,
 /// working in the data directory, with its output in `log` (truncated, and
 /// readable only by the user). The child holds `lock` until it is ready, and
 /// then opens the board of `open`.
@@ -105,8 +105,8 @@ pub(super) fn spawn_server(
     let err = out
         .try_clone()
         .map_err(|e| unavailable("Cannot open serve.log", e))?;
-    let exe = std::env::current_exe()
-        .map_err(|e| unavailable("Cannot find the agboard executable", e))?;
+    let exe =
+        std::env::current_exe().map_err(|e| unavailable("Cannot find the agpj executable", e))?;
     let fd = lock.file().as_raw_fd();
     let mut command = process::Command::new(exe);
     command

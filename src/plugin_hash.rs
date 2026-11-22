@@ -1,7 +1,7 @@
 //! The content hash of the Agent Board plugin's files.
 //!
 //! The build script hashes `plugins/agent-board/` and embeds the result; the
-//! hook and `agboard setup` hash the same relative files of an installed plugin
+//! hook and `agpj setup` hash the same relative files of an installed plugin
 //! and compare. The set is every regular file under the plugin folder (a
 //! `.DS_Store` excluded), by path relative to it with `/` separators. Files an
 //! agent adds to its installed copy are not part of the set, so they never

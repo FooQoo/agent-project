@@ -1,6 +1,6 @@
 //! A resident agent end to end, with a fake `claude` or `codex` that behaves as the resident skill
 //! tells a session the board launched to: it never runs `wait`, takes the message the board pushes
-//! when it is idle, acts on it with the real `agboard` commands, and ends the turn. The server runs on port 0
+//! when it is idle, acts on it with the real `agpj` commands, and ends the turn. The server runs on port 0
 //! in a temporary data directory; nothing here needs a real agent CLI.
 #![cfg(unix)]
 
@@ -46,7 +46,7 @@ fn fake_session(tool: &str, bin: &str, home: &Path, log: &Path) -> String {
             r#"while IFS= read -r line; do
   id=$(printf '%s' "$line" | sed -n 's/^{"id":\([0-9][0-9]*\),.*/\1/p')
   case "$line" in
-    *'"method":"initialize"'*) printf '{"id":%s,"result":{"userAgent":"agboard/9.9.9 (fake)"}}\n' "$id" ;;
+    *'"method":"initialize"'*) printf '{"id":%s,"result":{"userAgent":"agpj/9.9.9 (fake)"}}\n' "$id" ;;
     *'"method":"thread/start"'*) printf '{"id":%s,"result":{"thread":{"id":"e2e-fake"}}}\n' "$id" ;;
     *'"method":"turn/start"'*)
       turn=$((turn+1))
@@ -175,8 +175,8 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
         &first["message"]["content"]
     };
     let text = text.as_str().unwrap();
-    assert!(text.contains("agboard skills resident"));
-    assert!(text.contains("Do not run `agboard wait`"), "{text}");
+    assert!(text.contains("agpj skills resident"));
+    assert!(text.contains("Do not run `agpj wait`"), "{text}");
 
     // An external session still attaches with `wait` and is counted next to the board's own.
     let mut external = std::process::Command::new(env!("CARGO_BIN_EXE_agpj"))

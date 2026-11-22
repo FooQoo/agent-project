@@ -19,7 +19,7 @@ pub const SESSION_PROJECT_HEADER: &str = "x-agpj-session-project";
 /// How long a session whose stream closed stays in the count.
 pub const GRACE: Duration = Duration::from_secs(30);
 
-/// How long an external session counts after the last `agboard` command or hook of it reached
+/// How long an external session counts after the last `agpj` command or hook of it reached
 /// the server.
 pub const ACCESS_WINDOW: Duration = Duration::from_secs(5 * 60);
 

@@ -65,7 +65,7 @@ if [ "$n" = codex ]; then
     printf '%s\n' "$line" >> "$d/codex.stdin"
     id=$(printf '%s' "$line" | sed -n 's/^{"id":\([0-9][0-9]*\),.*/\1/p')
     case "$line" in
-      *'"method":"initialize"'*) printf '{"id":%s,"result":{"userAgent":"agboard/9.9.9 (fake)"}}\n' "$id" ;;
+      *'"method":"initialize"'*) printf '{"id":%s,"result":{"userAgent":"agpj/9.9.9 (fake)"}}\n' "$id" ;;
       *'"method":"thread/start"'*) printf '{"id":%s,"result":{"thread":{"id":"fake-thread"}}}\n' "$id" ;;
       *'"method":"turn/start"'*)
         printf '{"id":%s,"result":{"turn":{"id":"turn-1"}}}\n' "$id"

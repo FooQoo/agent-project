@@ -68,7 +68,7 @@ pub(crate) async fn connect(
     session: Option<(&ProjectId, &SessionIdentity)>,
 ) -> Result<Connected, AgpjError> {
     let info = paths::read_serve_info_in(dir).ok_or_else(|| {
-        unavailable("No running Agent Board server was found. Run \"agboard serve\".")
+        unavailable("No running Agent Board server was found. Run \"agpj serve\".")
     })?;
     let client = reqwest::Client::builder()
         .connect_timeout(CONNECT_LIMIT)
@@ -99,7 +99,7 @@ pub(crate) async fn connect(
         Ok(Err(error)) => {
             return Err(reach_error(error, |error| {
                 unavailable(format!(
-                    "serve.json names the server on port {}, which does not answer ({error}). The server may have stopped; run \"agboard serve\" again.",
+                    "serve.json names the server on port {}, which does not answer ({error}). The server may have stopped; run \"agpj serve\" again.",
                     info.port
                 ))
             }));
@@ -119,7 +119,7 @@ pub(crate) async fn connect(
     };
     if !health.ok || health.pid != info.pid {
         return Err(unavailable(format!(
-            "serve.json names process {} on port {}, but that port is answered by another process. Run \"agboard serve\" again.",
+            "serve.json names process {} on port {}, but that port is answered by another process. Run \"agpj serve\" again.",
             info.pid, info.port
         )));
     }

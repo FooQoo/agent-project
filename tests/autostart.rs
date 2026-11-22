@@ -401,7 +401,7 @@ fn serve_d_keeps_an_automatic_server_and_a_foreground_serve_points_to_it() {
         error["error"]["reason"]
             .as_str()
             .unwrap()
-            .contains("agboard serve -d"),
+            .contains("agpj serve -d"),
         "{error}"
     );
 
@@ -465,7 +465,7 @@ fn autostart_off_keeps_the_old_error() {
         error["error"]["reason"]
             .as_str()
             .unwrap()
-            .contains("Run \"agboard serve\""),
+            .contains("Run \"agpj serve\""),
         "{error}"
     );
     let hooked = board.hook();

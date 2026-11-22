@@ -18,7 +18,7 @@ pub enum ServeMode {
     Auto,
 }
 
-/// Contents of `serve.json`: how the CLI finds a running `agboard serve`.
+/// Contents of `serve.json`: how the CLI finds a running `agpj serve`.
 /// A file without `mode` was written by a manual server.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ServeInfo {

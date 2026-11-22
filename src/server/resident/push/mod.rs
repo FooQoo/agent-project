@@ -1,5 +1,5 @@
 //! Push mode: the server, not the session, watches the board. A board-launched session does not
-//! run `agboard wait`. When it is idle between two turns and the board has something for it, the
+//! run `agpj wait`. When it is idle between two turns and the board has something for it, the
 //! pusher sends one instruction through [`AgentDriver::send_user_message`] and waits for the
 //! turn to end before it looks again.
 //!

@@ -111,7 +111,7 @@ fn codex_starts_an_app_server_with_the_workspace_sandbox_automatic_review_and_th
     wait_until("the version note", || {
         std::fs::read_to_string(fx.launcher.log_path(Tool::Codex))
             .unwrap()
-            .contains("agboard: codex 9.9.9 thread fake-thread")
+            .contains("agpj: codex 9.9.9 thread fake-thread")
     });
     assert!(!log.contains("ARGS"), "{log}");
     fx.launcher.stop().unwrap();

@@ -1272,7 +1272,7 @@ fn deleting_a_missing_task_is_404_with_the_error_body() {
         serde_json::json!({"error": {
             "code": "task_not_found",
             "message": "task #99 not found.",
-            "reason": "No task has ID 99. Run \"agboard ls\" to see the tasks.",
+            "reason": "No task has ID 99. Run \"agpj ls\" to see the tasks.",
         }})
     );
     for bad_id in ["abc", "0", "-1", "1.5"] {
@@ -1657,7 +1657,7 @@ fn notify_serve_is_false_after_the_server_stopped() {
 use serve_process::ServeProcess;
 use std::process::{Child, Stdio};
 
-/// Start `agboard serve` with `args`, serving the data area in `home`.
+/// Start `agpj serve` with `args`, serving the data area in `home`.
 fn spawn_serve(home: &Path, args: &[&str]) -> ServeProcess {
     let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
@@ -1698,7 +1698,7 @@ fn wait_for_exit(child: &mut Child, within: Duration) -> Option<std::process::Ex
     child.try_wait().unwrap()
 }
 
-/// Start `agboard serve` on a port the OS picks, check it serves, send `signal`,
+/// Start `agpj serve` on a port the OS picks, check it serves, send `signal`,
 /// and check it exits cleanly and removes serve.json.
 fn serve_stops_on(signal: &str) {
     let home = board_home();

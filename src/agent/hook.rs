@@ -35,7 +35,7 @@ impl Failure {
 /// registered ancestor of the `cwd` supplied in the hook input. When the input
 /// has no `cwd`, the process working directory is used.
 ///
-/// The hook returns the same progress data as `agboard progress --json`. It
+/// The hook returns the same progress data as `agpj progress --json`. It
 /// changes no board file and never builds a shell command from hook input.
 pub fn run(
     agent: &str,

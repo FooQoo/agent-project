@@ -37,23 +37,23 @@ const READY_TIMEOUT: Duration = Duration::from_secs(30);
 /// in case it is starting or shutting down.
 const SETTLE_WAIT: Duration = Duration::from_secs(10);
 
-/// The marker `agboard stop` leaves so that the hook does not start the server again.
+/// The marker `agpj stop` leaves so that the hook does not start the server again.
 const PAUSED: &str = "autostart.paused";
 
 static ALLOWED: AtomicBool = AtomicBool::new(false);
 
-/// Let this process start servers. Called once by the `agboard` command line.
+/// Let this process start servers. Called once by the `agpj` command line.
 pub fn allow_in_this_process() {
     ALLOWED.store(true, Ordering::SeqCst);
 }
 
-/// Whether this process is the `agboard` command line, not the library
+/// Whether this process is the `agpj` command line, not the library
 /// embedded in a test.
 pub fn in_command_line() -> bool {
     ALLOWED.load(Ordering::SeqCst)
 }
 
-/// Whether a command may start a server: only in the `agboard` command line,
+/// Whether a command may start a server: only in the `agpj` command line,
 /// and not with `AGPJ_AUTOSTART=0`.
 pub fn enabled() -> bool {
     in_command_line() && std::env::var("AGPJ_AUTOSTART").map_or(true, |value| value.trim() != "0")
@@ -68,7 +68,7 @@ pub fn preferred_port(env: &dyn Fn(&str) -> Option<String>) -> u16 {
 }
 
 /// Keep the hook from starting a server until a command that waits, `serve`
-/// or `serve -d` starts one. Called by `agboard stop`.
+/// or `serve -d` starts one. Called by `agpj stop`.
 pub fn pause(data_dir: &Path) {
     let _ = std::fs::create_dir_all(data_dir);
     let _ = std::fs::write(data_dir.join(PAUSED), b"");
@@ -137,7 +137,7 @@ pub fn ensure_serving(data_dir: &Path, open: Option<&ProjectId>) -> Result<Serve
 }
 
 /// Start the server in the background without waiting, for the agent hook.
-/// Nothing happens when a server process is alive, after `agboard stop`, or
+/// Nothing happens when a server process is alive, after `agpj stop`, or
 /// while another command is starting one. Failures are left in `serve.log`.
 /// The server opens the board of `open` as [`ensure_serving`] does.
 pub fn start_in_background(data_dir: &Path, open: Option<&ProjectId>) {
@@ -187,7 +187,7 @@ fn running(data_dir: &Path) -> Result<Option<ServeInfo>, AgpjError> {
         }
         if Instant::now() >= deadline {
             return Err(unavailable(format!(
-                "The server (pid {}) is not answering. Stop it with \"agboard stop\" and try again.",
+                "The server (pid {}) is not answering. Stop it with \"agpj stop\" and try again.",
                 info.pid
             )));
         }

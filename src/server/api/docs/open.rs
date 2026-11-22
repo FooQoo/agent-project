@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn a_missing_folder_is_not_started() {
-        let result = start_opener(FsPath::new("/nonexistent/agboard-docs"));
+        let result = start_opener(FsPath::new("/nonexistent/agpj-docs"));
         assert!(result.is_err());
     }
 }

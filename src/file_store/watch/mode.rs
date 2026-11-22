@@ -8,7 +8,7 @@ pub const POLL_INTERVAL: Duration = Duration::from_millis(100);
 /// How the shared folder is watched.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum WatchMode {
-    /// The platform's file events (FSEvents on macOS). `agboard serve` uses this.
+    /// The platform's file events (FSEvents on macOS). `agpj serve` uses this.
     #[default]
     Native,
     /// Scan the folder every [`POLL_INTERVAL`]. It starts at once without the platform's

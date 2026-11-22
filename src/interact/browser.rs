@@ -1,7 +1,7 @@
 //! Opening a board page in the computer's web browser.
 //!
 //! An automatic server opens its project's board once after it starts, and
-//! `agboard open` opens one on request. Neither opens anything with
+//! `agpj open` opens one on request. Neither opens anything with
 //! `AGPJ_OPEN_BROWSER=0`, or where no browser can be shown (an SSH session,
 //! or Linux without a display). `AGPJ_BROWSER_OPENER` names a program that
 //! is started instead of the system's, with the address as its only argument;
@@ -55,7 +55,7 @@ pub enum NotOpened {
     Ssh,
     /// Linux or another system without `DISPLAY` or `WAYLAND_DISPLAY`.
     NoDisplay,
-    /// The library embedded in a program other than `agboard`.
+    /// The library embedded in a program other than `agpj`.
     NotCommandLine,
 }
 
@@ -68,7 +68,7 @@ impl NotOpened {
             NotOpened::NoDisplay => {
                 "No display is available (DISPLAY and WAYLAND_DISPLAY are unset)."
             }
-            NotOpened::NotCommandLine => "Only the agboard command opens a browser.",
+            NotOpened::NotCommandLine => "Only the agpj command opens a browser.",
         }
     }
 }
@@ -215,11 +215,11 @@ mod tests {
     #[test]
     fn a_missing_program_is_reported() {
         let opener = Opener {
-            program: "agboard-no-such-opener".into(),
+            program: "agpj-no-such-opener".into(),
         };
         let error = opener.open("http://127.0.0.1:1/").unwrap_err();
         assert!(
-            error.starts_with("Cannot start agboard-no-such-opener:"),
+            error.starts_with("Cannot start agpj-no-such-opener:"),
             "{error}"
         );
     }

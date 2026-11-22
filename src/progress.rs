@@ -1,5 +1,5 @@
 //! The progress table: the tasks an agent can pick up, grouped by epic in wave order.
-//! `agboard progress` and the agent hook print this same table.
+//! `agpj progress` and the agent hook print this same table.
 //!
 //! A task is listed when it is in Todo or Doing and its agent status is not AwaitingAnswer. Done and
 //! archived tasks are never listed; human-assigned tasks and drafts are, so the agent skips them.

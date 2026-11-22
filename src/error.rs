@@ -21,7 +21,7 @@ pub enum PortHolder {
     OtherProgram,
 }
 
-/// Every error `agboard` can report. Each variant maps to one error code in the
+/// Every error `agpj` can report. Each variant maps to one error code in the
 /// design's error table.
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 #[error("{}", self.message())]
@@ -238,7 +238,7 @@ pub enum AgpjError {
     },
     /// The OS or a sandbox does not allow listening on or connecting to 127.0.0.1.
     LocalNetworkDenied,
-    /// `agboard wait` could not read the board or reach the server.
+    /// `agpj wait` could not read the board or reach the server.
     BoardUnavailable {
         reason: String,
     },
@@ -246,7 +246,7 @@ pub enum AgpjError {
     CursorInvalid {
         reason: String,
     },
-    /// `agboard wait` reached its `--timeout` with no change.
+    /// `agpj wait` reached its `--timeout` with no change.
     WaitTimeout,
     /// A Docs path that cannot name a file under the Docs root.
     DocsPathInvalid {
@@ -281,7 +281,7 @@ pub enum AgpjError {
     DocsOpenFailed {
         reason: String,
     },
-    /// `agboard show remote` with a project has no ready ngrok connection to report.
+    /// `agpj show remote` with a project has no ready ngrok connection to report.
     RemoteUnavailable {
         reason: String,
     },
@@ -291,7 +291,7 @@ pub enum AgpjError {
     KeychainUnavailable {
         reason: String,
     },
-    /// `agboard open` could not start the program that opens the browser.
+    /// `agpj open` could not start the program that opens the browser.
     BrowserOpenFailed {
         url: String,
         reason: String,

@@ -1,6 +1,6 @@
 //! Codex over `codex app-server`: newline-delimited JSON-RPC on standard input and output. The
 //! session is one thread; the first instruction is the first `turn/start`, and the agent then
-//! works in that one long turn (`agboard wait` runs inside it). The conversation itself is the
+//! works in that one long turn (`agpj wait` runs inside it). The conversation itself is the
 //! state machine in [`super::codex_parse`].
 //!
 //! Permissions are as they were with the one-way `codex exec` launch: the workspace-write sandbox,

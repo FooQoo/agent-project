@@ -45,7 +45,7 @@ fn an_empty_data_area_gets_workspace_project_and_readme() {
     // The guidance for people and agents who touch the files directly (U9-6).
     for rule in [
         "Do not edit TASK.md of a task that is a draft.",
-        "Do not edit it; use the `agboard` CLI.",
+        "Do not edit it; use the `agpj` CLI.",
         "Do not delete a task folder or an epic folder.",
         "a task's metadata such as its current status and assignee.",
         "a task's body, acceptance conditions, and operation history.",

@@ -37,7 +37,7 @@ pub(super) async fn host_guard(
     if guard::host_allowed(host, context.port) {
         next.run(request).await
     } else {
-        forbidden("Open the board at http://127.0.0.1:<port>/ as printed by agboard serve.")
+        forbidden("Open the board at http://127.0.0.1:<port>/ as printed by agpj serve.")
     }
 }
 

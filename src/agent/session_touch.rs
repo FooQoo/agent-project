@@ -1,4 +1,4 @@
-//! Telling the board that an agent session used it. Every `agboard` command and hook run inside an
+//! Telling the board that an agent session used it. Every `agpj` command and hook run inside an
 //! external agent session sends one short request to the running server, so the board can count
 //! the session for five minutes whether or not it waits.
 //!
@@ -10,7 +10,7 @@
 //! Which sessions touch: the key must come from the agent's own session variable
 //! (`CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`). A key made from the parent process ID does not,
 //! because tools that start a shell for each command give every command another parent, so each
-//! `agboard` call would count as a new session, and a person's own terminal would show up as one.
+//! `agpj` call would count as a new session, and a person's own terminal would show up as one.
 //! A session the board launched does not touch either: the launcher counts it.
 
 use std::io::{Read, Write};

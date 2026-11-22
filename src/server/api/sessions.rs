@@ -59,7 +59,7 @@ pub(super) async fn list_sessions(
     }
 }
 
-/// An `agboard` command or hook of an agent session reached the board: count the session for the
+/// An `agpj` command or hook of an agent session reached the board: count the session for the
 /// access window. The session names itself in the `X-Agpj-Session*` headers; the project is
 /// the one in the headers, which must match the path. A request that names no valid session, or a
 /// board-launched one, changes nothing. Always 204, so a command never has a reason to fail.

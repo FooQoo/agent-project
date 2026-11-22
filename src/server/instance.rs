@@ -1,4 +1,4 @@
-//! Telling whether another `agboard serve` is already running, and cleaning up
+//! Telling whether another `agpj serve` is already running, and cleaning up
 //! `serve.json` on exit.
 
 use std::io::{Read, Write};

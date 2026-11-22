@@ -3,7 +3,7 @@
 //! A session counts in two ways. While a `wait --until task` command of it holds an event stream
 //! open, it is connected; when the stream closes it is kept for a grace period, so the gap
 //! between one wait and the next does not make the count flicker. An external session (one the
-//! board did not launch) also counts for [`ACCESS_WINDOW`] after any `agboard` command or hook
+//! board did not launch) also counts for [`ACCESS_WINDOW`] after any `agpj` command or hook
 //! of it reached the server with [`SessionRegistry::touch`], whether or not it waits. The
 //! commands name the session with the headers in `model`. The registry lives in memory only: a
 //! server that restarts starts with no sessions, and the next wait or command registers again.
@@ -32,7 +32,7 @@ struct Entry {
     streams: usize,
     /// When the last stream closed.
     released_at: Option<Instant>,
-    /// When an `agboard` command or hook of the session last reached the server.
+    /// When an `agpj` command or hook of the session last reached the server.
     touched_at: Option<Instant>,
 }
 
@@ -108,7 +108,7 @@ impl SessionRegistry {
         }
     }
 
-    /// Record that an `agboard` command or hook of an external session reached the server now.
+    /// Record that an `agpj` command or hook of an external session reached the server now.
     /// The session counts for [`ACCESS_WINDOW`] from this call, on top of any open stream. A
     /// board-launched session is ignored: the launcher counts it itself, so it is never counted
     /// twice. A session that is already counted keeps its first `connectedAt`.

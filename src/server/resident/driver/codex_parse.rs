@@ -117,7 +117,7 @@ impl Session {
     /// The first line of a session.
     pub(super) fn hello(&mut self) -> Value {
         let params = json!({
-            "clientInfo": {"name": "agboard", "title": "Agent Board", "version": self.settings.version},
+            "clientInfo": {"name": "agpj", "title": "Agent Board", "version": self.settings.version},
             "capabilities": {"experimentalApi": false},
         });
         self.request("initialize", params, Waiting::Initialize)
@@ -211,7 +211,7 @@ impl Session {
     }
 }
 
-/// `0.170.0` from `agboard/0.170.0`, the first word of the server's `userAgent`.
+/// `0.170.0` from `agpj/0.170.0`, the first word of the server's `userAgent`.
 pub(super) fn version_of(agent: &str) -> Option<String> {
     let version = agent.rsplit('/').next().unwrap_or("");
     (!version.is_empty()).then(|| version.to_string())

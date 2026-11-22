@@ -9,7 +9,7 @@ fn messages_and_reasons_follow_the_design_table() {
     let expected: Vec<(&str, &str)> = vec![
         (
             "project not found.",
-            "No project matches \"Alpha\". Run \"agboard project ls\" to see the projects.",
+            "No project matches \"Alpha\". Run \"agpj project ls\" to see the projects.",
         ),
         (
             "project \"Alpha\" already exists.",
@@ -17,11 +17,11 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "task #7 not found.",
-            "No task has ID 7. Run \"agboard ls\" to see the tasks.",
+            "No task has ID 7. Run \"agpj ls\" to see the tasks.",
         ),
         (
             "unexpected argument '--x'",
-            "Run \"agboard add --help\" for usage.",
+            "Run \"agpj add --help\" for usage.",
         ),
         ("title is invalid.", "r"),
         (
@@ -46,7 +46,7 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "task #5 is in the Backlog and has not been sent to Todo.",
-            "Send it to Todo first (agboard mv <id> todo --actor human), then try again.",
+            "Send it to Todo first (agpj mv <id> todo --actor human), then try again.",
         ),
         (
             "epic E is a draft and read-only for the CLI.",
@@ -78,7 +78,7 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "task #5 waits for answers to its questions.",
-            "Wait for the answers with \"agboard message wait\", or see the questions with \"agboard message ls --task ID\".",
+            "Wait for the answers with \"agpj message wait\", or see the questions with \"agpj message ls --task ID\".",
         ),
         (
             "Q-1 already answered.",
@@ -90,11 +90,11 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "cannot send while Q-2 has no answer.",
-            "Answer the questions (the board, or \"agboard message answer\"), then send again.",
+            "Answer the questions (the board, or \"agpj message answer\"), then send again.",
         ),
         (
             "message Q-3 not found.",
-            "Run \"agboard message ls --status all\" to see the messages of the project.",
+            "Run \"agpj message ls --status all\" to see the messages of the project.",
         ),
         (
             "message Q-3 already has its reply.",
@@ -107,11 +107,11 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "the answer of Q-4 was already accepted.",
-            "An agent took this answer in before. Read it with \"agboard message show ID\".",
+            "An agent took this answer in before. Read it with \"agpj message show ID\".",
         ),
         (
             "question Q-4 has no answer yet.",
-            "Only an answered question can be accepted. Wait for the answer with \"agboard message wait\".",
+            "Only an answered question can be accepted. Wait for the answer with \"agpj message wait\".",
         ),
         (
             "request Q-4 was withdrawn.",
@@ -155,12 +155,12 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "the board is busy.",
-            "Another agboard command is writing. Try again.",
+            "Another agpj command is writing. Try again.",
         ),
         ("cannot open the board.", "boom"),
         (
             "the board is already being served.",
-            "Open http://127.0.0.1:7420/ or stop the other \"agboard serve\".",
+            "Open http://127.0.0.1:7420/ or stop the other \"agpj serve\".",
         ),
         (
             "port 7420 is already in use.",
@@ -168,7 +168,7 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "local network connections are not allowed.",
-            "This environment does not allow local network connections, so the Agent Board server cannot be started or reached. In Codex, run \"agboard setup\" to allow agboard to run outside the sandbox.",
+            "This environment does not allow local network connections, so the Agent Board server cannot be started or reached. In Codex, run \"agpj setup\" to allow agpj to run outside the sandbox.",
         ),
         ("the board is unavailable.", "no running server"),
         ("the cursor is invalid.", "wrong project"),
@@ -243,7 +243,7 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "the project has no bound folder.",
-            "Bind a folder to project demo with \"agboard project bind\" in that folder.",
+            "Bind a folder to project demo with \"agpj project bind\" in that folder.",
         ),
     ];
     let expected: Vec<(String, String)> = expected
@@ -284,9 +284,5 @@ fn already_serving_says_when_the_server_was_started_automatically() {
         "{}",
         auto.reason()
     );
-    assert!(
-        auto.reason().contains("agboard serve -d"),
-        "{}",
-        auto.reason()
-    );
+    assert!(auto.reason().contains("agpj serve -d"), "{}", auto.reason());
 }
