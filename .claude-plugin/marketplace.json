@@ -1,13 +1,13 @@
 {
-  "name": "agent-board",
+  "name": "agent-project",
   "owner": {
     "name": "FooQoo"
   },
   "plugins": [
     {
-      "name": "agent-board",
-      "source": "./plugins/agent-board",
-      "description": "The Agent Board Skill and the Hook that shows the progress table.",
+      "name": "agent-project",
+      "source": "./plugins/agent-project",
+      "description": "The Agent Project Skill and the Hook that shows the progress table.",
       "version": "1.7.0"
     }
   ]

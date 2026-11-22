@@ -1,6 +1,6 @@
-//! `agpj skills`: the text of the Agent Board Skill, served by the binary.
+//! `agpj skills`: the text of the Agent Project Skill, served by the binary.
 //!
-//! The authoritative text is embedded at build time: `agent-board.md` is the
+//! The authoritative text is embedded at build time: `agent-project.md` is the
 //! Skill body, and `topics/` holds the references and templates it points to
 //! with `agpj skills <topic>`. The plugin's `SKILL.md` is only a thin entry
 //! that runs `agpj skills`, so the instructions always match the binary
@@ -10,7 +10,7 @@
 //! topic included, is Markdown printed with exit code 0.
 
 /// The Skill body, as Markdown without frontmatter.
-pub const AGENT_BOARD: &str = include_str!("agent-board.md");
+pub const AGENT_PROJECT: &str = include_str!("agent-project.md");
 
 /// The topics: name and text.
 pub const TOPICS: &[(&str, &str)] = &[
@@ -49,7 +49,7 @@ pub const TOPICS: &[(&str, &str)] = &[
 /// name that is no topic, the list of topics.
 pub fn render(topic: Option<&str>) -> String {
     let Some(topic) = topic else {
-        return AGENT_BOARD.to_string();
+        return AGENT_PROJECT.to_string();
     };
     match TOPICS.iter().find(|(name, _)| *name == topic) {
         Some((_, text)) => (*text).to_string(),
@@ -75,13 +75,13 @@ mod tests {
 
     #[test]
     fn the_main_text_has_no_frontmatter_and_names_no_file_the_plugin_lacks() {
-        assert!(AGENT_BOARD.starts_with("# Agent Board\n"));
+        assert!(AGENT_PROJECT.starts_with("# Agent Project\n"));
         for stale in ["references/", "SKILL.md"] {
-            assert!(!AGENT_BOARD.contains(stale), "the text mentions {stale}");
+            assert!(!AGENT_PROJECT.contains(stale), "the text mentions {stale}");
         }
         // `assets/<attachment-id>` is the image path of a task body.
         assert!(
-            !AGENT_BOARD
+            !AGENT_PROJECT
                 .replace("assets/<attachment-id>", "")
                 .contains("assets/")
         );
@@ -89,10 +89,10 @@ mod tests {
 
     #[test]
     fn every_topic_the_text_names_exists() {
-        let all = std::iter::once(AGENT_BOARD).chain(TOPICS.iter().map(|(_, text)| *text));
+        let all = std::iter::once(AGENT_PROJECT).chain(TOPICS.iter().map(|(_, text)| *text));
         for text in all {
             for (at, _) in text.match_indices("agpj skills ") {
-                let name: String = text[at + 12..]
+                let name: String = text[at + "agpj skills ".len()..]
                     .chars()
                     .take_while(|c| c.is_ascii_lowercase() || *c == '-')
                     .collect();
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn every_text_stays_under_the_claude_code_injection_limit() {
-        let all = std::iter::once(("the main text", AGENT_BOARD))
+        let all = std::iter::once(("the main text", AGENT_PROJECT))
             .chain(TOPICS.iter().map(|(name, text)| (*name, *text)));
         for (name, text) in all {
             let chars = text.chars().count();
@@ -130,7 +130,7 @@ mod tests {
         for (name, _) in TOPICS {
             let command = format!("agpj skills {name}");
             assert!(
-                AGENT_BOARD.contains(&command)
+                AGENT_PROJECT.contains(&command)
                     || TOPICS.iter().any(|(_, text)| text.contains(&command)),
                 "nothing points at the topic {name}"
             );

@@ -1,13 +1,13 @@
 ---
 name: wait
-description: Keep this session on the Agent Board, listening for requests, answers, and eligible tasks, and process each one before waiting again. Use when the user asks you to listen, wait on the board, or stay attached to the board, for example "listen", "wait on the board", "待ち受けて", "張り付いて".
-compatibility: Requires the agpj CLI on PATH and a local Agent Board data area. The listener starts the local agpj server when it is not running.
+description: Keep this session on the Agent Project, listening for requests, answers, and eligible tasks, and process each one before waiting again. Use when the user asks you to listen, wait on the board, or stay attached to the board, for example "listen", "wait on the board", "待ち受けて", "張り付いて".
+compatibility: Requires the agpj CLI on PATH and a local Agent Project data area. The listener starts the local agpj server when it is not running.
 allowed-tools: Bash(agpj *)
 ---
 
-# Agent Board resident listening
+# Agent Project resident listening
 
-Invoking this skill is the user's explicit request to listen on the board. This session stays on the project of the current folder, waits for answers, requests, and eligible tasks, handles each one through the normal Agent Board procedure, and then waits again.
+Invoking this skill is the user's explicit request to listen on the board. This session stays on the project of the current folder, waits for answers, requests, and eligible tasks, handles each one through the normal Agent Project procedure, and then waits again.
 
 ## Steps
 

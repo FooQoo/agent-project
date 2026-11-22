@@ -7,7 +7,7 @@ With --assets, DIR must also hold exactly the two per-CPU archives of that
 version (aarch64 and x86_64) and nothing else, so a missing CPU, a stray file,
 or an archive of another version fails the check.
 
-The Agent Board plugin's manifests and its Claude Code catalog entry must name
+The Agent Project plugin's manifests and its Claude Code catalog entry must name
 the same version, because setup installs the plugin from the tag of that
 version. Its Hook commands carry no version: they must be exactly
 "agpj hook --agent <agent>".

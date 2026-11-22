@@ -1,14 +1,14 @@
 {
-  "name": "agent-board",
+  "name": "agent-project",
   "interface": {
-    "displayName": "Agent Board"
+    "displayName": "Agent Project"
   },
   "plugins": [
     {
-      "name": "agent-board",
+      "name": "agent-project",
       "source": {
         "source": "local",
-        "path": "./plugins/agent-board"
+        "path": "./plugins/agent-project"
       },
       "policy": {
         "installation": "AVAILABLE",

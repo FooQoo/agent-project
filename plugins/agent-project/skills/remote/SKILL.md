@@ -1,10 +1,10 @@
 ---
 name: remote
-description: Give the user the Agent Board phone remote-access URL and passcode in one step. Use when the user asks for the remote access URL, the phone link, the passcode, or wants to open the board on their phone, for example "remote access URL", "phone link", "リモートアクセスのURL", "スマホで開きたい".
-compatibility: Requires the agpj CLI on PATH and a running Agent Board server whose ngrok connection is ready.
+description: Give the user the Agent Project phone remote-access URL and passcode in one step. Use when the user asks for the remote access URL, the phone link, the passcode, or wants to open the board on their phone, for example "remote access URL", "phone link", "リモートアクセスのURL", "スマホで開きたい".
+compatibility: Requires the agpj CLI on PATH and a running Agent Project server whose ngrok connection is ready.
 ---
 
-# Agent Board remote access
+# Agent Project remote access
 
 Hand the user the address and passcode that open the board on their phone. This skill only reads the state of a connection that already exists. It never starts the server or ngrok.
 

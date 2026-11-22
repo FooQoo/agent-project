@@ -1,14 +1,14 @@
 # The Agent Project plugin
 
-This folder is the Agent Project plugin for Claude Code and Codex. It holds the `agent-board` Skill, the `remote` Skill (the phone address and passcode, `/agent-board:remote` in Claude Code), the `wait` Skill (keeps a session listening on the board, `/agent-board:wait`), and the Hook. Install it with:
+This folder is the Agent Project plugin for Claude Code and Codex. It holds the `agent-project` Skill, the `remote` Skill (the phone address and passcode, `/agent-project:remote` in Claude Code), the `wait` Skill (keeps a session listening on the board, `/agent-project:wait`), and the Hook. Install it with:
 
 ```sh
 agpj setup
 ```
 
-For browser operations, CLI examples, and shared-file editing, see the [usage guide](https://fooqoo.github.io/agent-board/guide/), in particular [CLI reference](https://fooqoo.github.io/agent-board/guide/reference/cli) and [Editing and image attachments](https://fooqoo.github.io/agent-board/guide/watch/editing).
+For browser operations, CLI examples, and shared-file editing, see the [usage guide](https://fooqoo.github.io/agent-project/guide/), in particular [CLI reference](https://fooqoo.github.io/agent-project/guide/reference/cli) and [Editing and image attachments](https://fooqoo.github.io/agent-project/guide/watch/editing).
 
-Agent Project hooks read the same read-only progress table as `agpj progress --json` after tools run and pass it to the agent as `additionalContext`. The `agent-board` skill (its text is printed by `agpj skills agent-board`) describes how to choose work from that table, read only the needed plan and task files, record work, and verify acceptance conditions.
+Agent Project hooks read the same read-only progress table as `agpj progress --json` after tools run and pass it to the agent as `additionalContext`. The `agent-project` skill (its text is printed by `agpj skills agent-project`) describes how to choose work from that table, read only the needed plan and task files, record work, and verify acceptance conditions.
 
 ## Resolve the project from the working folder
 
@@ -20,18 +20,18 @@ Image attachments follow the same project and task boundaries. Use `agpj --proje
 
 ## Install
 
-`agpj setup` installs this plugin with each agent's own plugin command. The repository is the marketplace of both agents, and setup adds it at the tag of the `agpj` version, so the plugin always matches the command. It also lets the agents use the shared folder and, with your consent, trusts the plugin's hooks in Codex. See [Working with agents](https://fooqoo.github.io/agent-board/guide/delegate/agents#set-up-your-agents) for what it asks and changes.
+`agpj setup` installs this plugin with each agent's own plugin command. The repository is the marketplace of both agents, and setup adds it at the tag of the `agpj` version, so the plugin always matches the command. It also lets the agents use the shared folder and, with your consent, trusts the plugin's hooks in Codex. See [Working with agents](https://fooqoo.github.io/agent-project/guide/delegate/agents#set-up-your-agents) for what it asks and changes.
 
 To install the plugin by hand instead, run the same commands, with `X.Y.Z` replaced by the version that `agpj --version` prints:
 
 ```sh
 # Codex
-codex plugin marketplace add https://github.com/FooQoo/agent-board.git --ref vX.Y.Z
-codex plugin add agent-board@agent-board
+codex plugin marketplace add https://github.com/FooQoo/agent-project.git --ref vX.Y.Z
+codex plugin add agent-project@agent-project
 
 # Claude Code
-claude plugin marketplace add https://github.com/FooQoo/agent-board.git#vX.Y.Z
-claude plugin install agent-board@agent-board
+claude plugin marketplace add https://github.com/FooQoo/agent-project.git#vX.Y.Z
+claude plugin install agent-project@agent-project
 ```
 
 The plugin is installed for your user, so it works in every folder. In a folder with no project, the Hook prints nothing and exits normally. Hooks and the Skill run `agpj` from `PATH`, so they use the installed version. The Skill's instructions are embedded in `agpj`, so they always match it.
@@ -40,12 +40,12 @@ The plugin is installed for your user, so it works in every folder. In a folder 
 | --- | --- |
 | `.agents/plugins/marketplace.json` | The Codex marketplace catalog, at the repository root |
 | `.claude-plugin/marketplace.json` | The Claude Code marketplace catalog, at the repository root |
-| `plugins/agent-board/.codex-plugin/plugin.json` | The Codex plugin manifest |
-| `plugins/agent-board/.claude-plugin/plugin.json` | The Claude Code plugin manifest |
-| `plugins/agent-board/skills/agent-board/SKILL.md` | A thin entry for the Skill, shared by both agents; the instructions themselves come from `agpj skills agent-board` |
-| `plugins/agent-board/skills/remote/` | The Skill that gives the phone address and passcode, shared by both agents |
-| `plugins/agent-board/skills/wait/` | The Skill that keeps a session listening on the board, shared by both agents |
-| `plugins/agent-board/hooks/codex.json`, `hooks/claude.json` | The Hook of each agent |
+| `plugins/agent-project/.codex-plugin/plugin.json` | The Codex plugin manifest |
+| `plugins/agent-project/.claude-plugin/plugin.json` | The Claude Code plugin manifest |
+| `plugins/agent-project/skills/agent-project/SKILL.md` | A thin entry for the Skill, shared by both agents; the instructions themselves come from `agpj skills agent-project` |
+| `plugins/agent-project/skills/remote/` | The Skill that gives the phone address and passcode, shared by both agents |
+| `plugins/agent-project/skills/wait/` | The Skill that keeps a session listening on the board, shared by both agents |
+| `plugins/agent-project/hooks/codex.json`, `hooks/claude.json` | The Hook of each agent |
 
 ## Trust hooks
 
@@ -77,7 +77,7 @@ Done tasks are read-only for agents and do not return to progress unless a user 
 - `PostToolUseFailure`: a fresh progress table after a failed tool.
 - `Stop`: reminds the agent once at the end of a turn, with a list of rules: a question asked only in the chat, and a result that was not recorded (see the developer guide).
 
-Inspect `/hooks` and review the fixed command. The `agent-board` Skill does not register hooks itself.
+Inspect `/hooks` and review the fixed command. The `agent-project` Skill does not register hooks itself.
 
 ## Codex CLI and Codex App
 

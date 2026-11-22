@@ -72,7 +72,7 @@ pub fn installed_from_marketplace(root: &Path) -> bool {
 }
 
 /// The Codex hook definition this agpj ships.
-const SHIPPED_CODEX_HOOKS: &str = include_str!("../../plugins/agent-board/hooks/codex.json");
+const SHIPPED_CODEX_HOOKS: &str = include_str!("../../plugins/agent-project/hooks/codex.json");
 
 /// Whether the Codex hook definition in `root` differs from the shipped one.
 /// Codex keys its trust on the definition, so only then must the user trust
@@ -277,7 +277,7 @@ mod tests {
 
     #[test]
     fn the_embedded_hash_matches_the_plugin_folder() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("plugins/agent-board");
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("plugins/agent-project");
         assert!(installed_matches(&root));
         assert!(PLUGIN_FILES.contains(&"hooks/claude.json"));
     }

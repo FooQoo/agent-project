@@ -29,7 +29,7 @@ history: []
 - `plannedVersion`: an optional top-level string, the release a task is planned for, such as `v1.8.0`. Absent means unplanned. Quote a name that looks like a number (`"1.8"`); a number or a list is shown as a defect. The versions of a project are the file names of `docs/release/*.md` in its Docs (`v1.8.0.md` lists `v1.8.0`). Prefer `edit --planned-version <v>`, `--current-version` or `--unplanned`, which check the name against that list and add a history entry; a hand edit is also read, and any text is shown as written. Do not edit it on a draft task.
 - An `EPIC.md` may have `waves`, a list in which each item is one wave: a task ID (`566`) or task IDs joined by commas (`569,570,571`). Tasks in one wave can run in parallel, and a wave starts only when every task of the earlier waves is Done, so put tasks that depend on each other in later waves. Task IDs are distinct positive numbers; unlisted epic members follow in ascending ID order. Set it with `epic edit --waves 566 572 569,570,571` (one value per wave) or by editing `EPIC.md`. This is independent of lane order.
 - Other frontmatter keys are preserved when the board writes the file. An `EPIC.md` without frontmatter is entirely body text; its reference conditions are not parsed by the app.
-- Earlier versions named this file `PLAN.md`; Agent Board renames it to `EPIC.md` on the first read of the project. If an epic folder has both files, do not choose between them yourself; report the conflict to the user.
+- Earlier versions named this file `PLAN.md`; Agent Project renames it to `EPIC.md` on the first read of the project. If an epic folder has both files, do not choose between them yourself; report the conflict to the user.
 
 ## Task history
 
@@ -43,7 +43,7 @@ history:
 
 `at` must be a UTC string in the exact `YYYY-MM-DDTHH:MM:SSZ` format, with whole seconds and uppercase `Z`. Timezone offsets (including `+00:00`) and fractional seconds are rejected. `reason` is concise content (up to 10,000 Unicode characters, including surrounding whitespace). A supplied nonblank reason is preserved verbatim. A decision question is Markdown of up to 5,000 characters, and answer text is up to 2,000 characters. A reason is Markdown: the board draws it like a task body, with headings, tables, code, links, and images. An image attached to the same task uses the body's reference, `![caption](assets/<attachment-id>.<ext>)`. Entries have no ID, kind, actor, or transition fields. API and CLI responses return history in this same two-field shape. Question and answer lookup data is separate from history.
 
-Agent Board appends history automatically for task operations, including UI or CLI lane and state changes, questions and answers, and archive or restore actions. Missing or blank reasons generate wording from the current state. The browser's reason field is optional.
+Agent Project appends history automatically for task operations, including UI or CLI lane and state changes, questions and answers, and archive or restore actions. Missing or blank reasons generate wording from the current state. The browser's reason field is optional.
 
 A lane or state change takes its decision and grounds in the `--reason` of `mv` or `state`; that entry is the record. For a decision that changes no state but matters later (for example keeping a card in Todo), an agent adds one entry with the grounds, the decision, and when known the condition for reconsidering:
 
