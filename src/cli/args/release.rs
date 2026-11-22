@@ -3,7 +3,7 @@
 use clap::{Args, Subcommand};
 
 use crate::domain::validate_version_name;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::VersionChoice;
 
 #[derive(Args, Debug)]
@@ -33,7 +33,7 @@ pub struct ReleaseDocArgs {
 }
 
 impl ReleaseDocArgs {
-    pub fn choice(&self) -> Result<VersionChoice, AgboardError> {
+    pub fn choice(&self) -> Result<VersionChoice, AgpjError> {
         match &self.version {
             Some(name) => Ok(VersionChoice::Named(validate_version_name(name)?)),
             None => Ok(VersionChoice::Current),

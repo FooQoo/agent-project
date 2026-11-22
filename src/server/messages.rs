@@ -12,7 +12,7 @@ use super::AppState;
 use super::response::{agboard_error_response, json_response};
 use super::store::{parse_project_id, refresh_index, with_request_files};
 use crate::domain::Actor;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::qa::{AnswerVia, MessageView, QuestionStatus, QuestionView};
 use crate::file_store::{AnswerItem, FileStore};
 
@@ -35,11 +35,11 @@ pub(crate) struct AnswersInput {
 /// Run blocking file work against the shared folder.
 async fn on_files<T: Send + 'static>(
     shared: PathBuf,
-    work: impl FnOnce(FileStore) -> Result<T, AgboardError> + Send + 'static,
-) -> Result<T, AgboardError> {
+    work: impl FnOnce(FileStore) -> Result<T, AgpjError> + Send + 'static,
+) -> Result<T, AgpjError> {
     tokio::task::spawn_blocking(move || work(FileStore::open(&shared)))
         .await
-        .map_err(|e| AgboardError::DatabaseError {
+        .map_err(|e| AgpjError::DatabaseError {
             reason: format!("The file task failed: {e}"),
         })?
 }
@@ -75,7 +75,7 @@ pub(crate) async fn list_response(
         Err(error) => return agboard_error_response(&error),
     };
     let invalid = |field: &str, reason: &str| {
-        agboard_error_response(&AgboardError::InvalidValue {
+        agboard_error_response(&AgpjError::InvalidValue {
             field: field.into(),
             reason: reason.into(),
         })
@@ -123,7 +123,7 @@ fn conflict_response(
     store: &FileStore,
     project: &str,
     ids: &[String],
-    error: &AgboardError,
+    error: &AgpjError,
 ) -> Response {
     let questions: Vec<QuestionView> = project
         .parse()
@@ -195,8 +195,8 @@ pub(super) async fn record_answers(
             match store.answer_questions(&project, items, AnswerVia::Ui, chrono::Utc::now()) {
                 Ok(questions) => Ok(questions),
                 Err(
-                    error @ (AgboardError::QuestionAnswered { .. }
-                    | AgboardError::QuestionWithdrawn { .. }),
+                    error @ (AgpjError::QuestionAnswered { .. }
+                    | AgpjError::QuestionWithdrawn { .. }),
                 ) => Err(Ok(conflict_response(&store, &raw_project, &ids, &error))),
                 Err(error) => Err(Err(error)),
             },

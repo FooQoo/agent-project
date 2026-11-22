@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::watch::WatchMode;
 use agent_project::server::monitor_connection::contracts::PublicOrigin;
 use agent_project::server::monitor_connection::keychain::{TokenVault, VaultError};
@@ -161,7 +161,7 @@ pub struct Server {
     pub push: Arc<RecordingPush>,
     pub ready: Option<MonitorReady>,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 /// A keychain in memory: saved tokens, a switch to make it unusable, and a count
@@ -281,7 +281,7 @@ impl Default for Opts {
 }
 
 impl Server {
-    pub fn try_start(home: &Path, opts: Opts) -> Result<Self, AgboardError> {
+    pub fn try_start(home: &Path, opts: Opts) -> Result<Self, AgpjError> {
         let data_dir = home.to_path_buf();
         let (tx, rx) = mpsc::channel();
         let (stop_tx, stop_rx) = tokio::sync::oneshot::channel();

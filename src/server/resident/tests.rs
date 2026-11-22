@@ -144,7 +144,7 @@ fn fixture_with(timing: Timing, factory: driver::DriverFactory) -> Fixture {
 }
 
 impl Fixture {
-    fn launch(&self, tool: Tool, model: Option<&str>) -> Result<Launched, AgboardError> {
+    fn launch(&self, tool: Tool, model: Option<&str>) -> Result<Launched, AgpjError> {
         self.launcher
             .launch(&project(), "demo", self.folder.path(), tool, model)
     }

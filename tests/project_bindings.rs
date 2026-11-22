@@ -6,7 +6,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::FileStore;
 use assert_cmd::Command;
 use chrono::{TimeZone, Utc};
@@ -127,7 +127,7 @@ fn a_bindings_file_that_does_not_follow_the_format_is_an_error_not_an_empty_list
     store.bind_folder(&alpha.id, &work.join("x")).unwrap();
     fs::write(root.path().join("bindings.json"), "{ not json").unwrap();
 
-    let error: AgboardError = store.bindings().unwrap_err();
+    let error: AgpjError = store.bindings().unwrap_err();
     assert_eq!(error.code(), "file_invalid");
     assert!(store.bind_folder(&alpha.id, &work.join("other")).is_err());
     assert_eq!(

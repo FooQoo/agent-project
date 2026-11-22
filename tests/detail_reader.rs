@@ -5,7 +5,7 @@ use std::io::Cursor;
 use std::path::Path;
 
 use agent_project::domain::{Actor, Assignee, AttachmentInput, NewTask, ProjectId};
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::detail::{DetailSnapshot, epic_version, task_versions};
 use agent_project::file_store::model::{AttachmentOwner, NewEpic};
 use agent_project::file_store::validate::EpicId;
@@ -341,12 +341,12 @@ fn a_missing_task_or_epic_is_not_found() {
     let snapshot = world.snapshot();
     assert!(matches!(
         DetailSnapshot::task(world.shared(), &snapshot, 99, &BOTH),
-        Err(AgboardError::TaskNotFound { id: 99 })
+        Err(AgpjError::TaskNotFound { id: 99 })
     ));
     let missing: EpicId = "NOPE".parse().unwrap();
     assert!(matches!(
         DetailSnapshot::epic(world.shared(), &snapshot, &missing, &[Section::Document]),
-        Err(AgboardError::EpicNotFound { .. })
+        Err(AgpjError::EpicNotFound { .. })
     ));
 }
 

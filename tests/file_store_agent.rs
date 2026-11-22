@@ -6,7 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::FileStore;
 use chrono::{TimeZone, Utc};
 
@@ -106,10 +106,7 @@ fn reporting_running_on_a_todo_task_is_refused_and_changes_nothing() {
             later(),
         )
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::InvalidStateForAssignee),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::InvalidStateForAssignee), "{err:?}");
     assert_eq!(fx.bytes(id), before);
 }
 
@@ -150,10 +147,7 @@ fn running_on_a_human_task_in_doing_is_refused() {
             later(),
         )
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::InvalidStateForAssignee),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::InvalidStateForAssignee), "{err:?}");
 }
 
 #[test]
@@ -244,7 +238,7 @@ fn a_lane_move_keeps_the_open_question_and_a_person_can_move_a_waiting_task() {
         )
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::QuestionsUnanswered { .. }),
+        matches!(err, AgpjError::QuestionsUnanswered { .. }),
         "{err:?}"
     );
 
@@ -320,10 +314,7 @@ fn a_draft_task_refuses_agent_moves_and_accepts_user_moves() {
             later(),
         )
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::TaskIsDraft { id: 1 }),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::TaskIsDraft { id: 1 }), "{err:?}");
 
     let moved = fx
         .store
@@ -370,7 +361,7 @@ fn running_is_refused_while_a_referenced_question_is_open() {
         )
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::QuestionsUnanswered { .. }),
+        matches!(err, AgpjError::QuestionsUnanswered { .. }),
         "{err:?}"
     );
     assert_eq!(fx.bytes(id), before);
@@ -386,7 +377,7 @@ fn running_is_refused_while_a_referenced_question_is_open() {
         )
         .unwrap_err();
     assert!(
-        matches!(pending, AgboardError::InvalidValue { .. }),
+        matches!(pending, AgpjError::InvalidValue { .. }),
         "{pending:?}"
     );
 
@@ -500,7 +491,7 @@ fn done_tasks_reject_agent_edits_but_a_person_can_reopen_them() {
         .edit_task(&fx.project, id, Some("Renamed"), Some(VALID_BODY), later())
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::TaskIsDone { id: done } if done == id),
+        matches!(err, AgpjError::TaskIsDone { id: done } if done == id),
         "{err:?}"
     );
     assert_eq!(fx.bytes(id), before);
@@ -547,7 +538,7 @@ fn running_on_a_done_task_is_refused_by_the_state_table() {
         )
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::TaskIsDone { id: done } if done == id),
+        matches!(err, AgpjError::TaskIsDone { id: done } if done == id),
         "{err:?}"
     );
 }

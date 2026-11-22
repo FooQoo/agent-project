@@ -61,7 +61,7 @@ fn write_new_task(
         let body =
             match task.planned_version.as_deref() {
                 Some(version) => frontmatter::compose_planned_version(&body, Some(version))
-                    .map_err(|defect| AgboardError::FileInvalid {
+                    .map_err(|defect| AgpjError::FileInvalid {
                         file: format!("{label}/TASK.md"),
                         field: defect.field,
                         reason: defect.reason,

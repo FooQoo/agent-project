@@ -17,7 +17,7 @@ use futures_util::stream;
 
 use super::parse_task_id;
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::detail::DetailSnapshot;
 use crate::file_store::index::ProjectIndex;
 use crate::file_store::validate::EpicId;
@@ -81,7 +81,7 @@ pub(crate) async fn detail_response(
         },
         Target::Epic(raw) => match raw.parse::<EpicId>() {
             Ok(id) => Resolved::Epic(id),
-            Err(_) => return agboard_error_response(&AgboardError::EpicNotFound { id: raw }),
+            Err(_) => return agboard_error_response(&AgpjError::EpicNotFound { id: raw }),
         },
     };
     // The index is only read here, and only long enough to take the snapshot's `Arc`.
@@ -95,13 +95,13 @@ pub(crate) async fn detail_response(
             Resolved::Task(id) => DetailSnapshot::task(&shared, &snapshot, *id, &sections),
             Resolved::Epic(id) => DetailSnapshot::epic(&shared, &snapshot, id, &sections),
         }?;
-        Ok::<_, AgboardError>(detail.events())
+        Ok::<_, AgpjError>(detail.events())
     })
     .await;
     match built {
         Ok(Ok(events)) => ndjson_response(&events),
         Ok(Err(error)) => agboard_error_response(&error),
-        Err(error) => agboard_error_response(&AgboardError::DatabaseError {
+        Err(error) => agboard_error_response(&AgpjError::DatabaseError {
             reason: format!("The detail task failed: {error}"),
         }),
     }

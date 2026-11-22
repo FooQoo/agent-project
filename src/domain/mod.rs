@@ -70,7 +70,7 @@ pub fn check_work_state(
 /// The only changes of the run state an agent or the web API may ask for, all in Doing:
 /// idle to running, running to paused, and paused to running. Anything else is refused, so a
 /// task that has run never goes back to idle. Asking for the state a task is in is no change.
-pub fn check_state_change(from: RunState, to: RunState) -> Result<(), crate::error::AgboardError> {
+pub fn check_state_change(from: RunState, to: RunState) -> Result<(), crate::error::AgpjError> {
     if matches!(
         (from, to),
         (RunState::Idle, RunState::Running)
@@ -79,7 +79,7 @@ pub fn check_state_change(from: RunState, to: RunState) -> Result<(), crate::err
     ) {
         Ok(())
     } else {
-        Err(crate::error::AgboardError::InvalidStateChange { from, to })
+        Err(crate::error::AgpjError::InvalidStateChange { from, to })
     }
 }
 

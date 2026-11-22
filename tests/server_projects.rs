@@ -21,7 +21,7 @@ use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
 use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::FileStore;
 use agent_project::file_store::watch::WatchMode;
 use agent_project::server::{ServeConfig, run_until_in};
@@ -130,7 +130,7 @@ impl Reply {
 struct Running {
     addr: SocketAddr,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 impl Running {

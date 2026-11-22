@@ -5,7 +5,7 @@
 mod common;
 
 use agent_project::domain::{Actor, Assignee, Column, NewTask, ProjectId};
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::message::messages;
 use agent_project::file_store::model::NewEpic;
 use agent_project::file_store::qa::AnswerVia;
@@ -204,7 +204,7 @@ fn a_send_is_a_warning_for_a_person_while_a_question_about_it_has_no_answer() {
         .send_task(&f.project, task, Actor::Human, false, at(4))
         .unwrap_err();
     assert!(
-        matches!(&warned, AgboardError::SendWithOpenQuestions { ids } if ids.as_slice() == std::slice::from_ref(&q))
+        matches!(&warned, AgpjError::SendWithOpenQuestions { ids } if ids.as_slice() == std::slice::from_ref(&q))
     );
     assert_eq!(
         f.store.task(&f.project, task).unwrap().task_status,
@@ -231,7 +231,7 @@ fn an_epic_send_is_a_warning_while_a_question_about_its_cards_has_no_answer() {
         .send_epic(&f.project, &epic, None, Actor::Human, false, at(7))
         .unwrap_err();
     assert!(
-        matches!(&warned, AgboardError::SendWithOpenQuestions { ids } if ids.as_slice() == std::slice::from_ref(&q))
+        matches!(&warned, AgpjError::SendWithOpenQuestions { ids } if ids.as_slice() == std::slice::from_ref(&q))
     );
     assert_eq!(
         f.store.task(&f.project, one).unwrap().task_status,

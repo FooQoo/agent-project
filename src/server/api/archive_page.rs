@@ -10,7 +10,7 @@ use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use chrono::{DateTime, Utc};
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::reader::sort_archived_newest_first;
 use crate::server::AppState;
 use crate::server::response::{agboard_error_response, json_response};
@@ -53,14 +53,14 @@ impl PageCursor {
     }
 }
 
-fn bad(field: &str, reason: &str) -> AgboardError {
-    AgboardError::InvalidValue {
+fn bad(field: &str, reason: &str) -> AgpjError {
+    AgpjError::InvalidValue {
         field: field.to_string(),
         reason: reason.to_string(),
     }
 }
 
-fn parse_limit(query: &HashMap<String, String>) -> Result<usize, AgboardError> {
+fn parse_limit(query: &HashMap<String, String>) -> Result<usize, AgpjError> {
     let Some(raw) = query.get("limit") else {
         return Ok(DEFAULT_LIMIT);
     };

@@ -2,7 +2,7 @@
 //! stylesheets are in [`super::web_assets`].
 
 use super::web_assets::{APP_BUILD_ID, BUILD_ID_PLACEHOLDER};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// `web/dist/index.html`, with [`TOKEN_PLACEHOLDER`] in the token `<meta>`
 /// and [`BUILD_ID_PLACEHOLDER`] in the build `<meta>`.
@@ -51,9 +51,9 @@ pub fn to_hex(bytes: &[u8]) -> String {
 }
 
 /// A new session token: 32 random bytes as 64 lowercase hex characters.
-pub fn new_token() -> Result<String, AgboardError> {
+pub fn new_token() -> Result<String, AgpjError> {
     let mut bytes = [0u8; TOKEN_BYTES];
-    getrandom::fill(&mut bytes).map_err(|e| AgboardError::DatabaseError {
+    getrandom::fill(&mut bytes).map_err(|e| AgpjError::DatabaseError {
         reason: format!("Cannot create a session token: {e}"),
     })?;
     Ok(to_hex(&bytes))

@@ -17,7 +17,7 @@ use super::Launcher;
 use super::spawn::Spawn;
 use crate::clock::{Clock, SystemClock};
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::sessions::Tool;
 
 /// The times the supervisor works with. Tests shorten them.
@@ -156,8 +156,8 @@ pub(super) fn span(duration: Duration) -> String {
 
 /// Only a failed start of the process can pass by itself; a missing command, a logged-out
 /// tool, or a bad value stays wrong until a person fixes it.
-pub(super) fn retryable(error: &AgboardError) -> bool {
-    matches!(error, AgboardError::SessionLaunchFailed { .. })
+pub(super) fn retryable(error: &AgpjError) -> bool {
+    matches!(error, AgpjError::SessionLaunchFailed { .. })
 }
 
 impl Launcher {
@@ -262,7 +262,7 @@ impl Launcher {
         project: &ProjectId,
         model: Option<&str>,
         (name, folder): (&str, &std::path::Path),
-        error: &AgboardError,
+        error: &AgpjError,
     ) {
         let mut plan = Plan::new(epoch, project, name, folder, model, "");
         plan.fail(&self.timing, error.reason(), retryable(error));

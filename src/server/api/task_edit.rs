@@ -10,7 +10,7 @@ use serde::{Deserialize, Deserializer};
 use super::epics::whole_or_parts;
 use super::{changed_task_response, parse_task_id};
 use crate::domain::{Actor, Draft};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::frontmatter::AcceptanceItem;
 use crate::file_store::validate::EpicId;
 use crate::file_store::{DraftSave, TaskTextParts};
@@ -67,7 +67,7 @@ pub(super) async fn edit_task(
         && !input.finalize
         && input.draft.is_none()
     {
-        return agboard_error_response(&AgboardError::InvalidArgument {
+        return agboard_error_response(&AgpjError::InvalidArgument {
             message: "Nothing to change.".to_string(),
             command: None,
         });

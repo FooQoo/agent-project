@@ -7,7 +7,7 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 
 use agent_project::domain::{Actor, Assignee, NewTask};
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::FileStore;
 use agent_project::file_store::watch::WatchMode;
 use agent_project::server::monitor_connection::contracts::PublicOrigin;
@@ -80,7 +80,7 @@ pub struct Running {
     /// The passcode the start announced, as the PC would show it.
     pub passcode: String,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 impl Running {

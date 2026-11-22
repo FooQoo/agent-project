@@ -224,10 +224,7 @@ fn rejected_finalize_keeps_the_draft_body_and_history_unchanged() {
         )
         .unwrap_err();
     assert!(
-        matches!(
-            error,
-            agent_project::error::AgboardError::FileInvalid { .. }
-        ),
+        matches!(error, agent_project::error::AgpjError::FileInvalid { .. }),
         "{error:?}"
     );
     let after = files.task(&project, 1).unwrap();

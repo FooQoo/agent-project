@@ -9,7 +9,7 @@ use std::path::Path;
 use toml_edit::{Array, DocumentMut, Item, Table, Value};
 
 use super::plan::{Planned, invalid_file};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 const SUPPORTED_MODE: &str = "workspace-write";
 
@@ -25,7 +25,7 @@ pub(crate) fn plan(
     config: &Path,
     original: Option<&str>,
     root: &str,
-) -> Result<Planned, AgboardError> {
+) -> Result<Planned, AgpjError> {
     let text = original.unwrap_or("");
     let mut doc: DocumentMut = text.parse().map_err(|error: toml_edit::TomlError| {
         invalid_file(

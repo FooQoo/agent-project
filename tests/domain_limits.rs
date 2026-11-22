@@ -1,10 +1,10 @@
 use agent_project::domain::{
     normalize_and_validate_description, validate_board_name, validate_reason, validate_title,
 };
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 
-fn invalid(field: &str, reason: &str) -> AgboardError {
-    AgboardError::InvalidValue {
+fn invalid(field: &str, reason: &str) -> AgpjError {
+    AgpjError::InvalidValue {
         field: field.into(),
         reason: reason.into(),
     }

@@ -128,7 +128,7 @@ use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
 use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::FileStore;
 use agent_project::file_store::watch::WatchMode;
 use agent_project::server::{ServeConfig, run_until_in};
@@ -231,13 +231,13 @@ struct Running {
     /// `/api/projects/<id of "main">`, or empty when the data has no such project.
     base: String,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 impl Running {
     /// Start a server for the data directory `home` on `port` (0 = any) and
     /// wait until it is ready, or return the error it stopped with.
-    fn start(home: &Path, port: u16) -> Result<Running, AgboardError> {
+    fn start(home: &Path, port: u16) -> Result<Running, AgpjError> {
         // The data area is passed in, so servers start in parallel without
         // touching AGBOARD_HOME, and the poll watch starts without FSEvents.
         let data_dir = home.to_path_buf();
@@ -401,11 +401,11 @@ impl Running {
         events
     }
 
-    fn stop(mut self) -> Result<(), AgboardError> {
+    fn stop(mut self) -> Result<(), AgpjError> {
         self.shutdown()
     }
 
-    fn shutdown(&mut self) -> Result<(), AgboardError> {
+    fn shutdown(&mut self) -> Result<(), AgpjError> {
         match self.handle.take() {
             Some(handle) => match server_thread::finish(self.stop.take(), handle) {
                 Some(result) => result.expect("server thread panicked"),
@@ -1521,7 +1521,7 @@ fn a_second_server_for_the_same_data_directory_is_already_serving() {
     let error = Running::start(home.path(), 0).err().unwrap();
     assert_eq!(
         error,
-        AgboardError::AlreadyServing {
+        AgpjError::AlreadyServing {
             port: first.port(),
             auto: false
         }
@@ -1533,7 +1533,7 @@ fn a_second_server_for_the_same_data_directory_is_already_serving() {
     let error = Running::start(home.path(), first.port()).err().unwrap();
     assert_eq!(
         error,
-        AgboardError::AlreadyServing {
+        AgpjError::AlreadyServing {
             port: first.port(),
             auto: false
         }
@@ -1549,7 +1549,7 @@ fn a_port_in_use_by_something_else_is_port_in_use() {
     let error = Running::start(home.path(), port).err().unwrap();
     assert_eq!(
         error,
-        AgboardError::PortInUse {
+        AgpjError::PortInUse {
             port,
             holder: agent_project::error::PortHolder::OtherProgram
         }
@@ -1584,7 +1584,7 @@ fn a_serve_json_whose_port_answers_with_the_same_pid_means_already_serving() {
     let (port, fake) = fake_health_server(2);
     write_serve_json(home.path(), &info(2, port));
     let error = Running::start(home.path(), 0).err().unwrap();
-    assert_eq!(error, AgboardError::AlreadyServing { port, auto: false });
+    assert_eq!(error, AgpjError::AlreadyServing { port, auto: false });
     fake.join().unwrap();
 }
 

@@ -8,7 +8,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
 use serde::Deserialize;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::{ProjectVersions, VersionChoice};
 use crate::server::AppState;
 use crate::server::request::StrictJson;
@@ -102,7 +102,7 @@ pub(super) async fn set_current_version(
 
 fn versions_answer(
     state: &AppState,
-    result: Result<crate::domain::Changed<ProjectVersions>, AgboardError>,
+    result: Result<crate::domain::Changed<ProjectVersions>, AgpjError>,
 ) -> Response {
     match result {
         Ok(result) => {

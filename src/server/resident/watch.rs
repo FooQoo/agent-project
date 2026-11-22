@@ -10,7 +10,7 @@ use super::Launcher;
 use super::spawn::Spawn;
 use super::supervisor::{PlanState, retryable, span};
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::server::sessions::Tool;
 
@@ -18,13 +18,13 @@ use crate::server::sessions::Tool;
 pub fn resolve_project(
     files: &FileStore,
     project: &ProjectId,
-) -> Result<(String, PathBuf), AgboardError> {
+) -> Result<(String, PathBuf), AgpjError> {
     let catalog = files.catalog()?;
     let meta = catalog
         .projects
         .iter()
         .find(|meta| meta.id == *project)
-        .ok_or_else(|| AgboardError::ProjectNotFound {
+        .ok_or_else(|| AgpjError::ProjectNotFound {
             project: project.to_string(),
         })?;
     let folder = files
@@ -33,7 +33,7 @@ pub fn resolve_project(
         .filter(|binding| binding.project_id == *project)
         .map(|binding| binding.folder)
         .find(|folder| folder.is_dir())
-        .ok_or_else(|| AgboardError::ProjectHasNoFolder {
+        .ok_or_else(|| AgpjError::ProjectHasNoFolder {
             project: meta.name.clone(),
         })?;
     Ok((meta.name.clone(), folder))
@@ -45,7 +45,7 @@ impl Launcher {
     /// fails shows as `failed` (or `restarting`) in [`Launcher::health`].
     pub fn start<R>(self: &Arc<Self>, resolve: R)
     where
-        R: Fn(&ProjectId) -> Result<(String, PathBuf), AgboardError> + Send + 'static,
+        R: Fn(&ProjectId) -> Result<(String, PathBuf), AgpjError> + Send + 'static,
     {
         let weak: Weak<Launcher> = Arc::downgrade(self);
         let tick = self.timing.tick;
@@ -161,7 +161,7 @@ impl Launcher {
         let Some((generation, project, name, folder, model)) = target else {
             return;
         };
-        let result: Result<Launched, AgboardError> = self.spawn_child(
+        let result: Result<Launched, AgpjError> = self.spawn_child(
             &project,
             &name,
             &folder,

@@ -7,7 +7,7 @@
 use std::io;
 use std::net::TcpListener;
 
-use crate::error::{AgboardError, PortHolder};
+use crate::error::{AgpjError, PortHolder};
 
 /// The kind of a failure to listen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,14 +39,14 @@ pub(crate) fn is_denied(error: &io::Error) -> bool {
 }
 
 /// The error of a failure to listen on `port`.
-pub(crate) fn bind_error(error: &io::Error, port: u16) -> AgboardError {
+pub(crate) fn bind_error(error: &io::Error, port: u16) -> AgpjError {
     match classify(error) {
-        BindFailure::InUse => AgboardError::PortInUse {
+        BindFailure::InUse => AgpjError::PortInUse {
             port,
             holder: port_holder(port),
         },
-        BindFailure::Denied => AgboardError::LocalNetworkDenied,
-        BindFailure::Other => AgboardError::BoardUnavailable {
+        BindFailure::Denied => AgpjError::LocalNetworkDenied,
+        BindFailure::Other => AgpjError::BoardUnavailable {
             reason: format!("Cannot listen on 127.0.0.1:{port}: {error}."),
         },
     }
@@ -62,13 +62,13 @@ pub(crate) fn port_holder(port: u16) -> PortHolder {
 }
 
 /// Listen on exactly `port` (0 lets the OS choose).
-pub(crate) fn bind_exact(port: u16) -> Result<TcpListener, AgboardError> {
+pub(crate) fn bind_exact(port: u16) -> Result<TcpListener, AgpjError> {
     TcpListener::bind(("127.0.0.1", port)).map_err(|e| bind_error(&e, port))
 }
 
 /// Listen on `port`, or on a port the OS chooses when `port` is taken. The
 /// second value says why another port was used.
-pub(crate) fn bind_preferring(port: u16) -> Result<(TcpListener, Option<String>), AgboardError> {
+pub(crate) fn bind_preferring(port: u16) -> Result<(TcpListener, Option<String>), AgpjError> {
     if port == 0 {
         return bind_exact(0).map(|listener| (listener, None));
     }
@@ -157,7 +157,7 @@ mod tests {
         let error = bind_exact(port).unwrap_err();
         assert_eq!(
             error,
-            AgboardError::PortInUse {
+            AgpjError::PortInUse {
                 port,
                 holder: PortHolder::OtherProgram
             }

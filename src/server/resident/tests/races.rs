@@ -14,7 +14,7 @@ type Gate = (std::sync::mpsc::Receiver<()>, std::sync::mpsc::Sender<()>);
 fn blocked_resolver(
     folder: std::path::PathBuf,
 ) -> (
-    impl Fn(&ProjectId) -> Result<(String, std::path::PathBuf), AgboardError> + Send + 'static,
+    impl Fn(&ProjectId) -> Result<(String, std::path::PathBuf), AgpjError> + Send + 'static,
     Gate,
 ) {
     let (entered_tx, entered) = channel();

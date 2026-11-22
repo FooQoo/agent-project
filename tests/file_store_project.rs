@@ -5,7 +5,7 @@ use std::fs;
 use std::path::Path;
 
 use agent_project::domain::ProjectId;
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::FileStore;
 use chrono::{TimeZone, Utc};
 
@@ -75,7 +75,7 @@ fn project_names_are_trimmed_unique_and_case_sensitive_and_listed_by_name() {
     assert_eq!(alpha.name, "Alpha");
 
     let duplicate = store.create_project("Alpha", now()).unwrap_err();
-    assert!(matches!(duplicate, AgboardError::ProjectNameExists { .. }));
+    assert!(matches!(duplicate, AgpjError::ProjectNameExists { .. }));
     assert!(store.create_project("alpha", now()).is_ok());
 
     let names: Vec<String> = store
@@ -102,7 +102,7 @@ fn concurrent_creations_of_one_name_admit_exactly_one() {
     let created = results.iter().filter(|r| r.is_ok()).count();
     let refused = results
         .iter()
-        .filter(|r| matches!(r, Err(AgboardError::ProjectNameExists { .. })))
+        .filter(|r| matches!(r, Err(AgpjError::ProjectNameExists { .. })))
         .count();
     assert_eq!(created, 1);
     assert_eq!(refused, 3);
@@ -120,7 +120,7 @@ fn a_workspace_with_another_format_version_is_refused_and_not_converted() {
 
     let err = store.projects().unwrap_err();
     assert!(
-        matches!(err, AgboardError::FormatUnsupported { .. }),
+        matches!(err, AgpjError::FormatUnsupported { .. }),
         "{err:?}"
     );
     assert_eq!(fs::read_to_string(&path).unwrap(), text);
@@ -140,7 +140,7 @@ fn a_project_file_with_unknown_fields_is_refused_as_a_whole() {
     fs::write(&path, serde_json::to_string_pretty(&json).unwrap()).unwrap();
 
     match store.snapshot(&project.id).unwrap_err() {
-        AgboardError::FileInvalid { file, field, .. } => {
+        AgpjError::FileInvalid { file, field, .. } => {
             assert_eq!(field, "extra");
             assert_eq!(
                 file,
@@ -167,7 +167,7 @@ fn a_project_file_of_another_format_version_is_refused_and_unchanged() {
 
     let err = store.snapshot(&project.id).unwrap_err();
     assert!(
-        matches!(err, AgboardError::FormatUnsupported { .. }),
+        matches!(err, AgpjError::FormatUnsupported { .. }),
         "{err:?}"
     );
     assert_eq!(fs::read_to_string(&path).unwrap(), text);
@@ -187,7 +187,7 @@ fn a_project_whose_id_does_not_match_its_folder_is_refused() {
     fs::write(&path, serde_json::to_string_pretty(&json).unwrap()).unwrap();
 
     match store.snapshot(&project.id).unwrap_err() {
-        AgboardError::FileInvalid { field, .. } => assert_eq!(field, "id"),
+        AgpjError::FileInvalid { field, .. } => assert_eq!(field, "id"),
         other => panic!("unexpected error: {other:?}"),
     }
 }
@@ -198,7 +198,7 @@ fn a_missing_project_is_project_not_found() {
     let id: ProjectId = "0123456789abcdef0123456789abcdef".parse().unwrap();
     assert!(matches!(
         store.snapshot(&id),
-        Err(AgboardError::ProjectNotFound { .. })
+        Err(AgpjError::ProjectNotFound { .. })
     ));
 }
 

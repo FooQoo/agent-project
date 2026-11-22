@@ -6,7 +6,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use super::{Agent, claude, codex, env::display};
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 
 /// One agent settings file, planned but not yet written.
 #[derive(Debug, Clone)]
@@ -72,7 +72,7 @@ pub(super) fn plan(
     agent: Agent,
     config_path: &Path,
     data_root: &str,
-) -> Result<SettingsPlan, AgboardError> {
+) -> Result<SettingsPlan, AgpjError> {
     let (file, original) = resolve_and_read(config_path)?;
     let text = match &original {
         Some(bytes) => Some(std::str::from_utf8(bytes).map_err(|_| {
@@ -103,7 +103,7 @@ pub(super) fn plan(
 /// already has is kept as it is.
 pub(super) const CODEX_RULES: &str = "# Written by agboard setup: lets Codex run agboard without asking each time.\nprefix_rule(pattern=[\"agboard\"], decision=\"allow\")\n";
 
-pub(super) fn plan_rules(path: &Path) -> Result<Target, AgboardError> {
+pub(super) fn plan_rules(path: &Path) -> Result<Target, AgpjError> {
     let (file, original) = resolve_and_read(path)?;
     let planned = original.is_none().then(|| CODEX_RULES.as_bytes().to_vec());
     let changes = if planned.is_some() {
@@ -125,10 +125,10 @@ pub(super) fn plan_rules(path: &Path) -> Result<Target, AgboardError> {
 /// only when its target can be determined; the link itself is never replaced.
 pub(crate) fn resolve_and_read(
     config_path: &Path,
-) -> Result<(PathBuf, Option<Vec<u8>>), AgboardError> {
+) -> Result<(PathBuf, Option<Vec<u8>>), AgpjError> {
     let file = match fs::symlink_metadata(config_path) {
         Ok(meta) if meta.file_type().is_symlink() => {
-            fs::canonicalize(config_path).map_err(|error| AgboardError::FileError {
+            fs::canonicalize(config_path).map_err(|error| AgpjError::FileError {
                 action: FileAction::Read,
                 file: display(config_path),
                 reason: format!(
@@ -149,8 +149,8 @@ pub(crate) fn resolve_and_read(
     }
 }
 
-fn read_error(path: &Path, error: &io::Error) -> AgboardError {
-    AgboardError::FileError {
+fn read_error(path: &Path, error: &io::Error) -> AgpjError {
+    AgpjError::FileError {
         action: FileAction::Read,
         file: display(path),
         reason: error.to_string(),
@@ -158,8 +158,8 @@ fn read_error(path: &Path, error: &io::Error) -> AgboardError {
 }
 
 /// A settings file that exists but cannot be used as it is. Nothing is written.
-pub(crate) fn invalid_file(path: &Path, field: &str, reason: &str) -> AgboardError {
-    AgboardError::FileInvalid {
+pub(crate) fn invalid_file(path: &Path, field: &str, reason: &str) -> AgpjError {
+    AgpjError::FileInvalid {
         file: display(path),
         field: field.to_string(),
         reason: reason.to_string(),

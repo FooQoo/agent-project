@@ -25,7 +25,7 @@ mod tests;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::sessions::Tool;
 
 /// Everything a driver needs to start one session.
@@ -99,7 +99,7 @@ pub enum DriverEvent {
 pub trait AgentDriver: Send + Sync {
     /// Start the CLI and send the first instruction. A write that fails because the CLI already
     /// ended is not an error here; the end shows as [`DriverEvent::Exited`].
-    fn start(&self, spec: StartSpec) -> Result<(), AgboardError>;
+    fn start(&self, spec: StartSpec) -> Result<(), AgpjError>;
     /// The process ID, once started.
     fn pid(&self) -> Option<u32>;
     /// Whether the session is between turns. It is busy from the start until a turn ends, and
@@ -113,10 +113,10 @@ pub trait AgentDriver: Send + Sync {
     /// Block for the next event. After [`DriverEvent::Exited`] it returns `Exited` again.
     fn next_event(&self) -> DriverEvent;
     /// Hand the session a message at any time. While a turn runs the CLI queues it.
-    fn send_user_message(&self, text: &str) -> Result<(), AgboardError>;
-    fn answer_permission(&self, id: &str, answer: PermissionAnswer) -> Result<(), AgboardError>;
+    fn send_user_message(&self, text: &str) -> Result<(), AgpjError>;
+    fn answer_permission(&self, id: &str, answer: PermissionAnswer) -> Result<(), AgpjError>;
     /// Ask the CLI to stop the turn in progress.
-    fn interrupt(&self) -> Result<(), AgboardError>;
+    fn interrupt(&self) -> Result<(), AgpjError>;
     /// End the session and return when the process is gone: close its input, give it a moment,
     /// then SIGTERM its process group, then SIGKILL after `grace`.
     fn stop(&self, grace: Duration);

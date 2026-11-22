@@ -9,7 +9,7 @@ use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 
 use crate::domain::{Changed, Draft};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::frontmatter::{self, AcceptanceItem};
 use crate::file_store::model::{EpicUpdate, NewEpic};
 use crate::file_store::validate::{self, EpicId};
@@ -54,8 +54,8 @@ pub(super) struct EpicPatchInput {
 }
 
 /// The error for giving a whole file and its parts in one request.
-pub(super) fn whole_or_parts() -> AgboardError {
-    AgboardError::InvalidValue {
+pub(super) fn whole_or_parts() -> AgpjError {
+    AgpjError::InvalidValue {
         field: "body".into(),
         reason: "Give either the whole text or body fields, not both.".into(),
     }
@@ -68,10 +68,10 @@ pub(super) fn compose_text(
     current_body: &str,
     body: Option<String>,
     acceptance: Option<Vec<AcceptanceItem>>,
-) -> Result<String, AgboardError> {
+) -> Result<String, AgpjError> {
     let body = body.unwrap_or_else(|| current_body.to_string());
     frontmatter::compose(original, &body, acceptance.as_deref()).map_err(|defect| {
-        AgboardError::InvalidValue {
+        AgpjError::InvalidValue {
             field: defect.field,
             reason: defect.reason,
         }
@@ -85,7 +85,7 @@ pub(super) fn whole_text(
     body: Option<String>,
     acceptance: Option<Vec<AcceptanceItem>>,
     template: impl FnOnce() -> String,
-) -> Result<Option<String>, AgboardError> {
+) -> Result<Option<String>, AgpjError> {
     if body.is_none() && acceptance.is_none() {
         return Ok(given);
     }
@@ -95,7 +95,7 @@ pub(super) fn whole_text(
     compose_text(&template(), "", body, acceptance).map(Some)
 }
 
-pub(super) fn parse_epic_id(raw: &str) -> Result<EpicId, AgboardError> {
+pub(super) fn parse_epic_id(raw: &str) -> Result<EpicId, AgpjError> {
     raw.parse()
 }
 
@@ -213,7 +213,7 @@ pub(super) async fn update_epic(
         let waves = input.waves;
         // Refuse bad waves before anything is written, so a rejected request changes nothing.
         if let Some(waves) = &waves {
-            frontmatter::validate_waves(waves).map_err(|d| AgboardError::InvalidValue {
+            frontmatter::validate_waves(waves).map_err(|d| AgpjError::InvalidValue {
                 field: d.field,
                 reason: d.reason,
             })?;

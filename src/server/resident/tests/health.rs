@@ -17,8 +17,8 @@ pub(super) fn fast() -> Timing {
     }
 }
 
-pub(super) fn no_projects(_: &ProjectId) -> Result<(String, std::path::PathBuf), AgboardError> {
-    Err(AgboardError::ProjectNotFound {
+pub(super) fn no_projects(_: &ProjectId) -> Result<(String, std::path::PathBuf), AgpjError> {
+    Err(AgpjError::ProjectNotFound {
         project: "none".into(),
     })
 }

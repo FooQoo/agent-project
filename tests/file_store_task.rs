@@ -5,7 +5,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use agent_project::domain::{Actor, Assignee, Changed, Draft, NewTask, ProjectId};
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::FileStore;
 use agent_project::file_store::model::TaskView;
 use chrono::{TimeZone, Utc};
@@ -139,7 +139,7 @@ fn a_failed_save_keeps_the_number_reserved_and_leaves_no_temporary_folder() {
         .store
         .create_task(&fx.project, new_task("second", ""), now())
         .unwrap_err();
-    assert!(matches!(err, AgboardError::FileError { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::FileError { .. }), "{err:?}");
 
     let leftovers: Vec<String> = fs::read_dir(fx.project_dir().join("tasks"))
         .unwrap()
@@ -170,7 +170,7 @@ fn a_body_with_a_defective_frontmatter_is_refused_and_creates_nothing() {
         )
         .unwrap_err();
     match err {
-        AgboardError::FileInvalid { file, field, .. } => {
+        AgpjError::FileInvalid { file, field, .. } => {
             assert_eq!(field, "acceptance");
             assert!(file.ends_with("tasks/1/TASK.md"), "{file}");
         }
@@ -194,7 +194,7 @@ fn a_condition_without_done_is_refused() {
         .create_task(&fx.project, new_task("T", &body), now())
         .unwrap_err();
     match err {
-        AgboardError::FileInvalid { field, .. } => assert_eq!(field, "acceptance[0].done"),
+        AgpjError::FileInvalid { field, .. } => assert_eq!(field, "acceptance[0].done"),
         other => panic!("unexpected error: {other:?}"),
     }
 }
@@ -285,10 +285,7 @@ fn a_draft_refuses_agent_edits_and_its_files_stay_unchanged() {
         .store
         .edit_task(&fx.project, 1, Some("Changed"), Some(VALID_BODY), later())
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::TaskIsDraft { id: 1 }),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::TaskIsDraft { id: 1 }), "{err:?}");
     assert_eq!(fx.task_bytes(1), task);
     assert_eq!(fx.body_bytes(1), body);
 }
@@ -329,10 +326,7 @@ fn discarding_a_draft_records_a_discard_event_and_refuses_it_with_the_draft_flag
         .store
         .set_draft(&fx.project, 1, Some(Draft::Human), true, later())
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::InvalidArgument { .. }),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::InvalidArgument { .. }), "{err:?}");
 
     let left = fx
         .store
@@ -379,10 +373,7 @@ fn a_task_that_is_not_a_draft_is_refused_by_the_draft_edit() {
         .store
         .edit_draft_task(&fx.project, 1, Some("X"), None, false, later())
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::TaskNotDraft { id: 1 }),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::TaskNotDraft { id: 1 }), "{err:?}");
 }
 
 #[test]
@@ -416,7 +407,7 @@ fn archiving_keeps_the_lane_and_position_and_restoring_puts_the_task_at_the_lane
         .edit_task(&fx.project, 1, Some("x"), None, later())
         .unwrap_err();
     assert!(
-        matches!(edit, AgboardError::TaskArchived { id: 1 }),
+        matches!(edit, AgpjError::TaskArchived { id: 1 }),
         "{edit:?}"
     );
 
@@ -433,7 +424,7 @@ fn deleting_needs_an_archived_task_and_then_removes_its_folder() {
     fx.create("one");
     let err = fx.store.delete_archived_task(&fx.project, 1).unwrap_err();
     assert!(
-        matches!(err, AgboardError::TaskNotArchived { id: 1 }),
+        matches!(err, AgpjError::TaskNotArchived { id: 1 }),
         "{err:?}"
     );
 
@@ -442,7 +433,7 @@ fn deleting_needs_an_archived_task_and_then_removes_its_folder() {
     assert!(!fx.task_dir(1).exists());
     assert!(matches!(
         fx.store.task(&fx.project, 1),
-        Err(AgboardError::TaskNotFound { id: 1 })
+        Err(AgpjError::TaskNotFound { id: 1 })
     ));
 }
 
@@ -567,7 +558,7 @@ fn writing_to_a_task_with_a_broken_task_file_is_refused() {
         .store
         .edit_task(&fx.project, 1, Some("x"), None, later())
         .unwrap_err();
-    assert!(matches!(err, AgboardError::FileInvalid { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::FileInvalid { .. }), "{err:?}");
 }
 
 #[test]

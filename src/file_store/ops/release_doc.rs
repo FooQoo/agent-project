@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use super::lock_project;
 use super::version::VersionChoice;
 use crate::domain::{ProjectId, validate_version_name};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::history_language::HistoryLanguage;
 use crate::file_store::release_doc::{self, SpliceError};
 use crate::file_store::releases::{create_release_file, effective_current, listed_versions};
@@ -46,7 +46,7 @@ impl FileStore {
         project: &ProjectId,
         choice: &VersionChoice,
         now: DateTime<Utc>,
-    ) -> Result<ReleaseDoc, AgboardError> {
+    ) -> Result<ReleaseDoc, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let listed = listed_versions(&project_dir);
@@ -54,11 +54,11 @@ impl FileStore {
             VersionChoice::Current => {
                 let file = reader::read_project_file(shared, project)?;
                 effective_current(&listed, file.current_version.as_deref())
-                    .ok_or(AgboardError::NoCurrentVersion)?
+                    .ok_or(AgpjError::NoCurrentVersion)?
             }
             VersionChoice::Named(name) => validate_version_name(name)?,
             VersionChoice::Unset => {
-                return Err(AgboardError::InvalidArgument {
+                return Err(AgpjError::InvalidArgument {
                     message: "Name a version or use the current version.".into(),
                     command: None,
                 });
@@ -67,11 +67,11 @@ impl FileStore {
         let path = layout::release_dir(&project_dir).join(format!("{version}.md"));
         let label = layout::shared_label(shared, &path);
         let project_label = layout::project_label(&project_dir, &path);
-        let refuse_linked = || -> Result<(), AgboardError> {
+        let refuse_linked = || -> Result<(), AgpjError> {
             if layout::has_symlink_below(&project_dir, &path)
                 .map_err(|e| io::read_error(&label, e))?
             {
-                return Err(AgboardError::ReleaseDocRefused {
+                return Err(AgpjError::ReleaseDocRefused {
                     file: project_label.clone(),
                     reason: "The path passes through a symbolic link.".into(),
                 });
@@ -89,7 +89,7 @@ impl FileStore {
         refuse_linked()?;
         let meta = std::fs::symlink_metadata(&path).map_err(|e| io::read_error(&label, e))?;
         if !meta.is_file() {
-            return Err(AgboardError::ReleaseDocRefused {
+            return Err(AgpjError::ReleaseDocRefused {
                 file: project_label,
                 reason: "The path is not a regular file.".into(),
             });
@@ -99,7 +99,7 @@ impl FileStore {
         let language = self.history_language.unwrap_or(HistoryLanguage::English);
         let block = release_doc::render_block(&snapshot.tasks, &version, language);
         let after = release_doc::splice(&before, &block).map_err(|SpliceError::BadMarkers(why)| {
-            AgboardError::ReleaseDocRefused {
+            AgpjError::ReleaseDocRefused {
                 file: project_label.clone(),
                 reason: format!(
                     "{why} Fix the marker lines {} and {} by hand, or remove both to have the block appended.",
@@ -113,7 +113,7 @@ impl FileStore {
             // A person can edit the file in the Docs without this project's lock: write only
             // if it is still what the new text was built from.
             if io::read_text(&path, &label)? != before {
-                return Err(AgboardError::ReleaseDocRefused {
+                return Err(AgpjError::ReleaseDocRefused {
                     file: project_label,
                     reason: "The file changed while it was generated. Run the command again."
                         .into(),

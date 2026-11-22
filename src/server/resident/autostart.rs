@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::preferences::{create_private_dir, sync_dir, write_owner_only};
 use crate::server::sessions::Tool;
 
@@ -61,13 +61,13 @@ impl AutoStartStore {
     }
 
     /// Save (`Some`) or clear (`None`) the choice.
-    pub fn set(&self, choice: Option<AutoStart>) -> Result<(), AgboardError> {
+    pub fn set(&self, choice: Option<AutoStart>) -> Result<(), AgpjError> {
         let _guard = self.lock.lock().unwrap_or_else(|e| e.into_inner());
         self.write(&StoredFile {
             format_version: FORMAT_VERSION,
             auto_start: choice,
         })
-        .map_err(|e| AgboardError::SessionLaunchFailed {
+        .map_err(|e| AgpjError::SessionLaunchFailed {
             reason: format!("Cannot save {}: {e}.", self.path.display()),
         })
     }

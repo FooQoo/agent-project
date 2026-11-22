@@ -1,7 +1,7 @@
 //! Shape checks for shared files: the TASK.md frontmatter and its acceptance
 //! conditions, the answer inputs, and the formatVersion gate.
 
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::model::Choice;
 use agent_project::file_store::validate::{
     check_format_version, check_task_body, ensure_task_body, normalize_answer_text,
@@ -73,7 +73,7 @@ fn ensure_task_body_names_the_file_and_the_item() {
     let body = valid_body().replace("done: false", "done: 1");
     let err = ensure_task_body(&body, "projects/p/tasks/1/TASK.md").unwrap_err();
     match err {
-        AgboardError::FileInvalid { file, field, .. } => {
+        AgpjError::FileInvalid { file, field, .. } => {
             assert_eq!(file, "projects/p/tasks/1/TASK.md");
             assert_eq!(field, "acceptance[0].done");
         }
@@ -90,7 +90,7 @@ fn choices_are_limited_to_ten_unique_ascii_ids_with_short_labels() {
     let eleven: Vec<Choice> = (0..11).map(|i| choice(&format!("c{i}"), "Label")).collect();
     assert!(matches!(
         normalize_choices(eleven),
-        Err(AgboardError::InvalidValue { .. })
+        Err(AgpjError::InvalidValue { .. })
     ));
     for bad in [
         vec![choice("a", "x"), choice("a", "y")],
@@ -104,7 +104,7 @@ fn choices_are_limited_to_ten_unique_ascii_ids_with_short_labels() {
         assert!(
             matches!(
                 normalize_choices(bad.clone()),
-                Err(AgboardError::InvalidValue { .. })
+                Err(AgpjError::InvalidValue { .. })
             ),
             "{bad:?}"
         );
@@ -117,7 +117,7 @@ fn choices_are_limited_to_ten_unique_ascii_ids_with_short_labels() {
     assert_eq!(trimmed[0].label, "Proceed");
     assert!(matches!(
         normalize_choices(vec![choice("ok-1_x", "Proceed")]),
-        Err(AgboardError::InvalidValue { .. })
+        Err(AgpjError::InvalidValue { .. })
     ));
 }
 
@@ -147,11 +147,11 @@ fn only_format_version_one_passes_and_nothing_is_converted() {
     let future = serde_json::json!({"formatVersion": 2});
     assert!(matches!(
         check_format_version(&future, "project.json"),
-        Err(AgboardError::FormatUnsupported { .. })
+        Err(AgpjError::FormatUnsupported { .. })
     ));
     let missing = serde_json::json!({"id": "x"});
     assert!(matches!(
         check_format_version(&missing, "project.json"),
-        Err(AgboardError::FileInvalid { .. })
+        Err(AgpjError::FileInvalid { .. })
     ));
 }

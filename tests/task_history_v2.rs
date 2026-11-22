@@ -5,7 +5,7 @@ use std::fs;
 use std::path::Path;
 
 use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::FileStore;
 use chrono::{TimeZone, Utc};
 
@@ -117,7 +117,7 @@ fn task_format_versions_other_than_one_are_reported_and_left_byte_for_byte_uncha
         }));
         assert!(matches!(
             fx.store.task(&fx.project, id),
-            Err(AgboardError::FormatUnsupported { .. })
+            Err(AgpjError::FormatUnsupported { .. })
         ));
         assert_eq!(fs::read(&json_path).unwrap(), bytes);
         assert_eq!(file_tree(&fx.task_dir(id)), files_before);
@@ -150,7 +150,7 @@ fn malformed_history_keeps_body_and_acceptance_but_blocks_updates() {
     let before_json = fs::read(fx.task_dir(id).join("task.json")).unwrap();
     assert!(matches!(
         fx.store.set_draft(&fx.project, id, Some(agent_project::domain::Draft::Human), false, Utc::now()),
-        Err(AgboardError::FileInvalid { field, .. }) if field == "history"
+        Err(AgpjError::FileInvalid { field, .. }) if field == "history"
     ));
     assert_eq!(
         fs::read(fx.task_dir(id).join("task.json")).unwrap(),

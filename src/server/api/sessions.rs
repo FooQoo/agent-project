@@ -10,7 +10,7 @@ use axum::response::Response;
 use serde::{Deserialize, Serialize};
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::AppState;
 use crate::server::request::ApiJson;
 use crate::server::resident::{AutoStart, Health, Launched, resolve_project};
@@ -118,7 +118,7 @@ pub(super) async fn session_log(
         "claude-code" => Tool::ClaudeCode,
         "codex" => Tool::Codex,
         _ => {
-            return agboard_error_response(&AgboardError::InvalidValue {
+            return agboard_error_response(&AgpjError::InvalidValue {
                 field: "tool".to_string(),
                 reason: "tool must be claude-code or codex.".to_string(),
             });
@@ -200,7 +200,7 @@ pub(super) async fn stop_session(
 async fn project_folder(
     state: &AppState,
     project: ProjectId,
-) -> Result<(String, std::path::PathBuf), AgboardError> {
+) -> Result<(String, std::path::PathBuf), AgpjError> {
     with_files(state, move |files| resolve_project(&files, &project)).await
 }
 
@@ -233,7 +233,7 @@ pub(super) async fn set_autostart(
             .filter(|model| !model.is_empty() && *model != "default");
         let choice = if body.enabled {
             let tool = crate::server::resident::cli::launchable(body.tool.ok_or_else(|| {
-                AgboardError::InvalidValue {
+                AgpjError::InvalidValue {
                     field: "tool".to_string(),
                     reason: "tool is required to turn auto-start on.".to_string(),
                 }
@@ -241,7 +241,7 @@ pub(super) async fn set_autostart(
             if let Some(model) =
                 model.filter(|model| !crate::server::resident::cli::valid_model(model))
             {
-                return Err(AgboardError::InvalidValue {
+                return Err(AgpjError::InvalidValue {
                     field: "model".to_string(),
                     reason: format!("\"{model}\" is not a model name."),
                 });
@@ -269,11 +269,11 @@ pub(super) async fn set_autostart(
 
 /// Run blocking launcher work (it starts and waits for processes) off the async threads.
 async fn blocking<T: Send + 'static>(
-    work: impl FnOnce() -> Result<T, AgboardError> + Send + 'static,
-) -> Result<T, AgboardError> {
+    work: impl FnOnce() -> Result<T, AgpjError> + Send + 'static,
+) -> Result<T, AgpjError> {
     tokio::task::spawn_blocking(work)
         .await
-        .map_err(|e| AgboardError::SessionLaunchFailed {
+        .map_err(|e| AgpjError::SessionLaunchFailed {
             reason: format!("The launcher task failed: {e}"),
         })?
 }

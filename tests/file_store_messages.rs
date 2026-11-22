@@ -8,7 +8,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::qa::{AnswerVia, MessageView, QuestionStatus, RequestStatus};
 use agent_project::file_store::{
     Accepted, AnswerItem, AskInput, AskQuestion, FileStore, RequestImage, SendRequestInput,
@@ -107,7 +107,7 @@ impl Fixture {
         id: &str,
         choice: Option<&str>,
         text: Option<&str>,
-    ) -> Result<Vec<agent_project::file_store::qa::QuestionView>, AgboardError> {
+    ) -> Result<Vec<agent_project::file_store::qa::QuestionView>, AgpjError> {
         self.store.answer_questions(
             &self.project,
             vec![AnswerItem {
@@ -135,7 +135,7 @@ impl Fixture {
             .id
     }
 
-    fn withdraw(&self, id: &str, actor: Actor) -> Result<(), AgboardError> {
+    fn withdraw(&self, id: &str, actor: Actor) -> Result<(), AgpjError> {
         self.store
             .withdraw_message(&self.project, id, actor, Utc::now())
             .map(|_| ())
@@ -236,28 +236,28 @@ fn a_reply_needs_a_choice_or_a_note_when_the_question_has_choices() {
 
     assert!(matches!(
         f.answer(&with, None, None),
-        Err(AgboardError::InvalidValue { .. })
+        Err(AgpjError::InvalidValue { .. })
     ));
     assert!(matches!(
         f.answer(&with, None, Some("   ")),
-        Err(AgboardError::InvalidValue { .. })
+        Err(AgpjError::InvalidValue { .. })
     ));
     assert!(matches!(
         f.answer(&with, Some("nope"), None),
-        Err(AgboardError::ChoiceUnknown { .. })
+        Err(AgpjError::ChoiceUnknown { .. })
     ));
     assert!(matches!(
         f.answer(&without, Some("keep"), None),
-        Err(AgboardError::ChoiceUnknown { .. })
+        Err(AgpjError::ChoiceUnknown { .. })
     ));
     assert!(matches!(
         f.answer(&without, None, None),
-        Err(AgboardError::InvalidValue { .. })
+        Err(AgpjError::InvalidValue { .. })
     ));
     let long = "x".repeat(2001);
     assert!(matches!(
         f.answer(&without, None, Some(&long)),
-        Err(AgboardError::InvalidValue { .. })
+        Err(AgpjError::InvalidValue { .. })
     ));
     // Nothing was written by the refusals.
     assert!(f.file(&with).contains("reply: null"));
@@ -296,18 +296,18 @@ fn a_reply_is_written_once_and_nothing_is_written_after_a_withdrawal() {
 
     let again = f.answer(&answered, Some("drop"), None).unwrap_err();
     assert!(
-        matches!(&again, AgboardError::QuestionAnswered { ids } if ids == std::slice::from_ref(&answered))
+        matches!(&again, AgpjError::QuestionAnswered { ids } if ids == std::slice::from_ref(&answered))
     );
     assert_eq!(f.file(&answered), written);
 
     f.withdraw(&withdrawn, Actor::Ai).unwrap();
     let after = f.answer(&withdrawn, Some("yes"), None).unwrap_err();
-    assert!(matches!(after, AgboardError::QuestionWithdrawn { .. }));
+    assert!(matches!(after, AgpjError::QuestionWithdrawn { .. }));
     assert!(f.file(&withdrawn).contains("reply: null"));
     // A reply that was given cannot be withdrawn away.
     assert!(matches!(
         f.withdraw(&answered, Actor::Ai),
-        Err(AgboardError::MessageClosed { .. })
+        Err(AgpjError::MessageClosed { .. })
     ));
     // Answers are checked together: one bad item writes nothing.
     let open = f.ask("Ship?", &[("yes", "Yes"), ("no", "No")], &[]);
@@ -342,11 +342,11 @@ fn a_question_is_withdrawn_by_an_agent_and_a_request_by_a_person() {
 
     assert!(matches!(
         f.withdraw(&question, Actor::Human),
-        Err(AgboardError::AiOnly { .. })
+        Err(AgpjError::AiOnly { .. })
     ));
     assert!(matches!(
         f.withdraw(&request, Actor::Ai),
-        Err(AgboardError::HumanOnly { .. })
+        Err(AgpjError::HumanOnly { .. })
     ));
     assert!(f.file(&question).contains("withdrawnAt: null"));
 
@@ -364,7 +364,7 @@ fn a_question_is_withdrawn_by_an_agent_and_a_request_by_a_person() {
     assert!(!f.file(&request).contains("withdrawnAt: null"));
     assert!(matches!(
         f.withdraw("Q-99", Actor::Ai),
-        Err(AgboardError::MessageNotFound { .. })
+        Err(AgpjError::MessageNotFound { .. })
     ));
 }
 
@@ -377,12 +377,12 @@ fn a_request_is_accepted_once_by_one_agent() {
     assert!(matches!(
         f.store
             .accept_message(&f.project, &request, Actor::Human, Utc::now()),
-        Err(AgboardError::AiOnly { .. })
+        Err(AgpjError::AiOnly { .. })
     ));
     assert!(matches!(
         f.store
             .accept_message(&f.project, &question, Actor::Ai, Utc::now()),
-        Err(AgboardError::QuestionOpen { .. })
+        Err(AgpjError::QuestionOpen { .. })
     ));
 
     let accepted = f
@@ -400,12 +400,12 @@ fn a_request_is_accepted_once_by_one_agent() {
         .store
         .accept_message(&f.project, &request, Actor::Ai, Utc::now())
         .unwrap_err();
-    assert!(matches!(second, AgboardError::RequestAccepted { .. }));
+    assert!(matches!(second, AgpjError::RequestAccepted { .. }));
     assert_eq!(f.file(&request), text);
     // An accepted request is closed: it cannot be withdrawn.
     assert!(matches!(
         f.withdraw(&request, Actor::Human),
-        Err(AgboardError::MessageClosed { .. })
+        Err(AgpjError::MessageClosed { .. })
     ));
 
     let withdrawn = f.send("Never mind.");
@@ -413,7 +413,7 @@ fn a_request_is_accepted_once_by_one_agent() {
     assert!(matches!(
         f.store
             .accept_message(&f.project, &withdrawn, Actor::Ai, Utc::now()),
-        Err(AgboardError::RequestWithdrawn { .. })
+        Err(AgpjError::RequestWithdrawn { .. })
     ));
 }
 
@@ -428,12 +428,12 @@ fn an_answer_is_accepted_once_and_a_chat_answer_is_accepted_as_it_is_written() {
     assert!(matches!(
         f.store
             .accept_message(&f.project, &ui, Actor::Human, Utc::now()),
-        Err(AgboardError::AiOnly { .. })
+        Err(AgpjError::AiOnly { .. })
     ));
     assert!(matches!(
         f.store
             .accept_message(&f.project, &open, Actor::Ai, Utc::now()),
-        Err(AgboardError::QuestionOpen { .. })
+        Err(AgpjError::QuestionOpen { .. })
     ));
     let Accepted::Question(view) = f
         .store
@@ -448,7 +448,7 @@ fn an_answer_is_accepted_once_and_a_chat_answer_is_accepted_as_it_is_written() {
     assert!(matches!(
         f.store
             .accept_message(&f.project, &ui, Actor::Ai, Utc::now()),
-        Err(AgboardError::AnswerAccepted { .. })
+        Err(AgpjError::AnswerAccepted { .. })
     ));
     assert_eq!(f.file(&ui), text);
 
@@ -677,7 +677,7 @@ fn a_task_waits_for_an_unanswered_question_and_for_nothing_else() {
             Utc::now(),
         )
         .unwrap_err();
-    assert!(matches!(err, AgboardError::MessageTypeMismatch { .. }));
+    assert!(matches!(err, AgpjError::MessageTypeMismatch { .. }));
 
     // A question file that cannot be read keeps the task waiting.
     let third = f.ask("Ship?", &[("yes", "Yes"), ("no", "No")], &[task]);
@@ -739,7 +739,7 @@ fn linking_keeps_the_question_and_the_task_in_step() {
             Actor::Ai,
             Utc::now()
         ),
-        Err(AgboardError::MessageNotFound { .. })
+        Err(AgpjError::MessageNotFound { .. })
     ));
 }
 
@@ -755,11 +755,11 @@ fn messages_are_listed_and_shown_by_kind() {
     assert_eq!(all[0].state(), "open");
     assert!(matches!(
         f.store.question(&f.project, &request),
-        Err(AgboardError::MessageTypeMismatch { .. })
+        Err(AgpjError::MessageTypeMismatch { .. })
     ));
     assert!(matches!(
         f.store.request(&f.project, &question),
-        Err(AgboardError::MessageTypeMismatch { .. })
+        Err(AgpjError::MessageTypeMismatch { .. })
     ));
     f.answer(&question, Some("keep"), None).unwrap();
     assert_eq!(f.store.messages(&f.project).unwrap()[0].state(), "closed");
@@ -807,7 +807,7 @@ fn a_refused_ask_writes_nothing_and_reserves_no_number() {
     let two = [("a", "A"), ("b", "B")];
     assert!(matches!(
         ask(Actor::Human, vec![q("Ok?", &two, None)], vec![task]),
-        Err(AgboardError::AiOnly { .. })
+        Err(AgpjError::AiOnly { .. })
     ));
     for bad in [
         vec![],
@@ -818,16 +818,16 @@ fn a_refused_ask_writes_nothing_and_reserves_no_number() {
     ] {
         assert!(matches!(
             ask(Actor::Ai, bad, vec![task]),
-            Err(AgboardError::InvalidValue { .. })
+            Err(AgpjError::InvalidValue { .. })
         ));
     }
     assert!(matches!(
         ask(Actor::Ai, vec![q("Ok?", &two, None)], vec![task + 40]),
-        Err(AgboardError::TaskNotFound { .. })
+        Err(AgpjError::TaskNotFound { .. })
     ));
     assert!(matches!(
         ask(Actor::Ai, vec![q("Ok?", &two, None)], vec![draft]),
-        Err(AgboardError::TaskIsDraft { .. })
+        Err(AgpjError::TaskIsDraft { .. })
     ));
 
     assert!(

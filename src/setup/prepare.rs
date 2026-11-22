@@ -9,7 +9,7 @@ use super::agent_cli;
 use super::plan::{self, Target};
 use super::plugin::{self, Source};
 use super::{Agent, Mode, SetupEnv, SetupOptions, VERSION, env};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// Everything a run would do, before anything is done.
 #[derive(Debug)]
@@ -74,11 +74,11 @@ pub fn available(env: &SetupEnv) -> Vec<(Agent, Option<PathBuf>)> {
 
 /// Plans a run. Fails only when the data directory cannot be resolved or a
 /// settings file cannot be used, before anything is written.
-pub fn prepare(env: &SetupEnv, options: &SetupOptions) -> Result<Prepared, AgboardError> {
+pub fn prepare(env: &SetupEnv, options: &SetupOptions) -> Result<Prepared, AgpjError> {
     let data_dir = env.data_dir()?;
     let root = data_dir
         .to_str()
-        .ok_or_else(|| AgboardError::BoardUnavailable {
+        .ok_or_else(|| AgpjError::BoardUnavailable {
             reason: "The data directory path is not UTF-8. Set AGBOARD_HOME to a UTF-8 path."
                 .into(),
         })?
@@ -105,7 +105,7 @@ fn plan_agent(
     mode: Mode,
     agent: Agent,
     root: &str,
-) -> Result<AgentPlan, AgboardError> {
+) -> Result<AgentPlan, AgpjError> {
     let override_location = env.marketplace_override();
     let forced = override_location.is_some();
     let mut planned = AgentPlan {
@@ -165,7 +165,7 @@ fn plan_files(
     agent: Agent,
     root: &str,
     planned: &mut AgentPlan,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     let config = match agent {
         Agent::Codex => env.codex_config()?,
         Agent::Claude => env.claude_settings()?,

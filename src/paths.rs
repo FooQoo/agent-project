@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// Name of the data directory directly under the home directory.
 pub const DEFAULT_DATA_DIR_NAME: &str = ".agent-board";
@@ -39,7 +39,7 @@ pub struct ServeInfo {
 /// The data directory: `$AGBOARD_HOME` when it is set and not empty, otherwise
 /// `.agent-board` directly under the home directory. When neither can be found
 /// this is an error; the working directory is never used instead.
-pub fn data_dir() -> Result<PathBuf, AgboardError> {
+pub fn data_dir() -> Result<PathBuf, AgpjError> {
     data_dir_from(std::env::var_os("AGBOARD_HOME"), dirs::home_dir())
 }
 
@@ -48,13 +48,13 @@ pub fn data_dir() -> Result<PathBuf, AgboardError> {
 pub fn data_dir_from(
     agboard_home: Option<OsString>,
     home: Option<PathBuf>,
-) -> Result<PathBuf, AgboardError> {
+) -> Result<PathBuf, AgpjError> {
     if let Some(dir) = agboard_home.filter(|value| !value.is_empty()) {
         return Ok(PathBuf::from(dir));
     }
     match home.filter(|dir| !dir.as_os_str().is_empty()) {
         Some(home) => Ok(home.join(DEFAULT_DATA_DIR_NAME)),
-        None => Err(AgboardError::BoardUnavailable {
+        None => Err(AgpjError::BoardUnavailable {
             reason: "The home directory cannot be found. Set AGBOARD_HOME to the data directory."
                 .to_string(),
         }),
@@ -62,11 +62,11 @@ pub fn data_dir_from(
 }
 
 /// The shared file area: every project's canonical files live below it.
-pub fn shared_dir() -> Result<PathBuf, AgboardError> {
+pub fn shared_dir() -> Result<PathBuf, AgpjError> {
     Ok(data_dir()?.join("shared"))
 }
 
-pub fn serve_info_path() -> Result<PathBuf, AgboardError> {
+pub fn serve_info_path() -> Result<PathBuf, AgpjError> {
     Ok(data_dir()?.join("serve.json"))
 }
 

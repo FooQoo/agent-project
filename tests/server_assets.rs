@@ -12,7 +12,7 @@ use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::watch::WatchMode;
 use agent_project::server::web_assets::APP_ASSETS;
 use agent_project::server::{ServeConfig, run_until_in};
@@ -188,7 +188,7 @@ fn the_build_id_follows_the_page() {
 struct Running {
     addr: SocketAddr,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 impl Running {

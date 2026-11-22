@@ -8,7 +8,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
 use super::{AgentDriver, DriverEvent, DriverFactory, PermissionAnswer, StartSpec};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Call {
@@ -77,7 +77,7 @@ impl MockDriver {
 }
 
 impl AgentDriver for MockDriver {
-    fn start(&self, spec: StartSpec) -> Result<(), AgboardError> {
+    fn start(&self, spec: StartSpec) -> Result<(), AgpjError> {
         self.record(Call::Start {
             prompt: spec.prompt,
             env: spec.env,
@@ -124,7 +124,7 @@ impl AgentDriver for MockDriver {
         }
     }
 
-    fn send_user_message(&self, text: &str) -> Result<(), AgboardError> {
+    fn send_user_message(&self, text: &str) -> Result<(), AgpjError> {
         self.record(Call::Send(text.to_string()));
         self.idle.store(false, Ordering::SeqCst);
         self.state().script.extend(self.reply.clone());
@@ -132,7 +132,7 @@ impl AgentDriver for MockDriver {
         Ok(())
     }
 
-    fn answer_permission(&self, id: &str, answer: PermissionAnswer) -> Result<(), AgboardError> {
+    fn answer_permission(&self, id: &str, answer: PermissionAnswer) -> Result<(), AgpjError> {
         self.record(Call::Answer {
             id: id.to_string(),
             answer,
@@ -140,7 +140,7 @@ impl AgentDriver for MockDriver {
         Ok(())
     }
 
-    fn interrupt(&self) -> Result<(), AgboardError> {
+    fn interrupt(&self) -> Result<(), AgpjError> {
         self.record(Call::Interrupt);
         Ok(())
     }

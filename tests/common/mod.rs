@@ -18,7 +18,7 @@ use std::time::Duration;
 #[path = "../support/server_thread.rs"]
 mod server_thread;
 
-use agent_project::error::AgboardError;
+use agent_project::error::AgpjError;
 use agent_project::file_store::watch::WatchMode;
 use agent_project::server::{ServeConfig, run_until_in};
 use serde_json::Value;
@@ -135,7 +135,7 @@ impl Reply {
 pub struct Running {
     pub addr: SocketAddr,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 impl Running {

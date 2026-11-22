@@ -4,15 +4,15 @@ use serde_json::json;
 
 use crate::cli::args::{ReleaseArgs, ReleaseCommand, ReleaseDocArgs};
 use crate::cli::{Context, Outcome};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
-pub fn run(ctx: &mut Context, args: &ReleaseArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &ReleaseArgs) -> Result<Outcome, AgpjError> {
     match &args.command {
         ReleaseCommand::Doc(args) => doc(ctx, args),
     }
 }
 
-fn doc(ctx: &mut Context, args: &ReleaseDocArgs) -> Result<Outcome, AgboardError> {
+fn doc(ctx: &mut Context, args: &ReleaseDocArgs) -> Result<Outcome, AgpjError> {
     let doc =
         ctx.files
             .generate_release_doc(ctx.project_id()?, &args.choice()?, ctx.clock.now())?;

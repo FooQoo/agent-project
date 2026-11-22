@@ -4,7 +4,7 @@ use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 #[derive(Serialize)]
 struct ErrorBody {
@@ -34,62 +34,62 @@ pub(crate) fn error_response(
     json_response(status, &body)
 }
 
-pub(crate) fn agboard_error_response(error: &AgboardError) -> Response {
+pub(crate) fn agboard_error_response(error: &AgpjError) -> Response {
     let status = match error {
-        AgboardError::TaskNotFound { .. }
-        | AgboardError::ProjectNotFound { .. }
-        | AgboardError::AttachmentNotFound { .. }
-        | AgboardError::EpicNotFound { .. }
-        | AgboardError::MessageNotFound { .. } => StatusCode::NOT_FOUND,
-        AgboardError::HumanOnly { .. } | AgboardError::AiOnly { .. } => StatusCode::FORBIDDEN,
-        AgboardError::QuestionsUnanswered { .. }
-        | AgboardError::QuestionAnswered { .. }
-        | AgboardError::QuestionWithdrawn { .. }
-        | AgboardError::StartBlockedByQuestions { .. }
-        | AgboardError::MessageClosed { .. }
-        | AgboardError::RequestAccepted { .. }
-        | AgboardError::AnswerAccepted { .. }
-        | AgboardError::QuestionOpen { .. }
-        | AgboardError::RequestWithdrawn { .. }
-        | AgboardError::TaskStatusChanged { .. }
-        | AgboardError::PlannedVersionChanged { .. }
-        | AgboardError::TaskIsDraft { .. }
-        | AgboardError::TaskInBacklog { .. }
-        | AgboardError::EpicIsDraft { .. }
-        | AgboardError::SendWithOpenQuestions { .. }
-        | AgboardError::TaskIsDone { .. }
-        | AgboardError::TaskNotDraft { .. }
-        | AgboardError::InvalidStateForDraft { .. }
-        | AgboardError::ProjectNameExists { .. }
-        | AgboardError::EpicIdTaken { .. }
-        | AgboardError::EpicInUse { .. }
-        | AgboardError::AgentCliMissing { .. }
-        | AgboardError::AgentCliLoggedOut { .. }
-        | AgboardError::SessionLaunchRefused { .. }
-        | AgboardError::ProjectHasNoFolder { .. } => StatusCode::CONFLICT,
-        AgboardError::TaskArchived { .. }
-        | AgboardError::TaskNotArchived { .. }
-        | AgboardError::ArchiveTargetsChanged => StatusCode::CONFLICT,
-        AgboardError::InvalidArgument { .. }
-        | AgboardError::InvalidValue { .. }
-        | AgboardError::NoCurrentVersion
-        | AgboardError::FileInvalid { .. }
-        | AgboardError::InvalidStateForColumn { .. }
-        | AgboardError::InvalidStateForAssignee
-        | AgboardError::InvalidStateChange { .. }
-        | AgboardError::ChoiceUnknown { .. }
-        | AgboardError::MessageTypeMismatch { .. }
-        | AgboardError::AttachmentLimitExceeded => StatusCode::UNPROCESSABLE_ENTITY,
-        AgboardError::DatabaseBusy => StatusCode::SERVICE_UNAVAILABLE,
-        AgboardError::DocsPathInvalid { .. } => StatusCode::BAD_REQUEST,
-        AgboardError::DocsNotFound { .. } => StatusCode::NOT_FOUND,
-        AgboardError::ReleaseDocRefused { .. } => StatusCode::CONFLICT,
-        AgboardError::DocsNotMarkdown { .. } | AgboardError::DocsAssetType { .. } => {
+        AgpjError::TaskNotFound { .. }
+        | AgpjError::ProjectNotFound { .. }
+        | AgpjError::AttachmentNotFound { .. }
+        | AgpjError::EpicNotFound { .. }
+        | AgpjError::MessageNotFound { .. } => StatusCode::NOT_FOUND,
+        AgpjError::HumanOnly { .. } | AgpjError::AiOnly { .. } => StatusCode::FORBIDDEN,
+        AgpjError::QuestionsUnanswered { .. }
+        | AgpjError::QuestionAnswered { .. }
+        | AgpjError::QuestionWithdrawn { .. }
+        | AgpjError::StartBlockedByQuestions { .. }
+        | AgpjError::MessageClosed { .. }
+        | AgpjError::RequestAccepted { .. }
+        | AgpjError::AnswerAccepted { .. }
+        | AgpjError::QuestionOpen { .. }
+        | AgpjError::RequestWithdrawn { .. }
+        | AgpjError::TaskStatusChanged { .. }
+        | AgpjError::PlannedVersionChanged { .. }
+        | AgpjError::TaskIsDraft { .. }
+        | AgpjError::TaskInBacklog { .. }
+        | AgpjError::EpicIsDraft { .. }
+        | AgpjError::SendWithOpenQuestions { .. }
+        | AgpjError::TaskIsDone { .. }
+        | AgpjError::TaskNotDraft { .. }
+        | AgpjError::InvalidStateForDraft { .. }
+        | AgpjError::ProjectNameExists { .. }
+        | AgpjError::EpicIdTaken { .. }
+        | AgpjError::EpicInUse { .. }
+        | AgpjError::AgentCliMissing { .. }
+        | AgpjError::AgentCliLoggedOut { .. }
+        | AgpjError::SessionLaunchRefused { .. }
+        | AgpjError::ProjectHasNoFolder { .. } => StatusCode::CONFLICT,
+        AgpjError::TaskArchived { .. }
+        | AgpjError::TaskNotArchived { .. }
+        | AgpjError::ArchiveTargetsChanged => StatusCode::CONFLICT,
+        AgpjError::InvalidArgument { .. }
+        | AgpjError::InvalidValue { .. }
+        | AgpjError::NoCurrentVersion
+        | AgpjError::FileInvalid { .. }
+        | AgpjError::InvalidStateForColumn { .. }
+        | AgpjError::InvalidStateForAssignee
+        | AgpjError::InvalidStateChange { .. }
+        | AgpjError::ChoiceUnknown { .. }
+        | AgpjError::MessageTypeMismatch { .. }
+        | AgpjError::AttachmentLimitExceeded => StatusCode::UNPROCESSABLE_ENTITY,
+        AgpjError::DatabaseBusy => StatusCode::SERVICE_UNAVAILABLE,
+        AgpjError::DocsPathInvalid { .. } => StatusCode::BAD_REQUEST,
+        AgpjError::DocsNotFound { .. } => StatusCode::NOT_FOUND,
+        AgpjError::ReleaseDocRefused { .. } => StatusCode::CONFLICT,
+        AgpjError::DocsNotMarkdown { .. } | AgpjError::DocsAssetType { .. } => {
             StatusCode::UNSUPPORTED_MEDIA_TYPE
         }
-        AgboardError::DocsTooLarge { .. } => StatusCode::PAYLOAD_TOO_LARGE,
-        AgboardError::DocsNotUtf8 { .. } => StatusCode::UNPROCESSABLE_ENTITY,
-        AgboardError::DocsNotImplemented => StatusCode::NOT_IMPLEMENTED,
+        AgpjError::DocsTooLarge { .. } => StatusCode::PAYLOAD_TOO_LARGE,
+        AgpjError::DocsNotUtf8 { .. } => StatusCode::UNPROCESSABLE_ENTITY,
+        AgpjError::DocsNotImplemented => StatusCode::NOT_IMPLEMENTED,
         _ => StatusCode::INTERNAL_SERVER_ERROR,
     };
     error_response(status, error.code(), error.message(), error.reason())

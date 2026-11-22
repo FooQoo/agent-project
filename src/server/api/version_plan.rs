@@ -10,7 +10,7 @@ use serde::{Deserialize, Deserializer};
 
 use super::epics::parse_epic_id;
 use super::parse_task_id;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::{EpicVersionScope, VersionChoice};
 use crate::server::AppState;
 use crate::server::request::StrictJson;
@@ -26,16 +26,16 @@ enum Choice {
     Unset,
 }
 
-fn choice_of(choice: Choice, version: Option<String>) -> Result<VersionChoice, AgboardError> {
+fn choice_of(choice: Choice, version: Option<String>) -> Result<VersionChoice, AgpjError> {
     match (choice, version) {
         (Choice::Named, Some(name)) => Ok(VersionChoice::Named(name)),
         (Choice::Current, None) => Ok(VersionChoice::Current),
         (Choice::Unset, None) => Ok(VersionChoice::Unset),
-        (Choice::Named, None) => Err(AgboardError::InvalidValue {
+        (Choice::Named, None) => Err(AgpjError::InvalidValue {
             field: "version".into(),
             reason: "A named choice needs a version.".into(),
         }),
-        (_, Some(_)) => Err(AgboardError::InvalidValue {
+        (_, Some(_)) => Err(AgpjError::InvalidValue {
             field: "version".into(),
             reason: "Only a named choice takes a version.".into(),
         }),
@@ -100,9 +100,9 @@ pub(super) async fn set_task_version(
             )
         }
         // The page names the version the task has now, so it can show it without reading again.
-        Err(error @ AgboardError::PlannedVersionChanged { .. }) => {
+        Err(error @ AgpjError::PlannedVersionChanged { .. }) => {
             let current = match &error {
-                AgboardError::PlannedVersionChanged { current, .. } => current.clone(),
+                AgpjError::PlannedVersionChanged { current, .. } => current.clone(),
                 _ => None,
             };
             json_response(

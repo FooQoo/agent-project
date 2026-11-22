@@ -10,7 +10,7 @@ use super::AppState;
 use super::messages::{AnswersInput, record_answers};
 use super::response::{agboard_error_response, json_response};
 use super::store::{parse_project_id, refresh_index, with_request_files};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::{AnswerItem, RequestImage, SendRequestInput};
 
 /// `POST …/messages/requests`: a person sends a request. The multipart body has a `text` part
@@ -77,7 +77,7 @@ pub(crate) async fn send_request(
 }
 
 fn invalid_body(reason: &str) -> Response {
-    agboard_error_response(&AgboardError::InvalidValue {
+    agboard_error_response(&AgpjError::InvalidValue {
         field: "body".into(),
         reason: reason.into(),
     })
@@ -93,7 +93,7 @@ pub(crate) async fn answer_questions_multipart(
     multipart: Result<axum::extract::Multipart, axum::extract::multipart::MultipartRejection>,
 ) -> Response {
     let invalid_body = |reason: &str| {
-        agboard_error_response(&AgboardError::InvalidValue {
+        agboard_error_response(&AgpjError::InvalidValue {
             field: "body".into(),
             reason: reason.into(),
         })
@@ -141,7 +141,7 @@ pub(crate) async fn answer_questions_multipart(
     // Each answer is built with the images of its question, so a repeated ID would copy the
     // uploaded bytes once per repeat. The store refuses it in the same words, but only later.
     if let Some(repeated) = repeated_answer(&input.answers) {
-        return agboard_error_response(&AgboardError::InvalidValue {
+        return agboard_error_response(&AgpjError::InvalidValue {
             field: "answers".into(),
             reason: format!("{repeated} is answered twice."),
         });

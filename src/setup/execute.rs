@@ -10,10 +10,10 @@ use std::path::PathBuf;
 use super::prepare::{AgentPlan, Prepared, plugin_line};
 use super::report::{AgentReport, FileReport, SetupReport, Status};
 use super::{apply, env, plugin, trust};
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 
 /// Runs the plan, or reports it when the plan is a dry run.
-pub fn execute(prepared: Prepared) -> Result<SetupReport, AgboardError> {
+pub fn execute(prepared: Prepared) -> Result<SetupReport, AgpjError> {
     let targets: Vec<_> = prepared
         .agents
         .iter()
@@ -23,7 +23,7 @@ pub fn execute(prepared: Prepared) -> Result<SetupReport, AgboardError> {
     let mut backups = if prepared.dry_run {
         vec![None; targets.len()]
     } else {
-        fs::create_dir_all(&prepared.shared_dir).map_err(|error| AgboardError::FileError {
+        fs::create_dir_all(&prepared.shared_dir).map_err(|error| AgpjError::FileError {
             action: FileAction::Write,
             file: env::display(&prepared.shared_dir),
             reason: error.to_string(),

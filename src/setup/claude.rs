@@ -7,13 +7,13 @@ use std::path::Path;
 use serde_json::{Value, json};
 
 use super::plan::{Planned, invalid_file};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 pub(crate) fn plan(
     settings: &Path,
     original: Option<&str>,
     root: &str,
-) -> Result<Planned, AgboardError> {
+) -> Result<Planned, AgpjError> {
     let mut value: Value = match original {
         None => json!({}),
         Some(text) => serde_json::from_str(text).map_err(|error| {

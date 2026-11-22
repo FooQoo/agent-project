@@ -11,7 +11,7 @@ use super::push::{self, Push};
 use super::{Launched, Launcher, Live, cli};
 use crate::clock::{Clock, SystemClock};
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::sessions::Tool;
 
 /// Who starts the child: a person (a launch request, or the start of the server), or the
@@ -25,8 +25,8 @@ pub(super) enum Spawn {
     Relaunch(u64),
 }
 
-fn refused_stopped() -> AgboardError {
-    AgboardError::SessionLaunchRefused {
+fn refused_stopped() -> AgpjError {
+    AgpjError::SessionLaunchRefused {
         reason: "The session was stopped before it could be restarted.".to_string(),
     }
 }
@@ -40,10 +40,10 @@ impl Launcher {
         tool: Tool,
         model: Option<&str>,
         kind: Spawn,
-    ) -> Result<Launched, AgboardError> {
+    ) -> Result<Launched, AgpjError> {
         let tool = cli::launchable(tool)?;
         if let Some(model) = model.filter(|model| !cli::valid_model(model)) {
-            return Err(AgboardError::InvalidValue {
+            return Err(AgpjError::InvalidValue {
                 field: "model".to_string(),
                 reason: format!("\"{model}\" is not a model name."),
             });
@@ -59,14 +59,14 @@ impl Launcher {
                 return Err(refused_stopped());
             }
             Spawn::Auto(epoch) if epoch != self.epoch() => {
-                return Err(AgboardError::SessionLaunchRefused {
+                return Err(AgpjError::SessionLaunchRefused {
                     reason: "The saved auto-start was cancelled by a stop or another launch."
                         .to_string(),
                 });
             }
             _ => {}
         }
-        let refused = |reason: String| AgboardError::SessionLaunchRefused { reason };
+        let refused = |reason: String| AgpjError::SessionLaunchRefused { reason };
         // One board-launched session in total: any live child, or a restart that is waiting,
         // holds the slot (a restart of the same tool is the supervisor itself).
         let running = self.lock().keys().next().copied();
@@ -94,13 +94,13 @@ impl Launcher {
         if let Some(model) = model {
             let offered = self.executables.models(tool)?;
             if !offered.models.is_empty() && !offered.models.iter().any(|m| m.id == model) {
-                return Err(AgboardError::InvalidValue {
+                return Err(AgpjError::InvalidValue {
                     field: "model".to_string(),
                     reason: format!("\"{model}\" is not one of the models of {}.", tool.as_str()),
                 });
             }
         }
-        let failed = |reason: String| AgboardError::SessionLaunchFailed { reason };
+        let failed = |reason: String| AgpjError::SessionLaunchFailed { reason };
         let log_path = self.log_path(tool);
         let log = open_log(&log_path)
             .map_err(|e| failed(format!("Cannot write {}: {e}.", log_path.display())))?;

@@ -13,7 +13,7 @@ use self::files::create_backup;
 pub(crate) use self::files::{NEW_FILE_MODE, file_mode, read_current, write_atomically};
 use super::env::display;
 use super::plan::Target;
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 
 /// One failed step, before rollback turns it into the reported error.
 struct Failure {
@@ -31,7 +31,7 @@ struct Done {
 
 /// Writes every planned change. Returns the backup path for each target, in
 /// the order of `targets` (`None` where no backup was needed).
-pub(super) fn apply(targets: &[Target]) -> Result<Vec<Option<PathBuf>>, AgboardError> {
+pub(super) fn apply(targets: &[Target]) -> Result<Vec<Option<PathBuf>>, AgpjError> {
     let mut done: Vec<Done> = Vec::new();
     for (index, target) in targets.iter().enumerate() {
         if target.planned.is_none() {
@@ -82,7 +82,7 @@ fn write_target(index: usize, target: &Target, done: &mut Vec<Done>) -> Result<(
 }
 
 /// Undoes the writes of this run, newest first. Returns the error to report.
-fn roll_back(targets: &[Target], done: Vec<Done>, failure: Failure) -> AgboardError {
+fn roll_back(targets: &[Target], done: Vec<Done>, failure: Failure) -> AgpjError {
     let mut stuck: Vec<String> = Vec::new();
     for entry in done.iter().rev() {
         let target = &targets[entry.index];
@@ -120,7 +120,7 @@ fn roll_back(targets: &[Target], done: Vec<Done>, failure: Failure) -> AgboardEr
             stuck.join("; ")
         )
     };
-    AgboardError::FileError {
+    AgpjError::FileError {
         action: FileAction::Write,
         file: failure.file,
         reason,

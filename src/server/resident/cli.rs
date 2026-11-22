@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use serde::Serialize;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::sessions::Tool;
 use crate::setup::agent_cli;
 
@@ -33,10 +33,10 @@ pub fn prompt(project_name: &str) -> String {
 }
 
 /// The tool the launcher can start; `unknown` cannot be launched.
-pub fn launchable(tool: Tool) -> Result<Tool, AgboardError> {
+pub fn launchable(tool: Tool) -> Result<Tool, AgpjError> {
     match tool {
         Tool::ClaudeCode | Tool::Codex => Ok(tool),
-        Tool::Unknown => Err(AgboardError::InvalidValue {
+        Tool::Unknown => Err(AgpjError::InvalidValue {
             field: "tool".to_string(),
             reason: "tool must be claude-code or codex.".to_string(),
         }),
@@ -95,7 +95,7 @@ impl Executables {
     }
 
     /// The executable of `tool`, or `agent_cli_missing`.
-    pub fn find(&self, tool: Tool) -> Result<PathBuf, AgboardError> {
+    pub fn find(&self, tool: Tool) -> Result<PathBuf, AgpjError> {
         let name = command_name(tool);
         let overridden = match tool {
             Tool::Codex => &self.codex,
@@ -105,16 +105,16 @@ impl Executables {
             Some(path) => Some(path.clone()).filter(|path| path.is_file()),
             None => agent_cli::find_on_path(name, self.path.as_deref()),
         };
-        found.ok_or_else(|| AgboardError::AgentCliMissing {
+        found.ok_or_else(|| AgpjError::AgentCliMissing {
             tool: name.to_string(),
         })
     }
 
     /// The tool is installed and logged in, or the error that says which is not.
-    pub fn check(&self, tool: Tool) -> Result<PathBuf, AgboardError> {
+    pub fn check(&self, tool: Tool) -> Result<PathBuf, AgpjError> {
         let tool = launchable(tool)?;
         let program = self.find(tool)?;
-        let logged_out = || AgboardError::AgentCliLoggedOut {
+        let logged_out = || AgpjError::AgentCliLoggedOut {
             tool: command_name(tool).to_string(),
         };
         let run = |args: &[&str]| agent_cli::run_with_timeout(&program, args, None, self.timeout);
@@ -130,7 +130,7 @@ impl Executables {
         let logged_in = match answered {
             Ok(logged_in) => logged_in,
             Err(reason) if reason.contains("did not finish") => {
-                return Err(AgboardError::SessionLaunchFailed {
+                return Err(AgpjError::SessionLaunchFailed {
                     reason: format!("The login check of {}: {reason}.", command_name(tool)),
                 });
             }
@@ -145,7 +145,7 @@ impl Executables {
 
     /// The models to offer for `tool`. When the list cannot be read the list is empty and
     /// `reason` says why; the tool then launches with its own default model.
-    pub fn models(&self, tool: Tool) -> Result<ModelList, AgboardError> {
+    pub fn models(&self, tool: Tool) -> Result<ModelList, AgpjError> {
         let tool = launchable(tool)?;
         let program = self.find(tool)?;
         if tool == Tool::ClaudeCode {

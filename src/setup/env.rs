@@ -4,7 +4,7 @@
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::paths;
 
 /// The process environment that decides every path setup touches. Built once
@@ -36,14 +36,14 @@ impl SetupEnv {
 
     /// The data directory, as an absolute path. Uses the same rule as the CLI,
     /// server, and hooks (`paths::data_dir_from`).
-    pub fn data_dir(&self) -> Result<PathBuf, AgboardError> {
+    pub fn data_dir(&self) -> Result<PathBuf, AgpjError> {
         let dir = paths::data_dir_from(self.agboard_home.clone(), self.home.clone())?;
         absolute(dir)
     }
 
     /// Codex's folder: `$CODEX_HOME`, or `~/.codex`. An empty `CODEX_HOME`
     /// counts as unset.
-    pub(crate) fn codex_dir(&self) -> Result<PathBuf, AgboardError> {
+    pub(crate) fn codex_dir(&self) -> Result<PathBuf, AgpjError> {
         match non_empty(&self.codex_home) {
             Some(dir) => absolute(PathBuf::from(dir)),
             None => absolute(self.home_dir("CODEX_HOME")?.join(".codex")),
@@ -51,12 +51,12 @@ impl SetupEnv {
     }
 
     /// Codex's user config: `$CODEX_HOME/config.toml`, or `~/.codex/config.toml`.
-    pub fn codex_config(&self) -> Result<PathBuf, AgboardError> {
+    pub fn codex_config(&self) -> Result<PathBuf, AgpjError> {
         Ok(self.codex_dir()?.join("config.toml"))
     }
 
     /// The rule file setup writes for Codex: `$CODEX_HOME/rules/agboard.rules`.
-    pub fn codex_rules(&self) -> Result<PathBuf, AgboardError> {
+    pub fn codex_rules(&self) -> Result<PathBuf, AgpjError> {
         Ok(self.codex_dir()?.join("rules").join("agboard.rules"))
     }
 
@@ -75,7 +75,7 @@ impl SetupEnv {
 
     /// Claude Code's user settings: `$CLAUDE_CONFIG_DIR/settings.json`, or
     /// `~/.claude/settings.json`. An empty `CLAUDE_CONFIG_DIR` counts as unset.
-    pub fn claude_settings(&self) -> Result<PathBuf, AgboardError> {
+    pub fn claude_settings(&self) -> Result<PathBuf, AgpjError> {
         let dir = match non_empty(&self.claude_config_dir) {
             Some(dir) => PathBuf::from(dir),
             None => self.home_dir("CLAUDE_CONFIG_DIR")?.join(".claude"),
@@ -83,14 +83,14 @@ impl SetupEnv {
         absolute(dir.join("settings.json"))
     }
 
-    fn home_dir(&self, override_name: &str) -> Result<PathBuf, AgboardError> {
+    fn home_dir(&self, override_name: &str) -> Result<PathBuf, AgpjError> {
         match self
             .home
             .as_deref()
             .filter(|dir| !dir.as_os_str().is_empty())
         {
             Some(home) => Ok(home.to_path_buf()),
-            None => Err(AgboardError::BoardUnavailable {
+            None => Err(AgpjError::BoardUnavailable {
                 reason: format!(
                     "The home directory cannot be found. Set {override_name} to the agent's configuration directory."
                 ),
@@ -105,8 +105,8 @@ fn non_empty(value: &Option<OsString>) -> Option<&OsString> {
 
 /// Makes `path` absolute against the working directory without touching the
 /// file system (no symbolic link is resolved here).
-pub fn absolute(path: PathBuf) -> Result<PathBuf, AgboardError> {
-    std::path::absolute(&path).map_err(|error| AgboardError::BoardUnavailable {
+pub fn absolute(path: PathBuf) -> Result<PathBuf, AgpjError> {
+    std::path::absolute(&path).map_err(|error| AgpjError::BoardUnavailable {
         reason: format!("{} cannot be made absolute: {error}.", path.display()),
     })
 }

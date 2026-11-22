@@ -9,7 +9,7 @@ use serde::Deserialize;
 
 use super::epics::whole_text;
 use crate::domain::{Actor, Assignee, ChangeContext, Changed, Column, Draft, NewTask, RunState};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::frontmatter::AcceptanceItem;
 use crate::file_store::model::TaskView;
 use crate::file_store::validate::{self};
@@ -173,7 +173,7 @@ pub(super) async fn move_task(
             )
         }
         // The page names the status the task has now, so it can show it without reading again.
-        Err(error @ AgboardError::TaskStatusChanged { current, .. }) => json_response(
+        Err(error @ AgpjError::TaskStatusChanged { current, .. }) => json_response(
             StatusCode::CONFLICT,
             &serde_json::json!({
                 "error": {
@@ -271,7 +271,7 @@ pub(super) async fn set_agent_status(
 /// A task as `{"task": ...}`, telling the browsers only if something changed.
 pub(super) fn changed_task_response(
     state: &AppState,
-    result: Result<Changed<TaskView>, AgboardError>,
+    result: Result<Changed<TaskView>, AgpjError>,
 ) -> Response {
     match result {
         Ok(result) => {
