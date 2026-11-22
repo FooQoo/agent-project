@@ -143,7 +143,7 @@ Without `--project`, `agboard show remote --json` never fails because the connec
 
 `status` is `no_server` when no server runs and `unknown` when the server did not answer; otherwise it is the state of the connection (`ready`, `disabled`, `starting`, `reconnecting`, `failed`, and so on). `entrance` is the address only while the connection is `ready`, else `null`. The ngrok token is never in the output; `tokenSaved` says whether the OS keychain holds one.
 
-`agboard setup remote --domain … --enabled … --token-stdin --json` prints the saved settings in the same four fields (`enabled`, `domain`, `tokenSaved`, `keychainAvailable`), with `saved: true` and a `note` that says the settings apply the next time the connection starts.
+`agboard setup remote --domain … --enabled … --token-stdin --json` prints the saved settings in the same four fields (`enabled`, `domain`, `tokenSaved`, `keychainAvailable`), with `saved: true` and a `note` that says the settings apply the next time the connection starts. When the save sets the Tailscale provider it also carries a `tailscale` object, `{ "status": "ready" | "not_installed" | "not_logged_in" | "https_disabled", "domain": string | null }`, from a check that is advice only and never fails the save.
 
 ## message events
 

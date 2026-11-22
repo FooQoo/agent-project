@@ -127,15 +127,22 @@ impl Connector for TailscaleConnector {
     }
 }
 
-fn start(cli: PathBuf, port: u16, cancelled: &AtomicBool) -> Result<OpenedTunnel, FailureCode> {
-    let status = run(&cli, &["status", "--json"]).map_err(|e| {
+/// The machine's `ts.net` host name, or what is missing before the entrance can be opened:
+/// the tool, a login, or HTTPS certificates. Changes nothing; setup uses it as advice too.
+pub fn probe(cli: Option<&Path>) -> Result<String, FailureCode> {
+    let cli = cli.ok_or(FailureCode::TailscaleNotInstalled)?;
+    let status = run(cli, &["status", "--json"]).map_err(|e| {
         eprintln!("agboard: tailscale status failed: {e}");
         match e {
             RunError::Missing => FailureCode::TailscaleNotInstalled,
             RunError::Failed(_) => FailureCode::TailscaleNotLoggedIn,
         }
     })?;
-    let host = host_of_status(&status)?;
+    host_of_status(&status)
+}
+
+fn start(cli: PathBuf, port: u16, cancelled: &AtomicBool) -> Result<OpenedTunnel, FailureCode> {
+    let host = probe(Some(&cli))?;
     let public = PublicOrigin::parse(&format!("https://{host}"))
         .map_err(|_| FailureCode::PublicUrlInvalid)?;
     let target = format!("http://127.0.0.1:{port}");

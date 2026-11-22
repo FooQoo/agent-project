@@ -18,6 +18,7 @@ use std::path::Path;
 
 use serde_json::json;
 
+use super::setup_remote_tailscale as advice;
 use crate::cli::Outcome;
 use crate::cli::args::SetupRemoteArgs;
 use crate::error::AgboardError;
@@ -72,17 +73,22 @@ pub fn run(
 }
 
 fn save(data_dir: &Path, vault: &dyn TokenVault, change: Change) -> Result<Outcome, AgboardError> {
+    let tailscale = (change.provider == Some(Provider::Tailscale)).then(advice::check_now);
     let now = saved::apply(data_dir, vault, change)?;
     let mut json = now.to_json();
     json["saved"] = json!(true);
     json["note"] = json!(APPLIES_NOTE);
+    let mut human = format!(
+        "Saved the remote connection settings.\n{}{APPLIES_NOTE}\n",
+        now.human()
+    );
+    if let Some(advice) = tailscale {
+        advice.add_to(&mut json, &mut human);
+    }
+    // Nothing on a board changed, so there is no project to notify.
     Ok(Outcome {
-        // Nothing on a board changed, so there is no project to notify.
         changed: false,
-        human: format!(
-            "Saved the remote connection settings.\n{}{APPLIES_NOTE}\n",
-            now.human()
-        ),
+        human,
         json,
     })
 }
@@ -192,74 +198,14 @@ fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgboardError> {
     };
     answers.provider = (chosen != now.provider).then_some(chosen);
 
-    if chosen == Provider::Ngrok && !ask_ngrok(&now, &mut answers)? {
+    if chosen == Provider::Ngrok && !super::setup_remote_ngrok::ask_ngrok(&now, &mut answers)? {
         // A cancelled question saves nothing, not even the answers given before it.
         return Ok(());
     }
+    if chosen == Provider::Tailscale {
+        advice::check_now().show();
+    }
     finish(data_dir, vault, &answers)
-}
-
-/// The ngrok-only questions: the fixed domain and the token.
-/// Returns `false` when a question was cancelled, so the caller saves nothing.
-fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<bool, AgboardError> {
-    let change_domain = match &now.domain {
-        Some(_) => match confirm("Change the fixed domain?") {
-            Some(answer) => answer,
-            None => return cancel_false(),
-        },
-        None => true,
-    };
-    if change_domain {
-        let prompt = if now.domain.is_some() {
-            "New fixed domain (empty removes it)"
-        } else {
-            "Fixed ngrok domain, such as example.ngrok-free.dev (empty skips)"
-        };
-        let typed: Result<String, _> = cliclack::input(prompt)
-            .required(false)
-            .validate(|text: &String| {
-                if text.trim().is_empty() || saved::domain_of(text).is_ok() {
-                    Ok(())
-                } else {
-                    Err("Enter a host name only, without https://, a path, or a port.")
-                }
-            })
-            .interact();
-        match typed {
-            // Empty means "skip" when nothing is saved, and "remove" when something is.
-            Ok(text) if text.trim().is_empty() && now.domain.is_none() => {}
-            Ok(text) => answers.domain = Some(text),
-            Err(_) => return cancel_false(),
-        }
-    }
-
-    let change_token = if now.token_saved == Some(true) {
-        match confirm("Replace the saved token?") {
-            Some(answer) => answer,
-            None => return cancel_false(),
-        }
-    } else {
-        true
-    };
-    if change_token {
-        let typed = cliclack::password("ngrok authtoken (typed hidden; empty skips)")
-            .mask('*')
-            .allow_empty()
-            .validate(|text: &String| {
-                if text.trim().is_empty() || saved::token_of(text).is_ok() {
-                    Ok(())
-                } else {
-                    Err("The token must not contain spaces.")
-                }
-            })
-            .interact();
-        match typed {
-            Ok(text) => answers.token = Some(text),
-            Err(_) => return cancel_false(),
-        }
-    }
-
-    Ok(true)
 }
 
 fn finish(data_dir: &Path, vault: &dyn TokenVault, answers: &Answers) -> Result<(), AgboardError> {
@@ -276,7 +222,7 @@ fn finish(data_dir: &Path, vault: &dyn TokenVault, answers: &Answers) -> Result<
 }
 
 /// `Some(answer)` for a yes or a no, `None` when the prompt was cancelled.
-fn confirm(question: &str) -> Option<bool> {
+pub(super) fn confirm(question: &str) -> Option<bool> {
     cliclack::confirm(question)
         .initial_value(false)
         .interact()
@@ -284,7 +230,7 @@ fn confirm(question: &str) -> Option<bool> {
 }
 
 /// A cancelled question: say so and tell the caller to save nothing.
-fn cancel_false() -> Result<bool, AgboardError> {
+pub(super) fn cancel_false() -> Result<bool, AgboardError> {
     let _ = cancelled();
     Ok(false)
 }

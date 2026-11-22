@@ -378,6 +378,8 @@ printf '%s' "$NGROK_AUTHTOKEN" | agboard setup remote --token-stdin
 
 On a terminal, `agboard setup remote` with no option shows what is saved (the provider, the domain, and whether a token is saved, never the token) and asks which way the phone connects, ngrok or Tailscale. It then asks only the settings of that way: for ngrok the domain and the token, and for Tailscale nothing more, because Tailscale needs neither. The token is typed hidden and is never printed. Each question can be skipped by leaving it empty, and a value that is already saved is changed only when you say so. Without a terminal, or with `--json`, it asks nothing and exits with `2`, so a script never waits for input.
 
+When it saves Tailscale (by choosing it or with `--provider tailscale`), it also checks Tailscale on this computer and says what to do next: install it (the Mac app, or the Homebrew command-line tool, which cannot be used together), sign in, turn on MagicDNS and HTTPS certificates, or, when everything is ready, the `ts.net` address the phone will open. The check is advice only. It never blocks the save, and the command still exits with `0`. With `--json` the result is a `tailscale` object with a `status` (`ready`, `not_installed`, `not_logged_in`, or `https_disabled`) and the `domain` when ready.
+
 The options save without any question:
 
 | Option | Meaning |
