@@ -43,11 +43,12 @@ pub struct ProjectFile {
     /// which read it as 1.
     #[serde(default = "first_question_id")]
     pub next_question_id: i64,
-    /// The versions the project plans tasks for, in the order they were added. Absent in
-    /// older files and while there are none.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub versions: Vec<String>,
-    /// The project's current version, one of `versions`; `null` or absent when none is set.
+    /// The list of versions that an earlier build kept here. Read and ignored; never written
+    /// again: the versions are the files in `docs/release/`.
+    #[serde(default, skip_serializing)]
+    pub versions: Option<serde_json::Value>,
+    /// The project's current version; `null` or absent when none is set. It names a file in
+    /// `docs/release/`; while that file is missing the project has no current version.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub current_version: Option<String>,
 }

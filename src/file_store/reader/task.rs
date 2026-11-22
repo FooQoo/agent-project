@@ -84,7 +84,8 @@ pub(crate) fn read_task_lenient(
     }
     let md_path = layout::task_md(&dir);
     let md_label = layout::shared_label(shared, &md_path);
-    let (description, problems, history) = match io::read_text(&md_path, &md_label) {
+    let (description, problems, history, planned_version) = match io::read_text(&md_path, &md_label)
+    {
         Ok(text) => {
             let parsed = parse_task(&text, ParseMode::Stored);
             let mut problems = parsed
@@ -92,6 +93,7 @@ pub(crate) fn read_task_lenient(
                 .iter()
                 .chain(&parsed.acceptance_defects)
                 .chain(&parsed.questions_defects)
+                .chain(&parsed.planned_version_defects)
                 .map(|d| Problem {
                     file: md_label.clone(),
                     field: d.field.clone(),
@@ -103,12 +105,13 @@ pub(crate) fn read_task_lenient(
                 field: d.field.clone(),
                 reason: d.reason.clone(),
             }));
-            (text, problems, parsed.history)
+            (text, problems, parsed.history, parsed.planned_version)
         }
-        Err(error) => (String::new(), vec![problem_of(error)], Vec::new()),
+        Err(error) => (String::new(), vec![problem_of(error)], Vec::new(), None),
     };
     let mut joined = task;
     joined.history = history;
+    joined.planned_version = planned_version;
     Ok(TaskLoad {
         view: task_view(joined, description, file_time(&md_path)),
         problems,
@@ -154,7 +157,6 @@ pub(crate) fn task_view(
         task_status_changed_at: task.task_status_changed_at,
         onboarding_sample: task.onboarding_sample,
         planned_version: task.planned_version,
-        planned_version_changes: task.planned_version_changes,
         history: task.history,
     }
 }
@@ -225,6 +227,7 @@ pub(crate) fn read_task_strict(
     }
     let mut joined = task;
     joined.history = parsed.history;
+    joined.planned_version = parsed.planned_version;
     Ok(joined)
 }
 

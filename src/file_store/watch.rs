@@ -41,6 +41,9 @@ pub enum Target {
     All,
     /// Something in one project's `docs/` folder; announced, never loaded.
     Docs(ProjectId),
+    /// Something in one project's `docs/release/` folder, whose `*.md` files name the project's
+    /// versions: announced like a Docs change, and the project is reloaded.
+    Release(ProjectId),
     /// Something in one project's `notify/` folder; announced, never loaded.
     Notify(ProjectId),
 }
@@ -198,7 +201,7 @@ async fn reload_loop(
                 }
                 for target in &ready {
                     match target {
-                        Target::Docs(id) => (docs.0)(Some(id.clone())),
+                        Target::Docs(id) | Target::Release(id) => (docs.0)(Some(id.clone())),
                         // Lost events may have been in any project's Docs.
                         Target::All => {
                             (docs.0)(None);
@@ -217,6 +220,10 @@ async fn reload_loop(
                 let ready: Vec<Target> = ready
                     .into_iter()
                     .filter(|target| !matches!(target, Target::Docs(_) | Target::Notify(_)))
+                    .map(|target| match target {
+                        Target::Release(id) => Target::Project(id),
+                        other => other,
+                    })
                     .collect();
                 if ready.is_empty() {
                     continue;

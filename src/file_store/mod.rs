@@ -27,6 +27,7 @@ pub mod project;
 pub mod projection;
 pub mod qa;
 pub mod reader;
+pub mod releases;
 pub mod transaction;
 pub mod validate;
 mod versions;

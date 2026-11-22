@@ -111,7 +111,7 @@ fn the_current_version_is_shown_set_listed_and_cleared() {
     run(home.path(), &["version", "add", "v1.9.0"]);
     assert_eq!(
         plain(home.path(), &["version", "ls"]),
-        "v1.8.0 (current)\nv1.9.0\n"
+        "v1.9.0\nv1.8.0 (current)\n"
     );
     assert_eq!(
         plain(home.path(), &["version", "current"]),
@@ -120,7 +120,7 @@ fn the_current_version_is_shown_set_listed_and_cleared() {
 
     let cleared = run(home.path(), &["version", "current", "--clear"]);
     assert_eq!(cleared["currentVersion"], Value::Null);
-    assert_eq!(cleared["versions"], serde_json::json!(["v1.8.0", "v1.9.0"]));
+    assert_eq!(cleared["versions"], serde_json::json!(["v1.9.0", "v1.8.0"]));
 
     // A value with --clear is a usage error.
     let (code, name) = fail(home.path(), &["version", "current", "v2", "--clear"]);
@@ -172,10 +172,10 @@ fn edit_plans_a_task_for_a_version_the_current_one_or_none() {
 
     let task = &run(home.path(), &["edit", &id, "--planned-version", "v1.8.0"])["task"];
     assert_eq!(task["plannedVersion"], "v1.8.0");
-    assert_eq!(task["plannedVersionChanges"].as_array().unwrap().len(), 1);
+    let history = task["history"].as_array().unwrap().len();
     // The same value again changes nothing.
     let task = &run(home.path(), &["edit", &id, "--planned-version", "v1.8.0"])["task"];
-    assert_eq!(task["plannedVersionChanges"].as_array().unwrap().len(), 1);
+    assert_eq!(task["history"].as_array().unwrap().len(), history);
 
     let task = &run(home.path(), &["edit", &id, "--unplanned"])["task"];
     assert!(task.get("plannedVersion").is_none_or(Value::is_null));
@@ -194,6 +194,54 @@ fn edit_plans_a_task_for_a_version_the_current_one_or_none() {
         &["edit", &id, "--unplanned", "--current-version"],
     );
     assert_eq!((code, name.as_str()), (2, "invalid_argument"));
+}
+
+#[test]
+fn a_description_file_that_changes_the_plan_records_one_history_entry() {
+    let home = tempfile::tempdir().unwrap();
+    demo(home.path());
+    let id = add(home.path(), "T", &[]).to_string();
+    run(home.path(), &["version", "add", "v1.8.0"]);
+    run(home.path(), &["version", "add", "v1.9.0"]);
+    run(home.path(), &["edit", &id, "--planned-version", "v1.8.0"]);
+    let file = home.path().join("desc.md");
+    let edit = |text: &str| {
+        std::fs::write(&file, text).unwrap();
+        run(
+            home.path(),
+            &["edit", &id, "--desc-file", file.to_str().unwrap()],
+        )["task"]
+            .clone()
+    };
+    let entries = |task: &Value| -> Vec<String> {
+        task["history"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|e| e["reason"].as_str())
+            .filter(|r| r.contains("planned version"))
+            .map(str::to_owned)
+            .collect()
+    };
+    let before = entries(&run(home.path(), &["show", &id])["task"]);
+    assert_eq!(before.len(), 1);
+
+    // A different version is kept and recorded once.
+    let task = edit("---\nplannedVersion: v1.9.0\n---\nBody one\n");
+    assert_eq!(task["plannedVersion"], "v1.9.0");
+    let after = entries(&task);
+    assert_eq!(after.len(), 2);
+    assert_eq!(after[1], "Changed planned version from v1.8.0 to v1.9.0.");
+
+    // The same version adds nothing.
+    let task = edit("---\nplannedVersion: v1.9.0\n---\nBody two\n");
+    assert_eq!(task["plannedVersion"], "v1.9.0");
+    assert_eq!(entries(&task).len(), 2);
+
+    // Omitting the key keeps the stored plan and adds nothing.
+    let task = edit("Body three\n");
+    assert_eq!(task["plannedVersion"], "v1.9.0");
+    assert_eq!(entries(&task).len(), 2);
 }
 
 #[test]

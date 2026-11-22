@@ -92,13 +92,13 @@ The Backlog lane holds settled plans that must not be started yet; it means the 
 
 ## Planned versions
 
-A project can list versions and name one of them as its current version, and a task can be planned for one version. The plan is optional: a task without one stays without one, and old files without the fields read as no versions and no plans. The project keeps `versions` and `currentVersion` in `project.json`, and each task keeps `plannedVersion` and its trace `plannedVersionChanges` in `task.json`. See [Planned versions](../reference/files.md#planned-versions) for the fields and the format of a version name.
+A project lists versions as files and can name one of them as its current version, and a task can be planned for one version. The plan is optional: a task without one stays without one. The versions are the `*.md` files directly inside `docs/release/` of the project's Docs, the project keeps `currentVersion` in `project.json`, and each task keeps `plannedVersion` in its `TASK.md` frontmatter. See [Planned versions](../reference/files.md#planned-versions) for the layout, the order, and the format of a version name.
 
-- The planned version of each task is the source of truth. It is set per task or for every task of an epic in one call, and one epic can hold tasks of different versions.
+- The planned version of each task, the `plannedVersion` key of its `TASK.md`, is the source of truth; a person can edit it by hand. It is set per task or for every task of an epic in one call, and one epic can hold tasks of different versions.
 - Assigning the current version stores its name at that moment. Changing the project's current version later moves no task.
-- A change records the version before and after with its time, in `plannedVersionChanges` and as one ordinary history entry, so a later reader can tell which tasks left a version and when. Setting the version a task already has changes nothing, so a retry adds no entry.
+- A change appends one ordinary history entry in the same save, which records the version before and after and the time, so a later reader can tell which tasks left a version and when. Setting the version a task already has changes nothing, so a retry adds no entry.
 - The operations (`set_task_planned_version`, `set_epic_planned_version`, `add_version`, `set_current_version`) run under the project's write lock like other writes. Setting a version never changes the assignee, lane, run state, position, or acceptance conditions. It is refused on an archived task, and an AI cannot change a draft or Done task.
-- Not part of the Summary yet; the entry points (CLI and board) read and write these fields later.
+- The Summary carries `project.versions`, `project.currentVersion`, and each task's `plannedVersion` (see [Web API](../reference/web-api.md#summary-and-detail)). Adding or removing a version file by hand, or editing `plannedVersion` in `TASK.md`, reaches the board like any other file change.
 
 ## Ordering and time
 

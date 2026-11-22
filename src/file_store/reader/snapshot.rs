@@ -32,7 +32,8 @@ pub struct ProjectSnapshot {
     pub epics: Vec<EpicView>,
     pub tasks: Vec<TaskView>,
     pub problems: Vec<Problem>,
-    /// The project's versions and its current one. The board reads them; agents read them with
+    /// The project's versions (the files of `docs/release/`) and its current one, which is none
+    /// while its file is missing. The board reads them; agents read them with
     /// the version commands, so the snapshot JSON leaves them out.
     #[serde(skip)]
     pub versions: Vec<String>,
@@ -109,8 +110,9 @@ pub(crate) fn read_snapshot_locked(
     let cursor = ChangeCursor::new(project_id.clone(), &version)?;
     let file = read_project_file(shared, project_id)?;
     let next_task_id = file.next_task_id;
-    let versions = file.versions.clone();
-    let current_version = file.current_version.clone();
+    let versions = crate::file_store::releases::listed_versions(&project_dir);
+    let current_version =
+        crate::file_store::releases::effective_current(&versions, file.current_version.as_deref());
     let project = meta_of(file);
     let mut tasks = Vec::new();
     let (epics, mut problems) = read_epics(shared, &project_dir);

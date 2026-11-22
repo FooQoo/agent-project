@@ -23,6 +23,12 @@ pub fn classify(shared: &Path, path: &Path) -> Option<Target> {
         [projects, id] if projects == "projects" => {
             ProjectId::from_str(id).ok().map(|_| Target::All)
         }
+        // A version file is a Docs file that the board also reads, so it reloads the project.
+        [projects, id, docs, release, ..]
+            if projects == "projects" && docs == "docs" && release == "release" =>
+        {
+            ProjectId::from_str(id).ok().map(Target::Release)
+        }
         // The Docs are the user's files: they are announced, not loaded as board data.
         [projects, id, docs, ..] if projects == "projects" && docs == "docs" => {
             ProjectId::from_str(id).ok().map(Target::Docs)

@@ -131,6 +131,7 @@ fn task_pair(
             })?
             .into_bytes()
     };
+    let markdown = sync_planned_version(text, markdown, task, &md_label)?;
     let mut json = serde_json::to_vec_pretty(&TaskMetadata::from(task))
         .map_err(|error| io::write_error(&json_label, error))?;
     json.push(b'\n');
@@ -145,4 +146,37 @@ fn task_pair(
             markdown,
         },
     ))
+}
+
+/// Make the `plannedVersion` of the composed TASK.md match `task`. The value the task was read
+/// with is the one in the old text, so an operation that did not touch it changes nothing, a
+/// `plannedVersion` that cannot be read is left as written, and an operation that set or cleared
+/// it writes the key.
+fn sync_planned_version(
+    old_text: &str,
+    markdown: Vec<u8>,
+    task: &TaskFile,
+    label: &str,
+) -> Result<Vec<u8>, AgboardError> {
+    let composed = String::from_utf8(markdown).expect("the composed TASK.md is UTF-8");
+    let old = frontmatter::planned_version_of(old_text);
+    let now = frontmatter::planned_version_of(&composed);
+    let write = match (&old, &now) {
+        // Unreadable before and not set by the operation: keep what the person wrote.
+        (Err(_), _) => task.planned_version.is_some(),
+        (Ok(before), _) if *before != task.planned_version => true,
+        // A replacement text that dropped the key keeps the task's plan.
+        (Ok(_), Ok(after)) => after.is_none() && task.planned_version.is_some(),
+        (Ok(_), Err(_)) => false,
+    };
+    if !write {
+        return Ok(composed.into_bytes());
+    }
+    frontmatter::compose_planned_version(&composed, task.planned_version.as_deref())
+        .map(String::into_bytes)
+        .map_err(|defect| AgboardError::FileInvalid {
+            file: label.to_owned(),
+            field: defect.field,
+            reason: defect.reason,
+        })
 }
