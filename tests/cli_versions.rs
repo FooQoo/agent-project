@@ -214,6 +214,54 @@ fn edit_plans_a_task_for_a_version_the_current_one_or_none() {
 }
 
 #[test]
+fn a_description_file_that_changes_the_plan_records_one_history_entry() {
+    let home = tempfile::tempdir().unwrap();
+    demo(home.path());
+    let id = add(home.path(), "T", &[]).to_string();
+    run(home.path(), &["version", "add", "v1.8.0"]);
+    run(home.path(), &["version", "add", "v1.9.0"]);
+    run(home.path(), &["edit", &id, "--planned-version", "v1.8.0"]);
+    let file = home.path().join("desc.md");
+    let edit = |text: &str| {
+        std::fs::write(&file, text).unwrap();
+        run(
+            home.path(),
+            &["edit", &id, "--desc-file", file.to_str().unwrap()],
+        )["task"]
+            .clone()
+    };
+    let entries = |task: &Value| -> Vec<String> {
+        task["history"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|e| e["reason"].as_str())
+            .filter(|r| r.contains("planned version"))
+            .map(str::to_owned)
+            .collect()
+    };
+    let before = entries(&run(home.path(), &["show", &id])["task"]);
+    assert_eq!(before.len(), 1);
+
+    // A different version is kept and recorded once.
+    let task = edit("---\nplannedVersion: v1.9.0\n---\nBody one\n");
+    assert_eq!(task["plannedVersion"], "v1.9.0");
+    let after = entries(&task);
+    assert_eq!(after.len(), 2);
+    assert_eq!(after[1], "Changed planned version from v1.8.0 to v1.9.0.");
+
+    // The same version adds nothing.
+    let task = edit("---\nplannedVersion: v1.9.0\n---\nBody two\n");
+    assert_eq!(task["plannedVersion"], "v1.9.0");
+    assert_eq!(entries(&task).len(), 2);
+
+    // Omitting the key keeps the stored plan and adds nothing.
+    let task = edit("Body three\n");
+    assert_eq!(task["plannedVersion"], "v1.9.0");
+    assert_eq!(entries(&task).len(), 2);
+}
+
+#[test]
 fn epic_plan_reports_counts_skips_done_cards_and_can_leave_planned_cards_alone() {
     let home = tempfile::tempdir().unwrap();
     waves_board(home.path());

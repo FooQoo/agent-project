@@ -235,6 +235,24 @@ impl FileStore {
         Ok(result)
     }
 
+    /// A description replacement that names a different `plannedVersion` is an explicit edit of
+    /// the plan: keep its value and record the change like any other. A replacement that omits
+    /// the key, or holds an unreadable one, leaves the plan alone.
+    pub(super) fn record_replacement_plan(
+        &self,
+        project: &ProjectId,
+        task: &mut TaskFile,
+        markdown: Option<&str>,
+        now: DateTime<Utc>,
+    ) -> Result<(), AgboardError> {
+        if let Some(Ok(Some(version))) =
+            markdown.map(crate::file_store::frontmatter::planned_version_of)
+        {
+            self.apply_version(project, task, Some(version), now)?;
+        }
+        Ok(())
+    }
+
     /// Put `target` on the task and record the change. Returns whether anything changed.
     pub(super) fn apply_version(
         &self,
