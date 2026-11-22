@@ -52,6 +52,21 @@ class Agboard < Formula
     end
   end
 
+  def caveats
+    <<~EOS
+      To check the board from your phone, Agent Board can connect through ngrok
+      or through Tailscale. Tailscale is optional and is not installed with this
+      formula. Install either the Tailscale Mac app (App Store or tailscale.com)
+      or the command-line tool:
+        brew install tailscale
+        sudo brew services start tailscale
+      The app and the command-line tool cannot run on the same Mac. Sign in, then
+      turn on MagicDNS and HTTPS Certificates in the Tailscale admin console:
+        https://login.tailscale.com/admin/dns
+      Details: {repo}/blob/main/docs/guide/watch/remote-access.md
+    EOS
+  end
+
   def install
     # The archive holds the signed binary as shipped. Install it untouched:
     # no strip, install_name_tool, lipo or re-signing here.
@@ -177,6 +192,7 @@ def self_test():
     expect("fixture render equals agboard.rb.expected", got == expected)
     expect("render is repeatable", got == render("v1.0.0", sums))
     expect("no latest URL", "latest" not in got)
+    expect("caveats mention Tailscale", "def caveats" in got and "brew install tailscale" in got and "MagicDNS" in got)
     expect("order of lines does not matter", got == render("v1.0.0", intel + "\n" + arm + "\n"))
     refused("missing intel", "v1.0.0", arm + "\n", "lacks agboard-1.0.0-x86_64-apple-darwin")
     refused("missing arm", "v1.0.0", intel + "\n", "lacks agboard-1.0.0-aarch64-apple-darwin")

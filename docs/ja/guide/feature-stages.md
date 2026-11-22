@@ -46,7 +46,7 @@ GAの機能には、この表示はありません。
 | 表示言語とテーマ | パソコン、リモートアクセス | 日本語と英語、24のテーマです。 | [設定](./watch/board#settings) |
 | エージェント向けのCLI・JSON出力・Hook・`wait` | Claude Code、Codex | Skillはインストールした`agboard`が出力し、プラグインはセッションの開始時に自分で更新されます。Codexのhookも、定義が`agboard`同梱のものと同じ間は、更新時に信頼されます。`agboard update`が必要なのは、自動更新が終わらなかったときと、プラグインを直したいときだけです。エージェントの起動は人が行います。 | [エージェントとの連携](./delegate/agents) |
 | `setup`と`update` | macOS。`PATH`上にClaude CodeかCodexがあり、GitHubへ接続できる環境 | ターミナルでは、どちらのコマンドも先に確認します。`--yes`はあらかじめ同意します。Claude CodeとCodexのプラグインコマンドに依存します。 | [エージェントとの連携](./delegate/agents#set-up-your-agents)、[CLIリファレンス](./reference/cli#setup-and-update) |
-| リモートアクセス | スマートフォン、タブレット、ほかのパソコンのブラウザ。ngrokを経由します。幅768px未満ではスマホ向けの画面、768px以上ではPCと同じボードになります。 | ngrokに依存し、HTTPSはngrokで終端されます。パソコンが起動していて、サーバーが動いている間だけ使えます。 | [リモートアクセス](./watch/remote-access) |
+| リモートアクセス | スマートフォン、タブレット、ほかのパソコンのブラウザ。ngrokまたはTailscaleを経由します。幅768px未満ではスマホ向けの画面、768px以上ではPCと同じボードになります。 | ngrokまたはTailscaleに依存します。ngrokではHTTPSがngrokで終端され、Tailscaleでは自分のTailscaleネットワークの端末からだけアドレスに届きます。パソコンが起動していて、サーバーが動いている間だけ使えます。 | [リモートアクセス](./watch/remote-access) |
 | 初回の案内 | パソコンとスマホのブラウザ | データ領域ごとに1回提示し、設定からもう一度表示できます。ブラウザの中で動き、ボードを変えることはありません。 | [初回の案内](./watch/board#the-first-run-guide) |
 
 ## パブリックプレビューの機能
