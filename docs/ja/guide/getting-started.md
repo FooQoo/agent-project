@@ -27,6 +27,12 @@ agpj --version
 
 Agent ProjectはMITライセンスで公開しています。ライセンスと、同梱する第三者コンポーネントの通知は、Homebrewのprefix配下の`share/agpj`（`$(brew --prefix)/share/agpj`）にインストールされます。
 
+## Agent Boardをお使いだった方へ
+
+Agent Projectは、Agent Boardの新しい名前です。インストールは`brew install fooqoo/tap/agpj`で、古いコマンドを置き換えるものではありません。これまでのプロジェクトを使い続けるには、データフォルダを`mv ~/.agent-board ~/.agent-project`で一度だけ移します。このガイドの環境変数とコマンドは、`AGBOARD_`と`agboard`を`AGPJ_`と`agpj`に読み替えてください。
+
+最後のAgent Board（v1.1.1）は、[FooQoo/agent-board](https://github.com/FooQoo/agent-board)と専用のサイト[fooqoo.github.io/agent-board](https://fooqoo.github.io/agent-board/)に残してあり、`brew install fooqoo/tap/agboard`で今もインストールできます。新しい開発はAgent Projectで行います。
+
 ## プロジェクトを作成する、またはフォルダを登録する {#create-or-bind-a-project}
 
 作業しているフォルダに移動します。プロジェクトは、登録したフォルダに属し、そのサブフォルダも同じプロジェクトを使います。フォルダごとに一度だけ行います。

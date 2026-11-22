@@ -70,6 +70,12 @@ See the [usage guide](https://fooqoo.github.io/agent-project/guide/) for editing
 
 </details>
 
+## Coming from Agent Board?
+
+Agent Project is the new name of Agent Board. The command is now `agpj`, the data folder is `~/.agent-project`, and the environment variables start with `AGPJ_`. Install it with `brew install fooqoo/tap/agpj`, and move an existing `~/.agent-board` folder to `~/.agent-project` to keep your projects.
+
+The Agent Board you may know (v1.1.1, with the `agboard` command) is kept as it was at [FooQoo/agent-board](https://github.com/FooQoo/agent-board), with its own site at [fooqoo.github.io/agent-board](https://fooqoo.github.io/agent-board/). `brew install fooqoo/tap/agboard` still installs that version. Development continues here, in Agent Project.
+
 ## Install
 
 Agent Project runs on macOS 15 or later, on Apple Silicon and Intel. Install it with [Homebrew](https://brew.sh). You do not need Rust or Node.js, and you do not build anything.
