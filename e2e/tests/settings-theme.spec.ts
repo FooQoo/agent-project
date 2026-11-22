@@ -704,6 +704,14 @@ test('a request that fails keeps what was typed, shows the reason, and can be se
   });
   await dragTaskTo(page, 16, 'Doing');
   await expect(page.locator('.transient-notice')).toHaveText('Could not move the task. It stays where it was.');
+  // #698: on a wide screen the notice is a card at the top right, below the header, with a close button.
+  const noticeBox = await page.locator('.transient-notice').boundingBox();
+  const wide = page.viewportSize();
+  if (!noticeBox || !wide) throw new Error('the notice has no box');
+  expect(noticeBox.x + noticeBox.width).toBeCloseTo(wide.width - 16, 0);
+  expect(noticeBox.y).toBeGreaterThanOrEqual(56);
+  await page.getByRole('button', { name: 'Dismiss message' }).click();
+  await expect(page.locator('.transient-notice')).toHaveCount(0);
   expect(listTasks(mainProject).find(({ id }) => id === 16)?.taskStatus).toBe('todo');
   await expect(lane(page, 'Todo').getByRole('button', { name: /^#16 / })).toBeVisible();
   moveFails = false;

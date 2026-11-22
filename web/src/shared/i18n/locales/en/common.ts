@@ -164,4 +164,7 @@ export const commonEn = {
       'This task was moved by another change, so it was not moved. It is now in {{status}}.',
     failed: 'Could not move the task. It stays where it was.',
   },
+  transientNotice: {
+    close: 'Dismiss message',
+  },
 } as const;

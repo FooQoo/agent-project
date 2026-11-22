@@ -66,6 +66,8 @@ Drag a task to another column to move it. The move is made at once, with no conf
 
 If an agent or another browser moved the task after the board last showed it, the move is not made. The card goes back to the column it was in (the one it is in now), and a short notice names that column. If the move fails for any other reason, the card also goes back and a notice says it stays where it was. Drag it again to move it from there.
 
+These short notices appear as a card at the top of the screen: at the top right on a wide screen, and at the top center on a phone, below the header. Each has an icon for what happened and a close button (**Dismiss message**), and it goes away by itself after a few seconds.
+
 The columns mean:
 
 | Column | Meaning |
