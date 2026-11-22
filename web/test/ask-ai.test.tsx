@@ -86,7 +86,7 @@ describe('the request body', () => {
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe(`/api/projects/${PROJECT}/messages/requests`);
     expect(init.method).toBe('POST');
-    expect(init.headers).toMatchObject({ 'X-Agboard-Token': 'test-token' });
+    expect(init.headers).toMatchObject({ 'X-Agpj-Token': 'test-token' });
     expect(init.body).toBeInstanceOf(FormData);
   });
 });

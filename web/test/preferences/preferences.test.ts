@@ -117,7 +117,7 @@ describe('savePreferences', () => {
     const init = calls[0]?.init as RequestInit;
     expect(init.method).toBe('PUT');
     expect(JSON.parse(init.body as string)).toEqual({ locale: 'ja' });
-    expect((init.headers as Record<string, string>)['X-Agboard-Token']).toBe('secret');
+    expect((init.headers as Record<string, string>)['X-Agpj-Token']).toBe('secret');
   });
 
   it('omits the token header when there is no token', async () => {
@@ -127,7 +127,7 @@ describe('savePreferences', () => {
       return jsonResponse(200, saved);
     }) as typeof fetch;
     await savePreferences({ url: '/api/preferences' }, { theme: saved.theme }, fetcher);
-    expect(headers).not.toHaveProperty('X-Agboard-Token');
+    expect(headers).not.toHaveProperty('X-Agpj-Token');
   });
 
   it('keeps the server code of a refused save', async () => {
@@ -171,12 +171,12 @@ describe('savePreferences with extra headers', () => {
       return jsonResponse(200, saved);
     }) as typeof fetch;
     await savePreferences(
-      { url: '/api/preferences', headers: async () => ({ 'X-Agboard-Csrf': 'csrf-1' }) },
+      { url: '/api/preferences', headers: async () => ({ 'X-Agpj-Csrf': 'csrf-1' }) },
       { locale: 'ja' },
       fetcher,
     );
-    expect(sent?.get('X-Agboard-Csrf')).toBe('csrf-1');
-    expect(sent?.get('X-Agboard-Token')).toBeNull();
+    expect(sent?.get('X-Agpj-Csrf')).toBe('csrf-1');
+    expect(sent?.get('X-Agpj-Token')).toBeNull();
   });
 
   it('reports a failing headers step as a failed save', async () => {

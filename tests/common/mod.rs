@@ -185,7 +185,7 @@ impl Running {
         vec![
             ("Origin".into(), format!("http://127.0.0.1:{}", self.port())),
             ("Sec-Fetch-Site".into(), "same-origin".into()),
-            ("X-Agboard-Token".into(), token.into()),
+            ("X-Agpj-Token".into(), token.into()),
         ]
     }
 

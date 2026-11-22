@@ -169,7 +169,7 @@ fn the_board_works_through_the_entrance_with_a_session_and_the_csrf_token() {
             ("Cookie", &session.cookie),
             ("Origin", ORIGIN),
             ("Sec-Fetch-Site", "same-origin"),
-            ("X-Agboard-Csrf", &session.csrf),
+            ("X-Agpj-Csrf", &session.csrf),
             ("Content-Type", "multipart/form-data; boundary=x"),
         ],
         "--x\r\nContent-Disposition: form-data; name=\"metadata\"\r\n\r\n{}\r\n--x--\r\n",
@@ -214,7 +214,7 @@ fn a_write_needs_the_session_the_origin_the_fetch_metadata_and_the_csrf_token() 
             ("Cookie", session.cookie.as_str()),
             ("Origin", ORIGIN),
             ("Sec-Fetch-Site", "same-origin"),
-            ("X-Agboard-Csrf", session.csrf.as_str()),
+            ("X-Agpj-Csrf", session.csrf.as_str()),
             ("Content-Type", "application/json"),
         ];
         headers.retain(|(name, _)| !extra.iter().any(|(n, _)| n == name));
@@ -222,8 +222,8 @@ fn a_write_needs_the_session_the_origin_the_fetch_metadata_and_the_csrf_token() 
         server.request("POST", &path, &headers, &body)
     };
     // Each condition removed or spoiled on its own.
-    assert_eq!(good(&[("X-Agboard-Csrf", "wrong")]).status, 403);
-    assert_eq!(good(&[("X-Agboard-Csrf", "")]).status, 403);
+    assert_eq!(good(&[("X-Agpj-Csrf", "wrong")]).status, 403);
+    assert_eq!(good(&[("X-Agpj-Csrf", "")]).status, 403);
     assert_eq!(good(&[("Origin", "https://evil.ngrok.app")]).status, 403);
     assert_eq!(good(&[("Sec-Fetch-Site", "cross-site")]).status, 403);
     assert_eq!(good(&[("Cookie", "agpj_remote_session=nope")]).status, 401);
@@ -235,7 +235,7 @@ fn a_write_needs_the_session_the_origin_the_fetch_metadata_and_the_csrf_token() 
             ("Cookie", &session.cookie),
             ("Origin", ORIGIN),
             ("Sec-Fetch-Site", "same-origin"),
-            ("X-Agboard-Token", "0000"),
+            ("X-Agpj-Token", "0000"),
             ("Content-Type", "application/json"),
         ],
         &body,
@@ -531,10 +531,10 @@ fn the_local_entrance_keeps_its_token_page_and_checks_with_the_tunnel_up() {
             ("Content-Type", "application/json".to_string()),
         ];
         if let Some(token) = token {
-            h.push(("X-Agboard-Token", token.to_string()));
+            h.push(("X-Agpj-Token", token.to_string()));
         }
         if csrf {
-            h.push(("X-Agboard-Csrf", "x".repeat(64)));
+            h.push(("X-Agpj-Csrf", "x".repeat(64)));
         }
         h
     };

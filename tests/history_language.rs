@@ -239,7 +239,7 @@ fn browser_language_reaches_saved_history_and_invalid_headers_fall_back_to_body(
         ("unknown", "Created task"),
     ] {
         let mut headers = running.page_headers(&running.token());
-        headers.push(("X-Agboard-Language".into(), setting.into()));
+        headers.push(("X-Agpj-Language".into(), setting.into()));
         let reply = running.request(
             "POST",
             &path,

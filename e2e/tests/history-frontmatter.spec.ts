@@ -237,7 +237,7 @@ test('saving a body edit after a concurrent lane change keeps the newest event a
 		const token = document.querySelector('meta[name="agboard-token"]')?.getAttribute('content') ?? '';
 		const response = await fetch(`/api/projects/${projectId}/tasks/${taskId}/move`, {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'X-Agboard-Token': token },
+			headers: { 'Content-Type': 'application/json', 'X-Agpj-Token': token },
 			body: JSON.stringify({ taskStatus: 'doing', reason: 'Concurrent lane update' }),
 		});
 		return response.status;

@@ -61,7 +61,7 @@ pub(super) async fn write_guard(
         || (path.starts_with("/api/projects/") && path.ends_with("/sessions/touch"));
     if reads || command_call || allowed {
         next.run(request).await
-    } else if request.headers().contains_key("x-agboard-token")
+    } else if request.headers().contains_key("x-agpj-token")
         && matches!(
             guard::write_refusal(request.headers(), context.port, &context.token),
             Some(guard::Denial::Token)

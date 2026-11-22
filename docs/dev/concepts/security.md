@@ -51,7 +51,7 @@ Anyone who can open the ngrok address reaches ngrok's Edge first, not the board.
 - The passcode, sessions, CSRF tokens, and the ngrok token live only in memory. Stopping, starting again, or restarting the server drops them, ends open event streams, and makes a new passcode with a clean count.
 - The ngrok token is accepted only in the body of the local start request, is never returned or written to the settings file, and, when the user chooses to keep it, is stored in the PC's secure storage (the OS credential store). The `NGROK_AUTHTOKEN` environment variable takes priority over a saved token.
 - **Traffic Inspector.** ngrok ends the HTTPS connection, so it can process traffic, and its Traffic Inspector keeps request and response details when **Full Capture** is enabled for the account. Agent Board cannot turn that off; the user checks that it is disabled in the ngrok dashboard under **Settings** → **Observability**.
-- Without a session the entry serves only the page shell and its static files, and none of them holds a token or board data; every API and the event stream answer 401 until a session exists. Unknown routes are 404 and disallowed methods are 405, and authentication is evaluated before the target is looked up. A change needs the exact public Origin, `Sec-Fetch-Site: same-origin`, and the session's CSRF token; the local `X-Agboard-Token` plays no part and is removed.
+- Without a session the entry serves only the page shell and its static files, and none of them holds a token or board data; every API and the event stream answer 401 until a session exists. Unknown routes are 404 and disallowed methods are 405, and authentication is evaluated before the target is looked up. A change needs the exact public Origin, `Sec-Fetch-Site: same-origin`, and the session's CSRF token; the local `X-Agpj-Token` plays no part and is removed.
 
 ## The Tailscale entrance
 
@@ -76,7 +76,7 @@ The local listener accepts a write (create, edit, draft toggle, epic create and 
 1. `Host` meets the local loopback condition.
 2. `Origin` is `http://127.0.0.1:<port>` or `http://localhost:<port>`.
 3. `Sec-Fetch-Site` is `same-origin`.
-4. `X-Agboard-Token` matches the token generated when this `serve` started (32 random bytes in hexadecimal). The token is embedded only in the HTML of `GET /` and never appears in `serve.json`, API responses, or logs.
+4. `X-Agpj-Token` matches the token generated when this `serve` started (32 random bytes in hexadecimal). The token is embedded only in the HTML of `GET /` and never appears in `serve.json`, API responses, or logs.
 
 The guard runs before the target is looked up, and the actor is always recorded as `human`. `POST /api/notify` only asks clients to re-fetch and needs no token.
 

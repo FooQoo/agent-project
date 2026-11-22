@@ -8,13 +8,13 @@ use std::time::Duration;
 use crate::domain::ProjectId;
 
 /// The stable key of the session that sends the stream request.
-pub const SESSION_HEADER: &str = "x-agboard-session";
+pub const SESSION_HEADER: &str = "x-agpj-session";
 /// `claude-code`, `codex` or `unknown`.
-pub const SESSION_TOOL_HEADER: &str = "x-agboard-session-tool";
+pub const SESSION_TOOL_HEADER: &str = "x-agpj-session-tool";
 /// `board` or `external`.
-pub const SESSION_ORIGIN_HEADER: &str = "x-agboard-session-origin";
+pub const SESSION_ORIGIN_HEADER: &str = "x-agpj-session-origin";
 /// The ID of the project the session waits on.
-pub const SESSION_PROJECT_HEADER: &str = "x-agboard-session-project";
+pub const SESSION_PROJECT_HEADER: &str = "x-agpj-session-project";
 
 /// How long a session whose stream closed stays in the count.
 pub const GRACE: Duration = Duration::from_secs(30);

@@ -79,7 +79,7 @@ test('E2E-3: the file API refuses traversal, absolute paths, links and other ext
   await page.goto('/');
   const token = (await page.locator('meta[name="agboard-token"]').getAttribute('content'))!;
   const base = `/api/projects/${projectId(mainProject)}/docs`;
-  const guard = { Origin: new URL(page.url()).origin, 'Sec-Fetch-Site': 'same-origin', 'X-Agboard-Token': token };
+  const guard = { Origin: new URL(page.url()).origin, 'Sec-Fetch-Site': 'same-origin', 'X-Agpj-Token': token };
   const bad = ['../secret.md', '../../etc/passwd', '/etc/passwd', 'product/../../x.md', 'linkdir/secret.md', 'link.md', 'note.txt', 'dir.md'];
 
   try {
@@ -102,7 +102,7 @@ test('E2E-3: the file API refuses traversal, absolute paths, links and other ext
 
     const good = { path: 'product/tasks.md', content: 'x', expectedRevision: 'x' };
     expect((await request.put(`${base}/file`, { headers: guard, data: good })).status()).toBe(405);
-    for (const headers of [{} as Record<string, string>, { 'X-Agboard-Token': token }, { Origin: guard.Origin, 'Sec-Fetch-Site': 'same-origin' }]) {
+    for (const headers of [{} as Record<string, string>, { 'X-Agpj-Token': token }, { Origin: guard.Origin, 'Sec-Fetch-Site': 'same-origin' }]) {
       const response = await request.post(`${base}/open`, { headers, params: { path: 'product/tasks.md' } });
       expect(response.status(), JSON.stringify(Object.keys(headers))).toBe(403);
     }

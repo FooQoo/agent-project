@@ -26,7 +26,7 @@ test('a token alone, a bad token, or a wrong Origin is not enough', async ({ pag
   const before = listTasks(mainProject);
 
   // The right token, but the request does not come from the page.
-  const tokenOnly = await request.delete(task15, { headers: { 'X-Agboard-Token': token! } });
+  const tokenOnly = await request.delete(task15, { headers: { 'X-Agpj-Token': token! } });
   expect(tokenOnly.status()).toBe(403);
 
   // The page's origin, but no token.
@@ -40,7 +40,7 @@ test('a token alone, a bad token, or a wrong Origin is not enough', async ({ pag
     headers: {
       Origin: mainOrigin(),
       'Sec-Fetch-Site': 'same-origin',
-      'X-Agboard-Token': '0'.repeat(64),
+      'X-Agpj-Token': '0'.repeat(64),
     },
   });
   expect(wrongToken.status()).toBe(403);
@@ -50,7 +50,7 @@ test('a token alone, a bad token, or a wrong Origin is not enough', async ({ pag
     headers: {
       Origin: 'http://example.com',
       'Sec-Fetch-Site': 'cross-site',
-      'X-Agboard-Token': token!,
+      'X-Agpj-Token': token!,
     },
   });
   expect(otherOrigin.status()).toBe(403);
@@ -93,7 +93,7 @@ async function fromPage(
       const meta = document.querySelector('meta[name="agboard-token"]')?.getAttribute('content') ?? '';
       const response = await fetch(path, {
         method,
-        headers: { 'Content-Type': 'application/json', 'X-Agboard-Token': token ?? meta },
+        headers: { 'Content-Type': 'application/json', 'X-Agpj-Token': token ?? meta },
         body: JSON.stringify(body),
       });
       return { status: response.status, body: await response.json().catch(() => ({})) };
@@ -117,12 +117,12 @@ test('the edit and the draft switch are refused without the guard, and nothing c
     // Nothing at all, the token only, an Origin only, a wrong token, and a foreign Origin with the right token.
     const attempts: Record<string, string>[] = [
       {},
-      { 'X-Agboard-Token': token },
+      { 'X-Agpj-Token': token },
       { Origin: mainOrigin(), 'Sec-Fetch-Site': 'same-origin' },
-      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'same-origin', 'X-Agboard-Token': '0'.repeat(64) },
-      { Origin: 'http://example.com', 'Sec-Fetch-Site': 'cross-site', 'X-Agboard-Token': token },
-      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'cross-site', 'X-Agboard-Token': token },
-      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'same-origin', 'X-Agboard-Token': token, Host: `evil.example:${mainPort()}` },
+      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'same-origin', 'X-Agpj-Token': '0'.repeat(64) },
+      { Origin: 'http://example.com', 'Sec-Fetch-Site': 'cross-site', 'X-Agpj-Token': token },
+      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'cross-site', 'X-Agpj-Token': token },
+      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'same-origin', 'X-Agpj-Token': token, Host: `evil.example:${mainPort()}` },
     ];
     for (const headers of attempts) {
       const response = await send(headers);

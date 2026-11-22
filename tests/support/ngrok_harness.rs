@@ -340,7 +340,7 @@ impl Server {
             &[
                 ("Origin", &origin),
                 ("Sec-Fetch-Site", "same-origin"),
-                ("X-Agboard-Token", &self.token),
+                ("X-Agpj-Token", &self.token),
                 ("Content-Type", "application/json"),
             ],
             &body.to_string(),

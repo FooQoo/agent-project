@@ -89,7 +89,7 @@ The Edge does nothing for the app to rely on: the endpoint is opened without a T
    - *Unlock.* The body is `{"code":"1234"}` as JSON, with the exact public Origin and `Sec-Fetch-Site: same-origin`; no CSRF token is needed because there is no session yet. The code is compared in constant time. A right code issues the cookie `agpj_remote_session` (`Secure; HttpOnly; SameSite=Lax; Path=/`, up to 12 hours) bound to this start and public address, resets the count, and returns a CSRF token. It also [registers the device](#registered-devices) with a second cookie, `agpj_remote_device`. A wrong code is a 403 `unlock_failed` that does not say how close it was or how many tries are left.
    - *The limit.* The fifth wrong code in a row is still a 403. From then on every attempt, the right passcode included, is a 429 `unlock_locked` and issues nothing. Only a new start makes a new passcode and a clean count. Requests refused for their headers or body (a missing Origin, a body that is not JSON) are not guesses and are not counted.
    - *Session.* `GET /api/remote/session` reports a live session and its CSRF token. Without one, a valid `agpj_remote_device` cookie opens a new session there, without the passcode; otherwise it answers 401 `session_required`. Every other route under `/api/` needs a live session, or answers 401 `session_required`. Event streams end with the session, when the run closes, and after five minutes (the page reconnects).
-3. **Write guard.** Any change (an answer, an edit, a move, a preferences save, and so on) also needs the exact public Origin, `Sec-Fetch-Site: same-origin`, and the CSRF token in `X-Agboard-Csrf`.
+3. **Write guard.** Any change (an answer, an edit, a move, a preferences save, and so on) also needs the exact public Origin, `Sec-Fetch-Site: same-origin`, and the CSRF token in `X-Agpj-Csrf`.
 
 A 4-digit passcode is a deliberately small secret: it has 10,000 possibilities and is guarded by the five-guess limit and by a new passcode at every start. It is weaker than an account sign-in. The [Security model](./security.md#what-is-not-prevented) lists what it does not stop.
 
@@ -125,8 +125,8 @@ The user-facing steps are in [Remote access](../../guide/watch/remote-access.md#
 
 - The page at `/` is the board's own page (`web/index.html`), rendered with an empty token. The same bundle shows the PC board or the phone screen by window width, so the entrance needs no second app.
 - On load, a page without a token asks `GET /api/remote/session` (`RemoteGate`, `web/src/app/remote/`). Without a session it shows the passcode screen (`ConnectionStateView`) and the board does not mount, so nothing is read. The passcode goes to `POST /api/remote/unlock`; the cookie is set by the server, and the CSRF token stays in memory (`setCsrfToken` in `web/src/shared/api/http.ts`).
-- Every write sends `authHeaders()`: the board token when the page has one, and otherwise `X-Agboard-Csrf`. A 401 from any board request clears the CSRF token and brings the passcode screen back.
-- The entrance builds the board router a second time (`api::remote_router`) without the local Host and write guards and without the local-only routes, and serves it behind the entrance checks. A client's `X-Agboard-Token` is removed before it gets there, so the board token has no role on this surface.
+- Every write sends `authHeaders()`: the board token when the page has one, and otherwise `X-Agpj-Csrf`. A 401 from any board request clears the CSRF token and brings the passcode screen back.
+- The entrance builds the board router a second time (`api::remote_router`) without the local Host and write guards and without the local-only routes, and serves it behind the entrance checks. A client's `X-Agpj-Token` is removed before it gets there, so the board token has no role on this surface.
 
 ## The old monitor addresses
 

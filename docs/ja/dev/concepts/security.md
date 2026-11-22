@@ -51,7 +51,7 @@ ngrokのアドレスを開ける人が最初に届くのは、ボードではな
 - 合言葉、session、CSRFトークン、ngrokのトークンはメモリーだけに置きます。停止、開始のやり直し、サーバーの再起動で破棄され、開いているイベントストリームも終わり、新しい合言葉と数え直した回数になります。
 - ngrokのトークンは、ローカルの開始要求の本文でだけ受け取り、返したり設定ファイルに書いたりしません。利用者が保存を選んだ場合は、このPCの安全な保管場所（OSの資格情報ストア）に保存します。環境変数`NGROK_AUTHTOKEN`は保存済みのトークンより優先されます。
 - **Traffic Inspector。** ngrokはHTTPSを終端するため通信を処理でき、アカウントで**Full Capture**が有効だと、Traffic Inspectorがリクエストとレスポンスの詳細を保持します。Agent Boardはこれを無効にできません。利用者が、ngrokのダッシュボードの**Settings** → **Observability**で無効であることを確認します。
-- sessionがないとき入口が配信するのは、ページの殻とその静的ファイルだけで、どれもトークンやボードのデータを持ちません。すべてのAPIとイベントストリームは、sessionができるまで401を返します。未知の経路は404、許可しないメソッドは405で、認証は対象を探す前に評価します。変更には、公開Originとの完全一致・`Sec-Fetch-Site: same-origin`・sessionのCSRFトークンが必要で、ローカルの`X-Agboard-Token`は役割を持たず、取り除きます。
+- sessionがないとき入口が配信するのは、ページの殻とその静的ファイルだけで、どれもトークンやボードのデータを持ちません。すべてのAPIとイベントストリームは、sessionができるまで401を返します。未知の経路は404、許可しないメソッドは405で、認証は対象を探す前に評価します。変更には、公開Originとの完全一致・`Sec-Fetch-Site: same-origin`・sessionのCSRFトークンが必要で、ローカルの`X-Agpj-Token`は役割を持たず、取り除きます。
 
 ## Tailscaleの入口
 
@@ -76,7 +76,7 @@ Serveは`Tailscale-User-Login`と`X-Forwarded-*`のヘッダーを付けます�
 1. `Host`がローカルのループバックの条件を満たす。
 2. `Origin`が`http://127.0.0.1:<port>`か`http://localhost:<port>`。
 3. `Sec-Fetch-Site`が`same-origin`。
-4. `X-Agboard-Token`が、この`serve`の起動時に生成したトークン（32バイトの乱数の16進表記）と一致する。トークンは`GET /`のHTMLにだけ埋め込み、`serve.json`・APIの応答・ログには出さない。
+4. `X-Agpj-Token`が、この`serve`の起動時に生成したトークン（32バイトの乱数の16進表記）と一致する。トークンは`GET /`のHTMLにだけ埋め込み、`serve.json`・APIの応答・ログには出さない。
 
 保護は対象を探す前に行い、actorは常に`human`として記録します。`POST /api/notify`はクライアントに再取得を促すだけなので、トークンは要りません。
 

@@ -288,7 +288,7 @@ impl Running {
         vec![
             ("Origin".into(), format!("http://127.0.0.1:{}", self.port())),
             ("Sec-Fetch-Site".into(), "same-origin".into()),
-            ("X-Agboard-Token".into(), token.into()),
+            ("X-Agpj-Token".into(), token.into()),
         ]
     }
 
@@ -1163,7 +1163,7 @@ fn localhost_origin_and_host_also_delete() {
             ("Host", host.as_str()),
             ("Origin", origin.as_str()),
             ("Sec-Fetch-Site", "same-origin"),
-            ("X-Agboard-Token", token.as_str()),
+            ("X-Agpj-Token", token.as_str()),
         ],
     );
     assert_eq!(reply.status, 204);
@@ -1224,7 +1224,7 @@ fn a_delete_missing_any_one_condition_is_403_and_the_task_remains() {
             headers.push(("Sec-Fetch-Site", v));
         }
         if let Some(v) = token {
-            headers.push(("X-Agboard-Token", v));
+            headers.push(("X-Agpj-Token", v));
         }
         let reply = server.send("DELETE", &server.api("/tasks/1"), &headers);
         assert_eq!(reply.status, 403, "{name}");

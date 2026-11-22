@@ -178,7 +178,7 @@ impl Running {
         vec![
             ("Origin".into(), format!("http://127.0.0.1:{}", self.port())),
             ("Sec-Fetch-Site".into(), "same-origin".into()),
-            ("X-Agboard-Token".into(), token.into()),
+            ("X-Agpj-Token".into(), token.into()),
         ]
     }
 
@@ -915,7 +915,7 @@ fn a_guard_violation_is_403_for_existing_and_missing_projects_alike() {
         let mut headers = vec![
             ("Origin".to_string(), format!("http://127.0.0.1:{port}")),
             ("Sec-Fetch-Site".to_string(), "same-origin".to_string()),
-            ("X-Agboard-Token".to_string(), token.clone()),
+            ("X-Agpj-Token".to_string(), token.clone()),
         ];
         headers.retain(|(name, _)| name != skip);
         headers
@@ -930,8 +930,8 @@ fn a_guard_violation_is_403_for_existing_and_missing_projects_alike() {
         ("bad origin", wrong("Origin", "http://evil.example")),
         ("no fetch site", good("Sec-Fetch-Site")),
         ("cross-site", wrong("Sec-Fetch-Site", "cross-site")),
-        ("no token", good("X-Agboard-Token")),
-        ("bad token", wrong("X-Agboard-Token", &"0".repeat(64))),
+        ("no token", good("X-Agpj-Token")),
+        ("bad token", wrong("X-Agpj-Token", &"0".repeat(64))),
         ("bad host", {
             let mut headers = good("");
             headers.push(("Host".to_string(), "evil.example".to_string()));

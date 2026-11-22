@@ -9,7 +9,7 @@ export async function postEmpty(path: string): Promise<{ task: Task }> {
     method: 'POST',
     headers: {
       ...authHeaders(),
-      'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+      'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
     },
   });
   const body = (await response.json()) as { task?: Task; error?: ApiError['error'] };
@@ -29,7 +29,7 @@ export async function postTask<T>(path: string, value: unknown): Promise<T> {
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
-      'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+      'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
     },
     body: JSON.stringify(value),
   });
@@ -56,7 +56,7 @@ export async function postForm<T>(path: string, form: FormData): Promise<T> {
     method: 'POST',
     headers: {
       ...authHeaders(),
-      'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+      'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
     },
     body: form,
   });
@@ -99,7 +99,7 @@ export async function sendMultipart(path: string, body: FormData, method: 'POST'
     method,
     headers: {
       ...authHeaders(),
-      'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+      'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
     },
     body,
   });
@@ -125,7 +125,7 @@ export async function sendTask(
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
-      'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+      'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
     },
     body: JSON.stringify(value),
   });

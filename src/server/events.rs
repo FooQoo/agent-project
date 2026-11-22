@@ -24,7 +24,7 @@ const KEEP_ALIVE: Duration = Duration::from_secs(15);
 
 /// The header a command that waits sends with its stream request, so that its
 /// stream is not taken for a board page in a browser.
-pub(crate) const WAITING_COMMAND_HEADER: &str = "x-agboard-wait";
+pub(crate) const WAITING_COMMAND_HEADER: &str = "x-agpj-wait";
 
 /// `ready` right after connecting, carrying the board's build ID, then
 /// `changed` for every change, with the project, the changed resources and their facets, the

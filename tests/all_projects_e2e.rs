@@ -312,7 +312,7 @@ impl Serve {
         let headers = vec![
             ("Origin".to_string(), format!("http://{}", self.addr)),
             ("Sec-Fetch-Site".to_string(), "same-origin".to_string()),
-            ("X-Agboard-Token".to_string(), self.token()),
+            ("X-Agpj-Token".to_string(), self.token()),
         ];
         self.request("POST", path, Some(body), &headers)
     }

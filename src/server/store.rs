@@ -31,7 +31,7 @@ pub(crate) async fn with_request_files<T: Send + 'static>(
     headers: &HeaderMap,
     work: impl FnOnce(FileStore) -> Result<T, AgpjError> + Send + 'static,
 ) -> Result<T, AgpjError> {
-    let language = header_text(headers, "x-agboard-language")
+    let language = header_text(headers, "x-agpj-language")
         .and_then(crate::file_store::history_language::HistoryLanguage::from_setting);
     with_files(state, move |store| {
         work(store.with_history_language(language))

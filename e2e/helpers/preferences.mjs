@@ -10,7 +10,7 @@ export async function setPreferences(origin, patch) {
       'Content-Type': 'application/json',
       Origin: origin,
       'Sec-Fetch-Site': 'same-origin',
-      'X-Agboard-Token': token,
+      'X-Agpj-Token': token,
     },
     body: JSON.stringify(patch),
   });

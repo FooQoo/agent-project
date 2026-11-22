@@ -321,7 +321,7 @@ impl Server {
             .header("Sec-Fetch-Site", "same-origin")
             .header("Content-Type", "application/json");
         if let Some(token) = token {
-            request = request.header("X-Agboard-Token", token);
+            request = request.header("X-Agpj-Token", token);
         }
         let mut response = request.send(body.to_string()).unwrap();
         let status = response.status().as_u16();

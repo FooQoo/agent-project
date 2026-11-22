@@ -130,7 +130,7 @@ Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登�
 
 ボードが起動したセッションは自動承認でヘッドレスに動くので、人への質問はボードの`message ask --no-wait`だけで行い、ターンを終えます。回答は`answers`メッセージとして押し込まれます。
 
-ボードは、自分を使っている外部のセッションを2通りの方法で数えます。`wait --until task`は、どのセッションが待っているかをサーバーに伝えます。イベントストリームのリクエストに、セッションのキー、ツール、起動元、プロジェクトのIDを`X-Agboard-Session*`ヘッダーで付けます（[張り付いたセッション](../reference/web-api.md#張り付いたセッション)を参照）。出力するJSONは変わりません。ほかの`agboard`コマンドと`agboard hook`の実行（フックはエージェントがツールを使うたびに動きます）も、待機するかどうかにかかわらずセッションを報告します。コマンドがプロジェクトを特定したあと、`src/agent/session_touch.rs`が同じヘッダーを付けた`POST /api/projects/{id}/sessions/touch`を、`serve.json`が指すサーバーへ1回送ります。ボードが起動したセッションは報告しません。サーバーが自分で数に加えるからです（[pushモード](#push-mode)を参照）。コマンドは自分の環境変数から下の値を読み、環境からはそれ以外を送りません。
+ボードは、自分を使っている外部のセッションを2通りの方法で数えます。`wait --until task`は、どのセッションが待っているかをサーバーに伝えます。イベントストリームのリクエストに、セッションのキー、ツール、起動元、プロジェクトのIDを`X-Agpj-Session*`ヘッダーで付けます（[張り付いたセッション](../reference/web-api.md#張り付いたセッション)を参照）。出力するJSONは変わりません。ほかの`agboard`コマンドと`agboard hook`の実行（フックはエージェントがツールを使うたびに動きます）も、待機するかどうかにかかわらずセッションを報告します。コマンドがプロジェクトを特定したあと、`src/agent/session_touch.rs`が同じヘッダーを付けた`POST /api/projects/{id}/sessions/touch`を、`serve.json`が指すサーバーへ1回送ります。ボードが起動したセッションは報告しません。サーバーが自分で数に加えるからです（[pushモード](#push-mode)を参照）。コマンドは自分の環境変数から下の値を読み、環境からはそれ以外を送りません。
 
 - 起動元: `AGPJ_RESIDENT_ID`が設定されていれば（ボードの起動処理が設定します）`board`、なければ`external`です。
 - ツール: `AGPJ_SESSION_TOOL`（`claude-code`または`codex`。ボードの起動処理が設定します）があれば、それが優先されます。なければ`CLAUDECODE`または`CLAUDE_CODE_SESSION_ID`があれば`claude-code`、`CODEX_THREAD_ID`、`CODEX_SANDBOX`、`CODEX_SANDBOX_NETWORK_DISABLED`のいずれかがあれば`codex`、どれもなければ`unknown`です。`CODEX_COMPANION_SESSION_ID`はClaude Codeのプラグインの変数でCodexのものではないため、使いません。

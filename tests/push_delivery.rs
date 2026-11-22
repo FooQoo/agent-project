@@ -164,7 +164,7 @@ fn subscribed_phone(s: &Server) -> Phone {
             ("Origin", PUBLIC),
             ("Sec-Fetch-Site", "same-origin"),
             ("Content-Type", "application/json"),
-            ("X-Agboard-Csrf", &csrf),
+            ("X-Agpj-Csrf", &csrf),
         ],
         &body.to_string(),
     );

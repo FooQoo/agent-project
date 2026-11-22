@@ -47,7 +47,7 @@ async function send<T>(method: 'POST' | 'PUT', path: string, value: unknown): Pr
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
-      'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+      'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
     },
     body: JSON.stringify(value),
   });

@@ -172,7 +172,7 @@ describe('App', () => {
     expect(screen.getByText('7 tasks')).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledWith(`/api/projects/${PROJECT_A.id}/tasks/14/archive`, {
       method: 'POST',
-      headers: { 'X-Agboard-Token': 'test-token', 'X-Agboard-Language': 'en' },
+      headers: { 'X-Agpj-Token': 'test-token', 'X-Agpj-Language': 'en' },
     });
   });
 

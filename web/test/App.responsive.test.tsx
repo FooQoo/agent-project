@@ -150,7 +150,7 @@ describe('writes from the phone screen go to the board routes', () => {
     expect(JSON.parse(String(init?.body))).toMatchObject({
       answers: [{ questionId: pendingTask?.pendingRequestId, text: 'Go ahead' }],
     });
-    expect(new Headers(init?.headers).get('X-Agboard-Token')).toBe('test-token');
+    expect(new Headers(init?.headers).get('X-Agpj-Token')).toBe('test-token');
     expect(fetchMock.mock.calls.some(([target]) => String(target).includes('/monitor/api'))).toBe(
       false,
     );
@@ -171,7 +171,7 @@ describe('writes from the phone screen go to the board routes', () => {
     const [url, init] = requests('PUT')[0] ?? [];
     expect(url).toBe(`/api/projects/${PROJECT_A.id}/tasks/90/acceptance/c1`);
     expect(JSON.parse(String(init?.body))).toEqual({ done: true });
-    expect(new Headers(init?.headers).get('X-Agboard-Token')).toBe('test-token');
+    expect(new Headers(init?.headers).get('X-Agpj-Token')).toBe('test-token');
   });
 
   it('saves the language through the board preferences route', async () => {
@@ -193,6 +193,6 @@ describe('writes from the phone screen go to the board routes', () => {
     const [url, init] = requests('PUT')[0] ?? [];
     expect(url).toBe('/api/preferences');
     expect(JSON.parse(String(init?.body))).toMatchObject({ locale: 'ja' });
-    expect(new Headers(init?.headers).get('X-Agboard-Token')).toBe('test-token');
+    expect(new Headers(init?.headers).get('X-Agpj-Token')).toBe('test-token');
   });
 });

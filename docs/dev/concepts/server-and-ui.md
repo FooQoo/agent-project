@@ -41,7 +41,7 @@ An automatic server opens the board of the project it was started for, once. The
 
 - The command that starts the server passes the project ID as the hidden `serve --auto --open-board=<projectId>`: a waiting command passes the project it follows, `message ask` and `message wait` the project of the questions, and the hook the project of the progress table it printed. `agboard open` passes none, because it opens the page itself.
 - Once the server is ready and has released `autostart.lock`, a thread waits 3 seconds (`AGPJ_OPEN_GRACE_MS` changes it for the tests, up to 60,000 ms). Then it opens `http://127.0.0.1:<port>/?project=<projectId>` unless a board page has connected since the start. A tab that connected and closed again still counts, because it may reconnect.
-- A board page is a `GET /api/events` stream without the `X-Agboard-Wait` header. The waiting commands send that header, so their own stream, which opens right after the start, is not taken for a tab. A phone's page through the ngrok entrance is the same stream behind the session and counts the same way.
+- A board page is a `GET /api/events` stream without the `X-Agpj-Wait` header. The waiting commands send that header, so their own stream, which opens right after the start, is not taken for a tab. A phone's page through the ngrok entrance is the same stream behind the session and counts the same way.
 - `src/interact/browser.rs` decides whether a browser can be opened, in this order: `AGPJ_OPEN_BROWSER=0` opens nothing; `AGPJ_BROWSER_OPENER` names a program that replaces the system's opener; `SSH_CONNECTION` or `SSH_TTY` opens nothing; on systems other than macOS and Windows, no `DISPLAY` and no `WAYLAND_DISPLAY` opens nothing. Otherwise it runs `open` (macOS), `explorer` (Windows), or `xdg-open`, with the address as its only argument and no shell, and does not wait for it.
 - The outcome is one line in `serve.log`: `Opened … in the browser.`, `Did not open … in the browser.` with the reason, or `Could not open …` when the program could not be started.
 - Like starting a server, only the `agboard` command line opens a browser; the library embedded in a test never does. The tests set `AGPJ_OPEN_BROWSER=0`, and the tests of opening point `AGPJ_BROWSER_OPENER` at a script that records the address.
@@ -57,7 +57,7 @@ An automatic server opens the board of the project it was started for, once. The
 An automatic server is in use while any of these is true:
 
 - a request other than `GET /api/health` arrived within the idle time;
-- an event stream (`GET /api/events`) is open: a browser tab, a `wait`, or a question that waits (the waiting commands mark theirs with the `X-Agboard-Wait` header, see [Opening the board](#opening-the-board));
+- an event stream (`GET /api/events`) is open: a browser tab, a `wait`, or a question that waits (the waiting commands mark theirs with the `X-Agpj-Wait` header, see [Opening the board](#opening-the-board));
 - the remote access connection is starting, ready, reconnecting, or stopping;
 - the file watcher saw a change to the board or the Docs within the idle time, so an agent that edits files keeps the server running for automatic Done.
 
@@ -74,7 +74,7 @@ The idle time is 30 minutes; `AGPJ_IDLE_TIMEOUT` sets it from 60 to 86400 second
 Every request goes through the same steps:
 
 1. **Host check.** Only `127.0.0.1:<port>` or `localhost:<port>` is accepted.
-2. **Write guard** (writes only). `Origin`, `Sec-Fetch-Site: same-origin`, and `X-Agboard-Token` must all match (see [Security model](./security.md#writes-from-the-browser)). Guards run **before** the target is looked up, so a forged request learns nothing about what exists.
+2. **Write guard** (writes only). `Origin`, `Sec-Fetch-Site: same-origin`, and `X-Agpj-Token` must all match (see [Security model](./security.md#writes-from-the-browser)). Guards run **before** the target is looked up, so a forged request learns nothing about what exists.
 3. **The operation.** Reads come from the in-memory index. Writes take the project write lock, read the latest files, commit `task.json` and `TASK.md` as one pair, and trigger a reload and notification only when something changed (see [Storage and consistency](./saving-and-recovery.md#saving-a-task)).
 
 Writes always target the ProjectId in the URL. The web `actor` is always `human`; it is never taken from the request. There are no unscoped routes such as `/api/board`, no compatibility aliases, and no HTTP API for creating, renaming, or deleting projects.

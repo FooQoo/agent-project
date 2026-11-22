@@ -117,7 +117,7 @@ fn a_write_from_another_origin_is_refused() {
         &[
             ("Origin".into(), "http://evil.example".into()),
             ("Sec-Fetch-Site".into(), "cross-site".into()),
-            ("X-Agboard-Token".into(), token),
+            ("X-Agpj-Token".into(), token),
         ],
         Some("application/json"),
     );

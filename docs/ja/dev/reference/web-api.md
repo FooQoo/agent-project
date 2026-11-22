@@ -2,11 +2,11 @@
 
 `agboard serve`のHTTP APIです。書き込みの保護を含むリクエストの処理は、[サーバーと画面](../concepts/server-and-ui.md)で説明しています。
 
-タスクの書き込みでは、自動生成する履歴の言語を`X-Agboard-Language: en`または`ja`で指定できます。ボードは現在の画面言語を送ります。未指定・重複・未対応の値では、本文の言語に従います。そのリクエストで自動生成する文章だけが対象で、明示した理由と保存済みの履歴は変わりません。[履歴](../concepts/history-and-decisions.md#履歴)を参照してください。
+タスクの書き込みでは、自動生成する履歴の言語を`X-Agpj-Language: en`または`ja`で指定できます。ボードは現在の画面言語を送ります。未指定・重複・未対応の値では、本文の言語に従います。そのリクエストで自動生成する文章だけが対象で、明示した理由と保存済みの履歴は変わりません。[履歴](../concepts/history-and-decisions.md#履歴)を参照してください。
 
 ## ngrokの入口から使う
 
-ngrokの入口は、ボードのページと以下のルートを同じパスで配信します。ローカルのHost・Origin・トークンの検査の代わりに、合言葉のsessionの背後に置きます。そこのページはトークンを持ちません。変更にはsessionのCSRFトークンを`X-Agboard-Csrf`で送り、sessionは`/api/remote/session`と`/api/remote/unlock`で開きます。この2つの経路と、入口が配信しないもの（接続設定、`POST /api/notify`、`docs/open`）は、[入口のルート](./remote-routes.md#入口から使うボードのアプリ)を参照してください。
+ngrokの入口は、ボードのページと以下のルートを同じパスで配信します。ローカルのHost・Origin・トークンの検査の代わりに、合言葉のsessionの背後に置きます。そこのページはトークンを持ちません。変更にはsessionのCSRFトークンを`X-Agpj-Csrf`で送り、sessionは`/api/remote/session`と`/api/remote/unlock`で開きます。この2つの経路と、入口が配信しないもの（接続設定、`POST /api/notify`、`docs/open`）は、[入口のルート](./remote-routes.md#入口から使うボードのアプリ)を参照してください。
 
 ## エンドポイント
 
@@ -169,10 +169,10 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 
 | ヘッダー | 値 |
 | --- | --- |
-| `X-Agboard-Session` | セッションのキー。`A-Z a-z 0-9 . _ : -`の1〜64文字。 |
-| `X-Agboard-Session-Project` | プロジェクトのID。 |
-| `X-Agboard-Session-Tool` | `claude-code`、`codex`、`unknown`のいずれか。 |
-| `X-Agboard-Session-Origin` | `board`または`external`。 |
+| `X-Agpj-Session` | セッションのキー。`A-Z a-z 0-9 . _ : -`の1〜64文字。 |
+| `X-Agpj-Session-Project` | プロジェクトのID。 |
+| `X-Agpj-Session-Tool` | `claude-code`、`codex`、`unknown`のいずれか。 |
+| `X-Agpj-Session-Origin` | `board`または`external`。 |
 
 起動の上限は起動処理が持ちます。生きている子プロセスや待っている再起動があるときは起動を拒否し、起動処理が知らないボード起動元の待機を`SessionRegistry::check_board_launch()`が見つけたときも拒否します。ボードが起動したセッションは、2つのツールと全プロジェクトを通して全体で1つまでです。拒否の理由には、枠を持っているツールが入ります。外部のセッションには上限がなく、この上限の数にも入りません。`AGPJ_SESSION_GRACE_MS`は、30秒の猶予を指定したミリ秒に置き換えます。テストで使います。5分の窓は固定です。
 
@@ -272,7 +272,7 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 {"locale": "ja", "theme": {"mode": "dark", "accent": "teal"}}
 ```
 
-保存に成功すると保存した内容を返し、開いているイベントストリームすべてに`preferences`イベントを送ります。対象は`/api/events`です。イベントのデータは`GET`と同じJSONです。PCの`PUT`は、ほかのPCの書き込みと同じ書き込みの保護（Host・Origin・`Sec-Fetch-Site: same-origin`・`X-Agboard-Token`）を通ります。ngrokの入口を通す`PUT`は、回答と同じくsessionとCSRFトークンが必要です。
+保存に成功すると保存した内容を返し、開いているイベントストリームすべてに`preferences`イベントを送ります。対象は`/api/events`です。イベントのデータは`GET`と同じJSONです。PCの`PUT`は、ほかのPCの書き込みと同じ書き込みの保護（Host・Origin・`Sec-Fetch-Site: same-origin`・`X-Agpj-Token`）を通ります。ngrokの入口を通す`PUT`は、回答と同じくsessionとCSRFトークンが必要です。
 
 JSONとして読めない本文は、ほかの書き込みと同じく400です。`locale`と`theme`のどちらもない本文、それ以外の項目を含む本文、許可されない値は422 `invalid_preferences`です。revisionの確認はなく、後から保存した内容が優先されます。
 

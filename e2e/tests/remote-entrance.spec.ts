@@ -291,7 +291,7 @@ test('nothing is read or answered without a session, and a replaced tunnel needs
     expect(response.headers()['set-cookie']).toBeUndefined();
   }
   const forged = await bare.post(`${base}/projects/${alpha}/messages/answers`, {
-    headers: { Cookie: 'agpj_remote_session=' + '0'.repeat(64), 'X-Agboard-Csrf': '0'.repeat(64) },
+    headers: { Cookie: 'agpj_remote_session=' + '0'.repeat(64), 'X-Agpj-Csrf': '0'.repeat(64) },
     data: { answers: [{ questionId: 'Q-1', text: 'forged' }] },
   });
   expect(forged.status()).toBe(401);

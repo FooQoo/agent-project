@@ -2,11 +2,11 @@
 
 The HTTP API of `agboard serve`. How a request is handled, including the write guard, is described in [Server and web UI](../concepts/server-and-ui.md).
 
-Task writes accept optional `X-Agboard-Language: en` or `ja` for generated history. The board sends its current UI language. Missing, repeated, or unsupported values fall back to the task body’s language. This affects only generated text for that request; explicit reasons and stored history stay unchanged. See [History](../concepts/history-and-decisions.md#history).
+Task writes accept optional `X-Agpj-Language: en` or `ja` for generated history. The board sends its current UI language. Missing, repeated, or unsupported values fall back to the task body’s language. This affects only generated text for that request; explicit reasons and stored history stay unchanged. See [History](../concepts/history-and-decisions.md#history).
 
 ## Through the ngrok entrance
 
-The ngrok entrance serves the board page and the routes below under the same paths, behind a passcode session instead of the local Host, Origin, and token checks. The page there holds no token. A change sends the session's CSRF token in `X-Agboard-Csrf`, and the session is opened with `/api/remote/session` and `/api/remote/unlock`. See [Entrance routes](./remote-routes.md#the-board-app-through-the-entrance) for those two routes and for what the entrance does not serve (the connection settings, `POST /api/notify`, and `docs/open`).
+The ngrok entrance serves the board page and the routes below under the same paths, behind a passcode session instead of the local Host, Origin, and token checks. The page there holds no token. A change sends the session's CSRF token in `X-Agpj-Csrf`, and the session is opened with `/api/remote/session` and `/api/remote/unlock`. See [Entrance routes](./remote-routes.md#the-board-app-through-the-entrance) for those two routes and for what the entrance does not serve (the connection settings, `POST /api/notify`, and `docs/open`).
 
 ## Endpoints
 
@@ -169,10 +169,10 @@ How a session names itself: a command that waits for tasks sends four headers wi
 
 | Header | Value |
 | --- | --- |
-| `X-Agboard-Session` | The session key: 1 to 64 characters of `A-Z a-z 0-9 . _ : -`. |
-| `X-Agboard-Session-Project` | The project's ID. |
-| `X-Agboard-Session-Tool` | `claude-code`, `codex`, or `unknown`. |
-| `X-Agboard-Session-Origin` | `board` or `external`. |
+| `X-Agpj-Session` | The session key: 1 to 64 characters of `A-Z a-z 0-9 . _ : -`. |
+| `X-Agpj-Session-Project` | The project's ID. |
+| `X-Agpj-Session-Tool` | `claude-code`, `codex`, or `unknown`. |
+| `X-Agpj-Session-Origin` | `board` or `external`. |
 
 The limit on launching is held by the launcher: it refuses a launch while it has a live child or a waiting restart, and also when `SessionRegistry::check_board_launch()` finds a board-origin wait of a session it does not know. Board-launched sessions are limited to one in total, over both tools and all projects. The refusal names the tool that holds the slot. External sessions are never limited or counted against the limit. `AGPJ_SESSION_GRACE_MS` replaces the 30-second grace period with a number of milliseconds; tests use it. The five-minute access window is fixed.
 
@@ -272,7 +272,7 @@ A start reports its progress through this state; poll `GET` until `status` leave
 {"locale": "ja", "theme": {"mode": "dark", "accent": "teal"}}
 ```
 
-A save that succeeds returns the saved preferences and sends a `preferences` event to every open events stream of `/api/events`. The event's data is the same JSON as `GET`. The PC `PUT` passes the same write guard as the other PC writes (Host, Origin, `Sec-Fetch-Site: same-origin`, and `X-Agboard-Token`). Through the ngrok entrance the `PUT` needs the session and the CSRF token, like an answer.
+A save that succeeds returns the saved preferences and sends a `preferences` event to every open events stream of `/api/events`. The event's data is the same JSON as `GET`. The PC `PUT` passes the same write guard as the other PC writes (Host, Origin, `Sec-Fetch-Site: same-origin`, and `X-Agpj-Token`). Through the ngrok entrance the `PUT` needs the session and the CSRF token, like an answer.
 
 A malformed JSON body is 400, as for other writes. A body with neither field, a field other than `locale` and `theme`, or a value that is not allowed is 422 `invalid_preferences`. There is no revision check: the last save wins.
 

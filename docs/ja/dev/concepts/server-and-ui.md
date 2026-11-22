@@ -41,7 +41,7 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 
 - サーバーを起動するコマンドは、隠しオプション`serve --auto --open-board=<projectId>`でプロジェクトIDを渡します。待つコマンドは待っているプロジェクト、`message ask`と`message wait`は質問のプロジェクト、Hookは出力した進行表のプロジェクトを渡します。`agboard open`は自分でページを開くので、何も渡しません。
 - サーバーの準備ができて`autostart.lock`を外した後、スレッドが3秒待ちます（試験では`AGPJ_OPEN_GRACE_MS`で変えられ、上限は60,000ミリ秒）。起動してからボードのページが一度もつながっていなければ、`http://127.0.0.1:<port>/?project=<projectId>`を開きます。つながってから閉じたタブも、つながり直すかもしれないので数に入れます。
-- ボードのページとは、`X-Agboard-Wait`ヘッダーのない`GET /api/events`のストリームです。待つコマンドはこのヘッダーを付けるので、起動の直後に開く自分のストリームがタブと取り違えられることはありません。スマホのページがngrokの入口を通して開くのは、sessionの背後にある同じストリームで、同じように数えます。
+- ボードのページとは、`X-Agpj-Wait`ヘッダーのない`GET /api/events`のストリームです。待つコマンドはこのヘッダーを付けるので、起動の直後に開く自分のストリームがタブと取り違えられることはありません。スマホのページがngrokの入口を通して開くのは、sessionの背後にある同じストリームで、同じように数えます。
 - ブラウザーを開けるかどうかは`src/interact/browser.rs`が次の順で決めます。`AGPJ_OPEN_BROWSER=0`なら開きません。`AGPJ_BROWSER_OPENER`があれば、そのプログラムをシステムのものの代わりに使います。`SSH_CONNECTION`か`SSH_TTY`があれば開きません。macOSとWindows以外では、`DISPLAY`も`WAYLAND_DISPLAY`もなければ開きません。それ以外なら`open`（macOS）、`explorer`（Windows）、`xdg-open`を、アドレスだけを引数にしてシェルを通さずに起動し、終わるのを待ちません。
 - 結果は`serve.log`に1行残ります。`Opened … in the browser.`、理由つきの`Did not open … in the browser.`、プログラムを起動できなかったときの`Could not open …`のどれかです。
 - サーバーの起動と同じく、ブラウザーを開くのは`agboard`のコマンドラインだけで、試験に組み込んだライブラリは開きません。試験は`AGPJ_OPEN_BROWSER=0`を設定し、開く処理の試験は`AGPJ_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。
@@ -57,7 +57,7 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 自動のサーバーは、次のどれかに当てはまる間は「使われている」とみなします。
 
 - `GET /api/health`以外のリクエストが、使われない時間の上限内に届いた。
-- イベントストリーム（`GET /api/events`）が開いている。ブラウザーのタブ、`wait`、答えを待つ質問がこれに当たります（待つコマンドは自分のストリームに`X-Agboard-Wait`ヘッダーを付けます。[ボードを開く](#opening-the-board)を参照）。
+- イベントストリーム（`GET /api/events`）が開いている。ブラウザーのタブ、`wait`、答えを待つ質問がこれに当たります（待つコマンドは自分のストリームに`X-Agpj-Wait`ヘッダーを付けます。[ボードを開く](#opening-the-board)を参照）。
 - 携帯モニターの接続が、開始中・接続済み・再接続中・停止中のどれかである。
 - ファイルの監視が、上限内にボードかDocsの変更を見つけた。ファイルを直接編集するエージェントのために、自動Doneが働くようサーバーを残します。
 
@@ -74,7 +74,7 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 リクエストは、次の順序で処理します。
 
 1. **Hostの確認。** `127.0.0.1:<port>`か`localhost:<port>`だけを受け付けます。
-2. **書き込みの保護**（書き込みのみ）。`Origin`・`Sec-Fetch-Site: same-origin`・`X-Agboard-Token`がすべて一致しなければなりません（[セキュリティモデル](./security.md#ブラウザからの書き込み)を参照）。これらの検証は対象データを検索する**前**に行うため、不正なリクエストからデータの存在を探ることもできません。
+2. **書き込みの保護**（書き込みのみ）。`Origin`・`Sec-Fetch-Site: same-origin`・`X-Agpj-Token`がすべて一致しなければなりません（[セキュリティモデル](./security.md#ブラウザからの書き込み)を参照）。これらの検証は対象データを検索する**前**に行うため、不正なリクエストからデータの存在を探ることもできません。
 3. **操作。** 読み込みはメモリ上の索引から返します。書き込みはプロジェクトの書き込みロックを取って最新のファイルを読み、`task.json`と`TASK.md`を一組で確定し、何かが変わったときだけ再読み込みと通知を起こします（[保存と復旧](./saving-and-recovery.md#タスクの保存)を参照）。
 
 書き込みの対象は、常にURLのProjectIdです。Webの`actor`は常に`human`で、要求から受け取ることはありません。`/api/board`のような対象のない経路、互換の別名、プロジェクトを作成・名前変更・削除するHTTP APIはありません。

@@ -133,10 +133,10 @@ mod tests {
         assert!(text.starts_with(
             "POST /api/projects/0123456789abcdef0123456789abcdef/sessions/touch HTTP/1.1\r\n"
         ));
-        assert!(text.contains("x-agboard-session: claude:0011223344556677\r\n"));
-        assert!(text.contains("x-agboard-session-tool: claude-code\r\n"));
-        assert!(text.contains("x-agboard-session-origin: external\r\n"));
-        assert!(text.contains("x-agboard-session-project: 0123456789abcdef0123456789abcdef\r\n"));
+        assert!(text.contains("x-agpj-session: claude:0011223344556677\r\n"));
+        assert!(text.contains("x-agpj-session-tool: claude-code\r\n"));
+        assert!(text.contains("x-agpj-session-origin: external\r\n"));
+        assert!(text.contains("x-agpj-session-project: 0123456789abcdef0123456789abcdef\r\n"));
         assert_eq!(text.matches("\r\n").count(), 9);
     }
 

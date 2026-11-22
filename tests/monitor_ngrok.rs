@@ -154,7 +154,7 @@ fn write_headers<'a>(cookie: &'a str, csrf: &'a str) -> Vec<(&'a str, &'a str)> 
         ("Cookie", cookie),
         ("Origin", PUBLIC),
         ("Sec-Fetch-Site", "same-origin"),
-        ("X-Agboard-Csrf", csrf),
+        ("X-Agpj-Csrf", csrf),
         ("Content-Type", "application/json"),
     ]
 }
@@ -309,7 +309,7 @@ fn only_the_exact_public_host_is_admitted() {
     // The public Host admits the page; an extra header changes nothing either way.
     assert_eq!(t.call("GET", "/", &[], "").status, 200);
     assert_eq!(
-        t.call("GET", "/", &[("x-agboard-tunnel-proof", "x")], "")
+        t.call("GET", "/", &[("x-agpj-tunnel-proof", "x")], "")
             .status,
         200
     );
@@ -335,8 +335,8 @@ fn forged_identity_headers_never_stand_in_for_a_session() {
         ("X-Forwarded-Proto", "https"),
         ("Forwarded", "for=127.0.0.1;host=127.0.0.1"),
         ("X-Real-Ip", "127.0.0.1"),
-        ("X-Agboard-Token", "x"),
-        ("X-Agboard-Csrf", "x"),
+        ("X-Agpj-Token", "x"),
+        ("X-Agpj-Csrf", "x"),
         ("Origin", PUBLIC),
     ];
     let path = format!("/api/projects/{}/summary", t.project());
@@ -800,7 +800,7 @@ fn an_answer_needs_the_session_origin_fetch_metadata_csrf_and_json() {
     let other_cookie = cookie_header(&other);
     let cases: Vec<(&str, Headers, u16)> = vec![
         ("no cookie", without("Cookie"), 401),
-        ("no csrf", without("X-Agboard-Csrf"), 403),
+        ("no csrf", without("X-Agpj-Csrf"), 403),
         ("no origin", without("Origin"), 403),
         ("no fetch metadata", without("Sec-Fetch-Site"), 403),
         (
@@ -815,8 +815,8 @@ fn an_answer_needs_the_session_origin_fetch_metadata_csrf_and_json() {
         (
             "wrong csrf",
             {
-                let mut h = without("X-Agboard-Csrf");
-                h.push(("X-Agboard-Csrf", "0".repeat(64).leak()));
+                let mut h = without("X-Agpj-Csrf");
+                h.push(("X-Agpj-Csrf", "0".repeat(64).leak()));
                 h
             },
             403,
@@ -824,8 +824,8 @@ fn an_answer_needs_the_session_origin_fetch_metadata_csrf_and_json() {
         (
             "another session's csrf",
             {
-                let mut h = without("X-Agboard-Csrf");
-                h.push(("X-Agboard-Csrf", other_csrf.as_str()));
+                let mut h = without("X-Agpj-Csrf");
+                h.push(("X-Agpj-Csrf", other_csrf.as_str()));
                 h
             },
             403,
@@ -894,7 +894,7 @@ fn an_answer_needs_the_session_origin_fetch_metadata_csrf_and_json() {
     // A client-written token and forwarding headers change nothing: the entrance
     // replaces or removes them.
     let mut ok = good.clone();
-    ok.push(("X-Agboard-Token", "client-chosen"));
+    ok.push(("X-Agpj-Token", "client-chosen"));
     ok.push(("X-Forwarded-Host", "evil.example"));
     let r = t.call("POST", &path, &ok, &body);
     assert_eq!(r.status, 200, "{}", r.body);
@@ -950,7 +950,7 @@ fn a_preference_save_needs_the_session_origin_fetch_metadata_csrf_and_json() {
     let (_other, other_csrf) = t.session();
     let cases: Vec<(&str, Headers, u16)> = vec![
         ("no cookie", without("Cookie"), 401),
-        ("no csrf", without("X-Agboard-Csrf"), 403),
+        ("no csrf", without("X-Agpj-Csrf"), 403),
         ("no origin", without("Origin"), 403),
         ("no fetch metadata", without("Sec-Fetch-Site"), 403),
         (
@@ -965,8 +965,8 @@ fn a_preference_save_needs_the_session_origin_fetch_metadata_csrf_and_json() {
         (
             "wrong csrf",
             {
-                let mut h = without("X-Agboard-Csrf");
-                h.push(("X-Agboard-Csrf", "0".repeat(64).leak()));
+                let mut h = without("X-Agpj-Csrf");
+                h.push(("X-Agpj-Csrf", "0".repeat(64).leak()));
                 h
             },
             403,
@@ -974,8 +974,8 @@ fn a_preference_save_needs_the_session_origin_fetch_metadata_csrf_and_json() {
         (
             "another session's csrf",
             {
-                let mut h = without("X-Agboard-Csrf");
-                h.push(("X-Agboard-Csrf", other_csrf.as_str()));
+                let mut h = without("X-Agpj-Csrf");
+                h.push(("X-Agpj-Csrf", other_csrf.as_str()));
                 h
             },
             403,

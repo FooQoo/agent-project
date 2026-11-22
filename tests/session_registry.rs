@@ -41,8 +41,8 @@ fn attach(server: &Running, key: &str, tool: &str, origin: &str) -> TcpStream {
     write!(
         stream,
         "GET /api/events HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nAccept: text/event-stream\r\n\
-         x-agboard-wait: 1\r\nx-agboard-session: {key}\r\nx-agboard-session-tool: {tool}\r\n\
-         x-agboard-session-origin: {origin}\r\nx-agboard-session-project: {PROJECT}\r\n\r\n",
+         x-agpj-wait: 1\r\nx-agpj-session: {key}\r\nx-agpj-session-tool: {tool}\r\n\
+         x-agpj-session-origin: {origin}\r\nx-agpj-session-project: {PROJECT}\r\n\r\n",
         server.port()
     )
     .unwrap();
@@ -376,13 +376,10 @@ fn a_touch_that_names_a_board_session_or_another_project_is_ignored() {
             &format!("/api/projects/{path_project}/sessions/touch"),
             None,
             &[
-                ("x-agboard-session".to_string(), "claude:aaaa".to_string()),
-                (
-                    "x-agboard-session-tool".to_string(),
-                    "claude-code".to_string(),
-                ),
-                ("x-agboard-session-origin".to_string(), origin.to_string()),
-                ("x-agboard-session-project".to_string(), PROJECT.to_string()),
+                ("x-agpj-session".to_string(), "claude:aaaa".to_string()),
+                ("x-agpj-session-tool".to_string(), "claude-code".to_string()),
+                ("x-agpj-session-origin".to_string(), origin.to_string()),
+                ("x-agpj-session-project".to_string(), PROJECT.to_string()),
             ],
             None,
         )

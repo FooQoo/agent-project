@@ -17,7 +17,7 @@ function check(
   return send(server, {
     method: 'PUT',
     url: `${base}/${id}/acceptance/${encodeURIComponent(condition)}`,
-    headers: { 'x-agboard-token': 'mock-token', 'x-agboard-language': language },
+    headers: { 'x-agpj-token': 'mock-token', 'x-agpj-language': language },
     body: JSON.stringify({ done }),
   });
 }

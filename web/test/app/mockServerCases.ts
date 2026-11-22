@@ -19,7 +19,7 @@ const projectId = (index: number): string => SAMPLE_PROJECTS[index]?.id ?? '';
 export const PROJECT = projectId(0);
 const SMALL = projectId(1);
 const EMPTY = projectId(2);
-const TOKEN = { 'x-agboard-token': 'mock-token' };
+const TOKEN = { 'x-agpj-token': 'mock-token' };
 
 /** The board of the first sample project as the server holds it now. */
 export function boardOf(server: MockServer): MockBoard {

@@ -155,7 +155,7 @@ fn write(s: &Server, p: &Phone, method: &str, body: &Value, csrf: bool) -> Reply
         ("Content-Type", "application/json"),
     ];
     if csrf {
-        extra.push(("X-Agboard-Csrf", &p.csrf));
+        extra.push(("X-Agpj-Csrf", &p.csrf));
     }
     call(
         s,

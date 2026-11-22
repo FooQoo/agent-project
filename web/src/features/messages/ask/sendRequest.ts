@@ -33,7 +33,7 @@ export async function sendMessageRequest(
     method: 'POST',
     headers: {
       ...authHeaders(),
-      'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+      'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
     },
     body: buildRequestForm(input.text, input.attachments),
   });

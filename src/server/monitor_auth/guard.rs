@@ -7,7 +7,7 @@ use super::contracts::{DEVICE_COOKIE_NAME, SESSION_COOKIE_NAME};
 use crate::server::monitor_connection::contracts::{ContractError, PublicOrigin};
 
 /// The header a page sends its CSRF token in.
-pub const CSRF_HEADER: &str = "x-agboard-csrf";
+pub const CSRF_HEADER: &str = "x-agpj-csrf";
 
 /// The value of the session cookie, if there is exactly one.
 pub fn session_cookie(headers: &HeaderMap) -> Option<String> {
@@ -69,7 +69,7 @@ pub fn strip_untrusted(headers: &mut HeaderMap) {
                     "forwarded"
                         | "x-original-host"
                         | "x-real-ip"
-                        | "x-agboard-token"
+                        | "x-agpj-token"
                         | "authorization"
                         | "proxy-authorization"
                 )
@@ -177,15 +177,15 @@ mod tests {
             ("x-forwarded-host", "evil"),
             ("x-forwarded-for", "1.2.3.4"),
             ("ngrok-auth-user-email", "me@example.com"),
-            ("x-agboard-token", "client"),
+            ("x-agpj-token", "client"),
             ("authorization", "Bearer x"),
-            ("x-agboard-language", "ja"),
+            ("x-agpj-language", "ja"),
             ("host", "a.ngrok.app"),
         ]);
         strip_untrusted(&mut h);
         let left: Vec<_> = h.keys().map(|k| k.as_str().to_string()).collect();
         assert_eq!(left.len(), 2, "{left:?}");
-        assert!(h.contains_key("x-agboard-language") && h.contains_key("host"));
+        assert!(h.contains_key("x-agpj-language") && h.contains_key("host"));
     }
 
     #[test]

@@ -46,7 +46,7 @@ pub fn fetch_site_allowed(site: Option<&str>) -> bool {
     site == Some("same-origin")
 }
 
-/// The `X-Agboard-Token` value must equal the server's token. An empty expected
+/// The `X-Agpj-Token` value must equal the server's token. An empty expected
 /// token never matches. The comparison does not stop at the first difference.
 pub fn token_matches(provided: Option<&str>, expected: &str) -> bool {
     let Some(provided) = provided else {
@@ -104,7 +104,7 @@ pub(crate) fn write_refusal(headers: &HeaderMap, port: u16, token: &str) -> Opti
         host: header_text(headers, "host"),
         origin: header_text(headers, "origin"),
         sec_fetch_site: header_text(headers, "sec-fetch-site"),
-        token: header_text(headers, "x-agboard-token"),
+        token: header_text(headers, "x-agpj-token"),
     };
     check_delete(&request, port, token).err()
 }

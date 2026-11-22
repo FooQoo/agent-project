@@ -177,7 +177,7 @@ async function putPreferences(
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        ...(token ? { 'X-Agboard-Token': token } : {}),
+        ...(token ? { 'X-Agpj-Token': token } : {}),
         ...extra,
       },
       body: JSON.stringify(patch),

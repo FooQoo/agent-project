@@ -90,8 +90,8 @@ async function request<T = ConnectionSnapshot>(
           ? {}
           : {
               'Content-Type': 'application/json',
-              'X-Agboard-Token': readToken(),
-              'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+              'X-Agpj-Token': readToken(),
+              'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
             }),
       },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),

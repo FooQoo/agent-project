@@ -26,7 +26,7 @@ export async function putDraft(
       'Content-Type': 'application/json',
       Origin: origin,
       'Sec-Fetch-Site': 'same-origin',
-      'X-Agboard-Token': await pageToken(origin),
+      'X-Agpj-Token': await pageToken(origin),
     },
     body: JSON.stringify({ draft: isDraft ? 'human' : null, ...(options.discard ? { discard: true } : {}) }),
   });
@@ -46,7 +46,7 @@ export async function archiveTask(
       'Content-Type': 'application/json',
       Origin: origin,
       'Sec-Fetch-Site': 'same-origin',
-      'X-Agboard-Token': await pageToken(origin),
+      'X-Agpj-Token': await pageToken(origin),
     },
     body: '{}',
   });

@@ -27,13 +27,13 @@ export function readCsrfToken(): string {
  */
 export function authHeaders(): Record<string, string> {
   const token = readToken();
-  if (token === '' && csrfToken !== '') return { 'X-Agboard-Csrf': csrfToken };
-  return { 'X-Agboard-Token': token };
+  if (token === '' && csrfToken !== '') return { 'X-Agpj-Csrf': csrfToken };
+  return { 'X-Agpj-Token': token };
 }
 
 /** The extra header a preferences save sends through the ngrok entrance; none on the local page. */
 export function csrfHeaders(): Record<string, string> {
-  return readToken() === '' && csrfToken !== '' ? { 'X-Agboard-Csrf': csrfToken } : {};
+  return readToken() === '' && csrfToken !== '' ? { 'X-Agpj-Csrf': csrfToken } : {};
 }
 
 /** A failed read. `status` is 0 when the request never got an answer. */

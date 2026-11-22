@@ -217,7 +217,7 @@ impl Running {
                 ("Cookie", &session.cookie),
                 ("Origin", ORIGIN),
                 ("Sec-Fetch-Site", "same-origin"),
-                ("X-Agboard-Csrf", &session.csrf),
+                ("X-Agpj-Csrf", &session.csrf),
                 ("Content-Type", "application/json"),
             ],
             body,

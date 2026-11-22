@@ -256,7 +256,7 @@ test('an agent cannot move a task to Done while a condition is unmet, and a pers
       const meta = document.querySelector('meta[name="agboard-token"]')?.getAttribute('content') ?? '';
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Agboard-Token': meta },
+        headers: { 'Content-Type': 'application/json', 'X-Agpj-Token': meta },
         body: JSON.stringify(body),
       });
       return response.status;

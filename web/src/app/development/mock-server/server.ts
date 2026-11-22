@@ -166,12 +166,12 @@ export function createMockServer(options: MockServerOptions): MockServer {
         body: SAMPLE_IMAGE,
       };
     if (!url.pathname.startsWith('/api/')) return null;
-    const language = request.headers?.['x-agboard-language'];
+    const language = request.headers?.['x-agpj-language'];
     const routeRequest: RouteRequest = {
       method: request.method.toUpperCase(),
       url,
       page: new URLSearchParams(request.page ?? ''),
-      token: request.headers?.['x-agboard-token'],
+      token: request.headers?.['x-agpj-token'],
       language: language === 'ja' || language === 'en' ? language : undefined,
       body: request.body,
     };
