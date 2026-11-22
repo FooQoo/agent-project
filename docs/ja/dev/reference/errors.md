@@ -79,9 +79,9 @@
 
 | コード | 発生条件 | 終了コード | HTTP |
 | --- | --- | --- | --- |
-| `already_serving` | このデータ領域で、すでに別の`serve`が動いている。自動で起動したサーバーなら、理由には動かし続けるための`agboard serve -d`を示す。 | 1 | なし |
+| `already_serving` | このデータ領域で、すでに別の`serve`が動いている。自動で起動したサーバーなら、理由には動かし続けるための`agpj serve -d`を示す。 | 1 | なし |
 | `port_in_use` | `serve`に指定したポートが使われている。理由には使っているものを示す。データ領域の違う別のAgent Boardのサーバー（pidつき）か、別のプログラム。自動のサーバーは代わりに別のポートを使う。 | 1 | なし |
-| `local_network_denied` | OSやサンドボックスが、`agboard`が`127.0.0.1`で待ち受けることや接続することを拒んだ（`EACCES`か`EPERM`）。Codexでは`agboard setup`で`agboard`をサンドボックスの外で動かせるようにする。 | 1 | なし |
+| `local_network_denied` | OSやサンドボックスが、`agpj`が`127.0.0.1`で待ち受けることや接続することを拒んだ（`EACCES`か`EPERM`）。Codexでは`agpj setup`で`agpj`をサンドボックスの外で動かせるようにする。 | 1 | なし |
 | `board_unavailable` | 回答を待つ`message ask`、`message wait`、`wait`、`open`、Hookがサーバーに届かない。自動起動が無効（`AGPJ_AUTOSTART=0`）、サーバーを起動できない（理由に`serve.log`を示す）、`serve.json`のサーバーが応えない、接続に失敗した、のどれか。回答を待つ`message ask`は保存前にサーバーを確認するため、利用できない場合は質問を保存しない。`--no-wait`ならサーバーは不要。 | 1 | なし |
 | `remote_unavailable` | `--project`を付けた`show remote`が報告できる、準備のできたngrok接続がない。サーバーが動いていないか、接続が`ready`ではない（無効、開始中、再接続中、失敗など）。理由にどちらかを示し、接続が失敗したときは失敗コードも示す。何も起動せず、アドレスと合言葉は出力しない。 | 1 | なし |
 | `invalid_domain` | `setup remote --domain`の値がホスト名だけではない（スキーム、パス、ポート、ワイルドカード、空白を含む）。ボードの設定APIも同じコードをHTTP 422で返す。何も保存しない。 | 2 | 422 |
@@ -91,7 +91,7 @@
 | `agent_cli_logged_out` | エージェントのCLIはあるが、ログインしていない（`claude auth status`の`loggedIn`がfalse、または`codex login status`が失敗）。理由に、ターミナルでログインするよう示す。 | 1 | 409 |
 | `session_launch_refused` | どちらかのツールのセッションをボードがすでに起動していて、動いている、再起動を待っている、または張り付いている。ボードが起動するセッションは、2つのツールと全プロジェクトを通して全体で1つまで。理由に、そのツールを示し、先に止めるよう示す。 | 1 | 409 |
 | `session_launch_failed` | エージェントのCLIを起動できなかった、ログファイルに書けなかった、またはログインの確認が20秒以内に終わらなかった。 | 1 | 500 |
-| `project_has_no_folder` | プロジェクトに、存在する結び付いたフォルダがないため、セッションを起動できない。`agboard project bind`で結び付ける。 | 1 | 409 |
+| `project_has_no_folder` | プロジェクトに、存在する結び付いたフォルダがないため、セッションを起動できない。`agpj project bind`で結び付ける。 | 1 | 409 |
 | `cursor_invalid` | cursorの形式が誤っている、または別のプロジェクトのもの。 | 1 | なし |
 | `wait_timeout` | 変更待ち（`wait --after`）が、変更のないまま任意の`--timeout`に達した。`message ask`や`message wait`が`--timeout`に達するのはエラーではなく、`timeout`イベントを出して終了コード5で終わる。 | 1 | なし |
 | `hook_cwd_unavailable` | Hookの入力の`cwd`が、存在しない、または読めない絶対パス。`AGPJ_ERROR`として返す。確認できないフォルダを未登録とは扱わない。 | なし（Hookの出力） | なし |

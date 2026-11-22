@@ -9,13 +9,13 @@ title: エピックと進行表
 ## タスクをエピックにまとめる
 
 ```sh
-agboard --project "My project" epic add launch --name "Website launch" --actor ai
-agboard --project "My project" epic ls --json
-agboard --project "My project" epic show LAUNCH --json
-agboard --project "My project" epic edit LAUNCH --document-file epic.md
-agboard --project "My project" edit 1 --epic LAUNCH
-agboard --project "My project" add "Prepare the preview" --assignee ai --actor ai --epic LAUNCH
-agboard --project "My project" edit 1 --clear-epic
+agpj --project "My project" epic add launch --name "Website launch" --actor ai
+agpj --project "My project" epic ls --json
+agpj --project "My project" epic show LAUNCH --json
+agpj --project "My project" epic edit LAUNCH --document-file epic.md
+agpj --project "My project" edit 1 --epic LAUNCH
+agpj --project "My project" add "Prepare the preview" --assignee ai --actor ai --epic LAUNCH
+agpj --project "My project" edit 1 --clear-epic
 ```
 
 - エピックIDには、英字・数字・ハイフンを使います。小文字で入力すると、大文字になります。
@@ -47,7 +47,7 @@ agboard --project "My project" edit 1 --clear-epic
 ウェーブは、コマンドラインから保存します。ウェーブごとに1つの値を渡し、値はタスクID、またはカンマでつないだ複数のタスクIDです。
 
 ```sh
-agboard --project "My project" epic edit LAUNCH --waves 3 1,2 4
+agpj --project "My project" epic edit LAUNCH --waves 3 1,2 4
 ```
 
 エピックの`EPIC.md`には次のように書かれます。タスク3が最初、次にタスク1と2が同時、最後にタスク4です。
@@ -61,7 +61,7 @@ waves:
 
 エントリは、すべてのウェーブを通して重複しない正のタスクIDで、現在エピックに属するものだけが残ります。空になったウェーブは取り除かれます。記載のない所属タスクは、IDの昇順で後に続き、どのウェーブにも載らないタスクが待たされることはありません。明示した順序を消すには、`--waves ""`を渡します。順序は、ボード上のタスクの位置とは独立です。
 
-エージェント向けの次のタスクの一覧、`agboard wait --until task`、ボードが常駐セッションへ渡すタスクでは、前のウェーブにDoneでないタスクが残っている間、そのウェーブの未着手のタスクを載せません。アーカイブしたタスクは未完了に数えません。Doingで止まっている作業は、これまでどおり再開の対象として載ります。
+エージェント向けの次のタスクの一覧、`agpj wait --until task`、ボードが常駐セッションへ渡すタスクでは、前のウェーブにDoneでないタスクが残っている間、そのウェーブの未着手のタスクを載せません。アーカイブしたタスクは未完了に数えません。Doingで止まっている作業は、これまでどおり再開の対象として載ります。
 
 ## ブラウザでエピックを編集する
 
@@ -100,9 +100,9 @@ PCのボードでは、エピックのプレビューダイアログの右の列
 ## 進行表を読む
 
 ```sh
-agboard progress
-agboard progress --json
-agboard --project "My project" progress --json
+agpj progress
+agpj progress --json
+agpj --project "My project" progress --json
 ```
 
 進行表は、エージェントが次のタスクを選ぶために読む表です。未着手と進行中のタスクを、エピックごとにまとめ、エピックに所属しないタスクは別のグループにまとめます。完了・アーカイブ済み・回答待のタスクは含みません。未回答の質問は回答されるまでボードに残り、`show`や`snapshot`で見られます。ユーザー担当のタスクと下書きは、状況を知るために表に残りますが、エージェントはそれらを作業対象に選びません。
@@ -114,12 +114,12 @@ agboard --project "My project" progress --json
 既定では、判断待ちのタスクと完了したタスクは表に含まれません。全体を見たいときは、次のように追加します。
 
 ```sh
-agboard progress --include-awaiting-answer --include-done 5
+agpj progress --include-awaiting-answer --include-done 5
 ```
 
 - `--include-awaiting-answer`は「Waiting for a decision」の節を追加します。各タスクに質問の冒頭が付きます（JSONでは`question`）。
 - `--include-done COUNT`は「Recently done」の節を追加し、直近に完了したタスクを新しい順に出します。対象は、未着手または進行中のタスクがまだあるエピックのタスクだけです。完了済みのエピックやエピックのないタスクは含みません。アーカイブ済みのタスクも含みません。
-- 指定しなければ、出力はこれまでと同じです。エージェントにこれらの節を渡すには、Hookのコマンドに同じオプションを付けます（例: `agboard hook --agent claude --include-awaiting-answer --include-done 5`）。
+- 指定しなければ、出力はこれまでと同じです。エージェントにこれらの節を渡すには、Hookのコマンドに同じオプションを付けます（例: `agpj hook --agent claude --include-awaiting-answer --include-done 5`）。
 
 エピックはIDの昇順に並びます。エピック内のタスクの順序は`waves`で決まり、記載のないタスクはIDの昇順で後に続きます。エピックのない作業もIDで並べます。表に載るタスクのないエピックは含まれません。
 

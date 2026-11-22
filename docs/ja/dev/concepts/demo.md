@@ -1,6 +1,6 @@
 # ブラウザのデモ
 
-ブラウザのデモは、`agboard serve`を置かずに静的サイトの上でボードを動かすものです。このドキュメントサイトと一緒に[`/agent-board/demo/`](https://fooqoo.github.io/agent-board/demo/)で公開しています。画面は製品と同じもので、サーバーだけがページ内で動くサンプルデータのサーバーに置き換わっています。
+ブラウザのデモは、`agpj serve`を置かずに静的サイトの上でボードを動かすものです。このドキュメントサイトと一緒に[`/agent-board/demo/`](https://fooqoo.github.io/agent-board/demo/)で公開しています。画面は製品と同じもので、サーバーだけがページ内で動くサンプルデータのサーバーに置き換わっています。
 
 訪れた人には、まず[初回の案内](../../guide/quickstart.md#before-you-start-the-first-run-guide)が表示され、そのあと通常のボードを操作できます。このページでは、その仕組み、ビルドの方法、公開前に確かめる方法を説明します。
 
@@ -18,7 +18,7 @@ flowchart LR
 
 ### サンプルデータのサーバー
 
-`web/src/app/development/mock-server/`は、メモリ上のボードから`agboard serve`と同じように`/api/*`に応答します。NodeのAPIも独自の通信路も使いません。リクエストはMSWが運び、サンプルデータが必要なすべての場所で同じハンドラを使います。
+`web/src/app/development/mock-server/`は、メモリ上のボードから`agpj serve`と同じように`/api/*`に応答します。NodeのAPIも独自の通信路も使いません。リクエストはMSWが運び、サンプルデータが必要なすべての場所で同じハンドラを使います。
 
 - デモと[サンプルデータモード](../getting-started/setup.md#開発)（`pnpm --dir web dev --mode mock`）は、ページの中のService Workerを通します。
 - 単体テストは`setupServer()`、Storybookはブラウザ用のワーカーを通します。[モックハンドラ](../getting-started/setup.md#モックハンドラ)を参照してください。
@@ -52,7 +52,7 @@ flowchart LR
 
 ### 初回の案内
 
-案内は、`agboard serve`に対してと同じく、ページの中で動きます。サンプルの依頼、計画、その手順、質問はフロントエンド（`web/src/app/onboarding/`）の中だけにあります。サンプルデータのサーバー（`mock-server/guide.ts`）が答えるのは、本物のサーバーにもある2つのルート、`GET /api/onboarding`と`POST /api/onboarding/seen`だけです。デモのボードにカードを書き込むことはありません。
+案内は、`agpj serve`に対してと同じく、ページの中で動きます。サンプルの依頼、計画、その手順、質問はフロントエンド（`web/src/app/onboarding/`）の中だけにあります。サンプルデータのサーバー（`mock-server/guide.ts`）が答えるのは、本物のサーバーにもある2つのルート、`GET /api/onboarding`と`POST /api/onboarding/seen`だけです。デモのボードにカードを書き込むことはありません。
 
 「見た」という状態はメモリにしかありません。新しいページは新しいサーバーなので、ページを開くたびに案内が始まり、**スキップ**や**完了して始める**はそのページでだけ案内を閉じます。画面での手順は[クイックスタート](../../guide/quickstart.md#before-you-start-the-first-run-guide)を参照してください。
 
@@ -66,12 +66,12 @@ flowchart LR
 
 ### 隠している機能
 
-静的サイトには手元のコンピューターも`agboard serve`もないので、それらが必要な機能はデモでは隠しています。
+静的サイトには手元のコンピューターも`agpj serve`もないので、それらが必要な機能はデモでは隠しています。
 
 | 機能 | 隠している場所 | 理由 |
 | --- | --- | --- |
 | プロジェクトのDocs | `BoardWorkspace.tsx`が`onDocs`を渡さないので、ヘッダーに**Docs**ボタンが出ない | Docsはコンピューター上のファイルやフォルダーを開くため。 |
-| リモート接続 | `BoardSettings.tsx`が接続の行とダイアログを出さない | スマホは`agboard serve`に接続するため。 |
+| リモート接続 | `BoardSettings.tsx`が接続の行とダイアログを出さない | スマホは`agpj serve`に接続するため。 |
 | 添付 | `EditorBody.tsx`と`AskAiDialog.tsx`が画像の欄を出さず、貼り付けやドロップした画像を無視する | 何も保存しないので、置き場所がないため。 |
 | 言語とテーマの保存 | `app/entry/board.tsx`と`BoardSettings.tsx`が`/api/preferences`を使わない | 保存するサーバーがないため。テーマはサンプルデータモードと同じくブラウザの中に残し、言語はページを開くたびにブラウザに従う。 |
 

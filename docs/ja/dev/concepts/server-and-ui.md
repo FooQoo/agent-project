@@ -1,13 +1,13 @@
 # サーバーと画面
 
-`agboard serve`は、JSON APIと更新通知を提供し、バイナリに埋め込んだReactアプリでボードを表示します。このページでは、リクエストの処理、画面の構成、エラー発生時の動作を説明します。エンドポイントは[Web API](../reference/web-api.md)にあります。
+`agpj serve`は、JSON APIと更新通知を提供し、バイナリに埋め込んだReactアプリでボードを表示します。このページでは、リクエストの処理、画面の構成、エラー発生時の動作を説明します。エンドポイントは[Web API](../reference/web-api.md)にあります。
 
 ## serveの起動と停止
 
 データ領域ごとにサーバーは一つまでです。動き方は二通りあり、`serve.json`の`mode`に記録します。
 
 - **自動**　サーバーがないと動かないコマンドが、裏でサーバーを起動します。対象は`wait --after`、`wait --until task`、`--no-wait`を付けない`message ask`、未回答の質問を待つ`message wait`です。エージェントのHookも、待たずに起動します。使われなくなると、サーバーは自分で止まります。
-- **手動**　人が`agboard serve`（前面）か`agboard serve -d`（裏）で起動します。Ctrl+Cか`agboard stop`まで動き続けます。
+- **手動**　人が`agpj serve`（前面）か`agpj serve -d`（裏）で起動します。Ctrl+Cか`agpj stop`まで動き続けます。
 
 ほかのコマンドはファイルだけで動き、サーバーを起動しません。
 
@@ -15,7 +15,7 @@
 
 - `serve`は`127.0.0.1`だけで待ち受け、プロジェクトが0件でも動きます。空のデータ領域には`workspace.json`を作ることがあります。
 - データ領域ごとにサーバーが一つだけ動くよう、`lifecycle.lock`（標準の`try_lock`）を起動から終了まで保持します。ファイルがあるだけでサーバーが動いているとは判断しません。ロックはプロセスの終了で外れます。自動のサーバーは、終了処理中のサーバーがロックを外すのを最大10秒待ちます。
-- 起動時に`serve.json`があり、そのポートの`GET /api/health`が同じ`pid`を返すなら、`serve`は`already_serving`で終了します。そうでなければ古いファイルとして上書きします。動いているサーバーが自動なら、理由には動かし続けるための`agboard serve -d`を示します。
+- 起動時に`serve.json`があり、そのポートの`GET /api/health`が同じ`pid`を返すなら、`serve`は`already_serving`で終了します。そうでなければ古いファイルとして上書きします。動いているサーバーが自動なら、理由には動かし続けるための`agpj serve -d`を示します。
 - `serve -d`は先に同じ確認をします。動いているサーバーが自動で、それと食い違う`--port`や`--monitor`の指定がなければ、そのサーバーにSIGUSR1を送ります。同じプロセスが`mode: "manual"`を記録し、使われていない時間を数えるのをやめます。接続はどれも切れません。それ以外の場合、ターミナルで人が実行していれば、動いているサーバーを`stop`と同じ手順で止めて起動し直すかどうかを尋ね、`--json`を付けたときやターミナルの外では`already_serving`で終了します。
 - `serve`は待ち受けを始めた後に`serve.json`（`pid`・`port`・`started_at`・`mode`、自動のサーバーでは`idleTimeoutSeconds`も）を書きます。SIGINTかSIGTERMを受けると、自分のpidが書かれている場合だけ`serve.json`を消します。
 
@@ -24,27 +24,27 @@
 1. `serve.json`を読みます。そのサーバーがヘルスチェックに応えれば、それを使います。
 2. `serve.json`のpidが生きていて`lifecycle.lock`を持っているのに応えないときは、起動中か終了中の場合に備えて最大10秒待ち、そのpidを示した`board_unavailable`で失敗します。二つ目のサーバーは起動しません。OSやサンドボックスが接続を拒んだときは`local_network_denied`です。
 3. それ以外なら`autostart.lock`を取ります。ほかのコマンドが起動中なら最大40秒待ち、もう一度確かめます。
-4. `agboard --json serve --auto`を新しいセッション（`setsid`）として起動します。作業ディレクトリはデータ領域、標準出力と標準エラーは`serve.log`（起動のたびに空にし、権限は0600）です。子プロセスは開いたままの`autostart.lock`を受け継ぎ、準備ができてから外すので、その間にほかのコマンドが二つ目を起動することはありません。
+4. `agpj --json serve --auto`を新しいセッション（`setsid`）として起動します。作業ディレクトリはデータ領域、標準出力と標準エラーは`serve.log`（起動のたびに空にし、権限は0600）です。子プロセスは開いたままの`autostart.lock`を受け継ぎ、準備ができてから外すので、その間にほかのコマンドが二つ目を起動することはありません。
 5. `serve.log`に起動の行が出るまで最大30秒待ち、標準エラーに1行出して続けます。標準出力はコマンド本来の出力のままです。
 
 ```text
 Started the Agent Board server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
 ```
 
-`serve.json`を読んだ後に接続が失敗したとき（その間にサーバーが止まったときなど）は、もう一度だけ起動します。Hookは待たずに起動します。確かめるのは`serve.json`のpidが生きているかと`autostart.lock`が空いているかだけで、`agboard stop`の後は起動しません（後述）。失敗は`serve.log`に残ります。
+`serve.json`を読んだ後に接続が失敗したとき（その間にサーバーが止まったときなど）は、もう一度だけ起動します。Hookは待たずに起動します。確かめるのは`serve.json`のpidが生きているかと`autostart.lock`が空いているかだけで、`agpj stop`の後は起動しません（後述）。失敗は`serve.log`に残ります。
 
-`AGPJ_AUTOSTART=0`にすると、これらはすべて止まります。コマンドはこれまでどおり`board_unavailable`を返し、Hookは何も起動しません。ライブラリが自分でサーバーを起動することはなく、起動するのは`agboard`のコマンドラインだけです。
+`AGPJ_AUTOSTART=0`にすると、これらはすべて止まります。コマンドはこれまでどおり`board_unavailable`を返し、Hookは何も起動しません。ライブラリが自分でサーバーを起動することはなく、起動するのは`agpj`のコマンドラインだけです。
 
 ### ボードを開く {#opening-the-board}
 
 自動のサーバーは、起動のきっかけになったプロジェクトのボードを一度だけ開きます。利用者から見た決まりは[CLIリファレンス](../../guide/reference/cli.md#open-the-board-in-the-browser)にあります。
 
-- サーバーを起動するコマンドは、隠しオプション`serve --auto --open-board=<projectId>`でプロジェクトIDを渡します。待つコマンドは待っているプロジェクト、`message ask`と`message wait`は質問のプロジェクト、Hookは出力した進行表のプロジェクトを渡します。`agboard open`は自分でページを開くので、何も渡しません。
+- サーバーを起動するコマンドは、隠しオプション`serve --auto --open-board=<projectId>`でプロジェクトIDを渡します。待つコマンドは待っているプロジェクト、`message ask`と`message wait`は質問のプロジェクト、Hookは出力した進行表のプロジェクトを渡します。`agpj open`は自分でページを開くので、何も渡しません。
 - サーバーの準備ができて`autostart.lock`を外した後、スレッドが3秒待ちます（試験では`AGPJ_OPEN_GRACE_MS`で変えられ、上限は60,000ミリ秒）。起動してからボードのページが一度もつながっていなければ、`http://127.0.0.1:<port>/?project=<projectId>`を開きます。つながってから閉じたタブも、つながり直すかもしれないので数に入れます。
 - ボードのページとは、`X-Agpj-Wait`ヘッダーのない`GET /api/events`のストリームです。待つコマンドはこのヘッダーを付けるので、起動の直後に開く自分のストリームがタブと取り違えられることはありません。スマホのページがngrokの入口を通して開くのは、sessionの背後にある同じストリームで、同じように数えます。
 - ブラウザーを開けるかどうかは`src/interact/browser.rs`が次の順で決めます。`AGPJ_OPEN_BROWSER=0`なら開きません。`AGPJ_BROWSER_OPENER`があれば、そのプログラムをシステムのものの代わりに使います。`SSH_CONNECTION`か`SSH_TTY`があれば開きません。macOSとWindows以外では、`DISPLAY`も`WAYLAND_DISPLAY`もなければ開きません。それ以外なら`open`（macOS）、`explorer`（Windows）、`xdg-open`を、アドレスだけを引数にしてシェルを通さずに起動し、終わるのを待ちません。
 - 結果は`serve.log`に1行残ります。`Opened … in the browser.`、理由つきの`Did not open … in the browser.`、プログラムを起動できなかったときの`Could not open …`のどれかです。
-- サーバーの起動と同じく、ブラウザーを開くのは`agboard`のコマンドラインだけで、試験に組み込んだライブラリは開きません。試験は`AGPJ_OPEN_BROWSER=0`を設定し、開く処理の試験は`AGPJ_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。
+- サーバーの起動と同じく、ブラウザーを開くのは`agpj`のコマンドラインだけで、試験に組み込んだライブラリは開きません。試験は`AGPJ_OPEN_BROWSER=0`を設定し、開く処理の試験は`AGPJ_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。
 
 ### ポート
 

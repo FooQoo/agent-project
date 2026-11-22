@@ -2,12 +2,12 @@
 
 この章では、Agent Boardの開発に必要な構成・実装・検証方法を説明します。ボードの使い方は、[利用ガイド](../guide/index.md)を読んでください。
 
-Agent Boardは、CLIとWebサーバーを兼ねる一つのRust製プログラム`agboard`です。データはすべてファイルに保存され、CLI・Markdownの直接編集・ブラウザから同じデータを読み書きできます。
+Agent Boardは、CLIとWebサーバーを兼ねる一つのRust製プログラム`agpj`です。データはすべてファイルに保存され、CLI・Markdownの直接編集・ブラウザから同じデータを読み書きできます。
 
 ```mermaid
 flowchart LR
     CLI["CLI"] --> Files[("ファイル")]
-    Files <--> Serve["agboard serve"]
+    Files <--> Serve["agpj serve"]
     Serve <--> Browser["ブラウザ"]
 ```
 

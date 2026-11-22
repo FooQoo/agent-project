@@ -4,7 +4,7 @@ title: CLIリファレンス
 
 # CLIリファレンス
 
-ブラウザは作業の確認と編集に、`agboard`はエージェントの更新とプロジェクトの管理に使います。ほとんどのコマンドは、`--project NAME`を明示します。例は`My project`を使っているので、自分のプロジェクト名に置き換え、CLIが返すタスクIDを使ってください。各オプションは`agboard --help`か`agboard <command> --help`で確認できます。
+ブラウザは作業の確認と編集に、`agpj`はエージェントの更新とプロジェクトの管理に使います。ほとんどのコマンドは、`--project NAME`を明示します。例は`My project`を使っているので、自分のプロジェクト名に置き換え、CLIが返すタスクIDを使ってください。各オプションは`agpj --help`か`agpj <command> --help`で確認できます。
 
 ## コマンドの一覧
 
@@ -25,7 +25,7 @@ title: CLIリファレンス
 | スマホ用のアドレスと合言葉を確認する、リモートアクセスの設定を見る | `show remote` |
 | リモートアクセスの設定（ngrokかTailscale、ドメイン、トークン）を保存する | `setup remote` |
 | サーバーとHookを動かす | `serve`、`stop`、`hook` |
-| Agent Boardプラグインを導入・更新する | `setup`、`update` |
+| Agent Projectプラグインを導入・更新する | `setup`、`update` |
 | 削除する（人だけ） | `rm`、`project rm`、`epic rm`、`init` |
 
 ## タスクを追加して確認する
@@ -33,10 +33,10 @@ title: CLIリファレンス
 タスクを追加して、ボードを確認します。
 
 ```sh
-agboard --project "My project" add "Write the setup guide" --assignee ai --actor ai
-agboard --project "My project" ls --json
-agboard --project "My project" show 1 --json
-agboard --project "My project" snapshot --json
+agpj --project "My project" add "Write the setup guide" --assignee ai --actor ai
+agpj --project "My project" ls --json
+agpj --project "My project" show 1 --json
+agpj --project "My project" snapshot --json
 ```
 
 `--assignee`は担当を指します。`--actor`は変更を行う主体を指し、権限を決めます。人には`human`、エージェントには`ai`を使います。`snapshot`は、エピックとファイルの問題を含む、ボード全体と履歴を返します。
@@ -46,8 +46,8 @@ agboard --project "My project" snapshot --json
 作業の開始を報告します。
 
 ```sh
-agboard --project "My project" mv 1 doing --actor ai --reason "Start implementation"
-agboard --project "My project" state 1 running --actor ai --reason "Writing and checking the guide"
+agpj --project "My project" mv 1 doing --actor ai --reason "Start implementation"
+agpj --project "My project" state 1 running --actor ai --reason "Writing and checking the guide"
 ```
 
 列の移動や状態の変更では、`--reason`で理由を指定できます。指定は任意で、上限は10,000 Unicode文字です。理由を省略するか空白にすると、現在の状態から生成します。これらの操作は履歴を自動で追加するので、同じ操作の履歴を重複して追加しないでください。質問は5,000文字まで、回答のメモは2,000文字までです。
@@ -55,8 +55,8 @@ agboard --project "My project" state 1 running --actor ai --reason "Writing and 
 列や状態を変えないが、後で効く判断（カードをTODOに据え置くなど）を記録します。
 
 ```sh
-agboard --project "My project" history add 1 --reason "公開文面は実機確認の結果で変わるため、確認が終わるまでTODOに置く"
-agboard --project "My project" history add 1 --reason-file progress.txt
+agpj --project "My project" history add 1 --reason "公開文面は実機確認の結果で変わるため、確認が終わるまでTODOに置く"
+agpj --project "My project" history add 1 --reason-file progress.txt
 ```
 
 コマンドが時刻を付け、AIの書き込み権限を適用します。actor・イベントID・種別・時刻の指定は要りません。根拠・判断・分かっていれば再検討の条件を書きます。一覧を見ただけでは追記せず、`result add`は自動で記録されます。理由を省略するか空白にすると、状態に合った既定の文を生成します。AIは、下書き・アーカイブ済み・完了のタスクに履歴を追加できません。
@@ -67,15 +67,15 @@ agboard --project "My project" history add 1 --reason-file progress.txt
 
 依頼者が見られる最初の成果ができたら、作業の途中でも記録し、そのまま作業を続けます。成果は短い文章（`--summary`）と、任意の見出し（`--title`。1行で1〜80文字）で、画像（`--file`。複数の画像は繰り返して指定し、指定した順に最大20枚）と、主な成果物へのリンクまたは保存場所（`--link`）を添えられます。`--final`を付けない成果は途中のもの、`--final`を付けると完成したものです。
 
-AIタスクの条件がすべて満たされているのに最終の成果がないとき、`agboard progress`とエージェントのHookが`finalResultMissing`にそのタスクを載せ、エージェントに成果の記録を促します。自動Doneを止めたり遅らせたりはせず、Doneになったタスクにも最初の最終の成果を記録できます。
+AIタスクの条件がすべて満たされているのに最終の成果がないとき、`agpj progress`とエージェントのHookが`finalResultMissing`にそのタスクを載せ、エージェントに成果の記録を促します。自動Doneを止めたり遅らせたりはせず、Doneになったタスクにも最初の最終の成果を記録できます。
 
 ```sh
-agboard --project "My project" result add 1 --title "First draft" --summary "The first 30 seconds are ready" --link ./out/draft.mp4 --actor ai
-agboard --project "My project" result add 1 --summary "Top page capture" --file top.png --actor ai
-agboard --project "My project" result add 1 --summary "All screens of the mock" --file 01.png --file 02.png --file 03.png --actor ai
-agboard --project "My project" result add 1 --summary "Finished and checked" --final --actor ai
-agboard --project "My project" result add 1 --published v1.0.0 --link https://example.com/releases/v1.0.0 --summary "Released" --actor ai
-agboard --project "My project" result ls 1
+agpj --project "My project" result add 1 --title "First draft" --summary "The first 30 seconds are ready" --link ./out/draft.mp4 --actor ai
+agpj --project "My project" result add 1 --summary "Top page capture" --file top.png --actor ai
+agpj --project "My project" result add 1 --summary "All screens of the mock" --file 01.png --file 02.png --file 03.png --actor ai
+agpj --project "My project" result add 1 --summary "Finished and checked" --final --actor ai
+agpj --project "My project" result add 1 --published v1.0.0 --link https://example.com/releases/v1.0.0 --summary "Released" --actor ai
+agpj --project "My project" result ls 1
 ```
 
 成果には、タスクごとに次の版番号（1、2、……）が付きます。記録しても列と稼働状態は変わらず、履歴が1件増えます。同じ成果を繰り返し送っても安全です。すでに記録した成果を見つけて`created: false`を返し、何も書きません。`--key`を省くと、内容（種別・要約・リンク・画像のバイト列）で同じ成果かを判断します。`--key <key>`で自分で名前を付けることもでき、別の内容に同じキーを使うと`invalid_value`で失敗します。`--title`を省くと、タイトルは要約の最初の1文を80文字までに切ったものになります（切ったときは最後が`…`）。タイトルは同じ成果かどうかの判断にも含まれるため、別のタイトルで送り直すと、同じ`--key`を使わない限り別の成果になります（同じ`--key`では`invalid_value`で失敗します）。要約とリンクは1〜2,000文字、1つのタスクに残せる成果は100件までです。AIは、人の下書き・アーカイブ済み・完了のタスクには成果を記録できません。ただし、すでに記録した成果の再送は成功します。`--published 版名`は公開の記録です。`--link`が必須で、`--final`とは併用できず、版名は`version add`と同じ規則で検証され、要約の先頭に`Published: 版名`の行が付きます。Doneのタスクが受け付ける唯一の成果で、最終成果がすでにあっても、AIでも人でも追加できます。
@@ -89,7 +89,7 @@ agboard --project "My project" result ls 1
 ユーザーに質問するには`message ask`を使います。1回で最大20件の質問を出せます。質問は1件ずつ`Q-12`のようなIDを持つメッセージで、プロジェクトに属し、`--task <id>`を付けるとそのタスクが質問を参照して、回答されるまで回答待になります。コマンドは1行に1つのイベントを出力し（`--json`ならJSON Lines）、未回答の質問がなくなるまで待ちます。既定の待機時間は600秒です。
 
 ```sh
-agboard --project "My project" message ask --actor ai --task 1 --questions-json - --json < questions.json
+agpj --project "My project" message ask --actor ai --task 1 --questions-json - --json < questions.json
 ```
 
 `answered`（終了コード0）、`timeout`（終了コード5。質問は未回答のまま残る）、`withdrawn`（終了コード6）のいずれかで終わります。待ち直すには`message wait Q-12 Q-13`を使います。待機にはサーバーが必要です。動いていなければ、質問を保存する前にコマンドが裏で起動します。`--no-wait`を付けると、質問を登録してすぐに戻り、サーバーも要りません。回答の記録、メッセージの確認、質問の取り下げ、タスクからの参照の変更には、それぞれ`message answer`、`message ls`と`message show`、`message withdraw`、`message link`と`message unlink`を使います。人からエージェントへの依頼には`message send`と`message accept`を使います。質問には`images`で画像ファイルのパスを並べて添えられ、コマンドが質問と一緒に保存します。質問の形式と各コマンドは[判断依頼](../delegate/decisions)を参照してください。`progress`は、おすすめのタスクを最大3件`nextTasks`として返します（[エピックと進行表](../watch/epics#進行表を読む)を参照）。エピックと進行表は[エピックと進行表](../watch/epics)を参照してください。
@@ -99,7 +99,7 @@ agboard --project "My project" message ask --actor ai --task 1 --questions-json 
 長いMarkdown本文は、ファイルに書いてから読み込ませると編集しやすくなります。
 
 ```sh
-agboard --project "My project" edit 1 --desc-file task.md
+agpj --project "My project" edit 1 --desc-file task.md
 ```
 
 説明は50,000文字まで、エピックの詳細（`EPIC.md`）は100,000文字まで使えます。ファイルは[Markdownファイルの形式](./file-format)に従う必要があります。標準入力から説明を読むには、`--desc -`を使います。
@@ -111,9 +111,9 @@ agboard --project "My project" edit 1 --desc-file task.md
 エピックの詳細は、frontmatterを含む`EPIC.md`の全文です。文字列で直接渡すか、ファイルや標準入力から読み込みます。
 
 ```sh
-agboard --project "My project" epic edit LAUNCH --document-file epic.md
-agboard --project "My project" epic edit LAUNCH --document -
-agboard --project "My project" epic edit LAUNCH --waves 3 1,2
+agpj --project "My project" epic edit LAUNCH --document-file epic.md
+agpj --project "My project" epic edit LAUNCH --document -
+agpj --project "My project" epic edit LAUNCH --waves 3 1,2
 ```
 
 `--document`と`--document-file`は同時に指定できません。どちらも100,000文字まで受け付けます。
@@ -123,15 +123,15 @@ agboard --project "My project" epic edit LAUNCH --waves 3 1,2
 エージェントの`add`は、通常の未着手のタスクを作ります。計画だけを頼まれたときは、`--backlog`を付けて、カードを代わりにバックログに置きます。`epic add`にレーンはありません。エージェントのエピックは通常のエピックで、計画だけのエピックは、カードを`--backlog --epic <ID>`で作ったものです。
 
 ```sh
-agboard --project "My project" add --title "Plan the launch" --assignee ai --actor ai --backlog --epic LAUNCH
+agpj --project "My project" add --title "Plan the launch" --assignee ai --actor ai --backlog --epic LAUNCH
 ```
 
 バックログは、まだ始めてはいけない確定済みの計画を置く場所です。エージェントは始めず、バックログのカードへのエージェントの`mv`と`state`は`task_in_backlog`（終了コード1）で失敗します。カードを未着手の末尾へ送れるのは人だけです。コマンドラインでは、カードを`todo`へ移して送ります。`send`という別のコマンドはありません。
 
 ```sh
-agboard --project "My project" mv 12 todo --actor human
-agboard --project "My project" epic send LAUNCH --actor human
-agboard --project "My project" epic send LAUNCH --actor human --tasks 1,2
+agpj --project "My project" mv 12 todo --actor human
+agpj --project "My project" epic send LAUNCH --actor human
+agpj --project "My project" epic send LAUNCH --actor human --tasks 1,2
 ```
 
 `mv <id> todo`は1枚のカードを送ります。バックログのカードをほかのレーンへ移すのも人の操作です。`epic send`は、エピック全体、または`--tasks`で指定したカードだけを、全部移すか何も移さないかの一回の保存で送ります。エージェントがどちらを実行しても`human_only`になります。すでにバックログを出たカードは、ほかのカードと同じように移ります。ブラウザで人が編集中のカード（`draft: human`）は送れません（`task_is_draft`）。履歴には「人が Todo へ送りました。」と残ります。
@@ -139,13 +139,13 @@ agboard --project "My project" epic send LAUNCH --actor human --tasks 1,2
 計画に未回答の質問があると、送信は`send_with_open_questions`（終了コード1）で断られ、メッセージに質問のIDが並びます。`mv`（または`epic send`）に`--force`を付けると、そのまま送ります。質問は未回答のまま残り、回答があるまでカードは回答待です。
 
 ```sh
-agboard --project "My project" mv 12 todo --actor human --force
+agpj --project "My project" mv 12 todo --actor human --force
 ```
 
 人は、未着手の未着手のカード（Idleで成果なし）をバックログへ戻せます。エージェントが行うと`human_only`です。
 
 ```sh
-agboard --project "My project" mv 12 backlog --actor human
+agpj --project "My project" mv 12 backlog --actor human
 ```
 
 人がブラウザでエピックを下書きにしている間は、`--waves`を含む`epic edit`が`epic_is_draft`（終了コード1）で失敗し、何も変わりません。保存か破棄が済むまで待つか、残った下書きなら確定を頼んでください。`epic attachment`とタスクの所属の変更は、引き続き使えます。
@@ -153,10 +153,10 @@ agboard --project "My project" mv 12 backlog --actor human
 ## 一覧を絞り込む
 
 ```sh
-agboard --project "My project" ls --column doing --json
-agboard --project "My project" ls --column backlog --json
-agboard --project "My project" ls --state awaiting_answer --json
-agboard ls --all-projects --json
+agpj --project "My project" ls --column doing --json
+agpj --project "My project" ls --column backlog --json
+agpj --project "My project" ls --state awaiting_answer --json
+agpj ls --all-projects --json
 ```
 
 `ls --all-projects`は、全プロジェクトを名前順に読み、タスクの説明と履歴を完全な形で返します。`--column`と`--state`の絞り込みはすべてのプロジェクトに適用されます。`--project`とは組み合わせません。
@@ -166,11 +166,11 @@ agboard ls --all-projects --json
 プロジェクトは版の一覧を持ち、その1つを現在の版にできます。タスクは1つの版に割り当てるか、どの版にも割り当てません（未定）。版の名前は空白を含まない1〜64文字（例: `v1.8.0`）で、書いたとおりに保存し、比較します。
 
 ```sh
-agboard --project "My project" version add v1.9.0
-agboard --project "My project" version current v1.8.0
-agboard --project "My project" version current
-agboard --project "My project" version current --clear
-agboard --project "My project" version ls --json
+agpj --project "My project" version add v1.9.0
+agpj --project "My project" version current v1.8.0
+agpj --project "My project" version current
+agpj --project "My project" version current --clear
+agpj --project "My project" version ls --json
 ```
 
 プロジェクトの版は、その[ドキュメント](../watch/docs)の`docs/release/`直下にある`*.md`ファイルで、新しいものから並びます（`v1.10.0`は`v1.9.0`より前。`TEMPLATE.md`はリリースのテンプレートで、版にはなりません）。`version add VERSION`は`docs/release/TEMPLATE.md`をコピーして`docs/release/VERSION.md`を作り（テンプレートがなければ、標準のリリースノートのテンプレートを先に書きます）、既存のファイルは上書きしません。すでにファイルがある版は、一覧にあるものとして扱います。あわせて、そのリリースノートを書くための、担当がAIのカードをBacklogに1枚作ります（タイトルは`Write the release notes for VERSION`。ボードの言語が日本語なら日本語）で、予定の版はその版です。人がTodoに送ってから着手し、同じ版をもう一度追加しても2枚目は作りません。版を追加しても現在の版は変わりません。ファイルを自分で作っても版を追加できます。`version current VERSION`は、まだ一覧にない版を同じ方法で載せたうえでカレントにします。引数なしでは現在の版を表示します。あとで現在の版のファイルを削除すると、ファイルが戻るまで、プロジェクトは現在の版がないものとして読みます。現在の版を変えてもタスクは動きません。タスクは割り当てられた版の名前を保存しています。
@@ -178,8 +178,8 @@ agboard --project "My project" version ls --json
 ### リリースドキュメントを生成する {#generate-a-release-document}
 
 ```sh
-agboard --project "My project" release doc --current-version
-agboard --project "My project" release doc --version v1.9.0
+agpj --project "My project" release doc --current-version
+agpj --project "My project" release doc --version v1.9.0
 ```
 
 `release doc`は、1つの版のリリースドキュメントをプロジェクトの[ドキュメント](../watch/docs)の`docs/release/VERSION.md`に書きます。アーカイブ済みを含むすべてのカードを読み、その版について次のように分けます。
@@ -190,9 +190,9 @@ agboard --project "My project" release doc --version v1.9.0
 - **残作業**：それ以外の予定のカードのうち、まだ検証済みでないもの。
 - **別の版へ移した**：この版から外れたカード。後の版、前の版、版なしのいずれへの移動も含みます。履歴にこの版から別の版への変更があり、各行に移動先を書きます。
 
-各項目にはカード（`#12`）、成果と履歴の件数、各成果の日時とリンクを載せ、原記録は`agboard show 12`でたどれます。最後の**公開**の節は、公開済みのカードとそれ以外を分けます。予定のカードを公開済みと数えるのは、成果の本文に`Published: 版名`の行があり、公開物へのリンクが付いている場合だけです。行はあってもリンクがない成果、そうした成果がないカードは、完了していても「確認できない」に載せます。冒頭の集計にも`公開済み(公開記録あり): N / M`が出ます。エージェントの使い方は[版別レポートとテーマの振り返り](../delegate/release-reports)を参照してください。
+各項目にはカード（`#12`）、成果と履歴の件数、各成果の日時とリンクを載せ、原記録は`agpj show 12`でたどれます。最後の**公開**の節は、公開済みのカードとそれ以外を分けます。予定のカードを公開済みと数えるのは、成果の本文に`Published: 版名`の行があり、公開物へのリンクが付いている場合だけです。行はあってもリンクがない成果、そうした成果がないカードは、完了していても「確認できない」に載せます。冒頭の集計にも`公開済み(公開記録あり): N / M`が出ます。エージェントの使い方は[版別レポートとテーマの振り返り](../delegate/release-reports)を参照してください。
 
-文書は手で編集して構いません。生成する部分は`<!-- agboard:generated:start -->`と`<!-- agboard:generated:end -->`の行の間にあります。再生成で置き換わるのはその間だけなので、前後の文章は残り、同じボードから2回生成しても何も変わりません。この行がないファイル（`version add`がテンプレートから作ったものなど）は、文章を残したまま末尾にブロックを追加します。マーカー行が欠けている、重複している、順序が逆のファイルは`release_doc_refused`で拒否してそのまま残し、生成中に内容が変わったファイルも同様です。保存は一度に行うので、失敗しても書きかけの文書は残りません。
+文書は手で編集して構いません。生成する部分は`<!-- agpj:generated:start -->`と`<!-- agpj:generated:end -->`の行の間にあります。再生成で置き換わるのはその間だけなので、前後の文章は残り、同じボードから2回生成しても何も変わりません。この行がないファイル（`version add`がテンプレートから作ったものなど）は、文章を残したまま末尾にブロックを追加します。マーカー行が欠けている、重複している、順序が逆のファイルは`release_doc_refused`で拒否してそのまま残し、生成中に内容が変わったファイルも同様です。保存は一度に行うので、失敗しても書きかけの文書は残りません。
 
 `--version VERSION`はその版で生成し、一覧にない版は`version add`と同じようにまず一覧に加えます。`--current-version`はプロジェクトの現在の版を使い、未設定なら`no_current_version`（終了コード1）で失敗して何も書きません。版ごとに別のファイルになるので、別の版で生成すると文書が2つ並び、最初の文書には触れません。ファイルはボードの「ドキュメント」から開けます。`docs/release/`に版が並びます。
 
@@ -203,10 +203,10 @@ agboard --project "My project" release doc --version v1.9.0
 カードは追加するときにも、あとからでも割り当てられます。
 
 ```sh
-agboard --project "My project" add "Fix the login bug" --assignee ai --actor ai --current-version
-agboard --project "My project" edit 15 --planned-version v1.9.0
-agboard --project "My project" edit 15 --current-version
-agboard --project "My project" edit 15 --unplanned
+agpj --project "My project" add "Fix the login bug" --assignee ai --actor ai --current-version
+agpj --project "My project" edit 15 --planned-version v1.9.0
+agpj --project "My project" edit 15 --current-version
+agpj --project "My project" edit 15 --unplanned
 ```
 
 `--planned-version VERSION`は一覧にある版（`version add`済み、または`docs/release/`にファイルがあるもの）が必要です。`--current-version`はその時点の現在の版の名前を保存し、`--unplanned`は割り当てを外します。3つは同時に指定できません。プロジェクトに現在の版がないときの`--current-version`は`no_current_version`（終了コード1）で失敗し、何も変更しません。実際に変わったときだけカードの履歴に記録し、すでにその版のカードに同じ版を割り当てても何も変わりません。予定の版は、Doneやアーカイブされたカードでもエージェントと人のどちらも変更できる唯一の項目です。Doneのカードのそのほかの編集はエージェントには拒否されたままなので、Doneのカードで`--planned-version`とタイトルや説明の変更を組み合わせた編集は全体が拒否されます。エージェントは人の下書きを変更できません。
@@ -214,9 +214,9 @@ agboard --project "My project" edit 15 --unplanned
 エピックのカードをまとめて割り当てるには`epic plan`を使います。
 
 ```sh
-agboard --project "My project" epic plan LAUNCH --planned-version v1.9.0
-agboard --project "My project" epic plan LAUNCH --current-version --only-unplanned
-agboard --project "My project" epic plan LAUNCH --unplanned
+agpj --project "My project" epic plan LAUNCH --planned-version v1.9.0
+agpj --project "My project" epic plan LAUNCH --current-version --only-unplanned
+agpj --project "My project" epic plan LAUNCH --unplanned
 ```
 
 カードは1枚ずつ保存するため、途中で失敗すると先のカードは変更済みのままで、コマンドを再実行すれば残りが済みます。結果は、変更したカード（`changed`）、すでにその版だったカード（`unchanged`）、飛ばしたカード（`skipped`）の数と番号を返します。アーカイブされたカード、Doneのカード（出荷済み）、人が下書き中のカードは常に飛ばします。`--only-unplanned`を付けると、すでに版が割り当てられたカードも飛ばします。`--unplanned`と`--only-unplanned`は同時に指定できません。
@@ -224,23 +224,23 @@ agboard --project "My project" epic plan LAUNCH --unplanned
 `ls`と`progress`は1つの版に絞り込めます。
 
 ```sh
-agboard --project "My project" ls --current-version
-agboard --project "My project" ls --version v1.8.0 --epic LAUNCH --json
-agboard --project "My project" ls --unplanned --column todo
-agboard --project "My project" progress --version v1.8.0 --json
+agpj --project "My project" ls --current-version
+agpj --project "My project" ls --version v1.8.0 --epic LAUNCH --json
+agpj --project "My project" ls --unplanned --column todo
+agpj --project "My project" progress --version v1.8.0 --json
 ```
 
-`--version VERSION`、`--current-version`、`--unplanned`は同時に指定できず、ほかの絞り込みと組み合わせられます。現在の版がないプロジェクトでの`--current-version`は`no_current_version`で失敗します。`ls --all-projects`は`--version`と`--unplanned`を受け付けますが、現在の版はプロジェクトごとに違うため`--current-version`は受け付けません。JSONのタスクには`plannedVersion`が付き（割り当てがなければ省かれます）、テキストでは`[plan VERSION]`と表示します。ルートの`agboard --version`は、これまでどおりプログラムのバージョンを表示します。
+`--version VERSION`、`--current-version`、`--unplanned`は同時に指定できず、ほかの絞り込みと組み合わせられます。現在の版がないプロジェクトでの`--current-version`は`no_current_version`で失敗します。`ls --all-projects`は`--version`と`--unplanned`を受け付けますが、現在の版はプロジェクトごとに違うため`--current-version`は受け付けません。JSONのタスクには`plannedVersion`が付き（割り当てがなければ省かれます）、テキストでは`[plan VERSION]`と表示します。ルートの`agpj --version`は、これまでどおりプログラムのバージョンを表示します。
 
 版の絞り込みはタスクを隠すだけです。`progress`では、エージェントが着手できるタスクをボード全体で先に決めるので、前のウェーブのタスクが絞り込みで隠れていても、そのタスクは着手可能になりません。`nextTasks`には、絞り込みに合う着手可能なタスクの先頭3件が入ります。リクエスト、回答、閉じるエピックは絞り込みの対象外です。
 
 ## プロジェクト {#projects}
 
 ```sh
-agboard project create "My project"
-agboard project ls --json
-agboard --project "My project" project rename "Website launch"
-agboard project bind "My project" --folder ./docs
+agpj project create "My project"
+agpj project ls --json
+agpj --project "My project" project rename "Website launch"
+agpj project bind "My project" --folder ./docs
 ```
 
 名前を変えても、プロジェクトのID・フォルダの登録・タスクは保たれます。フォルダの登録とプロジェクトの削除は、[データとバックアップ](../operations/data#projects-and-folders)に説明があります。
@@ -250,7 +250,7 @@ agboard project bind "My project" --folder ./docs
 `wait`には二つのモードがあります。`--after <cursor>`は[エージェントとの連携](../delegate/agents#変更を待つ)のとおりプロジェクトの変更を待ちます。`--until task`は、対象となるAI担当タスクを一件返します。リッスンを始める前から未着手にあったタスクや、未稼働のまま進行中にあるタスクも対象です。
 
 ```sh
-agboard --project "My project" wait --until task --idle-timeout 300 --json
+agpj --project "My project" wait --until task --idle-timeout 300 --json
 ```
 
 `--until task`には`--idle-timeout`が必須です。1〜86,400秒を指定し、既定値はありません。一回の呼び出しで返すのは進行表と同じ順序の一件で、タスクを占有したり変更したりしません。取得したタスクを解決したら、再び`wait`を呼び出します。セッション全体の流れと、回答待のタスクの扱いは[エージェントとの連携](../delegate/agents#listen-for-the-next-task)を参照してください。
@@ -270,14 +270,14 @@ agboard --project "My project" wait --until task --idle-timeout 300 --json
 サーバーを自分で起動することは、ほとんどありません。`wait`、回答を待つ質問、エージェントのHookが、動いていなければ裏で起動します。起動したコマンドは、標準エラーに1行出します。
 
 ```text
-Started the Agent Board server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
+Started the Agent Project server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
 ```
 
 こうして起動したサーバーは、ブラウザーでボードを開いている間、エージェントが待っている間、スマホが接続している間は動き続けます。どれもない状態が30分続くと止まります。`AGPJ_IDLE_TIMEOUT`（60〜86,400秒）で変えられます。ポート7420が使われていれば、空いているポートを使い、そのことを表示します。`AGPJ_AUTOSTART=0`で自動の起動を止められます。このとき、サーバーが要るコマンドは、サーバーがないときと同じく`board_unavailable`で失敗します。`add`・`mv`・`ls`などのほかのコマンドは、サーバーを起動しません。
 
 ### ボードをブラウザーで開く {#open-the-board-in-the-browser}
 
-裏で起動したサーバーは、起動のきっかけになったプロジェクトのボードを、既定のブラウザーで一度だけ開きます。開く前に3秒ほど待ち、前から開いていたボードのタブがつながり直したとき（スリープから戻ったときなど）は何も開きません。サーバーが動いている間に質問が届いても、ブラウザーは開きません。`agboard serve`と`agboard serve -d`も開きません。
+裏で起動したサーバーは、起動のきっかけになったプロジェクトのボードを、既定のブラウザーで一度だけ開きます。開く前に3秒ほど待ち、前から開いていたボードのタブがつながり直したとき（スリープから戻ったときなど）は何も開きません。サーバーが動いている間に質問が届いても、ブラウザーは開きません。`agpj serve`と`agpj serve -d`も開きません。
 
 次のときは、ブラウザーを開きません。
 
@@ -287,12 +287,12 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 
 開いたかどうかと、開かなかった理由は、データフォルダの`serve.log`に残ります。
 
-自分でボードを開くには、`agboard open`を実行します。今のフォルダに登録されたプロジェクトか、`--project`で指定したプロジェクトのボードを開きます。サーバーが動いていなければ、先に裏で起動します。
+自分でボードを開くには、`agpj open`を実行します。今のフォルダに登録されたプロジェクトか、`--project`で指定したプロジェクトのボードを開きます。サーバーが動いていなければ、先に裏で起動します。
 
 ```sh
-agboard open
-agboard --project "My project" open
-agboard open --print
+agpj open
+agpj --project "My project" open
+agpj open --print
 ```
 
 開いたときも、`http://127.0.0.1:7420/?project=<id>`のようなボードのアドレスを表示します。`--print`はアドレスを表示するだけです。`--json`では`{"url":"…","projectId":"…","opened":true}`を出します。ブラウザーを開かなかったときは`opened`が`false`になり、`notice`に理由が入ります。`AGPJ_AUTOSTART=0`でサーバーが動いていなければ`board_unavailable`で失敗します。開くためのプログラムを起動できなければ`browser_open_failed`で失敗し、自分で開くアドレスをメッセージに示します。
@@ -303,11 +303,11 @@ macOSでは`open`、Linuxでは`xdg-open`を使います。ほかのプログラ
 
 動かし続けたいとき、ポートを選びたいとき、起動と同時にスマホを接続したいときは、自分で起動します。
 
-`agboard serve`は、`127.0.0.1`でボードを起動します。`--port`でポートを選べます（既定は7420）。サーバーの起動と同時にngrokでスマホを接続するには、`--monitor ngrok`を付けます。
+`agpj serve`は、`127.0.0.1`でボードを起動します。`--port`でポートを選べます（既定は7420）。サーバーの起動と同時にngrokでスマホを接続するには、`--monitor ngrok`を付けます。
 
 | オプション | 意味 |
 | --- | --- |
-| `--monitor ngrok` | リモートアクセスの接続を始めます。指定できるのは`ngrok`だけです。環境変数`NGROK_AUTHTOKEN`が必要で、トークンを引数で渡すことはできません。開始のたびに同じアドレスにするには、ngrokアカウントが持つドメインをダイアログに入力するか、環境変数`AGPJ_NGROK_DOMAIN`に設定するか、[`agboard setup remote`](#save-the-remote-access-settings)でコマンドラインから保存します。[同じアドレスを使い続ける](../watch/remote-access#同じアドレスを使い続ける)を参照してください。 |
+| `--monitor ngrok` | リモートアクセスの接続を始めます。指定できるのは`ngrok`だけです。環境変数`NGROK_AUTHTOKEN`が必要で、トークンを引数で渡すことはできません。開始のたびに同じアドレスにするには、ngrokアカウントが持つドメインをダイアログに入力するか、環境変数`AGPJ_NGROK_DOMAIN`に設定するか、[`agpj setup remote`](#save-the-remote-access-settings)でコマンドラインから保存します。[同じアドレスを使い続ける](../watch/remote-access#同じアドレスを使い続ける)を参照してください。 |
 
 スマホは、起動ごとに作る4桁の合言葉で守られます。サインイン用のオプションはありません。`--monitor`の不正な値、`NGROK_AUTHTOKEN`がないこと、未知のオプションは、終了コード2で終了します。接続を開始できなければ、`serve`は起動せず終了コード1で終了します。
 
@@ -315,22 +315,22 @@ macOSでは`open`、Linuxでは`xdg-open`を使います。ほかのプログラ
 
 ### バックグラウンドで実行する
 
-`agboard serve -d`（または`--daemon`）は、サーバーをバックグラウンドで起動し、準備ができた時点で戻ります。ターミナルは空き、閉じてもサーバーは止まりません。表示されるのは通常の起動時と同じアドレス（`--monitor ngrok`ではスマホのアドレスと合言葉も）に加えて、プロセスIDとログファイルです。`--port`と`--monitor`は通常どおり使えます。`--json`では、起動時のオブジェクトに`pid`と`log`も入ります。
+`agpj serve -d`（または`--daemon`）は、サーバーをバックグラウンドで起動し、準備ができた時点で戻ります。ターミナルは空き、閉じてもサーバーは止まりません。表示されるのは通常の起動時と同じアドレス（`--monitor ngrok`ではスマホのアドレスと合言葉も）に加えて、プロセスIDとログファイルです。`--port`と`--monitor`は通常どおり使えます。`--json`では、起動時のオブジェクトに`pid`と`log`も入ります。
 
 ```sh
-agboard serve -d
-agboard stop
+agpj serve -d
+agpj stop
 ```
 
-`agboard stop`は、実行中のサーバーを終了し、終了したところで戻ります。`serve`・`serve -d`・コマンドのどれで起動したサーバーも止められます。`stop`の後は、待つコマンド、`serve`、`serve -d`が起動するまで、Hookはサーバーを起動しません。サーバーが動いていなければ、その旨を表示して終了コード0で終わります。`stop`に`--project`は指定できません。
+`agpj stop`は、実行中のサーバーを終了し、終了したところで戻ります。`serve`・`serve -d`・コマンドのどれで起動したサーバーも止められます。`stop`の後は、待つコマンド、`serve`、`serve -d`が起動するまで、Hookはサーバーを起動しません。サーバーが動いていなければ、その旨を表示して終了コード0で終わります。`stop`に`--project`は指定できません。
 
 ### スマホ用のアドレスと合言葉を渡す
 
-ngrok接続が動いている間、`--project`を付けた`agboard show remote`は、接続の状態、公開アドレス、4桁の合言葉を表示します。接続ダイアログを開かなくても、エージェントからリンクを渡してもらえます。
+ngrok接続が動いている間、`--project`を付けた`agpj show remote`は、接続の状態、公開アドレス、4桁の合言葉を表示します。接続ダイアログを開かなくても、エージェントからリンクを渡してもらえます。
 
 ```sh
-agboard --project "My project" show remote
-agboard --project "My project" show remote --json
+agpj --project "My project" show remote
+agpj --project "My project" show remote --json
 ```
 
 ```text
@@ -345,15 +345,15 @@ Token: saved in the keychain
 
 アドレスはそのプロジェクトを開きます。`--json`では`{"status":"ready","url":"…","entrance":"…","passcode":"…","project":{"id":"…","name":"…"},"enabled":true,"domain":"…","tokenSaved":true,"keychainAvailable":true}`を出します。`entrance`はプロジェクトを含まないアドレスで、末尾の4項目は、次に説明する保存済みの設定です。
 
-プラグインには、このためのスキル`remote`（Claude Codeでは`/agent-board:remote`）が含まれます。エージェントに「リモートアクセスのURL」や「スマホで開きたい」と頼むと、フォルダのプロジェクトに対して`agboard --project "<名前>" show remote --json`を実行し、アドレスと合言葉を返します。サーバーやngrokは起動しません。
+プラグインには、このためのスキル`remote`（Claude Codeでは`/agent-project:remote`）が含まれます。エージェントに「リモートアクセスのURL」や「スマホで開きたい」と頼むと、フォルダのプロジェクトに対して`agpj --project "<名前>" show remote --json`を実行し、アドレスと合言葉を返します。サーバーやngrokは起動しません。
 
 `--project`を付けた`show remote`は何も起動しません。サーバーが動いていないか、接続の準備ができていないときは、アドレスも合言葉も表示せず、理由を伝えて、`remote_unavailable`として終了コード1で終わります。存在しないプロジェクトは終了コード4です。
 
 `--project`を付けない`show remote`は、保存済みのリモートアクセスの設定と接続の状態を表示し、接続が止まっていても失敗しません。
 
 ```sh
-agboard show remote
-agboard show remote --json
+agpj show remote
+agpj show remote --json
 ```
 
 ```text
@@ -367,17 +367,17 @@ Connection: ready at https://….ngrok-free.dev
 
 ### リモートアクセスの設定を保存する {#save-the-remote-access-settings}
 
-`agboard setup remote`は、ボードの接続ダイアログも保存しているリモートアクセスの設定、つまり接続をオンにするか、スマホがngrokとTailscaleのどちらで接続するか、ngrokの場合は固定ドメインとトークンを保存します。設定はデータフォルダ全体のものなのでプロジェクトは不要で、サーバーが動いていてもいなくても使えます。動いているボードには、再読み込みしなくても変更が反映されます。
+`agpj setup remote`は、ボードの接続ダイアログも保存しているリモートアクセスの設定、つまり接続をオンにするか、スマホがngrokとTailscaleのどちらで接続するか、ngrokの場合は固定ドメインとトークンを保存します。設定はデータフォルダ全体のものなのでプロジェクトは不要で、サーバーが動いていてもいなくても使えます。動いているボードには、再読み込みしなくても変更が反映されます。
 
 ```sh
-agboard setup remote
-agboard setup remote --provider tailscale --enabled true
-agboard setup remote --domain example.ngrok-free.dev --enabled true
-agboard setup remote --clear-domain
-printf '%s' "$NGROK_AUTHTOKEN" | agboard setup remote --token-stdin
+agpj setup remote
+agpj setup remote --provider tailscale --enabled true
+agpj setup remote --domain example.ngrok-free.dev --enabled true
+agpj setup remote --clear-domain
+printf '%s' "$NGROK_AUTHTOKEN" | agpj setup remote --token-stdin
 ```
 
-ターミナルでオプションなしの`agboard setup remote`を実行すると、保存済みの内容（providerと、ドメインと、トークンが保存されているかどうか。トークン自体は表示しません）を見せたうえで、スマホがngrokとTailscaleのどちらで接続するかを尋ねます。続いて、選んだ方法の設定だけを尋ねます。ngrokではドメインとトークン、Tailscaleは両方とも要らないので、これ以上は尋ねません。トークンは入力が表示されず、出力されることもありません。各質問は空のまま進めると飛ばせます。すでに保存してある値は、変えると答えたときだけ変更します。ターミナルがないときや`--json`を付けたときは何も尋ねず、終了コード`2`で終わるので、スクリプトが入力待ちで止まることはありません。
+ターミナルでオプションなしの`agpj setup remote`を実行すると、保存済みの内容（providerと、ドメインと、トークンが保存されているかどうか。トークン自体は表示しません）を見せたうえで、スマホがngrokとTailscaleのどちらで接続するかを尋ねます。続いて、選んだ方法の設定だけを尋ねます。ngrokではドメインとトークン、Tailscaleは両方とも要らないので、これ以上は尋ねません。トークンは入力が表示されず、出力されることもありません。各質問は空のまま進めると飛ばせます。すでに保存してある値は、変えると答えたときだけ変更します。ターミナルがないときや`--json`を付けたときは何も尋ねず、終了コード`2`で終わるので、スクリプトが入力待ちで止まることはありません。
 
 Tailscaleを保存するとき（選んだときや`--provider tailscale`のとき）は、このコンピューターのTailscaleの状態も確認し、次にすることを表示します。インストールする（Macアプリか、Homebrewのコマンドラインツール。この2つは併用できません）、サインインする、MagicDNSとHTTPS証明書を有効にする、のいずれかです。すべて整っていれば、スマホが開く`ts.net`のアドレスを表示します。この確認は案内だけで、保存を止めることはなく、コマンドは終了コード`0`で終わります。`--json`では、`status`（`ready`、`not_installed`、`not_logged_in`、`https_disabled`のいずれか）と、整っているときの`domain`を持つ`tailscale`オブジェクトが加わります。
 
@@ -397,29 +397,29 @@ Tailscaleを保存するとき（選んだときや`--provider tailscale`のと�
 
 バックグラウンドのサーバーは、出力をデータフォルダの`serve.log`に書きます。スマホの合言葉が入るため、このファイルは自分だけが読めます。`serve -d`のたびに作り直されます。バックグラウンドのサーバーを起動できない場合（ポートが使用中など）は、理由を表示して終了コード1で終わります。再起動後に自動で立ち上がることはありません。
 
-動いているサーバーをコマンドが起動していた場合、`serve -d`は新しく起動せず、そのサーバーを動かし続けるようにします。自分で止まることはなくなり、つながっているものも切れません。動いているサーバーと食い違う`--port`や`--monitor`を指定しないことが条件です。前面の`agboard serve`は`already_serving`で終わり、`serve -d`を案内します。
+動いているサーバーをコマンドが起動していた場合、`serve -d`は新しく起動せず、そのサーバーを動かし続けるようにします。自分で止まることはなくなり、つながっているものも切れません。動いているサーバーと食い違う`--port`や`--monitor`を指定しないことが条件です。前面の`agpj serve`は`already_serving`で終わり、`serve -d`を案内します。
 
 自分で起動したサーバーがすでに動いている場合や、指定が食い違う場合、`serve -d`はそのサーバーを止めて起動し直すかどうかをターミナルで確認します。`y`と答えると置き換えます。新しいサーバーは、前のサーバーの設定ではなく、このコマンドの`--port`と`--monitor`で起動します。`--monitor ngrok`なら合言葉も新しくなります。それ以外の答えでは、動いているサーバーはそのままで、終了コード0で終わります。`--json`を付けたときや、ターミナルの外で実行したときは確認せず、終了コード1（`already_serving`）で終わります。
 
 ## setupとupdate {#setup-and-update}
 
-`setup`は、データフォルダを作成し、Codex、Claude Code、または両方にAgent Boardプラグイン（SkillとHook）を導入します。`update`は、導入済みのプラグインをコマンドと同じ版にそろえます。尋ねる内容と変更するものは、[エージェントとの連携](../delegate/agents#set-up-your-agents)にあります。
+`setup`は、データフォルダを作成し、Codex、Claude Code、または両方にAgent Projectプラグイン（SkillとHook）を導入します。`update`は、導入済みのプラグインをコマンドと同じ版にそろえます。尋ねる内容と変更するものは、[エージェントとの連携](../delegate/agents#set-up-your-agents)にあります。
 
 ```sh
-agboard setup
-agboard setup --agent codex --dry-run
-agboard setup --agent all --yes --json
-agboard update
-agboard update --yes
+agpj setup
+agpj setup --agent codex --dry-run
+agpj setup --agent all --yes --json
+agpj update
+agpj update --yes
 ```
 
 | コマンド | 動作 | 終了コード |
 | --- | --- | --- |
-| `agboard setup` | データフォルダを作成し、設定するエージェントを尋ね、計画を表示します。`y`と答えると、プラグインを導入し、エージェントが共有フォルダを使えるようにし、CodexでAgent BoardのHookを信頼済みにします。プロジェクトは不要です。 | `0`は成功、変更なし、取り消し。`1`はエージェントの設定に失敗した、または設定できるエージェントがなかった。`2`はコマンドラインが不正、またはターミナルがないのに必要なオプションがない。 |
-| `agboard setup remote` | リモートアクセスの設定（ngrokのドメイン、オンかどうか、トークン）を保存します。プロジェクトは不要です。[リモートアクセスの設定を保存する](#save-the-remote-access-settings)を参照してください。 | `0`は成功。`1`はキーチェーンまたは設定ファイルを使えない。`2`はコマンドラインが不正、ドメインが不正、またはターミナルがないのにオプションがない。 |
-| `agboard update` | プラグインが導入されたすべてのエージェントで、プラグインをこの版にそろえ、新しいCodexのHookを信頼済みにします。先に計画を表示して確認します。更新後に必要なのは、自動更新ではできないとき（Codexのhookの信頼）か、プラグインを直したいときだけです。[プラグインを更新する](../delegate/agents#update-the-plugin)を参照してください。 | `0`は成功、更新なし、取り消し。`1`はエージェントの更新に失敗した。`2`はコマンドラインが不正、またはターミナルがないのに必要なオプションがない。 |
+| `agpj setup` | データフォルダを作成し、設定するエージェントを尋ね、計画を表示します。`y`と答えると、プラグインを導入し、エージェントが共有フォルダを使えるようにし、CodexでAgent ProjectのHookを信頼済みにします。プロジェクトは不要です。 | `0`は成功、変更なし、取り消し。`1`はエージェントの設定に失敗した、または設定できるエージェントがなかった。`2`はコマンドラインが不正、またはターミナルがないのに必要なオプションがない。 |
+| `agpj setup remote` | リモートアクセスの設定（ngrokのドメイン、オンかどうか、トークン）を保存します。プロジェクトは不要です。[リモートアクセスの設定を保存する](#save-the-remote-access-settings)を参照してください。 | `0`は成功。`1`はキーチェーンまたは設定ファイルを使えない。`2`はコマンドラインが不正、ドメインが不正、またはターミナルがないのにオプションがない。 |
+| `agpj update` | プラグインが導入されたすべてのエージェントで、プラグインをこの版にそろえ、新しいCodexのHookを信頼済みにします。先に計画を表示して確認します。更新後に必要なのは、自動更新ではできないとき（Codexのhookの信頼）か、プラグインを直したいときだけです。[プラグインを更新する](../delegate/agents#update-the-plugin)を参照してください。 | `0`は成功、更新なし、取り消し。`1`はエージェントの更新に失敗した。`2`はコマンドラインが不正、またはターミナルがないのに必要なオプションがない。 |
 
-`setup`がプラグインを入れ直すのは、プラグインがない、またはファイルが`agboard`の同梱のものと違うときだけです。`update`は常に入れ直します。
+`setup`がプラグインを入れ直すのは、プラグインがない、またはファイルが`agpj`の同梱のものと違うときだけです。`update`は常に入れ直します。
 
 どちらのコマンドも、次のオプションを受け付けます。
 
@@ -428,13 +428,13 @@ agboard update --yes
 - `--dry-run`は計画を表示するだけで、何も導入、作成、変更しません。
 - `--json`は機械可読の出力を表示します。
 
-ターミナルでは、オプションなしの`agboard setup`は、プラグインを導入したあとにリモートアクセスの設定も勧めます。設定するかどうかを尋ね（既定は「いいえ」）、設定するときは`agboard setup remote`と同じ質問をします。飛ばせば、それ以上は尋ねません。ターミナルがないとき、`--json`、`--yes`、`--dry-run`を付けたときは勧めません。
+ターミナルでは、オプションなしの`agpj setup`は、プラグインを導入したあとにリモートアクセスの設定も勧めます。設定するかどうかを尋ね（既定は「いいえ」）、設定するときは`agpj setup remote`と同じ質問をします。飛ばせば、それ以上は尋ねません。ターミナルがないとき、`--json`、`--yes`、`--dry-run`を付けたときは勧めません。
 
 どちらもパイプを待ちません。ターミナルがないときや`--json`を付けたときは、`setup`には`--agent`が、両方に`--yes`か`--dry-run`が必要です。足りないと終了コード`2`で終わります。コマンドが`PATH`上にないエージェントは、理由を示して飛ばします。失敗の理由はエラー出力に出ます。変更する設定ファイルとそのバックアップは[データとバックアップ](../operations/data#共有フォルダをセットアップする)を参照してください。
 
 ## Skillの本文 {#skill-text}
 
-`agboard skills`は、`agent-board`スキルの指示を出力します。`agboard skills <topic>`は、参照や雛形を1つ出力します。トピックは`project`、`language`、`files`、`requests`、`work-loop`、`questions`、`waiting`、`file-format`、`listening`、`resident`、`planning`、`fixed-epic-bodies`、`drafts`、`phone`、`task-template`、`epic-template`、`bug-epic-template`、`enhancement-epic-template`です。プラグインの`SKILL.md`が`agboard skills`を実行するので、エージェントは、インストールした`agboard`の指示をいつも受け取ります。このコマンドはMarkdownを出力し、何も書き込まず、サーバーも起動せず、常に終了コード`0`で終わります。トピックにない名前は、トピックの一覧を出力します。
+`agpj skills`は、`agent-project`スキルの指示を出力します。`agpj skills <topic>`は、参照や雛形を1つ出力します。トピックは`project`、`language`、`files`、`requests`、`work-loop`、`questions`、`waiting`、`file-format`、`listening`、`resident`、`planning`、`fixed-epic-bodies`、`drafts`、`phone`、`task-template`、`epic-template`、`bug-epic-template`、`enhancement-epic-template`です。プラグインの`SKILL.md`が`agpj skills`を実行するので、エージェントは、インストールした`agpj`の指示をいつも受け取ります。このコマンドはMarkdownを出力し、何も書き込まず、サーバーも起動せず、常に終了コード`0`で終わります。トピックにない名前は、トピックの一覧を出力します。
 
 ## 出力と確認
 

@@ -68,10 +68,10 @@ Agent Boardが保存するすべてのファイルを、項目と例とともに
 ```
 
 - JSONはUTF-8・camelCase・2スペースのインデントで、末尾に改行を一つ付けます。未知の項目は拒否します。
-- `workspace.json`は`{"format":"agboard-files","formatVersion":1}`です。`project.json`は`formatVersion: 1`です。バックログを使う`task.json`・`epic.json`は`formatVersion: 2`、通常のカードのファイルは`formatVersion: 1`のままで、どちらも読めます。それ以外のバージョンは`format_unsupported`を報告し、変更せずに残します。以前のバージョンの`agboard`はバージョン2のファイルを読めません。古いAI下書きは一度だけ自動で変換します（[保存と復旧](../concepts/saving-and-recovery.md#形式のバージョンとdraftの値)を参照）。
+- `workspace.json`は`{"format":"agboard-files","formatVersion":1}`です。`project.json`は`formatVersion: 1`です。バックログを使う`task.json`・`epic.json`は`formatVersion: 2`、通常のカードのファイルは`formatVersion: 1`のままで、どちらも読めます。それ以外のバージョンは`format_unsupported`を報告し、変更せずに残します。以前のバージョンの`agpj`はバージョン2のファイルを読めません。古いAI下書きは一度だけ自動で変換します（[保存と復旧](../concepts/saving-and-recovery.md#形式のバージョンとdraftの値)を参照）。
 - `.`で始まる名前は正本ではありません。`README.md`はフォルダと編集の規則の案内で、製品が作成時に書きます。
 - 画像は所有者の`assets/`に置きます。本文からは`assets/<attachment-id>.<ext>`（または旧形式の`attachment:<id>`）で画像を参照します。画像はPNG・JPEG・WebP・GIFで、1件10 MiBまで、所有者ごとに20件・合計50 MiBまでです。
-- `bindings.json`と`serve.json`はそのマシンだけで使うファイルです。`serve.json`は、CLIに通知先を、`wait`に接続先を教えます。トークンは含みません。`agboard stop`もこのファイルからサーバーを見つけます。
+- `bindings.json`と`serve.json`はそのマシンだけで使うファイルです。`serve.json`は、CLIに通知先を、`wait`に接続先を教えます。トークンは含みません。`agpj stop`もこのファイルからサーバーを見つけます。
 
   ```json
   {"pid":41235,"port":7420,"started_at":"2026-11-14T03:00:00Z","mode":"auto","idleTimeoutSeconds":1800}
@@ -80,7 +80,7 @@ Agent Boardが保存するすべてのファイルを、項目と例とともに
   `mode`は、コマンドが起動したサーバーなら`auto`、`serve`と`serve -d`なら`manual`です。この項目がないファイルは`manual`として読みます。`idleTimeoutSeconds`は自動のサーバーだけが持ちます。
 - `serve.log`は、`serve -d`かコマンドが裏で起動したサーバーの出力です（所有者のみ読み取り可、起動のたびに作り直し）。自動のサーバーは、別のポートを使った理由と止まったことをここに書きます。どのサーバーも、常駐エージェントが起動したとき、停止を求められたとき、終了したときに、UTCの時刻つきで1行ずつ標準エラー出力に書きます。バックグラウンドのサーバー（`serve -d`）は標準エラー出力を`serve.log`に送り、フォアグラウンドのサーバーは端末に表示します（[張り付くセッションの起動](../concepts/agents.md#張り付くセッションの起動)を参照）。
 - `resident/<ツール>.log`（`claude-code.log`または`codex.log`）は、そのツールのためにボードが起動したセッションの標準出力と標準エラーです（所有者のみ読み取り可）。起動のたびに新しいファイルになり、直前の4回分は`<ツール>.1.log`（直前の起動）から`<ツール>.4.log`として残ります。エージェントが出力した内容を含みうるので、あなたのアカウントで動くエージェントのほかの出力と同じように扱ってください。[張り付くセッションの起動](../concepts/agents.md#張り付くセッションの起動)を参照してください。
-- `autostart.lock`は、同時にサーバーを起動しようとしたコマンドの順番を決めます。`autostart.paused`は`agboard stop`が残すファイルで、Hookがまたサーバーを起動しないようにします。待つコマンド、`serve`、`serve -d`がこれを消します。[サーバーと画面](../concepts/server-and-ui.md#serveの起動と停止)を参照してください。
+- `autostart.lock`は、同時にサーバーを起動しようとしたコマンドの順番を決めます。`autostart.paused`は`agpj stop`が残すファイルで、Hookがまたサーバーを起動しないようにします。待つコマンド、`serve`、`serve -d`がこれを消します。[サーバーと画面](../concepts/server-and-ui.md#serveの起動と停止)を参照してください。
 
 `docs/`には、プロジェクトのMarkdown文書を置きます。ドキュメントのダイアログがこれを読みます（[プロジェクトのドキュメント](#プロジェクトのドキュメント)を参照）。
 
@@ -166,7 +166,7 @@ history:
 
 ### 成果 {#results}
 
-成果は、依頼者が見られるものとしてエージェントが`agboard result add`で届けるものです（[成果を届ける](../../guide/reference/cli.md#deliver-a-result)を参照）。成果は`TASK.md`ではなく`task.json`に保存します。クライアントが版を指定して読む構造化データだからです。`TASK.md`で時系列のテキストを持つのは、これまでどおり履歴だけです。`results`の各項目は次のとおりです。
+成果は、依頼者が見られるものとしてエージェントが`agpj result add`で届けるものです（[成果を届ける](../../guide/reference/cli.md#deliver-a-result)を参照）。成果は`TASK.md`ではなく`task.json`に保存します。クライアントが版を指定して読む構造化データだからです。`TASK.md`で時系列のテキストを持つのは、これまでどおり履歴だけです。`results`の各項目は次のとおりです。
 
 | フィールド | 意味 |
 | --- | --- |
@@ -257,7 +257,7 @@ createdAt: 2026-11-14T03:00:00Z
 
 ## モニター接続の設定
 
-ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.internal/monitor-connection.json`に保存します。このファイルはアプリのもので、PCの設定画面、`serve`、[`agboard setup remote`](../../guide/reference/cli.md#save-the-remote-access-settings)だけが書き、手で編集するものではありません。共有領域には含まれないため、プロジェクトのバックアップには入りません。所有者だけが読み書きできる権限（OSにある場合は`0600`）でatomicに置き換えます。
+ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.internal/monitor-connection.json`に保存します。このファイルはアプリのもので、PCの設定画面、`serve`、[`agpj setup remote`](../../guide/reference/cli.md#save-the-remote-access-settings)だけが書き、手で編集するものではありません。共有領域には含まれないため、プロジェクトのバックアップには入りません。所有者だけが読み書きできる権限（OSにある場合は`0600`）でatomicに置き換えます。
 
 ```json
 {
@@ -420,7 +420,7 @@ ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.i
 | `theme.mode` | `light`か`dark`。既定は`light`。 |
 | `theme.accent` | 12色のいずれか: `blue`・`sky`・`cyan`・`teal`・`green`・`lime`・`yellow`・`orange`・`red`・`pink`・`purple`・`gray`。既定は`blue`。 |
 
-進行表もこのファイルを読みます。`agboard progress --json`とHookは、保存した言語が英語以外のとき、表に`locale`を加え、エージェントがユーザーの言語で返答し続ける手がかりにします（[Hook・進捗・waitの出力](./agent-output.md#進行表)を参照）。READMEの言語と同じく、ファイルだけを読むのでサーバーが動いていなくても読め、ファイルがないか不正なときはフィールドを省くだけです。
+進行表もこのファイルを読みます。`agpj progress --json`とHookは、保存した言語が英語以外のとき、表に`locale`を加え、エージェントがユーザーの言語で返答し続ける手がかりにします（[Hook・進捗・waitの出力](./agent-output.md#進行表)を参照）。READMEの言語と同じく、ファイルだけを読むのでサーバーが動いていなくても読め、ファイルがないか不正なときはフィールドを省くだけです。
 
 保存では、送った項目だけを変えます。ほかの項目は保存済みの値を保ちます。後から保存した内容が優先され、競合の確認はありません。このファイルには秘密の値を含みません。トークン、合言葉、sessionは入りません。
 
@@ -463,22 +463,22 @@ CLI・Web API・Hookは、camelCaseの同じタスクの表現を使います。
 
 ## setupが書き込むファイル {#agent-settings}
 
-`agboard setup`は独自の記録を持ちません。何が導入されているかは各エージェントのプラグインの一覧が示し、データ領域の外で変更するのは次のファイルだけです。
+`agpj setup`は独自の記録を持ちません。何が導入されているかは各エージェントのプラグインの一覧が示し、データ領域の外で変更するのは次のファイルだけです。
 
 | ファイル | 変更 |
 | --- | --- |
 | `$CODEX_HOME/config.toml`（通常は`~/.codex/config.toml`） | `sandbox_workspace_write.writable_roots`にデータフォルダを加えます。`workspace-write`で、権限プロファイルがないときだけです。 |
-| `$CODEX_HOME/rules/agboard.rules` | 存在しないときに、`prefix_rule(pattern=["agboard"], decision="allow")`を書いて作ります。フルアクセスでは書きません。 |
+| `$CODEX_HOME/rules/agboard.rules` | 存在しないときに、`prefix_rule(pattern=["agpj"], decision="allow")`を書いて作ります。フルアクセスでは書きません。 |
 | `$CLAUDE_CONFIG_DIR/settings.json`（通常は`~/.claude/settings.json`） | `permissions.additionalDirectories`にデータフォルダを加えます。 |
 
 - 変更するファイルは、先に同じ場所へ`<file>.agboard-backup…`として、元のファイルのアクセス権のままバックアップします。新しく作るファイルは所有者だけが読み書きできます。
 - Codexのhookの信頼は、`codex app-server`を通して、Codex自身が設定の`hooks.state`に保存します。
-- 導入したプラグインは、各エージェントがプラグインを置く場所にあり、agboardはそこに書き込みません。
-- `agboard update`は、これらのファイルを変更しません。
+- 導入したプラグインは、各エージェントがプラグインを置く場所にあり、agpjはそこに書き込みません。
+- `agpj update`は、これらのファイルを変更しません。
 
 ## フォルダの紐付け
 
-フォルダの紐付けは、実フォルダとProjectIdを対応づけ、Hookと`agboard progress`が作業フォルダが属するプロジェクトを識別できるようにします。端末ローカルのデータ領域にだけ保存し、共有領域や追跡ファイルには保存しません。ProjectIdを保存するので、名前変更に追従し、同じ名前で作り直したプロジェクトへは移りません。最も近い紐付け済みの祖先フォルダを使います。存在しないフォルダ・壊れた紐付け・削除済みのProjectIdは、説明つきのエラーにします。
+フォルダの紐付けは、実フォルダとProjectIdを対応づけ、Hookと`agpj progress`が作業フォルダが属するプロジェクトを識別できるようにします。端末ローカルのデータ領域にだけ保存し、共有領域や追跡ファイルには保存しません。ProjectIdを保存するので、名前変更に追従し、同じ名前で作り直したプロジェクトへは移りません。最も近い紐付け済みの祖先フォルダを使います。存在しないフォルダ・壊れた紐付け・削除済みのProjectIdは、説明つきのエラーにします。
 
 ## プロジェクトのドキュメント
 

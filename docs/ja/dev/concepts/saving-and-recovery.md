@@ -47,7 +47,7 @@
 
 ## 形式のバージョンとdraftの値
 
-バックログを使う`task.json`・`epic.json`は`formatVersion: 2`で、通常のカードのファイルは`formatVersion: 1`のままです。どちらも読めます。ほかのバージョンは`format_unsupported`で、メッセージは「Only formatVersion 2 is supported」と伝えます。以前のバージョンの`agboard`はバージョン2のファイルを読めません。
+バックログを使う`task.json`・`epic.json`は`formatVersion: 2`で、通常のカードのファイルは`formatVersion: 1`のままです。どちらも読めます。ほかのバージョンは`format_unsupported`で、メッセージは「Only formatVersion 2 is supported」と伝えます。以前のバージョンの`agpj`はバージョン2のファイルを読めません。
 
 `draft`は`null`または`"human"`です。`draft: "ai"`は有効な値ではなく、その`task.json`・`epic.json`は、ほかの不正なファイルと同じく解析に失敗します。`problems`に報告され、ボードからは除かれ、書き換えられません。プロジェクトのほかの部分には影響しません。
 
@@ -101,7 +101,7 @@ Agent Boardは、不正なファイルを自動修正しません。問題のあ
 | --- | --- |
 | `serve`が動いていない、`serve.json`が古い、通知が失われた | CLIは成功し、保存を保つ。変更はOSのイベントか、サーバーの起動時に取り込まれる。 |
 | `serve`が異常終了して`serve.json`が残った | CLIの通知が接続に失敗して無視される。次の`serve`がファイルを上書きする。サーバーが要るコマンドは、pidがいないか`lifecycle.lock`が空いているので、新しく起動する。 |
-| `serve.json`のpidが生きていて`lifecycle.lock`を持つが応えない | サーバーが要るコマンドは最大10秒待ち、pidと`agboard stop`を示した`board_unavailable`で失敗する。二つ目のサーバーは起動しない。 |
+| `serve.json`のpidが生きていて`lifecycle.lock`を持つが応えない | サーバーが要るコマンドは最大10秒待ち、pidと`agpj stop`を示した`board_unavailable`で失敗する。二つ目のサーバーは起動しない。 |
 | 自動のサーバーが起動できない | コマンドは`serve.log`を示した`board_unavailable`か、`local_network_denied`・`port_in_use`で失敗する。何も保存していない。 |
 | 監視を登録できない | `serve`がエラーで終了する。 |
 | 稼働中に監視がエラーを報告した | すべてのプロジェクトを読み直し、エラーをログに残す。 |

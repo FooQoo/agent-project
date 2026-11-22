@@ -129,7 +129,7 @@ sequenceDiagram
 ```
 
 ```sh
-cat question.json | agboard --project "My project" message ask --actor ai --task 1 --questions-json - --json
+cat question.json | agpj --project "My project" message ask --actor ai --task 1 --questions-json - --json
 ```
 
 - `questions`は1〜20件です。
@@ -161,17 +161,17 @@ cat question.json | agboard --project "My project" message ask --actor ai --task
 タイムアウトやエラーのあとにもう一度待つときは、質問IDを渡します。質問を再び出すことはありません。
 
 ```sh
-agboard --project "My project" message wait Q-12 Q-13 --json
+agpj --project "My project" message wait Q-12 Q-13 --json
 ```
 
 ### 質問を読む・取り下げる・参照する
 
 ```sh
-agboard --project "My project" message ls --json
-agboard --project "My project" message show Q-12 --json
-agboard --project "My project" message withdraw Q-12 --actor ai
-agboard --project "My project" message link Q-12 --task 3
-agboard --project "My project" message unlink Q-12 --task 3
+agpj --project "My project" message ls --json
+agpj --project "My project" message show Q-12 --json
+agpj --project "My project" message withdraw Q-12 --actor ai
+agpj --project "My project" message link Q-12 --task 3
+agpj --project "My project" message unlink Q-12 --task 3
 ```
 
 - `message ls`は、未対応のメッセージ（質問と依頼）を一覧にします。`--status closed`は回答済みの質問と受け付け済みの依頼、`--status withdrawn`は取り下げられたもの、`--status all`はすべてを出します。`--type question`か`--type request`で片方に絞れ、`--task`を付けると、そのタスクが参照する質問に絞ります。
@@ -184,7 +184,7 @@ agboard --project "My project" message unlink Q-12 --task 3
 人はCLIからも、質問IDを指定して回答できます。1回のコマンドで答えられる質問は1件です。
 
 ```sh
-agboard --project "My project" message answer Q-12 --actor human --via cli --choice preview --text "公開前にフィードバックをもらいたい"
+agpj --project "My project" message answer Q-12 --actor human --via cli --choice preview --text "公開前にフィードバックをもらいたい"
 ```
 
 選択肢のある質問には`--choice`かメモ（またはその両方）が必要で、メモだけの回答は選択肢なしの回答になります。選択肢のない質問にはメモが必要です。メモは`--text`か`--text-file`で渡します。ユーザーがチャットで答えたときは、エージェントがその言葉を`--via chat`で記録します。最初に記録された回答が確定します。回答済みの質問に答えようとすると`question_answered`で失敗し、記録済みの回答が表示されます。
@@ -192,7 +192,7 @@ agboard --project "My project" message answer Q-12 --actor human --via cli --cho
 回答と履歴を読んだエージェントは、再開します。
 
 ```sh
-agboard --project "My project" state 1 running --actor ai --reason "ユーザーに頼まれたプレビューを準備する"
+agpj --project "My project" state 1 running --actor ai --reason "ユーザーに頼まれたプレビューを準備する"
 ```
 
 ## 依頼
@@ -200,9 +200,9 @@ agboard --project "My project" state 1 running --actor ai --reason "ユーザー
 依頼は、質問とは逆向きのメッセージです。人がエージェントに向けて書きます。質問と同じ連番の`Q-13`のようなIDで保存され、`message ls --type request`で一覧にできます。
 
 ```sh
-agboard --project "My project" message send --actor human --text "ガイドにWindowsの節を足して" --image ./sketch.png
-agboard --project "My project" message accept Q-13 --actor ai
-agboard --project "My project" message withdraw Q-13 --actor human
+agpj --project "My project" message send --actor human --text "ガイドにWindowsの節を足して" --image ./sketch.png
+agpj --project "My project" message accept Q-13 --actor ai
+agpj --project "My project" message withdraw Q-13 --actor human
 ```
 
 - `message send`は、`--text`か`--text-file`で1〜20,000文字の依頼を記録します。`--image`を繰り返すと画像を添付できます。

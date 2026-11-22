@@ -4,7 +4,7 @@
 
 ## 進行表
 
-`agboard progress --json`とHookは、同じ表を返します。
+`agpj progress --json`とHookは、同じ表を返します。
 
 ```json
 {
@@ -57,16 +57,16 @@
 - AIタスクに受け入れ条件が1件以上あり、そのすべてが完了していて、`--final`の成果がないとき、表に`finalResultMissing`配列がID順で加わります。最大5件で、各要素は`{"id":21,"title":"…","taskPath":"…/tasks/21/TASK.md"}`です。タスクが未着手または進行中にあるあいだと、レーンがDoneに変わってから24時間は一覧に残ります。エージェントが成果を書く前に自動Doneが起きても促せるようにするためです。バックログ、人の下書き、人のタスク、アーカイブ済み、条件が不正なタスクは含みません。エージェントは各要素について`result add --final`を記録し、記録すると要素は消えます。何かを止めたり遅らせたりはしません。自動Doneは成果を待ちません。該当するタスクがなければフィールドはありません。
 - `epicsToClose`は、未アーカイブのタスクがすべて Done で、`EPIC.md`の本文に未チェックの`- [ ]`が残るエピック（`BUG`と`ENHANCEMENT`を除く）をID順に並べます。`[{"id":"SPEC-MIGRATION","name":"…","documentPath":"…/epics/SPEC-MIGRATION/EPIC.md"}]`の形で、該当がなければ出力されません。
 - 実行中の AI タスクには`lastActivityAt`（最新の履歴の時刻。履歴がなければ最後の実行状態の変更の時刻）が付きます。`{"id":98,…,"agentStatus":"running","lastActivityAt":"2026-11-20T03:12:00Z"}`のような形です。`--final`の成果がある Doing の AI タスクには`"hasFinalResult": true`が付きます。どちらも該当しなければ出力されません。`stale-running`と`conditions`のルールが読みます。
-- `reminders`は、この表だけを読む[忘れごとのルール](../concepts/agents.md#nudge-rules)が見つけたことの一覧です。`[{"rule":"final-result","kind":"definite","text":"Task #21 has all conditions met but no final result: record agboard result add 21 --final ...","taskId":21}]`のような形です。`rule`はルールのID、`kind`はルールが確かめた違反なら`definite`、エージェントが判断すべきことなら`check`、`text`はリマインダーの本文です。`taskId`、`messageId`、`epicId`は、リマインダーがそれらに関するときだけ付きます。並びは登録簿の順です。Hookは作業中に表を渡すので、コマンドを実行しなくてもリマインダーがエージェントに届きます。リマインダーがなければフィールドはありません。既存のフィールドは変わりません。
+- `reminders`は、この表だけを読む[忘れごとのルール](../concepts/agents.md#nudge-rules)が見つけたことの一覧です。`[{"rule":"final-result","kind":"definite","text":"Task #21 has all conditions met but no final result: record agpj result add 21 --final ...","taskId":21}]`のような形です。`rule`はルールのID、`kind`はルールが確かめた違反なら`definite`、エージェントが判断すべきことなら`check`、`text`はリマインダーの本文です。`taskId`、`messageId`、`epicId`は、リマインダーがそれらに関するときだけ付きます。並びは登録簿の順です。Hookは作業中に表を渡すので、コマンドを実行しなくてもリマインダーがエージェントに届きます。リマインダーがなければフィールドはありません。既存のフィールドは変わりません。
 - 本文も履歴もありません。エージェントは、必要な`documentPath`と`taskPath`のファイルを読みます。
 - `cursor`は`wait --after`に渡す値です。
-- `locale`は、設定画面で選んだ言語で、エージェントが返答する言語の短い手がかりです。サーバーを介さず`<データ領域>/.internal/preferences.json`から読み、保存した言語が英語以外のとき（現在は`"ja"`）だけ含まれます。英語のとき、言語が保存されていないとき、ファイルがないか不正なときはフィールドがないため、既存の読み手には影響しません。`agboard progress`のテキスト形式には表示しません。
+- `locale`は、設定画面で選んだ言語で、エージェントが返答する言語の短い手がかりです。サーバーを介さず`<データ領域>/.internal/preferences.json`から読み、保存した言語が英語以外のとき（現在は`"ja"`）だけ含まれます。英語のとき、言語が保存されていないとき、ファイルがないか不正なときはフィールドがないため、既存の読み手には影響しません。`agpj progress`のテキスト形式には表示しません。
 - パスはローカルのCLIとHookの出力にだけ現れ、リモート向けのJSONには出ません。
 - 以前の`planPath`は出力されなくなりました。[データとバックアップ](../../guide/operations/data.md)のEPIC.mdへの移行の節を参照してください。
 
 ## Hookの出力
 
-`agboard hook --agent claude|codex`は、エージェント向けにJSONを出力します。
+`agpj hook --agent claude|codex`は、エージェント向けにJSONを出力します。
 
 ```json
 { "hookSpecificOutput": { "hookEventName": "PostToolUse", "additionalContext": "AGPJ_PROGRESS\n{…}" } }
@@ -81,7 +81,7 @@
 
 ## スナップショットとwait
 
-`agboard snapshot --json`と`agboard wait --after <cursor> --json`は、プロジェクトのスナップショットを返します。`fetchedAt`・`project`・`version`・`cursor`・`epics`・`tasks`（それぞれ全履歴を持つ）・`nextTaskId`・`problems`です。次の`wait`には、新しい`cursor`を使います。
+`agpj snapshot --json`と`agpj wait --after <cursor> --json`は、プロジェクトのスナップショットを返します。`fetchedAt`・`project`・`version`・`cursor`・`epics`・`tasks`（それぞれ全履歴を持つ）・`nextTaskId`・`problems`です。次の`wait`には、新しい`cursor`を使います。
 
 `wait`は、プロジェクトのversionがcursorと違うまで待ちます。`wait_timeout`・`board_unavailable`・`cursor_invalid`・`project_not_found`のときは、スナップショットではなくエラーで終わります。どれも「回答された」という意味ではありません。[エラーコード](./errors.md)を参照してください。
 
@@ -115,7 +115,7 @@ taskの項目を省略した例です。
 
 ## open
 
-`agboard open --json`は、サーバーが動いていなければ起動し（`AGPJ_AUTOSTART=0`のときを除く）、登録されたプロジェクトか指定したプロジェクトのボードを開いて、オブジェクトを一つ出します。
+`agpj open --json`は、サーバーが動いていなければ起動し（`AGPJ_AUTOSTART=0`のときを除く）、登録されたプロジェクトか指定したプロジェクトのボードを開いて、オブジェクトを一つ出します。
 
 ```json
 {"url":"http://127.0.0.1:7420/?project=<id>","projectId":"<id>","opened":true}
@@ -125,7 +125,7 @@ taskの項目を省略した例です。
 
 ## remote
 
-`agboard --project <name> show remote --json`は、動いているサーバーにngrok接続を問い合わせ、`ready`のときにオブジェクトを一つ出します。保存済みの設定も同じオブジェクトに入ります。
+`agpj --project <name> show remote --json`は、動いているサーバーにngrok接続を問い合わせ、`ready`のときにオブジェクトを一つ出します。保存済みの設定も同じオブジェクトに入ります。
 
 ```json
 {"status":"ready","url":"https://<name>.ngrok-free.app/?project=<id>","entrance":"https://<name>.ngrok-free.app","passcode":"2418","project":{"id":"<id>","name":"<name>"},"enabled":true,"domain":"example.ngrok-free.dev","tokenSaved":true,"keychainAvailable":true}
@@ -135,7 +135,7 @@ taskの項目を省略した例です。
 
 それ以外のときは、標準出力には何も出さず、終了コード1と`remote_unavailable`で終わります。サーバーが動いていないか、接続が`ready`ではない場合です。エラーにはアドレスも合言葉も含まれません。サーバーはこの情報をローカルのアドレスにだけ返すので、合言葉はこのコンピューターの前にいる人にだけ届き、トンネルは通りません。[エラーコード](./errors.md#サーバーと待機)を参照してください。
 
-`--project`を付けない`agboard show remote --json`は、接続が止まっていても失敗せず、合言葉もプロジェクトのアドレスも出しません。
+`--project`を付けない`agpj show remote --json`は、接続が止まっていても失敗せず、合言葉もプロジェクトのアドレスも出しません。
 
 ```json
 {"enabled":true,"domain":"example.ngrok-free.dev","tokenSaved":false,"keychainAvailable":true,"status":"ready","entrance":"https://<name>.ngrok-free.dev"}
@@ -143,11 +143,11 @@ taskの項目を省略した例です。
 
 `status`は、サーバーが動いていなければ`no_server`、サーバーが応えなければ`unknown`です。それ以外は接続の状態（`ready`、`disabled`、`starting`、`reconnecting`、`failed`など）です。`entrance`は接続が`ready`のときだけアドレスで、それ以外は`null`です。ngrokのトークンは出力に含まれません。`tokenSaved`は、OSのキーチェーンにトークンがあるかどうかを示します。
 
-`agboard setup remote --domain … --enabled … --token-stdin --json`は、保存した設定を同じ4つのフィールド（`enabled`、`domain`、`tokenSaved`、`keychainAvailable`）で出力し、`saved: true`と、設定は次に接続を開始するときから使われることを伝える`note`を加えます。保存でproviderをTailscaleにしたときは、`tailscale`オブジェクト（`{ "status": "ready" | "not_installed" | "not_logged_in" | "https_disabled", "domain": string | null }`）も加わります。これは案内のための確認で、保存を失敗させることはありません。
+`agpj setup remote --domain … --enabled … --token-stdin --json`は、保存した設定を同じ4つのフィールド（`enabled`、`domain`、`tokenSaved`、`keychainAvailable`）で出力し、`saved: true`と、設定は次に接続を開始するときから使われることを伝える`note`を加えます。保存でproviderをTailscaleにしたときは、`tailscale`オブジェクト（`{ "status": "ready" | "not_installed" | "not_logged_in" | "https_disabled", "domain": string | null }`）も加わります。これは案内のための確認で、保存を失敗させることはありません。
 
 ## messageのイベント
 
-`agboard message ask --actor ai --questions-json <json|-> [--task <id>]…`は、次の形を受け取ります。
+`agpj message ask --actor ai --questions-json <json|-> [--task <id>]…`は、次の形を受け取ります。
 
 ```json
 {

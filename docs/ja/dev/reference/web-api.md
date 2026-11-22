@@ -1,6 +1,6 @@
 # Web API
 
-`agboard serve`のHTTP APIです。書き込みの保護を含むリクエストの処理は、[サーバーと画面](../concepts/server-and-ui.md)で説明しています。
+`agpj serve`のHTTP APIです。書き込みの保護を含むリクエストの処理は、[サーバーと画面](../concepts/server-and-ui.md)で説明しています。
 
 タスクの書き込みでは、自動生成する履歴の言語を`X-Agpj-Language: en`または`ja`で指定できます。ボードは現在の画面言語を送ります。未指定・重複・未対応の値では、本文の言語に従います。そのリクエストで自動生成する文章だけが対象で、明示した理由と保存済みの履歴は変わりません。[履歴](../concepts/history-and-decisions.md#履歴)を参照してください。
 
@@ -18,7 +18,7 @@ ngrokの入口は、ボードのページと以下のルートを同じパスで
 | `POST /api/projects/{projectId}/tasks/multipart` | 画像付きの通常タスク、または依頼本文・任意のエピック・画像をまとめた簡易依頼タスクを作る。下記を参照。 |
 | `PATCH /api/projects/{projectId}/tasks/{id}` | **下書き**のタスクのtitle・body・acceptanceと任意の`finalize: true`を更新する。`draft`は`"human"`または`null`で、それ以外の値は、以前のバージョンの`"ai"`も含めて拒否する（multipartフォームも同じ）。bodyだけならfrontmatterを、acceptanceだけなら本文を保つ。`description`と`body`の同時指定は422 `invalid_value`。後から保存した内容が優先される。下書きでなければ409 `task_not_draft`。 |
 | `PUT /api/projects/{projectId}/tasks/{id}/draft` | `draft`（必須）を設定する。`"human"`で人の下書きにし、`null`で確定する。それ以外の値は、`"ai"`も含めて拒否し、何も書き込まない。`discard: true`（`null`と一緒の場合だけ）を付けると、確定せずに下書きを取り消し、履歴に`Discarded draft changes.`を残す。Runningのタスクは409 `invalid_state_for_draft`。 |
-| `POST /api/projects/{projectId}/tasks/{id}/send` | `{"ack"?: bool}`。人として、バックログのタスクを未着手の末尾へ送り、`{task, changed}`を返す。すでにバックログを出ているタスクは`changed: false`で何も書かないので、再試行しても安全。未回答の質問がある計画は、`ack: true`を付けるまで409 `send_with_open_questions`。人の下書きは409 `task_is_draft`、アーカイブ済みは409 `task_archived`。履歴に`A person sent the task to Todo.`を残す。CLIに送信のコマンドはなく、`agboard mv <id> todo --actor human [--force]`が同じ関数で同じ規則を適用する。 |
+| `POST /api/projects/{projectId}/tasks/{id}/send` | `{"ack"?: bool}`。人として、バックログのタスクを未着手の末尾へ送り、`{task, changed}`を返す。すでにバックログを出ているタスクは`changed: false`で何も書かないので、再試行しても安全。未回答の質問がある計画は、`ack: true`を付けるまで409 `send_with_open_questions`。人の下書きは409 `task_is_draft`、アーカイブ済みは409 `task_archived`。履歴に`A person sent the task to Todo.`を残す。CLIに送信のコマンドはなく、`agpj mv <id> todo --actor human [--force]`が同じ関数で同じ規則を適用する。 |
 | `POST /api/projects/{projectId}/epics/{epicId}/send` | `{"taskIds"?: [int], "ack"?: bool}`。人として、エピックのバックログのタスク（または`taskIds`だけ）を、全部成功か何も変えないかの一回の保存で送り、`{epic, sent, changed}`を返す。`sent`は移したタスクIDです。エピックの未完了のカードでない`taskId`は422 `invalid_value`。未回答の質問があれば`ack: true`が必要（409 `send_with_open_questions`）。人の下書きのエピックは409 `epic_is_draft`、下書きのタスクは409 `task_is_draft`。 |
 | `PUT /api/projects/{projectId}/tasks/{id}/acceptance/{condition}` | `{"done": true\|false}`で、条件を1件、人として設定する。版は送らず、ロックの中で最新の`TASK.md`を変え、その選択を優先する。`{task, changed}`を返す。アーカイブ済みのタスクは409 `task_archived`、存在しない条件は422 `invalid_argument`。 |
 | `GET`/`POST /api/projects/{projectId}/versions` | プロジェクトの版を読む、またはテンプレートから`docs/release/<name>.md`を作って版を登録し、そのリリースノートを書くBacklogのカードを1枚作る。`GET`はインデックスから`{versions, currentVersion}`を返す。`POST {"name"}`は同じ内容に`changed`を加えて返す。[予定の版](#planned-versions)を参照。 |
@@ -48,7 +48,7 @@ ngrokの入口は、ボードのページと以下のルートを同じパスで
 | `GET /api/projects/{projectId}/archive` | アーカイブ済みのタスクを1ページ分返す。[アーカイブのページ分け](#アーカイブのページ分け)を参照。 |
 | `GET /api/projects/{projectId}/summary` | ボードの一覧に使うデータ。プロジェクト、`version`、タスク、エピック、problemsを返し、本文は含めない。[SummaryとDetail](#summaryとdetail)を参照。 |
 | `GET /api/projects/{projectId}/sessions` | プロジェクトに張り付いているエージェントセッションとその数、およびボードが起動したセッション。[張り付いたセッション](#張り付いたセッション)を参照。キャッシュしません。 |
-| `POST /api/projects/{projectId}/sessions/touch` | ヘッダーで名乗った外部のセッションを5分間数える。すべての`agboard`コマンドとフックが送る。常に204。ローカルのリスナーのみ。[張り付いたセッション](#張り付いたセッション)を参照。 |
+| `POST /api/projects/{projectId}/sessions/touch` | ヘッダーで名乗った外部のセッションを5分間数える。すべての`agpj`コマンドとフックが送る。常に204。ローカルのリスナーのみ。[張り付いたセッション](#張り付いたセッション)を参照。 |
 | `GET …/sessions/models`、`GET …/sessions/log`、`POST …/sessions/launch`、`POST …/sessions/stop` | 画面を持たないClaude CodeとCodexのセッションを起動・停止する。ローカルのリスナーのみ。[セッションの起動](#セッションの起動)を参照。 |
 | `GET /api/projects/{projectId}/tasks/{id}/detail` | 1件のタスクの本文・完了条件・履歴をNDJSONのストリームで返す。アーカイブ済みのタスクも同じ方法で読む。 |
 | `GET /api/projects/{projectId}/epics/{epicId}/detail` | 1件のエピックのドキュメントをNDJSONのストリームで返す。 |
@@ -137,7 +137,7 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 
 ### 張り付いたセッション
 
-`GET /api/projects/{projectId}/sessions`は、プロジェクトを待っているエージェントセッションを返します。設定画面とフッターが使います。外部のセッションは、`wait --until task`コマンドが`/api/events`のストリームを開いている間、およびそのセッションの`agboard`コマンドまたはフックがサーバーに届いてから5分間、張り付いているとみなします。ボードが起動したセッションは、起動処理が加えます。ほかの読み取りと同じく、ngrokの入口でもパスコードのセッションの内側で同じルートを使えます。パス、プロセスID、環境変数の値は含みません。
+`GET /api/projects/{projectId}/sessions`は、プロジェクトを待っているエージェントセッションを返します。設定画面とフッターが使います。外部のセッションは、`wait --until task`コマンドが`/api/events`のストリームを開いている間、およびそのセッションの`agpj`コマンドまたはフックがサーバーに届いてから5分間、張り付いているとみなします。ボードが起動したセッションは、起動処理が加えます。ほかの読み取りと同じく、ngrokの入口でもパスコードのセッションの内側で同じルートを使えます。パス、プロセスID、環境変数の値は含みません。
 
 ```json
 {
@@ -161,7 +161,7 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 ```
 
 - `tool`は`claude-code`、`codex`、`unknown`のいずれかです。`origin`は、ボードが起動したセッションなら`board`、それ以外は`external`です。
-- `state`は、ストリームが開いている間は`connected`です。それ以外は`grace`で、最後のストリームが閉じてから30秒間（待機から次の待機までの間に数がちらつかないようにするため）と、セッションの最後の`agboard`コマンドまたはフックがサーバーに届いてから5分間のうち、最後に終わるものまで続きます。`grace`のセッションも`total`などの数に含まれ、`connected`は開いているストリームだけを数えます。そのため、待機せずにボードを使うセッションは`connected`になりません。どちらの期間も過ぎるとセッションは消えます。`lastSeenAt`は、接続中は現在時刻、それ以外は最後に閉じたストリームまたは最後のコマンドの時刻です。間に合って再接続した、または別のコマンドを実行したセッションは同じセッションとして扱い、最初の`connectedAt`を保ちます。
+- `state`は、ストリームが開いている間は`connected`です。それ以外は`grace`で、最後のストリームが閉じてから30秒間（待機から次の待機までの間に数がちらつかないようにするため）と、セッションの最後の`agpj`コマンドまたはフックがサーバーに届いてから5分間のうち、最後に終わるものまで続きます。`grace`のセッションも`total`などの数に含まれ、`connected`は開いているストリームだけを数えます。そのため、待機せずにボードを使うセッションは`connected`になりません。どちらの期間も過ぎるとセッションは消えます。`lastSeenAt`は、接続中は現在時刻、それ以外は最後に閉じたストリームまたは最後のコマンドの時刻です。間に合って再接続した、または別のコマンドを実行したセッションは同じセッションとして扱い、最初の`connectedAt`を保ちます。
 - セッションは`connectedAt`順に並びます。形式の誤ったプロジェクトIDは422 `invalid_value`です。セッションがないプロジェクト（存在しないプロジェクトも）は空のリストを返します。
 - 登録はサーバーのメモリにだけ置きます。再起動すると空になり、待機が再接続し、コマンドが実行されるたびに戻ります。一覧はリクエストのたびに読みます。UIはポーリングし、変更を知らせるイベントはありません。
 
