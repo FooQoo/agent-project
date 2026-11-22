@@ -28,6 +28,7 @@ const guideGroups: Group[] = [
     pages: [
       { file: 'delegate/agents', en: 'Working with agents', ja: 'エージェントとの連携' },
       { file: 'delegate/decisions', en: 'Decisions', ja: '判断依頼' },
+      { file: 'delegate/release-reports', en: 'Version reports and theme retrospectives', ja: '版別レポートとテーマの振り返り' },
       { file: 'delegate/resident-session', en: 'Resident agent', ja: '常駐エージェント' },
     ],
   },

@@ -1,6 +1,6 @@
 //! The Markdown of the generated block.
 
-use super::{END_MARKER, START_MARKER, group};
+use super::{END_MARKER, Publication, START_MARKER, group, publication_of};
 use crate::clock::format_utc;
 use crate::file_store::history_language::HistoryLanguage;
 use crate::file_store::model::TaskView;
@@ -88,6 +88,16 @@ pub fn render_block(tasks: &[TaskView], version: &str, language: HistoryLanguage
         t("Moved to the next version", "次版送り"),
         groups.moved.len()
     ));
+    out.truncate(out.len() - 1);
+    out.push_str(&format!(
+        "- {}: {} / {}\n\n",
+        t(
+            "Published (with a publication record)",
+            "公開済み(公開記録あり)"
+        ),
+        groups.published.len(),
+        groups.planned.len()
+    ));
     let section = |out: &mut String, title: &str, lines: Vec<String>, empty: &str| {
         out.push_str(&format!("### {title}\n\n"));
         if lines.is_empty() {
@@ -166,10 +176,59 @@ pub fn render_block(tasks: &[TaskView], version: &str, language: HistoryLanguage
     out.push_str(&format!(
         "{}\n\n",
         t(
-            "Published: none. Agent Board keeps no publication record yet, so no item is marked as published. Generating this document publishes nothing.",
-            "公開済み: なし。Agent Board にはまだ公開記録がないため、公開済みとする項目はありません。この文書を生成しても何も公開されません。",
+            "A task counts as published only when one of its results states `Published: VERSION` on its own line and links to what was published. Done alone is not publication. Generating this document publishes nothing.",
+            "タスクを公開済みと数えるのは、成果の本文に `Published: 版名` の行があり、公開物へのリンクが付いている場合だけです。Done だけでは公開済みになりません。この文書を生成しても何も公開されません。",
         )
     ));
+    let mut confirmed = Vec::new();
+    let mut unconfirmed = Vec::new();
+    for task in &groups.planned {
+        let head = item_line(task, language, false);
+        match publication_of(task, version) {
+            Publication::Confirmed(result) => confirmed.push(format!(
+                "{head}\n  - {}: `agboard show {}`, {} {} [{}] ({})",
+                t("Record", "公開記録"),
+                task.id,
+                t("result", "成果"),
+                result.version,
+                format_utc(result.at),
+                result.link.as_deref().unwrap_or_default()
+            )),
+            Publication::Unlinked(result) => unconfirmed.push(format!(
+                "{head}\n  - {}: {} {} {}",
+                t("Unconfirmed", "未確認"),
+                t("result", "成果"),
+                result.version,
+                t(
+                    "states the publication but has no link",
+                    "は公開と書いているがリンクがない"
+                )
+            )),
+            Publication::None => unconfirmed.push(format!(
+                "{head}\n  - {}: {}",
+                t("Unconfirmed", "未確認"),
+                t("no publication record", "公開記録がない")
+            )),
+        }
+    }
+    section(
+        &mut out,
+        t("Published", "公開済み"),
+        confirmed,
+        t(
+            "No task has a publication record.",
+            "公開記録のあるタスクはありません。",
+        ),
+    );
+    section(
+        &mut out,
+        t("Not confirmed as published", "公開を確認できない"),
+        unconfirmed,
+        t(
+            "Every planned task has a publication record.",
+            "予定したタスクはすべて公開記録を確認できました。",
+        ),
+    );
     out.push_str(END_MARKER);
     out.push('\n');
     out

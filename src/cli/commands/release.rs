@@ -24,8 +24,8 @@ fn doc(ctx: &mut Context, args: &ReleaseDocArgs) -> Result<Outcome, AgboardError
         "Unchanged:"
     };
     let human = format!(
-        "{verb} {} for {}: {} planned, {} verified, {} remaining, {} moved to another version. Nothing was published.\n",
-        doc.path, doc.version, doc.planned, doc.verified, doc.remaining, doc.moved
+        "{verb} {} for {}: {} planned, {} verified, {} remaining, {} moved to another version, {} with a publication record. Generating publishes nothing.\n",
+        doc.path, doc.version, doc.planned, doc.verified, doc.remaining, doc.moved, doc.published
     );
     Ok(Outcome {
         changed: doc.changed,
@@ -39,7 +39,7 @@ fn doc(ctx: &mut Context, args: &ReleaseDocArgs) -> Result<Outcome, AgboardError
             "verified": doc.verified,
             "remaining": doc.remaining,
             "moved": doc.moved,
-            "published": 0,
+            "published": doc.published,
         }),
     })
 }

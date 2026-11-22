@@ -97,7 +97,7 @@ While a question is open or something is pending, continue the tasks that do not
 
 When your agent can spawn subagents, the main agent orchestrates and subagents do the work. Give each independent task its own subagent, with its task ID, plan, and acceptance conditions, and keep the implementation, investigation, and verification in the subagents. The main agent manages the project: it picks and orders the work, starts the subagents, reviews what they report, asks the user, and keeps the board updates (lane, run state, history, acceptance) itself, so every change goes through one writer.
 
-The full procedure, title review, parallel work, and epic closure: `agboard skills work-loop`. Results and the turn-end checklist: `agboard skills results`.
+The full procedure, title review, parallel work, and epic closure: `agboard skills work-loop`. Results and the turn-end checklist: `agboard skills results`. Per-version reports and theme retrospectives: `agboard skills release-report`.
 
 ## 7. Ask the user
 

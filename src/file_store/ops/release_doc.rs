@@ -28,6 +28,8 @@ pub struct ReleaseDoc {
     pub verified: usize,
     pub remaining: usize,
     pub moved: usize,
+    /// Planned tasks with a linked publication record.
+    pub published: usize,
 }
 
 impl FileStore {
@@ -127,6 +129,7 @@ impl FileStore {
             verified: groups.verified.len(),
             remaining: groups.remaining.len(),
             moved: groups.moved.len(),
+            published: groups.published.len(),
             version,
         })
     }

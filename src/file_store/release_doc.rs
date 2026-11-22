@@ -11,6 +11,7 @@ mod render;
 use chrono::{DateTime, Utc};
 
 use super::model::{HistoryRecord, TaskView};
+use crate::domain::TaskResult;
 
 /// The line that opens the generated block. Text outside the block is never touched.
 pub const START_MARKER: &str = "<!-- agboard:generated:start -->";
@@ -67,6 +68,41 @@ pub fn is_verified(task: &TaskView) -> bool {
     !task.acceptance_error && !task.acceptance.is_empty() && task.acceptance.iter().all(|a| a.done)
 }
 
+/// What a task's results say about its publication in one version.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Publication<'a> {
+    /// A result states `Published: <version>` and links to what was published.
+    Confirmed(&'a TaskResult),
+    /// A result states `Published: <version>` but has no link, so nothing can be checked.
+    Unlinked(&'a TaskResult),
+    /// No result states the publication.
+    None,
+}
+
+/// The publication record of Agent Board: a result whose summary holds a line
+/// `Published: <version>` and whose link points to the published artifact (a release page, a
+/// package, a merged pull request). The line without the link is only a claim. The newest
+/// confirmed result wins; otherwise the newest unlinked claim.
+pub fn publication_of<'a>(task: &'a TaskView, version: &str) -> Publication<'a> {
+    let states = |result: &TaskResult| {
+        result.summary.lines().any(|line| {
+            line.trim()
+                .strip_prefix("Published:")
+                .is_some_and(|rest| rest.trim() == version)
+        })
+    };
+    let linked =
+        |result: &&TaskResult| result.link.as_deref().is_some_and(|l| !l.trim().is_empty());
+    let claims: Vec<&TaskResult> = task.results.iter().filter(|r| states(r)).collect();
+    if let Some(result) = claims.iter().rev().find(|r| linked(r)) {
+        Publication::Confirmed(result)
+    } else if let Some(result) = claims.last() {
+        Publication::Unlinked(result)
+    } else {
+        Publication::None
+    }
+}
+
 /// The groups of one version.
 #[derive(Debug, Default)]
 pub struct Groups<'a> {
@@ -74,6 +110,8 @@ pub struct Groups<'a> {
     pub planned: Vec<&'a TaskView>,
     pub verified: Vec<&'a TaskView>,
     pub remaining: Vec<&'a TaskView>,
+    /// Planned tasks with a linked publication record for the version.
+    pub published: Vec<&'a TaskView>,
     /// Tasks whose history says they left the version, with where they went.
     pub moved: Vec<Item<'a>>,
 }
@@ -90,6 +128,9 @@ pub fn group<'a>(tasks: &'a [TaskView], version: &str) -> Groups<'a> {
                 groups.verified.push(task);
             } else {
                 groups.remaining.push(task);
+            }
+            if matches!(publication_of(task, version), Publication::Confirmed(_)) {
+                groups.published.push(task);
             }
             continue;
         }
@@ -110,6 +151,7 @@ pub fn group<'a>(tasks: &'a [TaskView], version: &str) -> Groups<'a> {
     groups.planned.sort_by(by_id);
     groups.verified.sort_by(by_id);
     groups.remaining.sort_by(by_id);
+    groups.published.sort_by(by_id);
     groups.moved.sort_by_key(|item| item.task.id);
     groups
 }

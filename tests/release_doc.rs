@@ -126,7 +126,8 @@ fn generating_groups_tasks_and_keeps_hand_written_text_on_regeneration() {
     let moved_section = section("Moved to the next version");
     assert!(moved_section.contains(&format!("#{moved} Moved work")));
     assert!(moved_section.contains("Moved to: v2"));
-    assert!(section("Publication").contains("Published: none."));
+    assert!(section("Not confirmed as published").contains(&format!("#{done} Verified work")));
+    assert!(section("Published").contains("No task has a publication record."));
 
     // A hand-written paragraph outside the block survives a regeneration, and the block is
     // not duplicated.
@@ -251,6 +252,73 @@ fn archived_tasks_are_included_and_a_named_unlisted_version_is_listed() {
     assert_eq!(new["created"], true);
     assert!(release(&home, "v9").is_file());
     assert_eq!(new["planned"], 0);
+}
+
+#[test]
+fn only_a_linked_publication_record_counts_as_published() {
+    let (_root, home) = demo();
+    run(&home, &["version", "add", "v1"]);
+    let linked = add(&home, "Linked", "v1", &[("Works", true)]);
+    let unlinked = add(&home, "Unlinked", "v1", &[("Works", true)]);
+    let other = add(&home, "Other version", "v1", &[("Works", true)]);
+    let bare = add(&home, "Done only", "v1", &[("Works", true)]);
+    let result = |id: i64, summary: &str, link: Option<&str>| {
+        let id = id.to_string();
+        let mut args = vec![
+            "result",
+            "add",
+            &id,
+            "--actor",
+            "ai",
+            "--final",
+            "--summary",
+            summary,
+        ];
+        if let Some(link) = link {
+            args.extend(["--link", link]);
+        }
+        run(&home, &args);
+    };
+    result(
+        linked,
+        "Shipped.\nPublished: v1",
+        Some("https://example.com/releases/v1"),
+    );
+    result(unlinked, "Published: v1", None);
+    result(
+        other,
+        "Published: v2",
+        Some("https://example.com/releases/v2"),
+    );
+    for id in [linked, unlinked, other, bare] {
+        let id = id.to_string();
+        run(
+            &home,
+            &["mv", &id, "doing", "--actor", "ai", "--reason", "Start"],
+        );
+        run(
+            &home,
+            &["mv", &id, "done", "--actor", "ai", "--reason", "Finish"],
+        );
+    }
+    let out = generate(&home, "v1");
+    assert_eq!(
+        (&out["planned"], &out["published"]),
+        (&Value::from(4), &Value::from(1))
+    );
+    let text = fs::read_to_string(release(&home, "v1")).unwrap();
+    assert!(text.contains("- Published (with a publication record): 1 / 4"));
+    let from = text.find("### Published\n").unwrap();
+    let rest = &text[from..];
+    let (published, unconfirmed) = rest.split_once("### Not confirmed as published").unwrap();
+    assert!(published.contains(&format!("#{linked} Linked")));
+    assert!(published.contains("https://example.com/releases/v1"));
+    for id in [unlinked, other, bare] {
+        assert!(unconfirmed.contains(&format!("#{id} ")), "{id}");
+        assert!(!published.contains(&format!("#{id} ")), "{id}");
+    }
+    assert!(unconfirmed.contains("states the publication but has no link"));
+    assert!(unconfirmed.contains("no publication record"));
 }
 
 #[cfg(unix)]
