@@ -220,6 +220,7 @@ fn recording_a_summary_dismisses_the_oldest_beyond_ten_and_keeps_every_line() {
                 link: None,
                 images: Vec::new(),
                 key: None,
+                published: None,
             },
             at(11, 30),
         )
