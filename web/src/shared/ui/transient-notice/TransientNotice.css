@@ -1,19 +1,115 @@
+/* Top right on a wide screen, top center on a phone, below the header and the safe area. */
 .transient-notice {
   position: fixed;
+  top: calc(var(--safe-top, 0px) + 64px);
   right: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  left: 16px;
   z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   box-sizing: border-box;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 10px 14px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 12px 12px 14px;
   border: 1px solid var(--r-border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--r-surface);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.18);
+  box-shadow:
+    0 8px 24px rgb(0 0 0 / 0.14),
+    0 2px 6px rgb(0 0 0 / 0.08);
   color: var(--r-text);
   font-size: 14px;
   line-height: 1.5;
-  pointer-events: none;
+  animation: transient-notice-in 180ms ease-out;
+}
+
+.transient-notice[data-leaving="true"] {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition:
+    opacity 150ms ease-in,
+    transform 150ms ease-in;
+}
+
+.transient-notice__icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.transient-notice[data-tone="error"] .transient-notice__icon {
+  color: var(--r-danger);
+}
+
+.transient-notice[data-tone="success"] .transient-notice__icon {
+  color: var(--r-done);
+}
+
+.transient-notice[data-tone="info"] .transient-notice__icon {
+  color: var(--r-accent);
+}
+
+.transient-notice__text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.transient-notice__close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  margin: -2px 0;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--r-muted);
+  cursor: pointer;
+}
+
+.transient-notice__close:hover {
+  background: var(--r-lane);
+  color: var(--r-text);
+}
+
+.transient-notice__close:focus-visible {
+  outline: 2px solid var(--r-accent);
+  outline-offset: 1px;
+}
+
+@media (max-width: 767px) {
+  .transient-notice {
+    top: calc(var(--safe-top, 0px) + 12px);
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    animation-name: transient-notice-in-center;
+  }
+
+  .transient-notice[data-leaving="true"] {
+    transform: translateX(-50%) translateY(-8px);
+  }
+}
+
+@keyframes transient-notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes transient-notice-in-center {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .transient-notice,
+  .transient-notice[data-leaving="true"] {
+    animation: none;
+    transition: none;
+  }
 }

@@ -521,6 +521,12 @@ test('a Todo to Doing and a Doing to Done move show at once on the phone; a refu
   await holdAndSwipe(page, swipeCard(page, 'Opt refused'), -1);
   await page.getByRole('button', { name: /^Move #\d+ to Doing$/ }).tap();
   await expect(page.locator('.transient-notice')).toHaveText('Could not move the task. It stays where it was.');
+  // #698: on a phone the notice is a card at the top center.
+  const noticeBox = await page.locator('.transient-notice').boundingBox();
+  const narrow = page.viewportSize();
+  if (!noticeBox || !narrow) throw new Error('the notice has no box');
+  expect(noticeBox.x + noticeBox.width / 2).toBeCloseTo(narrow.width / 2, 0);
+  expect(noticeBox.y).toBeLessThan(40);
   await expect(tab(page, 'Todo 1')).toBeVisible();
   await expect(tab(page, 'Doing 1')).toBeVisible();
   expect(show('Optimistic', 'Opt refused').taskStatus).toBe('todo');

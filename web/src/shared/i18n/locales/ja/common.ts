@@ -164,4 +164,7 @@ export const commonJa = {
       'このタスクは別の操作で移動済みのため、移動しませんでした。今は「{{status}}」にあります。',
     failed: 'タスクを移動できませんでした。元の列のままです。',
   },
+  transientNotice: {
+    close: 'メッセージを閉じる',
+  },
 } as const;

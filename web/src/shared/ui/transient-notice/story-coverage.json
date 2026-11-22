@@ -8,12 +8,42 @@
       "stories": [
         {
           "id": "shared-ui-transientnotice--default",
-          "states": ["status message"],
+          "states": ["status message", "close button"],
           "interaction": false
         },
         {
           "id": "shared-ui-transientnotice--hidden",
           "states": ["no message"],
+          "interaction": false
+        },
+        {
+          "id": "shared-ui-transientnotice--success",
+          "states": ["success tone"],
+          "interaction": false
+        },
+        {
+          "id": "shared-ui-transientnotice--info",
+          "states": ["info tone"],
+          "interaction": false
+        },
+        {
+          "id": "shared-ui-transientnotice--japanese-dark",
+          "states": ["Japanese", "dark theme", "close label"],
+          "interaction": false
+        },
+        {
+          "id": "shared-ui-transientnotice--phone",
+          "states": ["phone 390px top center"],
+          "interaction": false
+        },
+        {
+          "id": "shared-ui-transientnotice--phone-320-japanese-dark",
+          "states": ["phone 320px", "Japanese", "dark theme"],
+          "interaction": false
+        },
+        {
+          "id": "shared-ui-transientnotice--japanese",
+          "states": ["Japanese", "light theme"],
           "interaction": false
         }
       ]
