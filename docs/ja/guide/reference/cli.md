@@ -155,7 +155,7 @@ agboard --project "My project" mv 12 backlog --actor human
 ```sh
 agboard --project "My project" ls --column doing --json
 agboard --project "My project" ls --column backlog --json
-agboard --project "My project" ls --state pending --json
+agboard --project "My project" ls --state awaiting_answer --json
 agboard ls --all-projects --json
 ```
 

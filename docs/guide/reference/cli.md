@@ -154,7 +154,7 @@ While a person has an epic in draft in the browser, `epic edit` fails with `epic
 ```sh
 agboard --project "My project" ls --column doing --json
 agboard --project "My project" ls --column backlog --json
-agboard --project "My project" ls --state pending --json
+agboard --project "My project" ls --state awaiting_answer --json
 agboard ls --all-projects --json
 ```
 
