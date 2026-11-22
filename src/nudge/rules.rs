@@ -2,7 +2,7 @@
 //! points to, then its cases in `cases.rs` and a row in the rule list of
 //! `docs/dev/concepts/agents.md` (and its Japanese copy).
 
-use super::commands::{contains_sequence, ends_with_question, runs_agboard, tokens};
+use super::commands::{contains_sequence, ends_with_question, runs_agpj, tokens};
 use super::question_rules;
 use super::record_rules;
 use super::state_rules;
@@ -156,7 +156,7 @@ fn question(facts: &Facts) -> Vec<Finding> {
         || facts
             .calls()
             .iter()
-            .any(|c| runs_agboard(&c.command, &[&["message", "ask"], &["message", "answer"]]))
+            .any(|c| runs_agpj(&c.command, &[&["message", "ask"], &["message", "answer"]]))
     {
         return Vec::new();
     }
@@ -218,7 +218,7 @@ fn result_expected(facts: &Facts) -> bool {
     !facts
         .calls()
         .iter()
-        .any(|c| runs_agboard(&c.command, &[&["result", "add"]]))
+        .any(|c| runs_agpj(&c.command, &[&["result", "add"]]))
         && has_running_ai_task(facts)
 }
 
@@ -269,7 +269,7 @@ pub(super) fn produced_image(call: &Call) -> bool {
     // produce one. Reading or listing one does not count.
     let lower = call.command.to_ascii_lowercase();
     tokens.iter().any(|t| is_image(t))
-        && !runs_agboard(&call.command, &[&["result", "add"]])
+        && !runs_agpj(&call.command, &[&["result", "add"]])
         && [
             "screenshot",
             "screencapture",

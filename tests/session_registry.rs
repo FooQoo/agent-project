@@ -307,7 +307,7 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
 }
 
 /// One `agboard` command with the board's test settings and an agent session's variables.
-fn agboard_in_session(home: &std::path::Path, session: Option<&str>, args: &[&str]) -> Vec<u8> {
+fn agpj_in_session(home: &std::path::Path, session: Option<&str>, args: &[&str]) -> Vec<u8> {
     let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
     command
         .env("AGPJ_AUTOSTART", "0")
@@ -337,23 +337,20 @@ fn agboard_in_session(home: &std::path::Path, session: Option<&str>, args: &[&st
 fn a_command_run_in_an_agent_session_counts_it_as_an_external_session() {
     let _serial = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let home = tempdir().unwrap();
-    agboard_in_session(home.path(), None, &["init"]);
-    let snapshot: Value = serde_json::from_slice(&agboard_in_session(
-        home.path(),
-        None,
-        &["snapshot", "--json"],
-    ))
-    .unwrap();
+    agpj_in_session(home.path(), None, &["init"]);
+    let snapshot: Value =
+        serde_json::from_slice(&agpj_in_session(home.path(), None, &["snapshot", "--json"]))
+            .unwrap();
     let project = snapshot["project"]["id"].as_str().unwrap().to_string();
     let (_server, port) = serve(home.path());
     let path = format!("/api/projects/{project}/sessions");
 
     // A command outside any agent session (the parent process names it) is not counted.
-    agboard_in_session(home.path(), None, &["ls"]);
+    agpj_in_session(home.path(), None, &["ls"]);
     assert_eq!(get_json(port, &path)["counts"]["total"], 0);
 
     // An ordinary command of an agent session that does not wait is.
-    agboard_in_session(home.path(), Some("session-under-test"), &["ls"]);
+    agpj_in_session(home.path(), Some("session-under-test"), &["ls"]);
     let list = get_json(port, &path);
     assert_eq!(list["counts"]["total"], 1, "{list}");
     assert_eq!(list["counts"]["connected"], 0);
@@ -364,7 +361,7 @@ fn a_command_run_in_an_agent_session_counts_it_as_an_external_session() {
     assert_eq!(list["sessions"][0]["state"], "grace");
 
     // A second command of the same session is the same session.
-    agboard_in_session(home.path(), Some("session-under-test"), &["ls"]);
+    agpj_in_session(home.path(), Some("session-under-test"), &["ls"]);
     assert_eq!(get_json(port, &path)["counts"]["total"], 1);
 }
 
@@ -404,10 +401,10 @@ fn a_touch_that_names_a_board_session_or_another_project_is_ignored() {
 fn commands_succeed_quickly_when_no_server_runs() {
     let _serial = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let home = tempdir().unwrap();
-    agboard_in_session(home.path(), None, &["init"]);
+    agpj_in_session(home.path(), None, &["init"]);
     // No serve.json at all.
     let start = Instant::now();
-    agboard_in_session(home.path(), Some("session-under-test"), &["ls"]);
+    agpj_in_session(home.path(), Some("session-under-test"), &["ls"]);
     // A serve.json that names a port nothing listens on.
     let port = {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
@@ -418,6 +415,6 @@ fn commands_succeed_quickly_when_no_server_runs() {
         format!(r#"{{"pid":1,"port":{port},"started_at":"2026-01-01T00:00:00Z"}}"#),
     )
     .unwrap();
-    agboard_in_session(home.path(), Some("session-under-test"), &["ls"]);
+    agpj_in_session(home.path(), Some("session-under-test"), &["ls"]);
     assert!(start.elapsed() < Duration::from_secs(5));
 }

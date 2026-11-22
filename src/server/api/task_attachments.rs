@@ -11,9 +11,7 @@ use super::multipart::{multipart_too_large, parse_multipart};
 use super::parse_task_id;
 use crate::file_store::model::AttachmentOwner;
 use crate::server::AppState;
-use crate::server::response::{
-    agboard_error_response, error_response, file_response, json_response,
-};
+use crate::server::response::{agpj_error_response, error_response, file_response, json_response};
 use crate::server::store::{parse_project_id, read_checked, refresh_index, with_files};
 
 /// The owner is checked with the project and the ID, so another task's image
@@ -24,7 +22,7 @@ pub(super) async fn list_task_attachments(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -35,7 +33,7 @@ pub(super) async fn list_task_attachments(
             StatusCode::OK,
             &serde_json::json!({"taskId": task.id, "attachments": task.attachments}),
         ),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 /// The results recorded on a task, oldest first. Read-only. The images of the
@@ -46,7 +44,7 @@ pub(super) async fn list_task_results(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -57,7 +55,7 @@ pub(super) async fn list_task_results(
             StatusCode::OK,
             &serde_json::json!({"taskId": task.id, "results": task.results}),
         ),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 pub(super) async fn add_task_attachment(
@@ -67,7 +65,7 @@ pub(super) async fn add_task_attachment(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -110,7 +108,7 @@ pub(super) async fn add_task_attachment(
             refresh_index(&state);
             json_response(StatusCode::CREATED, &serde_json::json!({"task": task}))
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 pub(super) async fn get_task_attachment(
@@ -119,7 +117,7 @@ pub(super) async fn get_task_attachment(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -134,7 +132,7 @@ pub(super) async fn get_task_attachment(
     .await;
     match result {
         Ok((media_type, bytes)) => file_response(&media_type, bytes),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -144,7 +142,7 @@ pub(super) async fn delete_task_attachment(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -165,6 +163,6 @@ pub(super) async fn delete_task_attachment(
             refresh_index(&state);
             json_response(StatusCode::OK, &serde_json::json!({"task": task}))
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

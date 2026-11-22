@@ -316,7 +316,7 @@ fn a_live_lock_holds_other_sessions_back_and_a_stale_one_is_replaced() {
 }
 
 #[test]
-fn a_recent_failure_is_not_retried_and_points_at_agboard_update() {
+fn a_recent_failure_is_not_retried_and_points_at_agpj_update() {
     let fx = fixture("claude", true);
     fs::create_dir_all(fx.data.join("plugin-update")).unwrap();
     let now = std::time::SystemTime::now()

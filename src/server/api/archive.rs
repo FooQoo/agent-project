@@ -10,7 +10,7 @@ use serde::Deserialize;
 use super::{changed_task_response, parse_task_id};
 use crate::server::AppState;
 use crate::server::request::StrictJson;
-use crate::server::response::{agboard_error_response, error_response, json_response};
+use crate::server::response::{agpj_error_response, error_response, json_response};
 use crate::server::store::{parse_project_id, refresh_index, with_files, with_request_files};
 
 pub(super) async fn delete_task(
@@ -19,7 +19,7 @@ pub(super) async fn delete_task(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let Ok(id) = raw_id.parse::<i64>() else {
         return error_response(
@@ -38,7 +38,7 @@ pub(super) async fn delete_task(
             refresh_index(&state);
             StatusCode::NO_CONTENT.into_response()
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -49,7 +49,7 @@ pub(super) async fn archive_task(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -69,7 +69,7 @@ pub(super) async fn restore_task(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -96,7 +96,7 @@ pub(super) async fn archive_done(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
         store.archive_done(&project_id, &input.ids, chrono::Utc::now())
@@ -115,6 +115,6 @@ pub(super) async fn archive_done(
                 }),
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

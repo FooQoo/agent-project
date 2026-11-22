@@ -27,7 +27,7 @@ use support::home;
 mod harness;
 use harness::*;
 
-const COOKIE: &str = "agboard_remote_session";
+const COOKIE: &str = "agpj_remote_session";
 const OTHER_PUBLIC: &str = "https://other-xyz.ngrok.app";
 
 fn fixture() -> tempfile::TempDir {

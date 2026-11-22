@@ -31,7 +31,7 @@ fn json_of(assert: assert_cmd::assert::Assert) -> Value {
 }
 
 #[test]
-fn agboard_requires_assignee_actor_and_reason_and_records_the_exchange() {
+fn agpj_requires_assignee_actor_and_reason_and_records_the_exchange() {
     let home = tempdir().unwrap();
     invoke(home.path(), &["init"]).success();
     invoke(home.path(), &["add", "Work"]).failure();

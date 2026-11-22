@@ -11,7 +11,7 @@ use crate::paths;
 /// by [`SetupEnv::from_process`]; tests build it by hand.
 #[derive(Debug, Clone, Default)]
 pub struct SetupEnv {
-    pub agboard_home: Option<OsString>,
+    pub agpj_home: Option<OsString>,
     pub home: Option<PathBuf>,
     pub codex_home: Option<OsString>,
     pub claude_config_dir: Option<OsString>,
@@ -25,7 +25,7 @@ pub struct SetupEnv {
 impl SetupEnv {
     pub fn from_process() -> Self {
         SetupEnv {
-            agboard_home: std::env::var_os("AGPJ_HOME"),
+            agpj_home: std::env::var_os("AGPJ_HOME"),
             home: dirs::home_dir(),
             codex_home: std::env::var_os("CODEX_HOME"),
             claude_config_dir: std::env::var_os("CLAUDE_CONFIG_DIR"),
@@ -37,7 +37,7 @@ impl SetupEnv {
     /// The data directory, as an absolute path. Uses the same rule as the CLI,
     /// server, and hooks (`paths::data_dir_from`).
     pub fn data_dir(&self) -> Result<PathBuf, AgpjError> {
-        let dir = paths::data_dir_from(self.agboard_home.clone(), self.home.clone())?;
+        let dir = paths::data_dir_from(self.agpj_home.clone(), self.home.clone())?;
         absolute(dir)
     }
 

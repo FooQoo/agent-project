@@ -1,7 +1,7 @@
 //! Turn rules about records and starting: history notes, acceptance
 //! conditions after a merge, and starting a task before editing.
 
-use super::commands::{contains_sequence, runs_agboard, tokens};
+use super::commands::{contains_sequence, runs_agpj, tokens};
 use super::rules::{has_running_ai_task, is_pr_create};
 use super::{Call, Facts, Finding};
 use crate::domain::{Assignee, Column};
@@ -15,7 +15,7 @@ const RECORDS: &[&[&str]] = &[&["history", "add"], &["state"], &["mv"], &["resul
 pub(super) fn history(facts: &Facts) -> Vec<Finding> {
     let calls = facts.calls();
     if !has_running_ai_task(facts)
-        || calls.iter().any(|c| runs_agboard(&c.command, RECORDS))
+        || calls.iter().any(|c| runs_agpj(&c.command, RECORDS))
         || !calls.iter().any(is_progress)
     {
         return Vec::new();

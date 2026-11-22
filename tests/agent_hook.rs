@@ -312,7 +312,7 @@ struct HookRun {
     stderr: String,
 }
 
-fn agboard_in(home: &std::path::Path, cwd: &std::path::Path, args: &[&str]) -> HookRun {
+fn agpj_in(home: &std::path::Path, cwd: &std::path::Path, args: &[&str]) -> HookRun {
     hook_process(home, cwd, args, None)
 }
 
@@ -388,7 +388,7 @@ fn project_of(run: &HookRun) -> String {
 
 fn create_project(home: &std::path::Path, folder: &std::path::Path, name: &str) {
     std::fs::create_dir_all(folder).unwrap();
-    let run = agboard_in(home, folder, &["project", "create", name]);
+    let run = agpj_in(home, folder, &["project", "create", name]);
     assert_eq!(run.status, 0, "{}", run.stderr);
 }
 
@@ -625,7 +625,7 @@ fn hook_keeps_its_event_allow_list_and_json_errors_for_unbound_folders() {
 fn normal_progress_keeps_folder_unbound_for_an_unbound_folder() {
     let home = tempdir().unwrap();
     let work = tempdir().unwrap();
-    let run = agboard_in(home.path(), work.path(), &["progress", "--json"]);
+    let run = agpj_in(home.path(), work.path(), &["progress", "--json"]);
     assert_eq!(run.status, 4);
     assert_eq!(run.stdout, "");
     let err: Value = serde_json::from_str(&run.stderr).unwrap();

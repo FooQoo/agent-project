@@ -141,7 +141,7 @@ fn it_serves_the_backend_on_the_tailnet_and_turns_serve_off_on_stop() {
     let ok = json_unlock(HOST, &origin, &passcode);
     assert_eq!(ok.status, 200, "{}", ok.body);
     let cookie = ok.header("set-cookie").unwrap();
-    assert!(cookie.starts_with("agboard_remote_session="), "{cookie}");
+    assert!(cookie.starts_with("agpj_remote_session="), "{cookie}");
     assert!(
         cookie.contains("Secure") && cookie.contains("HttpOnly"),
         "{cookie}"

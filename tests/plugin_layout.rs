@@ -81,7 +81,7 @@ fn every_plugin_version_is_the_crate_version() {
 }
 
 #[test]
-fn the_skill_is_a_thin_entry_that_runs_agboard_skills() {
+fn the_skill_is_a_thin_entry_that_runs_agpj_skills() {
     let skill_dir = repo("plugins/agent-board/skills/agent-board");
     let skill = std::fs::read_to_string(skill_dir.join("SKILL.md")).unwrap();
     let (frontmatter, body) = skill

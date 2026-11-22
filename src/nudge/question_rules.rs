@@ -1,12 +1,12 @@
 //! Turn rules about questions put on the board with `message ask`: images,
 //! the copy in the chat, and waiting for the answer.
 
-use super::commands::{runs_agboard, tokens};
+use super::commands::{runs_agpj, tokens};
 use super::rules::produced_image;
 use super::{Call, Facts, Finding};
 
 fn is_ask(call: &Call) -> bool {
-    runs_agboard(&call.command, &[&["message", "ask"]])
+    runs_agpj(&call.command, &[&["message", "ask"]])
 }
 
 /// A real ask: not a call that only prints the help text.
@@ -30,7 +30,7 @@ pub fn question_images(facts: &Facts) -> Vec<Finding> {
         || !calls.iter().any(produced_image)
         || calls
             .iter()
-            .any(|c| carries_image(c) || runs_agboard(&c.command, &[&["attachment", "add"]]))
+            .any(|c| carries_image(c) || runs_agpj(&c.command, &[&["attachment", "add"]]))
     {
         return Vec::new();
     }
@@ -63,7 +63,7 @@ pub fn question_wait(facts: &Facts) -> Vec<Finding> {
     };
     if calls[last_ask..]
         .iter()
-        .any(|c| runs_agboard(&c.command, &[&["message", "wait"]]))
+        .any(|c| runs_agpj(&c.command, &[&["message", "wait"]]))
     {
         return Vec::new();
     }

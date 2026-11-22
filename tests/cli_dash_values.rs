@@ -27,7 +27,7 @@ fn all_task_text(home: &Path) -> String {
 }
 
 /// Run `agboard` with `input` on standard input.
-fn agboard_stdin(home: &Path, args: &[&str], input: &str) -> (i32, String, String) {
+fn agpj_stdin(home: &Path, args: &[&str], input: &str) -> (i32, String, String) {
     let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
@@ -159,7 +159,7 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
     );
     assert_eq!(code, 0, "{err}");
 
-    let (code, _, err) = agboard_stdin(
+    let (code, _, err) = agpj_stdin(
         home.path(),
         &[
             "--project",
@@ -207,7 +207,7 @@ fn a_spaced_dash_value_is_refused_with_a_hint_to_use_equals() {
 fn a_lone_dash_still_reads_the_description_from_standard_input() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
-    let (code, _, err) = agboard_stdin(
+    let (code, _, err) = agpj_stdin(
         home.path(),
         &[
             "--project",

@@ -9,7 +9,7 @@ use axum::response::Response;
 use serde::Deserialize;
 
 use super::AppState;
-use super::response::{agboard_error_response, error_response, json_response};
+use super::response::{agpj_error_response, error_response, json_response};
 use super::store::{parse_project_id, refresh_index, with_request_files};
 
 #[derive(Deserialize)]
@@ -28,7 +28,7 @@ pub(crate) async fn set_project_task_acceptance(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let Ok(id) = raw_id.parse::<i64>() else {
         return error_response(
@@ -52,6 +52,6 @@ pub(crate) async fn set_project_task_acceptance(
                 &serde_json::json!({"task": result.value, "changed": result.changed}),
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

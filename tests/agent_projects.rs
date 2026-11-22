@@ -30,7 +30,7 @@ fn agboard(home: &Path, project: &str, args: &[&str]) -> Output {
         .unwrap()
 }
 
-fn agboard_in(home: &Path, cwd: &Path, args: &[&str]) -> Output {
+fn agpj_in(home: &Path, cwd: &Path, args: &[&str]) -> Output {
     bin()
         .env("AGBOARD_WATCH", "poll")
         .env("AGPJ_HOME", home)
@@ -326,7 +326,7 @@ fn the_hook_passes_only_the_named_projects_progress_table() {
 }
 
 #[test]
-fn a_hook_without_a_usable_target_reports_agboard_error_and_changes_nothing() {
+fn a_hook_without_a_usable_target_reports_agpj_error_and_changes_nothing() {
     let home = tempdir().unwrap();
     two_projects(home.path());
     let shared = home.path().join("shared");
@@ -408,12 +408,12 @@ fn progress_uses_the_nearest_bound_ancestor_and_explicit_project_overrides_it() 
     let deeper = nested.join("deeper");
     std::fs::create_dir_all(&deeper).unwrap();
 
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &root,
         &["project", "create", "Alpha"],
     ));
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &nested,
         &["project", "create", "Beta"],
@@ -421,13 +421,13 @@ fn progress_uses_the_nearest_bound_ancestor_and_explicit_project_overrides_it() 
     add_task(home.path(), "Alpha", "Root task");
     add_task(home.path(), "Beta", "Nested task");
 
-    let nearest = agboard_in(home.path(), &deeper, &["progress", "--json"]);
+    let nearest = agpj_in(home.path(), &deeper, &["progress", "--json"]);
     ok(&nearest);
     let nearest: Value = serde_json::from_slice(&nearest.stdout).unwrap();
     assert_eq!(nearest["project"]["name"], "Beta");
     assert_eq!(nearest["unassigned"][0]["title"], "Nested task");
 
-    let explicit = agboard_in(
+    let explicit = agpj_in(
         home.path(),
         &deeper,
         &["--project", "Alpha", "progress", "--json"],
@@ -445,27 +445,27 @@ fn progress_does_not_guess_from_an_unbound_folder_or_fall_through_a_stale_neares
     let root = folders.path().join("root");
     let nested = root.join("nested");
     std::fs::create_dir_all(&nested).unwrap();
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &root,
         &["project", "create", "Alpha"],
     ));
 
-    let unbound = agboard_in(home.path(), folders.path(), &["progress"]);
+    let unbound = agpj_in(home.path(), folders.path(), &["progress"]);
     assert!(!unbound.status.success());
     assert!(String::from_utf8_lossy(&unbound.stderr).contains("this folder is not bound"));
 
     // Existing read commands still require an explicit project.
-    let still_explicit = agboard_in(home.path(), &root, &["show", "1", "--json"]);
+    let still_explicit = agpj_in(home.path(), &root, &["show", "1", "--json"]);
     assert!(!still_explicit.status.success());
     assert!(String::from_utf8_lossy(&still_explicit.stderr).contains("--project NAME is required"));
 
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &nested,
         &["project", "create", "Beta"],
     ));
-    let projects = agboard_in(home.path(), &root, &["project", "ls", "--json"]);
+    let projects = agpj_in(home.path(), &root, &["project", "ls", "--json"]);
     ok(&projects);
     let projects: Value = serde_json::from_slice(&projects.stdout).unwrap();
     let beta_id = projects["projects"]
@@ -478,7 +478,7 @@ fn progress_does_not_guess_from_an_unbound_folder_or_fall_through_a_stale_neares
         .unwrap();
     std::fs::remove_dir_all(home.path().join("shared/projects").join(beta_id)).unwrap();
 
-    let stale = agboard_in(home.path(), &nested, &["progress"]);
+    let stale = agpj_in(home.path(), &nested, &["progress"]);
     assert!(!stale.status.success());
     assert!(
         String::from_utf8_lossy(&stale.stderr)
@@ -507,12 +507,12 @@ fn hook_uses_cwd_binding_and_emits_the_same_read_only_progress_snapshot() {
     let nested = root.join("nested");
     let deeper = nested.join("deeper");
     std::fs::create_dir_all(&deeper).unwrap();
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &root,
         &["project", "create", "Alpha"],
     ));
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &nested,
         &["project", "create", "Beta"],
@@ -541,7 +541,7 @@ fn hook_uses_cwd_binding_and_emits_the_same_read_only_progress_snapshot() {
         serde_json::from_str(fallback.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(fallback["project"]["name"], "Beta");
 
-    let progress = agboard_in(home.path(), &deeper, &["progress", "--json"]);
+    let progress = agpj_in(home.path(), &deeper, &["progress", "--json"]);
     ok(&progress);
     let mut progress: Value = serde_json::from_slice(&progress.stdout).unwrap();
     progress.as_object_mut().unwrap().remove("fetchedAt");
@@ -562,7 +562,7 @@ fn hook_explicit_project_overrides_cwd_binding_and_missing_binding_is_an_error()
     let unbound = folders.path().join("unbound");
     std::fs::create_dir_all(&root).unwrap();
     std::fs::create_dir_all(&unbound).unwrap();
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &root,
         &["project", "create", "Alpha"],
@@ -612,7 +612,7 @@ fn hook_treats_cwd_as_a_path_and_never_interpolates_it_as_shell_text() {
     let marker = folders.path().join("injected");
     let hostile = folders.path().join("repo-$(touch injected)");
     std::fs::create_dir_all(&hostile).unwrap();
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &hostile,
         &["project", "create", "Literal path"],

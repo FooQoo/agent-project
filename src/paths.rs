@@ -46,10 +46,10 @@ pub fn data_dir() -> Result<PathBuf, AgpjError> {
 /// [`data_dir`] with its inputs given, so the rule needs no process environment.
 /// An empty `AGPJ_HOME` counts as unset.
 pub fn data_dir_from(
-    agboard_home: Option<OsString>,
+    agpj_home: Option<OsString>,
     home: Option<PathBuf>,
 ) -> Result<PathBuf, AgpjError> {
-    if let Some(dir) = agboard_home.filter(|value| !value.is_empty()) {
+    if let Some(dir) = agpj_home.filter(|value| !value.is_empty()) {
         return Ok(PathBuf::from(dir));
     }
     match home.filter(|dir| !dir.as_os_str().is_empty()) {
@@ -149,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    fn agboard_home_takes_precedence_over_the_home_directory() {
+    fn agpj_home_takes_precedence_over_the_home_directory() {
         let tmp = tempfile::tempdir().unwrap();
         let resolved = data_dir_from(Some(tmp.path().into()), Some(PathBuf::from("/srv/someone")));
         assert_eq!(resolved.unwrap(), tmp.path());
@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn an_empty_agboard_home_counts_as_unset() {
+    fn an_empty_agpj_home_counts_as_unset() {
         let resolved = data_dir_from(Some(OsString::new()), Some(PathBuf::from("/srv/someone")));
         assert_eq!(
             resolved.unwrap(),
@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn data_dir_prefers_agboard_home() {
+    fn data_dir_prefers_agpj_home() {
         let tmp = tempfile::tempdir().unwrap();
         with_home(Some(tmp.path()), || {
             assert_eq!(data_dir().unwrap(), tmp.path());

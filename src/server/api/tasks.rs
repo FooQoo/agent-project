@@ -15,7 +15,7 @@ use crate::file_store::model::TaskView;
 use crate::file_store::validate::{self};
 use crate::server::AppState;
 use crate::server::request::ApiJson;
-use crate::server::response::{agboard_error_response, error_response, json_response};
+use crate::server::response::{agpj_error_response, error_response, json_response};
 use crate::server::store::{parse_project_id, refresh_index, with_files, with_request_files};
 
 #[derive(Deserialize)]
@@ -78,7 +78,7 @@ pub(super) async fn create_task(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let description = match whole_text(
         input.description,
@@ -87,7 +87,7 @@ pub(super) async fn create_task(
         validate::task_template,
     ) {
         Ok(description) => description.unwrap_or_default(),
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     match with_request_files(&state, &headers, move |store| {
         store.create_task(
@@ -108,7 +108,7 @@ pub(super) async fn create_task(
             refresh_index(&state);
             json_response(StatusCode::CREATED, &serde_json::json!({"task": task}))
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -120,7 +120,7 @@ pub(super) async fn move_task(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let Ok(id) = raw_id.parse::<i64>() else {
         return error_response(
@@ -184,7 +184,7 @@ pub(super) async fn move_task(
                 "currentStatus": current,
             }),
         ),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -195,7 +195,7 @@ pub(super) async fn reorder_task(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let Ok(id) = raw_id.parse::<i64>() else {
         return error_response(
@@ -219,7 +219,7 @@ pub(super) async fn reorder_task(
                 &serde_json::json!({"task": result.value, "changed": result.changed}),
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -231,7 +231,7 @@ pub(super) async fn set_agent_status(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let Ok(id) = raw_id.parse::<i64>() else {
         return error_response(
@@ -264,7 +264,7 @@ pub(super) async fn set_agent_status(
                 &serde_json::json!({"task": result.value, "changed": result.changed}),
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -280,6 +280,6 @@ pub(super) fn changed_task_response(
             }
             json_response(StatusCode::OK, &serde_json::json!({"task": result.value}))
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

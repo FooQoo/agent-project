@@ -34,7 +34,7 @@ pub(crate) fn error_response(
     json_response(status, &body)
 }
 
-pub(crate) fn agboard_error_response(error: &AgpjError) -> Response {
+pub(crate) fn agpj_error_response(error: &AgpjError) -> Response {
     let status = match error {
         AgpjError::TaskNotFound { .. }
         | AgpjError::ProjectNotFound { .. }

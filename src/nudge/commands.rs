@@ -51,7 +51,7 @@ pub(super) fn contains_sequence(tokens: &[&str], sequence: &[&str]) -> bool {
 
 /// Whether `command` runs `agboard` with any of the subcommand sequences,
 /// global flags in between allowed.
-pub fn runs_agboard(command: &str, sequences: &[&[&str]]) -> bool {
+pub fn runs_agpj(command: &str, sequences: &[&[&str]]) -> bool {
     let tokens = tokens(command);
     let Some(from) = tokens
         .iter()

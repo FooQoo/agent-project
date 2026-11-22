@@ -13,7 +13,7 @@ use crate::server::messages::{
 };
 use crate::server::messages_send::{answer_questions_multipart, send_request};
 use crate::server::request::ApiJson;
-use crate::server::response::{agboard_error_response, file_response};
+use crate::server::response::{agpj_error_response, file_response};
 use crate::server::store::{parse_project_id, with_files};
 
 pub(super) async fn message_detail(
@@ -77,7 +77,7 @@ pub(super) async fn message_attachment(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     match with_files(&state, move |store| {
         store.message_attachment(&project_id, &id, &name)
@@ -85,6 +85,6 @@ pub(super) async fn message_attachment(
     .await
     {
         Ok((media_type, bytes)) => file_response(&media_type, bytes),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

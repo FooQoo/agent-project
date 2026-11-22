@@ -216,7 +216,7 @@ fn human_output_is_english_and_names_the_next_step() {
 }
 
 #[test]
-fn agboard_home_overrides_the_default_and_an_empty_value_does_not() {
+fn agpj_home_overrides_the_default_and_an_empty_value_does_not() {
     let (tmp, home) = home_with_settings("home");
     let custom = tmp.path().join("custom data");
     let json = setup_json(
@@ -237,7 +237,7 @@ fn agboard_home_overrides_the_default_and_an_empty_value_does_not() {
 }
 
 #[test]
-fn a_relative_agboard_home_is_resolved_to_an_absolute_path_once() {
+fn a_relative_agpj_home_is_resolved_to_an_absolute_path_once() {
     let (_tmp, home) = home_with_settings("home");
     let json = setup_json(
         &home,
@@ -558,7 +558,7 @@ fn an_existing_rule_file_is_kept_as_it_is() {
 }
 
 #[test]
-fn the_written_rule_allows_the_agboard_command() {
+fn the_written_rule_allows_the_agpj_command() {
     let (_tmp, home) = home_with_settings("home");
     setup_json(&home, &[], &["--agent", "codex"]);
     let rules = fs::read_to_string(home.join(".codex/rules/agboard.rules")).unwrap();

@@ -13,10 +13,10 @@ use serve_process::ServeProcess;
 
 /// Run `agboard --project "Agent Board" <args>`.
 fn agboard(home: &std::path::Path, args: &[&str]) -> std::process::Output {
-    agboard_for(home, "Agent Board", args)
+    agpj_for(home, "Agent Board", args)
 }
 
-fn agboard_for(home: &std::path::Path, project: &str, args: &[&str]) -> std::process::Output {
+fn agpj_for(home: &std::path::Path, project: &str, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_agboard"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
@@ -234,11 +234,7 @@ fn wait_keeps_the_event_stream_open_until_its_timeout() {
 fn a_change_to_another_project_does_not_end_the_wait() {
     let home = tempdir().unwrap();
     assert!(agboard(home.path(), &["init"]).status.success());
-    assert!(
-        agboard_for(home.path(), "Other", &["init"])
-            .status
-            .success()
-    );
+    assert!(agpj_for(home.path(), "Other", &["init"]).status.success());
     let baseline = agboard(home.path(), &["snapshot", "--json"]);
     let baseline: Value = serde_json::from_slice(&baseline.stdout).unwrap();
     let after = baseline["cursor"].as_str().unwrap().to_string();
@@ -264,7 +260,7 @@ fn a_change_to_another_project_does_not_end_the_wait() {
         .spawn()
         .unwrap();
     std::thread::sleep(Duration::from_millis(800));
-    let added = agboard_for(
+    let added = agpj_for(
         home.path(),
         "Other",
         &["add", "Elsewhere", "--assignee", "ai", "--actor", "human"],
@@ -280,12 +276,8 @@ fn a_change_to_another_project_does_not_end_the_wait() {
 fn a_cursor_from_another_project_or_a_bare_number_is_refused() {
     let home = tempdir().unwrap();
     assert!(agboard(home.path(), &["init"]).status.success());
-    assert!(
-        agboard_for(home.path(), "Other", &["init"])
-            .status
-            .success()
-    );
-    let other = agboard_for(home.path(), "Other", &["snapshot", "--json"]);
+    assert!(agpj_for(home.path(), "Other", &["init"]).status.success());
+    let other = agpj_for(home.path(), "Other", &["snapshot", "--json"]);
     let other: Value = serde_json::from_slice(&other.stdout).unwrap();
     let foreign = other["cursor"].as_str().unwrap();
     let output = agboard(
