@@ -6,7 +6,7 @@ import { readBoardAfterReset, waitForSync } from '../helpers/ui';
 // Headless Chromium hides scrollbars by default; the scroll cue needs the real ones.
 test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } });
 
-const STORAGE_KEY = 'agboard.detailWidth';
+const STORAGE_KEY = 'agpj.detailWidth';
 
 test.beforeEach(async () => {
   resetBoard(mainProject);
@@ -76,7 +76,7 @@ for (const locale of ['en', 'ja']) {
     test(`${locale}: tabs and draft actions fit a ${detailWidth}px detail column`, async ({ page }, testInfo) => {
       await setPreferences({ locale: locale as 'en' | 'ja' });
       await page.addInitScript((detailWidth) => {
-        localStorage.setItem('agboard.detailWidth', String(detailWidth));
+        localStorage.setItem('agpj.detailWidth', String(detailWidth));
       }, detailWidth);
       await page.setViewportSize({ width: 1920, height: 900 });
       await page.goto(`/?project=${projectId(mainProject)}`);

@@ -56,7 +56,7 @@ describe('theme catalog', () => {
     expect(MODES).toEqual(['light', 'dark']);
     expect(all).toHaveLength(24);
     expect(DEFAULT_THEME).toEqual({ mode: 'light', accent: 'blue' });
-    expect(THEME_STORAGE_KEY).toBe('agboard.theme');
+    expect(THEME_STORAGE_KEY).toBe('agpj.theme');
   });
 });
 
@@ -197,9 +197,9 @@ describe('selectTheme', () => {
   });
 
   it('does not change the locale key', () => {
-    window.localStorage.setItem('agboard.locale', 'ja');
+    window.localStorage.setItem('agpj.locale', 'ja');
     selectTheme({ mode: 'dark', accent: 'gray' });
-    expect(window.localStorage.getItem('agboard.locale')).toBe('ja');
+    expect(window.localStorage.getItem('agpj.locale')).toBe('ja');
     window.localStorage.clear();
   });
 });

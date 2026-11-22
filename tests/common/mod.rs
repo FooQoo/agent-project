@@ -175,7 +175,7 @@ impl Running {
     /// The write token the board page carries.
     pub fn token(&self) -> String {
         let page = self.get("/").body;
-        let marker = "name=\"agboard-token\" content=\"";
+        let marker = "name=\"agpj-token\" content=\"";
         let start = page.find(marker).expect("token meta tag") + marker.len();
         page[start..start + 64].to_string()
     }

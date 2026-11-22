@@ -12,7 +12,7 @@ ngrokの入口は、ボードのページと以下のルートを同じパスで
 
 | API | 入出力と動作 |
 | --- | --- |
-| `GET /` | 書き込み用トークンを`meta[name=agboard-token]`に埋め込んだHTML。 |
+| `GET /` | 書き込み用トークンを`meta[name=agpj-token]`に埋め込んだHTML。 |
 | `GET /api/projects` | `projects`（id・name・createdAt）と`catalogVersion`。タスクは含まない。0件でも200。 |
 | `POST /api/projects/{projectId}/tasks` | title・body・acceptance・assigneeと任意の`draft: "human"`から未着手・Idleのタスクを作る（`"ai"`は422 `invalid_value`）。サーバーがfrontmatterを組み立てて検証する。201。 |
 | `POST /api/projects/{projectId}/tasks/multipart` | 画像付きの通常タスク、または依頼本文・任意のエピック・画像をまとめた簡易依頼タスクを作る。下記を参照。 |

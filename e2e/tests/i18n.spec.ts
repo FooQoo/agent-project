@@ -95,7 +95,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   });
 
   expect((await getPreferences()).locale).toBe('ja');
-  await expect(page.evaluate(() => localStorage.getItem('agboard.locale'))).resolves.toBe('ja');
+  await expect(page.evaluate(() => localStorage.getItem('agpj.locale'))).resolves.toBe('ja');
   await page.reload();
   await expect(page.getByRole('contentinfo').getByRole('status')).toHaveText(/^同期済み/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'ja');

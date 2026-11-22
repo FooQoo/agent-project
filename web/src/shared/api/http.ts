@@ -1,8 +1,8 @@
 import type { ApiError, ProjectId } from './contracts';
 
-const TOKEN_META = 'agboard-token';
+const TOKEN_META = 'agpj-token';
 
-/** The server puts the session token for writes into `<meta name="agboard-token">`. */
+/** The server puts the session token for writes into `<meta name="agpj-token">`. */
 export function readToken(): string {
   const meta = document.querySelector<HTMLMetaElement>(`meta[name="${TOKEN_META}"]`);
   return meta?.content ?? '';

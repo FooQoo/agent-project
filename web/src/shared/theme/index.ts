@@ -1,4 +1,4 @@
-export const THEME_STORAGE_KEY = 'agboard.theme';
+export const THEME_STORAGE_KEY = 'agpj.theme';
 export const MODES = ['light', 'dark'] as const;
 export const ACCENTS = [
   'blue',

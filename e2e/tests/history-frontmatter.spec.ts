@@ -234,7 +234,7 @@ test('saving a body edit after a concurrent lane change keeps the newest event a
 	await page.keyboard.press('End');
 	await page.keyboard.type('\nSaved after status update.');
 	const moved = await page.evaluate(async ({ taskId, projectId }) => {
-		const token = document.querySelector('meta[name="agboard-token"]')?.getAttribute('content') ?? '';
+		const token = document.querySelector('meta[name="agpj-token"]')?.getAttribute('content') ?? '';
 		const response = await fetch(`/api/projects/${projectId}/tasks/${taskId}/move`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', 'X-Agpj-Token': token },

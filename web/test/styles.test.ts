@@ -120,6 +120,6 @@ describe('message list tabs', () => {
 
 describe('index.html', () => {
   it('carries the session token placeholder for the server to replace', () => {
-    expect(read('index.html')).toContain('<meta name="agboard-token" content="{{AGPJ_TOKEN}}"');
+    expect(read('index.html')).toContain('<meta name="agpj-token" content="{{AGPJ_TOKEN}}"');
   });
 });

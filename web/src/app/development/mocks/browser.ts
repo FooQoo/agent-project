@@ -3,7 +3,7 @@ import type { MockServer } from '../mock-server/server.ts';
 import { mockHandlers } from './handlers.ts';
 
 /** Set while a page that the worker does not control yet has reloaded once to be controlled. */
-const RELOADED_FLAG = 'agboard.mockWorkerReloaded';
+const RELOADED_FLAG = 'agpj.mockWorkerReloaded';
 
 /** What `startMockWorker` did: the page can render, it is reloading, or it cannot run. */
 export type MockWorkerState = 'ready' | 'reloading' | 'unsupported';

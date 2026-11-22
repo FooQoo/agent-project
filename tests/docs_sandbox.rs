@@ -30,7 +30,7 @@ fn the_sandbox_page_has_its_own_policy_and_no_board_content() {
     assert_eq!(page.header("content-security-policy"), Some(SANDBOX_POLICY));
     assert_eq!(page.header("x-content-type-options"), Some("nosniff"));
     assert!(page.body.contains("<div id=\"root\">"));
-    assert!(!page.body.contains("agboard-token"));
+    assert!(!page.body.contains("agpj-token"));
     assert!(!page.body.contains(&server.token()));
 }
 

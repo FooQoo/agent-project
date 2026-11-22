@@ -4,10 +4,10 @@ import { onMonitorAuthLoss } from '../../pages/monitor/session';
 import { openRemoteSession, unlockRemote, usesRemoteSession, watchSessionLoss } from './session';
 
 function setToken(content: string | null) {
-  document.querySelector('meta[name="agboard-token"]')?.remove();
+  document.querySelector('meta[name="agpj-token"]')?.remove();
   if (content === null) return;
   const meta = document.createElement('meta');
-  meta.name = 'agboard-token';
+  meta.name = 'agpj-token';
   meta.content = content;
   document.head.append(meta);
 }

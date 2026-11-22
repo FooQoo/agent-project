@@ -71,10 +71,10 @@ mod tests {
 
     #[test]
     fn render_index_replaces_the_placeholder() {
-        let html = r#"<meta name="agboard-token" content="{{AGPJ_TOKEN}}" />"#;
+        let html = r#"<meta name="agpj-token" content="{{AGPJ_TOKEN}}" />"#;
         assert_eq!(
             render_index(html, "abc123"),
-            r#"<meta name="agboard-token" content="abc123" />"#
+            r#"<meta name="agpj-token" content="abc123" />"#
         );
     }
 
@@ -85,10 +85,10 @@ mod tests {
 
     #[test]
     fn render_index_fills_in_the_build_id() {
-        let html = r#"<meta name="agboard-build" content="{{AGPJ_BUILD_ID}}" />"#;
+        let html = r#"<meta name="agpj-build" content="{{AGPJ_BUILD_ID}}" />"#;
         assert_eq!(
             render_index(html, "abc"),
-            format!(r#"<meta name="agboard-build" content="{APP_BUILD_ID}" />"#)
+            format!(r#"<meta name="agpj-build" content="{APP_BUILD_ID}" />"#)
         );
     }
 

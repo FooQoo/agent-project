@@ -26,7 +26,7 @@ test.describe('PC condition tab', () => {
         const id = seed(mainProject);
         await page.setViewportSize({ width: locale === 'en' ? 1024 : 1280, height: 900 });
         await setPreferences({ locale, theme: { mode, accent: 'blue' } });
-        await page.addInitScript(() => localStorage.setItem('agboard.detailWidth', '320'));
+        await page.addInitScript(() => localStorage.setItem('agpj.detailWidth', '320'));
         await page.goto(`/?project=${projectId(mainProject)}`);
         await waitForSync(page);
         await readBoardAfterReset(page);

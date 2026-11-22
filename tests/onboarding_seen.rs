@@ -297,7 +297,7 @@ impl Server {
             .call()
             .unwrap();
         let page = response.body_mut().read_to_string().unwrap();
-        let marker = "name=\"agboard-token\" content=\"";
+        let marker = "name=\"agpj-token\" content=\"";
         let start = page.find(marker).unwrap() + marker.len();
         page[start..start + 64].to_string()
     }

@@ -253,7 +253,7 @@ test('an agent cannot move a task to Done while a condition is unmet, and a pers
   const pid = projectId(mainProject);
   const moved = await page.evaluate(
     async ({ url, body }) => {
-      const meta = document.querySelector('meta[name="agboard-token"]')?.getAttribute('content') ?? '';
+      const meta = document.querySelector('meta[name="agpj-token"]')?.getAttribute('content') ?? '';
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Agpj-Token': meta },

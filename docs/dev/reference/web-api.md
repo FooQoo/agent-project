@@ -12,7 +12,7 @@ The ngrok entrance serves the board page and the routes below under the same pat
 
 | API | Contract |
 | --- | --- |
-| `GET /` | HTML with the write token in `meta[name=agboard-token]`. |
+| `GET /` | HTML with the write token in `meta[name=agpj-token]`. |
 | `GET /api/projects` | `projects` (id, name, createdAt) and `catalogVersion`, without tasks. 200 even when empty. |
 | `POST /api/projects/{projectId}/tasks` | Creates a Todo/Idle task from title, body, acceptance, assignee, and optionally `draft: "human"` (`"ai"` is 422 `invalid_value`). The server composes and validates the frontmatter. 201. |
 | `POST /api/projects/{projectId}/tasks/multipart` | Creates a regular task with images, or an AI task from a short request with its optional epic and images, in one multipart submission. See below. |

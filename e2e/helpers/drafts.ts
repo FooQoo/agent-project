@@ -3,7 +3,7 @@ import { mainHome, mainOrigin, mainProject, projectId } from './agboard';
 /** The write token the server puts in the page it serves. */
 async function pageToken(origin: string): Promise<string> {
   const html = await (await fetch(`${origin}/`)).text();
-  const token = html.match(/<meta name="agboard-token" content="([^"]*)"/)?.[1];
+  const token = html.match(/<meta name="agpj-token" content="([^"]*)"/)?.[1];
   if (!token) throw new Error(`no write token in the page at ${origin}`);
   return token;
 }

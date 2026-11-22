@@ -21,7 +21,7 @@ test('a delete request without the token or an Origin is refused and the task st
 
 test('a token alone, a bad token, or a wrong Origin is not enough', async ({ page, request }) => {
   await page.goto('/');
-  const token = await page.locator('meta[name="agboard-token"]').getAttribute('content');
+  const token = await page.locator('meta[name="agpj-token"]').getAttribute('content');
   expect(token).toMatch(/^[0-9a-f]{64}$/);
   const before = listTasks(mainProject);
 
@@ -60,7 +60,7 @@ test('a token alone, a bad token, or a wrong Origin is not enough', async ({ pag
 
 test('the token appears only in the page, never in the API responses', async ({ page, request }) => {
   await page.goto('/');
-  const token = (await page.locator('meta[name="agboard-token"]').getAttribute('content'))!;
+  const token = (await page.locator('meta[name="agpj-token"]').getAttribute('content'))!;
   for (const path of [
     '/api/projects',
     `/api/projects/${projectId(mainProject)}/summary`,
@@ -90,7 +90,7 @@ async function fromPage(
 ): Promise<{ status: number; body: { error?: { code: string }; task?: Shown } }> {
   return page.evaluate(
     async ({ method, path, body, token }) => {
-      const meta = document.querySelector('meta[name="agboard-token"]')?.getAttribute('content') ?? '';
+      const meta = document.querySelector('meta[name="agpj-token"]')?.getAttribute('content') ?? '';
       const response = await fetch(path, {
         method,
         headers: { 'Content-Type': 'application/json', 'X-Agpj-Token': token ?? meta },
@@ -105,7 +105,7 @@ async function fromPage(
 test('the edit and the draft switch are refused without the guard, and nothing changes', async ({ page, request }) => {
   const task13 = `/api/projects/${projectId(mainProject)}/tasks/13`;
   await page.goto('/');
-  const token = (await page.locator('meta[name="agboard-token"]').getAttribute('content'))!;
+  const token = (await page.locator('meta[name="agpj-token"]').getAttribute('content'))!;
   const before = listTasks(mainProject);
   const draftBefore = shown(13).draft;
 

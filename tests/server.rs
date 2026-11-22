@@ -295,7 +295,7 @@ impl Running {
     /// Fetch the session token the way a browser would, from `GET /`.
     fn token(&self) -> String {
         let page = self.get("/");
-        let marker = "name=\"agboard-token\" content=\"";
+        let marker = "name=\"agpj-token\" content=\"";
         let start = page.body.find(marker).expect("token meta tag") + marker.len();
         page.body[start..start + 64].to_string()
     }
@@ -488,9 +488,10 @@ fn index_is_html_with_a_fresh_64_hex_token() {
     let token = server.token();
     assert_eq!(token.len(), 64);
     assert!(token.chars().all(|c| matches!(c, '0'..='9' | 'a'..='f')));
-    assert!(page.body.contains(&format!(
-        "<meta name=\"agboard-token\" content=\"{token}\" />"
-    )));
+    assert!(
+        page.body
+            .contains(&format!("<meta name=\"agpj-token\" content=\"{token}\" />"))
+    );
     let script = agent_project::server::web_assets::APP_ASSETS
         .iter()
         .find(|asset| asset.name.starts_with("app-") && asset.name.ends_with(".js"))
@@ -500,7 +501,7 @@ fn index_is_html_with_a_fresh_64_hex_token() {
             .contains(&format!("src=\"/assets/{}\"", script.name))
     );
     assert!(page.body.contains(&format!(
-        "<meta name=\"agboard-build\" content=\"{}\" />",
+        "<meta name=\"agpj-build\" content=\"{}\" />",
         agent_project::server::web_assets::APP_BUILD_ID
     )));
 }

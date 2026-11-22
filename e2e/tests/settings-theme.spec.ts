@@ -80,8 +80,8 @@ const JA_COLORS: Record<Accent, string> = {
   Gray: 'グレー',
 };
 
-const THEME_KEY = 'agboard.theme';
-const LOCALE_KEY = 'agboard.locale';
+const THEME_KEY = 'agpj.theme';
+const LOCALE_KEY = 'agpj.locale';
 
 let pageErrors: string[] = [];
 
@@ -329,7 +329,7 @@ test.describe('a storage that fails', () => {
     await openWith(page, () => {
       const read = Storage.prototype.getItem;
       Storage.prototype.getItem = function (key: string) {
-        if (key === 'agboard.theme') throw new DOMException('denied', 'SecurityError');
+        if (key === 'agpj.theme') throw new DOMException('denied', 'SecurityError');
         return read.call(this, key);
       };
     });
@@ -343,7 +343,7 @@ test.describe('a storage that fails', () => {
     await openWith(page, () => {
       const write = Storage.prototype.setItem;
       Storage.prototype.setItem = function (key: string, value: string) {
-        if (key === 'agboard.theme') throw new DOMException('full', 'QuotaExceededError');
+        if (key === 'agpj.theme') throw new DOMException('full', 'QuotaExceededError');
         return write.call(this, key, value);
       };
     });

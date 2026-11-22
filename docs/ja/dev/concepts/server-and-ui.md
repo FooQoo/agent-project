@@ -97,7 +97,7 @@ JSONとHTMLの応答は`no-store`です。スクリプトとスタイルシー�
 - 最初のスクリプトには、最初の画面に必要なものだけを入れます。カード・エピック・設定のダイアログ、詳細パネルのMarkdown表示、スマホ画面の詳細ドロワーは`preloadable`（`web/src/shared/lib/lazy/preloadable.ts`）で分割し、最初の画面を表示した直後に取得します。表示部品が届くまで、本文はプレーンテキストで表示します。エディターのアウトラインは表示側のMarkdownパーサーで`##`見出しを読むため、CodeMirrorはエディターを開いたときにだけ読み込まれます。
 - `web/test/build-contract.test.ts`は、ボードの初回読み込み（入口と、そこから静的にimportされるチャンク）に上限を設け、500 kBを超えるスクリプトは使うときだけ読み込むことを確かめます。Viteの`chunkSizeWarningLimit`は、使うときだけ読み込む大きなチャンク（MermaidのELKレイアウト、文法パーサー、リッチエディター）に合わせて1500 kBにしています。
 - Rustは二つのロゴ、HTMLのテンプレート、`.gz`ファイルを埋め込みます。`build.rs`はボードのスクリプトとスタイルシートを`OUT_DIR`の表にまとめ、同じバイト列のファイルは一度だけ埋め込みます。配信するのは表にある名前だけです。ページのHTMLとファイル名から、ビルドIDも作ります。ファイルや`.gz`がない場合、またはHTMLが表にないファイルを読み込む場合は、`Run "pnpm --dir web build" first.`でビルドを止めます。画面のビルドを`cargo build`の前に行うのはこのためです。`web/dist/`はコミットしません。
-- 各HTMLは`<meta name="agboard-build">`に自分のビルドIDを持ち、SSEの`ready`はサーバーの現在のビルドIDを伝えます。両者が違うとページを一度だけ再読み込みします。編集ダイアログ、送信前の回答、そのほかの操作が開いている間は、終わるまで待ちます（`useBuildReload`）。同じビルドのために一度再読み込みしたタブは、もう再読み込みしません。ビルドIDを持たないページ（Viteの開発サーバー）は再読み込みしません。
+- 各HTMLは`<meta name="agpj-build">`に自分のビルドIDを持ち、SSEの`ready`はサーバーの現在のビルドIDを伝えます。両者が違うとページを一度だけ再読み込みします。編集ダイアログ、送信前の回答、そのほかの操作が開いている間は、終わるまで待ちます（`useBuildReload`）。同じビルドのために一度再読み込みしたタブは、もう再読み込みしません。ビルドIDを持たないページ（Viteの開発サーバー）は再読み込みしません。
 - 表示用の純粋関数（日時、並び替え、件数）は`web/src/features/*/model/`または`web/src/shared/lib/`に置いてVitestで試験し、コンポーネントはTesting Libraryで試験します。
 - shadcnのRadix版部品（Dialog・Button・Badge・Input・Textarea・Label・RadioGroup・DropdownMenu）と、モニターの下から出るシート（Radix Dialogを使う`drawer.tsx`）は`web/src/shared/ui/`に置き、`cn`は`web/src/shared/lib/classnames/utils.ts`、別名は`@/* → ./src/*`です。Dialogのフォーカスはライブラリに任せ、保存中に閉じさせない・送信・入力の保持は機能側で扱います。UIのスタイルは`shared/styles/ui.css`、テーマと製品のスタイルは`shared/styles/theme.css`・`tokens.css`・`app.css`です。
 - 外部のCDNやフォントは読み込みません。書体は`--font-sans`と`--font-mono`の指定だけです。
@@ -111,7 +111,7 @@ JSONとHTMLの応答は`no-store`です。スクリプトとスタイルシー�
 
 **エディター。** `RichMarkdownEditor`（Milkdown Crepe）は`MarkdownEditor`と同じ契約を保ちます。`value`・`onChange`・`onCursorChange`・`disabled`と、`goTo`・`focus`・`insert`を持つrefです。遅延読み込みで、その間は`MarkdownView`を表示します。有効にするのはCodeMirror・ListItem・ImageBlock・Cursor・Placeholder・LinkTooltip・Toolbar・Tableだけで、Crepeのテーマは使いません。初期値はマウント時に一度だけ渡し、`onChange`は利用者の編集でだけ呼びます。編集していない文書は元の文字列のまま保存するので、変えていないMarkdownの書式は崩れません。アップロードは保留中の添付になり、`assets/<id>.<ext>`で参照します。Mermaidのプレビューと閲覧は`renderMermaid`を共有します。`web/src/shared/rich-editor/`の中では、`RichMarkdownEditor.impl.tsx`は外部の値でセッションを作り直す境界だけを持ち、`useRichEditorSession.ts`がセッション（元の文章・編集済みかどうか・初期化前のコマンド・見出し位置・後始末）、`createEditor.ts`が機能の組み合わせ、`editorCommands.ts`が`goTo`・`focus`・`insert`・`markdown`のハンドル、`MermaidPreviews.ts`が図のプレビューを受け持ちます。図のエラー文は画面の翻訳を受け取って作ります。ハンドルのコマンドが動くのは、Crepeがエディターを作り終えた後の最初のアニメーションフレームからです。それより前のコマンドはそこまで待ちます。そのフレームでCrepeのリスト項目が描画時の選択位置を戻すため、先に実行すると`goTo`や`insert`の結果が打ち消されるからです。
 
-**テーマ。** `web/src/shared/theme/index.ts`が、テーマの型・一覧・検証・DOMの属性を受け持ちます。テーマはモード（lightかdark）と12色のアクセントの一つです。Reactの描画前に`data-mode`・`data-accent`・`dark`クラス・`color-scheme`を同期して適用します。保存した値はPCの`preferences.json`にあり、`web/src/shared/preferences/index.ts`が`GET`・`PUT /api/preferences`で読み書きします（[共有ファイル](../reference/files.md#表示設定)を参照）。ブラウザは最初の描画のためだけに、`localStorage`の`agboard.theme`と`agboard.locale`に控えを持ちます。テーマの変更がタスクの履歴に届くことはありません。
+**テーマ。** `web/src/shared/theme/index.ts`が、テーマの型・一覧・検証・DOMの属性を受け持ちます。テーマはモード（lightかdark）と12色のアクセントの一つです。Reactの描画前に`data-mode`・`data-accent`・`dark`クラス・`color-scheme`を同期して適用します。保存した値はPCの`preferences.json`にあり、`web/src/shared/preferences/index.ts`が`GET`・`PUT /api/preferences`で読み書きします（[共有ファイル](../reference/files.md#表示設定)を参照）。ブラウザは最初の描画のためだけに、`localStorage`の`agpj.theme`と`agpj.locale`に控えを持ちます。テーマの変更がタスクの履歴に届くことはありません。
 
 エピック一覧は、プロジェクトのSummaryから、エピックと進捗を読みます。進捗はサーバーが`epics`と同じスナップショットから計算するので、一覧が二つの読み込みを混ぜることはありません。リモートアクセスのスマホ向けの画面には、エピック一覧はありません。幅768px以上ではPCのボードになり、エピック一覧もあります。一覧はアーカイブと`ListPane`で外枠を共有し、読み込み中・読み込み失敗・再取得失敗・空の各状態はプロジェクトのresourceから決まります。再取得に失敗しても直前に読めた行を残します。
 
@@ -240,7 +240,7 @@ Detailは、表示する画面がなくなってから5分キャッシュに残�
 - 起動時、ページはブラウザの控えで描画してから、`GET /api/preferences`を読みます。PCの値と違えば、ページはPCの値に切り替えます。正しいのはPCの値で、ブラウザの控えは表示が一瞬ずれるのを防ぐためだけに使います。
 - `preferences`イベントは、開いているすべてのページに変更をすぐに反映します。再読み込みは要りません。ページは、すでに新しい版を表示していれば、遅れて届いた古い応答やイベントを無視します。
 - 保存に失敗した場合（`invalid_preferences`・`preferences_unavailable`、または接続できない場合）も、選んだ設定は今のページに反映します。設定のダイアログには保存の失敗を表示し、PCの値は変えません。日本語の翻訳キーがなければ英語の文言を表示します。設定の失敗でボードのデータが変わることはありません。
-- 詳細欄の幅は、保存する設定には含みません。`agboard.detailWidth`の別のキーでブラウザごとに保存し、値がない・不正なときは既定の幅に戻します。
+- 詳細欄の幅は、保存する設定には含みません。`agpj.detailWidth`の別のキーでブラウザごとに保存し、値がない・不正なときは既定の幅に戻します。
 
 ### ドキュメントのダイアログ
 

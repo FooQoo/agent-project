@@ -302,7 +302,7 @@ impl Serve {
 
     fn token(&self) -> String {
         let page = self.request("GET", "/", None, &[]).1;
-        let marker = "name=\"agboard-token\" content=\"";
+        let marker = "name=\"agpj-token\" content=\"";
         let start = page.find(marker).expect("token meta tag") + marker.len();
         page[start..start + 64].to_string()
     }

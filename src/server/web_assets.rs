@@ -18,7 +18,7 @@ pub struct EmbeddedAsset {
 // `APP_ASSETS`, `SANDBOX_ASSETS` and `APP_BUILD_ID`.
 include!(concat!(env!("OUT_DIR"), "/web_assets.rs"));
 
-/// What the web build leaves in each page's `agboard-build` `<meta>`.
+/// What the web build leaves in each page's `agpj-build` `<meta>`.
 pub const BUILD_ID_PLACEHOLDER: &str = "{{AGPJ_BUILD_ID}}";
 
 /// For a content-named file: the browser keeps it and never asks again.

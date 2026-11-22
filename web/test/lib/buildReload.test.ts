@@ -6,10 +6,10 @@ const OWN = '0123456789abcdef';
 const NEW = 'fedcba9876543210';
 
 function setMeta(content: string | null) {
-  document.head.querySelector('meta[name="agboard-build"]')?.remove();
+  document.head.querySelector('meta[name="agpj-build"]')?.remove();
   if (content === null) return;
   const meta = document.createElement('meta');
-  meta.name = 'agboard-build';
+  meta.name = 'agpj-build';
   meta.content = content;
   document.head.append(meta);
 }

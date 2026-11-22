@@ -1,7 +1,7 @@
 const BUILD_ID = /^[0-9a-f]{16}$/;
 /** The build ID the server put in this page, or `null` (a dev server leaves the placeholder). */
 export function pageBuildId(doc: Document = document): string | null {
-  const content = doc.querySelector('meta[name="agboard-build"]')?.getAttribute('content') ?? '';
+  const content = doc.querySelector('meta[name="agpj-build"]')?.getAttribute('content') ?? '';
   return BUILD_ID.test(content) ? content : null;
 }
 

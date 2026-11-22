@@ -262,7 +262,7 @@ impl Reply {
 }
 
 pub fn token(html: &str) -> String {
-    let marker = "name=\"agboard-token\" content=\"";
+    let marker = "name=\"agpj-token\" content=\"";
     let start = html.find(marker).expect("remote PC token meta") + marker.len();
     html[start..start + 64].to_string()
 }

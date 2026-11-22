@@ -38,7 +38,7 @@ export const WithConnectionEntry: StoryObj<typeof meta> = {
     // The page served on the PC carries its token; a page without one came through the entrance,
     // which shows no connection entry.
     const token = document.createElement('meta');
-    token.name = 'agboard-token';
+    token.name = 'agpj-token';
     token.content = 'story-token';
     document.head.append(token);
     const original = window.fetch;

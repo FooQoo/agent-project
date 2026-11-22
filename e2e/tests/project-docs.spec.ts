@@ -77,7 +77,7 @@ test('E2E-3: the file API refuses traversal, absolute paths, links and other ext
   mkdirSync(path.join(docsDir(), 'dir.md'), { recursive: true });
 
   await page.goto('/');
-  const token = (await page.locator('meta[name="agboard-token"]').getAttribute('content'))!;
+  const token = (await page.locator('meta[name="agpj-token"]').getAttribute('content'))!;
   const base = `/api/projects/${projectId(mainProject)}/docs`;
   const guard = { Origin: new URL(page.url()).origin, 'Sec-Fetch-Site': 'same-origin', 'X-Agpj-Token': token };
   const bad = ['../secret.md', '../../etc/passwd', '/etc/passwd', 'product/../../x.md', 'linkdir/secret.md', 'link.md', 'note.txt', 'dir.md'];

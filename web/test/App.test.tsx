@@ -44,7 +44,7 @@ beforeEach(() => {
   };
   FakeEventSource.reset(true);
   vi.stubGlobal('EventSource', FakeEventSource);
-  document.head.innerHTML = '<meta name="agboard-token" content="test-token">';
+  document.head.innerHTML = '<meta name="agpj-token" content="test-token">';
   fetchMock = stubBackend(backend);
 });
 

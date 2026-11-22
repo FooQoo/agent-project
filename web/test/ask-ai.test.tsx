@@ -27,7 +27,7 @@ function local(id: string, name: string, type = 'image/png'): EditorAttachment {
 
 beforeEach(() => {
   selectLocale('en');
-  document.head.innerHTML = '<meta name="agboard-token" content="test-token">';
+  document.head.innerHTML = '<meta name="agpj-token" content="test-token">';
 });
 afterEach(() => {
   cleanup();

@@ -16,7 +16,7 @@ function lastCall(fetchMock: ReturnType<typeof vi.fn>) {
 }
 
 beforeEach(() => {
-  document.head.innerHTML = '<meta name="agboard-token" content="test-token">';
+  document.head.innerHTML = '<meta name="agpj-token" content="test-token">';
 });
 afterEach(() => {
   vi.unstubAllGlobals();

@@ -424,7 +424,7 @@ fn the_page_and_its_static_files_carry_no_token_and_need_no_session() {
     let page = server.request("GET", "/", &[], "");
     assert_eq!(page.status, 200, "{}", page.body);
     assert_eq!(page.header("cache-control"), Some("no-store"));
-    assert!(page.body.contains("name=\"agboard-token\" content=\"\""));
+    assert!(page.body.contains("name=\"agpj-token\" content=\"\""));
     assert!(!page.body.contains(&board_token));
     assert!(!page.body.contains("{{AGBOARD"));
     let csp = page.header("content-security-policy").unwrap();
@@ -479,7 +479,7 @@ fn the_page_and_its_static_files_carry_no_token_and_need_no_session() {
     let session = server.session();
     let again = server.get(&session, "/");
     assert!(!again.body.contains(&board_token));
-    assert!(again.body.contains("name=\"agboard-token\" content=\"\""));
+    assert!(again.body.contains("name=\"agpj-token\" content=\"\""));
 }
 
 // -------------------------------------------------------------------- AC-4
@@ -599,7 +599,7 @@ fn the_old_monitor_addresses_are_not_found_through_the_entrance_with_or_without_
     }
     // The bodies do not point anywhere: no page, no redirect, no token.
     let page = server.get(&session, "/monitor/");
-    assert!(!page.body.contains("agboard-monitor-token"));
+    assert!(!page.body.contains("agpj-monitor-token"));
     assert!(!page.body.contains("<html"));
 }
 
@@ -679,7 +679,7 @@ fn projects_are_listed_and_switched_through_the_entrance_as_on_the_pc() {
     for id in [first.as_str(), second.as_str()] {
         let page = server.request("GET", &format!("/?project={id}"), &[], "");
         assert_eq!(page.status, 200, "{id}");
-        assert!(page.body.contains("name=\"agboard-token\" content=\"\""));
+        assert!(page.body.contains("name=\"agpj-token\" content=\"\""));
         assert!(!page.body.contains("Only in the second project"));
     }
 
@@ -693,7 +693,7 @@ fn projects_are_listed_and_switched_through_the_entrance_as_on_the_pc() {
         "",
     );
     assert_eq!(link.status, 200);
-    assert!(link.body.contains("name=\"agboard-token\" content=\"\""));
+    assert!(link.body.contains("name=\"agpj-token\" content=\"\""));
     assert!(!link.body.contains("Only in the second project"));
 
     // Without a session neither the list nor a project is readable.
