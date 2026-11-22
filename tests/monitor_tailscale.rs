@@ -29,7 +29,7 @@ fn fake_cli(dir: &Path, status: &str) -> PathBuf {
     std::fs::write(
         &script,
         format!(
-            "#!/bin/sh\nD='{}'\nif [ \"$1\" = status ]; then cat \"$D/status.json\"; exit 0; fi\necho \"$@\" >> \"$D/calls.log\"\n",
+            "#!/bin/sh\nD='{}'\nif [ \"$1\" = status ]; then cat \"$D/status.json\"; exit 0; fi\nif [ \"$1 $2\" = \"serve status\" ]; then cat \"$D/serve.json\" 2>/dev/null || echo '{{}}'; exit 0; fi\necho \"$@\" >> \"$D/calls.log\"\n",
             dir.display()
         ),
     )
@@ -149,8 +149,31 @@ fn it_serves_the_backend_on_the_tailnet_and_turns_serve_off_on_stop() {
 
     assert_eq!(s.stop_ngrok().status, 200);
     s.wait_status("disabled");
+    // Turning serve off runs on its own thread, so give it a moment.
+    let end = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while calls(tools.path()).len() < 2 && std::time::Instant::now() < end {
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
     let log = calls(tools.path());
     assert_eq!(log.last().unwrap(), "serve --https=443 off", "{log:?}");
+}
+
+#[test]
+fn it_does_not_replace_a_handler_another_program_already_serves_on_443() {
+    let tools = tempfile::tempdir().unwrap();
+    let home = support::home();
+    let cli = fake_cli(tools.path(), RUNNING);
+    std::fs::write(
+        tools.path().join("serve.json"),
+        r#"{"TCP":{"443":{"HTTPS":true}},"Web":{"mac.tail1234.ts.net:443":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:9000"}}}}}"#,
+    )
+    .unwrap();
+    let s = server(home.path(), Some(cli));
+    choose_tailscale(&s);
+    assert_eq!(s.start_ngrok(json!({})).status, 202);
+    assert_eq!(s.wait_status("failed")["failure"], "tailscale_serve_busy");
+    // Nothing was changed, and a failed start turns nothing off either.
+    assert!(calls(tools.path()).is_empty(), "{:?}", calls(tools.path()));
 }
 
 #[test]

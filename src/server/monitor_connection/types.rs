@@ -74,6 +74,8 @@ pub enum FailureCode {
     TailscaleHttpsDisabled,
     /// `tailscale serve` did not accept the entrance.
     TailscaleServeFailed,
+    /// Another program already serves HTTPS on port 443 of this tailnet name.
+    TailscaleServeBusy,
 }
 
 impl FailureCode {
@@ -89,6 +91,7 @@ impl FailureCode {
             Self::TailscaleNotLoggedIn => "tailscale_not_logged_in",
             Self::TailscaleHttpsDisabled => "tailscale_https_disabled",
             Self::TailscaleServeFailed => "tailscale_serve_failed",
+            Self::TailscaleServeBusy => "tailscale_serve_busy",
         }
     }
 }

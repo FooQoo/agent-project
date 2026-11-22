@@ -256,7 +256,7 @@ The state object has these fields:
 | `tokenSource` | `env` (`NGROK_AUTHTOKEN`), `keychain` (the secure storage), `session` (typed for this run), or `null`. Never the value. |
 | `keychainAvailable` | Whether this PC has a secure storage (the OS credential store) that can hold a token. |
 | `keychainTokenSaved` | Whether a token is saved in the secure storage, even if another source is used. |
-| `failure` | `null`, or one of `connect_failed`, `endpoint_failed`, `public_url_invalid`, `internal`, `config_unreadable`, `config_invalid`, `tailscale_not_installed`, `tailscale_not_logged_in`, `tailscale_https_disabled`, `tailscale_serve_failed`. |
+| `failure` | `null`, or one of `connect_failed`, `endpoint_failed`, `public_url_invalid`, `internal`, `config_unreadable`, `config_invalid`, `tailscale_not_installed`, `tailscale_not_logged_in`, `tailscale_https_disabled`, `tailscale_serve_failed`, `tailscale_serve_busy`. |
 | `passcode` | The 4-digit passcode of the running connection, for the PC to show. Present only while `status` is `ready`; omitted when the connection is starting, stopped, or failed. It is the one secret this API returns. |
 
 A start reports its progress through this state; poll `GET` until `status` leaves `starting`. The token, the count of wrong guesses, and sessions never appear in any response or in the settings file, and the passcode appears only here (and on the `serve` startup line). The settings are stored as described in [Shared files](./files.md#monitor-connection-settings). The error codes are in [Error codes](./errors.md#remote-connection).
