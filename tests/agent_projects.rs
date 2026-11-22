@@ -14,14 +14,14 @@ use tempfile::tempdir;
 fn bin() -> Command {
     let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
     command
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0");
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0");
     command
 }
 
 fn agpj(home: &Path, project: &str, args: &[&str]) -> Output {
     bin()
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["--project", project])
@@ -32,7 +32,7 @@ fn agpj(home: &Path, project: &str, args: &[&str]) -> Output {
 
 fn agpj_in(home: &Path, cwd: &Path, args: &[&str]) -> Output {
     bin()
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(cwd)
@@ -104,7 +104,7 @@ fn hook_in(
     cwd: Option<&Path>,
 ) -> Output {
     let mut command = bin();
-    command.env("AGBOARD_WATCH", "poll").env("AGPJ_HOME", home);
+    command.env("AGPJ_WATCH", "poll").env("AGPJ_HOME", home);
     command.env("TZ", "UTC");
     if let Some(cwd) = cwd {
         command.current_dir(cwd);
@@ -163,7 +163,7 @@ impl Drop for Server {
 
 fn start_server(home: &Path) -> Server {
     let mut server = bin()
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
@@ -185,7 +185,7 @@ fn stop(server: Server) {
 fn spawn_wait(home: &Path, project: &str, after: &str, timeout: Option<&str>) -> Child {
     let mut command = bin();
     command
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .args(["--project", project, "--json", "wait", "--after", after]);
     if let Some(timeout) = timeout {

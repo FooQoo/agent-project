@@ -186,8 +186,7 @@ export const scenarios: Record<ScenarioId, ResidentPanelProps> = {
     ...base(stopped),
     launchProblem: {
       code: 'project_has_no_folder',
-      reason:
-        'The project has no bound folder that still exists. Bind one with agpj project bind.',
+      reason: 'The project has no bound folder that still exists. Bind one with agpj project bind.',
       unreachable: false,
     },
   },
