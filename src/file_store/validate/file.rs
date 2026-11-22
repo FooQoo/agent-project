@@ -8,8 +8,7 @@ use super::body::normalize_answer_text;
 use super::choice::choice_items_defect;
 use super::{Defect, defect, is_hex32};
 use crate::domain::{
-    MAX_VERSIONS, RunState, check_work_state, validate_project_name, validate_title,
-    validate_version_name,
+    RunState, check_work_state, validate_project_name, validate_title, validate_version_name,
 };
 use crate::error::AgboardError;
 use crate::file_store::layout::FORMAT_NAME;
@@ -73,24 +72,12 @@ pub fn check_project(file: &ProjectFile, folder_id: &str) -> Vec<Defect> {
     if file.next_task_id < 1 {
         out.push(defect("nextTaskId", "The next task ID starts at 1."));
     }
-    let mut seen = HashSet::new();
-    for (index, version) in file.versions.iter().enumerate() {
-        if validate_version_name(version).is_err() || !seen.insert(version) {
-            out.push(defect(
-                format!("versions[{index}]"),
-                "Versions must be valid, unique names.",
-            ));
-        }
-    }
-    if file.versions.len() > MAX_VERSIONS {
-        out.push(defect("versions", "A project lists at most 200 versions."));
-    }
     if let Some(current) = &file.current_version
-        && !file.versions.contains(current)
+        && validate_version_name(current).is_err()
     {
         out.push(defect(
             "currentVersion",
-            "The current version must be one of the project's versions.",
+            "The current version is not a valid name.",
         ));
     }
     out
@@ -167,26 +154,6 @@ pub fn check_task_metadata(task: &TaskFile, folder_id: i64) -> Vec<Defect> {
     }
     if task.archived_at.is_some() && task.agent_status != RunState::Idle {
         out.push(defect("archivedAt", "An archived task is idle."));
-    }
-    if let Some(version) = &task.planned_version
-        && validate_version_name(version).is_err()
-    {
-        out.push(defect(
-            "plannedVersion",
-            "The planned version is not a valid name.",
-        ));
-    }
-    for (index, change) in task.planned_version_changes.iter().enumerate() {
-        for (name, value) in [("from", &change.from), ("to", &change.to)] {
-            if let Some(value) = value
-                && validate_version_name(value).is_err()
-            {
-                out.push(defect(
-                    format!("plannedVersionChanges[{index}].{name}"),
-                    "Versions must be valid names.",
-                ));
-            }
-        }
     }
     out
 }

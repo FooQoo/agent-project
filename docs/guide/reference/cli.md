@@ -171,7 +171,9 @@ agboard --project "My project" version current --clear
 agboard --project "My project" version ls --json
 ```
 
-`version current VERSION` lists the version when it is not listed yet and makes it current. Without an argument it shows the current version. Changing the current version moves no task: a task stores the version name it was given.
+A project's versions are the `*.md` files directly inside `docs/release/` of its [Docs](../watch/docs), listed oldest first (`v1.9.0` before `v1.10.0`). `version add VERSION` creates an empty `docs/release/VERSION.md` and never overwrites an existing file, so a version that already has its file is already listed. You can also add a version by creating the file yourself. `version current VERSION` lists the version the same way when it is not listed yet and makes it current. Without an argument it shows the current version. If the current version's file is deleted later, the project reads as having no current version until the file returns. Changing the current version moves no task: a task stores the version name it was given.
+
+A card's planned version is the `plannedVersion` key in the frontmatter of its `TASK.md`, so you can also set or remove it by hand.
 
 Plan a card when you add it, or later:
 
@@ -182,7 +184,7 @@ agboard --project "My project" edit 15 --current-version
 agboard --project "My project" edit 15 --unplanned
 ```
 
-`--planned-version VERSION` needs a listed version (`version add`), `--current-version` stores the current version's name as it is now, and `--unplanned` removes the plan. The three exclude each other. When the project has no current version, `--current-version` fails with `no_current_version` (exit code 1) and changes nothing. Each real change is recorded in the card's history; planning a card for the version it already has changes nothing. An agent cannot change a Done card, a person's draft, or an archived card.
+`--planned-version VERSION` needs a listed version (`version add`, or a file in `docs/release/`), `--current-version` stores the current version's name as it is now, and `--unplanned` removes the plan. The three exclude each other. When the project has no current version, `--current-version` fails with `no_current_version` (exit code 1) and changes nothing. Each real change is recorded in the card's history; planning a card for the version it already has changes nothing. An agent cannot change a Done card, a person's draft, or an archived card.
 
 Plan every card of an epic at once with `epic plan`:
 

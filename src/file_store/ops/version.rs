@@ -1,10 +1,9 @@
-//! Versions: the project's list of versions and its current one, and the version a task is
+//! Versions: the project's list of versions (the files of `docs/release/`) and its current one, and the version a task is
 //! planned for. Every write holds the project's write lock and saves atomically.
 
 use chrono::{DateTime, Utc};
 
 use super::epic::read_epic_file;
-use super::version_names::add_listed;
 pub(super) use super::version_names::resolve;
 use super::version_plan::EpicVersionScope;
 use super::{
@@ -13,8 +12,9 @@ use super::{
 use crate::domain::{Actor, Changed, Draft, ProjectId, validate_version_name};
 use crate::error::AgboardError;
 use crate::file_store::FileStore;
-use crate::file_store::model::{HistoryRecord, PlannedVersionChange, TaskFile, TaskView};
+use crate::file_store::model::{HistoryRecord, ProjectFile, TaskFile, TaskView};
 use crate::file_store::reader;
+use crate::file_store::releases::{create_release_file, effective_current, listed_versions};
 use crate::file_store::validate::EpicId;
 
 /// The versions of a project and the current one.
@@ -22,6 +22,17 @@ use crate::file_store::validate::EpicId;
 pub struct ProjectVersions {
     pub versions: Vec<String>,
     pub current: Option<String>,
+}
+
+/// The listed versions and the current one of a project, read now.
+fn versions_of(
+    shared: &std::path::Path,
+    project: &ProjectId,
+    file: &ProjectFile,
+) -> ProjectVersions {
+    let versions = listed_versions(&crate::file_store::layout::project_dir(shared, project));
+    let current = effective_current(&versions, file.current_version.as_deref());
+    ProjectVersions { versions, current }
 }
 
 /// Which version a task is planned for.
@@ -47,16 +58,15 @@ pub struct EpicVersionSet {
 }
 
 impl FileStore {
-    /// The project's versions and its current version.
+    /// The project's versions (the files in `docs/release/`) and its current version. A current
+    /// version whose file is missing is reported as none.
     pub fn project_versions(&self, project: &ProjectId) -> Result<ProjectVersions, AgboardError> {
         let file = reader::read_project_file(self.shared_dir(), project)?;
-        Ok(ProjectVersions {
-            versions: file.versions,
-            current: file.current_version,
-        })
+        Ok(versions_of(self.shared_dir(), project, &file))
     }
 
-    /// List a version in the project. Listing a version that is already listed changes nothing.
+    /// List a version in the project by creating an empty `docs/release/<name>.md`. A version
+    /// that is already listed changes nothing and its file is not touched.
     pub fn add_version(
         &self,
         project: &ProjectId,
@@ -65,22 +75,16 @@ impl FileStore {
         let name = validate_version_name(name)?;
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
-        let mut file = reader::read_project_file(shared, project)?;
-        let changed = add_listed(&mut file.versions, &name)?;
-        if changed {
-            save_project(shared, &project_dir, &file)?;
-        }
+        let file = reader::read_project_file(shared, project)?;
+        let changed = create_release_file(shared, &project_dir, &name)?;
         Ok(Changed {
-            value: ProjectVersions {
-                versions: file.versions,
-                current: file.current_version,
-            },
+            value: versions_of(shared, project, &file),
             changed,
         })
     }
 
     /// Set (`Some`) or clear (`None`) the project's current version. A version that is not yet
-    /// listed is listed first. Tasks keep the version they were given.
+    /// listed is listed first, by creating its file. Tasks keep the version they were given.
     pub fn set_current_version(
         &self,
         project: &ProjectId,
@@ -92,20 +96,15 @@ impl FileStore {
         let mut file = reader::read_project_file(shared, project)?;
         let mut changed = false;
         if let Some(name) = &name {
-            changed |= add_listed(&mut file.versions, name)?;
+            changed |= create_release_file(shared, &project_dir, name)?;
         }
         if file.current_version != name {
             file.current_version = name;
+            save_project(shared, &project_dir, &file)?;
             changed = true;
         }
-        if changed {
-            save_project(shared, &project_dir, &file)?;
-        }
         Ok(Changed {
-            value: ProjectVersions {
-                versions: file.versions,
-                current: file.current_version,
-            },
+            value: versions_of(shared, project, &file),
             changed,
         })
     }
@@ -250,11 +249,6 @@ impl FileStore {
         );
         let reason = reason_or_default(None, language.text(&english, &japanese).to_owned())?;
         task.history.push(HistoryRecord { at, reason });
-        task.planned_version_changes.push(PlannedVersionChange {
-            at,
-            from,
-            to: target.clone(),
-        });
         task.planned_version = target;
         task.updated_at = at;
         Ok(true)

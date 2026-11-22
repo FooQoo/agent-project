@@ -172,7 +172,9 @@ agboard --project "My project" version current --clear
 agboard --project "My project" version ls --json
 ```
 
-`version current VERSION`は、版が一覧にまだなければ追加して現在の版にします。引数なしでは現在の版を表示します。現在の版を変えても、どのタスクも動きません。タスクには指定した時点の版の名前が保存されます。
+プロジェクトの版は、その[ドキュメント](../watch/docs)の`docs/release/`直下にある`*.md`ファイルで、古いものから並びます（`v1.9.0`は`v1.10.0`より前）。`version add VERSION`は空の`docs/release/VERSION.md`を作り、既存のファイルは上書きしません。すでにファイルがある版は、一覧にあるものとして扱います。ファイルを自分で作っても版を追加できます。`version current VERSION`は、まだ一覧にない版を同じ方法で載せたうえでカレントにします。引数なしでは現在の版を表示します。あとで現在の版のファイルを削除すると、ファイルが戻るまで、プロジェクトは現在の版がないものとして読みます。現在の版を変えてもタスクは動きません。タスクは割り当てられた版の名前を保存しています。
+
+カードの予定の版は、`TASK.md`のフロントマターにある`plannedVersion`キーなので、手で設定・削除することもできます。
 
 カードは追加するときにも、あとからでも割り当てられます。
 
@@ -183,7 +185,7 @@ agboard --project "My project" edit 15 --current-version
 agboard --project "My project" edit 15 --unplanned
 ```
 
-`--planned-version VERSION`は一覧にある版（`version add`済み）が必要です。`--current-version`はその時点の現在の版の名前を保存し、`--unplanned`は割り当てを外します。3つは同時に指定できません。プロジェクトに現在の版がないときの`--current-version`は`no_current_version`（終了コード1）で失敗し、何も変更しません。実際に変わったときだけカードの履歴に記録し、すでにその版のカードに同じ版を割り当てても何も変わりません。エージェントは、Doneのカード、人の下書き、アーカイブされたカードを変更できません。
+`--planned-version VERSION`は一覧にある版（`version add`済み、または`docs/release/`にファイルがあるもの）が必要です。`--current-version`はその時点の現在の版の名前を保存し、`--unplanned`は割り当てを外します。3つは同時に指定できません。プロジェクトに現在の版がないときの`--current-version`は`no_current_version`（終了コード1）で失敗し、何も変更しません。実際に変わったときだけカードの履歴に記録し、すでにその版のカードに同じ版を割り当てても何も変わりません。エージェントは、Doneのカード、人の下書き、アーカイブされたカードを変更できません。
 
 エピックのカードをまとめて割り当てるには`epic plan`を使います。
 

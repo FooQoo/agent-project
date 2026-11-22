@@ -1,11 +1,11 @@
-//! Project versions, the current version, and the planned version of tasks, with its change
-//! history, on the shared files.
+//! Project versions (the files of `docs/release/`), the current version, and the planned version
+//! of tasks (the `plannedVersion` key of TASK.md) with its history entries, on the shared files.
 
 use std::fs;
 use std::path::PathBuf;
 
 use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::file_store::model::{NewEpic, PlannedVersionChange, TaskView};
+use agent_board::file_store::model::{NewEpic, TaskView};
 use agent_board::file_store::validate::EpicId;
 use agent_board::file_store::{FileStore, VersionChoice};
 use chrono::{DateTime, TimeZone, Utc};
@@ -208,8 +208,10 @@ fn the_current_version_is_stored_as_a_concrete_name_and_later_switches_do_not_mo
     let (view, changed) = f.set(task.id, VersionChoice::Current, 5);
     assert!(changed);
     assert_eq!(view.planned_version.as_deref(), Some("v1.8.0"));
+    let md = String::from_utf8(f.task_md(task.id)).unwrap();
+    assert!(md.contains("plannedVersion: v1.8.0"), "{md}");
     let stored: Value = serde_json::from_slice(&f.task_json(task.id)).unwrap();
-    assert_eq!(stored["plannedVersion"], "v1.8.0");
+    assert!(stored.get("plannedVersion").is_none());
 
     f.store
         .set_current_version(&f.project, Some("v1.9.0"))
@@ -256,12 +258,12 @@ fn a_version_must_be_listed_and_named_validly() {
     assert!(f.store.add_version(&f.project, "1.8.0").unwrap().changed);
     assert_eq!(
         f.store.project_versions(&f.project).unwrap().versions,
-        ["v1.8.0", "1.8.0"]
+        ["1.8.0", "v1.8.0"]
     );
 }
 
 #[test]
-fn moves_between_versions_are_traced_with_before_after_and_time() {
+fn moves_between_versions_are_traced_in_the_history_with_before_after_and_time() {
     let f = fixture();
     let task = f.task("Plan", Assignee::Ai);
     f.store.add_version(&f.project, "v1.8.0").unwrap();
@@ -271,19 +273,6 @@ fn moves_between_versions_are_traced_with_before_after_and_time() {
     f.set(task.id, named("v1.9.0"), 6);
     let (view, _) = f.set(task.id, VersionChoice::Unset, 7);
 
-    let change = |day: u32, from: Option<&str>, to: Option<&str>| PlannedVersionChange {
-        at: at(day),
-        from: from.map(str::to_owned),
-        to: to.map(str::to_owned),
-    };
-    assert_eq!(
-        view.planned_version_changes,
-        [
-            change(5, None, Some("v1.8.0")),
-            change(6, Some("v1.8.0"), Some("v1.9.0")),
-            change(7, Some("v1.9.0"), None),
-        ]
-    );
     assert_eq!(view.planned_version, None);
     // The history holds one readable entry per change after the creation entry.
     let reasons: Vec<&str> = view.history.iter().map(|h| h.reason.as_str()).collect();
@@ -292,14 +281,15 @@ fn moves_between_versions_are_traced_with_before_after_and_time() {
     assert_eq!(reasons[2], "Changed planned version from v1.8.0 to v1.9.0.");
     assert_eq!(reasons[3], "Changed planned version from v1.9.0 to none.");
     assert_eq!(view.history[3].at, at(7));
-    // task.json keeps the structured trace; no plan is left in the file.
+    // Neither file keeps a structured trace: the history entries are the record, and no plan is
+    // left in TASK.md or task.json after it is cleared.
     let stored: Value = serde_json::from_slice(&f.task_json(task.id)).unwrap();
     assert!(stored.get("plannedVersion").is_none());
-    assert_eq!(stored["plannedVersionChanges"][1]["from"], "v1.8.0");
-    assert_eq!(stored["plannedVersionChanges"][1]["to"], "v1.9.0");
-    assert_eq!(
-        stored["plannedVersionChanges"][1]["at"],
-        "2026-10-06T03:00:00Z"
+    assert!(stored.get("plannedVersionChanges").is_none());
+    assert!(
+        !String::from_utf8(f.task_md(task.id))
+            .unwrap()
+            .contains("plannedVersion")
     );
     assert!(f.store.snapshot(&f.project).unwrap().problems.is_empty());
 }
@@ -341,7 +331,6 @@ fn a_retried_set_is_a_no_op_without_a_second_history_entry() {
     let (again, changed) = f.set(task.id, named("v1.8.0"), 9);
     assert!(!changed);
     assert_eq!(again.history, first.history);
-    assert_eq!(again.planned_version_changes.len(), 1);
     assert_eq!(f.task_json(task.id), json);
     assert_eq!(f.task_md(task.id), md);
 }
@@ -379,7 +368,6 @@ fn concurrent_sets_of_the_same_version_record_one_change() {
         .count();
     assert_eq!(changed, 1);
     let view = f.store.task(&f.project, id).unwrap();
-    assert_eq!(view.planned_version_changes.len(), 1);
     assert_eq!(view.history.len(), 2);
 }
 
@@ -439,7 +427,8 @@ fn an_epic_can_hold_mixed_versions_and_a_bulk_set_reports_what_changed() {
     );
     // B moved from the other version, and the task outside the epic was not touched.
     let b_view = f.store.task(&f.project, b.id).unwrap();
-    assert_eq!(b_view.planned_version_changes.len(), 2);
+    // Creation, joining the epic, then two planned-version changes.
+    assert_eq!(b_view.history.len(), 4);
     assert_eq!(
         f.store
             .task(&f.project, outside.id)
@@ -475,7 +464,7 @@ fn an_epic_can_hold_mixed_versions_and_a_bulk_set_reports_what_changed() {
     let c_view = f.store.task(&f.project, c.id).unwrap();
     assert_eq!(c_view.assignee, Assignee::Human);
     assert_eq!(c_view.acceptance, c.acceptance);
-    assert_eq!(c_view.planned_version_changes.len(), 3);
+    assert_eq!(c_view.history.len(), 5);
 }
 
 #[test]

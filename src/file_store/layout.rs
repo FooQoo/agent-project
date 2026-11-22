@@ -63,6 +63,11 @@ pub fn docs_dir(project_dir: &Path) -> PathBuf {
     project_dir.join("docs")
 }
 
+/// The folder whose `*.md` files name the project's versions: `docs/release/`.
+pub fn release_dir(project_dir: &Path) -> PathBuf {
+    docs_dir(project_dir).join("release")
+}
+
 pub fn epics_dir(project_dir: &Path) -> PathBuf {
     project_dir.join("epics")
 }

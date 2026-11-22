@@ -20,10 +20,10 @@ A task is one unit of work on the board. A task's state lives in `task.json`; it
 | `agentStatus` | The AI run state. `task.json` stores `idle` or `running`; reads return `pending` while an AI task in Todo or Doing waits for a person (see [Messages](../concepts/history-and-decisions.md#messages)). A stored `pending` reads as `idle`. |
 | `draft` | `null` or `"human"`. `human` is a draft a person is writing in the browser, an edit lock. Files of earlier versions hold `isDraft`: `true` reads as `human` and `false` as `null`; writing uses `draft` only. For an epic, the CLI `epic edit` refuses a `human` draft with `epic_is_draft`. |
 | `questions` | In `TASK.md` frontmatter: the IDs of the project questions the task refers to, such as `[Q-12, Q-15]`. Omitted, `null`, and empty all mean none; duplicates are rejected. |
+| `plannedVersion` | In `TASK.md` frontmatter: the version the task is planned for, such as `v1.8.0`. Absent means unplanned. See [Planned versions](#planned-versions). |
 | `requestAnswers` | Answers recorded by earlier versions of Agent Board, kept as a record. Nothing adds to it. |
 | `archivedAt` | `null`, or the archive time. |
 | `attachments` | ID, name, size, MIME type, and creation time of each image. |
-| `plannedVersion`, `plannedVersionChanges` | The version the task is planned for, and every change of it. See [Planned versions](#planned-versions). |
 | `results` | The results delivered to the requester, oldest first (`[]` when none). See [Results](#results). |
 | `simpleRequest` | Legacy optional metadata `{requestId, payloadHash}` from older short-request submissions. New tasks do not write or use it. |
 | `createdAt`, `updatedAt` | Creation time; when read, the later of the `task.json` and `TASK.md` modification times. |
@@ -84,7 +84,7 @@ The data area is `.agent-board/` in the home directory on every OS, or a non-emp
 
 `docs/` holds the project's own Markdown documents, which the Docs dialog reads (see [Project docs](#project-docs)).
 
-`project.json` holds `formatVersion`, `id`, `name`, `createdAt`, `nextTaskId`, `nextQuestionId`, and `defaultEpicsSeeded`, and may hold `versions` and `currentVersion` (see [Planned versions](#planned-versions)). `nextQuestionId` is the number of the next question; a file without it is read as `1`. The last one is `true` once the project has been offered the default epics `BUG` and `ENHANCEMENT`; it is written once, so a default epic that was deleted is not created again. A file without it is read as `false`. `epic.json` holds `formatVersion`, `id`, `name`, `color`, `isDraft`, `attachments`, `createdAt`, and `updatedAt`.
+`project.json` holds `formatVersion`, `id`, `name`, `createdAt`, `nextTaskId`, `nextQuestionId`, and `defaultEpicsSeeded`, and may hold `currentVersion` (see [Planned versions](#planned-versions)). `nextQuestionId` is the number of the next question; a file without it is read as `1`. The last one is `true` once the project has been offered the default epics `BUG` and `ENHANCEMENT`; it is written once, so a default epic that was deleted is not created again. A file without it is read as `false`. `epic.json` holds `formatVersion`, `id`, `name`, `color`, `isDraft`, `attachments`, `createdAt`, and `updatedAt`.
 
 `EPIC.md` holds the epic's details in Markdown, frontmatter included. Its frontmatter may hold `waves`, the task order as a YAML list in which each item is one wave: a task ID (`566`) or task IDs joined by commas (`569,570,571`). The tasks of one wave can run in parallel, and a wave starts when every task of the earlier waves is Done. The API and `epic show --json` return the whole text as `document`, the text without frontmatter as `body`, and the parsed order as `waves` (a list of task ID lists).
 
@@ -138,28 +138,22 @@ history:
 
 ### Planned versions {#planned-versions}
 
-A project lists the versions it plans work for, and a task may be planned for one of them. Both the board and the CLI (`version`, `edit --planned-version`, `epic plan`) set them; the file store operations behind them are the only writers.
+The versions of a project are files, and the version of a task is a key of its `TASK.md`. Both the board and the CLI (`version`, `edit --planned-version`, `epic plan`) write them through the file store, and a person can write them by hand.
 
-- `project.json` may hold `versions`, the version names in the order they were added, and `currentVersion`, the project's current version. `currentVersion` is `null` or absent when none is set, and when set it is one of `versions`. Both are omitted while empty, so a project that never used versions keeps its file unchanged, and an older file without them reads as no versions. A project has at most 200 versions, and each project's list is its own: two projects can list the same name.
-- A version name is 1 to 64 characters with no whitespace or control characters. It is kept and compared exactly, so `v1.8.0` and `1.8.0` are two versions. No format such as semver is required.
-- `task.json` may hold `plannedVersion`, the name of one listed version, and `plannedVersionChanges`, the trace of every change, oldest first. A task has no plan until one is set; nothing assigns a version automatically, and the current version of the project never reaches a task by itself. The fields are omitted while empty, so a task that never had a plan keeps its file unchanged. They live in `task.json`, the file the app owns, and not in `TASK.md`, so editing the body cannot corrupt them.
-- Assigning the project's current version to a task stores that version's name at the moment of saving, never a reference to "current". Changing the current version of the project later moves no task.
-- Each real change appends one entry `{at, from, to}` to `plannedVersionChanges` (`null` means no plan) and one ordinary entry to the `TASK.md` history in the same save, such as `Changed planned version from v1.8.0 to v1.9.0.` The reason is English or Japanese by the same rule as other automatic entries (`リリース予定の版をv1.8.0からv1.9.0に変更しました。`; no plan reads `none` or `なし`). Setting the version a task already has is a no-op: nothing is saved, no history is added, and `updatedAt` does not move.
-- Every write runs under the project's write lock and saves with the atomic task save, after reading the latest files. A retry or a concurrent set of the same version therefore records one change. Setting every task of an epic saves each task on its own: it skips archived tasks (and, for an AI, drafts and Done tasks), leaves tasks that already have the version untouched, and reports which tasks changed, stayed, or were skipped. A failure part way leaves earlier tasks changed, and a retry finishes the rest.
+- **The list.** A project's versions are the file stems of the `*.md` files directly inside `docs/release/` of its Docs folder: `docs/release/v1.8.0.md` lists `v1.8.0`. Subfolders, files with another extension, hidden files, and files whose stem is not a valid version name are ignored, and so are `*.md` files elsewhere in the Docs. The list is sorted naturally, oldest first: digit runs compare as numbers, so `v1.9.0` comes before `v1.10.0`, and the CLI, the web API, and the Summary all return that order. Each project's list is its own, and a project lists at most 200 versions.
+- **Adding.** `version add`, `POST …/versions`, and setting a current version that is not listed yet create an empty `docs/release/<version>.md`, and `docs/release/` when it is missing. The file is created in one step and never overwrites an existing one: a version that already has its file is already listed and the call answers `changed: false`. The file's content is not board data, so the same file can hold the release document.
+- **The current version.** `project.json` may hold `currentVersion`, a version name, `null`, or nothing. There is no `versions` list in `project.json`; a leftover `versions` field of an earlier build is read and ignored, and it is not written again. A current version must name a listed version when it is set through the CLI or the API. If its file is removed later, the project keeps the stored name but reads as having no current version: `version ls`, the web API, and the Summary report `currentVersion: null`, `--current-version` fails with `no_current_version`, and the `current` choice is refused. Nothing is cleared, so adding the file again brings the current version back.
+- **A version name** is 1 to 64 characters with no whitespace or control characters, no file-name characters (`/ \ : * ? " < > |`), and no leading dot, because it is also a file name. It is kept and compared exactly, so `v1.8.0` and `1.8.0` are two versions. No format such as semver is required.
+- **A task's plan.** `TASK.md` frontmatter may hold a top-level `plannedVersion: v1.8.0`. An absent key, `null`, and a blank value mean unplanned. `task.json` holds no plan; leftover `plannedVersion` and `plannedVersionChanges` fields of an earlier build are read and ignored. A person can add, change, or remove the key by hand, and the board and the CLI show the edit like any other `TASK.md` change. A hand-written name that is not listed still loads and is shown as written; only the CLI and API writes check the name against the list. A value that is not a string, such as a number or a list, is a problem on that file (field `plannedVersion`), the same way an unreadable `acceptance` is, and the task reads as unplanned. Quote a name that looks like a number (`"1.8"`).
+- **Nothing assigns a version automatically**, and the current version never reaches a task by itself. Assigning the project's current version stores that version's name at the moment of saving. Changing the current version later moves no task.
+- **History.** Each real change appends one ordinary entry to the `TASK.md` history in the same save as the key, such as `Changed planned version from v1.8.0 to v1.9.0.` The reason is English or Japanese by the same rule as other automatic entries (`リリース予定の版をv1.8.0からv1.9.0に変更しました。`; no plan reads `none` or `なし`). That entry is the record of the version before, the version after, and the time. Setting the version a task already has is a no-op: nothing is saved, no history is added, and `updatedAt` does not move. A write replaces a `plannedVersion` that cannot be read.
+- **Writing.** Every write runs under the project's write lock and saves with the atomic task save, after reading the latest files, and it keeps every other frontmatter key, the key order, and the body. A new key is written in front of `history`. A retry or a concurrent set of the same version therefore records one change. Setting every task of an epic saves each task on its own: it skips archived tasks (and, for an AI, drafts and Done tasks), leaves tasks that already have the version untouched, and reports which tasks changed, stayed, or were skipped. A failure part way leaves earlier tasks changed, and a retry finishes the rest.
+- **Live updates.** The watcher treats a path directly under `docs/release/` as a Docs change and as a project change: it sends a `docs` event, reloads the project, and sends `changed` for the project when the list or the current version differs. The project version covers the names of the version files, not their contents, so editing a release document does not move the board.
 
-Moving a task from `v1.8.0` to `v1.9.0` changes only these parts of `task.json` and `TASK.md`:
-
-```diff
-   "updatedAt": "2026-10-06T03:00:00Z",
--  "plannedVersion": "v1.8.0",
-+  "plannedVersion": "v1.9.0",
-   "plannedVersionChanges": [
-     { "at": "2026-10-05T03:00:00Z", "from": null, "to": "v1.8.0" },
-+    { "at": "2026-10-06T03:00:00Z", "from": "v1.8.0", "to": "v1.9.0" }
-   ]
-```
+Moving a task from `v1.8.0` to `v1.9.0` changes only these parts of `TASK.md`:
 
 ```yaml
+plannedVersion: v1.9.0   # was v1.8.0
 history:
   - at: "2026-10-05T03:00:00Z"
     reason: "Changed planned version from none to v1.8.0."

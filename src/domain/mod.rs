@@ -19,7 +19,9 @@ pub use limits::{
 pub use plain_title::{first_line_plain, strip_inline_markdown};
 pub use project::{ChangeCursor, ProjectCatalog, ProjectId, ProjectMeta};
 pub use task::BoardMeta;
-pub use version::{MAX_VERSION_CHARS, MAX_VERSIONS, VersionFilter, validate_version_name};
+pub use version::{
+    MAX_VERSION_CHARS, MAX_VERSIONS, VersionFilter, compare_versions, validate_version_name,
+};
 pub use work::{
     Actor, Assignee, Attachment, AttachmentData, AttachmentInput, BulkArchiveResult, ChangeContext,
     Changed, Draft, HistoryEvent, MAX_RESULT_TITLE_CHARS, NewTask, ResultKind, Task, TaskResult,

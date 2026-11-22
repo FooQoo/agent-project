@@ -172,10 +172,10 @@ fn edit_plans_a_task_for_a_version_the_current_one_or_none() {
 
     let task = &run(home.path(), &["edit", &id, "--planned-version", "v1.8.0"])["task"];
     assert_eq!(task["plannedVersion"], "v1.8.0");
-    assert_eq!(task["plannedVersionChanges"].as_array().unwrap().len(), 1);
+    let history = task["history"].as_array().unwrap().len();
     // The same value again changes nothing.
     let task = &run(home.path(), &["edit", &id, "--planned-version", "v1.8.0"])["task"];
-    assert_eq!(task["plannedVersionChanges"].as_array().unwrap().len(), 1);
+    assert_eq!(task["history"].as_array().unwrap().len(), history);
 
     let task = &run(home.path(), &["edit", &id, "--unplanned"])["task"];
     assert!(task.get("plannedVersion").is_none_or(Value::is_null));
