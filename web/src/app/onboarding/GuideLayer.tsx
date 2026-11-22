@@ -19,7 +19,7 @@ import '../../shared/i18n/onboarding-strings';
 import { AskAiDialog } from '../../features/messages/ask/AskAiDialog';
 import { EpicLabel } from '../../features/epics/label/EpicLabel';
 import type { EpicRef } from '../../shared/api/contracts';
-import { focusColumn, sampleRequest } from './guideSamples';
+import { focusColumn, sampleAttachTasks, sampleRequest } from './guideSamples';
 import type { GuidePhase } from './guideTiming';
 import { phoneItemOf, usePhoneLaneRect } from './phoneTarget';
 import { SampleAnswer } from './SampleAnswer';
@@ -231,6 +231,7 @@ export function GuideLayer({
         <AskAiDialog
           kind={phone ? 'sheet' : 'dialog'}
           initialText={sampleRequest(locale)}
+          tasks={sampleAttachTasks(locale)}
           onSubmit={async () => guide.sent()}
           onClose={() => setAsking(false)}
         />

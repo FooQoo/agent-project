@@ -65,18 +65,22 @@ impl FileStore {
         Ok(versions_of(self.shared_dir(), project, &file))
     }
 
-    /// List a version in the project by creating an empty `docs/release/<name>.md`. A version
-    /// that is already listed changes nothing and its file is not touched.
+    /// List a version in the project by creating `docs/release/<name>.md` from the release-note
+    /// template, and make sure one Backlog card exists for writing its release notes. A version
+    /// that is already listed keeps its file untouched; the card is still issued when none exists,
+    /// so a retry after a failed first call finishes the work.
     pub fn add_version(
         &self,
         project: &ProjectId,
         name: &str,
+        now: DateTime<Utc>,
     ) -> Result<Changed<ProjectVersions>, AgboardError> {
         let name = validate_version_name(name)?;
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let file = reader::read_project_file(shared, project)?;
-        let changed = create_release_file(shared, &project_dir, &name)?;
+        let mut changed = create_release_file(shared, &project_dir, &name)?;
+        changed |= self.ensure_release_notes_task(&project_dir, project, &name, now)?;
         Ok(Changed {
             value: versions_of(shared, project, &file),
             changed,
@@ -84,19 +88,27 @@ impl FileStore {
     }
 
     /// Set (`Some`) or clear (`None`) the project's current version. A version that is not yet
-    /// listed is listed first, by creating its file. Tasks keep the version they were given.
+    /// listed is listed first, by creating its file from the template and issuing its
+    /// release-notes card. Tasks keep the version they were given.
     pub fn set_current_version(
         &self,
         project: &ProjectId,
         name: Option<&str>,
+        now: DateTime<Utc>,
     ) -> Result<Changed<ProjectVersions>, AgboardError> {
         let name = name.map(validate_version_name).transpose()?;
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut file = reader::read_project_file(shared, project)?;
         let mut changed = false;
-        if let Some(name) = &name {
-            changed |= create_release_file(shared, &project_dir, name)?;
+        if let Some(name) = &name
+            && create_release_file(shared, &project_dir, name)?
+        {
+            self.ensure_release_notes_task(&project_dir, project, name, now)?;
+            // Creating the card advanced the task counter in project.json: read the file
+            // again so saving the current version does not write the old counter back.
+            file = reader::read_project_file(shared, project)?;
+            changed = true;
         }
         if file.current_version != name {
             file.current_version = name;

@@ -8,7 +8,9 @@ vi.mock('../src/shared/api/write', () => ({ postTask: (...args: unknown[]) => po
 const { sendTasks, withOpenQuestions } = await import('../src/features/backlog/send');
 const { useBacklogSend } = await import('../src/features/backlog/useBacklogSend');
 const { useBacklogMove } = await import('../src/features/backlog/useBacklogMove');
-const { useBacklogSelection } = await import('../src/features/backlog/useSelection');
+const { useBacklogSelection, useLaneSelection } = await import(
+  '../src/features/backlog/useSelection'
+);
 
 const PROJECT = 'a1b2c3d4e5f60718293a4b5c6d7e8f90' as ProjectId;
 
@@ -269,5 +271,58 @@ describe('useBacklogSelection', () => {
     const { result } = renderHook(() => useBacklogSelection([]));
     act(() => result.current.enter());
     expect(result.current.selecting).toBe(false);
+  });
+});
+
+describe('useLaneSelection with every card preselected (the Done lane archive)', () => {
+  it('picks every card on entering, toggles, and counts', () => {
+    const { result } = renderHook(() => useLaneSelection([1, 2, 3], { preselect: true }));
+    expect(result.current.picked).toEqual([]);
+    act(() => result.current.enter());
+    expect(result.current.selecting).toBe(true);
+    expect(result.current.picked).toEqual([1, 2, 3]);
+    act(() => result.current.toggle(2));
+    expect(result.current.picked).toEqual([1, 3]);
+    act(() => result.current.toggle(2));
+    expect(result.current.picked).toEqual([1, 2, 3]);
+  });
+
+  it('can be emptied by hand without ending the mode, and leaving picks nothing', () => {
+    const { result } = renderHook(() => useLaneSelection([1, 2], { preselect: true }));
+    act(() => result.current.enter());
+    act(() => result.current.toggle(1));
+    act(() => result.current.toggle(2));
+    expect(result.current.picked).toEqual([]);
+    expect(result.current.selecting).toBe(true);
+    act(() => result.current.leave());
+    expect(result.current.selecting).toBe(false);
+    act(() => result.current.enter());
+    expect(result.current.picked).toEqual([1, 2]);
+  });
+
+  it('ends the mode once every picked card has left the lane (they were archived)', () => {
+    const { result, rerender } = renderHook(
+      ({ ids }) => useLaneSelection(ids, { preselect: true }),
+      {
+        initialProps: { ids: [1, 2] },
+      },
+    );
+    act(() => result.current.enter());
+    rerender({ ids: [] });
+    expect(result.current.selecting).toBe(false);
+    rerender({ ids: [3] });
+    expect(result.current.selecting).toBe(false);
+  });
+
+  it('keeps a card that arrives while picking unpicked', () => {
+    const { result, rerender } = renderHook(
+      ({ ids }) => useLaneSelection(ids, { preselect: true }),
+      {
+        initialProps: { ids: [1, 2] },
+      },
+    );
+    act(() => result.current.enter());
+    rerender({ ids: [1, 2, 3] });
+    expect(result.current.picked).toEqual([1, 2]);
   });
 });

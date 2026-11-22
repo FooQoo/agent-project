@@ -114,6 +114,7 @@ impl FileStore {
             // created by older versions, but new tasks no longer store it.
             simple_request: None,
             onboarding_sample: None,
+            release_notes_version: None,
             planned_version: None,
             history: vec![transition_event(Transition {
                 language,

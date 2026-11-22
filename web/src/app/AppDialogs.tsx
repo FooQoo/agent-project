@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
-import { useTranslation } from 'react-i18next';
-import { actionDialog, bulkArchiveDialog, docsDialog } from './dialogs/lazyDialogs';
+import { actionDialog, docsDialog } from './dialogs/lazyDialogs';
 import type { AppDialogsProps } from './contracts';
 import { useNarrowViewport } from '../shared/lib/viewport/useNarrowViewport';
 
@@ -10,17 +9,13 @@ export function AppDialogs({
   onCloseOperation,
   onSavingChange,
   onOpenTask,
-  onConfirmBulkArchive,
-  onCancelBulkArchive,
   epicApi,
 }: AppDialogsProps) {
-  const { t } = useTranslation();
   // The planned-version fields are on the PC board only.
   const narrow = useNarrowViewport();
-  const { session, tasks, projects } = model;
+  const { session, tasks } = model;
   const dialog = session.dialog;
   const operation = session.operation;
-  const bulkArchive = session.bulkArchive;
 
   return (
     <>
@@ -52,20 +47,6 @@ export function AppDialogs({
             projectId={model.docsProjectId}
             onClose={() => model.setDocsProjectId(null)}
             subscribeChanges={model.subscribeDocs}
-          />
-        </Suspense>
-      ) : null}
-      {bulkArchive ? (
-        <Suspense fallback={null}>
-          <bulkArchiveDialog.Component
-            projectName={
-              projects.projects.find((project) => project.id === bulkArchive.projectId)?.name ??
-              t('project.none')
-            }
-            targets={bulkArchive.targets}
-            saving={session.operation?.kind === 'archive-done' && session.operation.saving}
-            onCancel={onCancelBulkArchive}
-            onConfirm={onConfirmBulkArchive}
           />
         </Suspense>
       ) : null}

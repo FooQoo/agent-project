@@ -9,7 +9,8 @@ import { LaneHeader } from './LaneHeader';
 import { useDroppable } from '@dnd-kit/react';
 import type { ProjectId } from '../../../shared/api/contracts';
 import { BacklogBar } from '../../../features/backlog/BacklogBar';
-import type { BacklogSelection } from '../../../features/backlog/useSelection';
+import type { LaneSelection } from '../../../features/backlog/useSelection';
+import type { SelectionAction } from '../../../features/backlog/selectionAction';
 
 export interface LaneProps {
   column: ColumnName;
@@ -18,17 +19,20 @@ export interface LaneProps {
   tasks: TaskModel[];
   selectedId: number | null;
   onSelect: (id: number) => void;
-  onArchive?: () => void;
   onOpenEpic?: (epicId: string) => void;
   projectId?: ProjectId;
   onAnswer?: (taskId: number) => void;
   /** Draws the planned-version tag of a card, in the card's own slot. */
   renderVersion?: (task: TaskModel) => ReactNode;
-  /** The Backlog lane: the selection mode and the send of the picked cards. */
-  backlog?: {
-    selection: BacklogSelection;
+  /**
+   * The selection mode of the lane and what it does with the picked cards: the Backlog sends them, the
+   * Done lane archives them.
+   */
+  picker?: {
+    action: SelectionAction;
+    selection: LaneSelection;
     busy: boolean;
-    onSend: (ids: number[]) => void;
+    onSubmit: (ids: number[]) => void;
     /** The picked cards are being dragged: the card under the pointer. */
     draggingId: number | null;
   };
@@ -40,12 +44,11 @@ export function Lane({
   tasks,
   selectedId,
   onSelect,
-  onArchive,
   onOpenEpic,
   projectId,
   onAnswer,
   renderVersion,
-  backlog,
+  picker,
 }: LaneProps) {
   const { t } = useTranslation();
   const listRef = useRef<HTMLDivElement>(null);
@@ -63,7 +66,7 @@ export function Lane({
       onClick={() => onOpenEpic?.(epic.id)}
     />
   );
-  const picking = backlog?.selection.selecting === true;
+  const picking = picker?.selection.selecting === true;
   return (
     <section
       ref={ref}
@@ -75,13 +78,12 @@ export function Lane({
       <LaneHeader
         column={column}
         count={tasks.length}
-        onArchive={onArchive}
-        selecting={backlog?.selection.selecting}
+        selecting={picker?.selection.selecting}
         onToggleSelect={
-          backlog
-            ? backlog.selection.selecting
-              ? backlog.selection.leave
-              : backlog.selection.enter
+          picker
+            ? picker.selection.selecting
+              ? picker.selection.leave
+              : picker.selection.enter
             : undefined
         }
       />
@@ -96,19 +98,19 @@ export function Lane({
               task={task}
               index={index}
               selected={task.id === selectedId}
-              onSelect={picking ? backlog.selection.toggle : onSelect}
+              onSelect={picking ? picker.selection.toggle : onSelect}
               selection={
                 picking
                   ? {
-                      checked: backlog.selection.picked.includes(task.id),
-                      onToggle: () => backlog.selection.toggle(task.id),
+                      checked: picker.selection.picked.includes(task.id),
+                      onToggle: () => picker.selection.toggle(task.id),
                       drag:
-                        backlog.draggingId !== null &&
-                        backlog.selection.picked.includes(backlog.draggingId) &&
-                        backlog.selection.picked.includes(task.id)
+                        picker.draggingId !== null &&
+                        picker.selection.picked.includes(picker.draggingId) &&
+                        picker.selection.picked.includes(task.id)
                           ? {
-                              count: backlog.selection.picked.length,
-                              lead: task.id === backlog.draggingId,
+                              count: picker.selection.picked.length,
+                              lead: task.id === picker.draggingId,
                             }
                           : undefined,
                     }
@@ -124,10 +126,11 @@ export function Lane({
       </div>
       {picking && (
         <BacklogBar
-          count={backlog.selection.picked.length}
-          busy={backlog.busy}
-          onCancel={backlog.selection.leave}
-          onSend={() => backlog.onSend(backlog.selection.picked)}
+          action={picker.action}
+          count={picker.selection.picked.length}
+          busy={picker.busy}
+          onCancel={picker.selection.leave}
+          onSend={() => picker.onSubmit(picker.selection.picked)}
         />
       )}
     </section>

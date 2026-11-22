@@ -14,7 +14,7 @@ A bar at the bottom of the screen holds the main places, left to right: **Board*
 
 - **Messages** opens the open messages in three tabs, **AI's questions**, **Your requests**, and **Summary**; pick a question to answer it there, with **Back to list** (or **Later**) and **Send answer** pinned at the bottom (see [Decisions](../delegate/decisions#answer-on-your-phone)). The number on its icon counts the questions that wait for your answer, in the theme's accent color. It disappears when none wait.
 - **Ask** opens the request form (see [Ask AI](./editing#ask-ai)). It has no number.
-- **Archive** and **Settings** are described under [Review and restore archived tasks](#review-and-restore-archived-tasks) and in [Open it on the phone](#open-it-on-the-phone). Archiving every done task starts from the Done lane; see [Archive all done tasks](#archive-all-done-tasks).
+- **Archive** and **Settings** are described under [Review and restore archived tasks](#review-and-restore-archived-tasks) and in [Open it on the phone](#open-it-on-the-phone). Archiving every done task starts from the Done lane; see [Archive done tasks](#archive-done-tasks).
 
 Backlog plans have their own **Backlog** tab with its count, before Todo. Only a person sends a plan to Todo: choose **Select cards** at the bottom of the Backlog lane (or swipe a card left), pick the cards, and choose **Send to Todo (N)** (see [Backlog plans](./board#backlog-plans)).
 
@@ -42,9 +42,9 @@ Swipe the task back, or tap anywhere outside it, to close the buttons without a 
 
 To restore a task, swipe its card to the left. A **Restore** button appears on the right at once, with no need to choose the card first; press it and the task leaves the list and returns to the lane it was archived from, with its run state Idle, the state every archived task is stored with. It goes to the end of that lane. A tap outside the open card, or a tap on it, closes the button. A tap on a closed card does nothing. With a keyboard, focus a card and press Enter or the left arrow to open **Restore** and move focus to it; the right arrow closes it. If the restore fails, the row stays and the drawer says so.
 
-### Archive all done tasks
+### Archive done tasks
 
-On the Done lane, swipe left past the last lane to open **Archive completed tasks** as a drawer. While you swipe, the lane follows your finger and an Archive all icon appears on the right, as the buttons of a card do; swipe far enough and let go to open it, or let go sooner and the lane springs back. The drawer which lists every task in the Done lane that would be archived; choose **Archive** with the count to confirm. The **Archive all** button after the last Done card does the same, for a keyboard or a screen reader. Neither appears while no task is done.
+On the Done lane, swipe left past the last card, or choose **Select and archive** after the last Done card, to start the selection with every done card picked. While you swipe, the lane follows your finger and an archive icon appears on the right, as the buttons of a card do; swipe far enough and let go to start it, or let go sooner and the lane springs back. A short drawer rises from the bottom with **Cancel** and **Archive (N)**, in two buttons of the same size. Tap a card to unpick it, and choose **Archive (N)** to archive only the picked cards. Neither the swipe nor the button appears while no task is done. See [Archive](./board#archive) for the details.
 
 ### Switch sheets from the bottom bar
 

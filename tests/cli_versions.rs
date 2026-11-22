@@ -41,6 +41,23 @@ fn demo(home: &Path) {
     assert_eq!(code, 0, "{err}");
 }
 
+/// List versions the way a person can, by creating their files in the project's `docs/release/`,
+/// so that no release-notes card takes a task number from the cards a test counts.
+fn list_versions(home: &Path, names: &[&str]) {
+    let projects = home.join("shared/projects");
+    let project = std::fs::read_dir(&projects)
+        .unwrap()
+        .next()
+        .unwrap()
+        .unwrap()
+        .path();
+    let dir = project.join("docs/release");
+    std::fs::create_dir_all(&dir).unwrap();
+    for name in names {
+        std::fs::write(dir.join(format!("{name}.md")), "").unwrap();
+    }
+}
+
 fn ids(value: &Value) -> Vec<i64> {
     value
         .as_array()
@@ -60,7 +77,7 @@ fn ls_ids(home: &Path, args: &[&str]) -> Vec<i64> {
 /// first, #3 (v1.9.0) after them, then #4 with no plan and no wave. #5 has no epic.
 fn waves_board(home: &Path) {
     demo(home);
-    run(home, &["version", "add", "v1.8.0"]);
+    list_versions(home, &["v1.8.0", "v1.9.0"]);
     run(home, &["version", "current", "v1.9.0"]);
     let (code, _, err) = agboard(
         home,

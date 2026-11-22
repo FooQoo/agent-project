@@ -3,6 +3,7 @@
 // can have, and the guide draws them over the board without ever writing them to it.
 
 import type { Choice, EpicRef, TaskSummary } from '../../shared/api/contracts';
+import type { PickerTask } from '../../features/messages/ask/pickerTasks';
 import type { GuidePhase } from './guideTiming';
 
 export type GuideLocale = 'en' | 'ja';
@@ -58,6 +59,19 @@ const TEXT: Record<GuideLocale, Text> = {
 /** The request the guide offers to send: it is what the pretend agent turns into a plan. */
 export function sampleRequest(locale: GuideLocale): string {
   return TEXT[locale].request;
+}
+
+/**
+ * The cards "Attach task" offers in the guide's Ask AI box, as the real board offers its tasks.
+ * They are numbered 1 to 3 so the attachment line reads like a real one; the guide sends nothing,
+ * so these numbers never reach a task.
+ */
+export function sampleAttachTasks(locale: GuideLocale): PickerTask[] {
+  return TEXT[locale].titles.map((title, index) => ({
+    id: index + 1,
+    title,
+    taskStatus: 'todo' as const,
+  }));
 }
 
 /** The question the pretend agent asks: its text and its options. */

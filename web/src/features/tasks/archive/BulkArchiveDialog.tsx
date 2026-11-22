@@ -4,7 +4,6 @@ import { Button } from '@/shared/ui/button';
 import { DialogActions } from '@/shared/ui/dialog-actions';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog';
 import type { TaskSummary } from '../../../shared/api/contracts';
-import { Surface } from '../../../shared/ui/surface/Surface';
 import '../../../shared/styles/modal.css';
 
 export interface BulkArchiveDialogProps {
@@ -17,8 +16,6 @@ export interface BulkArchiveDialogProps {
   title?: string;
   description?: string;
   submitLabel?: string;
-  /** `sheet`: a bottom sheet for the phone. The PC board and the card archive use the dialog. */
-  kind?: 'dialog' | 'sheet';
 }
 
 /** Arrow, Home, End and Page keys scroll the table of targets. */
@@ -48,13 +45,10 @@ export function BulkArchiveDialog({
   title,
   description,
   submitLabel,
-  kind = 'dialog',
 }: BulkArchiveDialogProps) {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const submitting = useRef(false);
-  // The ref refuses a second submit in the same tick; the state tells the sheet it cannot be dragged away.
-  const [busy, setBusy] = useState(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
 
@@ -66,14 +60,12 @@ export function BulkArchiveDialog({
   const confirm = async () => {
     if (saving || submitting.current || targets.length === 0) return;
     submitting.current = true;
-    setBusy(true);
     setError(null);
     try {
       await onConfirm();
     } catch (cause) {
       setError(cause instanceof Error && cause.message ? cause.message : t('archive.error'));
       submitting.current = false;
-      setBusy(false);
     }
   };
 
@@ -136,23 +128,6 @@ export function BulkArchiveDialog({
       </Button>
     </DialogActions>
   );
-  if (kind === 'sheet') {
-    return (
-      <Surface
-        kind="sheet"
-        title={title ?? t('archive.bulkTitle')}
-        closeLabel={t('dialog.close')}
-        onClose={close}
-        className="bulk-archive__sheet"
-        dismissible={!(saving || busy)}
-        footer={actions}
-      >
-        <p className="bulk-archive__description">{description_}</p>
-        {table}
-        {status}
-      </Surface>
-    );
-  }
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
       <DialogContent

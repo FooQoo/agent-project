@@ -40,7 +40,7 @@ export const monitorJa = {
       tab: '{{lane}} {{count}}件',
       toNext: '→ {{lane}}',
       toPrev: '← {{lane}}',
-      bulkArchive: 'まとめてアーカイブ',
+      bulkArchive: 'まとめて選んでアーカイブ',
       archiveTask: '#{{id}} をアーカイブ',
       moveTask: '#{{id}} を{{lane}}へ移動',
       archiveTitle: 'タスクをアーカイブ',

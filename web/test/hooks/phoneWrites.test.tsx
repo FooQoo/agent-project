@@ -23,7 +23,6 @@ function setup() {
       writes: writes as never,
       projectId: 'p',
       overlay,
-      doneItems: [item(1, 'done'), item(2, 'done')],
       closePending,
       onWritten,
     });
@@ -86,16 +85,28 @@ describe('phone lane writes', () => {
     expect(onWritten).not.toHaveBeenCalled();
   });
 
-  it('archives the Done lane, and reads again even when it is refused', async () => {
+  it('archives the picked Done cards, hides them, and reads again even when it is refused', async () => {
     writes.archiveDone.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('no'));
-    const { result, onWritten, closePending } = setup();
-    await act(() => result.current.lane.archiveAll());
-    expect(writes.archiveDone).toHaveBeenCalledWith('p', [1, 2]);
-    expect(closePending).toHaveBeenCalledTimes(1);
+    const { result, onWritten } = setup();
+    let ok = false;
     await act(async () => {
-      await expect(result.current.lane.archiveAll()).rejects.toThrow('no');
+      ok = await result.current.lane.archiveSelected.archive([1, 2]);
     });
+    expect(ok).toBe(true);
+    expect(writes.archiveDone).toHaveBeenCalledWith('p', [1, 2]);
+    await act(async () => {
+      ok = await result.current.lane.archiveSelected.archive([1]);
+    });
+    expect(ok).toBe(false);
+    expect(result.current.lane.archiveSelected.notice).toBeTruthy();
     await waitFor(() => expect(onWritten).toHaveBeenCalledTimes(2));
-    expect(closePending).toHaveBeenCalledTimes(1);
+  });
+
+  it('archives nothing when nothing is picked', async () => {
+    const { result } = setup();
+    await act(async () => {
+      expect(await result.current.lane.archiveSelected.archive([])).toBe(false);
+    });
+    expect(writes.archiveDone).not.toHaveBeenCalled();
   });
 });

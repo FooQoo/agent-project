@@ -118,23 +118,38 @@ fn the_list_is_the_md_stems_in_natural_order_and_ignores_everything_else() {
 }
 
 #[test]
-fn adding_creates_an_empty_file_and_never_overwrites_one() {
+fn adding_creates_the_file_from_the_template_and_never_overwrites_one() {
     let f = fixture();
-    let added = f.store.add_version(&f.project, "v1.8.0").unwrap();
+    let added = f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
     assert!(added.changed);
     assert_eq!(added.value.versions, ["v1.8.0"]);
     let file = f.release().join("v1.8.0.md");
-    assert_eq!(fs::read(&file).unwrap(), b"");
+    assert_eq!(
+        fs::read_to_string(&file).unwrap(),
+        agent_board::file_store::releases::STANDARD_TEMPLATE
+    );
 
     // Someone writes the release document; listing the version again keeps it.
     fs::write(&file, "# v1.8.0\n\nNotes.\n").unwrap();
-    let again = f.store.add_version(&f.project, "v1.8.0").unwrap();
+    let again = f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
     assert!(!again.changed);
     assert_eq!(fs::read_to_string(&file).unwrap(), "# v1.8.0\n\nNotes.\n");
 
-    // A hand-made file is already listed.
+    // A hand-made file is already listed: adding it keeps the file, issues its release-notes
+    // card once (it has none yet), and then changes nothing.
     fs::write(f.release().join("v2.0.0.md"), "x").unwrap();
-    assert!(!f.store.add_version(&f.project, "v2.0.0").unwrap().changed);
+    assert!(
+        f.store
+            .add_version(&f.project, "v2.0.0", at(5))
+            .unwrap()
+            .changed
+    );
+    assert!(
+        !f.store
+            .add_version(&f.project, "v2.0.0", at(5))
+            .unwrap()
+            .changed
+    );
     assert_eq!(
         fs::read_to_string(f.release().join("v2.0.0.md")).unwrap(),
         "x"
@@ -142,17 +157,22 @@ fn adding_creates_an_empty_file_and_never_overwrites_one() {
 
     // Names that cannot be file names are refused and nothing is written.
     for bad in ["a/b", "..", ".x", "a\\b", "v1:2"] {
-        assert!(f.store.add_version(&f.project, bad).is_err(), "{bad}");
+        assert!(
+            f.store.add_version(&f.project, bad, at(5)).is_err(),
+            "{bad}"
+        );
     }
     assert_eq!(f.versions(), ["v2.0.0", "v1.8.0"]);
     // The release template is never a version and cannot be created as one.
-    assert!(f.store.add_version(&f.project, "TEMPLATE").is_err());
+    assert!(f.store.add_version(&f.project, "TEMPLATE", at(5)).is_err());
     assert!(
         f.store
-            .set_current_version(&f.project, Some("TEMPLATE"))
+            .set_current_version(&f.project, Some("TEMPLATE"), at(5))
             .is_err()
     );
-    assert!(!f.release().join("TEMPLATE.md").exists());
+    // The template exists (the first add wrote it) and is still not a version.
+    assert!(f.release().join("TEMPLATE.md").exists());
+    assert_eq!(f.versions(), ["v2.0.0", "v1.8.0"]);
     // No temporary files are left behind.
     let names: Vec<_> = fs::read_dir(f.release())
         .unwrap()
@@ -166,7 +186,7 @@ fn project_json_keeps_no_version_list_and_setting_current_lists_the_version() {
     let f = fixture();
     let current = f
         .store
-        .set_current_version(&f.project, Some("v1.8.0"))
+        .set_current_version(&f.project, Some("v1.8.0"), at(5))
         .unwrap();
     assert!(current.changed);
     assert_eq!(current.value.versions, ["v1.8.0"]);
@@ -182,7 +202,9 @@ fn project_json_keeps_no_version_list_and_setting_current_lists_the_version() {
     );
     fs::write(f.dir().join("project.json"), legacy).unwrap();
     assert_eq!(f.versions(), ["v1.8.0"]);
-    f.store.set_current_version(&f.project, None).unwrap();
+    f.store
+        .set_current_version(&f.project, None, at(5))
+        .unwrap();
     let text = fs::read_to_string(f.dir().join("project.json")).unwrap();
     assert!(!text.contains("versions") && !text.contains("currentVersion"));
 }
@@ -191,7 +213,7 @@ fn project_json_keeps_no_version_list_and_setting_current_lists_the_version() {
 fn a_current_version_whose_file_is_gone_reads_as_none_and_comes_back_with_the_file() {
     let f = fixture();
     f.store
-        .set_current_version(&f.project, Some("v1.8.0"))
+        .set_current_version(&f.project, Some("v1.8.0"), at(5))
         .unwrap();
     fs::remove_file(f.release().join("v1.8.0.md")).unwrap();
 
@@ -245,7 +267,7 @@ fn a_hand_edit_of_planned_version_is_read_and_a_write_keeps_everything_else() {
             .is_err(),
         "an unlisted version is refused"
     );
-    f.store.add_version(&f.project, "v1.9.0").unwrap();
+    f.store.add_version(&f.project, "v1.9.0", at(5)).unwrap();
     f.set("v1.9.0", 6);
     let after = f.md();
     assert!(after.contains("plannedVersion: v1.9.0"), "{after}");

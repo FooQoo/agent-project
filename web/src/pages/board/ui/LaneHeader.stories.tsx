@@ -5,7 +5,7 @@ import { LaneHeader } from './LaneHeader';
 const meta = {
   title: 'Pages/Board/LaneHeader',
   component: LaneHeader,
-  args: { column: 'done', count: 3, onArchive: fn() },
+  args: { column: 'done', count: 3, onToggleSelect: fn() },
 } satisfies Meta<typeof LaneHeader>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -14,8 +14,8 @@ export const DoneWithArchive: Story = {
     await userEvent.click(
       within(canvasElement).getByRole('button', { name: 'Archive completed tasks' }),
     );
-    await expect(args.onArchive).toHaveBeenCalledOnce();
+    await expect(args.onToggleSelect).toHaveBeenCalledOnce();
   },
 };
 export const EmptyDone: Story = { args: { count: 0 } };
-export const Todo: Story = { args: { column: 'todo', onArchive: undefined } };
+export const Todo: Story = { args: { column: 'todo', onToggleSelect: undefined } };

@@ -123,6 +123,101 @@ export const SelectionDrawer: Story = {
   },
 };
 
+/** The Done lane's archive bar on the PC: every card starts picked, and the two buttons are the same size. */
+export const ArchiveBar: Story = {
+  args: { action: 'archive', count: 3 },
+  play: async ({ canvasElement, args }) => {
+    const bar = within(canvasElement).getByRole('region', {
+      name: 'Archive the picked completed tasks',
+    });
+    await expect(within(bar).getByText('3 selected')).toBeVisible();
+    const cancel = within(bar).getByRole('button', { name: 'Cancel' });
+    const submit = within(bar).getByRole('button', { name: 'Archive (3)' });
+    await expect(Math.abs(cancel.offsetWidth - submit.offsetWidth)).toBeLessThan(2);
+    await expect(Math.abs(cancel.offsetHeight - submit.offsetHeight)).toBeLessThan(2);
+    await userEvent.click(submit);
+    await expect(args.onSend).toHaveBeenCalledOnce();
+    await userEvent.click(cancel);
+    await expect(args.onCancel).toHaveBeenCalledOnce();
+  },
+};
+
+/** Every card unpicked: the archive button waits. */
+export const ArchiveBarWithNothingPicked: Story = {
+  args: { action: 'archive', count: 0 },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('button', { name: 'Archive (0)' })).toBeDisabled();
+  },
+};
+
+/** The same bar in Japanese. */
+export const ArchiveBarJapanese: Story = {
+  args: { action: 'archive', count: 3 },
+  globals: { locale: 'ja' },
+  play: async ({ canvasElement }) => {
+    const bar = within(canvasElement).getByRole('region', {
+      name: '選んだ完了タスクをアーカイブする',
+    });
+    await expect(within(bar).getByRole('button', { name: 'やめる' })).toBeVisible();
+    await expect(within(bar).getByRole('button', { name: 'アーカイブ (3)' })).toBeVisible();
+  },
+};
+
+/** The phone's archive drawer: the same short, non-modal drawer, with the archive button. */
+export const ArchiveDrawer: Story = {
+  globals: { width: 'phone' },
+  render: (args) => (
+    <BacklogSheet
+      action="archive"
+      open
+      count={args.count}
+      onCancel={args.onCancel}
+      onSend={args.onSend}
+    />
+  ),
+  play: async ({ args }) => {
+    const drawer = await within(document.body).findByRole('region', {
+      name: 'Archive the picked completed tasks',
+    });
+    await expect(within(drawer).getByRole('status')).toHaveTextContent('2 selected');
+    const cancel = within(drawer).getByRole('button', { name: 'Cancel' });
+    const submit = within(drawer).getByRole('button', { name: 'Archive (2)' });
+    await expect(cancel.getBoundingClientRect().width).toBeCloseTo(
+      submit.getBoundingClientRect().width,
+      0,
+    );
+    await expect(cancel.getBoundingClientRect().height).toBeCloseTo(
+      submit.getBoundingClientRect().height,
+      0,
+    );
+    await userEvent.click(submit);
+    await expect(args.onSend).toHaveBeenCalledOnce();
+    await userEvent.click(cancel);
+    await expect(args.onCancel).toHaveBeenCalledOnce();
+  },
+};
+
+/** The archive drawer in Japanese. */
+export const ArchiveDrawerJapanese: Story = {
+  globals: { width: 'phone', locale: 'ja' },
+  render: (args) => (
+    <BacklogSheet
+      action="archive"
+      open
+      count={args.count}
+      onCancel={args.onCancel}
+      onSend={args.onSend}
+    />
+  ),
+  play: async () => {
+    const drawer = await within(document.body).findByRole('region', {
+      name: '選んだ完了タスクをアーカイブする',
+    });
+    await expect(within(drawer).getByRole('button', { name: 'やめる' })).toBeVisible();
+    await expect(within(drawer).getByRole('button', { name: 'アーカイブ (2)' })).toBeVisible();
+  },
+};
+
 /** A long count in a narrow drawer: the label is cut, and the two buttons keep the same size. */
 export const SelectionDrawerLongCount: Story = {
   args: { count: 128 },

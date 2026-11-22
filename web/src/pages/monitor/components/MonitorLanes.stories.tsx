@@ -156,13 +156,15 @@ type ScreenArgs = Pick<
   | 'onAsk'
 > & {
   /** Opens a confirmation: `archive` uses the card named by `pendingTask`. */
-  pending?: 'archive' | 'bulk' | 'list' | 'list-revealed';
+  pending?: 'archive' | 'list' | 'list-revealed';
   pendingTask?: number;
   emptyDone?: boolean;
   emptyArchive?: boolean;
   /** Archives this many tasks, to show that only a window of rows is drawn. */
   manyArchived?: number;
 };
+
+const ARCHIVE_BAR = '選んだ完了タスクをアーカイブする';
 
 /** The phone monitor's lane view over sample cards. A move changes them at once; an archive changes them once confirmed. */
 function LanesStory({
@@ -181,15 +183,13 @@ function LanesStory({
       .find((item) => item.task.id === id);
   const target = find(pendingTask);
   const initialPending: LanePending =
-    pending === 'bulk'
-      ? { kind: 'bulk' }
-      : pending === 'list'
-        ? { kind: 'list' }
-        : pending === 'list-revealed'
-          ? { kind: 'list', revealed: 5 }
-          : pending && target
-            ? { kind: 'archive', item: target }
-            : null;
+    pending === 'list'
+      ? { kind: 'list' }
+      : pending === 'list-revealed'
+        ? { kind: 'list', revealed: 5 }
+        : pending && target
+          ? { kind: 'archive', item: target }
+          : null;
   const without = (id: number) => ({
     backlog: lanes.backlog.filter((item) => item.task.id !== id),
     todo: lanes.todo.filter((item) => item.task.id !== id),
@@ -216,7 +216,10 @@ function LanesStory({
         setLanes(without(item.task.id));
         return true;
       }}
-      onBulkArchive={async () => setLanes({ ...lanes, done: [] })}
+      onArchiveSelected={async (ids) => {
+        setLanes({ ...lanes, done: lanes.done.filter((item) => !ids.includes(item.task.id)) });
+        return true;
+      }}
       archive={{
         data: {
           project: makeProject({ id: SAMPLE_PROJECT, name: LANE_PROJECT_NAME }),
@@ -329,7 +332,7 @@ export const TabSwitchesLane: Story = {
     await expect(tab(canvasElement, '進行中')).toHaveAttribute('aria-selected', 'true');
     await userEvent.click(tab(canvasElement, '完了'));
     await expect(
-      within(canvasElement).getByRole('button', { name: 'まとめてアーカイブ' }),
+      within(canvasElement).getByRole('button', { name: 'まとめて選んでアーカイブ' }),
     ).toBeVisible();
   },
 };
@@ -396,19 +399,11 @@ export const DoneLane: Story = {
     const lane = within(
       canvasElement.querySelector('.monitor-lane[data-lane="done"]') as HTMLElement,
     );
-    await expect(lane.getByRole('button', { name: 'まとめてアーカイブ' })).toBeEnabled();
+    await expect(lane.getByRole('button', { name: 'まとめて選んでアーカイブ' })).toBeEnabled();
     const bar = within(canvasElement).getByRole('navigation', { name: '主なナビゲーション' });
-    await expect(within(bar).queryByRole('button', { name: 'まとめてアーカイブ' })).toBeNull();
-  },
-};
-
-/** The bulk confirmation lists the completed cards in a bottom sheet. */
-export const BulkArchiveConfirm: Story = {
-  args: { initialLane: 'done', pending: 'bulk' },
-  play: async () => {
-    const dialog = within(await within(document.body).findByRole('dialog'));
-    await expect(dialog.getAllByRole('row')).toHaveLength(5);
-    await expect(dialog.getByRole('button', { name: '4件をアーカイブ' })).toBeEnabled();
+    await expect(
+      within(bar).queryByRole('button', { name: 'まとめて選んでアーカイブ' }),
+    ).toBeNull();
   },
 };
 
@@ -434,14 +429,14 @@ export const BulkArchiveDragging: Story = {
     await expect(tile.getBoundingClientRect().width).toBe(64);
     await expect(within(document.body).queryByRole('dialog')).toBeNull();
     await expect(
-      within(section).getAllByRole('button', { name: 'まとめてアーカイブ' }),
+      within(section).getAllByRole('button', { name: 'まとめて選んでアーカイブ' }),
     ).toHaveLength(1);
   },
 };
 
 /**
  * On the Done lane, a long swipe to the left makes the lane follow the finger and show the Archive
- * all tile; lifting the finger springs it back and opens the bulk-archive confirmation as a drawer.
+ * all tile; lifting the finger springs it back and starts the selection with every done card picked, in the short drawer.
  */
 export const BulkArchiveBySwipe: Story = {
   args: { initialLane: 'done' },
@@ -456,9 +451,8 @@ export const BulkArchiveBySwipe: Story = {
     press(lane, 'pointermove', rect.right - 160, y);
     await waitFor(() => expect(bulkTile(section)).toHaveAttribute('data-revealed'));
     press(lane, 'pointerup', rect.right - 160, y);
-    const sheet = await within(document.body).findByRole('dialog');
-    await expect(sheet.getAttribute('data-slot')).toBe('drawer-popup');
-    await expect(within(sheet).getAllByRole('row')).toHaveLength(5);
+    const sheet = await within(document.body).findByRole('region', { name: ARCHIVE_BAR });
+    await expect(within(sheet).getByRole('button', { name: 'アーカイブ (4)' })).toBeEnabled();
     await waitFor(() => expect(bulkTile(section)).not.toHaveAttribute('data-revealed'));
   },
 };
@@ -480,15 +474,22 @@ export const BulkArchiveShortSwipe: Story = {
   },
 };
 
-/** The button after the last Done card asks the same, for a keyboard or a screen reader. */
+/** The button after the last Done card starts the same selection, for a keyboard or a screen reader. */
 export const BulkArchiveButton: Story = {
   args: { initialLane: 'done' },
   play: async ({ canvasElement }) => {
     await userEvent.click(
-      within(canvasElement).getByRole('button', { name: 'まとめてアーカイブ' }),
+      within(canvasElement).getByRole('button', { name: 'まとめて選んでアーカイブ' }),
     );
-    const sheet = await within(document.body).findByRole('dialog');
-    await expect(within(sheet).getAllByRole('row')).toHaveLength(5);
+    const sheet = await within(document.body).findByRole('region', { name: ARCHIVE_BAR });
+    // Every done card starts picked; a tap on a card unpicks it, and the count follows.
+    await expect(within(sheet).getByRole('button', { name: 'アーカイブ (4)' })).toBeEnabled();
+    await userEvent.click(within(canvasElement).getAllByRole('checkbox')[0] as HTMLElement);
+    await expect(within(sheet).getByRole('button', { name: 'アーカイブ (3)' })).toBeEnabled();
+    await userEvent.click(within(sheet).getByRole('button', { name: 'やめる' }));
+    await waitFor(() =>
+      expect(within(document.body).queryByRole('region', { name: ARCHIVE_BAR })).toBeNull(),
+    );
   },
 };
 
@@ -604,7 +605,7 @@ export const EmptyDoneLane: Story = {
   args: { initialLane: 'done', emptyDone: true },
   play: async ({ canvasElement }) => {
     await expect(
-      within(canvasElement).queryByRole('button', { name: 'まとめてアーカイブ' }),
+      within(canvasElement).queryByRole('button', { name: 'まとめて選んでアーカイブ' }),
     ).toBeNull();
     await expect(within(canvasElement).getByText('完了した作業はありません。')).toBeVisible();
   },

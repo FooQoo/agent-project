@@ -7,16 +7,14 @@ import '../../../shared/styles/backlog.css';
 export function LaneHeader({
   column,
   count,
-  onArchive,
   selecting,
   onToggleSelect,
 }: {
   column: ColumnName;
   count: number;
-  onArchive?: () => void;
-  /** The Backlog lane: the selection mode is on. */
+  /** The Backlog and Done lanes: the selection mode is on. */
   selecting?: boolean;
-  /** The Backlog lane: the button that enters and leaves the selection mode. */
+  /** The Backlog lane's button that enters and leaves the selection mode, and the Done lane's archive button. */
   onToggleSelect?: () => void;
 }) {
   const { t } = useTranslation();
@@ -37,13 +35,14 @@ export function LaneHeader({
           {selecting ? <XIcon aria-hidden="true" /> : <ListChecksIcon aria-hidden="true" />}
         </button>
       )}
-      {column === 'done' && onArchive && (
+      {column === 'done' && onToggleSelect && (
         <button
           type="button"
           className="lane-header__archive"
           aria-label={t('archive.bulkTitle')}
           title={t('archive.bulkTitle')}
-          onClick={onArchive}
+          aria-pressed={selecting}
+          onClick={onToggleSelect}
           disabled={count === 0}
         >
           <ArchiveIcon aria-hidden="true" />
