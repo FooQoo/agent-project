@@ -16,7 +16,7 @@ let entrance: PhoneEntrance;
 
 test.beforeAll(async () => {
   test.setTimeout(120_000);
-  home = mkdtempSync(path.join(os.tmpdir(), 'agent-board-archive-pages-'));
+  home = mkdtempSync(path.join(os.tmpdir(), 'agent-project-archive-pages-'));
   skipGuide(home);
   agpjCatalogOk(['project', 'create', 'Pages'], home);
   const added = agpj('Pages', ['add', 'Template task', `--desc=${taskBody('Template.')}`, '--assignee', 'ai', '--actor', 'human'], home);

@@ -42,7 +42,7 @@ let work: string;
 
 test.beforeAll(async () => {
   images = await startImageServer();
-  work = mkdtempSync(path.join(os.tmpdir(), 'agent-board-e2e-pc-'));
+  work = mkdtempSync(path.join(os.tmpdir(), 'agent-project-e2e-pc-'));
 });
 
 test.afterAll(async () => {

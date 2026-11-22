@@ -50,7 +50,7 @@ function cliFrom(cwd: string, args: string[]): { code: number; stdout: string; s
 let work: string;
 
 test.beforeAll(() => {
-  work = mkdtempSync(path.join(os.tmpdir(), 'agent-board-e2e-shared-'));
+  work = mkdtempSync(path.join(os.tmpdir(), 'agent-project-e2e-shared-'));
 });
 test.afterAll(() => {
   rmSync(work, { recursive: true, force: true });

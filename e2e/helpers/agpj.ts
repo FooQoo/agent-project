@@ -65,7 +65,7 @@ export function mainPort(): number {
  * see the board as before the guide existed; the guide's own tests pass `unseen`.
  */
 export function makeHome(label: string, guide: 'skipped' | 'unseen' = 'skipped'): string {
-  const home = mkdtempSync(path.join(os.tmpdir(), `agent-board-e2e-${label}-`));
+  const home = mkdtempSync(path.join(os.tmpdir(), `agent-project-e2e-${label}-`));
   if (guide === 'skipped') skipGuide(home);
   return home;
 }
@@ -414,7 +414,7 @@ export function agpjOnTerminal(
 }
 
 /**
- * Put `project` back to the version-two Agent Board fixture. The project keeps its ID; its tasks and epics are
+ * Put `project` back to the version-two Agent Project fixture. The project keeps its ID; its tasks and epics are
  * replaced by the fixture's cards.
  */
 export function resetBoard(project: string, home: string = mainHome()): void {

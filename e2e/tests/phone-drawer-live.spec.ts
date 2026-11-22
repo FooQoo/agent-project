@@ -18,7 +18,7 @@ let id: number;
 
 test.beforeAll(async () => {
   test.setTimeout(240_000);
-  home = mkdtempSync(path.join(os.tmpdir(), 'agent-board-phone-drawer-'));
+  home = mkdtempSync(path.join(os.tmpdir(), 'agent-project-phone-drawer-'));
   skipGuide(home);
   agpjCatalogOk(['project', 'create', 'Live'], home);
   const added = JSON.parse(

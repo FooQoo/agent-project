@@ -54,7 +54,7 @@ const png = Buffer.from(
 );
 
 test.beforeAll(() => {
-  work = mkdtempSync(path.join(os.tmpdir(), 'agent-board-e2e-body-'));
+  work = mkdtempSync(path.join(os.tmpdir(), 'agent-project-e2e-body-'));
 });
 test.afterAll(() => {
   rmSync(work, { recursive: true, force: true });

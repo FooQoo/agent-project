@@ -145,7 +145,7 @@ test.describe('a new data area', () => {
     await expect(switcher(page)).toHaveText('No projects');
     await expect(switcher(page)).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Ask AI' })).toHaveCount(0);
-    await expect(page).toHaveTitle('Agent Board');
+    await expect(page).toHaveTitle('Agent Project');
     await expect.poll(() => projectParam(page)).toBeNull();
 
     await page.evaluate(() => {
@@ -155,7 +155,7 @@ test.describe('a new data area', () => {
 
     // The first project is shown, and the URL names it without adding a history entry.
     await expect(switcher(page)).toHaveText('Alpha');
-    await expect(page).toHaveTitle('Alpha - Agent Board');
+    await expect(page).toHaveTitle('Alpha - Agent Project');
     await expect(page.getByText('No tasks yet.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ask AI' })).toBeEnabled();
     await expect.poll(() => projectParam(page)).toBe(projectId('Alpha', home));
@@ -208,7 +208,7 @@ test.describe('two projects with the same task numbers', () => {
     page,
   }) => {
     await open(page, alpha);
-    await expect(page).toHaveTitle('Alpha - Agent Board');
+    await expect(page).toHaveTitle('Alpha - Agent Project');
     await expect(task(page, 1)).toHaveText(/Alpha: draft the release notes/);
     await expect(task(page, 2)).toHaveText(/Alpha: choose the license/);
     // The card offers the button; the question is read in the dialog.
@@ -325,7 +325,7 @@ test.describe('two projects with the same task numbers', () => {
     await menuItem(page, 'Beta').click();
     await expect(menu).toHaveCount(0);
     await expect(switcher(page)).toHaveText('Beta');
-    await expect(page).toHaveTitle('Beta - Agent Board');
+    await expect(page).toHaveTitle('Beta - Agent Project');
     await expect.poll(() => projectParam(page)).toBe(beta);
     await expect(details(page)).toContainText('Select a task to see its details.');
     await expect(details(page).getByRole('heading', { level: 2 })).toHaveCount(0);
@@ -454,7 +454,7 @@ test.describe('two projects with the same task numbers', () => {
     await sendRequest(create);
     // Done: the latest URL (Alpha) is shown now.
     await expect(switcher(page)).toHaveText('Alpha');
-    await expect(page).toHaveTitle('Alpha - Agent Board');
+    await expect(page).toHaveTitle('Alpha - Agent Project');
     await expect(task(page, 1)).toHaveText(/Alpha: draft the release notes/);
     expect(posts).toEqual([`/api/projects/${beta}/messages/requests`]);
     expect(requestsOf('Beta', home)).toContain('Typed in Beta');
@@ -759,7 +759,7 @@ test.describe('two projects with the same task numbers', () => {
     // A rename: the tab that shows Alpha by its ID keeps showing the same project under the new name.
     agpjOk('Alpha', ['project', 'rename', 'Alpha Renamed'], home);
     await expect(switcher(page)).toHaveText('Alpha Renamed');
-    await expect(page).toHaveTitle('Alpha Renamed - Agent Board');
+    await expect(page).toHaveTitle('Alpha Renamed - Agent Project');
     await expect(task(page, 1)).toHaveText(/Alpha: draft the release notes/);
     await expect.poll(() => projectParam(page)).toBe(alpha);
     await page.reload();

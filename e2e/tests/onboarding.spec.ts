@@ -84,7 +84,7 @@ test('OB-01: the guide takes the request and the answer, plays the plan, and lea
 	const url = await openBoard();
 	await page.goto(url);
 
-	await expect(page.getByText('Try Agent Board')).toBeVisible();
+	await expect(page.getByText('Try Agent Project')).toBeVisible();
 	await page.getByRole('button', { name: 'Start guide' }).click();
 	await expect(page.getByText('Guide 1 / 5')).toBeVisible();
 	await expect(page.getByRole('dialog', { name: 'Ask AI' })).toBeVisible();
@@ -98,19 +98,19 @@ test('OB-01: the guide takes the request and the answer, plays the plan, and lea
 	await expect.poll(() => guideStatus(url)).toBe('completed');
 	expect(await serverTitles(url)).toEqual([]);
 	await page.reload();
-	await expect(page.getByText('Try Agent Board')).toBeHidden();
+	await expect(page.getByText('Try Agent Project')).toBeHidden();
 });
 
 test('OB-02: skipping records it and the guide is not shown again', async ({ page }) => {
 	const url = await openBoard();
 	await page.goto(url);
-	await expect(page.getByText('Try Agent Board')).toBeVisible();
+	await expect(page.getByText('Try Agent Project')).toBeVisible();
 	await page.getByRole('button', { name: 'Skip' }).click();
-	await expect(page.getByText('Try Agent Board')).toBeHidden();
+	await expect(page.getByText('Try Agent Project')).toBeHidden();
 	await expect.poll(() => guideStatus(url)).toBe('skipped');
 
 	await page.reload();
-	await expect(page.getByText('Try Agent Board')).toBeHidden();
+	await expect(page.getByText('Try Agent Project')).toBeHidden();
 });
 
 test('OB-03: ending an offered guide early records a skip', async ({ page }) => {
@@ -129,11 +129,11 @@ test('OB-03: ending an offered guide early records a skip', async ({ page }) => 
 test('OB-04: the settings show the tutorial again, and ending a replay records nothing', async ({ page }) => {
 	const url = await openBoard('skipped');
 	await page.goto(url);
-	await expect(page.getByText('Try Agent Board')).toBeHidden();
+	await expect(page.getByText('Try Agent Project')).toBeHidden();
 
 	await page.getByRole('button', { name: 'Settings' }).click();
 	await page.getByRole('button', { name: 'Try it' }).click();
-	await expect(page.getByText('Try Agent Board')).toBeVisible();
+	await expect(page.getByText('Try Agent Project')).toBeVisible();
 
 	await page.getByRole('button', { name: 'Start guide' }).click();
 	await expect(page.getByText('Guide 1 / 5')).toBeVisible();
@@ -150,14 +150,14 @@ test('OB-04: the settings show the tutorial again, and ending a replay records n
 test('OB-05: a second tab can show the guide at the same time', async ({ page, context }) => {
 	const url = await openBoard();
 	await page.goto(url);
-	await expect(page.getByText('Try Agent Board')).toBeVisible();
+	await expect(page.getByText('Try Agent Project')).toBeVisible();
 
 	const other = await context.newPage();
 	await other.goto(url);
-	await expect(other.getByText('Try Agent Board')).toBeVisible();
+	await expect(other.getByText('Try Agent Project')).toBeVisible();
 	await other.getByRole('button', { name: 'Start guide' }).click();
 	await expect(other.getByText('Guide 1 / 5')).toBeVisible();
-	await expect(page.getByText('Try Agent Board')).toBeVisible();
+	await expect(page.getByText('Try Agent Project')).toBeVisible();
 });
 
 const PHONE = { width: 390, height: 844 };
@@ -167,7 +167,7 @@ test('OB-06: at phone width the guide runs to the end, with the answer given in 
 	await page.setViewportSize(PHONE);
 	await page.goto(url);
 
-	await expect(page.getByText('Try Agent Board')).toBeVisible();
+	await expect(page.getByText('Try Agent Project')).toBeVisible();
 	await page.getByRole('button', { name: 'Start guide' }).click();
 	await expect(page.getByText('Guide 1 / 5')).toBeVisible();
 	await sendRequest(page);

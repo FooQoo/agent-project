@@ -70,7 +70,7 @@ function bodyOfLength(count: number): string {
 let work: string;
 
 test.beforeAll(() => {
-  work = mkdtempSync(path.join(os.tmpdir(), 'agent-board-e2e-draft-'));
+  work = mkdtempSync(path.join(os.tmpdir(), 'agent-project-e2e-draft-'));
 });
 test.afterAll(() => {
   rmSync(work, { recursive: true, force: true });

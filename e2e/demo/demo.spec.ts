@@ -17,7 +17,7 @@ async function openDemo(page: Page): Promise<string[]> {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('./');
-  await expect(page.getByText('Try Agent Board')).toBeVisible();
+  await expect(page.getByText('Try Agent Project')).toBeVisible();
   return errors;
 }
 
@@ -137,7 +137,7 @@ test.describe('in an English browser', () => {
   }) => {
     const errors = await openDemo(page);
     await page.getByRole('button', { name: 'Skip' }).click();
-    await expect(page.getByText('Try Agent Board')).toBeHidden();
+    await expect(page.getByText('Try Agent Project')).toBeHidden();
     await expect(task(lane(page, 'Todo'), 15)).toBeVisible();
 
     // No project Docs: the demo has no files on a computer to open.
@@ -156,7 +156,7 @@ test.describe('in an English browser', () => {
     await dragTaskTo(page, 15, 'Doing');
     await expect(task(lane(page, 'Doing'), 15)).toBeVisible();
     await page.reload();
-    await expect(page.getByText('Try Agent Board')).toBeVisible();
+    await expect(page.getByText('Try Agent Project')).toBeVisible();
     await page.getByRole('button', { name: 'Skip' }).click();
     await expect(task(lane(page, 'Todo'), 15)).toBeVisible();
     expect(errors).toEqual([]);
@@ -171,7 +171,7 @@ test.describe('in a Japanese browser', () => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('./');
-    const welcome = page.getByRole('dialog', { name: 'Agent Boardを体験しましょう' });
+    const welcome = page.getByRole('dialog', { name: 'Agent Project を体験しましょう' });
     await expect(welcome).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
 
@@ -219,7 +219,7 @@ test.describe('in a Japanese browser', () => {
 
     // A reload starts afresh in the browser's language, with the guide in Japanese again.
     await page.reload();
-    await expect(page.getByRole('dialog', { name: 'Agent Boardを体験しましょう' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Agent Project を体験しましょう' })).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
     await page.getByRole('button', { name: 'スキップ' }).click();
     await expect(page.getByRole('region', { name: '未着手' })).toBeVisible();

@@ -80,7 +80,7 @@ let claudeSettings: string;
 let fakeBin: string;
 
 test.beforeEach(() => {
-	root = mkdtempSync(path.join(os.tmpdir(), 'agent-board-e2e-home-setup-'));
+	root = mkdtempSync(path.join(os.tmpdir(), 'agent-project-e2e-home-setup-'));
 	home = path.join(root, 'home');
 	dataRoot = path.join(home, '.agent-project');
 	codexConfig = path.join(home, '.codex', 'config.toml');
@@ -150,7 +150,7 @@ function hashes(dir: string): Record<string, string> {
 /** The backup files setup wrote next to `file`. */
 function backupsOf(file: string): string[] {
 	const name = path.basename(file);
-	return readdirSync(path.dirname(file)).filter((entry) => entry.startsWith(`${name}.agboard-backup`));
+	return readdirSync(path.dirname(file)).filter((entry) => entry.startsWith(`${name}.agpj-backup`));
 }
 
 /** Parse a TOML file with Python's tomllib, so the checks read keys instead of matching text. */

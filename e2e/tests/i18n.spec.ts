@@ -27,13 +27,13 @@ test('starts in English in a Japanese browser, switches and persists without tra
   const home = mainHome();
   expect(path.isAbsolute(home)).toBe(true);
   expect(path.dirname(home)).toBe(os.tmpdir());
-  expect(home).toContain('agent-board-e2e-main-');
+  expect(home).toContain('agent-project-e2e-main-');
   expect(home).not.toMatch(/Library\/Application Support\/agpj$/);
   expect(await page.evaluate(() => navigator.language)).toBe('ja-JP');
   // Nothing was saved, so the page is English whatever the browser's language is.
   expect((await getPreferences()).locale).toBe('en');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(page.getByRole('banner')).toContainText('Agent Board');
+  await expect(page.getByRole('banner')).toContainText('Agent Project');
   await expect(lane(page, 'Todo')).toBeVisible();
   await expect(lane(page, 'Doing')).toBeVisible();
 

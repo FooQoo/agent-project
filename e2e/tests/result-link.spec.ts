@@ -51,10 +51,10 @@ const linkTo = (project: string, task: number, version: number) => `/?project=${
 test('a link to a result with an image opens it directly, even from another project', async ({ page }) => {
   // The phone was showing another project.
   await page.goto(`/?project=${beta}`);
-  await expect(page).toHaveTitle('Beta - Agent Board');
+  await expect(page).toHaveTitle('Beta - Agent Project');
 
   await page.goto(linkTo(alpha, 1, 2));
-  await expect(page).toHaveTitle('Alpha - Agent Board');
+  await expect(page).toHaveTitle('Alpha - Agent Project');
   const drawer = page.getByRole('dialog');
   await expect(drawer).toBeVisible();
   await expect(drawer.getByRole('tab', { name: 'Results' })).toHaveAttribute('aria-selected', 'true');
@@ -93,7 +93,7 @@ test('closing the drawer takes the link out of the address, and a damaged link o
   expect(new URL(page.url()).searchParams.get('project')).toBe(alpha);
 
   await page.goto(`/?project=${alpha}&task=abc&result=2`);
-  await expect(page).toHaveTitle('Alpha - Agent Board');
+  await expect(page).toHaveTitle('Alpha - Agent Project');
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 

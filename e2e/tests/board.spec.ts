@@ -13,10 +13,10 @@ function lane(page: import('@playwright/test').Page, name: 'Todo' | 'Doing' | 'D
 }
 
 test('the header and the page title show the board name', async ({ page }) => {
-  await expect(page).toHaveTitle('agent-board - Agent Board');
+  await expect(page).toHaveTitle('agent-board - Agent Project');
   const header = page.getByRole('banner');
-  await expect(header.getByRole('heading', { level: 1 })).toHaveText('Agent Board');
-  await expect(header).toContainText('Agent Board');
+  await expect(header.getByRole('heading', { level: 1 })).toHaveText('Agent Project');
+  await expect(header).toContainText('Agent Project');
 });
 
 test('three lanes show their names and task counts', async ({ page }) => {

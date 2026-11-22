@@ -38,7 +38,7 @@ test.afterAll(async () => {
 
 test('an empty board shows the lanes and a hint for agents', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveTitle('Empty Board - Agent Board');
+  await expect(page).toHaveTitle('Empty Board - Agent Project');
   await expect(page.getByRole('banner')).toContainText('Empty Board');
   for (const name of ['Todo', 'Doing', 'Done']) {
     const lane = page.getByRole('region', { name });

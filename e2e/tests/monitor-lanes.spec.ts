@@ -47,7 +47,7 @@ function show(project: string, title: string): { taskStatus: Lane; archivedAt: s
 
 test.beforeAll(async () => {
   test.setTimeout(240_000);
-  home = mkdtempSync(path.join(os.tmpdir(), 'agent-board-lanes-'));
+  home = mkdtempSync(path.join(os.tmpdir(), 'agent-project-lanes-'));
   skipGuide(home);
   seed('Switch', [
     { title: 'Switch todo A', lane: 'todo' },
