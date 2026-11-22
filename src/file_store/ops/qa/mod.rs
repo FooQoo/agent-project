@@ -24,7 +24,7 @@ pub use send::{RequestImage, SendRequestInput};
 use std::path::Path;
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::history::{ParseMode, parse_task};
 use crate::file_store::io;
 use crate::file_store::model::{Choice, TaskFile};
@@ -33,7 +33,7 @@ use crate::file_store::transaction::FileChange;
 use crate::file_store::{layout, reader};
 
 /// The bytes of a message file as it is stored.
-fn message_bytes(message: &Message) -> Result<Vec<u8>, AgboardError> {
+fn message_bytes(message: &Message) -> Result<Vec<u8>, AgpjError> {
     let id = message.id();
     render_message(message)
         .map(String::into_bytes)
@@ -45,7 +45,7 @@ fn message_change(
     project_dir: &Path,
     message: &Message,
     is_new: bool,
-) -> Result<FileChange, AgboardError> {
+) -> Result<FileChange, AgpjError> {
     let target = qa::message_relative(message.id());
     let old = if is_new {
         None
@@ -83,7 +83,7 @@ fn referrers(
     project: &ProjectId,
     project_dir: &Path,
     ids: &[String],
-) -> Result<Vec<Referrer>, AgboardError> {
+) -> Result<Vec<Referrer>, AgpjError> {
     let mut found = Vec::new();
     for task_id in reader::task_ids(project_dir)? {
         let Ok(task) = reader::read_task_strict(shared, project, task_id) else {
@@ -112,7 +112,7 @@ pub(in crate::file_store) fn task_waits(
     shared: &Path,
     project: &ProjectId,
     task_id: i64,
-) -> Result<bool, AgboardError> {
+) -> Result<bool, AgpjError> {
     let project_dir = layout::project_dir(shared, project);
     let text = reader::read_body(shared, project, task_id)?;
     let (ids, error) = match crate::file_store::frontmatter::questions_of(&text) {
@@ -126,8 +126,8 @@ pub(in crate::file_store) fn task_waits(
 }
 
 /// The defect of a broken message file, as the error a write reports.
-fn broken_file_error(index: &QaIndex) -> Option<AgboardError> {
-    index.problems.first().map(|p| AgboardError::FileInvalid {
+fn broken_file_error(index: &QaIndex) -> Option<AgpjError> {
+    index.problems.first().map(|p| AgpjError::FileInvalid {
         file: p.file.clone(),
         field: p.field.clone(),
         reason: p.reason.clone(),

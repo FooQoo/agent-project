@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::frontmatter::{self};
 use crate::file_store::io;
 use crate::file_store::layout;
@@ -12,7 +12,7 @@ pub(super) fn save_task(
     shared: &Path,
     project_dir: &Path,
     task: &TaskFile,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     save_task_with_markdown(shared, project_dir, task, None)
 }
 
@@ -21,7 +21,7 @@ pub(super) fn save_task_with_markdown(
     project_dir: &Path,
     task: &TaskFile,
     replacement: Option<&str>,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     save_task_text(shared, project_dir, task, replacement).map(drop)
 }
 
@@ -32,7 +32,7 @@ pub(super) fn save_task_text(
     project_dir: &Path,
     task: &TaskFile,
     replacement: Option<&str>,
-) -> Result<String, AgboardError> {
+) -> Result<String, AgpjError> {
     use crate::file_store::transaction::save_pair_locked;
     let (targets, old, new) = task_pair(shared, project_dir, task, replacement)?;
     save_pair_locked(project_dir, &targets, &old, &new)?;
@@ -45,7 +45,7 @@ pub(super) fn task_pair_changes(
     project_dir: &Path,
     task: &TaskFile,
     replacement: Option<&str>,
-) -> Result<Vec<crate::file_store::transaction::FileChange>, AgboardError> {
+) -> Result<Vec<crate::file_store::transaction::FileChange>, AgpjError> {
     use crate::file_store::transaction::FileChange;
     let (targets, old, new) = task_pair(shared, project_dir, task, replacement)?;
     Ok(vec![
@@ -74,7 +74,7 @@ fn task_pair(
         crate::file_store::transaction::PairBytes,
         crate::file_store::transaction::PairBytes,
     ),
-    AgboardError,
+    AgpjError,
 > {
     use crate::file_store::history::{ParseMode, compose_task, parse_task};
     use crate::file_store::model::TaskMetadata;
@@ -90,14 +90,14 @@ fn task_pair(
         markdown: io::read_bytes(&md_path, &md_label)?,
     };
     let text = std::str::from_utf8(&old.markdown).map_err(|_| {
-        crate::error::AgboardError::FileUnreadable {
+        crate::error::AgpjError::FileUnreadable {
             file: md_label.clone(),
             reason: "the file is not valid UTF-8".into(),
         }
     })?;
     let parsed = parse_task(text, ParseMode::Stored);
     if let Some(defect) = parsed.history_defects.first() {
-        return Err(AgboardError::FileInvalid {
+        return Err(AgpjError::FileInvalid {
             file: md_label,
             field: defect.field.clone(),
             reason: defect.reason.clone(),
@@ -114,7 +114,7 @@ fn task_pair(
     let markdown = if let Some(replacement) = replacement {
         let parts = frontmatter::parse(replacement);
         compose_task(replacement, &parts.body, None, &task.history)
-            .map_err(|defect| AgboardError::FileInvalid {
+            .map_err(|defect| AgpjError::FileInvalid {
                 file: md_label.clone(),
                 field: defect.field,
                 reason: defect.reason,
@@ -124,7 +124,7 @@ fn task_pair(
         old.markdown.clone()
     } else {
         compose_task(text, &parsed.body, None, &task.history)
-            .map_err(|defect| AgboardError::FileInvalid {
+            .map_err(|defect| AgpjError::FileInvalid {
                 file: md_label.clone(),
                 field: defect.field,
                 reason: defect.reason,
@@ -157,7 +157,7 @@ fn sync_planned_version(
     markdown: Vec<u8>,
     task: &TaskFile,
     label: &str,
-) -> Result<Vec<u8>, AgboardError> {
+) -> Result<Vec<u8>, AgpjError> {
     let composed = String::from_utf8(markdown).expect("the composed TASK.md is UTF-8");
     let old = frontmatter::planned_version_of(old_text);
     let now = frontmatter::planned_version_of(&composed);
@@ -174,7 +174,7 @@ fn sync_planned_version(
     }
     frontmatter::compose_planned_version(&composed, task.planned_version.as_deref())
         .map(String::into_bytes)
-        .map_err(|defect| AgboardError::FileInvalid {
+        .map_err(|defect| AgpjError::FileInvalid {
             file: label.to_owned(),
             field: defect.field,
             reason: defect.reason,

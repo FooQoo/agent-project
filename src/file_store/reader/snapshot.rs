@@ -10,7 +10,7 @@ use std::path::Path;
 use serde::Serialize;
 
 use crate::domain::{ChangeCursor, ProjectCatalog, ProjectId, ProjectMeta};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::index;
 use crate::file_store::layout;
@@ -87,10 +87,7 @@ pub struct FetchedSnapshot<'a> {
 
 /// The snapshot of one project: its project file (strict), and every task
 /// with the defects that were tolerated.
-pub fn read_snapshot(
-    shared: &Path,
-    project_id: &ProjectId,
-) -> Result<ProjectSnapshot, AgboardError> {
+pub fn read_snapshot(shared: &Path, project_id: &ProjectId) -> Result<ProjectSnapshot, AgpjError> {
     let project_dir = project_dir_checked(shared, project_id)?;
     let _lock = WriteLock::acquire(&layout::write_lock(&project_dir))?;
     transaction::recover_locked(&project_dir)?;
@@ -102,7 +99,7 @@ pub fn read_snapshot(
 pub(crate) fn read_snapshot_locked(
     shared: &Path,
     project_id: &ProjectId,
-) -> Result<ProjectSnapshot, AgboardError> {
+) -> Result<ProjectSnapshot, AgpjError> {
     let project_dir = project_dir_checked(shared, project_id)?;
     // The version is taken before the files are read: a save in between makes
     // the next reload see a different version and read again.
@@ -163,7 +160,7 @@ pub struct AllSnapshots {
 
 impl FileStore {
     /// The project list with the catalog version, computed from the files read now.
-    pub fn catalog(&self) -> Result<ProjectCatalog, AgboardError> {
+    pub fn catalog(&self) -> Result<ProjectCatalog, AgpjError> {
         let all = self.all_snapshots()?;
         Ok(ProjectCatalog {
             projects: all.projects.iter().map(|p| p.project.clone()).collect(),
@@ -173,29 +170,29 @@ impl FileStore {
 
     /// The project with this name. A name that matches no project is
     /// `project_not_found`.
-    pub fn project_by_name(&self, name: &str) -> Result<ProjectMeta, AgboardError> {
+    pub fn project_by_name(&self, name: &str) -> Result<ProjectMeta, AgpjError> {
         list_projects(self.shared_dir())?
             .into_iter()
             .find(|project| project.name == name)
-            .ok_or_else(|| AgboardError::ProjectNotFound {
+            .ok_or_else(|| AgpjError::ProjectNotFound {
                 project: name.to_string(),
             })
     }
 
     /// One project's unarchived tasks, with its version, its cursor, and the
     /// defects of its files.
-    pub fn board(&self, id: &ProjectId) -> Result<ProjectSnapshot, AgboardError> {
+    pub fn board(&self, id: &ProjectId) -> Result<ProjectSnapshot, AgpjError> {
         Ok(read_snapshot(self.shared_dir(), id)?.without_archived())
     }
 
     /// One project's archived tasks, read the same way as [`FileStore::board`].
-    pub fn archive_snapshot(&self, id: &ProjectId) -> Result<ProjectSnapshot, AgboardError> {
+    pub fn archive_snapshot(&self, id: &ProjectId) -> Result<ProjectSnapshot, AgpjError> {
         Ok(read_snapshot(self.shared_dir(), id)?.only_archived())
     }
 
     /// Every project's unarchived snapshot in name order, with the catalog
     /// version. A project whose `project.json` is defective fails the whole read.
-    pub fn all_snapshots(&self) -> Result<AllSnapshots, AgboardError> {
+    pub fn all_snapshots(&self) -> Result<AllSnapshots, AgpjError> {
         let mut projects = Vec::new();
         for meta in list_projects(self.shared_dir())? {
             projects.push(self.board(&meta.id)?);

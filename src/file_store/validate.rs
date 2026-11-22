@@ -13,15 +13,15 @@ pub use self::choice::*;
 pub use self::epic::*;
 pub use self::file::*;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// Check that an attachment ID has the stored form (32 lowercase
 /// hexadecimal characters). This is the check before a path is built from it.
-pub fn check_object_id(text: &str, field: &str) -> Result<(), AgboardError> {
+pub fn check_object_id(text: &str, field: &str) -> Result<(), AgpjError> {
     if is_hex32(text) {
         Ok(())
     } else {
-        Err(AgboardError::InvalidValue {
+        Err(AgpjError::InvalidValue {
             field: field.into(),
             reason: "IDs are 32 lowercase hexadecimal characters.".into(),
         })

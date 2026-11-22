@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::qa::{MessageView, QuestionView, RequestView};
 use crate::file_store::reader;
@@ -13,19 +13,19 @@ use crate::file_store::{io, layout, qa};
 pub(super) fn views_locked(
     shared: &Path,
     project: &ProjectId,
-) -> Result<(Vec<QuestionView>, Vec<RequestView>), AgboardError> {
+) -> Result<(Vec<QuestionView>, Vec<RequestView>), AgpjError> {
     let snapshot = reader::read_snapshot_locked(shared, project)?;
     Ok((snapshot.questions, snapshot.requests))
 }
 
 impl FileStore {
     /// Every question of the project, in ID order, with the tasks that refer to it.
-    pub fn questions(&self, project: &ProjectId) -> Result<Vec<QuestionView>, AgboardError> {
+    pub fn questions(&self, project: &ProjectId) -> Result<Vec<QuestionView>, AgpjError> {
         Ok(self.snapshot(project)?.questions)
     }
 
     /// Every message of the project, in ID order.
-    pub fn messages(&self, project: &ProjectId) -> Result<Vec<MessageView>, AgboardError> {
+    pub fn messages(&self, project: &ProjectId) -> Result<Vec<MessageView>, AgpjError> {
         let snapshot = self.snapshot(project)?;
         let mut all: Vec<MessageView> = snapshot
             .questions
@@ -39,7 +39,7 @@ impl FileStore {
 
     /// One message. A message that is not found while a message file is broken reports the
     /// broken file.
-    pub fn message(&self, project: &ProjectId, id: &str) -> Result<MessageView, AgboardError> {
+    pub fn message(&self, project: &ProjectId, id: &str) -> Result<MessageView, AgpjError> {
         let snapshot = self.snapshot(project)?;
         if let Some(view) = snapshot.questions.into_iter().find(|q| q.id == id) {
             return Ok(MessageView::Question(view));
@@ -52,20 +52,20 @@ impl FileStore {
             .into_iter()
             .find(|p| p.file.contains("/qa/") || p.file.starts_with("qa/"));
         Err(match broken {
-            Some(p) => AgboardError::FileInvalid {
+            Some(p) => AgpjError::FileInvalid {
                 file: p.file,
                 field: p.field,
                 reason: p.reason,
             },
-            None => AgboardError::MessageNotFound { id: id.to_owned() },
+            None => AgpjError::MessageNotFound { id: id.to_owned() },
         })
     }
 
     /// One question. A request is `message_type_mismatch`.
-    pub fn question(&self, project: &ProjectId, id: &str) -> Result<QuestionView, AgboardError> {
+    pub fn question(&self, project: &ProjectId, id: &str) -> Result<QuestionView, AgpjError> {
         match self.message(project, id)? {
             MessageView::Question(view) => Ok(view),
-            MessageView::Request(_) => Err(AgboardError::MessageTypeMismatch {
+            MessageView::Request(_) => Err(AgpjError::MessageTypeMismatch {
                 id: id.to_owned(),
                 expected: "question".into(),
             }),
@@ -73,10 +73,10 @@ impl FileStore {
     }
 
     /// One request. A question is `message_type_mismatch`.
-    pub fn request(&self, project: &ProjectId, id: &str) -> Result<RequestView, AgboardError> {
+    pub fn request(&self, project: &ProjectId, id: &str) -> Result<RequestView, AgpjError> {
         match self.message(project, id)? {
             MessageView::Request(view) => Ok(view),
-            MessageView::Question(_) => Err(AgboardError::MessageTypeMismatch {
+            MessageView::Question(_) => Err(AgpjError::MessageTypeMismatch {
                 id: id.to_owned(),
                 expected: "request".into(),
             }),
@@ -92,14 +92,14 @@ impl FileStore {
         project: &ProjectId,
         id: &str,
         name: &str,
-    ) -> Result<(String, Vec<u8>), AgboardError> {
+    ) -> Result<(String, Vec<u8>), AgpjError> {
         let shared = self.shared_dir();
         let project_dir = reader::project_dir_checked(shared, project)?;
         let dir = qa::message_dir(&project_dir, id);
         if qa::question_number(id).is_none() || !dir.is_dir() {
-            return Err(AgboardError::MessageNotFound { id: id.to_owned() });
+            return Err(AgpjError::MessageNotFound { id: id.to_owned() });
         }
-        let not_found = || AgboardError::AttachmentNotFound {
+        let not_found = || AgpjError::AttachmentNotFound {
             id: name.to_owned(),
         };
         let plain = !name.is_empty()

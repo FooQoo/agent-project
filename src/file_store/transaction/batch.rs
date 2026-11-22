@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 use super::journal::{Phase, hash};
 use super::paths::reject_symlinks;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::io::{random_hex, sync_dir, write_atomic, write_error};
 use crate::file_store::qa::question_number;
 use crate::file_store::validate::{EpicId, is_hex32};
@@ -50,7 +50,7 @@ fn hashes(changes: &[FileChange]) -> Vec<(Option<String>, Option<String>)> {
 }
 
 /// Only a message file and the files of a task or an epic may be part of a batch.
-fn validate_target(project: &Path, target: &Path) -> Result<(), AgboardError> {
+fn validate_target(project: &Path, target: &Path) -> Result<(), AgpjError> {
     let parts: Vec<_> = target.components().collect();
     let ok = match parts.as_slice() {
         [
@@ -81,7 +81,7 @@ fn validate_target(project: &Path, target: &Path) -> Result<(), AgboardError> {
     reject_symlinks(project, target)
 }
 
-fn read_optional(project: &Path, target: &Path) -> Result<Option<Vec<u8>>, AgboardError> {
+fn read_optional(project: &Path, target: &Path) -> Result<Option<Vec<u8>>, AgpjError> {
     match fs::read(project.join(target)) {
         Ok(bytes) => Ok(Some(bytes)),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
@@ -90,7 +90,7 @@ fn read_optional(project: &Path, target: &Path) -> Result<Option<Vec<u8>>, Agboa
 }
 
 /// Put `bytes` at `target`, or remove it (and its folder, when the folder is left empty).
-fn place(project: &Path, target: &Path, bytes: Option<&[u8]>) -> Result<(), AgboardError> {
+fn place(project: &Path, target: &Path, bytes: Option<&[u8]>) -> Result<(), AgpjError> {
     let path = project.join(target);
     let parent = path
         .parent()
@@ -123,13 +123,13 @@ fn place(project: &Path, target: &Path, bytes: Option<&[u8]>) -> Result<(), Agbo
     }
 }
 
-fn write_journal(path: &Path, journal: &BatchJournal) -> Result<(), AgboardError> {
+fn write_journal(path: &Path, journal: &BatchJournal) -> Result<(), AgpjError> {
     let bytes = serde_json::to_vec(journal).map_err(|e| write_error(DIR, e))?;
     write_atomic(path, &bytes, DIR)
 }
 
 /// Save every change, or none of them. Each `old` must still match its file.
-pub fn save_batch_locked(project: &Path, changes: Vec<FileChange>) -> Result<(), AgboardError> {
+pub fn save_batch_locked(project: &Path, changes: Vec<FileChange>) -> Result<(), AgpjError> {
     save_batch_reporting(project, changes).map_err(|failure| failure.error)
 }
 
@@ -137,13 +137,13 @@ pub fn save_batch_locked(project: &Path, changes: Vec<FileChange>) -> Result<(),
 /// written) when it did. Recovery keeps a committed batch, so what it names must stay.
 #[derive(Debug)]
 pub struct BatchFailure {
-    pub error: AgboardError,
+    pub error: AgpjError,
     pub committed: bool,
 }
 
 impl BatchFailure {
     /// A failure before the commit point.
-    pub fn before(error: AgboardError) -> Self {
+    pub fn before(error: AgpjError) -> Self {
         Self {
             error,
             committed: false,
@@ -151,7 +151,7 @@ impl BatchFailure {
     }
 
     /// A failure after the commit point.
-    pub fn after(error: AgboardError) -> Self {
+    pub fn after(error: AgpjError) -> Self {
         Self {
             error,
             committed: true,
@@ -232,7 +232,7 @@ fn finish_committed(journal: &Path, dir: &Path) -> Result<(), BatchFailure> {
 
 /// Resolve the journals of interrupted batches: roll prepared ones back, keep committed ones.
 /// Returns the targets that were resolved.
-pub fn recover_batches_locked(project: &Path) -> Result<Vec<PathBuf>, AgboardError> {
+pub fn recover_batches_locked(project: &Path) -> Result<Vec<PathBuf>, AgpjError> {
     let dir = project.join(DIR);
     let entries = match fs::read_dir(&dir) {
         Ok(entries) => entries,

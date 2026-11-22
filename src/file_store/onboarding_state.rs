@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 use super::io;
 use super::lock::WriteLock;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The only format this build writes.
 pub const STATE_FORMAT_VERSION: u32 = 2;
@@ -108,7 +108,7 @@ struct LegacyRunFields {
 }
 
 /// Read the state; a data area without the file has never shown the guide.
-pub fn read(shared: &Path) -> Result<Loaded, AgboardError> {
+pub fn read(shared: &Path) -> Result<Loaded, AgpjError> {
     let path = state_file(shared);
     let label = super::layout::shared_label(shared, &path);
     if !path.exists() {
@@ -169,7 +169,7 @@ pub fn read(shared: &Path) -> Result<Loaded, AgboardError> {
 }
 
 /// Save the state atomically.
-pub fn write(shared: &Path, file: &OnboardingFile) -> Result<(), AgboardError> {
+pub fn write(shared: &Path, file: &OnboardingFile) -> Result<(), AgpjError> {
     let path = state_file(shared);
     let label = super::layout::shared_label(shared, &path);
     if let Some(dir) = path.parent() {
@@ -182,8 +182,8 @@ pub fn write(shared: &Path, file: &OnboardingFile) -> Result<(), AgboardError> {
 /// any project lock, so an operation may take a project lock inside it.
 pub fn with_lock<T>(
     shared: &Path,
-    action: impl FnOnce() -> Result<T, AgboardError>,
-) -> Result<T, AgboardError> {
+    action: impl FnOnce() -> Result<T, AgpjError>,
+) -> Result<T, AgpjError> {
     let lock_path = state_lock(shared);
     if let Some(dir) = lock_path.parent() {
         std::fs::create_dir_all(dir).map_err(|error| {

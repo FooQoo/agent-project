@@ -7,7 +7,7 @@ use super::version::resolve;
 use super::{EpicVersionSet, VersionChoice};
 use super::{lock_project, save_task};
 use crate::domain::Column;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::model::TaskView;
 use crate::file_store::reader;
@@ -64,7 +64,7 @@ impl FileStore {
         choice: &VersionChoice,
         expected: Option<Option<&str>>,
         now: DateTime<Utc>,
-    ) -> Result<crate::domain::Changed<TaskView>, AgboardError> {
+    ) -> Result<crate::domain::Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let target = resolve(shared, project, choice)?;
@@ -72,7 +72,7 @@ impl FileStore {
         if let Some(expected) = expected
             && task.planned_version.as_deref() != expected
         {
-            return Err(AgboardError::PlannedVersionChanged {
+            return Err(AgpjError::PlannedVersionChanged {
                 id: task_id,
                 current: task.planned_version.clone(),
             });
@@ -102,7 +102,7 @@ impl FileStore {
         task_ids: &[i64],
         dry_run: bool,
         now: DateTime<Utc>,
-    ) -> Result<EpicVersionPlan, AgboardError> {
+    ) -> Result<EpicVersionPlan, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         read_epic_file(shared, project, epic)?;
@@ -124,7 +124,7 @@ impl FileStore {
             let task =
                 reader::read_task_strict(shared, project, task_id).map_err(
                     |error| match error {
-                        AgboardError::TaskNotFound { .. } => invalid_task(task_id),
+                        AgpjError::TaskNotFound { .. } => invalid_task(task_id),
                         other => other,
                     },
                 )?;
@@ -163,8 +163,8 @@ impl FileStore {
     }
 }
 
-fn invalid_task(task_id: i64) -> AgboardError {
-    AgboardError::InvalidValue {
+fn invalid_task(task_id: i64) -> AgpjError {
+    AgpjError::InvalidValue {
         field: "taskIds".into(),
         reason: format!("Task #{task_id} is not a task of this epic."),
     }

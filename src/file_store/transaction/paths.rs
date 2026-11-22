@@ -4,14 +4,14 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 use super::{PairBytes, PairTargets};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::io::write_error;
 
 pub(super) fn label(path: &Path) -> String {
     path.to_string_lossy().into_owned()
 }
 
-pub(super) fn validate_targets(project: &Path, targets: &PairTargets) -> Result<(), AgboardError> {
+pub(super) fn validate_targets(project: &Path, targets: &PairTargets) -> Result<(), AgpjError> {
     let valid = |path: &Path, filename: &str| -> Option<String> {
         let parts: Vec<_> = path.components().collect();
         let [
@@ -46,7 +46,7 @@ pub(super) fn validate_targets(project: &Path, targets: &PairTargets) -> Result<
     Ok(())
 }
 
-pub(super) fn reject_symlinks(project: &Path, relative: &Path) -> Result<(), AgboardError> {
+pub(super) fn reject_symlinks(project: &Path, relative: &Path) -> Result<(), AgpjError> {
     let mut path = project.to_path_buf();
     for component in relative.components() {
         if !matches!(component, Component::Normal(_)) {
@@ -71,13 +71,13 @@ pub(super) fn reject_symlinks(project: &Path, relative: &Path) -> Result<(), Agb
     Ok(())
 }
 
-pub(super) fn journal_dir(project: &Path) -> Result<PathBuf, AgboardError> {
+pub(super) fn journal_dir(project: &Path) -> Result<PathBuf, AgpjError> {
     let relative = Path::new(".internal/transactions");
     reject_symlinks(project, relative)?;
     Ok(project.join(relative))
 }
 
-pub(super) fn read_pair(project: &Path, targets: &PairTargets) -> Result<PairBytes, AgboardError> {
+pub(super) fn read_pair(project: &Path, targets: &PairTargets) -> Result<PairBytes, AgpjError> {
     Ok(PairBytes {
         metadata: fs::read(project.join(&targets.metadata))
             .map_err(|e| write_error(&label(&targets.metadata), e))?,

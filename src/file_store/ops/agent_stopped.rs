@@ -7,7 +7,7 @@ use super::super::model::HistoryRecord;
 use super::super::reader;
 use super::{lock_project, save_task, stamp};
 use crate::domain::{Assignee, Column, ProjectId, RunState};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The longest error text kept in the note, in characters.
 const DETAIL_MAX: usize = 200;
@@ -33,7 +33,7 @@ impl FileStore {
         id: i64,
         detail: &str,
         now: DateTime<Utc>,
-    ) -> Result<bool, AgboardError> {
+    ) -> Result<bool, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;

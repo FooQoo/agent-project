@@ -6,7 +6,7 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 
 use crate::domain::{Changed, Column, ProjectId, RunState};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::model::TaskView;
 use crate::file_store::reader;
@@ -35,7 +35,7 @@ impl FileStore {
         project: &ProjectId,
         id: i64,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
@@ -81,7 +81,7 @@ impl FileStore {
         project: &ProjectId,
         id: i64,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
@@ -146,12 +146,12 @@ impl FileStore {
         project: &ProjectId,
         ids: &[i64],
         now: DateTime<Utc>,
-    ) -> Result<Changed<ArchiveDoneResult>, AgboardError> {
+    ) -> Result<Changed<ArchiveDoneResult>, AgpjError> {
         if ids.is_empty()
             || ids.iter().any(|id| *id <= 0)
             || ids.iter().collect::<HashSet<_>>().len() != ids.len()
         {
-            return Err(AgboardError::InvalidValue {
+            return Err(AgpjError::InvalidValue {
                 field: "ids".into(),
                 reason: "IDs must be a non-empty list of unique positive integers.".into(),
             });
@@ -162,13 +162,13 @@ impl FileStore {
         for id in ids {
             let task = match reader::read_task_strict(shared, project, *id) {
                 Ok(task) => task,
-                Err(AgboardError::TaskNotFound { .. }) => {
-                    return Err(AgboardError::ArchiveTargetsChanged);
+                Err(AgpjError::TaskNotFound { .. }) => {
+                    return Err(AgpjError::ArchiveTargetsChanged);
                 }
                 Err(other) => return Err(other),
             };
             if task.archived_at.is_none() && task.task_status != Column::Done {
-                return Err(AgboardError::ArchiveTargetsChanged);
+                return Err(AgpjError::ArchiveTargetsChanged);
             }
             targets.push(task);
         }

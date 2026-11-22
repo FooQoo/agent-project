@@ -5,16 +5,16 @@ use sha2::{Digest, Sha256};
 
 use super::result::{MAX_RESULT_KEY_CHARS, MAX_RESULT_TEXT_CHARS};
 use crate::domain::{AttachmentInput, MAX_RESULT_TITLE_CHARS, ResultKind};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
-pub(super) fn invalid(field: &str, reason: &str) -> AgboardError {
-    AgboardError::InvalidValue {
+pub(super) fn invalid(field: &str, reason: &str) -> AgpjError {
+    AgpjError::InvalidValue {
         field: field.into(),
         reason: reason.into(),
     }
 }
 
-pub(super) fn clean_text(field: &str, value: &str) -> Result<String, AgboardError> {
+pub(super) fn clean_text(field: &str, value: &str) -> Result<String, AgpjError> {
     let text = value.replace("\r\n", "\n").replace('\r', "\n");
     let text = text.trim();
     let count = text.chars().count();
@@ -27,7 +27,7 @@ pub(super) fn clean_text(field: &str, value: &str) -> Result<String, AgboardErro
     Ok(text.to_owned())
 }
 
-pub(super) fn clean_title(value: &str) -> Result<String, AgboardError> {
+pub(super) fn clean_title(value: &str) -> Result<String, AgpjError> {
     let title = value.trim();
     let count = title.chars().count();
     if count == 0 || count > MAX_RESULT_TITLE_CHARS {
@@ -42,7 +42,7 @@ pub(super) fn clean_title(value: &str) -> Result<String, AgboardError> {
     Ok(title.to_owned())
 }
 
-pub(super) fn clean_link(value: &str) -> Result<String, AgboardError> {
+pub(super) fn clean_link(value: &str) -> Result<String, AgpjError> {
     let link = clean_text("link", value)?;
     if link.chars().any(char::is_control) {
         return Err(invalid("link", "A link must be on one line."));
@@ -50,7 +50,7 @@ pub(super) fn clean_link(value: &str) -> Result<String, AgboardError> {
     Ok(link)
 }
 
-pub(super) fn clean_key(value: &str) -> Result<String, AgboardError> {
+pub(super) fn clean_key(value: &str) -> Result<String, AgpjError> {
     let key = value.trim();
     let valid = !key.is_empty()
         && key.chars().count() <= MAX_RESULT_KEY_CHARS

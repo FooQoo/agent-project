@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use crate::domain::{Changed, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::model::{TaskFile, TaskView};
 use crate::file_store::qa::{self, QaIndex};
 use crate::file_store::reader;
@@ -21,7 +21,7 @@ impl SavedDraft {
         shared: &Path,
         project: &ProjectId,
         task: TaskFile,
-    ) -> Result<Self, AgboardError> {
+    ) -> Result<Self, AgpjError> {
         let description = reader::read_body(shared, project, task.id)?;
         Ok(Self {
             task,

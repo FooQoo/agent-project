@@ -10,7 +10,7 @@ use std::path::Path;
 use chrono::{DateTime, Utc};
 
 use crate::domain::{Actor, Changed, Column, Draft, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::history_language::HistoryLanguage;
 use crate::file_store::layout;
@@ -37,7 +37,7 @@ pub(super) fn open_questions(
     shared: &Path,
     project: &ProjectId,
     tasks: &[i64],
-) -> Result<Vec<String>, AgboardError> {
+) -> Result<Vec<String>, AgpjError> {
     let project_dir = layout::project_dir(shared, project);
     let index = QaIndex::load(shared, &project_dir)?;
     let mut open: Vec<_> = index
@@ -52,14 +52,14 @@ pub(super) fn open_questions(
 /// Only a person sends a plan. An open question is a warning they confirm
 /// with `ack`; the question stays, so no agent can run the card until it is
 /// answered.
-pub(super) fn check_sender(actor: Actor, ack: bool, open: Vec<String>) -> Result<(), AgboardError> {
+pub(super) fn check_sender(actor: Actor, ack: bool, open: Vec<String>) -> Result<(), AgpjError> {
     if actor == Actor::Ai {
-        return Err(AgboardError::HumanOnly {
+        return Err(AgpjError::HumanOnly {
             action: "sending a plan to Todo".into(),
         });
     }
     if !open.is_empty() && !ack {
-        return Err(AgboardError::SendWithOpenQuestions { ids: open });
+        return Err(AgpjError::SendWithOpenQuestions { ids: open });
     }
     Ok(())
 }
@@ -68,7 +68,7 @@ fn send_event(
     task: &TaskFile,
     at: DateTime<Utc>,
     language: HistoryLanguage,
-) -> Result<HistoryRecord, AgboardError> {
+) -> Result<HistoryRecord, AgpjError> {
     let reason = language.text(
         "A person sent the task to Todo.",
         "人が Todo へ送りました。",
@@ -91,7 +91,7 @@ fn move_to_todo(
     position: i64,
     at: DateTime<Utc>,
     language: HistoryLanguage,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     let event = send_event(task, at, language)?;
     task.task_status = Column::Todo;
     task.position = position;
@@ -112,7 +112,7 @@ impl FileStore {
         actor: Actor,
         ack: bool,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let task = reader::read_task_strict(shared, project, id)?;
@@ -128,14 +128,14 @@ impl FileStore {
         actor: Actor,
         ack: bool,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let id = task.id;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         if task.draft == Some(Draft::Human) {
-            return Err(AgboardError::TaskIsDraft { id });
+            return Err(AgpjError::TaskIsDraft { id });
         }
         if task.task_status != Column::Backlog {
             return Ok(Changed {
@@ -166,12 +166,12 @@ impl FileStore {
         actor: Actor,
         ack: bool,
         now: DateTime<Utc>,
-    ) -> Result<Changed<EpicSent>, AgboardError> {
+    ) -> Result<Changed<EpicSent>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let (_, epic) = read_epic_file(shared, project, id)?;
         if epic.draft == Some(Draft::Human) {
-            return Err(AgboardError::EpicIsDraft { id: id.to_string() });
+            return Err(AgpjError::EpicIsDraft { id: id.to_string() });
         }
         let mut members = Vec::new();
         for task_id in reader::task_ids(&project_dir)? {
@@ -183,7 +183,7 @@ impl FileStore {
         if let Some(stray) =
             task_ids.and_then(|ids| ids.iter().find(|n| !members.iter().any(|t| t.id == **n)))
         {
-            return Err(AgboardError::InvalidValue {
+            return Err(AgpjError::InvalidValue {
                 field: "taskIds".into(),
                 reason: format!("task #{stray} is not an open card of epic {id}."),
             });
@@ -195,7 +195,7 @@ impl FileStore {
             .collect();
         chosen.sort_by_key(|t| (t.position, t.id));
         if let Some(task) = chosen.iter().find(|t| t.draft == Some(Draft::Human)) {
-            return Err(AgboardError::TaskIsDraft { id: task.id });
+            return Err(AgpjError::TaskIsDraft { id: task.id });
         }
         let sent: Vec<i64> = chosen.iter().map(|t| t.id).collect();
         if chosen.is_empty() {

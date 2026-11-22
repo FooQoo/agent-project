@@ -3,7 +3,7 @@
 use chrono::{DateTime, Utc};
 
 use crate::domain::{Column, RunState};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::model::HistoryRecord;
 
 /// Context used to generate an informative default reason.
@@ -46,7 +46,7 @@ pub(super) fn agent_word_ja(state: RunState) -> &'static str {
     }
 }
 
-pub(super) fn transition_event(t: Transition<'_>) -> Result<HistoryRecord, AgboardError> {
+pub(super) fn transition_event(t: Transition<'_>) -> Result<HistoryRecord, AgpjError> {
     let fallback = match t.kind {
         HistoryKind::Created => format!(
             "Created task in {} with agent {}.",
@@ -106,7 +106,7 @@ pub(super) fn transition_event(t: Transition<'_>) -> Result<HistoryRecord, Agboa
 pub(super) fn reason_or_default(
     reason: Option<&str>,
     fallback: String,
-) -> Result<String, AgboardError> {
+) -> Result<String, AgpjError> {
     let reason = reason
         .filter(|reason| !reason.trim().is_empty())
         .unwrap_or(&fallback);

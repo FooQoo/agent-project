@@ -24,11 +24,11 @@ use super::super::model::{HistoryRecord, TaskView};
 use super::super::reader;
 use super::{ensure_ai_task_not_done, lock_project, save_task, stamp};
 use crate::domain::{Actor, Changed, Column, ProjectId, normalize_and_validate_description};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The description as it is stored: CRLF folded to LF, and at most 50,000 characters of Markdown body. The
 /// frontmatter is not counted, because the editor counts only the body.
-fn normalize_description(value: &str) -> Result<String, AgboardError> {
+fn normalize_description(value: &str) -> Result<String, AgpjError> {
     let normalized = value.replace("\r\n", "\n");
     let body = crate::file_store::frontmatter::parse(&normalized).body;
     normalize_and_validate_description(&body)?;
@@ -36,7 +36,7 @@ fn normalize_description(value: &str) -> Result<String, AgboardError> {
 }
 
 /// The task's view after a change, read back from the files.
-fn view(shared: &Path, project: &ProjectId, id: i64) -> Result<TaskView, AgboardError> {
+fn view(shared: &Path, project: &ProjectId, id: i64) -> Result<TaskView, AgpjError> {
     reader::read_task_locked(shared, project, id)
 }
 
@@ -48,16 +48,16 @@ impl FileStore {
         id: i64,
         reason: Option<&str>,
         now: DateTime<Utc>,
-    ) -> Result<TaskView, AgboardError> {
+    ) -> Result<TaskView, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         ensure_ai_task_not_done(&task, Actor::Ai)?;
         if task.draft == Some(crate::domain::Draft::Human) {
-            return Err(AgboardError::TaskIsDraft { id });
+            return Err(AgpjError::TaskIsDraft { id });
         }
         let language = self.history_language(project, &task)?;
         let fallback = format!(
@@ -89,12 +89,12 @@ impl FileStore {
         project: &ProjectId,
         id: i64,
         before: Option<i64>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         let lane = task.task_status;
         let mut tasks: Vec<(i64, i64)> = Vec::new();

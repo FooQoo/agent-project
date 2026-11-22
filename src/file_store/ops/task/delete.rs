@@ -3,7 +3,7 @@
 use std::fs;
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::io;
 use crate::file_store::layout;
@@ -13,12 +13,12 @@ use super::super::lock_project;
 
 impl FileStore {
     /// Delete an archived task's folder. Confirmation is the caller's job.
-    pub fn delete_archived_task(&self, project: &ProjectId, id: i64) -> Result<(), AgboardError> {
+    pub fn delete_archived_task(&self, project: &ProjectId, id: i64) -> Result<(), AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_none() {
-            return Err(AgboardError::TaskNotArchived { id });
+            return Err(AgpjError::TaskNotArchived { id });
         }
         let folder = layout::task_dir(&project_dir, id);
         fs::remove_dir_all(&folder)
@@ -26,12 +26,12 @@ impl FileStore {
     }
 
     /// its own confirmation; the Web API deletes only archived tasks.
-    pub fn delete_task(&self, project: &ProjectId, id: i64) -> Result<(), AgboardError> {
+    pub fn delete_task(&self, project: &ProjectId, id: i64) -> Result<(), AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let folder = layout::task_dir(&project_dir, id);
         if !folder.is_dir() {
-            return Err(AgboardError::TaskNotFound { id });
+            return Err(AgpjError::TaskNotFound { id });
         }
         let tasks = layout::tasks_dir(&project_dir);
         let label = layout::shared_label(shared, &folder);

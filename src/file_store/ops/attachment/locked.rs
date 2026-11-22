@@ -12,7 +12,7 @@ use super::super::super::model::AttachmentOwner;
 use super::owner::{load, save};
 use super::{asset_file, stamp, write_image};
 use crate::domain::{Attachment, AttachmentInput, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// `add_attachment_gated` for a caller that already holds the project lock.
 pub(in crate::file_store::ops) fn add_image_locked(
@@ -23,7 +23,7 @@ pub(in crate::file_store::ops) fn add_image_locked(
     input: AttachmentInput,
     now: DateTime<Utc>,
     block_drafts: bool,
-) -> Result<Attachment, AgboardError> {
+) -> Result<Attachment, AgpjError> {
     {
         let mut loaded = load(shared, project, owner)?;
         loaded.ensure_writable(block_drafts)?;
@@ -54,18 +54,18 @@ pub(in crate::file_store::ops) fn delete_image_locked(
     attachment_id: &str,
     now: DateTime<Utc>,
     block_drafts: bool,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     let mut loaded = load(shared, project, owner)?;
     loaded.ensure_writable(block_drafts)?;
     let index = loaded
         .attachments()
         .iter()
         .position(|a| a.id == attachment_id)
-        .ok_or_else(|| AgboardError::AttachmentNotFound {
+        .ok_or_else(|| AgpjError::AttachmentNotFound {
             id: attachment_id.to_string(),
         })?;
     if let Some(version) = loaded.result_using(attachment_id) {
-        return Err(AgboardError::InvalidValue {
+        return Err(AgpjError::InvalidValue {
             field: "attachmentId".into(),
             reason: format!("Result version {version} uses this image."),
         });

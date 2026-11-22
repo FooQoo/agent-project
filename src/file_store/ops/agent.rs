@@ -19,7 +19,7 @@ use crate::domain::{
     Actor, Assignee, ChangeContext, Changed, Column, Draft, ProjectId, RunState,
     check_state_change, check_work_state, state_after_move,
 };
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// Who moves: the CLI (drafts stay), the CLI with the open questions confirmed (`--force`), a
 /// person in the Web UI, or that person after confirming the open questions.
@@ -40,7 +40,7 @@ impl FileStore {
         to: Column,
         ctx: ChangeContext,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         self.move_task(project, id, to, None, ctx, now, MoveMode::Agent)
     }
 
@@ -53,7 +53,7 @@ impl FileStore {
         to: Column,
         ctx: ChangeContext,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         self.move_task(project, id, to, None, ctx, now, MoveMode::AgentConfirmed)
     }
 
@@ -65,7 +65,7 @@ impl FileStore {
         to: Column,
         ctx: ChangeContext,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         self.move_task(project, id, to, None, ctx, now, MoveMode::User)
     }
 
@@ -80,7 +80,7 @@ impl FileStore {
         to: Column,
         ctx: ChangeContext,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         self.move_task(project, id, to, Some(from), ctx, now, MoveMode::User)
     }
 
@@ -93,7 +93,7 @@ impl FileStore {
         to: Column,
         ctx: ChangeContext,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         self.move_task(
             project,
             id,
@@ -115,19 +115,19 @@ impl FileStore {
         ctx: ChangeContext,
         now: DateTime<Utc>,
         mode: MoveMode,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let block_drafts = matches!(mode, MoveMode::Agent | MoveMode::AgentConfirmed);
         let ack = matches!(mode, MoveMode::UserConfirmed | MoveMode::AgentConfirmed);
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         if let Some(from) = from
             && task.task_status != from
         {
-            return Err(AgboardError::TaskStatusChanged {
+            return Err(AgpjError::TaskStatusChanged {
                 id,
                 current: task.task_status,
             });
@@ -145,10 +145,10 @@ impl FileStore {
                 return self.send_task_locked(project, &project_dir, task, ctx.actor, ack, now);
             }
             if ctx.actor != Actor::Human {
-                return Err(AgboardError::TaskInBacklog { id });
+                return Err(AgpjError::TaskInBacklog { id });
             }
             if task.draft == Some(Draft::Human) {
-                return Err(AgboardError::TaskIsDraft { id });
+                return Err(AgpjError::TaskIsDraft { id });
             }
             check_sender(Actor::Human, ack, open_questions(shared, project, &[id])?)?;
         }
@@ -156,7 +156,7 @@ impl FileStore {
             // Taking a card back to the Backlog is a person's decision, and only
             // for a card nobody has started.
             if ctx.actor == Actor::Ai {
-                return Err(AgboardError::HumanOnly {
+                return Err(AgpjError::HumanOnly {
                     action: "moving a card back to the Backlog".into(),
                 });
             }
@@ -164,7 +164,7 @@ impl FileStore {
                 || task.agent_status != RunState::Idle
                 || !task.results.is_empty()
             {
-                return Err(AgboardError::InvalidValue {
+                return Err(AgpjError::InvalidValue {
                     field: "to".into(),
                     reason:
                         "Only a Todo card that has not been started can go back to the Backlog."
@@ -175,7 +175,7 @@ impl FileStore {
         if ctx.actor == Actor::Ai && to == Column::Done && task.task_status != Column::Done {
             ensure_acceptance_met(shared, project, id)?;
             if task_waits(shared, project, id)? {
-                return Err(AgboardError::QuestionsUnanswered { id });
+                return Err(AgpjError::QuestionsUnanswered { id });
             }
         }
         if task.task_status == to {
@@ -228,9 +228,9 @@ impl FileStore {
         state: RunState,
         ctx: ChangeContext,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         if matches!(state, RunState::AwaitingAnswer | RunState::Ran) {
-            return Err(AgboardError::InvalidValue {
+            return Err(AgpjError::InvalidValue {
                 field: "agentStatus".into(),
                 reason: "Set running or paused. Ask questions with message ask, and move the card to change the other states.".into(),
             });
@@ -239,14 +239,14 @@ impl FileStore {
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         ensure_ai_task_not_done(&task, ctx.actor)?;
         if let Some(draft) = task.draft {
             return Err(draft_refusal(id, draft));
         }
         if task.task_status == Column::Backlog {
-            return Err(AgboardError::TaskInBacklog { id });
+            return Err(AgpjError::TaskInBacklog { id });
         }
         check_work_state(task.assignee, task.task_status, state)?;
         if task.agent_status != state {
@@ -254,7 +254,7 @@ impl FileStore {
         }
         if ctx.actor == Actor::Ai && state == RunState::Running && task_waits(shared, project, id)?
         {
-            return Err(AgboardError::QuestionsUnanswered { id });
+            return Err(AgpjError::QuestionsUnanswered { id });
         }
         if task.agent_status == state {
             return Ok(Changed {
@@ -287,8 +287,8 @@ impl FileStore {
 
 /// The refusal of a move or state change on a draft: a person's own draft waits for its
 /// owner to finalize it.
-fn draft_refusal(id: i64, draft: crate::domain::Draft) -> AgboardError {
+fn draft_refusal(id: i64, draft: crate::domain::Draft) -> AgpjError {
     match draft {
-        crate::domain::Draft::Human => AgboardError::TaskIsDraft { id },
+        crate::domain::Draft::Human => AgpjError::TaskIsDraft { id },
     }
 }

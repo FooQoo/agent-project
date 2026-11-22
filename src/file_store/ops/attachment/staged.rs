@@ -10,7 +10,7 @@ use super::super::super::layout;
 use super::super::super::model::{AttachmentOwner, TaskFile};
 use super::{asset_file, stamp, write_image};
 use crate::domain::{Attachment, AttachmentInput};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// An image change set that is checked and staged before anything is
 /// committed: new files are written, the removed files stay where they are.
@@ -62,7 +62,7 @@ pub(in crate::file_store::ops) fn stage_images(
     removed: &[String],
     added: Vec<AttachmentInput>,
     now: DateTime<Utc>,
-) -> Result<StagedImages, AgboardError> {
+) -> Result<StagedImages, AgpjError> {
     let owner = AttachmentOwner::Task(task.id);
     let mut attachments = task.attachments.clone();
     let mut removed_paths = Vec::new();
@@ -70,7 +70,7 @@ pub(in crate::file_store::ops) fn stage_images(
         let index = attachments
             .iter()
             .position(|a| a.id == *attachment_id)
-            .ok_or_else(|| AgboardError::AttachmentNotFound {
+            .ok_or_else(|| AgpjError::AttachmentNotFound {
                 id: attachment_id.clone(),
             })?;
         if let Some(version) = task
@@ -79,7 +79,7 @@ pub(in crate::file_store::ops) fn stage_images(
             .find(|r| r.image_ids().contains(&attachment_id.as_str()))
             .map(|r| r.version)
         {
-            return Err(AgboardError::InvalidValue {
+            return Err(AgpjError::InvalidValue {
                 field: "attachmentId".into(),
                 reason: format!("Result version {version} uses this image."),
             });
@@ -100,7 +100,7 @@ pub(in crate::file_store::ops) fn stage_images(
     };
     for input in added {
         let outcome = if task.attachments.iter().any(|a| a.id == input.id) {
-            Err(AgboardError::InvalidValue {
+            Err(AgpjError::InvalidValue {
                 field: "attachmentId".into(),
                 reason: "Attachment IDs must be unique.".into(),
             })

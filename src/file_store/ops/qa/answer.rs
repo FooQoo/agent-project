@@ -8,7 +8,7 @@ use super::read::views_locked;
 use super::send::{RequestImage, checked_images};
 use super::{broken_file_error, message_change, referrers};
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::model::HistoryRecord;
 use crate::file_store::qa::{
@@ -79,19 +79,19 @@ fn answered(
     image_names: Vec<String>,
     via: AnswerVia,
     at: DateTime<Utc>,
-) -> Result<Question, AgboardError> {
+) -> Result<Question, AgpjError> {
     let text = validate::normalize_answer_text(item.text.as_deref().unwrap_or(""))?;
     let choice = item.choice_id.clone().filter(|c| !c.is_empty());
     if let Some(id) = &choice
         && !question.choices.iter().any(|c| &c.id == id)
     {
-        return Err(AgboardError::ChoiceUnknown {
+        return Err(AgpjError::ChoiceUnknown {
             question_id: question.id.clone(),
             choice_id: id.clone(),
         });
     }
     if !question.choices.is_empty() && choice.is_none() && text.is_none() {
-        return Err(AgboardError::InvalidValue {
+        return Err(AgpjError::InvalidValue {
             field: "choice".into(),
             reason: format!(
                 "Choose one of the options of {} or write a note.",
@@ -100,7 +100,7 @@ fn answered(
         });
     }
     if question.choices.is_empty() && text.is_none() {
-        return Err(AgboardError::InvalidValue {
+        return Err(AgpjError::InvalidValue {
             field: "text".into(),
             reason: format!("{} has no options; write the answer in words.", question.id),
         });
@@ -128,9 +128,9 @@ impl FileStore {
         items: Vec<AnswerItem>,
         via: AnswerVia,
         now: DateTime<Utc>,
-    ) -> Result<Vec<QuestionView>, AgboardError> {
+    ) -> Result<Vec<QuestionView>, AgpjError> {
         if items.is_empty() {
-            return Err(AgboardError::InvalidValue {
+            return Err(AgpjError::InvalidValue {
                 field: "answers".into(),
                 reason: "Give at least one answer.".into(),
             });
@@ -150,7 +150,7 @@ impl FileStore {
         let mut planned: Vec<(Question, Question)> = Vec::new();
         for (item, files) in items.iter().zip(staged.iter_mut()) {
             if planned.iter().any(|(old, _)| old.id == item.question_id) {
-                return Err(AgboardError::InvalidValue {
+                return Err(AgpjError::InvalidValue {
                     field: "answers".into(),
                     reason: format!("{} is answered twice.", item.question_id),
                 });
@@ -158,17 +158,17 @@ impl FileStore {
             let question = match index.find(&item.question_id) {
                 Some(Message::Question(q)) => q,
                 Some(Message::Request(_)) => {
-                    return Err(AgboardError::MessageTypeMismatch {
+                    return Err(AgpjError::MessageTypeMismatch {
                         id: item.question_id.clone(),
                         expected: "question".into(),
                     });
                 }
                 None => {
-                    return Err(broken_file_error(&index).unwrap_or(
-                        AgboardError::MessageNotFound {
+                    return Err(
+                        broken_file_error(&index).unwrap_or(AgpjError::MessageNotFound {
                             id: item.question_id.clone(),
-                        },
-                    ));
+                        }),
+                    );
                 }
             };
             match question.state() {
@@ -183,10 +183,10 @@ impl FileStore {
             planned.push((question.clone(), answered(question, item, names, via, at)?));
         }
         if !done.is_empty() {
-            return Err(AgboardError::QuestionAnswered { ids: done });
+            return Err(AgpjError::QuestionAnswered { ids: done });
         }
         if !withdrawn.is_empty() {
-            return Err(AgboardError::QuestionWithdrawn { ids: withdrawn });
+            return Err(AgpjError::QuestionWithdrawn { ids: withdrawn });
         }
 
         let mut placed = Vec::new();

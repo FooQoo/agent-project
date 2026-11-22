@@ -3,7 +3,7 @@
 use chrono::{DateTime, Utc};
 
 use crate::domain::{Actor, Assignee, Column, NewTask, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::history_language::HistoryLanguage;
 use crate::file_store::layout;
@@ -20,7 +20,7 @@ impl FileStore {
         project: &ProjectId,
         name: &str,
         now: DateTime<Utc>,
-    ) -> Result<bool, AgboardError> {
+    ) -> Result<bool, AgpjError> {
         for id in reader::task_ids(project_dir)? {
             let path = layout::task_json(&layout::task_dir(project_dir, id));
             // A card that cannot be read cannot be the marked one; it must not block the add.

@@ -11,7 +11,7 @@ use std::path::Path;
 use chrono::{DateTime, Utc};
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::frontmatter;
 use crate::file_store::history::{ParseMode, parse_task};
 use crate::file_store::io;
@@ -30,7 +30,7 @@ pub(crate) struct TaskLoad {
 
 /// The task IDs of a project, in ascending order. Only folders with canonical
 /// names count; a temporary folder or a stray file is ignored.
-pub(crate) fn task_ids(project_dir: &Path) -> Result<Vec<i64>, AgboardError> {
+pub(crate) fn task_ids(project_dir: &Path) -> Result<Vec<i64>, AgpjError> {
     let tasks = layout::tasks_dir(project_dir);
     if !tasks.is_dir() {
         return Ok(Vec::new());
@@ -182,11 +182,11 @@ pub(crate) fn read_task_metadata_strict(
     shared: &Path,
     project_id: &ProjectId,
     task_id: i64,
-) -> Result<TaskFile, AgboardError> {
+) -> Result<TaskFile, AgpjError> {
     let project_dir = project_dir_checked(shared, project_id)?;
     let dir = layout::task_dir(&project_dir, task_id);
     if !dir.is_dir() {
-        return Err(AgboardError::TaskNotFound { id: task_id });
+        return Err(AgpjError::TaskNotFound { id: task_id });
     }
     let path = layout::task_json(&dir);
     let label = layout::shared_label(shared, &path);
@@ -197,7 +197,7 @@ pub(crate) fn read_task_metadata_strict(
         .into_iter()
         .next()
     {
-        return Err(AgboardError::FileInvalid {
+        return Err(AgpjError::FileInvalid {
             file: label,
             field: d.field,
             reason: d.reason,
@@ -211,7 +211,7 @@ pub(crate) fn read_task_strict(
     shared: &Path,
     project_id: &ProjectId,
     task_id: i64,
-) -> Result<TaskFile, AgboardError> {
+) -> Result<TaskFile, AgpjError> {
     let task = read_task_metadata_strict(shared, project_id, task_id)?;
     let dir = layout::task_dir(&layout::project_dir(shared, project_id), task_id);
     let md_path = layout::task_md(&dir);
@@ -219,7 +219,7 @@ pub(crate) fn read_task_strict(
     let text = io::read_text(&md_path, &md_label)?;
     let parsed = parse_task(&text, ParseMode::Stored);
     if let Some(defect) = parsed.history_defects.first() {
-        return Err(AgboardError::FileInvalid {
+        return Err(AgpjError::FileInvalid {
             file: md_label,
             field: defect.field.clone(),
             reason: defect.reason.clone(),
@@ -236,7 +236,7 @@ pub(crate) fn read_body(
     shared: &Path,
     project_id: &ProjectId,
     task_id: i64,
-) -> Result<String, AgboardError> {
+) -> Result<String, AgpjError> {
     let project_dir = project_dir_checked(shared, project_id)?;
     let path = layout::task_md(&layout::task_dir(&project_dir, task_id));
     io::read_text(&path, &layout::shared_label(shared, &path))
@@ -247,7 +247,7 @@ pub fn read_task(
     shared: &Path,
     project_id: &ProjectId,
     task_id: i64,
-) -> Result<TaskView, AgboardError> {
+) -> Result<TaskView, AgpjError> {
     let project_dir = project_dir_checked(shared, project_id)?;
     let _lock = WriteLock::acquire(&layout::write_lock(&project_dir))?;
     transaction::recover_locked(&project_dir)?;
@@ -259,7 +259,7 @@ pub(crate) fn read_task_locked(
     shared: &Path,
     project_id: &ProjectId,
     task_id: i64,
-) -> Result<TaskView, AgboardError> {
+) -> Result<TaskView, AgpjError> {
     let task = read_task_strict(shared, project_id, task_id)?;
     let body = read_body(shared, project_id, task_id)?;
     let project_dir = layout::project_dir(shared, project_id);

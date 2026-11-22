@@ -5,7 +5,7 @@ use std::path::Path;
 use chrono::{DateTime, Utc};
 
 use crate::domain::{Actor, Attachment, Changed, Draft, ProjectId, validate_title};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::history_language::HistoryLanguage;
 use crate::file_store::model::TaskView;
 use crate::file_store::reader;
@@ -29,17 +29,17 @@ impl FileStore {
         title: Option<&str>,
         description: Option<&str>,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let title = title.map(validate_title).transpose()?;
         let description = description.map(normalize_description).transpose()?;
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         if task.draft == Some(Draft::Human) {
-            return Err(AgboardError::TaskIsDraft { id });
+            return Err(AgpjError::TaskIsDraft { id });
         }
         ensure_ai_task_not_done(&task, Actor::Ai)?;
         let (changed, markdown) =
@@ -67,16 +67,16 @@ impl FileStore {
         title: Option<&str>,
         parts: TaskTextParts<'_>,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let title = title.map(validate_title).transpose()?;
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         if task.draft == Some(Draft::Human) {
-            return Err(AgboardError::TaskIsDraft { id });
+            return Err(AgpjError::TaskIsDraft { id });
         }
         ensure_ai_task_not_done(&task, Actor::Ai)?;
         let title_changed = title.as_ref().is_some_and(|value| *value != task.title);
@@ -114,7 +114,7 @@ impl FileStore {
         description: Option<&str>,
         finalize: bool,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         self.edit_draft_task_to(
             project,
             id,
@@ -135,7 +135,7 @@ impl FileStore {
         description: Option<&str>,
         finalize: DraftSave,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let title = title.map(validate_title).transpose()?;
         let description = description.map(normalize_description).transpose()?;
         let shared = self.shared_dir();
@@ -163,14 +163,14 @@ impl FileStore {
         (title, description): (Option<String>, Option<String>),
         (finalize, images): (DraftSave, Option<Vec<Attachment>>),
         now: DateTime<Utc>,
-    ) -> Result<SavedDraft, AgboardError> {
+    ) -> Result<SavedDraft, AgpjError> {
         let shared = self.shared_dir();
         let mut task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         let Some(owner) = task.draft else {
-            return Err(AgboardError::TaskNotDraft { id });
+            return Err(AgpjError::TaskNotDraft { id });
         };
         let current = Some(owner);
         let target = resolve_finalize(finalize.target, owner);
@@ -216,7 +216,7 @@ impl FileStore {
         parts: TaskTextParts<'_>,
         finalize: bool,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         self.edit_draft_task_parts_to(
             project,
             id,
@@ -236,16 +236,16 @@ impl FileStore {
         parts: TaskTextParts<'_>,
         finalize: DraftSave,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let title = title.map(validate_title).transpose()?;
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         let Some(owner) = task.draft else {
-            return Err(AgboardError::TaskNotDraft { id });
+            return Err(AgpjError::TaskNotDraft { id });
         };
         let current = Some(owner);
         let target = resolve_finalize(finalize.target, owner);

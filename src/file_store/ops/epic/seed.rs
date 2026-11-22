@@ -3,7 +3,7 @@
 use chrono::{DateTime, Utc};
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::io;
 use crate::file_store::layout;
@@ -27,7 +27,7 @@ impl FileStore {
         &self,
         project: &ProjectId,
         now: DateTime<Utc>,
-    ) -> Result<(), AgboardError> {
+    ) -> Result<(), AgpjError> {
         if reader::read_project_file(self.shared_dir(), project)?.default_epics_seeded {
             return Ok(());
         }
@@ -40,7 +40,7 @@ impl FileStore {
                 document: None,
             };
             match self.create_epic(project, new, now) {
-                Ok(_) | Err(AgboardError::EpicIdTaken { .. }) => {}
+                Ok(_) | Err(AgpjError::EpicIdTaken { .. }) => {}
                 Err(error) => return Err(error),
             }
         }

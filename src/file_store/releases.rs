@@ -6,7 +6,7 @@ use std::path::Path;
 
 use super::{io, layout};
 use crate::domain::{MAX_VERSIONS, compare_versions, validate_version_name};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The listed versions in natural order, newest first (`v1.10.0` before `v1.9.0`). A file
 /// counts when it is a plain `.md` file directly in `docs/release/`, is not hidden, and its stem
@@ -71,7 +71,7 @@ fn create_file_whole(
     dir: &Path,
     file_name: &str,
     bytes: &[u8],
-) -> Result<bool, AgboardError> {
+) -> Result<bool, AgpjError> {
     let path = dir.join(file_name);
     let label = layout::shared_label(shared, &path);
     let temp = dir.join(format!(
@@ -101,7 +101,7 @@ fn create_file_whole(
 
 /// The text of the release-note template, writing the standard one first when the project has
 /// none. An existing template is read as it is and never rewritten.
-fn template_text(shared: &Path, dir: &Path) -> Result<String, AgboardError> {
+fn template_text(shared: &Path, dir: &Path) -> Result<String, AgpjError> {
     create_file_whole(shared, dir, TEMPLATE_FILE, STANDARD_TEMPLATE.as_bytes())?;
     let path = dir.join(TEMPLATE_FILE);
     io::read_text(&path, &layout::shared_label(shared, &path))
@@ -114,13 +114,13 @@ pub fn create_release_file(
     shared: &Path,
     project_dir: &Path,
     name: &str,
-) -> Result<bool, AgboardError> {
+) -> Result<bool, AgpjError> {
     let listed = listed_versions(project_dir);
     if listed.iter().any(|v| v == name) {
         return Ok(false);
     }
     if listed.len() >= MAX_VERSIONS {
-        return Err(AgboardError::InvalidArgument {
+        return Err(AgpjError::InvalidArgument {
             message: "A project lists at most 200 versions.".into(),
             command: None,
         });
@@ -137,7 +137,7 @@ pub fn create_release_file(
     if listed_versions(project_dir).iter().any(|v| v == name) {
         Ok(false)
     } else {
-        Err(AgboardError::InvalidArgument {
+        Err(AgpjError::InvalidArgument {
             message: format!(
                 "A file named {name}.md already exists in docs/release/ but does not list this version."
             ),

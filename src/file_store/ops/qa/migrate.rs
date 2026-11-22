@@ -16,7 +16,7 @@ use serde::Deserialize;
 use super::super::save::task_pair_changes;
 use super::message_change;
 use crate::domain::{Assignee, Column, ProjectId, RunState};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::frontmatter::{compose_questions, questions_of};
 use crate::file_store::model::{Choice, HistoryRecord};
 use crate::file_store::qa::{self, Message, Question, question_defect, question_number};
@@ -51,7 +51,7 @@ struct LegacyQuestion {
 }
 
 /// The folders of the earlier format: `qa/<32 hex digits>/`.
-fn legacy_dirs(project_dir: &Path) -> Result<Vec<PathBuf>, AgboardError> {
+fn legacy_dirs(project_dir: &Path) -> Result<Vec<PathBuf>, AgpjError> {
     let dir = qa::qa_dir(project_dir);
     if !dir.is_dir() {
         return Ok(Vec::new());
@@ -126,7 +126,7 @@ pub(in crate::file_store) fn migrate_legacy_locked(
     shared: &Path,
     project: &ProjectId,
     project_dir: &Path,
-) -> Result<bool, AgboardError> {
+) -> Result<bool, AgpjError> {
     let dirs = legacy_dirs(project_dir)?;
     if dirs.is_empty() {
         return Ok(false);
@@ -188,7 +188,7 @@ pub(in crate::file_store) fn migrate_legacy_locked(
             });
         }
         let composed =
-            compose_questions(&text, &remaining).map_err(|d| AgboardError::FileInvalid {
+            compose_questions(&text, &remaining).map_err(|d| AgpjError::FileInvalid {
                 file: format!("tasks/{task_id}/TASK.md"),
                 field: d.field,
                 reason: d.reason,

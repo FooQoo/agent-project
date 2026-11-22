@@ -6,7 +6,7 @@ use chrono::{DateTime, Utc};
 use super::super::{lock_project, stamp};
 use super::message_change;
 use crate::domain::{Actor, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::qa::{Message, MessageState, QuestionView, RequestView, read_message};
 use crate::file_store::transaction::save_batch_locked;
@@ -30,9 +30,9 @@ impl FileStore {
         id: &str,
         actor: Actor,
         now: DateTime<Utc>,
-    ) -> Result<Accepted, AgboardError> {
+    ) -> Result<Accepted, AgpjError> {
         if actor != Actor::Ai {
-            return Err(AgboardError::AiOnly {
+            return Err(AgpjError::AiOnly {
                 action: "accepting a message".into(),
             });
         }
@@ -42,10 +42,10 @@ impl FileStore {
             Message::Request(mut request) => {
                 match request.state() {
                     MessageState::Withdrawn => {
-                        return Err(AgboardError::RequestWithdrawn { id: id.to_owned() });
+                        return Err(AgpjError::RequestWithdrawn { id: id.to_owned() });
                     }
                     MessageState::Closed => {
-                        return Err(AgboardError::RequestAccepted { id: id.to_owned() });
+                        return Err(AgpjError::RequestAccepted { id: id.to_owned() });
                     }
                     MessageState::Open => {}
                 }
@@ -55,18 +55,18 @@ impl FileStore {
             Message::Question(mut question) => {
                 match question.state() {
                     MessageState::Withdrawn => {
-                        return Err(AgboardError::QuestionWithdrawn {
+                        return Err(AgpjError::QuestionWithdrawn {
                             ids: vec![id.to_owned()],
                         });
                     }
                     MessageState::Open => {
-                        return Err(AgboardError::QuestionOpen { id: id.to_owned() });
+                        return Err(AgpjError::QuestionOpen { id: id.to_owned() });
                     }
                     MessageState::Closed => {}
                 }
                 let reply = question.reply.as_mut().expect("an answered question");
                 if reply.accepted_at.is_some() {
-                    return Err(AgboardError::AnswerAccepted { id: id.to_owned() });
+                    return Err(AgpjError::AnswerAccepted { id: id.to_owned() });
                 }
                 reply.accepted_at = Some(stamp(now));
                 Message::Question(question)
@@ -90,7 +90,7 @@ impl FileStore {
         project: &ProjectId,
         ids: &[String],
         now: DateTime<Utc>,
-    ) -> Result<Vec<String>, AgboardError> {
+    ) -> Result<Vec<String>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let at = stamp(now);

@@ -6,7 +6,7 @@ use std::str::FromStr;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use super::{Defect, defect, is_hex32};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::model::EpicFile;
 
 /// An EPIC-ID in canonical form: `[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*`, 1 to 64
@@ -17,7 +17,7 @@ pub struct EpicId(String);
 
 impl EpicId {
     /// Fold ASCII lowercase letters to uppercase, then check the grammar.
-    pub fn normalize(text: &str) -> Result<EpicId, AgboardError> {
+    pub fn normalize(text: &str) -> Result<EpicId, AgpjError> {
         text.to_ascii_uppercase().parse()
     }
 
@@ -46,13 +46,13 @@ fn is_epic_id(text: &str) -> bool {
 }
 
 impl FromStr for EpicId {
-    type Err = AgboardError;
+    type Err = AgpjError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if is_epic_id(s) {
             Ok(EpicId(s.to_string()))
         } else {
-            Err(AgboardError::InvalidValue {
+            Err(AgpjError::InvalidValue {
                 field: "epicId".into(),
                 reason: "EPIC-IDs are 1 to 64 uppercase letters, digits, and hyphens, starting with a letter."
                     .into(),
@@ -77,19 +77,19 @@ impl<'de> Deserialize<'de> for EpicId {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let text = String::deserialize(d)?;
         text.parse()
-            .map_err(|e: AgboardError| serde::de::Error::custom(e.reason()))
+            .map_err(|e: AgpjError| serde::de::Error::custom(e.reason()))
     }
 }
 
 /// `#RRGGBB` with uppercase digits, the stored form of an epic color.
 /// Surrounding whitespace is ignored and lowercase digits are folded.
-pub fn normalize_color(text: &str) -> Result<String, AgboardError> {
+pub fn normalize_color(text: &str) -> Result<String, AgpjError> {
     let trimmed = text.trim();
     match trimmed.strip_prefix('#') {
         Some(hex) if hex.len() == 6 && hex.bytes().all(|b| b.is_ascii_hexdigit()) => {
             Ok(format!("#{}", hex.to_ascii_uppercase()))
         }
-        _ => Err(AgboardError::InvalidValue {
+        _ => Err(AgpjError::InvalidValue {
             field: "color".into(),
             reason: "Colors are #RRGGBB: a # and six hexadecimal digits.".into(),
         }),
@@ -101,11 +101,11 @@ fn is_stored_color(text: &str) -> bool {
 }
 
 /// An epic's formal name: trimmed, 1 to 100 characters, one line.
-pub fn validate_epic_name(text: &str) -> Result<String, AgboardError> {
+pub fn validate_epic_name(text: &str) -> Result<String, AgpjError> {
     let trimmed = text.trim();
     let count = trimmed.chars().count();
     if count == 0 || count > 100 || trimmed.contains(['\n', '\r']) {
-        return Err(AgboardError::InvalidValue {
+        return Err(AgpjError::InvalidValue {
             field: "name".into(),
             reason: "Epic names must be 1 to 100 characters on one line.".into(),
         });
@@ -116,12 +116,12 @@ pub fn validate_epic_name(text: &str) -> Result<String, AgboardError> {
 /// A document text with CRLF folded to LF, and at most 100,000 characters of
 /// Markdown body. The frontmatter is not counted, because the editor counts only
 /// the body.
-pub fn normalize_document(text: &str) -> Result<String, AgboardError> {
+pub fn normalize_document(text: &str) -> Result<String, AgpjError> {
     let normalized = text.replace("\r\n", "\n");
     let body = crate::file_store::frontmatter::parse_document(&normalized).body;
     let count = body.chars().count();
     if count > 100_000 {
-        return Err(AgboardError::InvalidValue {
+        return Err(AgpjError::InvalidValue {
             field: "document".into(),
             reason: "Documents must be 100,000 characters or fewer.".into(),
         });

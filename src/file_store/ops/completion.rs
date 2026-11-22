@@ -9,14 +9,14 @@ use super::super::reader;
 use super::HistoryKind;
 use super::{Transition, lane_end, lock_project, save_task, stamp, transition_event};
 use crate::domain::{Column, ProjectId, RunState};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 const AUTO_DONE_REASON: &str = "All acceptance conditions are complete.";
 
 impl FileStore {
     /// Complete every eligible task in every project. Used before the serve
     /// publishes its first snapshot, so existing work is reconciled on startup.
-    pub(crate) fn auto_complete_all(&self, now: DateTime<Utc>) -> Result<bool, AgboardError> {
+    pub(crate) fn auto_complete_all(&self, now: DateTime<Utc>) -> Result<bool, AgpjError> {
         let mut changed = false;
         for project in self.projects()? {
             changed |= self.auto_complete_project(&project.id, now)?;
@@ -31,7 +31,7 @@ impl FileStore {
         &self,
         project: &ProjectId,
         now: DateTime<Utc>,
-    ) -> Result<bool, AgboardError> {
+    ) -> Result<bool, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut changed = false;
