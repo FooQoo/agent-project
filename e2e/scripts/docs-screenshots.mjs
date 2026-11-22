@@ -18,7 +18,7 @@ const extra = {
     editorBody: '## Goal\n\nWrite a setup guide that a new teammate can follow without help.\n\n## Flow\n\n```mermaid\nflowchart LR\n  Outline --> Write --> Try --> Publish\n```\n\n## Tasks\n\n- [x] Outline the steps\n- [ ] Write each step with an example\n- [ ] Ask a teammate to try the guide\n',
     editorChecks: ['The steps are complete', 'A teammate followed the guide', 'The guide is published'],
     archived: ['Set up the repository', 'Choose the color palette', 'Write the first draft'],
-    archive: { trigger: 'Archive completed tasks', submit: /^Archive \d+ tasks$/, open: 'Archive', doneLane: 'Done' },
+    archive: { trigger: 'Archive completed tasks', bar: 'Archive the picked completed tasks', submit: /^Archive \(\d+\)$/, open: 'Archive', doneLane: 'Done' },
     preview: 'Open full screen (task)', close: 'Close', settings: 'Settings',
     notificationRow: 'Notification settings', notificationDialog: 'Notifications',
     residentRow: 'Agent settings', residentDialog: 'Resident agent', residentWaiting: 'Waiting', residentStart: 'Start',
@@ -37,7 +37,7 @@ const extra = {
     editorBody: '## 目的\n\n新しいメンバーが一人で進められるセットアップガイドを書く。\n\n## 流れ\n\n```mermaid\nflowchart LR\n  構成 --> 執筆 --> 確認 --> 公開\n```\n\n## 作業\n\n- [x] 手順の構成を決める\n- [ ] 各手順に例を添えて書く\n- [ ] チームメンバーに試してもらう\n',
     editorChecks: ['手順がそろっている', 'メンバーがガイドどおりに進められた', 'ガイドを公開している'],
     archived: ['リポジトリを準備する', '配色を決める', '最初の下書きを書く'],
-    archive: { trigger: '完了タスクをアーカイブ', submit: /^\d+件をアーカイブ$/, open: 'アーカイブ', doneLane: '完了' },
+    archive: { trigger: '完了タスクをアーカイブ', bar: '選んだ完了タスクをアーカイブする', submit: /^アーカイブ \(\d+\)$/, open: 'アーカイブ', doneLane: '完了' },
     preview: '全画面で開く（タスク）', close: '閉じる', settings: '設定',
     notificationRow: '通知の設定', notificationDialog: '通知',
     residentRow: 'エージェントの設定', residentDialog: '常駐エージェント', residentWaiting: '待機中', residentStart: '起動',
@@ -234,7 +234,8 @@ try {
 
       // archive: archive the completed cards, then open the archive list.
       await page.locator('.lane-header__archive').click();
-      const confirm = page.getByRole('dialog');
+      // The Done lane's button picks every completed card and shows a bar under the lane.
+      const confirm = page.getByRole('region', { name: more.archive.bar });
       await expect(confirm).toBeVisible();
       await confirm.getByRole('button', { name: more.archive.submit }).click();
       await expect(confirm).toHaveCount(0);
