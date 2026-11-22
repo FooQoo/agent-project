@@ -28,15 +28,18 @@ export function editingText(element: Element | null): boolean {
   return false;
 }
 
+/** The surfaces whose body scrolls above the keyboard: centered dialogs and the phone's bottom sheet. */
+const REVEAL_SURFACES = '[data-slot="dialog-content"], [data-slot="drawer-popup"]';
+
 /**
- * Bring the focused field of a dialog back into sight once the keyboard layout has squeezed the
- * dialog: the browser scrolled it into view while the dialog was still tall, and a body that shrank
- * afterwards can leave it below the fold.
+ * Bring the focused field of a dialog or a bottom sheet back into sight once the keyboard layout has
+ * squeezed it: the browser scrolled the field into view while the surface was still tall (or, for a
+ * sheet scrolled deep, not at all), and a body that shrank afterwards can leave it below the fold.
  */
 export function revealFocusedField(target: Window): void {
   const reveal = () => {
     const field = target.document.activeElement;
-    if (!editingText(field) || !field?.closest('[data-slot="dialog-content"]')) return;
+    if (!editingText(field) || !field?.closest(REVEAL_SURFACES)) return;
     field.scrollIntoView({ block: 'nearest' });
   };
   // Once the new layout is in, and again after the dialog's own transition has settled.
