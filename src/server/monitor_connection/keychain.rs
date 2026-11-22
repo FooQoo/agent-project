@@ -6,7 +6,7 @@
 
 use super::types::Secret;
 
-const SERVICE: &str = "agent-board";
+const SERVICE: &str = "agent-project";
 const ACCOUNT: &str = "ngrok-authtoken";
 
 /// Why a keychain operation did not happen. Carries no detail.

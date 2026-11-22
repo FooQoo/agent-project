@@ -26,7 +26,7 @@ export default defineConfig({
   retries: 0,
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  outputDir: path.join(os.tmpdir(), `agent-board-e2e-results-${checkout}`),
+  outputDir: path.join(os.tmpdir(), `agent-project-e2e-results-${checkout}`),
   reporter: [['list']],
   globalSetup: './global-setup.ts',
   use: {

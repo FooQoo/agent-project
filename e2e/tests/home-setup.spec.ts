@@ -82,7 +82,7 @@ let fakeBin: string;
 test.beforeEach(() => {
 	root = mkdtempSync(path.join(os.tmpdir(), 'agent-board-e2e-home-setup-'));
 	home = path.join(root, 'home');
-	dataRoot = path.join(home, '.agent-board');
+	dataRoot = path.join(home, '.agent-project');
 	codexConfig = path.join(home, '.codex', 'config.toml');
 	claudeSettings = path.join(home, '.claude', 'settings.json');
 	mkdirSync(path.dirname(codexConfig), { recursive: true });
@@ -168,7 +168,7 @@ function createProject(name: string): void {
 	cliOk(['project', 'create', name], { cwd: folder });
 }
 
-test('the default root is <HOME>/.agent-board, AGPJ_HOME overrides it, and an empty AGPJ_HOME is ignored', () => {
+test('the default root is <HOME>/.agent-project, AGPJ_HOME overrides it, and an empty AGPJ_HOME is ignored', () => {
 	const custom = path.join(root, 'custom-data');
 
 	expect(setup(['--dry-run']).dataDir).toBe(dataRoot);

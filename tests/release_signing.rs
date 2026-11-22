@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 const ROOT: &str = env!("CARGO_MANIFEST_DIR");
-const ID: &str = "io.github.FooQoo.agent-board.agboard";
+const ID: &str = "io.github.FooQoo.agent-project.agpj";
 const TEAM: &str = "TEAM123456";
 const T_ARM: &str = "aarch64-apple-darwin";
 const T_X86: &str = "x86_64-apple-darwin";
@@ -89,7 +89,7 @@ case "$1" in
   --verify) exit "${FAKE_VERIFY_EXIT:-0}" ;;
   -dv)
     {
-      echo "Identifier=${FAKE_IDENT:-io.github.FooQoo.agent-board.agboard}"
+      echo "Identifier=${FAKE_IDENT:-io.github.FooQoo.agent-project.agpj}"
       echo "CodeDirectory v=20500 size=1 flags=${FAKE_FLAGS:-0x10000(runtime)} hashes=1 location=embedded"
       echo "Signature=${FAKE_SIGNATURE:-size=9000}"
       echo "Authority=${FAKE_AUTH:-Developer ID Application: Fixture (TEAM123456)}"

@@ -30,7 +30,7 @@ import sys
 import tarfile
 from pathlib import Path
 
-IDENTIFIER = "io.github.FooQoo.agent-board.agboard"
+IDENTIFIER = "io.github.FooQoo.agent-project.agpj"
 TARGETS = ("aarch64-apple-darwin", "x86_64-apple-darwin")
 MEMBERS = {"agboard", "LICENSE", "THIRD_PARTY_NOTICES.txt"}
 

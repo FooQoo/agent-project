@@ -124,7 +124,7 @@ pub(crate) fn plan(
 mod tests {
     use super::*;
 
-    const ROOT: &str = "/srv/example/.agent-board";
+    const ROOT: &str = "/srv/example/.agent-project";
 
     fn planned(text: &str) -> Option<String> {
         plan(Path::new("/c/config.toml"), Some(text), ROOT)

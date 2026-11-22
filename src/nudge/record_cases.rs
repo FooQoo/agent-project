@@ -180,7 +180,7 @@ pub fn all() -> Vec<Case> {
             "start-task",
             "a Codex patch of the data folder",
             false,
-            idle(vec![codex_patch("/Users/me/.agent-board/shared/x.md")]),
+            idle(vec![codex_patch("/Users/me/.agent-project/shared/x.md")]),
         ),
         case(
             "start-task",

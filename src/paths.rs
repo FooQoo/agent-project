@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::AgpjError;
 
 /// Name of the data directory directly under the home directory.
-pub const DEFAULT_DATA_DIR_NAME: &str = ".agent-board";
+pub const DEFAULT_DATA_DIR_NAME: &str = ".agent-project";
 
 /// How a running server was started: by a person (`serve`, `serve -d`) or by
 /// the CLI when a command needed one. Only an automatic server stops by itself.
@@ -37,7 +37,7 @@ pub struct ServeInfo {
 }
 
 /// The data directory: `$AGPJ_HOME` when it is set and not empty, otherwise
-/// `.agent-board` directly under the home directory. When neither can be found
+/// `.agent-project` directly under the home directory. When neither can be found
 /// this is an error; the working directory is never used instead.
 pub fn data_dir() -> Result<PathBuf, AgpjError> {
     data_dir_from(std::env::var_os("AGPJ_HOME"), dirs::home_dir())
@@ -160,7 +160,7 @@ mod tests {
         let resolved = data_dir_from(None, Some(PathBuf::from("/srv/someone")));
         assert_eq!(
             resolved.unwrap(),
-            PathBuf::from("/srv/someone").join(".agent-board")
+            PathBuf::from("/srv/someone").join(".agent-project")
         );
     }
 
@@ -169,7 +169,7 @@ mod tests {
         let resolved = data_dir_from(Some(OsString::new()), Some(PathBuf::from("/srv/someone")));
         assert_eq!(
             resolved.unwrap(),
-            PathBuf::from("/srv/someone").join(".agent-board")
+            PathBuf::from("/srv/someone").join(".agent-project")
         );
     }
 
@@ -198,7 +198,7 @@ mod tests {
         with_home(None, || {
             assert_eq!(
                 data_dir().unwrap(),
-                dirs::home_dir().unwrap().join(".agent-board")
+                dirs::home_dir().unwrap().join(".agent-project")
             );
         });
     }

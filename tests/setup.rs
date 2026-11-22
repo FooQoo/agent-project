@@ -110,7 +110,7 @@ fn home_with_settings(name: &str) -> (tempfile::TempDir, PathBuf) {
 }
 
 fn data_root(home: &Path) -> PathBuf {
-    home.join(".agent-board")
+    home.join(".agent-project")
 }
 
 #[test]
@@ -432,14 +432,14 @@ fn codex_home_and_claude_config_dir_overrides_are_honored() {
     assert!(
         fs::read_to_string(codex_home.join("config.toml"))
             .unwrap()
-            .contains(".agent-board")
+            .contains(".agent-project")
     );
     assert!(codex_home.join("rules/agboard.rules").is_file());
     assert!(!home.join(".codex/rules").exists());
     assert!(
         fs::read_to_string(claude_dir.join("settings.json"))
             .unwrap()
-            .contains(".agent-board")
+            .contains(".agent-project")
     );
     assert_eq!(
         fs::read(home.join(".codex/config.toml")).unwrap(),
@@ -650,7 +650,7 @@ fn a_symbolic_link_is_followed_and_kept_as_a_link() {
         "link must stay a link"
     );
     let target = fs::read_to_string(dotfiles.join("settings.json")).unwrap();
-    assert!(target.contains(".agent-board"));
+    assert!(target.contains(".agent-project"));
     // the backup sits next to the real file
     assert_eq!(backups_in(&dotfiles).len(), 1);
     assert!(backups_in(&home.join(".claude")).is_empty());

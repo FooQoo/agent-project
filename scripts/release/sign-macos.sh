@@ -33,7 +33,7 @@
 # to exactly one Developer ID Application identity of the expected Team.
 set -euo pipefail
 
-IDENTIFIER=io.github.FooQoo.agent-board.agboard
+IDENTIFIER=io.github.FooQoo.agent-project.agpj
 
 die() { echo "sign-macos: $*" >&2; exit "${2:-1}"; }
 need() { [ -n "${!1:-}" ] || die "required setting $1 is not set" 2; }

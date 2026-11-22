@@ -79,7 +79,7 @@ pub(crate) fn plan(
 mod tests {
     use super::*;
 
-    const ROOT: &str = "/srv/example/.agent-board";
+    const ROOT: &str = "/srv/example/.agent-project";
 
     #[test]
     fn keeps_permissions_hooks_and_unknown_keys() {

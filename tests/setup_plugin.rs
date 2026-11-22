@@ -221,7 +221,7 @@ fn a_failing_agent_command_fails_that_agent_with_its_message() {
     assert!(
         fs::read_to_string(fx.home.join(".claude/settings.json"))
             .unwrap()
-            .contains(".agent-board")
+            .contains(".agent-project")
     );
 }
 
@@ -239,7 +239,7 @@ fn without_a_terminal_setup_needs_an_agent_and_a_yes_or_a_dry_run() {
         assert!(err.contains("terminal"), "{err}");
     }
     assert!(fx.fakes.log("codex").is_empty(), "nothing may run");
-    assert!(!fx.home.join(".agent-board").exists());
+    assert!(!fx.home.join(".agent-project").exists());
 }
 
 #[test]
@@ -261,7 +261,7 @@ fn dry_run_runs_only_the_read_only_plugin_list() {
         before
     );
     assert!(!fx.home.join(".codex/rules").exists());
-    assert!(!fx.home.join(".agent-board").exists());
+    assert!(!fx.home.join(".agent-project").exists());
 }
 
 fn old_install(fx: &Fixture) {

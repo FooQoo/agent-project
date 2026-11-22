@@ -23,7 +23,7 @@ use crate::server::monitor_connection::push::{PushStore, Subscription};
 use crate::server::notification_settings::NotificationSettings;
 
 /// The contact a push service may use to reach the operator of this board (RFC 8292 `sub`).
-const VAPID_SUBJECT: &str = "https://github.com/FooQoo/agent-board";
+const VAPID_SUBJECT: &str = "https://github.com/FooQoo/agent-project";
 /// How long to wait after the first, second, third and fourth failure.
 const BACKOFF_SECONDS: [i64; 4] = [60, 300, 1800, 7200];
 /// A message is given up after this many tries.
