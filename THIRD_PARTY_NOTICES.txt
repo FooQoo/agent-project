@@ -180,6 +180,8 @@ Name | Version | Distribution | Applicable license | License text ID
 @tailwindcss/node | 4.3.3 | Monitor, Web | MIT | LT-030
 @tailwindcss/oxide | 4.3.3 | Monitor, Web | MIT | LT-030
 @tailwindcss/vite | 4.3.3 | Monitor, Web | MIT | LT-030
+@tanstack/query-core | 5.108.2 | Monitor, Web | MIT | LT-031
+@tanstack/react-query | 5.108.2 | Monitor, Web | MIT | LT-031
 @tanstack/react-virtual | 3.14.13 | Monitor, Web | MIT | LT-031
 @tanstack/virtual-core | 3.17.11 | Monitor, Web | MIT | LT-031
 @types/d3 | 7.4.3 | Monitor, Web | MIT | LT-032
@@ -2838,6 +2840,30 @@ Upstream: https://tailwindcss.com
 Source: https://registry.npmjs.org/@tailwindcss/vite/-/vite-4.3.3.tgz
 Applicable license: MIT
 License text: LT-030
+Modifications: None
+
+See the license text IDs above in LICENSE TEXTS.
+
+============================================================
+Component: @tanstack/query-core
+Version: 5.108.2
+Distribution: Monitor, Web
+Upstream: https://tanstack.com/query
+Source: https://registry.npmjs.org/@tanstack/query-core/-/query-core-5.108.2.tgz
+Applicable license: MIT
+License text: LT-031
+Modifications: None
+
+See the license text IDs above in LICENSE TEXTS.
+
+============================================================
+Component: @tanstack/react-query
+Version: 5.108.2
+Distribution: Monitor, Web
+Upstream: https://tanstack.com/query
+Source: https://registry.npmjs.org/@tanstack/react-query/-/react-query-5.108.2.tgz
+Applicable license: MIT
+License text: LT-031
 Modifications: None
 
 See the license text IDs above in LICENSE TEXTS.
