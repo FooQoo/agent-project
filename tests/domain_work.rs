@@ -2,22 +2,28 @@ use agent_board::domain::{Assignee, Column, RunState, check_work_state, validate
 
 #[test]
 fn run_states_follow_the_table_for_each_owner_and_column() {
-    // An AI task may ask (pending) in todo; it runs and waits in doing. A person's task is only idle.
+    // An AI task runs and pauses in Doing, has run in Todo or Done, and waits for an answer in
+    // Todo or Doing. A person's task is only idle.
     let allowed = |assignee: Assignee, column: Column, state: RunState| {
         state == RunState::Idle
-            || matches!(
-                (assignee, column, state),
-                (Assignee::Ai, Column::Todo, RunState::Pending)
-                    | (
-                        Assignee::Ai,
-                        Column::Doing,
-                        RunState::Pending | RunState::Running
-                    )
-            )
+            || (assignee == Assignee::Ai
+                && match state {
+                    RunState::Running | RunState::Paused => column == Column::Doing,
+                    RunState::Ran => matches!(column, Column::Todo | Column::Done),
+                    RunState::AwaitingAnswer => matches!(column, Column::Todo | Column::Doing),
+                    RunState::Idle => true,
+                })
     };
+    let states = [
+        RunState::Idle,
+        RunState::Running,
+        RunState::Paused,
+        RunState::Ran,
+        RunState::AwaitingAnswer,
+    ];
     for assignee in [Assignee::Ai, Assignee::Human] {
         for column in [Column::Todo, Column::Doing, Column::Done] {
-            for state in [RunState::Idle, RunState::Running, RunState::Pending] {
+            for state in states {
                 assert_eq!(
                     check_work_state(assignee, column, state).is_ok(),
                     allowed(assignee, column, state),

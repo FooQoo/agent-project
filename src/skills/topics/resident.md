@@ -13,7 +13,7 @@ Nobody watches a board-launched session. It runs headless with automatic approva
 
 Only a session the board launched follows this part.
 
-1. Resolve the project as the main Skill describes (`agboard skills`), read the complete project snapshot, and inspect every AI task's `agentStatus`. Resolve work that is `running` or `pending` first, as `agboard skills listening` describes for a resumed session. Then end your turn. Do not start a wait: the board sends the next message when it has work.
+1. Resolve the project as the main Skill describes (`agboard skills`), read the complete project snapshot, and inspect every AI task's `agentStatus`. Resolve work that is `running` or `awaiting_answer` first, as `agboard skills listening` describes for a resumed session. Then end your turn. Do not start a wait: the board sends the next message when it has work.
 2. A message that starts with "Agent Board has work for you" carries one JSON object, of the same shape `wait --until task --json` returns. Handle it as follows, then end your turn:
    - `"kind":"answers"`: answers to questions you asked. Read each with `message show <id>`, act on it, and take it in with `message accept <id> --actor ai`.
    - `"kind":"requests"`: open requests. Read each with `message show <id>`, take it with `message accept <id> --actor ai`, and plan it as `agboard skills planning` describes. If `message accept` says another session already took it, drop it.
@@ -31,7 +31,7 @@ Only a session a person opened and told to stay on the board follows this part a
 ### Start
 
 1. Resolve the project as the main Skill describes (`agboard skills`). Never broaden the session to other projects. If the folder is not bound (`folder_unbound`), report it and stop; there is nobody to retry for you.
-2. Read the complete project snapshot and inspect every AI task's `agentStatus`. Resolve work that is `running` or `pending` before waiting, as `agboard skills listening` describes for a resumed session.
+2. Read the complete project snapshot and inspect every AI task's `agentStatus`. Resolve work that is `running` or `awaiting_answer` before waiting, as `agboard skills listening` describes for a resumed session.
 
 ### The loop
 
@@ -68,4 +68,4 @@ When a task needs a decision that is a person's (one of the four cases in the ma
 ## Errors
 
 - `local_network_denied`, `board_unavailable`, malformed project data, a mismatched server, `project_not_found`, and invalid arguments are errors, not an empty board. Report the error and its recovery step, then stop. The board sees the session end and decides whether to start it again.
-- If the wait is interrupted, fetch a fresh snapshot, inspect every AI task by `agentStatus`, resolve `running` or `pending` work, and start the loop again.
+- If the wait is interrupted, fetch a fresh snapshot, inspect every AI task by `agentStatus`, resolve `running` or `awaiting_answer` work, and start the loop again.

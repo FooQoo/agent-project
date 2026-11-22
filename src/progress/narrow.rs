@@ -23,7 +23,10 @@ pub(super) fn narrow(table: &mut Progress, snapshot: &ProjectSnapshot, filter: &
     table
         .final_result_missing
         .retain(|task| kept.contains(&task.id));
-    for section in [&mut table.pending, &mut table.done].into_iter().flatten() {
+    for section in [&mut table.awaiting_answer, &mut table.done]
+        .into_iter()
+        .flatten()
+    {
         section.retain(|task| kept.contains(&task.id));
     }
 }

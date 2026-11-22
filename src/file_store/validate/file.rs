@@ -105,14 +105,19 @@ pub fn check_task_metadata(task: &TaskFile, folder_id: i64) -> Vec<Defect> {
     if task.position < 1 {
         out.push(defect("position", "Positions start at 1."));
     }
-    if check_work_state(task.assignee, task.task_status, task.agent_status).is_err() {
+    // An archived task keeps "has run" in whatever lane it was archived from.
+    let archived_ok = task.archived_at.is_some()
+        && task.assignee == crate::domain::Assignee::Ai
+        && matches!(task.agent_status, RunState::Idle | RunState::Ran);
+    if !archived_ok && check_work_state(task.assignee, task.task_status, task.agent_status).is_err()
+    {
         out.push(defect(
             "agentStatus",
-            "Running needs an AI-owned task in Doing.",
+            "Running and paused need an AI-owned task in Doing, and has run needs one in Todo or Done.",
         ));
     }
-    if task.draft.is_some() && task.agent_status != RunState::Idle {
-        out.push(defect("draft", "Only idle tasks can be drafts."));
+    if task.draft.is_some() && task.agent_status == RunState::Running {
+        out.push(defect("draft", "A running task cannot be a draft."));
     }
     let mut answer_ids = HashSet::new();
     for (index, answer) in task.request_answers.iter().enumerate() {
@@ -152,8 +157,8 @@ pub fn check_task_metadata(task: &TaskFile, folder_id: i64) -> Vec<Defect> {
             out.push(defect(field("text"), "An answer needs a choice or text."));
         }
     }
-    if task.archived_at.is_some() && task.agent_status != RunState::Idle {
-        out.push(defect("archivedAt", "An archived task is idle."));
+    if task.archived_at.is_some() && !matches!(task.agent_status, RunState::Idle | RunState::Ran) {
+        out.push(defect("archivedAt", "An archived task is idle or has run."));
     }
     out
 }

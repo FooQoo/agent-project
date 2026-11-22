@@ -87,6 +87,12 @@ pub enum AgboardError {
         column: Column,
     },
     InvalidStateForAssignee,
+    /// The run state cannot change this way: only idle to running, running to paused, and
+    /// paused to running are allowed.
+    InvalidStateChange {
+        from: RunState,
+        to: RunState,
+    },
     /// The task is a draft: agents and the CLI cannot change it.
     TaskIsDraft {
         id: i64,

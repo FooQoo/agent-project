@@ -114,7 +114,7 @@ fn real_cli_appends_verbatim_notes_or_defaults_and_preserves_lane_timing() {
     );
     assert_eq!(
         last_reason(&moved["task"]),
-        "Moved task from Doing to Todo; agent is idle."
+        "Moved task from Doing to Todo; agent is ran."
     );
 }
 
@@ -238,7 +238,7 @@ fn real_server_generates_optional_operation_reasons_but_rejects_blank_questions(
     let invalid = server.write(
         "POST",
         &format!("{task_path}/agent-status"),
-        Some(r#"{"agentStatus":"pending","reason":" "}"#),
+        Some(r#"{"agentStatus":"awaiting_answer","reason":" "}"#),
     );
     assert_eq!(invalid.status, 422, "{}", invalid.body);
     let moved = server.write(
@@ -249,6 +249,6 @@ fn real_server_generates_optional_operation_reasons_but_rejects_blank_questions(
     assert_eq!(moved.status, 200, "{}", moved.body);
     assert_eq!(
         last_reason(&moved.json()["task"]),
-        "Moved task from Doing to Todo; agent is idle."
+        "Moved task from Doing to Todo; agent is ran."
     );
 }

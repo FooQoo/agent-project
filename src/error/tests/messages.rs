@@ -26,11 +26,15 @@ fn messages_and_reasons_follow_the_design_table() {
         ("title is invalid.", "r"),
         (
             "cannot set #11 to running.",
-            "Only tasks in Doing can be running or pending. #11 is in Todo.",
+            "Only tasks in Doing can be running or paused. #11 is in Todo.",
         ),
         (
             "state is invalid for this assignee.",
-            "Only AI-owned tasks in Doing can be running or pending.",
+            "Only AI-owned tasks can be running, paused, or have run.",
+        ),
+        (
+            "cannot change the state from ran to idle.",
+            "In Doing a task goes from idle to running, from running to paused, and from paused to running. Move the card to change the other states.",
         ),
         (
             "the project has no current version.",

@@ -60,19 +60,20 @@ When a request needs more than one task, run `agboard skills planning` before yo
 
 ## 5. Lanes and run states
 
-Lanes are `backlog`, `todo`, `doing`, and `done`. You never take work from `backlog`: only a person sends it to `todo`. AI tasks may be Pending in Todo or Doing; only Doing supports Running:
+Lanes are `backlog`, `todo`, `doing`, and `done`. You never take work from `backlog`: only a person sends it to `todo`. Run states are `idle` (never run), `running`, `paused` (in Doing, the run stopped), `ran` (has run, now in Todo or Done), and `awaiting_answer` (waiting for an answer to an open question):
 
 | Owner | Lane | Allowed run state |
 | --- | --- | --- |
-| `ai` | `doing` | `idle`, `running`, `pending` |
-| `ai` | `todo` | `idle`, `pending` |
-| `ai` | `done` | `idle` only |
+| `ai` | `doing` | `idle`, `running`, `paused`, `awaiting_answer` |
+| `ai` | `todo` | `idle`, `ran`, `awaiting_answer` |
+| `ai` | `done` | `idle`, `ran` |
 | `human` | any | `idle` only |
 
-- `running` means you are working on it. `pending` means the task refers to a question that is still open. It is never set directly; it follows from the questions (section 7).
-- A real lane move resets the run state to `idle`. It does not withdraw questions: they belong to the project.
-- `running` is self-reported and is not reset automatically. Set it while actively working, return it to `idle` when active work stops, and ask with `message ask` when you need a user decision. A session starting or resuming alone does not make a task `running`.
-- Never report `running` or `pending` on a `human` task.
+- `running` means you are working on it. `awaiting_answer` means the task refers to a question that is still open. It is never set directly; it follows from the questions (section 7).
+- In Doing the only changes of `state` are `idle` to `running`, `running` to `paused`, and `paused` to `running`; anything else is refused. `ran` is never set directly either, and a task that has run never goes back to `idle`.
+- A real lane move keeps the questions, which belong to the project. A task that never ran stays `idle`. A task that has run (`running`, `paused`, or `ran`) becomes `paused` in Doing and `ran` in Todo or Done. Whether a task waits for an answer does not change this.
+- `running` is self-reported and is not reset automatically. Set it while actively working, set `paused` when active work stops, and ask with `message ask` when you need a user decision. A session starting or resuming alone does not make a task `running`.
+- Never report `running` or `paused` on a `human` task.
 - Every `mv` and `state` needs `--actor`, which controls permission. `--reason` is optional for lane and state changes (up to 10,000 characters); missing or blank reasons are generated from the current state. Never use `--actor human` unless the user explicitly gave that direction or you are recording their own chat answer (section 7).
 
 ## 6. Work loop
@@ -93,7 +94,7 @@ History keeps the decisions and grounds a reader needs later, not a log of every
 
 Keep history reasons concise, in Markdown where it helps. An option value that starts with `-` (a Markdown list such as `- did X`) must be written `--reason="- did X"` with an equals sign, or passed with `--reason-file`; `--reason "- did X"` fails, and so does a forgotten value (`--reason --json`). The same holds for `--text`, `--desc`, `--summary`, `--title`, and `--link`; a whole `TASK.md` or `EPIC.md` starts with `---`, so give it with `--desc-file`, `--document-file`, or `-`. Put verification results in the TASK body, visual proof in image attachments, and never full test logs.
 
-While a question is open or something is pending, continue the tasks that do not depend on it, each change to a Git repository on its own branch in its own worktree.
+While a question is open or something is awaiting an answer, continue the tasks that do not depend on it, each change to a Git repository on its own branch in its own worktree.
 
 When your agent can spawn subagents, the main agent orchestrates and subagents do the work. Give each independent task its own subagent, with its task ID, plan, and acceptance conditions, and keep the implementation, investigation, and verification in the subagents. The main agent manages the project: it picks and orders the work, starts the subagents, reviews what they report, asks the user, and keeps the board updates (lane, run state, history, acceptance) itself, so every change goes through one writer.
 

@@ -44,27 +44,53 @@ pub fn validate_work_reason(value: &str) -> Result<String, crate::error::Agboard
     Ok(trimmed.to_owned())
 }
 
-/// Which run states a task may take. Idle is always allowed. An AI task may be
-/// pending in Todo (a question before the work starts) or in Doing; it may run
-/// only in Doing. A person's task is only idle. Nothing else may be pending.
+/// Which run states a task may take in a column. Idle is always allowed. Only an AI task
+/// can have another state: running and paused in Doing, has run in Todo or Done, and
+/// awaiting an answer (derived, never stored) in Todo or Doing. A person's task is only idle.
 pub fn check_work_state(
     assignee: Assignee,
     column: Column,
     state: RunState,
 ) -> Result<(), crate::error::AgboardError> {
     let allowed = state == RunState::Idle
-        || matches!(
-            (assignee, column, state),
-            (Assignee::Ai, Column::Todo, RunState::Pending)
-                | (
-                    Assignee::Ai,
-                    Column::Doing,
-                    RunState::Pending | RunState::Running
-                )
-        );
+        || (assignee == Assignee::Ai
+            && match state {
+                RunState::Idle => true,
+                RunState::Running | RunState::Paused => column == Column::Doing,
+                RunState::Ran => matches!(column, Column::Todo | Column::Done),
+                RunState::AwaitingAnswer => matches!(column, Column::Todo | Column::Doing),
+            });
     if allowed {
         Ok(())
     } else {
         Err(crate::error::AgboardError::InvalidStateForAssignee)
+    }
+}
+
+/// The only changes of the run state an agent or the web API may ask for, all in Doing:
+/// idle to running, running to paused, and paused to running. Anything else is refused, so a
+/// task that has run never goes back to idle. Asking for the state a task is in is no change.
+pub fn check_state_change(from: RunState, to: RunState) -> Result<(), crate::error::AgboardError> {
+    if matches!(
+        (from, to),
+        (RunState::Idle, RunState::Running)
+            | (RunState::Running, RunState::Paused)
+            | (RunState::Paused, RunState::Running)
+    ) {
+        Ok(())
+    } else {
+        Err(crate::error::AgboardError::InvalidStateChange { from, to })
+    }
+}
+
+/// The stored run state after a task moves to `to`. A task that has run (stored running,
+/// paused, or ran) becomes paused in Doing and has run in Todo or Done; a task that never ran
+/// stays idle. Waiting for an answer is derived and not stored, so it never decides this.
+pub fn state_after_move(from: RunState, to: Column) -> RunState {
+    match (from, to) {
+        (RunState::Idle | RunState::AwaitingAnswer, _) => RunState::Idle,
+        (_, Column::Doing) => RunState::Paused,
+        (_, Column::Backlog) => RunState::Idle,
+        (_, _) => RunState::Ran,
     }
 }

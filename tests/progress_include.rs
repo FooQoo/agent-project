@@ -141,7 +141,7 @@ fn board() -> Board {
 fn the_default_table_has_no_pending_or_done_sections() {
     let b = board();
     let table = json(agboard(b.home.path(), &["progress", "--json"]));
-    assert!(table.get("pending").is_none());
+    assert!(table.get("awaitingAnswer").is_none());
     assert!(table.get("done").is_none());
     assert_eq!(ids(&table["epics"][0]["tasks"]), vec![b.open]);
     let text = out(agboard(b.home.path(), &["progress"]));
@@ -156,20 +156,25 @@ fn include_flags_add_the_waiting_question_and_the_newest_done_tasks() {
         b.home.path(),
         &[
             "progress",
-            "--include-pending",
+            "--include-awaiting-answer",
             "--include-done",
             "1",
             "--json",
         ],
     ));
-    assert_eq!(ids(&table["pending"]), vec![b.waiting]);
-    assert_eq!(table["pending"][0]["question"], "Proceed?");
+    assert_eq!(ids(&table["awaitingAnswer"]), vec![b.waiting]);
+    assert_eq!(table["awaitingAnswer"][0]["question"], "Proceed?");
     assert_eq!(ids(&table["done"]), vec![b.second]);
     assert_eq!(ids(&table["epics"][0]["tasks"]), vec![b.open]);
 
     let text = out(agboard(
         b.home.path(),
-        &["progress", "--include-pending", "--include-done", "2"],
+        &[
+            "progress",
+            "--include-awaiting-answer",
+            "--include-done",
+            "2",
+        ],
     ));
     assert!(text.contains("Waiting for a decision"));
     assert!(text.contains("question: Proceed?"));
@@ -200,7 +205,7 @@ fn the_hook_passes_the_flags_through() {
         &b.home.path().join("shared"),
         Some("Demo"),
         agent_board::progress::Include {
-            pending: true,
+            awaiting_answer: true,
             done: 1,
         },
     )

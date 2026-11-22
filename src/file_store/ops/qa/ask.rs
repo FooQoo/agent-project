@@ -213,10 +213,10 @@ impl FileStore {
                     from_task: Some(task.task_status),
                     to_task: task.task_status,
                     from_agent: Some(RunState::Running),
-                    to_agent: RunState::Idle,
+                    to_agent: RunState::Paused,
                     at,
                 })?);
-                task.agent_status = RunState::Idle;
+                task.agent_status = RunState::Paused;
                 task.agent_status_changed_at = at;
             }
             task.updated_at = at;

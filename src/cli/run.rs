@@ -134,7 +134,7 @@ pub fn execute(args: &[OsString], env: &mut Env) -> i32 {
             &env.shared_dir,
             cli.project(),
             crate::progress::Include {
-                pending: args.progress.include_pending,
+                awaiting_answer: args.progress.include_awaiting_answer,
                 done: args.progress.include_done,
             },
         );

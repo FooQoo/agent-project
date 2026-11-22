@@ -127,7 +127,7 @@ fn ask_without_waiting_needs_no_server_and_a_wait_without_autostart_needs_one() 
 
     let task = json_ok(home.path(), &["--project", "Demo", "show", "1", "--json"]);
     let task = &task["task"];
-    assert_eq!(task["agentStatus"], "pending", "{task}");
+    assert_eq!(task["agentStatus"], "awaiting_answer", "{task}");
     assert_eq!(task["openQuestionIds"], serde_json::json!(["Q-1"]));
     // The board answers the question named here.
     assert_eq!(task["pendingRequestId"], "Q-1");
@@ -325,7 +325,7 @@ fn edit_with_desc_file_keeps_question_refs_and_the_task_stays_pending() {
     assert_eq!(code, 0, "{err}");
     let before = json_ok(home.path(), &["--project", "Demo", "show", "1", "--json"]);
     assert_eq!(before["task"]["questionIds"], serde_json::json!(["Q-1"]));
-    assert_eq!(before["task"]["agentStatus"], "pending");
+    assert_eq!(before["task"]["agentStatus"], "awaiting_answer");
 
     // A desc file that names other questions neither adds nor removes any ref.
     let file = home.path().join("desc.md");
@@ -339,7 +339,7 @@ fn edit_with_desc_file_keeps_question_refs_and_the_task_stays_pending() {
     let after = json_ok(home.path(), &["--project", "Demo", "show", "1", "--json"]);
     assert_eq!(after["task"]["body"], "Replaced body");
     assert_eq!(after["task"]["questionIds"], serde_json::json!(["Q-1"]));
-    assert_eq!(after["task"]["agentStatus"], "pending");
+    assert_eq!(after["task"]["agentStatus"], "awaiting_answer");
 
     // The same holds for a plain file without frontmatter.
     std::fs::write(&file, "Second body\n").unwrap();
@@ -350,5 +350,5 @@ fn edit_with_desc_file_keeps_question_refs_and_the_task_stays_pending() {
     assert_eq!(code, 0, "{err}");
     let after = json_ok(home.path(), &["--project", "Demo", "show", "1", "--json"]);
     assert_eq!(after["task"]["questionIds"], serde_json::json!(["Q-1"]));
-    assert_eq!(after["task"]["agentStatus"], "pending");
+    assert_eq!(after["task"]["agentStatus"], "awaiting_answer");
 }

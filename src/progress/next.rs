@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use serde::Serialize;
 
-use crate::domain::{Assignee, Column, RunState};
+use crate::domain::{Assignee, Column};
 use crate::file_store::layout;
 use crate::file_store::model::TaskView;
 use crate::file_store::reader::ProjectSnapshot;
@@ -67,7 +67,7 @@ pub(super) fn next_tasks(
 ) -> Vec<NextTask> {
     let ready = |task: &&&TaskView| {
         task.assignee == Assignee::Ai
-            && task.agent_status == RunState::Idle
+            && task.agent_status.can_start()
             && task.draft.is_none()
             && task.archived_at.is_none()
     };

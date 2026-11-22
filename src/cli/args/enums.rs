@@ -27,7 +27,10 @@ impl ColumnArg {
 pub enum RunStateArg {
     Idle,
     Running,
-    Pending,
+    Paused,
+    Ran,
+    #[value(name = "awaiting_answer")]
+    AwaitingAnswer,
 }
 
 impl RunStateArg {
@@ -35,16 +38,20 @@ impl RunStateArg {
         match self {
             RunStateArg::Idle => RunState::Idle,
             RunStateArg::Running => RunState::Running,
-            RunStateArg::Pending => RunState::Pending,
+            RunStateArg::Paused => RunState::Paused,
+            RunStateArg::Ran => RunState::Ran,
+            RunStateArg::AwaitingAnswer => RunState::AwaitingAnswer,
         }
     }
 }
 
-/// The run states an agent or a person reports. Waiting is read from the questions.
+/// The run states an agent or a person reports. Waiting is read from the questions, and
+/// "has run" follows from moving the card.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 pub enum ReportStateArg {
     Idle,
     Running,
+    Paused,
 }
 
 impl ReportStateArg {
@@ -52,6 +59,7 @@ impl ReportStateArg {
         match self {
             ReportStateArg::Idle => RunState::Idle,
             ReportStateArg::Running => RunState::Running,
+            ReportStateArg::Paused => RunState::Paused,
         }
     }
 }

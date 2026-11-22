@@ -1,7 +1,7 @@
 //! The progress table: the tasks an agent can pick up, grouped by epic in wave order.
 //! `agboard progress` and the agent hook print this same table.
 //!
-//! A task is listed when it is in Todo or Doing and its agent status is not Pending. Done and
+//! A task is listed when it is in Todo or Doing and its agent status is not AwaitingAnswer. Done and
 //! archived tasks are never listed; human-assigned tasks and drafts are, so the agent skips them.
 //!
 //! Open requests, unaccepted answers, and tasks lacking a final result are always listed. With
@@ -64,7 +64,7 @@ pub struct Progress {
     pub reminders: Vec<Reminder>,
     /// Tasks waiting for a decision, in ID order. Only when asked for.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub pending: Option<Vec<ProgressTask>>,
+    pub awaiting_answer: Option<Vec<ProgressTask>>,
     /// The most recently completed tasks of epics that still have Todo or
     /// Doing work, newest first. Only when asked for.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -75,7 +75,7 @@ pub struct Progress {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Include {
     /// Add the tasks waiting for a decision, with their questions.
-    pub pending: bool,
+    pub awaiting_answer: bool,
     /// Add this many of the most recently completed tasks of epics that still
     /// have Todo or Doing work; 0 adds none.
     pub done: usize,
@@ -188,7 +188,7 @@ pub fn build_filtered(
         final_result_missing: final_result_missing(snapshot, &project_dir, fetched_at),
         epics_to_close: epic_close::epics_to_close(snapshot, &project_dir),
         reminders: Vec::new(),
-        pending: include.pending.then(|| {
+        awaiting_answer: include.awaiting_answer.then(|| {
             let mut tasks: Vec<&TaskView> = snapshot
                 .tasks
                 .iter()
@@ -270,13 +270,13 @@ fn is_sample(task: &TaskView) -> bool {
 
 fn is_listed(task: &TaskView) -> bool {
     matches!(task.task_status, Column::Todo | Column::Doing)
-        && task.agent_status != RunState::Pending
+        && task.agent_status != RunState::AwaitingAnswer
         && !is_sample(task)
 }
 
 fn is_waiting(task: &TaskView) -> bool {
     matches!(task.task_status, Column::Todo | Column::Doing)
-        && task.agent_status == RunState::Pending
+        && task.agent_status == RunState::AwaitingAnswer
         && !is_sample(task)
 }
 

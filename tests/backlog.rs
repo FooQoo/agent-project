@@ -244,7 +244,10 @@ fn an_open_question_is_a_warning_a_person_confirms() {
     let view = f.store.task(&f.project, id).unwrap();
     assert_eq!(view.open_question_ids, vec![q.id.clone()]);
     // It waits for the answer in Todo, so no agent can run it.
-    assert_eq!(view.agent_status, agent_board::domain::RunState::Pending);
+    assert_eq!(
+        view.agent_status,
+        agent_board::domain::RunState::AwaitingAnswer
+    );
 }
 
 #[test]

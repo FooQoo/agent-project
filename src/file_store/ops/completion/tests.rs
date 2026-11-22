@@ -217,7 +217,7 @@ fn pending_is_left_alone_then_answered_task_is_reconsidered() {
     f.store.auto_complete_all(at(4)).unwrap();
     assert_eq!(
         f.store.task(&f.project, id).unwrap().agent_status,
-        RunState::Pending
+        RunState::AwaitingAnswer
     );
     f.store
         .answer_questions(

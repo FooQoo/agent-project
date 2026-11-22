@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::agent::session_identity::SessionIdentity;
 use crate::agent::wait_engine::{Evaluation, WaitReader, WaitResult, wait_until};
-use crate::domain::{Assignee, Column, ProjectId, RunState, validate_project_name};
+use crate::domain::{Assignee, Column, ProjectId, validate_project_name};
 use crate::error::AgboardError;
 use crate::file_store::FileStore;
 use crate::file_store::layout;
@@ -200,7 +200,7 @@ pub(crate) fn ready_tasks(snapshot: &ProjectSnapshot) -> Vec<&TaskView> {
         .filter(|task| {
             task.assignee == Assignee::Ai
                 && matches!(task.task_status, Column::Todo | Column::Doing)
-                && task.agent_status == RunState::Idle
+                && task.agent_status.can_start()
                 && task.draft.is_none()
                 && task.archived_at.is_none()
                 && (task.task_status != Column::Todo

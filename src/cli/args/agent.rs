@@ -16,7 +16,7 @@ pub enum AgentArg {
 pub struct ProgressArgs {
     /// Also list the tasks waiting for a decision, with their questions
     #[arg(long)]
-    pub include_pending: bool,
+    pub include_awaiting_answer: bool,
     /// Also list this many of the most recently completed tasks
     #[arg(long, value_name = "COUNT", default_value_t = 0)]
     pub include_done: usize,

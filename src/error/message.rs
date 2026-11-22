@@ -33,6 +33,13 @@ impl AgboardError {
                 format!("cannot set #{id} to {}.", state.as_str())
             }
             AgboardError::InvalidStateForAssignee => "state is invalid for this assignee.".into(),
+            AgboardError::InvalidStateChange { from, to } => {
+                format!(
+                    "cannot change the state from {} to {}.",
+                    from.as_str(),
+                    to.as_str()
+                )
+            }
             AgboardError::TaskIsDraft { id } => {
                 format!("task #{id} is a draft and read-only for agents.")
             }

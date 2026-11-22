@@ -39,11 +39,14 @@ impl AgboardError {
             },
             AgboardError::InvalidValue { reason, .. } => reason.clone(),
             AgboardError::InvalidStateForColumn { id, column, .. } => format!(
-                "Only tasks in Doing can be running or pending. #{id} is in {}.",
+                "Only tasks in Doing can be running or paused. #{id} is in {}.",
                 column.label()
             ),
             AgboardError::InvalidStateForAssignee => {
-                "Only AI-owned tasks in Doing can be running or pending.".into()
+                "Only AI-owned tasks can be running, paused, or have run.".into()
+            }
+            AgboardError::InvalidStateChange { .. } => {
+                "In Doing a task goes from idle to running, from running to paused, and from paused to running. Move the card to change the other states.".into()
             }
             AgboardError::TaskIsDraft { .. } => {
                 "Wait for the user to finalize it, then try again.".into()

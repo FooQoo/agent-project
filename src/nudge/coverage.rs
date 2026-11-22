@@ -145,7 +145,7 @@ pub const FIELDS: &[(&str, Cover)] = &[
     ("locale", NoRule("metadata")),
     ("nextTasks", Rules(&["next-task"])),
     (
-        "pending",
+        "awaitingAnswer",
         NoRule("read-only list of tasks waiting for a decision"),
     ),
     ("project", NoRule("metadata")),
@@ -202,7 +202,7 @@ fn field_names() -> Vec<String> {
         name: "E".into(),
         document_path: "p".into(),
     });
-    table.pending = Some(Vec::new());
+    table.awaiting_answer = Some(Vec::new());
     table.done = Some(Vec::new());
     let mut names: Vec<String> = serde_json::to_value(&table)
         .unwrap()

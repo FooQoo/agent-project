@@ -39,7 +39,7 @@ fn notes(board: &Board, id: i64) -> Vec<String> {
 }
 
 #[test]
-fn a_failed_turn_leaves_one_note_and_returns_the_running_task_to_idle() {
+fn a_failed_turn_leaves_one_note_and_pauses_the_running_task() {
     let _env = ENV.lock().unwrap_or_else(|e| e.into_inner());
     let board = board();
     let (fx, calls) = session(&board, turn_ends(), then(failed("boom")));
@@ -52,7 +52,7 @@ fn a_failed_turn_leaves_one_note_and_returns_the_running_task_to_idle() {
     assert!(note.contains("boom"), "{note}");
     assert!(note.contains("Another agent needs to take over"), "{note}");
     let task = board.store.task(&board.id, id).unwrap();
-    assert_eq!(task.agent_status, RunState::Idle);
+    assert_eq!(task.agent_status, RunState::Paused);
     // The board pushes the task again after the backoff, and each retry fails before the task
     // runs, so no second note is written for the same failure.
     std::thread::sleep(Duration::from_millis(1200));
@@ -162,7 +162,7 @@ fn a_note_that_could_not_be_saved_is_kept_and_a_clean_turn_end_does_not_release_
     assert!(found[0].contains("boom"), "{found:?}");
     assert_eq!(
         board.store.task(&board.id, id).unwrap().agent_status,
-        RunState::Idle
+        RunState::Paused
     );
 }
 
@@ -178,7 +178,7 @@ fn a_task_that_is_no_longer_running_is_dropped_from_the_retry_list() {
         .set_agent_status(
             &board.id,
             id,
-            RunState::Idle,
+            RunState::Paused,
             ChangeContext {
                 actor: Actor::Ai,
                 reason: "Taken over".into(),

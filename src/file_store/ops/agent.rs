@@ -16,7 +16,8 @@ use super::{
     task_waits, transition_event,
 };
 use crate::domain::{
-    Actor, ChangeContext, Changed, Column, Draft, ProjectId, RunState, check_work_state,
+    Actor, Assignee, ChangeContext, Changed, Column, Draft, ProjectId, RunState,
+    check_state_change, check_work_state, state_after_move,
 };
 use crate::error::AgboardError;
 
@@ -185,6 +186,11 @@ impl FileStore {
         }
         let at = stamp(now);
         let position = lane_end(shared, project, to)?;
+        let next_state = if task.assignee == Assignee::Ai {
+            state_after_move(task.agent_status, to)
+        } else {
+            RunState::Idle
+        };
         let event = transition_event(Transition {
             language: self.history_language(project, &task)?,
             kind: HistoryKind::Lane,
@@ -192,16 +198,16 @@ impl FileStore {
             from_task: Some(task.task_status),
             to_task: to,
             from_agent: Some(task.agent_status),
-            to_agent: RunState::Idle,
+            to_agent: next_state,
             at,
         })?;
-        if task.agent_status != RunState::Idle {
+        if task.agent_status != next_state {
             task.agent_status_changed_at = at;
         }
         task.task_status = to;
         task.task_status_changed_at = at;
         task.position = position;
-        task.agent_status = RunState::Idle;
+        task.agent_status = next_state;
         task.updated_at = at;
         task.history.push(event);
         save_task(shared, &project_dir, &task)?;
@@ -211,7 +217,8 @@ impl FileStore {
         })
     }
 
-    /// Change a task's run state. Only an AI-owned task in Doing can run, and an agent cannot
+    /// Change a task's run state. Only an AI-owned task in Doing can run or pause, and only
+    /// idle to running, running to paused, and paused to running are allowed. An agent cannot
     /// run a task that waits for answers. A state that is already set is not a change,
     /// whatever the reason. Waiting is never stored: it is read from the questions.
     pub fn set_agent_status(
@@ -222,10 +229,10 @@ impl FileStore {
         ctx: ChangeContext,
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgboardError> {
-        if state == RunState::Pending {
+        if matches!(state, RunState::AwaitingAnswer | RunState::Ran) {
             return Err(AgboardError::InvalidValue {
                 field: "agentStatus".into(),
-                reason: "The run state is idle or running. Ask questions with message ask.".into(),
+                reason: "Set running or paused. Ask questions with message ask, and move the card to change the other states.".into(),
             });
         }
         let shared = self.shared_dir();
@@ -242,6 +249,9 @@ impl FileStore {
             return Err(AgboardError::TaskInBacklog { id });
         }
         check_work_state(task.assignee, task.task_status, state)?;
+        if task.agent_status != state {
+            check_state_change(task.agent_status, state)?;
+        }
         if ctx.actor == Actor::Ai && state == RunState::Running && task_waits(shared, project, id)?
         {
             return Err(AgboardError::QuestionsUnanswered { id });
