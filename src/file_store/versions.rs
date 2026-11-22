@@ -55,7 +55,7 @@ pub fn scan_ids(shared: &Path) -> Result<Vec<ProjectId>, AgboardError> {
 /// digits. It covers `project.json`, every epic's `epic.json` and `EPIC.md`,
 /// every task's `task.json` and `TASK.md`, every question request's
 /// `qa/Q-<n>/QA.md`, and the names (not the contents) of the
-/// files in `assets/`. Dot-prefixed names are skipped.
+/// files in `assets/` and of the version files in `docs/release/`. Dot-prefixed names are skipped.
 pub fn project_version(project_dir: &Path) -> String {
     let mut items: Vec<(String, Option<String>)> = Vec::new();
     let project_file = layout::project_file(project_dir);
@@ -94,6 +94,10 @@ pub fn project_version(project_dir: &Path) -> String {
         for path in child_files(&super::qa::attachments_dir(&folder)) {
             items.push((layout::project_label(project_dir, &path), None));
         }
+    }
+    // The version names count, not the files' contents: the Docs are not board data.
+    for name in super::releases::listed_versions(project_dir) {
+        items.push((format!("docs/release/{name}.md"), None));
     }
     items.sort_by(|a, b| a.0.cmp(&b.0));
 

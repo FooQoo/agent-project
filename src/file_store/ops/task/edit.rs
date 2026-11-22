@@ -44,6 +44,7 @@ impl FileStore {
         ensure_ai_task_not_done(&task, Actor::Ai)?;
         let (changed, markdown) =
             write_text(shared, project, &project_dir, &mut task, title, description)?;
+        self.record_replacement_plan(project, &mut task, markdown.as_deref(), now)?;
         if !changed {
             return Ok(Changed {
                 value: view(shared, project, id)?,
@@ -175,6 +176,7 @@ impl FileStore {
         let target = resolve_finalize(finalize.target, owner);
         let (text_changed, markdown) =
             write_text(shared, project, project_dir, &mut task, title, description)?;
+        self.record_replacement_plan(project, &mut task, markdown.as_deref(), now)?;
         if !text_changed && target == current && images.is_none() {
             return SavedDraft::unchanged(shared, project, task);
         }

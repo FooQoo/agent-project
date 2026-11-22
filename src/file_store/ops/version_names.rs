@@ -1,8 +1,9 @@
 //! Checking version names against a project's list.
 
-use crate::domain::{MAX_VERSIONS, ProjectId, validate_version_name};
+use crate::domain::{ProjectId, validate_version_name};
 use crate::error::AgboardError;
-use crate::file_store::reader;
+use crate::file_store::releases::{effective_current, listed_versions};
+use crate::file_store::{layout, reader};
 
 use super::version::VersionChoice;
 
@@ -13,22 +14,23 @@ fn invalid(message: impl Into<String>) -> AgboardError {
     }
 }
 
-/// The concrete version a choice stands for, checked against the project's list.
+/// The concrete version a choice stands for, checked against the project's list. A current
+/// version whose file is missing counts as no current version.
 pub(super) fn resolve(
     shared: &std::path::Path,
     project: &ProjectId,
     choice: &VersionChoice,
 ) -> Result<Option<String>, AgboardError> {
     let file = reader::read_project_file(shared, project)?;
+    let listed = listed_versions(&layout::project_dir(shared, project));
     match choice {
         VersionChoice::Unset => Ok(None),
-        VersionChoice::Current => file
-            .current_version
+        VersionChoice::Current => effective_current(&listed, file.current_version.as_deref())
             .map(Some)
             .ok_or(AgboardError::NoCurrentVersion),
         VersionChoice::Named(name) => {
             let name = validate_version_name(name)?;
-            if file.versions.contains(&name) {
+            if listed.contains(&name) {
                 Ok(Some(name))
             } else {
                 Err(invalid(format!(
@@ -37,15 +39,4 @@ pub(super) fn resolve(
             }
         }
     }
-}
-
-pub(super) fn add_listed(versions: &mut Vec<String>, name: &str) -> Result<bool, AgboardError> {
-    if versions.iter().any(|v| v == name) {
-        return Ok(false);
-    }
-    if versions.len() >= MAX_VERSIONS {
-        return Err(invalid("A project lists at most 200 versions."));
-    }
-    versions.push(name.to_owned());
-    Ok(true)
 }

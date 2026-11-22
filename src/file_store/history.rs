@@ -21,10 +21,13 @@ pub struct ParsedTask {
     pub acceptance: Vec<AcceptanceItem>,
     /// The question IDs the task refers to (`questions`).
     pub questions: Vec<String>,
+    /// The `plannedVersion` as written; `None` when absent or unreadable.
+    pub planned_version: Option<String>,
     pub history: Vec<HistoryRecord>,
     pub frontmatter_defects: Vec<Defect>,
     pub acceptance_defects: Vec<Defect>,
     pub questions_defects: Vec<Defect>,
+    pub planned_version_defects: Vec<Defect>,
     pub history_defects: Vec<Defect>,
 }
 
@@ -35,6 +38,7 @@ impl ParsedTask {
             .iter()
             .chain(&self.acceptance_defects)
             .chain(&self.questions_defects)
+            .chain(&self.planned_version_defects)
             .chain(&self.history_defects)
             .cloned()
             .collect()
@@ -56,15 +60,21 @@ pub fn parse_task(text: &str, mode: ParseMode) -> ParsedTask {
         body: acceptance.body,
         acceptance: acceptance.acceptance,
         questions: Vec::new(),
+        planned_version: None,
         history: Vec::new(),
         frontmatter_defects: Vec::new(),
         acceptance_defects: Vec::new(),
         questions_defects: Vec::new(),
+        planned_version_defects: Vec::new(),
         history_defects: Vec::new(),
     };
     match frontmatter::questions_of(text) {
         Ok(ids) => parsed.questions = ids,
         Err(d) => parsed.questions_defects.push(d),
+    }
+    match frontmatter::planned_version_of(text) {
+        Ok(name) => parsed.planned_version = name,
+        Err(d) => parsed.planned_version_defects.push(d),
     }
     for d in acceptance.defects {
         if d.field == "frontmatter" {
