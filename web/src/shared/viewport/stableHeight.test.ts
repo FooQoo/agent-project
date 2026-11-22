@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { nextStableHeight, watchStableHeight } from './stableHeight';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { nextStableHeight, revealFocusedField, watchStableHeight } from './stableHeight';
 
 describe('nextStableHeight', () => {
   it('keeps the height while typing shrinks the viewport', () => {
@@ -36,5 +36,37 @@ describe('watchStableHeight', () => {
     field.blur();
     expect(root.hasAttribute('data-keyboard')).toBe(false);
     stop();
+  });
+});
+
+describe('revealFocusedField', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    vi.restoreAllMocks();
+  });
+
+  it.each(['dialog-content', 'drawer-popup'])(
+    'scrolls the focused field of a %s into sight',
+    async (slot) => {
+      const surface = document.body.appendChild(document.createElement('div'));
+      surface.dataset.slot = slot;
+      const field = surface.appendChild(document.createElement('textarea'));
+      const scroll = vi.fn();
+      field.scrollIntoView = scroll;
+      field.focus();
+      revealFocusedField(window);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      expect(scroll).toHaveBeenCalledWith({ block: 'nearest' });
+    },
+  );
+
+  it('leaves a field outside a dialog or a sheet alone', async () => {
+    const field = document.body.appendChild(document.createElement('textarea'));
+    const scroll = vi.fn();
+    field.scrollIntoView = scroll;
+    field.focus();
+    revealFocusedField(window);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(scroll).not.toHaveBeenCalled();
   });
 });
