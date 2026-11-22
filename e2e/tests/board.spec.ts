@@ -32,13 +32,13 @@ test('three lanes show their names and task counts', async ({ page }) => {
 
 test('a task shows its ID, title, and update time', async ({ page }) => {
   await expect(
-    lane(page, 'Todo').getByRole('button', { name: '#14 User Prepare the Windows build Updated 10/02 10:08' }),
+    lane(page, 'Todo').getByRole('button', { name: '#14 User Prepare the Windows build 10/02 10:08' }),
   ).toBeVisible();
   await expect(
-    lane(page, 'Todo').getByRole('button', { name: '#15 AI Write the setup guide Updated 10/02 09:25' }),
+    lane(page, 'Todo').getByRole('button', { name: '#15 AI Write the setup guide 10/02 09:25' }),
   ).toBeVisible();
   await expect(
-    lane(page, 'Done').getByRole('button', { name: '#8 AI Initialize the board Updated 10/02 09:48' }),
+    lane(page, 'Done').getByRole('button', { name: '#8 AI Initialize the board 10/02 09:48' }),
   ).toBeVisible();
   const task = lane(page, 'Todo').getByRole('button').first();
   const idBounds = await task.locator('.card__id').boundingBox();
@@ -60,10 +60,10 @@ test('Doing tasks show Idle, Running, or Pending, and a pending task shows its r
 }) => {
   const doing = lane(page, 'Doing');
   await expect(
-    doing.getByRole('button', { name: '#11 AI Running Implement task moves Updated 10/02 10:42' }),
+    doing.getByRole('button', { name: '#11 AI Running Implement task moves 10/02 10:42' }),
   ).toBeVisible();
   await expect(
-    doing.getByRole('button', { name: '#13 AI Idle Check the board display Updated 10/02 10:12' }),
+    doing.getByRole('button', { name: '#13 AI Idle Check the board display 10/02 10:12' }),
   ).toBeVisible();
   const pending = doing.getByRole('button', { name: /^#12 AI Pending Restore a board from JSON / });
   await expect(pending).toBeVisible();

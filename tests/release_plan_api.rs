@@ -287,7 +287,7 @@ fn a_stale_expectation_is_a_conflict_that_names_the_current_version() {
 }
 
 #[test]
-fn an_archived_task_cannot_be_planned() {
+fn an_archived_task_can_be_planned() {
     let board = Board::new();
     board.call("POST", "/versions", json!({"name": "v1"}));
     let moved = board.call("POST", "/tasks/4/move", json!({"taskStatus": "done"}));
@@ -299,8 +299,8 @@ fn an_archived_task_cannot_be_planned() {
         "/tasks/4/planned-version",
         json!({"choice": "named", "version": "v1"}),
     );
-    assert_eq!(reply.status, 409, "{}", reply.body);
-    assert_eq!(reply.code(), "task_archived");
+    assert_eq!(reply.status, 200, "{}", reply.body);
+    assert_eq!(reply.json()["task"]["plannedVersion"], "v1");
 }
 
 #[test]

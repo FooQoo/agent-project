@@ -509,7 +509,8 @@ fn a_failed_version_change_in_edit_leaves_the_other_changes_unsaved() {
         "Old title"
     );
 
-    // A Done task refuses an agent's version change: the title is not changed either.
+    // A Done task refuses an agent's title change, so a version change in the same edit is
+    // not saved either.
     run(home.path(), &["version", "add", "v1.8.0"]);
     plain(
         home.path(),
@@ -531,8 +532,46 @@ fn a_failed_version_change_in_edit_leaves_the_other_changes_unsaved() {
         ],
     );
     assert_eq!((code, name.as_str()), (1, "task_is_done"));
-    assert_eq!(
-        run(home.path(), &["show", &id])["task"]["title"],
-        "Old title"
+    let shown = run(home.path(), &["show", &id]);
+    assert_eq!(shown["task"]["title"], "Old title");
+    assert_eq!(shown["task"]["plannedVersion"], Value::Null);
+}
+
+#[test]
+fn a_done_task_takes_a_planned_version_from_an_agent_and_nothing_else() {
+    let home = tempfile::tempdir().unwrap();
+    demo(home.path());
+    let id = add(home.path(), "Shipped", &[]).to_string();
+    run(home.path(), &["version", "add", "v1.8.0"]);
+    run(home.path(), &["version", "add", "v2.0.0"]);
+    plain(
+        home.path(),
+        &["mv", &id, "doing", "--actor", "ai", "--reason", "Go."],
     );
+    plain(
+        home.path(),
+        &["mv", &id, "done", "--actor", "ai", "--reason", "Done."],
+    );
+
+    let set = run(home.path(), &["edit", &id, "--planned-version", "v1.8.0"]);
+    assert_eq!(set["task"]["plannedVersion"], "v1.8.0");
+    assert_eq!(set["task"]["taskStatus"], "done");
+    let moved = run(home.path(), &["edit", &id, "--planned-version", "v2.0.0"]);
+    assert_eq!(moved["task"]["plannedVersion"], "v2.0.0");
+    let cleared = run(home.path(), &["edit", &id, "--unplanned"]);
+    assert_eq!(cleared["task"]["plannedVersion"], Value::Null);
+    let history = cleared["task"]["history"].as_array().unwrap();
+    assert!(
+        history[history.len() - 3..]
+            .iter()
+            .all(|entry| entry["reason"]
+                .as_str()
+                .unwrap()
+                .starts_with("Changed planned version")),
+        "{history:?}"
+    );
+
+    // Every other edit of a Done task stays refused.
+    let (code, name) = fail(home.path(), &["edit", &id, "--title", "Other"]);
+    assert_eq!((code, name.as_str()), (1, "task_is_done"));
 }
