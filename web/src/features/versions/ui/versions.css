@@ -69,10 +69,11 @@
 
 /* ---- Card version tag ---- */
 
+/* The tag sits in the date row: at the left of the card footer, and of the phone card's meta row. */
 .card__plan,
 .monitor-card__plan {
   display: flex;
-  margin-top: 6px;
+  flex: none;
 }
 
 .card__plan:empty,

@@ -49,7 +49,7 @@ async function notReloaded(page: Page): Promise<void> {
 
 test('agboard add shows a new task without reloading', async ({ page }) => {
   agboardOk(mainProject, ['add', 'Added while open', `--desc=From the CLI`]);
-  await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh} AI Added while open Updated \\d\\d\\/\\d\\d \\d\\d:\\d\\d$`) })).toBeVisible();
+  await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh} AI Added while open \\d\\d\\/\\d\\d \\d\\d:\\d\\d$`) })).toBeVisible();
   await expect(page.getByRole('contentinfo')).toContainText('9 tasks');
   await expect(lane(page, 'Todo').getByText('4', { exact: true })).toBeVisible();
   // New Todo cards go to the end.
@@ -162,7 +162,7 @@ test('agboard state and the question it waits on update the run state without re
   await expect(doing.getByRole('button', { name: /^#13 AI Running Check the board display / })).toBeVisible();
 
   const asked = JSON.parse(agboardOk(mainProject, ['--json', ...askArgs('13', decisionJson('Waiting for a review'))]).stdout.split('\n')[0]);
-  const pending = doing.getByRole('button', { name: /^#13 AI Pending Check the board display / });
+  const pending = doing.getByRole('button', { name: /^#13 AI Awaiting answer Check the board display / });
   await expect(pending).toBeVisible();
   // The card offers the button only; the question is read in the dialog.
   await expect(doing.getByText('Waiting for a review')).toHaveCount(0);
@@ -171,7 +171,7 @@ test('agboard state and the question it waits on update the run state without re
 
   // Pending comes from the open question, so the wait ends when the question is withdrawn.
   agboardOk(mainProject, ['message', 'withdraw', asked.questions[0].id, '--actor', 'ai']);
-  await expect(doing.getByRole('button', { name: /^#13 AI Idle Check the board display / })).toBeVisible();
+  await expect(doing.getByRole('button', { name: /^#13 AI Paused Check the board display / })).toBeVisible();
   await expect(doing.getByText('Waiting for a review')).toHaveCount(0);
   await notReloaded(page);
 });
@@ -188,10 +188,10 @@ test('an open task follows its move to another lane while its details stay open'
   await expect(task(page, 11)).toHaveAttribute('aria-current', 'true');
   await expect(panel.getByRole('heading', { level: 2 })).toHaveText('Implement task moves');
   await expect(panel).toContainText('Done');
-  // It left Doing, so the current status row no longer shows its fixed Idle state.
-  await expect(panel.locator('.detail__meta .status-label--agent')).toHaveCount(0);
+  // A task that has run shows Has run in Done.
+  await expect(panel.locator('.detail__meta .status-label--agent')).toHaveText('Has run');
   await panel.getByRole('tab', { name: /^History/ }).click();
-  await expect(panel.getByRole('listitem').first()).toContainText('Moved task from Doing to Done; agent is idle.');
+  await expect(panel.getByRole('listitem').first()).toContainText('Moved task from Doing to Done; agent is ran.');
   await notReloaded(page);
 });
 

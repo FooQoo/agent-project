@@ -96,3 +96,37 @@ fn a_change_to_the_folder_is_announced_as_a_change_of_the_messages() {
         .join("notify/2026-11-02.ldjson");
     assert!(matches!(classify(shared, &path), Some(Target::Notify(_))));
 }
+
+#[test]
+fn the_list_returns_at_most_ten_newest_first_even_when_files_hold_more() {
+    let home = tempfile::tempdir().unwrap();
+    demo_project(home.path());
+    let server = Running::start(home.path());
+    let projects = server.get("/api/projects").json();
+    let project = projects["projects"][0]["id"].as_str().unwrap().to_string();
+    let dir = notify_dir(home.path(), &project);
+    std::fs::create_dir_all(&dir).unwrap();
+    let lines: Vec<String> = (1..=12)
+        .map(|h| {
+            line(
+                &format!("s-20261102T{h:02}0000Z"),
+                &format!("2026-11-02T{h:02}:00:00Z"),
+                "x",
+            )
+        })
+        .collect();
+    std::fs::write(dir.join("2026-11-02.ldjson"), lines.join("\n") + "\n").unwrap();
+    let base = format!("/api/projects/{project}/summaries");
+    let listed = server.get(&base).json();
+    let ids: Vec<_> = listed["summaries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s["id"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(ids.len(), 10);
+    assert_eq!(ids[0], "s-20261102T120000Z");
+    assert_eq!(ids[9], "s-20261102T030000Z");
+    let all = server.get(&format!("{base}?dismissed=include")).json();
+    assert_eq!(all["summaries"].as_array().unwrap().len(), 12);
+}

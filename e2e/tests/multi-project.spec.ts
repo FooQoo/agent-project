@@ -874,7 +874,7 @@ test.describe('two projects with the same task numbers', () => {
     await expect(page.getByRole('menu', { name: 'Alpha' })).toContainText('プロジェクト');
     await menuItem(page, 'Beta').click();
     await expect(switcher(page)).toHaveText('Beta');
-    await expect(lane(page, '進行中').getByRole('button', { name: /^#2 AI 待機中 Beta: pick the database / })).toBeVisible();
+    await expect(lane(page, '進行中').getByRole('button', { name: /^#2 AI 回答待 Beta: pick the database / })).toBeVisible();
     // The answer, in Japanese and typed in place, for Beta's own request.
     await task(page, 2).click();
     const japanesePanel = page.getByRole('complementary', { name: 'タスクの詳細' });

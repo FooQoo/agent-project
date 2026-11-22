@@ -11,7 +11,7 @@ mod render;
 use chrono::{DateTime, Utc};
 
 use super::model::{HistoryRecord, TaskView};
-use crate::domain::TaskResult;
+use crate::domain::{Column, TaskResult};
 
 /// The line that opens the generated block. Text outside the block is never touched.
 pub const START_MARKER: &str = "<!-- agboard:generated:start -->";
@@ -68,6 +68,12 @@ pub fn is_verified(task: &TaskView) -> bool {
     !task.acceptance_error && !task.acceptance.is_empty() && task.acceptance.iter().all(|a| a.done)
 }
 
+/// A task is done without acceptance conditions when it is in Done and has no condition at
+/// all, so nothing can say it was verified.
+pub fn is_done_unchecked(task: &TaskView) -> bool {
+    !task.acceptance_error && task.task_status == Column::Done && task.acceptance.is_empty()
+}
+
 /// What a task's results say about its publication in one version.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Publication<'a> {
@@ -109,6 +115,8 @@ pub struct Groups<'a> {
     /// Every task planned for the version now, archived ones included.
     pub planned: Vec<&'a TaskView>,
     pub verified: Vec<&'a TaskView>,
+    /// Planned tasks in Done that have no acceptance conditions.
+    pub done_unchecked: Vec<&'a TaskView>,
     pub remaining: Vec<&'a TaskView>,
     /// Planned tasks with a linked publication record for the version.
     pub published: Vec<&'a TaskView>,
@@ -126,6 +134,8 @@ pub fn group<'a>(tasks: &'a [TaskView], version: &str) -> Groups<'a> {
             groups.planned.push(task);
             if is_verified(task) {
                 groups.verified.push(task);
+            } else if is_done_unchecked(task) {
+                groups.done_unchecked.push(task);
             } else {
                 groups.remaining.push(task);
             }
@@ -150,6 +160,7 @@ pub fn group<'a>(tasks: &'a [TaskView], version: &str) -> Groups<'a> {
     let by_id = |a: &&TaskView, b: &&TaskView| a.id.cmp(&b.id);
     groups.planned.sort_by(by_id);
     groups.verified.sort_by(by_id);
+    groups.done_unchecked.sort_by(by_id);
     groups.remaining.sort_by(by_id);
     groups.published.sort_by(by_id);
     groups.moved.sort_by_key(|item| item.task.id);

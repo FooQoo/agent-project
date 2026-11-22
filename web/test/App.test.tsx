@@ -92,7 +92,7 @@ describe('App', () => {
     await screen.findByRole('region', { name: 'Todo' });
     const titles = (name: string) =>
       within(lane(name))
-        .getAllByRole('button', { name: /Updated/ })
+        .getAllByRole('button', { name: /#\d+/ })
         .map((b) => b.querySelector('.card__id')?.textContent);
     expect(titles('Todo')).toEqual(['#14', '#15', '#16']);
     expect(titles('Doing')).toEqual(['#11', '#12', '#13']);

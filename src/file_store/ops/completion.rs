@@ -8,7 +8,7 @@ use super::super::qa::QaIndex;
 use super::super::reader;
 use super::HistoryKind;
 use super::{Transition, lane_end, lock_project, save_task, stamp, transition_event};
-use crate::domain::{Column, ProjectId, state_after_move};
+use crate::domain::{Column, ProjectId, RunState};
 use crate::error::AgboardError;
 
 const AUTO_DONE_REASON: &str = "All acceptance conditions are complete.";
@@ -77,7 +77,7 @@ impl FileStore {
 
             let at = stamp(now);
             let position = lane_end(shared, project, Column::Done)?;
-            let next_state = state_after_move(task.agent_status, Column::Done);
+            let next_state = RunState::Ran;
             let event = transition_event(Transition {
                 language: self.history_language(project, &task)?,
                 kind: HistoryKind::Lane,

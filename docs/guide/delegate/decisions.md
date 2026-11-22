@@ -70,7 +70,7 @@ A request you sent with **Ask AI** shows in the **Your requests** tab as **Waiti
 
 The **Summary** tab lists the periodic summaries the board records of the results in the project (see [Notification settings](../watch/remote-access) for the interval). Its count is the number of summaries you have not deleted. Nothing is marked read or unread, and the **Messages** count in the phone's bottom bar still counts questions only.
 
-Each item shows the window it covers in your local time, such as `11/20 09:00–10:00`, and one row for every result recorded in it: the task number, the result's title, and its version such as `Result v2`. Newest windows come first. A window without results has no item.
+Each item shows the window it covers in your local time, such as `11/20 09:00–10:00`, and one row for every result recorded in it: the task number, the result's title, and its version such as `Result v2`. Newest windows come first, and the tab keeps only the latest 10: each time the board records a new summary, older ones beyond 10 are set aside (the board keeps their records on disk). A window without results has no item.
 
 Each result row is a link. Select it to open that task's **Results** tab, scrolled to the result and highlighted, without reloading the page. Closing the task brings the **Summary** tab back at the scroll position you left. Control-click, Command-click, or middle-click opens the link in a new tab instead. The row has a border, a chevron on the right, and a hover and pressed color, and you can reach it with the keyboard and open it with Enter. A summary recorded before the board kept versions shows `Results` instead of a version; its row opens the **Results** tab without highlighting a result.
 

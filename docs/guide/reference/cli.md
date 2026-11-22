@@ -185,8 +185,9 @@ agboard --project "My project" release doc --version v1.9.0
 
 - **Planned**: the cards whose planned version is this version now.
 - **Verified**: planned cards that have acceptance conditions, all of them done.
-- **Remaining**: planned cards that are not verified yet.
-- **Moved to the next version**: cards that left this version. Their history holds a change of planned version away from it, and the section names where each one went.
+- **Done without acceptance conditions**: planned cards in Done that have no acceptance conditions at all. Nothing can verify them, so they are neither verified nor remaining.
+- **Remaining**: the other planned cards that are not verified yet.
+- **Moved to another version**: cards that left this version, whether to a later version, an earlier one, or none. Their history holds a change of planned version away from it, and each line names where the card went.
 
 Each item names its card (`#12`), the number of results and history entries, and each result with its time and link, and points to `agboard show 12` for the original records. The last section, **Publication**, separates published cards from the rest. A planned card counts as published only when one of its results has a line `Published: VERSION` in its summary and a link to what was published; a card whose result has the line but no link, and a card with no such result, are listed as not confirmed, however finished they are. The summary also shows `Published (with a publication record): N / M`. See [Version reports and theme retrospectives](../delegate/release-reports) for how agents use this.
 
@@ -207,7 +208,7 @@ agboard --project "My project" edit 15 --current-version
 agboard --project "My project" edit 15 --unplanned
 ```
 
-`--planned-version VERSION` needs a listed version (`version add`, or a file in `docs/release/`), `--current-version` stores the current version's name as it is now, and `--unplanned` removes the plan. The three exclude each other. When the project has no current version, `--current-version` fails with `no_current_version` (exit code 1) and changes nothing. Each real change is recorded in the card's history; planning a card for the version it already has changes nothing. An agent cannot change a Done card, a person's draft, or an archived card.
+`--planned-version VERSION` needs a listed version (`version add`, or a file in `docs/release/`), `--current-version` stores the current version's name as it is now, and `--unplanned` removes the plan. The three exclude each other. When the project has no current version, `--current-version` fails with `no_current_version` (exit code 1) and changes nothing. Each real change is recorded in the card's history; planning a card for the version it already has changes nothing. The planned version is the one field you can change on a Done or archived card, as an agent or a person; every other edit of a Done card stays refused for an agent, so an edit that combines `--planned-version` with a title or description change on a Done card is refused as a whole. An agent cannot change a person's draft.
 
 Plan every card of an epic at once with `epic plan`:
 

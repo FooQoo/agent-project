@@ -78,14 +78,16 @@ pub fn render_block(tasks: &[TaskView], version: &str, language: HistoryLanguage
         t("Release status of", "リリースの状況:")
     ));
     out.push_str(&format!(
-        "- {}: {}\n- {}: {}\n- {}: {}\n- {}: {}\n\n",
+        "- {}: {}\n- {}: {}\n- {}: {}\n- {}: {}\n- {}: {}\n\n",
         t("Planned", "予定"),
         groups.planned.len(),
         t("Verified", "検証済み"),
         groups.verified.len(),
+        t("Done without acceptance conditions", "受入条件なしで完了"),
+        groups.done_unchecked.len(),
         t("Remaining", "残作業"),
         groups.remaining.len(),
-        t("Moved to the next version", "次版送り"),
+        t("Moved to another version", "別の版へ移した"),
         groups.moved.len()
     ));
     out.truncate(out.len() - 1);
@@ -138,6 +140,19 @@ pub fn render_block(tasks: &[TaskView], version: &str, language: HistoryLanguage
     );
     section(
         &mut out,
+        t("Done without acceptance conditions", "受入条件なしで完了"),
+        groups
+            .done_unchecked
+            .iter()
+            .map(|task| item_line(task, language, true))
+            .collect(),
+        t(
+            "No done task lacks acceptance conditions.",
+            "受入条件なしで完了したタスクはありません。",
+        ),
+    );
+    section(
+        &mut out,
         t("Remaining", "残作業"),
         groups
             .remaining
@@ -148,7 +163,7 @@ pub fn render_block(tasks: &[TaskView], version: &str, language: HistoryLanguage
     );
     section(
         &mut out,
-        t("Moved to the next version", "次版送り"),
+        t("Moved to another version", "別の版へ移した"),
         groups
             .moved
             .iter()
