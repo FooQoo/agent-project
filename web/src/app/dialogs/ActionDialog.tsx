@@ -9,6 +9,9 @@ import { TaskProgressRow } from '../../features/tasks/card/TaskProgressRow';
 import { epicInk } from '../../features/epics/model/epic';
 import type { ProgressTaskRenderer } from '../../features/epics/editor/EpicProgressList';
 import type { EpicRef } from '../../shared/api/contracts';
+import type { RenderPlanField } from '../../shared/ui/editor/planField';
+import { EpicPlan } from '../../features/versions/ui/EpicPlan';
+import { TaskPlanField } from '../../features/versions/ui/TaskPlanField';
 
 export type { DialogAction };
 
@@ -45,6 +48,7 @@ export function ActionDialog({
   loadEpic,
   isTaskListed,
   onChanged,
+  plan = false,
 }: {
   action: DialogAction;
   /** The dialog is done: saved, or cancelled. */
@@ -69,7 +73,19 @@ export function ActionDialog({
   loadEpic?: (projectId: ProjectId, epic: Epic) => Promise<Epic | null>;
   /** The task preview entered or left a draft. */
   onChanged?: () => void;
+  /** Shows the planned-version fields of the task and epic editors (the PC board). */
+  plan?: boolean;
 }) {
+  const taskPlan: RenderPlanField | undefined =
+    plan && projectId !== undefined && action.kind === 'edit' && !action.archived
+      ? (args) => (
+          <TaskPlanField projectId={projectId as ProjectId} taskId={action.task.id} {...args} />
+        )
+      : undefined;
+  const epicPlan: RenderPlanField | undefined =
+    plan && projectId !== undefined && action.kind === 'epic'
+      ? (args) => <EpicPlan projectId={projectId as ProjectId} epicId={action.epic.id} {...args} />
+      : undefined;
   switch (action.kind) {
     case 'request':
       return (
@@ -93,6 +109,7 @@ export function ActionDialog({
             onSubmit={onSubmit}
             projectId={projectId}
             renderEpicChip={renderEpicChip}
+            renderPlan={taskPlan}
           />
         );
       return (
@@ -108,6 +125,7 @@ export function ActionDialog({
           loadTask={loadTask}
           isTaskListed={isTaskListed}
           onChanged={onChanged ?? noop}
+          renderPlan={taskPlan}
         />
       );
     case 'epic':
@@ -123,6 +141,7 @@ export function ActionDialog({
           onSavingChange={onSavingChange}
           renderTask={renderEpicTask}
           subscribe={subscribeChanges}
+          renderPlan={epicPlan}
           load={
             loadEpic && projectId !== undefined
               ? () => loadEpic(projectId as ProjectId, action.epic)

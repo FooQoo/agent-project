@@ -5,6 +5,7 @@ import type { MessagesApi } from '../features/tasks/messages/model/messages';
 import { Header } from '../shared/ui/app-header/Header';
 import { ProjectSwitcher } from '../features/projects/switcher/ProjectSwitcher';
 import { boardSettingsSlot } from './boardSettingsSlot';
+import { useBoardVersions } from './useBoardVersions';
 import { residentFooterSlot } from './residentSlot';
 import { Board } from '../pages/board/ui/Board';
 import { ArchiveList } from '../pages/archive/ui/ArchiveList';
@@ -91,6 +92,7 @@ export function BoardWorkspace({
     restoreFailure,
   } = model;
   const operation = session.operation;
+  const planned = useBoardVersions(model);
   const projectSwitcher = (
     <ProjectSwitcher
       projects={projects.projects ?? []}
@@ -109,6 +111,7 @@ export function BoardWorkspace({
         activeProjectId={known ? activeId : null}
         switchDisabled={operation !== null}
         projectSwitcher={projectSwitcher}
+        versionSlot={planned.versionSlot}
         settings={boardSettingsSlot}
         canAdd={session.viewMode === 'board' && model.view === 'board'}
         viewMode={session.viewMode}
@@ -153,6 +156,7 @@ export function BoardWorkspace({
             layoutRef={attachLayoutRef}
             projectId={activeId as ProjectId}
             onAnswer={model.messages.openForTask}
+            renderVersion={planned.renderVersion}
             band={boardBand(model, messagesApi)}
             onOpenEpic={actions.onOpenEpic}
             onMove={actions.onMove}

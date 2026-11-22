@@ -29,6 +29,7 @@ flowchart LR
 
 - カードの作成、編集、レーン間の移動、レーン内の並べ替え
 - 質問への回答
+- 版の一覧への追加、カレント版の設定、タスクの予定、エピックの予定（`dryRun`あり・なし）（`versions.ts`。ルートは`versions`、`versions/current`、`tasks/{id}/planned-version`、`epics/{id}/planned-version`）
 - 完了条件のチェックと、そのあとの自動Done。すべての条件を満たしたAIのタスクを、サーバーの監視と同じようにDoneに移します（`completion.ts`）
 
 変更はそれぞれSSEの`changed`イベントと同じ形で購読者に届くので、画面は本物のサーバーを相手にしたときと同じように更新されます。

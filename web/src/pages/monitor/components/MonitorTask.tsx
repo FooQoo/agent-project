@@ -5,6 +5,7 @@ import { StatusLabel } from '../../../features/tasks/status/StatusLabel';
 import { AcceptanceProgress } from '../../../features/tasks/acceptance/AcceptanceProgress';
 import { DecisionAnswerButton } from '../../../features/tasks/answer/DecisionAnswerButton';
 import { EpicLabel } from '../../../features/epics/label/EpicLabel';
+import { PlanTag } from '../../../features/versions/ui/PlanContext';
 import type { MonitorTask as MonitorTaskModel, MonitorViewProps } from '../contracts';
 import type { MonitorSection } from './MonitorSectionHeader';
 import { completedAt } from '../model/sort';
@@ -76,6 +77,9 @@ export function MonitorTask({
           />
         )}
       </TaskCardContent>
+      <span className="monitor-card__plan">
+        <PlanTag planned={task.plannedVersion ?? null} />
+      </span>
       <span className="monitor-card__meta">
         <span className="monitor-card__time">
           {when

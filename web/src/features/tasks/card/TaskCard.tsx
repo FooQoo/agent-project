@@ -21,6 +21,8 @@ export interface TaskCardProps {
   index?: number;
   /** Draws the card's EPIC-ID label. The page that composes the board supplies it; without it no label shows. */
   renderEpic?: (epic: EpicRef) => ReactNode;
+  /** Draws the card's planned-version tag, in a slot of its own below the title. The board supplies it. */
+  renderVersion?: (task: TaskModel) => ReactNode;
   projectId?: ProjectId;
   /** Opens the answer dialog at the card's first question; the dialog lives above the board. */
   onAnswer?: (taskId: number) => void;
@@ -43,6 +45,7 @@ export interface TaskCardViewProps {
   onSelect: (id: number) => void;
   cardRef?: RefCallback<HTMLDivElement>;
   renderEpic?: (epic: EpicRef) => ReactNode;
+  renderVersion?: (task: TaskModel) => ReactNode;
   showPendingReason?: boolean;
   selection?: CardSelection;
   children?: ReactNode;
@@ -112,6 +115,7 @@ export function TaskCardView({
   onSelect,
   cardRef,
   renderEpic,
+  renderVersion,
   showPendingReason = task.agentStatus === 'pending',
   selection,
   children,
@@ -174,6 +178,11 @@ export function TaskCardView({
         <TaskCardContent task={task} showPendingReason={pending && showPendingReason}>
           {task.epic && renderEpic?.(task.epic)}
         </TaskCardContent>
+        {renderVersion && (
+          <span className="card__plan" data-slot="plan">
+            {renderVersion(task)}
+          </span>
+        )}
         <span className="card__foot">
           <span className="card__updated">
             {t('card.updated', { date: formatShort(task.updatedAt) })}
@@ -197,6 +206,7 @@ export function TaskCard({
   index = 0,
   onSelect,
   renderEpic,
+  renderVersion,
   projectId,
   onAnswer,
   selection,
@@ -220,6 +230,7 @@ export function TaskCard({
       onSelect={onSelect}
       cardRef={ref}
       renderEpic={renderEpic}
+      renderVersion={renderVersion}
       showPendingReason
       selection={selection}
     >

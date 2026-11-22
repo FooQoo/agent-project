@@ -38,6 +38,7 @@ export function boardEnvironment(): MonitorEnvironment {
     // As on the PC board, the settings can show the guide again.
     settings: phoneSettingsSlot(preferences),
     messagesApi,
+    planning: true,
     writes: { move: moveTask, archive: archiveTask, archiveDone, restore: restoreTask },
   };
 }

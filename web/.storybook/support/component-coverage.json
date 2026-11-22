@@ -8,6 +8,18 @@
       {
         "file": "app/development/MarkdownSample.tsx",
         "reason": "Development-only sample, not a product UI component; the same Markdown renderer is covered by shared/markdown Stories."
+      },
+      {
+        "file": "features/versions/ui/HeaderCurrentVersion.tsx",
+        "reason": "Wires the header menu to the project Summary and the version write routes; the menu is covered by the Versions/CurrentVersionMenu Stories and the whole path by the E2E suite."
+      },
+      {
+        "file": "features/versions/ui/TaskPlanField.tsx",
+        "reason": "Wires the task editor's picker to the project Summary and the version write routes; the picker is covered by the Versions/Fields Stories and the whole path by the E2E suite."
+      },
+      {
+        "file": "features/versions/ui/EpicPlan.tsx",
+        "reason": "Wires the epic editor's field to the project Summary and the dry-run route; the field is covered by the Versions/Fields Stories and the whole path by the E2E suite."
       }
     ],
     "coverageFilePattern": "^story-coverage(?:\\.[a-z0-9-]+)?\\.json$",

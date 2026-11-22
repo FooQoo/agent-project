@@ -25,6 +25,11 @@ export interface PreviewLock {
   release: () => Promise<void>;
   /** Enters again after `running` or `failed`; nothing otherwise. */
   retry: () => void;
+  /**
+   * Forgets the draft after the save finalized it: the next input enters a draft again and is
+   * compared with the content the dialog then showed. Nothing is sent.
+   */
+  finalized: () => void;
 }
 
 /**
@@ -98,7 +103,13 @@ export function usePreviewLock({
     setEntered(false);
   }, []);
 
+  const finalized = useCallback(() => {
+    enteredRef.current = false;
+    setEntered(false);
+    setProblem(null);
+  }, []);
+
   const locked = draftAtOpen || entered;
   const canSave = dirty && !readOnly && problem === null && locked;
-  return { entered, problem, canSave, release, retry };
+  return { entered, problem, canSave, release, retry, finalized };
 }

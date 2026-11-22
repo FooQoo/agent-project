@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "owner": "U10",
+  "files": [
+    {
+      "file": "features/versions/ui/VersionTag.tsx",
+      "exports": [
+        {
+          "name": "VersionTag",
+          "stories": [
+            {
+              "id": "versions-parts--version-tag-states",
+              "states": ["planned", "current mark", "unplanned dashed"],
+              "interaction": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "features/versions/ui/PlanContext.tsx",
+      "exports": [
+        {
+          "name": "PlanContext",
+          "stories": [
+            {
+              "id": "versions-parts--plan-tag-in-context",
+              "states": ["provided versions", "without provider"],
+              "interaction": true
+            }
+          ]
+        },
+        {
+          "name": "PlanTag",
+          "stories": [
+            {
+              "id": "versions-parts--plan-tag-in-context",
+              "states": ["tag drawn with provider", "nothing without provider"],
+              "interaction": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "features/versions/ui/CurrentVersionMenu.tsx",
+      "exports": [
+        {
+          "name": "CurrentVersionMenu",
+          "stories": [
+            {
+              "id": "versions-currentversionmenu--current-set",
+              "states": ["closed", "current version shown"],
+              "interaction": true
+            },
+            {
+              "id": "versions-currentversionmenu--none-set",
+              "states": ["closed", "not set"],
+              "interaction": true
+            },
+            {
+              "id": "versions-currentversionmenu--open",
+              "states": [
+                "open",
+                "typed-version row",
+                "confirm disabled while empty",
+                "current mark"
+              ],
+              "interaction": true
+            },
+            {
+              "id": "versions-currentversionmenu--selecting-a-version",
+              "states": ["select a version"],
+              "interaction": true
+            },
+            {
+              "id": "versions-currentversionmenu--typing-a-new-version",
+              "states": ["type a new version", "confirm"],
+              "interaction": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "features/versions/ui/PlannedVersionPicker.tsx",
+      "exports": [
+        {
+          "name": "PlannedVersionPicker",
+          "stories": [
+            {
+              "id": "versions-fields--picker-current-enabled",
+              "states": ["current enabled", "unplanned selected"],
+              "interaction": true
+            },
+            {
+              "id": "versions-fields--picker-current-disabled",
+              "states": ["current disabled", "hint"],
+              "interaction": true
+            },
+            {
+              "id": "versions-fields--picker-conflict",
+              "states": ["conflict message", "newer value", "refetch"],
+              "interaction": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "features/versions/ui/EpicPlanField.tsx",
+      "exports": [
+        {
+          "name": "EpicPlanField",
+          "stories": [
+            {
+              "id": "versions-fields--epic-default-no-change",
+              "states": ["no change default", "options"],
+              "interaction": true
+            },
+            {
+              "id": "versions-fields--epic-dropdown-open",
+              "states": ["dropdown open"],
+              "interaction": true
+            },
+            {
+              "id": "versions-fields--epic-picking-a-version",
+              "states": ["version picked"],
+              "interaction": true
+            },
+            {
+              "id": "versions-fields--epic-current-unavailable",
+              "states": ["current disabled"],
+              "interaction": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "features/versions/ui/Options.tsx",
+      "exports": [
+        {
+          "name": "OptionRow",
+          "stories": [
+            {
+              "id": "versions-fields--picker-current-enabled",
+              "states": ["checked row", "row"],
+              "interaction": true
+            },
+            {
+              "id": "versions-fields--picker-current-disabled",
+              "states": ["disabled row"],
+              "interaction": true
+            }
+          ]
+        },
+        {
+          "name": "OptionText",
+          "stories": [
+            {
+              "id": "versions-fields--picker-current-enabled",
+              "states": ["label", "hint"],
+              "interaction": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

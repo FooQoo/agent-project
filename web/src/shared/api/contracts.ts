@@ -79,6 +79,10 @@ export interface Project {
   id: ProjectId;
   name: string;
   createdAt: string;
+  /** The versions the project lists. Only the sample-data server sets it; the real server sends them in the Summary. */
+  versions?: string[];
+  /** The version new work is planned for. Only the sample-data server sets it. */
+  currentVersion?: string | null;
 }
 
 /** A format defect in a shared file. `file` is relative to the shared folder. */

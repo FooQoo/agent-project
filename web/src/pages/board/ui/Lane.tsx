@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { type ReactNode, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { columnLabel } from '../../../features/tasks/model/format';
 import { useScrollCue } from '../../../shared/lib/scroll/useScrollCue';
@@ -22,6 +22,8 @@ export interface LaneProps {
   onOpenEpic?: (epicId: string) => void;
   projectId?: ProjectId;
   onAnswer?: (taskId: number) => void;
+  /** Draws the planned-version tag of a card, in the card's own slot. */
+  renderVersion?: (task: TaskModel) => ReactNode;
   /**
    * The selection mode of the lane and what it does with the picked cards: the Backlog sends them, the
    * Done lane archives them.
@@ -45,6 +47,7 @@ export function Lane({
   onOpenEpic,
   projectId,
   onAnswer,
+  renderVersion,
   picker,
 }: LaneProps) {
   const { t } = useTranslation();
@@ -114,6 +117,7 @@ export function Lane({
                   : undefined
               }
               renderEpic={renderEpic}
+              renderVersion={renderVersion}
               projectId={projectId}
               onAnswer={onAnswer}
             />
