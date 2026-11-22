@@ -72,9 +72,9 @@ flowchart LR
 
 ## Agent Boardをお使いだった方へ
 
-Agent Projectは、Agent Boardの新しい名前です。コマンドは`agpj`、データの置き場所は`~/.agent-project`、環境変数は`AGPJ_`で始まります。インストールは`brew install fooqoo/tap/agpj`です。既存の`~/.agent-board`フォルダを`~/.agent-project`へ移すと、これまでのプロジェクトをそのまま使えます。
+Agent Projectは、Agent Boardの新しい名前です。コマンドは`agpj`、データの置き場所は`~/.agent-project`、環境変数は`AGPJ_`で始まります。インストールは`brew install fooqoo/tap/agpj`です。既存の`~/.agent-board`フォルダを`~/.agent-project`へ移すと、これまでのプロジェクトをそのまま使えます。そのあと`agpj setup`で新しいプラグインを入れ、各エージェントから古い`agent-board`プラグインを外してください。
 
-これまでのAgent Board（v1.1.1、`agboard`コマンド）は、そのままの形で[FooQoo/agent-board](https://github.com/FooQoo/agent-board)に残してあり、専用のサイト[fooqoo.github.io/agent-board](https://fooqoo.github.io/agent-board/)もあります。`brew install fooqoo/tap/agboard`は引き続きこの版をインストールします。開発はこのAgent Projectで続けます。
+最後のAgent Board（v1.7.0、`agboard`コマンド）は、そのままの形で[FooQoo/agent-board](https://github.com/FooQoo/agent-board)に残してあり、専用のサイト[fooqoo.github.io/agent-board](https://fooqoo.github.io/agent-board/)もあります。`brew install fooqoo/tap/agboard`は引き続きこの版をインストールします。開発はこのAgent Projectで続けます。
 
 ## インストール
 
