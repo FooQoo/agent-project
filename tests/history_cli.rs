@@ -114,7 +114,7 @@ fn real_cli_appends_verbatim_notes_or_defaults_and_preserves_lane_timing() {
     );
     assert_eq!(
         last_reason(&moved["task"]),
-        "Moved task from Doing to Todo; agent is ran."
+        "Moved task from Doing to Todo; agent has run."
     );
 }
 
@@ -249,6 +249,6 @@ fn real_server_generates_optional_operation_reasons_but_rejects_blank_questions(
     assert_eq!(moved.status, 200, "{}", moved.body);
     assert_eq!(
         last_reason(&moved.json()["task"]),
-        "Moved task from Doing to Todo; agent is ran."
+        "Moved task from Doing to Todo; agent has run."
     );
 }

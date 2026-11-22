@@ -61,14 +61,14 @@ impl FileStore {
         }
         let language = self.history_language(project, &task)?;
         let fallback = format!(
-            "Progress note in {}; agent is {}.",
+            "Progress note in {}; {}.",
             task.task_status.label(),
-            task.agent_status.as_str()
+            super::history_event::agent_clause(task.agent_status)
         );
         let japanese = format!(
             "{}での進捗を記録しました。エージェントは{}です。",
             task.task_status.label(),
-            task.agent_status.as_str()
+            super::history_event::agent_word_ja(task.agent_status)
         );
         let reason =
             super::reason_or_default(reason, language.text(&fallback, &japanese).to_owned())?;
