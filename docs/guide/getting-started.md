@@ -29,9 +29,9 @@ Agent Project is released under the MIT License. The license and the notices for
 
 ## If you used Agent Board
 
-Agent Project is the new name of Agent Board. Install it with `brew install fooqoo/tap/agpj`; it does not replace the old command. To keep your existing projects, move the data folder once with `mv ~/.agent-board ~/.agent-project`, and read the variables and commands in these pages with `AGPJ_` and `agpj` in place of `AGBOARD_` and `agboard`.
+Agent Project is the new name of Agent Board. Install it with `brew install fooqoo/tap/agpj`; it does not replace the old command. To keep your existing projects, move the data folder once with `mv ~/.agent-board ~/.agent-project`. Run `agpj setup` to install the new agent plugin, and remove the old `agent-board` plugin from your agents. Read the variables and commands in these pages with `AGPJ_` and `agpj` in place of `AGBOARD_` and `agboard`.
 
-The last Agent Board, v1.1.1, stays available at [FooQoo/agent-board](https://github.com/FooQoo/agent-board) with its own site at [fooqoo.github.io/agent-board](https://fooqoo.github.io/agent-board/), and `brew install fooqoo/tap/agboard` still installs it. New work happens in Agent Project.
+The last Agent Board, v1.7.0, stays available at [FooQoo/agent-board](https://github.com/FooQoo/agent-board) with its own site at [fooqoo.github.io/agent-board](https://fooqoo.github.io/agent-board/), and `brew install fooqoo/tap/agboard` still installs it. New work happens in Agent Project.
 
 ## Create or bind a project
 
