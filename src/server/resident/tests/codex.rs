@@ -104,7 +104,7 @@ fn codex_starts_an_app_server_with_the_workspace_sandbox_automatic_review_and_th
     assert_eq!(turn["threadId"], "fake-thread");
     let text = turn["input"][0]["text"].as_str().unwrap();
     assert!(
-        text.starts_with("You were launched by Agent Board"),
+        text.starts_with("You were launched by Agent Project"),
         "{text}"
     );
     let log = std::fs::read_to_string(fx.launcher.log_path(Tool::Codex)).unwrap();

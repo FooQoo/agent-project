@@ -52,7 +52,7 @@ pub(crate) fn bind_error(error: &io::Error, port: u16) -> AgpjError {
     }
 }
 
-/// What holds `port`: an Agent Board server answers its health check with its
+/// What holds `port`: an Agent Project server answers its health check with its
 /// process ID; anything else is another program.
 pub(crate) fn port_holder(port: u16) -> PortHolder {
     match super::instance::health_pid(port) {
@@ -91,7 +91,7 @@ pub(crate) fn bind_preferring(port: u16) -> Result<(TcpListener, Option<String>)
 pub(crate) fn another_port_notice(port: u16, holder: PortHolder, chosen: u16) -> String {
     match holder {
         PortHolder::AgentBoard { pid } => format!(
-            "Port {port} is used by another Agent Board server (pid {pid}) with a different data folder, so this server uses port {chosen}."
+            "Port {port} is used by another Agent Project server (pid {pid}) with a different data folder, so this server uses port {chosen}."
         ),
         PortHolder::OtherProgram | PortHolder::Unknown => {
             format!("Port {port} is used by another program, so this server uses port {chosen}.")
@@ -184,7 +184,7 @@ mod tests {
     fn the_notice_names_another_agent_project_server() {
         assert_eq!(
             another_port_notice(7420, PortHolder::AgentBoard { pid: 41235 }, 52114),
-            "Port 7420 is used by another Agent Board server (pid 41235) with a different data folder, so this server uses port 52114."
+            "Port 7420 is used by another Agent Project server (pid 41235) with a different data folder, so this server uses port 52114."
         );
     }
 }

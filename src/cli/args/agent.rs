@@ -34,7 +34,7 @@ pub struct ProgressCommandArgs {
 /// `skills` prints the Agent Project Skill, or one of its topics.
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Prints the instructions of the agent-board Skill as Markdown. The plugin's SKILL.md runs this command, so the instructions always match this agpj.\nNothing is read or written, and no server is started.\n\nExamples:\n  agpj skills\n  agpj skills file-format"
+    after_help = "Prints the instructions of the agent-project Skill as Markdown. The plugin's SKILL.md runs this command, so the instructions always match this agpj.\nNothing is read or written, and no server is started.\n\nExamples:\n  agpj skills\n  agpj skills file-format"
 )]
 pub struct SkillsArgs {
     /// A part of the Skill to print instead of the main text; an unknown topic lists the topics

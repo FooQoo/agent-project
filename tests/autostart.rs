@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 
 use serde_json::Value;
 
-const STARTED_PREFIX: &str = "Started the Agent Board server at http://127.0.0.1:";
+const STARTED_PREFIX: &str = "Started the Agent Project server at http://127.0.0.1:";
 const QUESTION: &str = r#"{"questions":[{"body":"Which?","choices":[{"id":"a","label":"A"},{"id":"b","label":"B"}]}]}"#;
 const STARTED_SUFFIX: &str = "/ in the background. It stops by itself after ";
 
@@ -506,7 +506,7 @@ fn a_manual_serve_names_what_holds_its_port() {
     );
     drop(held);
 
-    // Another Agent Board server, of another data folder, is named with its pid.
+    // Another Agent Project server, of another data folder, is named with its pid.
     let other = Board::new();
     let port = start_by_waiting(&other);
     let other_pid = other.serve_info().unwrap()["pid"].clone();
@@ -516,7 +516,7 @@ fn a_manual_serve_names_what_holds_its_port() {
     assert_eq!(
         error["error"]["reason"],
         format!(
-            "Port {port} is used by another Agent Board server (pid {other_pid}) with a different data folder. Choose another port with --port."
+            "Port {port} is used by another Agent Project server (pid {other_pid}) with a different data folder. Choose another port with --port."
         )
     );
 }

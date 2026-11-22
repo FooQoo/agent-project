@@ -53,7 +53,7 @@ fn an_empty_data_area_gets_workspace_project_and_readme() {
         "The body after the frontmatter is free Markdown.",
         "`formatVersion: 1`",
         "Files with any other version or with unknown fields are reported and are not migrated or read;",
-        "Agent Board never converts or deletes them automatically.",
+        "Agent Project never converts or deletes them automatically.",
     ] {
         assert!(readme.contains(rule), "README lacks {rule:?}");
     }

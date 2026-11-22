@@ -168,7 +168,7 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "local network connections are not allowed.",
-            "This environment does not allow local network connections, so the Agent Board server cannot be started or reached. In Codex, run \"agpj setup\" to allow agpj to run outside the sandbox.",
+            "This environment does not allow local network connections, so the Agent Project server cannot be started or reached. In Codex, run \"agpj setup\" to allow agpj to run outside the sandbox.",
         ),
         ("the board is unavailable.", "no running server"),
         ("the cursor is invalid.", "wrong project"),
@@ -261,7 +261,7 @@ fn port_in_use_names_what_holds_the_port() {
     };
     assert_eq!(
         board.reason(),
-        "Port 7420 is used by another Agent Board server (pid 41235) with a different data folder. Choose another port with --port."
+        "Port 7420 is used by another Agent Project server (pid 41235) with a different data folder. Choose another port with --port."
     );
     let other = AgpjError::PortInUse {
         port: 7420,

@@ -248,7 +248,7 @@ pub(super) fn decide(
 
 fn wording(project_name: &str, work: &serde_json::Value) -> String {
     format!(
-        "Agent Board has work for you in project \"{project_name}\". Handle it as `agpj skills \
+        "Agent Project has work for you in project \"{project_name}\". Handle it as `agpj skills \
          resident` describes under \"Work the board pushes\", then end your turn. Do not run \
          `agpj wait`.\n\n{work}"
     )

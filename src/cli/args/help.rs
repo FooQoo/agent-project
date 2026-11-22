@@ -37,8 +37,8 @@ Commands:
   serve   Show the board in your browser (-d runs it in the background)
   open    Open the project's board in your browser
   stop    Stop the running server
-  setup   Install the Agent Board plugin for Codex and Claude Code; set up remote access (setup remote)
-  update  Update the installed Agent Board plugin to this version
+  setup   Install the Agent Project plugin for Codex and Claude Code; set up remote access (setup remote)
+  update  Update the installed Agent Project plugin to this version
 
 Workflow for agents:
   agpj project ls --json

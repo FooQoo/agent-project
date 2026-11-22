@@ -1,4 +1,4 @@
-//! Arguments of `agboard release`.
+//! Arguments of `agpj release`.
 
 use clap::{Args, Subcommand};
 
@@ -16,7 +16,7 @@ pub struct ReleaseArgs {
 pub enum ReleaseCommand {
     /// Generate the release document of a version in docs/release/
     #[command(
-        after_help = "Writes docs/release/<version>.md in the project's Docs: what was planned for the version, what is verified, what remains, and what moved to another version. Only the block between the agboard:generated markers is replaced; text outside it is kept. Generating again changes nothing unless the board changed. It publishes nothing outside the shared folder.\n\nExamples:\n  agboard --project demo release doc --current-version\n  agboard --project demo release doc --version v1.8.0\n  agboard --project demo release doc --version v1.8.0 --json"
+        after_help = "Writes docs/release/<version>.md in the project's Docs: what was planned for the version, what is verified, what remains, and what moved to another version. Only the block between the agpj:generated markers is replaced; text outside it is kept. Generating again changes nothing unless the board changed. It publishes nothing outside the shared folder.\n\nExamples:\n  agpj --project demo release doc --current-version\n  agpj --project demo release doc --version v1.8.0\n  agpj --project demo release doc --version v1.8.0 --json"
     )]
     Doc(ReleaseDocArgs),
 }

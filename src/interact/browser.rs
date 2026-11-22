@@ -13,7 +13,7 @@ use std::process::{Command, Stdio};
 
 use crate::domain::ProjectId;
 
-/// The operating systems whose opener Agent Board can start.
+/// The operating systems whose opener Agent Project can start.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Platform {
     MacOs,

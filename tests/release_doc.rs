@@ -9,8 +9,8 @@ use std::path::{Path, PathBuf};
 use common::{agpj, json_error, json_ok};
 use serde_json::Value;
 
-const START: &str = "<!-- agboard:generated:start -->";
-const END: &str = "<!-- agboard:generated:end -->";
+const START: &str = "<!-- agpj:generated:start -->";
+const END: &str = "<!-- agpj:generated:end -->";
 
 fn run(home: &Path, args: &[&str]) -> Value {
     let mut all = vec!["--project", "Demo"];

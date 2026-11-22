@@ -14,9 +14,9 @@ use super::model::{HistoryRecord, TaskView};
 use crate::domain::{Column, TaskResult};
 
 /// The line that opens the generated block. Text outside the block is never touched.
-pub const START_MARKER: &str = "<!-- agboard:generated:start -->";
+pub const START_MARKER: &str = "<!-- agpj:generated:start -->";
 /// The line that closes the generated block.
-pub const END_MARKER: &str = "<!-- agboard:generated:end -->";
+pub const END_MARKER: &str = "<!-- agpj:generated:end -->";
 
 /// A planned-version change read from a task's history.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -85,7 +85,7 @@ pub enum Publication<'a> {
     None,
 }
 
-/// The publication record of Agent Board: a result whose summary holds a line
+/// The publication record of Agent Project: a result whose summary holds a line
 /// `Published: <version>` and whose link points to the published artifact (a release page, a
 /// package, a merged pull request). The line without the link is only a claim. The newest
 /// confirmed result wins; otherwise the newest unlinked claim.

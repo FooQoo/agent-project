@@ -232,7 +232,7 @@ fn claude_starts_headless_with_every_permission_and_a_scrubbed_environment() {
         first["message"]["content"]
             .as_str()
             .unwrap()
-            .starts_with("You were launched by Agent Board"),
+            .starts_with("You were launched by Agent Project"),
         "{first}"
     );
     assert!(

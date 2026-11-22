@@ -201,12 +201,12 @@ impl AgpjError {
 }
 
 /// Why `agpj` cannot listen on or reach 127.0.0.1, and the fix for Codex.
-const LOCAL_NETWORK_DENIED: &str = "This environment does not allow local network connections, so the Agent Board server cannot be started or reached. In Codex, run \"agpj setup\" to allow agpj to run outside the sandbox.";
+const LOCAL_NETWORK_DENIED: &str = "This environment does not allow local network connections, so the Agent Project server cannot be started or reached. In Codex, run \"agpj setup\" to allow agpj to run outside the sandbox.";
 
 fn port_in_use_reason(port: u16, holder: PortHolder) -> String {
     match holder {
         PortHolder::AgentBoard { pid } => format!(
-            "Port {port} is used by another Agent Board server (pid {pid}) with a different data folder. Choose another port with --port."
+            "Port {port} is used by another Agent Project server (pid {pid}) with a different data folder. Choose another port with --port."
         ),
         PortHolder::OtherProgram => {
             format!("Port {port} is used by another program. Choose another port with --port.")

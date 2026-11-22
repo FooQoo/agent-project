@@ -117,7 +117,7 @@ impl Session {
     /// The first line of a session.
     pub(super) fn hello(&mut self) -> Value {
         let params = json!({
-            "clientInfo": {"name": "agpj", "title": "Agent Board", "version": self.settings.version},
+            "clientInfo": {"name": "agpj", "title": "Agent Project", "version": self.settings.version},
             "capabilities": {"experimentalApi": false},
         });
         self.request("initialize", params, Waiting::Initialize)

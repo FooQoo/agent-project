@@ -169,7 +169,7 @@ fn control_request(message: &Value, pending: &mut Pending, parsed: &mut Parsed) 
         parsed.reply = Some(json!({"type": "control_response", "response": {
             "subtype": "error",
             "request_id": id,
-            "error": "Agent Board does not handle this request.",
+            "error": "Agent Project does not handle this request.",
         }}));
     }
 }

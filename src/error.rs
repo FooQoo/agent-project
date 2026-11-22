@@ -15,9 +15,9 @@ pub enum FileAction {
 pub enum PortHolder {
     /// Nothing answered the question.
     Unknown,
-    /// An Agent Board server of another data directory, with its process ID.
+    /// An Agent Project server of another data directory, with its process ID.
     AgentBoard { pid: u32 },
-    /// Something that is not an Agent Board server.
+    /// Something that is not an Agent Project server.
     OtherProgram,
 }
 

@@ -1,4 +1,4 @@
-//! Everything Agent Board knows about the external agent CLIs: their names, how to find them,
+//! Everything Agent Project knows about the external agent CLIs: their names, how to find them,
 //! how to check a login, how to list models, and the exact arguments of a headless launch.
 //! Nothing outside this module names `claude` or `codex`.
 
@@ -23,7 +23,7 @@ const CLAUDE_MODELS: [&str; 4] = ["opus", "sonnet", "haiku", "fable"];
 /// The first instruction of a launched session. The detailed procedure lives in the skill.
 pub fn prompt(project_name: &str) -> String {
     format!(
-        "You were launched by Agent Board as a resident agent for project \"{project_name}\". \
+        "You were launched by Agent Project as a resident agent for project \"{project_name}\". \
          Run `agpj skills resident` and read the part for a session the board launched. Do \
          not run `agpj wait`: the board sends you each piece of work as a message, one at a \
          time, when you are idle. Once you have read the skill, end your turn and wait for \

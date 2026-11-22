@@ -320,7 +320,7 @@ fn open_starts_the_server_and_opens_the_bound_projects_board() {
     let stdout = text(&output.stdout);
     assert!(output.status.success(), "{output:?}");
     assert!(
-        text(&output.stderr).starts_with("Started the Agent Board server at"),
+        text(&output.stderr).starts_with("Started the Agent Project server at"),
         "{output:?}"
     );
     let url = board.board_url();

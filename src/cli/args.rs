@@ -88,7 +88,7 @@ pub enum Command {
     Snapshot(SnapshotArgs),
     /// Add the current progress table to an agent hook
     Hook(HookArgs),
-    /// Print the instructions of the agent-board Skill
+    /// Print the instructions of the agent-project Skill
     Skills(SkillsArgs),
     /// Wait for a board change or the next task
     Wait(WaitArgs),

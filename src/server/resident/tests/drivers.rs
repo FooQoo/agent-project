@@ -67,7 +67,7 @@ fn a_permission_request_is_answered_allow_and_a_turn_end_does_not_end_the_sessio
     let Call::Start { prompt, env } = start else {
         panic!("the first call is the start");
     };
-    assert!(prompt.starts_with("You were launched by Agent Board"));
+    assert!(prompt.starts_with("You were launched by Agent Project"));
     assert!(env.contains(&("AGPJ_SESSION_ORIGIN".to_string(), "board".to_string())));
 
     assert!(fx.launcher.stop().unwrap());

@@ -117,7 +117,7 @@ pub fn ensure_serving(data_dir: &Path, open: Option<&ProjectId>) -> Result<Serve
                 eprintln!("{notice}");
             }
             eprintln!(
-                "Started the Agent Board server at http://127.0.0.1:{}/ in the background. It stops by itself after {minutes} without use.",
+                "Started the Agent Project server at http://127.0.0.1:{}/ in the background. It stops by itself after {minutes} without use.",
                 info.port
             );
             Ok(info)

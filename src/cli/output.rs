@@ -86,7 +86,7 @@ pub fn render_json(value: &Value) -> String {
 }
 
 pub fn task_value(task: &TaskView) -> Value {
-    serde_json::to_value(task).expect("Agent Board tasks serialize")
+    serde_json::to_value(task).expect("Agent Project tasks serialize")
 }
 
 pub fn state_text(state: RunState, reason: Option<&str>) -> String {

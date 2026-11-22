@@ -1,4 +1,4 @@
-//! `agpj setup` and `agpj update`: installing the Agent Board plugin with
+//! `agpj setup` and `agpj update`: installing the Agent Project plugin with
 //! the agents' own commands, trusting the Codex hooks, and what happens when
 //! an agent is missing or a command fails. The agents are the fakes of
 //! `support/fake_agents.rs`, the only commands on PATH, so nothing reaches a

@@ -426,7 +426,7 @@ fn the_page_and_its_static_files_carry_no_token_and_need_no_session() {
     assert_eq!(page.header("cache-control"), Some("no-store"));
     assert!(page.body.contains("name=\"agpj-token\" content=\"\""));
     assert!(!page.body.contains(&board_token));
-    assert!(!page.body.contains("{{AGBOARD"));
+    assert!(!page.body.contains("{{AGPJ"));
     let csp = page.header("content-security-policy").unwrap();
     assert!(csp.contains("frame-ancestors 'none'") && csp.contains("default-src 'none'"));
     assert_eq!(page.header("referrer-policy"), Some("no-referrer"));

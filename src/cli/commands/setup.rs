@@ -59,7 +59,7 @@ pub fn run(request: &Request) -> Result<Finished, AgpjError> {
             return Err(invalid(
                 command,
                 &format!(
-                    "{command} asks for a confirmation and needs a terminal for it; it never reads a pipe. Add --yes to agree in advance (this includes trusting the Agent Board plugin's hooks in Codex), or --dry-run to see the plan."
+                    "{command} asks for a confirmation and needs a terminal for it; it never reads a pipe. Add --yes to agree in advance (this includes trusting the Agent Project plugin's hooks in Codex), or --dry-run to see the plan."
                 ),
             ));
         }
@@ -84,7 +84,7 @@ pub fn run(request: &Request) -> Result<Finished, AgpjError> {
     if interactive && !request.dry_run && !request.yes && prepared.has_work() {
         let _ = cliclack::note(format!("agpj {command}"), prepared.describe());
         let question = if prepared.trusts_hooks() {
-            "Apply these changes? This also marks the Agent Board plugin's hooks as trusted in Codex, so Codex runs them without asking."
+            "Apply these changes? This also marks the Agent Project plugin's hooks as trusted in Codex, so Codex runs them without asking."
         } else {
             "Apply these changes?"
         };
@@ -135,7 +135,7 @@ fn choose_agents(env: &SetupEnv) -> Option<Vec<Agent>> {
         }
         _ => {
             let both = "both";
-            let picked = cliclack::select("Which agent do you use with Agent Board?")
+            let picked = cliclack::select("Which agent do you use with Agent Project?")
                 .item("codex", "Codex", "")
                 .item("claude", "Claude Code", "")
                 .item(both, "Both", "Codex and Claude Code")

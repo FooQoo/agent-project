@@ -1,4 +1,4 @@
-//! Arguments of `agboard result`.
+//! Arguments of `agpj result`.
 
 use std::path::PathBuf;
 
@@ -8,7 +8,7 @@ use super::enums::ActorArg;
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo result add 12 --title \"First draft\" --summary \"First 30 seconds are ready\" --link ./out/draft.mp4 --actor ai\n  agboard --project demo result add 12 --summary \"Top page capture\" --file top.png --key top-v1 --actor ai\n  agboard --project demo result add 12 --summary \"Mock screens\" --file 01.png --file 02.png --file 03.png --actor ai\n  agboard --project demo result add 12 --summary \"Finished\" --final --actor ai\n  agboard --project demo result add 12 --published v1.8.0 --link https://example.com/releases/v1.8.0 --summary \"Released\" --actor ai\n  agboard --project demo result ls 12"
+    after_help = "Examples:\n  agpj --project demo result add 12 --title \"First draft\" --summary \"First 30 seconds are ready\" --link ./out/draft.mp4 --actor ai\n  agpj --project demo result add 12 --summary \"Top page capture\" --file top.png --key top-v1 --actor ai\n  agpj --project demo result add 12 --summary \"Mock screens\" --file 01.png --file 02.png --file 03.png --actor ai\n  agpj --project demo result add 12 --summary \"Finished\" --final --actor ai\n  agpj --project demo result add 12 --published v1.8.0 --link https://example.com/releases/v1.8.0 --summary \"Released\" --actor ai\n  agpj --project demo result ls 12"
 )]
 pub struct ResultArgs {
     #[command(subcommand)]
