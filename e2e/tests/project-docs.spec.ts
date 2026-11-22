@@ -68,7 +68,7 @@ test('E2E-2: the dialog follows the files on disk: an edit, a new file, and a de
 });
 
 test('E2E-3: the file API refuses traversal, absolute paths, links and other extensions, and nothing writes', async ({ page, request }) => {
-  const outside = path.join(os.tmpdir(), `agboard-docs-outside-${process.pid}`);
+  const outside = path.join(os.tmpdir(), `agpj-docs-outside-${process.pid}`);
   mkdirSync(outside, { recursive: true });
   writeFileSync(path.join(outside, 'secret.md'), 'secret');
   symlinkSync(outside, path.join(docsDir(), 'linkdir'));

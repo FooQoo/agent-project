@@ -3,7 +3,7 @@ import type { Change } from '../../../shared/data/api/contracts.ts';
 import type { MockBoard } from './boards.ts';
 import { taskChangeOf } from './wire.ts';
 
-// The automatic Done of `agboard serve`: once every acceptance condition of an AI task is met, the
+// The automatic Done of `agpj serve`: once every acceptance condition of an AI task is met, the
 // task moves to Done, the way the server's watcher completes it after each save.
 
 /** `ja` when the text has kana or kanji, as the server infers the language of generated history. */

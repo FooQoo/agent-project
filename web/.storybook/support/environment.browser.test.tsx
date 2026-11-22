@@ -49,7 +49,7 @@ describe('story environment', () => {
         <span>content</span>
       </StoryEnvironment>,
     );
-    const stored = Object.keys(window.localStorage).filter((key) => key.startsWith('agboard.'));
+    const stored = Object.keys(window.localStorage).filter((key) => key.startsWith('agpj.'));
     expect(stored).toEqual([]);
   });
 

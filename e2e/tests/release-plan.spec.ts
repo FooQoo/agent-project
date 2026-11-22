@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../helpers/fixtures';
-import { agboardOk, mainProject, nextTaskId, resetBoard } from '../helpers/agboard';
+import { agpjOk, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
 import { resetPreferences } from '../helpers/preferences';
 import { clearVersions, currentVersion, plannedVersions, planTask, seedVersions } from '../helpers/versions';
 import { waitForSync } from '../helpers/ui';
@@ -28,17 +28,17 @@ interface Seed {
 async function seed(current: string | null = null): Promise<Seed> {
 	clearVersions();
 	resetBoard(mainProject);
-	agboardOk(mainProject, ['epic', 'add', 'LOGIN', '--name', 'Login work', '--actor', 'human']);
+	agpjOk(mainProject, ['epic', 'add', 'LOGIN', '--name', 'Login work', '--actor', 'human']);
 	const first = nextTaskId(mainProject);
 	const ids = [0, 1, 2, 3, 4].map((offset) => first + offset);
 	const add = (title: string, epic?: string) =>
-		agboardOk(mainProject, ['add', title, '--assignee', 'ai', '--actor', 'human', ...(epic ? ['--epic', epic] : [])]);
+		agpjOk(mainProject, ['add', title, '--assignee', 'ai', '--actor', 'human', ...(epic ? ['--epic', epic] : [])]);
 	add('Plan A login screen', 'LOGIN');
 	add('Plan B reset mail', 'LOGIN');
 	add('Plan C session', 'LOGIN');
 	add('Plan D history', 'LOGIN');
 	add('Plan E dark theme');
-	agboardOk(mainProject, ['mv', String(ids[3]), 'doing', '--actor', 'human', '--reason', 'Start']);
+	agpjOk(mainProject, ['mv', String(ids[3]), 'doing', '--actor', 'human', '--reason', 'Start']);
 	await seedVersions(['v1.8.0', 'v1.9.0'], current);
 	await planTask(ids[0] as number, 'v1.8.0');
 	await planTask(ids[4] as number, 'v1.9.0');

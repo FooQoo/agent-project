@@ -31,7 +31,7 @@ export interface MockBrowserOptions {
  */
 export function mockBrowser(options: MockBrowserOptions): Plugin {
   return {
-    name: 'agboard-mock-browser',
+    name: 'agpj-mock-browser',
     resolveId: (id) => (id === SEED_ID ? RESOLVED_SEED_ID : null),
     load(id) {
       if (id !== RESOLVED_SEED_ID) return null;

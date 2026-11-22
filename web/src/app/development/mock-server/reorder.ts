@@ -17,7 +17,7 @@ const REORDER_PATH = /^\/api\/projects\/([^/]+)\/tasks\/(\d+)\/reorder$/;
 
 /**
  * The lane with `moved` placed before `beforeId`, or last when `beforeId` is null or not in the
- * lane, as `agboard serve` orders it: by position and ID, and from the bottom up in Done, where the
+ * lane, as `agpj serve` orders it: by position and ID, and from the bottom up in Done, where the
  * highest position is shown first.
  */
 export function reorderedLane(tasks: Task[], moved: Task, beforeId: number | null): Task[] {

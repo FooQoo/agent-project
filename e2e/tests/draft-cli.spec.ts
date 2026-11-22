@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
 import {
-  agboard,
+  agpj,
   agpjBinary,
   agpjCatalog,
   agpjCatalogOk,
@@ -95,13 +95,13 @@ test('a draft is read-only for edit, mv, and state, and everything else still wo
     ['state', ['state', '13', 'running', '--actor', 'ai', '--reason', 'Resuming.']],
   ];
   for (const [name, args] of refused) {
-    const result: AgpjResult = agboard(mainProject, args);
+    const result: AgpjResult = agpj(mainProject, args);
     expect(result.code, name).toBe(1);
     expect(result.stdout, name).toBe('');
     // The message is English and says what to do.
     expect(result.stderr, name).toContain('task #13 is a draft and read-only for agents.');
     expect(result.stderr, name).toContain('Wait for the user to finalize it, then try again.');
-    const json = agboard(mainProject, [...args, '--json']);
+    const json = agpj(mainProject, [...args, '--json']);
     expect(json.code, name).toBe(1);
     expect(JSON.parse(json.stderr || json.stdout).error.code, name).toBe('task_is_draft');
   }
@@ -156,7 +156,7 @@ test('a plan in the Backlog takes AI edits and history but not mv, state, or a m
     [['state', String(id), 'running', '--actor', 'ai', '--reason', 'Go.'], 'task_in_backlog'],
     [['mv', String(id), 'todo', '--actor', 'ai', '--reason', 'Go.'], 'human_only'],
   ] as const) {
-    const refused = agboard(mainProject, [...args, '--json']);
+    const refused = agpj(mainProject, [...args, '--json']);
     expect(refused.code, args[0]).toBe(1);
     expect(JSON.parse(refused.stderr || refused.stdout).error.code, args[0]).toBe(code);
   }
@@ -251,7 +251,7 @@ test('a body of exactly 50,000 characters is accepted for add, edit, and --desc 
     ['add', 'Too long', '--desc-file', overFile],
     ['edit', String(id), '--desc-file', overFile],
   ]) {
-    const result = agboard(mainProject, args);
+    const result = agpj(mainProject, args);
     expect(result.code, args.join(' ')).toBe(2);
     expect(result.stderr).toContain('Descriptions must be 50,000 characters or fewer. This one has 50001.');
   }

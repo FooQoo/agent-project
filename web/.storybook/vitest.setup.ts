@@ -11,7 +11,7 @@ beforeAll(async () => {
 afterEach(() => {
   resetHandlers();
   assertNoUnhandledRequests();
-  const written = Object.keys(window.localStorage).filter((key) => key.startsWith('agboard.'));
+  const written = Object.keys(window.localStorage).filter((key) => key.startsWith('agpj.'));
   for (const key of written) window.localStorage.removeItem(key);
   expect(written, 'a test must not write preferences to localStorage').toEqual([]);
 });

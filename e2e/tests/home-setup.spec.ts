@@ -7,7 +7,7 @@ import { expect, test } from '../helpers/fixtures';
 import { agpjBinary, replaceFileAtomically } from '../helpers/agpj';
 import { fakeAgents } from '../helpers/fake-agents';
 
-// `agboard setup` and a CLI project that uses the shared folder it prepares, run with the real binary.
+// `agpj setup` and a CLI project that uses the shared folder it prepares, run with the real binary.
 // Every run has a cleared environment (only HOME, TZ, and a PATH that holds only fake `codex` and `claude`
 // commands), a temporary HOME, and no server or port.
 
@@ -96,7 +96,7 @@ test.beforeEach(() => {
 function agpjVersion(): string {
 	const result = spawnSync(agpjBinary(), ['--version'], { env: {}, encoding: 'utf8' });
 	const version = /\d+\.\d+\.\d+\S*/.exec(result.stdout)?.[0];
-	if (!version) throw new Error(`agboard --version printed no version: ${result.stdout}${result.stderr}`);
+	if (!version) throw new Error(`agpj --version printed no version: ${result.stdout}${result.stderr}`);
 	return version;
 }
 
@@ -122,11 +122,11 @@ function cli(args: string[], options: { cwd?: string; env?: Record<string, strin
 
 function cliOk(args: string[], options: { cwd?: string; env?: Record<string, string> } = {}): CliResult {
 	const result = cli(args, options);
-	if (result.code !== 0) throw new Error(`agboard ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
+	if (result.code !== 0) throw new Error(`agpj ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
 	return result;
 }
 
-/** `agboard --json setup --agent all`, with `--yes` unless it is a dry run; it must succeed. `env` adds variables. */
+/** `agpj --json setup --agent all`, with `--yes` unless it is a dry run; it must succeed. `env` adds variables. */
 function setup(args: string[] = [], env?: Record<string, string>): SetupJson {
 	const confirm = args.includes('--dry-run') ? [] : ['--yes'];
 	return JSON.parse(cliOk(['--json', 'setup', '--agent', 'all', ...confirm, ...args], { env }).stdout) as SetupJson;
@@ -302,7 +302,7 @@ test('after setup, a CLI project hands out a shared folder whose TASK.md can be 
 test('the old OS application-support folder is never created or read by the setup and project run', () => {
 	const oldArea = path.join(home, 'Library', 'Application Support', 'agboard');
 	mkdirSync(oldArea, { recursive: true });
-	writeFileSync(path.join(oldArea, 'marker.txt'), 'Not agboard data.\n');
+	writeFileSync(path.join(oldArea, 'marker.txt'), 'Not agpj data.\n');
 	const libraryBefore = hashes(path.join(home, 'Library'));
 
 	setup();

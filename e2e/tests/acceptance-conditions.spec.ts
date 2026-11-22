@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
 import {
-  agboard,
+  agpj,
   agpjOk,
   mainProject,
   nextTaskId,
@@ -241,7 +241,7 @@ test('a frontmatter that cannot be read is shown as a problem, the body stays vi
 
 test('an agent cannot move a task to Done while a condition is unmet, and a person can', async ({ page }) => {
   const id = addTask('Unmet', frontmatter([{ id: 'AC-1', text: 'Still open', done: false }]));
-  const refused = agboard(mainProject, ['mv', String(id), 'done', '--actor', 'ai', '--reason', 'Finished.']);
+  const refused = agpj(mainProject, ['mv', String(id), 'done', '--actor', 'ai', '--reason', 'Finished.']);
   expect(refused.code).toBe(2);
   expect(refused.stderr).toContain('unmet acceptance conditions: AC-1');
   expect(show(id).taskStatus).toBe('todo');

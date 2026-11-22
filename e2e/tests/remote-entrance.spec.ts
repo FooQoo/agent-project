@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, request as playwrightRequest, test } from '../helpers/fixtures';
-import { agboard, askArgs, decisionJson } from '../helpers/agpj';
+import { agpj, askArgs, decisionJson } from '../helpers/agpj';
 import { answerDialog, answerSend, askItem, fillAnswer, messageBand, openAnswer, openMessageList, openQuestionCount, phoneBar, send } from '../helpers/answer';
 import { closeMessages } from '../helpers/answer-flow';
 import {
@@ -181,7 +181,7 @@ test('the phone answers a question from the sheet, and the answer reaches the sh
   await closeMessages(page);
   await expect(article.getByRole('button', { name: 'Answer the question' })).toHaveCount(0);
 
-  const task = JSON.parse(agboard('Alpha', ['show', '1', '--json'], home).stdout).task as {
+  const task = JSON.parse(agpj('Alpha', ['show', '1', '--json'], home).stdout).task as {
     agentStatus: string;
     pendingRequestId: string | null;
     history: { reason: string }[];
@@ -192,7 +192,7 @@ test('the phone answers a question from the sheet, and the answer reaches the sh
 });
 
 test('the phone bar counts the open questions; a question picked in its list is answered from the sheet', async ({ page }) => {
-  const json = (args: string[]) => JSON.parse(agboard('Alpha', [...args, '--json'], home).stdout);
+  const json = (args: string[]) => JSON.parse(agpj('Alpha', [...args, '--json'], home).stdout);
   await entrance.open(page, phoneUrl());
   // The bottom bar is always there, and Messages carries the number of open questions.
   await expect(phoneBar(page)).toBeVisible();
@@ -204,8 +204,8 @@ test('the phone bar counts the open questions; a question picked in its list is 
   await expect(askItem(page)).toBeVisible();
 
   const id: number = json(['add', 'Alpha band question', `--desc=Asked for the band.`, '--assignee', 'ai', '--actor', 'human']).task.id;
-  agboard('Alpha', ['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Start'], home);
-  const asked = agboard('Alpha', askArgs(String(id), decisionJson('Which plan for the band?')), home);
+  agpj('Alpha', ['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Start'], home);
+  const asked = agpj('Alpha', askArgs(String(id), decisionJson('Which plan for the band?')), home);
   expect(asked.code, asked.stderr).toBe(0);
   await expect.poll(countOf).toBe(before + 1);
 
@@ -230,18 +230,18 @@ test('the phone bar counts the open questions; a question picked in its list is 
 });
 
 test('an image attached to the task shows in the sheet from the attachment route of the board', async ({ page }) => {
-  const json = (args: string[]) => JSON.parse(agboard('Alpha', [...args, '--json'], home).stdout);
+  const json = (args: string[]) => JSON.parse(agpj('Alpha', [...args, '--json'], home).stdout);
   const id: number = json(['add', 'Alpha image question', `--desc=A question with a picture.`, '--assignee', 'ai', '--actor', 'human']).task.id;
-  agboard('Alpha', ['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Start review'], home);
+  agpj('Alpha', ['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Start review'], home);
   const png = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgaPj/HwAEggJ/59habAAAAABJRU5ErkJggg==',
     'base64',
   );
-  const file = path.join(mkdtempSync(path.join(os.tmpdir(), 'agboard-question-image-')), 'question.png');
+  const file = path.join(mkdtempSync(path.join(os.tmpdir(), 'agpj-question-image-')), 'question.png');
   writeFileSync(file, png);
   const attachment: string = json(['attachment', 'add', String(id), '--file', file, '--actor', 'ai']).attachment.id;
   const question = `Which one?\n\n![the picture](attachment:${attachment})`;
-  const st = agboard('Alpha', askArgs(String(id), decisionJson(question)), home);
+  const st = agpj('Alpha', askArgs(String(id), decisionJson(question)), home);
   expect(st.code, st.stderr).toBe(0);
 
   await entrance.open(page, phoneUrl());
@@ -255,17 +255,17 @@ test('an image attached to the task shows in the sheet from the attachment route
 });
 
 test('an image in a history reason shows in the History tab from the attachment route of the board', async ({ page }) => {
-  const json = (args: string[]) => JSON.parse(agboard('Alpha', [...args, '--json'], home).stdout);
+  const json = (args: string[]) => JSON.parse(agpj('Alpha', [...args, '--json'], home).stdout);
   const id: number = json(['add', 'Alpha history evidence', `--desc=A task with evidence.`, '--assignee', 'ai', '--actor', 'human']).task.id;
   const png = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgaPj/HwAEggJ/59habAAAAABJRU5ErkJggg==',
     'base64',
   );
-  const file = path.join(mkdtempSync(path.join(os.tmpdir(), 'agboard-history-image-')), 'evidence.png');
+  const file = path.join(mkdtempSync(path.join(os.tmpdir(), 'agpj-history-image-')), 'evidence.png');
   writeFileSync(file, png);
   const added = json(['attachment', 'add', String(id), '--file', file, '--actor', 'ai']);
   const reason = `Checked.\n\n| Screen | Result |\n| --- | --- |\n| Board | Passed |\n\n![the evidence](${added.path})`;
-  const noted = agboard('Alpha', ['history', 'add', String(id), `--reason=${reason}`], home);
+  const noted = agpj('Alpha', ['history', 'add', String(id), `--reason=${reason}`], home);
   expect(noted.code, noted.stderr).toBe(0);
 
   await entrance.open(page, phoneUrl());

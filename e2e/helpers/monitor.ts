@@ -22,9 +22,9 @@ function run(home: string, args: string[]): string {
     env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     encoding: 'utf8',
   });
-  if (result.error) throw new Error(`agboard ${args.join(' ')} did not run: ${result.error.message}`, { cause: result.error });
+  if (result.error) throw new Error(`agpj ${args.join(' ')} did not run: ${result.error.message}`, { cause: result.error });
   if (result.status !== 0) {
-    throw new Error(`agboard ${args.join(' ')} failed (${result.signal ?? `exit ${result.status}`}): ${result.stderr}`);
+    throw new Error(`agpj ${args.join(' ')} failed (${result.signal ?? `exit ${result.status}`}): ${result.stderr}`);
   }
   return result.stdout;
 }

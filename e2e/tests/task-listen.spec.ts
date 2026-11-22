@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { agboard, agpjOk, mainProject, resetBoard } from '../helpers/agpj';
+import { agpj, agpjOk, mainProject, resetBoard } from '../helpers/agpj';
 import { fillRequest, openAskAi, sendRequest } from '../helpers/ask-ai';
 import { waitForSync } from '../helpers/ui';
 
@@ -34,7 +34,7 @@ test('a request sent through Ask AI with an image is returned by task wait as a 
   const snapshot = JSON.parse(agpjOk(mainProject, ['snapshot', '--json']).stdout) as { tasks: { title: string }[] };
   expect(snapshot.tasks.map(({ title }) => title)).not.toContain('Investigate the listener request');
 
-  const waited = agboard(mainProject, ['wait', '--until', 'task', '--idle-timeout', '1', '--json']);
+  const waited = agpj(mainProject, ['wait', '--until', 'task', '--idle-timeout', '1', '--json']);
   expect(waited.code, waited.stderr).toBe(0);
   expect(waited.stderr).toBe('');
   const selected = JSON.parse(waited.stdout) as {
@@ -52,10 +52,10 @@ test('a request sent through Ask AI with an image is returned by task wait as a 
   };
   expect(shown.request.body).toContain('Keep the source wording intact.');
   expect(shown.request.status).toBe('open');
-  const again = JSON.parse(agboard(mainProject, ['wait', '--until', 'task', '--idle-timeout', '1', '--json']).stdout) as { kind: string };
+  const again = JSON.parse(agpj(mainProject, ['wait', '--until', 'task', '--idle-timeout', '1', '--json']).stdout) as { kind: string };
   expect(again.kind).toBe('requests');
   agpjOk(mainProject, ['message', 'accept', selected.requests[0].id, '--actor', 'ai', '--json']);
   // An accepted request no longer wakes the wait: the board's own todo task is returned instead.
-  const next = JSON.parse(agboard(mainProject, ['wait', '--until', 'task', '--idle-timeout', '1', '--json']).stdout) as { kind: string };
+  const next = JSON.parse(agpj(mainProject, ['wait', '--until', 'task', '--idle-timeout', '1', '--json']).stdout) as { kind: string };
   expect(next.kind).not.toBe('requests');
 });

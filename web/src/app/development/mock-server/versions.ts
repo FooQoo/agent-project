@@ -11,7 +11,7 @@ import {
   toWireTask,
 } from './wire.ts';
 
-// The versions of a project and the planned version of its tasks, as `agboard serve` answers them.
+// The versions of a project and the planned version of its tasks, as `agpj serve` answers them.
 
 const BASE = /^\/api\/projects\/([^/]+)\/(versions|versions\/current)$/;
 const TASK = /^\/api\/projects\/([^/]+)\/tasks\/(\d+)\/planned-version$/;

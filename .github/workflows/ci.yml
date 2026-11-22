@@ -137,7 +137,7 @@ jobs:
         run: |
           pnpm --dir web install --frozen-lockfile
           pnpm --dir web build
-      # Tests that start agboard with a cleared environment lose LLVM_PROFILE_FILE, so the child writes its
+      # Tests that start agpj with a cleared environment lose LLVM_PROFILE_FILE, so the child writes its
       # profile into the test's folder and a check that the folder is unchanged fails. The Rust job decides
       # pass or fail; here a failed test still leaves a report.
       - name: Measure the Rust coverage
@@ -239,7 +239,7 @@ jobs:
       - run: |
           pnpm --dir web install --frozen-lockfile
           pnpm --dir e2e install --frozen-lockfile
-      # Each worker starts its own `agboard serve` on port 0 with its own temporary data area.
+      # Each worker starts its own `agpj serve` on port 0 with its own temporary data area.
       - run: pnpm --dir e2e test --shard=${{ matrix.shard }}/5
       - name: Find the results folder
         if: failure()

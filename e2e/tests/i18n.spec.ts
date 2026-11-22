@@ -28,7 +28,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   expect(path.isAbsolute(home)).toBe(true);
   expect(path.dirname(home)).toBe(os.tmpdir());
   expect(home).toContain('agent-board-e2e-main-');
-  expect(home).not.toMatch(/Library\/Application Support\/agboard$/);
+  expect(home).not.toMatch(/Library\/Application Support\/agpj$/);
   expect(await page.evaluate(() => navigator.language)).toBe('ja-JP');
   // Nothing was saved, so the page is English whatever the browser's language is.
   expect((await getPreferences()).locale).toBe('en');

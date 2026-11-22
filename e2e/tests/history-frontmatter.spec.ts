@@ -66,7 +66,7 @@ function catalog(args: string[]): { code: number; stdout: string; stderr: string
 
 function cliOk(args: string[]): string {
 	const result = cli([...args, '--json']);
-	if (result.code !== 0) throw new Error(`agboard ${args.join(' ')} failed (${result.code}): ${result.stderr}`);
+	if (result.code !== 0) throw new Error(`agpj ${args.join(' ')} failed (${result.code}): ${result.stderr}`);
 	return result.stdout;
 }
 

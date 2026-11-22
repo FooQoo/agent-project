@@ -65,7 +65,7 @@ export const acceptanceRoutes: Routes = (context, request) => {
       422,
       'invalid_argument',
       `Task #${id} has no acceptance condition ${condition}.`,
-      'Run "agboard --help" for usage.',
+      'Run "agpj --help" for usage.',
     );
   if (item.done === input.done) return json(200, { task: toWireTask(task), changed: false });
 

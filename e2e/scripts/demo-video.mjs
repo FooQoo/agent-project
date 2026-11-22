@@ -330,7 +330,7 @@ function encode(source, start, end, suffix) {
   return { mp4, duration };
 }
 
-const tmp = mkdtempSync(path.join(os.tmpdir(), 'agboard-demo-'));
+const tmp = mkdtempSync(path.join(os.tmpdir(), 'agpj-demo-'));
 let browser;
 try {
   mkdirSync(output, { recursive: true });

@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
 import {
-  agboard,
+  agpj,
   agpjBinary,
   agpjCatalogOk,
   agpjOk,
@@ -63,13 +63,13 @@ test('a shared folder and an epic are created by the CLI, and the epic label sho
   // A new data area gets the shared folder, a project folder with its ID, and the README.
   const name = `Shared demo ${Date.now()}`;
   agpjCatalogOk(['project', 'create', name]);
-  const id = JSON.parse(agboard(name, ['workspace', '--json']).stdout).projectId as string;
+  const id = JSON.parse(agpj(name, ['workspace', '--json']).stdout).projectId as string;
   const shared = path.join(mainHome(), 'shared');
   expect(JSON.parse(readFileSync(path.join(shared, 'workspace.json'), 'utf8'))).toEqual({
     format: 'agboard-files',
     formatVersion: 1,
   });
-  const folder = JSON.parse(agboard(name, ['workspace', '--json']).stdout).folder as string;
+  const folder = JSON.parse(agpj(name, ['workspace', '--json']).stdout).folder as string;
   expect(folder.startsWith(shared)).toBe(true);
   expect(JSON.parse(readFileSync(path.join(folder, 'project.json'), 'utf8'))).toMatchObject({ id, name, nextTaskId: 1 });
   expect(readFileSync(path.join(folder, 'README.md'), 'utf8')).toContain('TASK.md');

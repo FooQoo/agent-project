@@ -13,7 +13,7 @@ mkdirSync(output, { recursive: true });
 const browser = await chromium.launch();
 try {
   for (const locale of ['en', 'ja']) {
-    const home = mkdtempSync(path.join(os.tmpdir(), 'agboard-readme-'));
+    const home = mkdtempSync(path.join(os.tmpdir(), 'agpj-readme-'));
     let server;
     let context;
     let phoneContext;

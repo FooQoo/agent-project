@@ -3,7 +3,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import {
-  agboard,
+  agpj,
   agpjBinary,
   agpjCatalogOk,
   agpjOk,
@@ -229,7 +229,7 @@ test('the CLI stores the epic details from --document, standard input, and --doc
   writeFileSync(file, 'Document from a file.\n');
 
 
-  const text = agboard(PROJECT, ['epic', 'edit', 'BETA', `--document=---\nwaves: [4, 5]\n---\n\nDocument from text.\n`, '--json'], fixture.home);
+  const text = agpj(PROJECT, ['epic', 'edit', 'BETA', `--document=---\nwaves: [4, 5]\n---\n\nDocument from text.\n`, '--json'], fixture.home);
   expect(text.code, text.stderr).toBe(0);
   expect(JSON.parse(text.stdout).epic).toMatchObject({ body: 'Document from text.\n', waves: [[4], [5]] });
   expect(readFileSync(path.join(fixture.beta, 'EPIC.md'), 'utf8')).toContain('Document from text.');
@@ -238,12 +238,12 @@ test('the CLI stores the epic details from --document, standard input, and --doc
   expect(piped.status, piped.stderr).toBe(0);
   expect(readFileSync(path.join(fixture.gamma, 'EPIC.md'), 'utf8')).toContain('Document from standard input.');
 
-  const fromFile = agboard(PROJECT, ['epic', 'edit', 'GAMMA', '--document-file', file, '--json'], fixture.home);
+  const fromFile = agpj(PROJECT, ['epic', 'edit', 'GAMMA', '--document-file', file, '--json'], fixture.home);
   expect(fromFile.code, fromFile.stderr).toBe(0);
   const gamma = JSON.parse(fromFile.stdout).epic;
   expect(gamma.document).toBe('Document from a file.') /* a file and standard input lose one final newline, as before */;
 
-  const help = agboard(PROJECT, ['epic', 'edit', '--help'], fixture.home);
+  const help = agpj(PROJECT, ['epic', 'edit', '--help'], fixture.home);
   expect(help.stdout).toContain('--document-file');
 
   // Put the epic back for the page scenarios.

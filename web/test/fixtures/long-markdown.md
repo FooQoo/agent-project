@@ -2,7 +2,7 @@ Plan for the board setup. Single line breaks
 are kept as line breaks.
 
 ## Purpose
-Create the board storage with `agboard init`. When the storage already exists, change nothing.
+Create the board storage with `agpj init`. When the storage already exists, change nothing.
 
 ### Notes
 Headings below H2 stay inside their section.
@@ -25,7 +25,7 @@ Headings below H2 stay inside their section.
 | Second run | Nothing changes | AC-2 |
 
 ```sh
-AGPJ_HOME=$(mktemp -d) agboard init --name a-very-long-board-name-that-does-not-wrap --description "long line"
+AGPJ_HOME=$(mktemp -d) agpj init --name a-very-long-board-name-that-does-not-wrap --description "long line"
 ```
 
 > Quoted note from a review.

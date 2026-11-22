@@ -53,7 +53,7 @@ for (const { locale, theme, height } of [
       agpjOk(mainProject, ['add', `Other work ${i}`, '--assignee', 'ai', '--actor', 'human']);
     }
     const id = nextTaskId(mainProject);
-    const question = '共有ホームとsetupの全体計画と詳細計画を承認しますか？ ~/.agent-projectを既定の保存先にし、agboard setupでCodex・Claude Codeの共有フォルダ設定へ追加します。既存設定を保持し、旧データの移行は行いません。';
+    const question = '共有ホームとsetupの全体計画と詳細計画を承認しますか？ ~/.agent-projectを既定の保存先にし、agpj setupでCodex・Claude Codeの共有フォルダ設定へ追加します。既存設定を保持し、旧データの移行は行いません。';
     agpjOk(mainProject, ['add', '共有ホームとsetupの計画をレビューする', '--assignee', 'ai', '--actor', 'human']);
     agpjOk(mainProject, askArgs(String(id), questionJson(
       question,

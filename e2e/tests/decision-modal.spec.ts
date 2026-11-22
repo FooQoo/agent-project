@@ -169,7 +169,7 @@ test('the question shows a table, code, a link, an attached picture and an exter
     '| --- | --- |',
     '| Replace | low |',
     '',
-    'Run `agboard setup` and read [the notes](' + images.origin + '/page.html).',
+    'Run `agpj setup` and read [the notes](' + images.origin + '/page.html).',
     '',
     '```ts',
     'const answer = 42;',

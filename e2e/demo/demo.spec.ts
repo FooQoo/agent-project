@@ -92,7 +92,7 @@ test.describe('in an English browser', () => {
     await expect(task(page, 12)).not.toContainText('Pending');
     await expect(page.locator('main [data-decision-answer]')).toHaveCount(0);
 
-    // Checking its last two conditions moves the AI card to Done, as `agboard serve` does.
+    // Checking its last two conditions moves the AI card to Done, as `agpj serve` does.
     await task(page, 11).click();
     const panel = details(page);
     await expect(panel.getByRole('heading', { level: 2 })).toHaveText('Implement task moves');
@@ -145,7 +145,7 @@ test.describe('in an English browser', () => {
     await expect(header.getByRole('button', { name: 'Settings' })).toBeVisible();
     await expect(header.getByRole('button', { name: 'Docs' })).toHaveCount(0);
 
-    // No remote connection: there is no `agboard serve` for a phone to reach.
+    // No remote connection: there is no `agpj serve` for a phone to reach.
     await header.getByRole('button', { name: 'Settings' }).click();
     const settings = page.getByRole('dialog', { name: 'Settings' });
     await expect(settings.getByRole('region', { name: 'Tutorial' })).toBeVisible();

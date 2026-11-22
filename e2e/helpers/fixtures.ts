@@ -11,7 +11,7 @@ interface WorkerFixtures {
 
 /**
  * Each worker gets its own data area with the board fixture in the `agent-board` project, and its own
- * `agboard serve` on a port the system picks. The worker records both in its environment, where `mainHome()`,
+ * `agpj serve` on a port the system picks. The worker records both in its environment, where `mainHome()`,
  * `mainUrl()` and the CLI helpers read them, and every page opens on that serve through `baseURL`. Specs in
  * one worker run one after another, so they share the area as they did when the suite had one worker.
  */

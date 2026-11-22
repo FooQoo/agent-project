@@ -54,7 +54,7 @@ export const MarkdownReason: Story = {
           'Answered decision:',
           '## Which database?',
           '| Name | Size |\n| --- | --- |\n| `main` | 1 GB |',
-          '```sh\nagboard show 12 --json\n```',
+          '```sh\nagpj show 12 --json\n```',
           '![Sample chart](attachment:0123456789abcdef0123456789abcdef)',
           'Selected: Keep it\nThe note keeps its line break.',
         ].join('\n\n'),
@@ -66,7 +66,7 @@ export const MarkdownReason: Story = {
     await expect(await canvas.findByRole('heading', { name: 'Which database?' })).toBeVisible();
     await expect(canvas.getByRole('table')).toBeVisible();
     await expect(canvas.getByRole('img', { name: 'Sample chart' })).toBeVisible();
-    await expect(canvas.getByText('agboard show 12 --json')).toBeVisible();
+    await expect(canvas.getByText('agpj show 12 --json')).toBeVisible();
     await expect(canvasElement.textContent).not.toContain('##');
     await expect(canvasElement.querySelector('.history__reason br')).not.toBeNull();
   },

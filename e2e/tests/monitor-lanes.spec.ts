@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { agboard, agpjCatalogOk, projectId, skipGuide, taskBody } from '../helpers/agpj';
+import { agpj, agpjCatalogOk, projectId, skipGuide, taskBody } from '../helpers/agpj';
 import { startPhoneEntrance, type PhoneEntrance } from '../helpers/monitor';
 
 // The phone monitor's lane view through the phone entrance, driven with a finger: one lane on screen,
@@ -23,8 +23,8 @@ let entrance: PhoneEntrance;
 const ids = new Map<string, number>();
 
 function cli(project: string, args: string[]): string {
-  const result = agboard(project, args, home);
-  if (result.code !== 0) throw new Error(`agboard ${args.join(' ')} failed: ${result.stderr}`);
+  const result = agpj(project, args, home);
+  if (result.code !== 0) throw new Error(`agpj ${args.join(' ')} failed: ${result.stderr}`);
   return result.stdout;
 }
 

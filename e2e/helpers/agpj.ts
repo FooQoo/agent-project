@@ -89,7 +89,7 @@ function agpjEnv(home: string): NodeJS.ProcessEnv {
 }
 
 /**
- * The environment of an `agboard serve` the tests start. `AGPJ_WATCH=poll` makes the serve poll the shared
+ * The environment of an `agpj serve` the tests start. `AGPJ_WATCH=poll` makes the serve poll the shared
  * folder instead of registering a macOS FSEvents watch, which can take tens of seconds per start.
  */
 export function serveEnv(home: string): NodeJS.ProcessEnv {
@@ -103,10 +103,10 @@ export interface AgpjResult {
 }
 
 /**
- * Run a project command, `agboard --project <project> <args>`, against `home` (the main home by default),
+ * Run a project command, `agpj --project <project> <args>`, against `home` (the main home by default),
  * without a terminal. The project is always named by the caller.
  */
-export function agboard(project: string, args: string[], home: string = mainHome()): AgpjResult {
+export function agpj(project: string, args: string[], home: string = mainHome()): AgpjResult {
   return run(['--project', project, ...withTestDefaults(args)], home);
 }
 
@@ -138,11 +138,11 @@ function run(args: string[], home: string): AgpjResult {
   return { code: result.status ?? -1, stdout: result.stdout, stderr: result.stderr };
 }
 
-/** Like `agboard`, but the command must succeed. */
+/** Like `agpj`, but the command must succeed. */
 export function agpjOk(project: string, args: string[], home: string = mainHome()): AgpjResult {
-  const result = agboard(project, args, home);
+  const result = agpj(project, args, home);
   if (result.code !== 0) {
-    throw new Error(`agboard --project ${project} ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
+    throw new Error(`agpj --project ${project} ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
   }
   return result;
 }
@@ -150,7 +150,7 @@ export function agpjOk(project: string, args: string[], home: string = mainHome(
 /** Like `agpjCatalog`, but the command must succeed. */
 export function agpjCatalogOk(args: string[], home: string = mainHome()): AgpjResult {
   const result = agpjCatalog(args, home);
-  if (result.code !== 0) throw new Error(`agboard ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
+  if (result.code !== 0) throw new Error(`agpj ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
   return result;
 }
 
@@ -160,7 +160,7 @@ export interface ProjectJson {
   createdAt: string;
 }
 
-/** The projects from `agboard project ls --json`. */
+/** The projects from `agpj project ls --json`. */
 export function listProjects(home: string = mainHome()): ProjectJson[] {
   return JSON.parse(agpjCatalogOk(['project', 'ls', '--json'], home).stdout).projects;
 }
@@ -180,7 +180,7 @@ export interface WorkspaceJson {
   epics: string;
 }
 
-/** The shared folder of `project`, from `agboard workspace --json`. */
+/** The shared folder of `project`, from `agpj workspace --json`. */
 export function workspace(project: string, home: string = mainHome()): WorkspaceJson {
   return JSON.parse(agpjOk(project, ['workspace', '--json'], home).stdout);
 }
@@ -197,7 +197,7 @@ export interface TaskJson {
   pendingChoices?: { id: string; label: string }[];
 }
 
-/** The cards of `project` from `agboard ls --json`. */
+/** The cards of `project` from `agpj ls --json`. */
 export function listTasks(project: string, home: string = mainHome()): TaskJson[] {
   return JSON.parse(agpjOk(project, ['ls', '--json'], home).stdout).tasks;
 }
@@ -396,7 +396,7 @@ export function ensureProject(project: string, home: string = mainHome()): void 
 
 /**
  * Answer a "[y/N] " prompt of a human-only command (`rm`, `project rm`) the way a person at a terminal
- * would. Runs `agboard` on a pseudo-terminal through a small Python helper, because Node cannot allocate one.
+ * would. Runs `agpj` on a pseudo-terminal through a small Python helper, because Node cannot allocate one.
  */
 export function agpjOnTerminal(
   project: string,
@@ -502,7 +502,7 @@ export interface Serve {
 export const serveStartTimeout = 90_000;
 
 /**
- * The address on the startup line, `{"url":"http://127.0.0.1:<port>/"}`, which `agboard --json serve` prints once
+ * The address on the startup line, `{"url":"http://127.0.0.1:<port>/"}`, which `agpj --json serve` prints once
  * it has bound its port.
  */
 function readStartupUrl(child: ChildProcess, stderr: () => string): Promise<string> {
@@ -518,9 +518,9 @@ function readStartupUrl(child: ChildProcess, stderr: () => string): Promise<stri
     };
     const timer = setTimeout(() => {
       child.kill('SIGKILL');
-      finish(() => reject(new Error(`agboard serve printed no address within ${serveStartTimeout} ms: ${stderr()}`)));
+      finish(() => reject(new Error(`agpj serve printed no address within ${serveStartTimeout} ms: ${stderr()}`)));
     }, serveStartTimeout);
-    const onExit = (code: number | null) => finish(() => reject(new Error(`agboard serve exited with ${code}: ${stderr()}`)));
+    const onExit = (code: number | null) => finish(() => reject(new Error(`agpj serve exited with ${code}: ${stderr()}`)));
     const onData = (chunk: Buffer) => {
       buffer += chunk.toString('utf8');
       const newline = buffer.indexOf('\n');
@@ -530,7 +530,7 @@ function readStartupUrl(child: ChildProcess, stderr: () => string): Promise<stri
         try {
           resolve((JSON.parse(line) as { url: string }).url);
         } catch {
-          reject(new Error(`agboard serve printed an unexpected startup line: ${line}`));
+          reject(new Error(`agpj serve printed an unexpected startup line: ${line}`));
         }
       });
     };
@@ -542,7 +542,7 @@ function readStartupUrl(child: ChildProcess, stderr: () => string): Promise<stri
 async function waitForHealth(url: string, child: ChildProcess): Promise<void> {
   const deadline = Date.now() + serveStartTimeout;
   while (Date.now() < deadline) {
-    if (child.exitCode !== null) throw new Error(`agboard serve exited with ${child.exitCode}`);
+    if (child.exitCode !== null) throw new Error(`agpj serve exited with ${child.exitCode}`);
     try {
       const response = await fetch(`${url}api/health`);
       if (response.ok) return;
@@ -551,11 +551,11 @@ async function waitForHealth(url: string, child: ChildProcess): Promise<void> {
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  throw new Error(`agboard serve did not answer at ${url}`);
+  throw new Error(`agpj serve did not answer at ${url}`);
 }
 
 /**
- * Start `agboard serve` on `home` and wait until it answers. It listens on a port the system picks (`--port 0`),
+ * Start `agpj serve` on `home` and wait until it answers. It listens on a port the system picks (`--port 0`),
  * read back from its startup line. A spec that restarts a serve under an open page passes the earlier serve's
  * port, so the page reconnects to the same address.
  */

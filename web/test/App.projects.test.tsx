@@ -517,7 +517,7 @@ describe('states', () => {
     const app = renderApp(urlOf(PROJECT_A.id));
     expect(await screen.findByText('No projects yet')).toBeTruthy();
     expect(screen.getByText('Create a project using the CLI.')).toBeTruthy();
-    expect(screen.getByText('agboard project create NAME')).toBeTruthy();
+    expect(screen.getByText('agpj project create NAME')).toBeTruthy();
     expect(
       (screen.getByRole('button', { name: 'No projects' }) as HTMLButtonElement).disabled,
     ).toBe(true);

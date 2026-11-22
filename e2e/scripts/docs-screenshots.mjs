@@ -94,7 +94,7 @@ function addSamples(home, id, text, more) {
 const browser = await chromium.launch();
 try {
   for (const locale of ['en', 'ja']) {
-    const home = mkdtempSync(path.join(os.tmpdir(), 'agboard-docs-'));
+    const home = mkdtempSync(path.join(os.tmpdir(), 'agpj-docs-'));
     let server;
     const contexts = [];
     try {
