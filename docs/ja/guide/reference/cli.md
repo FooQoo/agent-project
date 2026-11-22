@@ -86,7 +86,7 @@ agboard --project "My project" result ls 1
 
 ### 質問する
 
-ユーザーに質問するには`message ask`を使います。1回で最大20件の質問を出せます。質問は1件ずつ`Q-12`のようなIDを持つメッセージで、プロジェクトに属し、`--task <id>`を付けるとそのタスクが質問を参照して、回答されるまで待機中になります。コマンドは1行に1つのイベントを出力し（`--json`ならJSON Lines）、未回答の質問がなくなるまで待ちます。既定の待機時間は600秒です。
+ユーザーに質問するには`message ask`を使います。1回で最大20件の質問を出せます。質問は1件ずつ`Q-12`のようなIDを持つメッセージで、プロジェクトに属し、`--task <id>`を付けるとそのタスクが質問を参照して、回答されるまで回答待になります。コマンドは1行に1つのイベントを出力し（`--json`ならJSON Lines）、未回答の質問がなくなるまで待ちます。既定の待機時間は600秒です。
 
 ```sh
 agboard --project "My project" message ask --actor ai --task 1 --questions-json - --json < questions.json
@@ -104,7 +104,7 @@ agboard --project "My project" edit 1 --desc-file task.md
 
 説明は50,000文字まで、エピックの詳細（`EPIC.md`）は100,000文字まで使えます。ファイルは[Markdownファイルの形式](./file-format)に従う必要があります。標準入力から説明を読むには、`--desc -`を使います。
 
-`edit --desc-file`は、本文と完了条件を置き換え、`TASK.md`の最新の履歴と質問への参照（`questions`）を保ちます。入力ファイルの`history`と`questions`は無視されるため、未回答の質問を参照しているタスクは保留のままです。参照を変えるには`message link`・`message unlink`を使います。CLIや画面からの移動・状態の変更などの操作は、`TASK.md`に履歴を追加し、`show`・`snapshot`・ブラウザは同じ履歴を読みます。
+`edit --desc-file`は、本文と完了条件を置き換え、`TASK.md`の最新の履歴と質問への参照（`questions`）を保ちます。入力ファイルの`history`と`questions`は無視されるため、未回答の質問を参照しているタスクは回答待のままです。参照を変えるには`message link`・`message unlink`を使います。CLIや画面からの移動・状態の変更などの操作は、`TASK.md`に履歴を追加し、`show`・`snapshot`・ブラウザは同じ履歴を読みます。
 
 ## エピックの詳細を編集する
 
@@ -136,7 +136,7 @@ agboard --project "My project" epic send LAUNCH --actor human --tasks 1,2
 
 `mv <id> todo`は1枚のカードを送ります。バックログのカードをほかのレーンへ移すのも人の操作です。`epic send`は、エピック全体、または`--tasks`で指定したカードだけを、全部移すか何も移さないかの一回の保存で送ります。エージェントがどちらを実行しても`human_only`になります。すでにバックログを出たカードは、ほかのカードと同じように移ります。ブラウザで人が編集中のカード（`draft: human`）は送れません（`task_is_draft`）。履歴には「人が Todo へ送りました。」と残ります。
 
-計画に未回答の質問があると、送信は`send_with_open_questions`（終了コード1）で断られ、メッセージに質問のIDが並びます。`mv`（または`epic send`）に`--force`を付けると、そのまま送ります。質問は未回答のまま残り、回答があるまでカードはPendingです。
+計画に未回答の質問があると、送信は`send_with_open_questions`（終了コード1）で断られ、メッセージに質問のIDが並びます。`mv`（または`epic send`）に`--force`を付けると、そのまま送ります。質問は未回答のまま残り、回答があるまでカードは回答待です。
 
 ```sh
 agboard --project "My project" mv 12 todo --actor human --force
@@ -155,7 +155,7 @@ agboard --project "My project" mv 12 backlog --actor human
 ```sh
 agboard --project "My project" ls --column doing --json
 agboard --project "My project" ls --column backlog --json
-agboard --project "My project" ls --state pending --json
+agboard --project "My project" ls --state awaiting_answer --json
 agboard ls --all-projects --json
 ```
 
@@ -252,7 +252,7 @@ agboard project bind "My project" --folder ./docs
 agboard --project "My project" wait --until task --idle-timeout 300 --json
 ```
 
-`--until task`には`--idle-timeout`が必須です。1〜86,400秒を指定し、既定値はありません。一回の呼び出しで返すのは進行表と同じ順序の一件で、タスクを占有したり変更したりしません。取得したタスクを解決したら、再び`wait`を呼び出します。セッション全体の流れと、待機中のタスクの扱いは[エージェントとの連携](../delegate/agents#listen-for-the-next-task)を参照してください。
+`--until task`には`--idle-timeout`が必須です。1〜86,400秒を指定し、既定値はありません。一回の呼び出しで返すのは進行表と同じ順序の一件で、タスクを占有したり変更したりしません。取得したタスクを解決したら、再び`wait`を呼び出します。セッション全体の流れと、回答待のタスクの扱いは[エージェントとの連携](../delegate/agents#listen-for-the-next-task)を参照してください。
 
 取得成功時は、一つのJSONオブジェクトを出力して終了コード0を返します。
 

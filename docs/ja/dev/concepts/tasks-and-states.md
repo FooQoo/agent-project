@@ -21,21 +21,22 @@
 | 担当 | レーン | 有効な稼働状態 |
 | --- | --- | --- |
 | ai | backlog | idleのみ |
-| ai | todo | idle、pending |
-| ai | doing | idle、running、pending |
-| ai | done | idleのみ |
+| ai | todo | idle、ran、awaiting_answer |
+| ai | doing | idle、running、paused、awaiting_answer |
+| ai | done | idle、ran |
 | human | すべて（backlogを含む） | idleのみ |
 
-- **Running**は自己申告で、生存監視ではありません。自動で戻ることはなく、エージェントもセッションの開始や中断だけを理由に変えません。
-- **Pending**は、タスクが参照するプロジェクトの質問に、まだ回答がない状態です。読めないメッセージのファイルを参照しているタスクもPendingです。その間もほかのタスクを進めてかまいません。Pendingは保存しません。`task.json`にはIdleかRunningを保存し、読み出すときにタスクの`questions`からPendingを導きます（[メッセージ](./history-and-decisions.md#メッセージ)）。
-- 無効な組み合わせは保存しません。下書きのタスクは、どのレーンでもIdleかPendingです。
+- **Idle**は、一度も稼働していないタスクです。**Running**は自己申告で、生存監視ではありません。自動で戻ることはなく、エージェントもセッションの開始や中断だけを理由に変えません。
+- **Paused**（`paused`）は、稼働したあとに止まった、Doingのタスクです。**Has run**（`ran`）は、一度稼働して、いまは未着手かDoneにあるタスクです。
+- **Awaiting answer**（`awaiting_answer`）は、タスクが参照するプロジェクトの質問に、まだ回答がない状態です。読めないメッセージのファイルを参照しているタスクもAwaiting answerです。その間もほかのタスクを進めてかまいません。Awaiting answerは保存しません。`task.json`には`idle`・`running`・`paused`・`ran`のどれかを保存し、読み出すときにタスクの`questions`からAwaiting answerを導きます（[メッセージ](./history-and-decisions.md#メッセージ)）。待っているタスクは、その下にある保存した状態で判定します。
+- 無効な組み合わせは保存しません。下書きのタスクは、どのレーンでもIdleかAwaiting answerになれます。
 
 操作によって状態は次のように変わります。
 
 - **作成**はタスクを未着手・Idleでレーンの末尾に置き、作成を履歴に記録します。本文がなければ空の`acceptance`と空の本文を書き、指定した本文はfrontmatterの検証を通します。
-- **列移動**は`actor`が必須で、`reason`は任意です。タスクは移動先のレーンの末尾に置きます。実際の移動では保存した稼働状態をIdleに戻し、履歴を追加し、`taskStatusChangedAt`を更新します。同じレーンへの移動は何も変えません。
-- **稼働状態の変更**は`actor`が必須で、レーンは変わりません。`state`が受け付けるのはIdleとRunningで、RunningにできるのはAI担当のDoingだけです。回答待ちのタスクをAIがRunningにしようとすると`questions_unanswered`で拒否します。質問は`message ask`で出し、そのときRunningのタスクはIdleに戻ります。列移動やアーカイブをしても、タスクの質問と参照は残ります。同じ状態の再申告は変更ではありません。
-- **編集**で変わるのはタイトル・本文・完了条件だけで、担当は変わりません。CLIの`--desc`・`--desc-file`はファイル全体を受け取りますが、保存済みの最新の`TASK.md`の履歴と`questions`の参照を保ちます。入力のこの2つのキーは無視されるため、未回答の質問を参照するタスクは保留のままです。`epic edit --document-file`は`EPIC.md`の全文を置き換えます。Web画面は`body`と`acceptance`を送り、ロックの中で最新のファイルに適用します。
+- **列移動**は`actor`が必須で、`reason`は任意です。タスクは移動先のレーンの末尾に置きます。実際の移動ではタスクの未回答の質問を保ち、保存した稼働状態をそれまでの経過から決めます。IdleのタスクはIdleのままで、稼働したタスク（保存した状態がRunning、Paused、Has run）は、DoingではPaused、未着手とDoneではHas runになり、Idleには戻りません。待っているタスクは、その下にある保存した状態で判定します。実際の移動は履歴を追加し、`taskStatusChangedAt`を更新します。同じレーンへの移動は何も変えません。
+- **稼働状態の変更**は`actor`が必須で、レーンは変わりません。`state`はDoingにあるAI担当のタスクに使います。許されるのは、IdleからRunning、RunningからPaused、PausedからRunningの変更だけで、それ以外（たとえばRunningからIdle、IdleからPaused）は`invalid_state_change`で拒否します。`ran`と`awaiting_answer`は設定できず、求めると`invalid_value`で拒否します。回答待ちのタスクをAIがRunningにしようとすると`questions_unanswered`で拒否します。質問は`message ask`で出し、そのときRunningのタスクはPausedになります。列移動やアーカイブをしても、タスクの質問と参照は残ります。同じ状態の再申告は変更ではありません。
+- **編集**で変わるのはタイトル・本文・完了条件だけで、担当は変わりません。CLIの`--desc`・`--desc-file`はファイル全体を受け取りますが、保存済みの最新の`TASK.md`の履歴と`questions`の参照を保ちます。入力のこの2つのキーは無視されるため、未回答の質問を参照するタスクは回答待のままです。`epic edit --document-file`は`EPIC.md`の全文を置き換えます。Web画面は`body`と`acceptance`を送り、ロックの中で最新のファイルに適用します。
 - **エピックの所属**は`epicId`を設定または解除します。実際に変わったときだけ履歴を追加します。下書きやアーカイブ済みのタスクでも人は変更できます。
 - **削除**はタスクのフォルダを消します。Web画面はアーカイブ済みのタスクだけを削除し、CLIは端末での確認を求めます。
 
@@ -66,7 +67,7 @@
 下書きは、人がまだ書いているタスクやエピックです。`draft`は`null`（通常のタスク）か`"human"`（人がブラウザで書いている。編集ロック）です。保存される項目は[共有ファイル](../reference/files.md)にあります。下書きに期限はなく、`wait`と自動Doneはすべての下書きを飛ばします。AIの下書きはありません。エージェントが提案する計画はバックログのタスクです（[バックログと送信](#バックログと送信)を参照）。
 
 - エージェントが作ったタスクとエピック（CLIの`add`と`epic add`）は`draft: null`です。人が作ったものは`null`で、ブラウザで下書きとして作ると`human`です。
-- プレビューは、最初の実際の変更で人の下書きに入ります。タスクは`PUT /tasks/{id}/draft`で`draft: "human"`を送り、エピックは`PATCH /epics/{id}`で`draft: "human"`を送ります。下書きにできるのはIdleまたはPendingのタスクだけで、Runningは`invalid_state_for_draft`で拒否します。実際の変更は履歴を追加しますが、`updatedAt`は変えません。エピックの下書きに入る・出るときも`updatedAt`は変わりません。古いバージョンのクライアントが送る`draft: "ai"`は受け付け、`null`として扱います（編集ロックを解除します）。`draft: "ai"`でのタスクの作成は拒否します。
+- プレビューは、最初の実際の変更で人の下書きに入ります。タスクは`PUT /tasks/{id}/draft`で`draft: "human"`を送り、エピックは`PATCH /epics/{id}`で`draft: "human"`を送ります。下書きにできるのはRunningでないタスクだけで、Runningは`invalid_state_for_draft`で拒否します。実際の変更は履歴を追加しますが、`updatedAt`は変えません。エピックの下書きに入る・出るときも`updatedAt`は変わりません。古いバージョンのクライアントが送る`draft: "ai"`は受け付け、`null`として扱います（編集ロックを解除します）。`draft: "ai"`でのタスクの作成は拒否します。
 - `human`の下書きでは、CLIの`edit`・`mv`・`state`・`history add`が書き込みロックの中で`draft`を確かめ、`task_is_draft`で失敗し、CLIの`epic edit`と`epic edit --waves`は`epic_is_draft`で失敗します。読み取り、`add`、`epic attachment`、所属の変更には影響しません。エピックへのWebの`PATCH`は下書きを拒否しません。
 - Webの編集は下書きのタスクだけを受け付けます。`finalize`を指定すると、本文・タイトル・`draft: null`・履歴を一組で確定します。破棄は、`draft: null`と`discard: true`を送り、履歴に`Discarded draft changes.`を残します。エピックに履歴はないので、破棄は`PATCH /epics/{id}`の`draft: null`だけです。
 - 下書きの`TASK.md`の直接編集は製品では止められず、READMEとエージェントのスキルで編集しないよう伝えます。
@@ -75,9 +76,9 @@
 
 バックログのレーンは、まだ始めてはいけない確定済みの計画を置く場所で、「始めない」と同じ意味です。計画はチャットやAIへの依頼で直します。バックログ専用の編集はなく、通常のカードの編集は変わりません。バックログを使うファイルは`formatVersion: 2`になります（[保存と復旧](./saving-and-recovery.md#形式のバージョンとdraftの値)を参照）。
 
-- **作成。** `agboard add ... --actor ai --backlog`でバックログにカードを作ります。エージェントは、計画だけを頼まれたときに使います。`--backlog`なしのエージェントの`add`は、通常の未着手のタスクを作ります（未回答の質問があればこれまでどおりPendingになります）。`epic add`にレーンはありません。エージェントのエピックは通常のエピックで、計画だけのエピックは、カードを`--backlog --epic <ID>`で作ったものです。
+- **作成。** `agboard add ... --actor ai --backlog`でバックログにカードを作ります。エージェントは、計画だけを頼まれたときに使います。`--backlog`なしのエージェントの`add`は、通常の未着手のタスクを作ります（未回答の質問があればこれまでどおりAwaiting answerになります）。`epic add`にレーンはありません。エージェントのエピックは通常のエピックで、計画だけのエピックは、カードを`--backlog --epic <ID>`で作ったものです。
 - **送信。** バックログから未着手へ送れるのは人だけです。1枚のカードには`agboard mv <id> todo --actor human [--force]`（`send`という別のコマンドはありません）、エピック全体または選んだカードを、全部成功か何も変えないかの一回の保存で送る`agboard epic send <EPIC-ID> --actor human [--tasks 1,2] [--force]`です。Webのルートは`POST /tasks/{id}/send`と`POST /epics/{epicId}/send`（[Web API](../reference/web-api.md)を参照）で、WebのUIではバックログのレーン、カードの詳細、エピックの詳細から送れます（[サーバーとUI](./server-and-ui.md)を参照）。エージェントが行うと`human_only`になります。未着手へ送ったカードは未着手の末尾に置かれます。`mv`がこの規則を使うのは、カードをバックログから未着手へ移すときだけです。すでにバックログを出たカードはほかのカードと同じように移り、送信のルートでは何も変わらないので、再試行しても安全です。人が編集中のカード（`draft: human`）は送れません（`task_is_draft`）。履歴には`人が Todo へ送りました。`と残ります。
-- **未回答の質問。** 未回答の質問がある計画は、人が`--force`（CLI）または`ack: true`（API）で確認するまで、`send_with_open_questions`（409。メッセージに質問のIDを示す）で拒否します。送ったあとも質問は残り、回答があるまでカードはPendingです。
+- **未回答の質問。** 未回答の質問がある計画は、人が`--force`（CLI）または`ack: true`（API）で確認するまで、`send_with_open_questions`（409。メッセージに質問のIDを示す）で拒否します。送ったあとも質問は残り、回答があるまでカードはAwaiting answerです。
 - **移動。** エージェントのバックログのカードへの`mv`・`state`は`task_in_backlog`で失敗します。人によるCLIやWebでの未着手への移動は送信で、DoingやDoneへの移動も人なら行え、送信と同じ規則に従います（未回答の質問には`--force`または`ack`が要り、編集中のカードは拒否されます）。エージェントはバックログのカードを動かせません。`agboard mv <id> backlog --actor human`は、未着手の未着手のカード（Idleで成果なし）をバックログへ戻します。エージェントが行うと`human_only`です。
 - **エージェントの画面。** nextTasks・`wait`・Hook・常駐セッション・自動Done・進捗表の候補は、バックログを見ません。エピックの中のバックログのカードは、Doneではないので、あとのウェーブを待たせ続けます。エピックの`progress`には、任意の`backlog`の件数があり、0のときは省きます。
 - **規則の置き場所。** 送信の規則は`src/file_store/ops/send.rs`にあり、CLIの`mv <id> todo`とWebの送信ルートはどちらも`send_task_locked`に行き着きます。`check_sender`と`open_questions`が、タスク、またはエピックの送信が動かすすべてのカードについて、エージェントと、確認のない未回答の質問のある計画を拒みます。
@@ -85,8 +86,8 @@
 
 ## アーカイブ
 
-- アーカイブでは、レーン・`draft`・`epicId`・positionを保ち、保存した稼働状態をIdleに戻し、質問の参照を保ち、`updatedAt`を更新します。レーンと`taskStatusChangedAt`は変わりません。Web画面のアーカイブと復元は、固定の理由`Archived by user.`と`Restored by user.`を記録します。
-- 復元したタスクは、アーカイブしたときのレーンの末尾に、稼働状態Idleで置きます。アーカイブでは必ずIdleを保存するので、復元したタスクはアーカイブ時点の稼働状態になり、レーンとIdleの組み合わせは常に作業モデルで有効です。フォールバックは要りません。スマホのアーカイブ一覧も、PCと同じ`POST …/tasks/{id}/restore`で復元します。
+- アーカイブでは、レーン・`draft`・`epicId`・positionを保ち、稼働したタスクの稼働状態は`ran`にし（`ran`は`ran`のまま、RunningとPausedは`ran`になります）、一度も稼働していないタスクは`idle`のままにするので、アーカイブしたタスクはIdleかHas runです。質問の参照を保ち、`updatedAt`を更新します。レーンと`taskStatusChangedAt`は変わりません。Web画面のアーカイブと復元は、固定の理由`Archived by user.`と`Restored by user.`を記録します。
+- 復元したタスクは、アーカイブしたときのレーンの末尾に置き、アーカイブ時点の稼働状態（IdleかHas run）を保ちます。ただし、稼働したタスクがDoingに戻るときは、列移動と同じくPausedになるので、レーンと状態の組み合わせは常に作業モデルで有効です。スマホのアーカイブ一覧も、PCと同じ`POST …/tasks/{id}/restore`で復元します。
 - 通常のスナップショット・`ls`・Hookは未アーカイブのタスクだけを返し、`show ID`はアーカイブ済みも表示します。アーカイブ済みへの書き込みは`task_archived`で失敗しますが、画像は読めます。アーカイブ一覧は`archivedAt`の新しい順で、同じ時刻ならタスクIDの大きいほうが先、読み取れる`archivedAt`のないタスクは最後です。`GET …/archive`は`sort_archived_newest_first`（`src/file_store/reader/snapshot.rs`）で並べ、Web UIも`sortArchivedNewestFirst`（`web/src/features/tasks/api/read.ts`）で同じ順に並べ直すため、PCの一覧とスマートフォンの一覧は同じ順序になります。
 
 ## リリース予定の版
