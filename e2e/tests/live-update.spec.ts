@@ -191,7 +191,7 @@ test('an open task follows its move to another lane while its details stay open'
   // A task that has run shows Has run in Done.
   await expect(panel.locator('.detail__meta .status-label--agent')).toHaveText('Has run');
   await panel.getByRole('tab', { name: /^History/ }).click();
-  await expect(panel.getByRole('listitem').first()).toContainText('Moved task from Doing to Done; agent is ran.');
+  await expect(panel.getByRole('listitem').first()).toContainText('Moved task from Doing to Done; agent has run.');
   await notReloaded(page);
 });
 
@@ -221,7 +221,7 @@ test('a task for the user added from the CLI appears live and moves with a gener
   await expect(panel.getByRole('listitem').first().getByRole('img')).toHaveCount(0);
 });
 
-test('a user answer returns a pending task to idle and records the full answer in history', async ({ page }) => {
+test('a user answer returns an awaiting-answer task to paused and records the full answer in history', async ({ page }) => {
   await task(page, 12).click();
   const panel = page.getByRole('complementary', { name: 'Task details' });
   // All recorded reasons use neutral dots without inferred state tags.
@@ -246,7 +246,7 @@ test('a user answer returns a pending task to idle and records the full answer i
   await sendAnswer(page, 12, { choice: 'Keep compatibility (recommended)', text: fullAnswer });
   await closeMessages(page);
 
-  await expect(lane(page, 'Doing').getByRole('button', { name: /^#12 AI Idle Restore a board from JSON / })).toBeVisible();
+  await expect(lane(page, 'Doing').getByRole('button', { name: /^#12 AI Paused Restore a board from JSON / })).toBeVisible();
   await expect(panel.getByRole('listitem').first().getByRole('img')).toHaveCount(0);
   await expect(panel.getByRole('listitem').first()).toContainText('Do not migrate or delete user data.');
   await expect(panel.getByRole('region', { name: 'The agent is waiting for your answer' })).toHaveCount(0);
