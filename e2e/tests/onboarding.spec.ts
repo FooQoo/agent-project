@@ -46,6 +46,11 @@ function boardSamples(page: Page) {
 async function sendRequest(page: Page) {
 	const ask = page.getByRole('dialog', { name: 'Ask AI' });
 	await expect(ask.getByRole('textbox')).toHaveValue(/monthly report/);
+	// The same "Attach task" control as the real screen offers the sample cards, and attaching only edits the text.
+	await ask.getByRole('button', { name: 'Attach task' }).click();
+	await page.getByRole('checkbox', { name: /Write the summary/ }).click();
+	await page.getByRole('button', { name: 'Attach (1)' }).click();
+	await expect(ask.getByRole('textbox')).toHaveValue(/monthly report[\s\S]*#2$/);
 	await ask.getByRole('button', { name: 'Send request' }).click();
 }
 
