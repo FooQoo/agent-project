@@ -10,7 +10,7 @@ use agent_project::file_store::FileStore;
 use common::{Running, agpj, demo_project, json_error, json_ok, multipart, png};
 use serde_json::{Value, json};
 
-const BOUNDARY: &str = "agboard-test-boundary";
+const BOUNDARY: &str = "agpj-test-boundary";
 const IMAGE_ID: &str = "0123456789abcdef0123456789abcdef";
 
 fn project_id(home: &Path) -> String {

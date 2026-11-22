@@ -1,7 +1,7 @@
 //! End-to-end stories for a data area that holds several projects.
 //!
-//! Everything here runs the real `agboard` binary against the shared files in a temporary data area:
-//! the CLI, a real `agboard serve` on port 0 with HTTP and server-sent events, the agent hook and `wait`,
+//! Everything here runs the real `agpj` binary against the shared files in a temporary data area:
+//! the CLI, a real `agpj serve` on port 0 with HTTP and server-sent events, the agent hook and `wait`,
 //! and a pseudo-terminal for the commands that need a person. The projects come from the backup fixtures
 //! the browser specs use (`e2e/fixtures/multi-project-*.json`), which hold a task #1 each with different
 //! content.
@@ -35,7 +35,7 @@ fn fixture(name: &str) -> PathBuf {
         .join(name)
 }
 
-/// `agboard [--project NAME] ARGS...` with no terminal and nothing on stdin.
+/// `agpj [--project NAME] ARGS...` with no terminal and nothing on stdin.
 fn run(home: &Path, project: Option<&str>, args: &[&str]) -> Output {
     let mut command = bin();
     command
@@ -214,7 +214,7 @@ fn task(snapshot: &Value, id: i64) -> &Value {
         .unwrap_or_else(|| panic!("no task #{id}"))
 }
 
-/// A running `agboard serve --port 0`, stopped when dropped so that a failing test leaves nothing behind.
+/// A running `agpj serve --port 0`, stopped when dropped so that a failing test leaves nothing behind.
 struct Serve {
     child: Child,
     addr: SocketAddr,

@@ -1,7 +1,7 @@
 //! Shared harness for the epic, request, and shared-file HTTP and CLI tests.
 //!
 //! Servers listen on port 0 in a temporary data area. The CLI is the real
-//! `agboard` binary run against the same `AGPJ_HOME`.
+//! `agpj` binary run against the same `AGPJ_HOME`.
 
 #![allow(dead_code)]
 
@@ -35,7 +35,7 @@ pub fn png() -> Vec<u8> {
 /// A TASK.md body that the file store accepts.
 pub const BODY: &str = "## 作業内容\n\nDetails\n\n## 完了条件と確認結果\n\n- [ ] AC-1. Done\n  - 確認結果: 未確認\n  - 根拠: 未記入\n  - 調整役の確認: 未確認\n\n## 実行記録\n\n";
 
-/// Run the `agboard` binary in `home` with no terminal on standard input.
+/// Run the `agpj` binary in `home` with no terminal on standard input.
 /// Returns the exit code, standard output, and standard error.
 pub fn agpj(home: &Path, args: &[&str]) -> (i32, String, String) {
     let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
@@ -131,7 +131,7 @@ impl Reply {
     }
 }
 
-/// A running `agboard serve` on port 0, stopped on drop.
+/// A running `agpj serve` on port 0, stopped on drop.
 pub struct Running {
     pub addr: SocketAddr,
     stop: Option<tokio::sync::oneshot::Sender<()>>,

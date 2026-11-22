@@ -4,13 +4,13 @@ mod common;
 use serde_json::Value;
 use tempfile::tempdir;
 
-/// Run `agboard --project "Agent Board" <args>`.
+/// Run `agpj --project "Agent Board" <args>`.
 fn invoke(home: &std::path::Path, args: &[&str]) -> assert_cmd::assert::Assert {
     invoke_for(home, "Agent Board", args)
 }
 
 fn invoke_for(home: &std::path::Path, project: &str, args: &[&str]) -> assert_cmd::assert::Assert {
-    let mut command = Command::cargo_bin("agboard").unwrap();
+    let mut command = Command::cargo_bin("agpj").unwrap();
     command
         .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
@@ -220,7 +220,7 @@ fn a_command_needs_a_project_that_exists_and_never_guesses_one() {
     let home = tempdir().unwrap();
     invoke_for(home.path(), "Only", &["init"]).success();
     // No --project: refused even though exactly one project exists.
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
         .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
@@ -264,7 +264,7 @@ fn make_draft(home: &std::path::Path, project: &str, id: i64) {
 }
 
 fn invoke_none(home: &std::path::Path, args: &[&str]) -> assert_cmd::assert::Assert {
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
         .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
@@ -431,7 +431,7 @@ fn descriptions_up_to_the_limit_pass_through_every_input() {
             .unwrap()
             .contains("history:")
     );
-    let piped = Command::cargo_bin("agboard")
+    let piped = Command::cargo_bin("agpj")
         .unwrap()
         .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
@@ -478,7 +478,7 @@ fn descriptions_up_to_the_limit_pass_through_every_input() {
 #[test]
 fn help_describes_markdown_limits_and_drafts() {
     let help = |args: &[&str]| {
-        let out = Command::cargo_bin("agboard")
+        let out = Command::cargo_bin("agpj")
             .unwrap()
             .env("AGPJ_AUTOSTART", "0")
             .env_remove("CLAUDE_CODE_SESSION_ID")

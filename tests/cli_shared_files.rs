@@ -7,7 +7,7 @@ use assert_cmd::Command;
 use serde_json::Value;
 
 fn agpj(home: &Path) -> Command {
-    let mut cmd = Command::cargo_bin("agboard").unwrap();
+    let mut cmd = Command::cargo_bin("agpj").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0").env("AGPJ_OPEN_BROWSER", "0");
     cmd.env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
@@ -44,7 +44,7 @@ fn the_first_project_creates_the_shared_folder() {
             &std::fs::read_to_string(shared.join("workspace.json")).unwrap()
         )
         .unwrap(),
-        serde_json::json!({"format": "agboard-files", "formatVersion": 1})
+        serde_json::json!({"format": "agpj-files", "formatVersion": 1})
     );
     let project = shared.join("projects").join(&id);
     assert!(project.join("project.json").is_file());

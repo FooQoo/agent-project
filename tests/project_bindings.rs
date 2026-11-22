@@ -158,7 +158,7 @@ fn an_unknown_folder_cannot_be_canonicalized_and_a_file_is_not_a_folder() {
 // ---- the command line -----------------------------------------------------
 
 fn agpj(home: &Path, cwd: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")

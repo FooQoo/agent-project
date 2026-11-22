@@ -687,7 +687,7 @@ fn errors_and_invalid_cli_inputs_are_not_idle_completions() {
         ],
         vec!["--project", "Demo", "wait", "--timeout", "1"],
     ] {
-        let output = AssertCommand::cargo_bin("agboard")
+        let output = AssertCommand::cargo_bin("agpj")
             .unwrap()
             .env("AGPJ_AUTOSTART", "0")
             .env("AGPJ_OPEN_BROWSER", "0")

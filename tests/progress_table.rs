@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 use tempfile::{TempDir, tempdir};
 
 fn agpj(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")

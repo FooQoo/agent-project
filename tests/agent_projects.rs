@@ -91,7 +91,7 @@ fn content(mut snapshot: Value) -> Value {
     snapshot
 }
 
-/// Runs `agboard [--project NAME] hook --agent AGENT` with `input` on stdin.
+/// Runs `agpj [--project NAME] hook --agent AGENT` with `input` on stdin.
 fn hook(home: &Path, project: Option<&str>, agent: &str, input: &str) -> Output {
     hook_in(home, project, agent, input, None)
 }
@@ -150,7 +150,7 @@ fn error_code(context: &str) -> String {
 
 const SESSION_START: &str = r#"{"hook_event_name":"SessionStart"}"#;
 
-/// A running `agboard serve`, stopped when dropped, so that a failing test
+/// A running `agpj serve`, stopped when dropped, so that a failing test
 /// does not leave it behind.
 struct Server(Child);
 

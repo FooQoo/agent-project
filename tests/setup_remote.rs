@@ -1,6 +1,6 @@
-//! `agboard setup remote`: save the ngrok connection settings.
+//! `agpj setup remote`: save the ngrok connection settings.
 //!
-//! Runs the real `agboard` binary with `AGPJ_HOME` in a temporary directory and
+//! Runs the real `agpj` binary with `AGPJ_HOME` in a temporary directory and
 //! `AGPJ_KEYCHAIN=none`, so the real keychain is never touched. No server is
 //! started and port 7420 is never used.
 
@@ -13,7 +13,7 @@ const TOKEN: &str = "tok_secret_value_123";
 const FILE: &str = ".internal/monitor-connection.json";
 
 fn agpj(home: &Path) -> Command {
-    let mut cmd = Command::cargo_bin("agboard").unwrap();
+    let mut cmd = Command::cargo_bin("agpj").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_KEYCHAIN", "none")

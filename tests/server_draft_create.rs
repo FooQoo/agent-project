@@ -9,7 +9,7 @@ use std::path::Path;
 use common::{Reply, Running, demo_project, multipart, png};
 use serde_json::{Value, json};
 
-const BOUNDARY: &str = "agboard-create-boundary";
+const BOUNDARY: &str = "agpj-create-boundary";
 const IMAGE_ID: &str = "0123456789abcdef0123456789abcdef";
 
 fn project_id(home: &Path) -> String {

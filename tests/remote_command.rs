@@ -1,4 +1,4 @@
-//! `agboard show remote`: the saved settings, the ngrok connection state, the public address with the
+//! `agpj show remote`: the saved settings, the ngrok connection state, the public address with the
 //! project, and the passcode, read from a real server on loopback.
 //!
 //! No test connects to ngrok: the tunnel is opened by a mock connector.
@@ -18,7 +18,7 @@ mod harness;
 use harness::*;
 
 fn agpj(home: &Path, args: &[&str]) -> Output {
-    let mut cmd = Command::cargo_bin("agboard").unwrap();
+    let mut cmd = Command::cargo_bin("agpj").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_KEYCHAIN", "none")

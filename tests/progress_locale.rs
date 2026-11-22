@@ -1,5 +1,5 @@
 //! The saved language rides in the progress table as `locale`: in the hook
-//! context and in `agboard progress --json`. It is left out for English and
+//! context and in `agpj progress --json`. It is left out for English and
 //! when no usable language is saved, and a broken file never fails either command.
 
 use std::io::Cursor;

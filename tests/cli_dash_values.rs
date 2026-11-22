@@ -26,7 +26,7 @@ fn all_task_text(home: &Path) -> String {
     out
 }
 
-/// Run `agboard` with `input` on standard input.
+/// Run `agpj` with `input` on standard input.
 fn agpj_stdin(home: &Path, args: &[&str], input: &str) -> (i32, String, String) {
     let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")

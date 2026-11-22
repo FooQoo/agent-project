@@ -8,7 +8,7 @@ use std::path::Path;
 use common::{Reply, Running, agpj, demo_project, multipart, png};
 use serde_json::{Value, json};
 
-const BOUNDARY: &str = "agboard-simple-request";
+const BOUNDARY: &str = "agpj-simple-request";
 fn project_id(home: &Path) -> String {
     common::json_ok(home, &["project", "ls", "--json"])["projects"][0]["id"]
         .as_str()

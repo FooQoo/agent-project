@@ -1,4 +1,4 @@
-//! `agboard message ask` and `message wait`: the events of a wait and how it ends, and that
+//! `agpj message ask` and `message wait`: the events of a wait and how it ends, and that
 //! asking without waiting needs no server.
 
 mod common;

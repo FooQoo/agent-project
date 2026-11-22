@@ -182,7 +182,7 @@ fn a_stream_without_valid_session_headers_is_not_counted() {
     assert_eq!(refused.status, 422, "{}", refused.body);
 }
 
-/// `agboard serve` as its own process, with the short grace period.
+/// `agpj serve` as its own process, with the short grace period.
 fn serve(home: &std::path::Path) -> (ServeProcess, u16) {
     let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
@@ -306,7 +306,7 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
     }
 }
 
-/// One `agboard` command with the board's test settings and an agent session's variables.
+/// One `agpj` command with the board's test settings and an agent session's variables.
 fn agpj_in_session(home: &std::path::Path, session: Option<&str>, args: &[&str]) -> Vec<u8> {
     let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
     command

@@ -22,7 +22,7 @@ use support::home;
 // ------------------------------------------------------------- command line
 
 fn agpj(home: &Path) -> Command {
-    let mut cmd = Command::cargo_bin("agboard").unwrap();
+    let mut cmd = Command::cargo_bin("agpj").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0").env("AGPJ_OPEN_BROWSER", "0");
     cmd.env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
@@ -104,8 +104,7 @@ fn bad_command_lines_exit_with_2_and_never_print_the_token() {
 #[test]
 fn a_valid_ngrok_command_line_is_accepted() {
     let parse_serve = |extra: &[&str]| {
-        let mut argv: Vec<std::ffi::OsString> =
-            ["agboard", "serve"].iter().map(Into::into).collect();
+        let mut argv: Vec<std::ffi::OsString> = ["agpj", "serve"].iter().map(Into::into).collect();
         argv.extend(extra.iter().map(Into::into));
         let Ok(Parsed::Run(cli)) = parse(&argv) else {
             panic!("the command line must parse: {extra:?}");

@@ -24,7 +24,7 @@ fn run(home: &Path, args: &[&str]) -> Output {
         .env("TZ", "UTC")
         .args(args)
         .output()
-        .expect("agboard should start")
+        .expect("agpj should start")
 }
 
 fn success(home: &Path, args: &[&str]) -> Output {

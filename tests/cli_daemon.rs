@@ -1,4 +1,4 @@
-//! `agboard serve -d` and `agboard stop`.
+//! `agpj serve -d` and `agpj stop`.
 //!
 //! These tests run the real binary with `AGPJ_HOME` in a temporary
 //! directory. Every server listens on a port the OS picks (never 7420), and
@@ -18,7 +18,7 @@ fn serial() -> MutexGuard<'static, ()> {
 }
 
 fn agpj(home: &Path) -> Command {
-    let mut cmd = Command::cargo_bin("agboard").unwrap();
+    let mut cmd = Command::cargo_bin("agpj").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0").env("AGPJ_OPEN_BROWSER", "0");
     cmd.env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
@@ -70,7 +70,7 @@ fn serve_d_returns_while_the_server_runs_and_stop_ends_it() {
         )),
         "{line}"
     );
-    assert!(line.contains("agboard stop"), "{line}");
+    assert!(line.contains("agpj stop"), "{line}");
     assert!(!port_is_free(port), "the server should hold the port");
 
     let info: serde_json::Value =

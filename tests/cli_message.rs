@@ -1,4 +1,4 @@
-//! `agboard message ...`: asking, answering, withdrawing, sending and accepting, and the JSON
+//! `agpj message ...`: asking, answering, withdrawing, sending and accepting, and the JSON
 //! each command prints.
 
 mod common;

@@ -11,7 +11,7 @@ use tempfile::{TempDir, tempdir};
 fn agpj(home: &Path, args: &[&str]) -> Value {
     let mut full = vec!["--project", "Demo"];
     full.extend(args);
-    let assert = Command::cargo_bin("agboard")
+    let assert = Command::cargo_bin("agpj")
         .unwrap()
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
@@ -30,7 +30,7 @@ fn board(epics: &[&str]) -> TempDir {
     let home = tempdir().unwrap();
     let folder = home.path().join("work");
     fs::create_dir_all(&folder).unwrap();
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")

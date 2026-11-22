@@ -97,7 +97,7 @@ fn a_request_is_sent_with_images_and_withdrawn_by_a_person() {
     let server = Running::start(home.path());
     let base = format!("/api/projects/{pid}/messages");
 
-    let boundary = "----agboard";
+    let boundary = "----agpj";
     let text = "Add a reset link.\n\n![](attachments/login.png)";
     let body = multipart(boundary, &[("text", text)], &[("images", "login.png", PNG)]);
     let sent = server.write_multipart("POST", &format!("{base}/requests"), body, boundary);
@@ -150,7 +150,7 @@ fn an_answer_that_repeats_a_question_is_refused_before_anything_is_saved() {
     let server = Running::start(home.path());
     let base = format!("/api/projects/{pid}/messages");
 
-    let boundary = "----agboard";
+    let boundary = "----agpj";
     let metadata = json!({"answers": [
         {"questionId": "Q-1", "choiceId": "a"},
         {"questionId": "Q-1", "choiceId": "b"},

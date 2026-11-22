@@ -1,4 +1,4 @@
-//! `agboard result add|ls`: results recorded with versions, safe to retry.
+//! `agpj result add|ls`: results recorded with versions, safe to retry.
 
 mod common;
 

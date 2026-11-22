@@ -20,7 +20,7 @@ use tempfile::tempdir;
 // ---- helpers --------------------------------------------------------------
 
 fn agpj(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
@@ -250,7 +250,7 @@ fn every_project_command_refuses_a_missing_project() {
         if !command.contains(&"--json") {
             command.push("--json");
         }
-        let output = Command::cargo_bin("agboard")
+        let output = Command::cargo_bin("agpj")
             .unwrap()
             .env("AGPJ_AUTOSTART", "0")
             .env("AGPJ_OPEN_BROWSER", "0")
@@ -394,7 +394,7 @@ fn project_rm_and_task_rm_refuse_without_a_human_terminal() {
         vec!["--project", "A", "rm", "1"],
     ] {
         // Even a "yes" on standard input is not a human at a terminal.
-        let output = Command::cargo_bin("agboard")
+        let output = Command::cargo_bin("agpj")
             .unwrap()
             .env("AGPJ_AUTOSTART", "0")
             .env("AGPJ_OPEN_BROWSER", "0")
@@ -423,7 +423,7 @@ mod terminal {
 
     fn session(home: &Path, args: &[&str]) -> Session {
         let mut command =
-            std::process::Command::new(Command::cargo_bin("agboard").unwrap().get_program());
+            std::process::Command::new(Command::cargo_bin("agpj").unwrap().get_program());
         command
             .env("AGPJ_AUTOSTART", "0")
             .env("AGPJ_OPEN_BROWSER", "0")
@@ -536,7 +536,7 @@ mod terminal {
 
 // ---- notification of a running serve --------------------------------------
 
-/// A stand-in for `agboard serve`: counts `POST /api/notify` requests and
+/// A stand-in for `agpj serve`: counts `POST /api/notify` requests and
 /// answers 204. `serve.json` in `dir` points the CLI at it.
 struct NotifySpy {
     count: Arc<AtomicUsize>,
@@ -604,7 +604,7 @@ impl NotifySpy {
 
 /// Run the CLI in this process with a spy instead of a server notification.
 fn in_process(home: &Path, args: &[&str]) -> (i32, String, String, usize, Vec<PathBuf>) {
-    let args: Vec<OsString> = std::iter::once("agboard")
+    let args: Vec<OsString> = std::iter::once("agpj")
         .chain(folder_args(home, args).iter().map(String::as_str))
         .map(OsString::from)
         .collect();
@@ -951,7 +951,7 @@ fn help_lists_project_commands_and_every_example_names_its_project() {
     let top = agpj(home.path(), &["--help"]).success();
     let top = String::from_utf8_lossy(&top.get_output().stdout).to_string();
     assert!(top.contains("project"));
-    assert!(top.contains("agboard project ls --json"));
+    assert!(top.contains("agpj project ls --json"));
     assert!(top.contains("rename"));
     assert!(!top.contains("--name"));
 
@@ -985,7 +985,7 @@ fn help_lists_project_commands_and_every_example_names_its_project() {
         let help = String::from_utf8_lossy(&help.get_output().stdout).to_string();
         let examples: Vec<&str> = help
             .lines()
-            .filter(|line| line.trim_start().starts_with("agboard "))
+            .filter(|line| line.trim_start().starts_with("agpj "))
             // `show remote` reads the settings of the data folder and names a project only to
             // give the phone address of that one; it has its own tests.
             .filter(|line| !line.contains("show remote") && !line.contains("<COMMAND>"))

@@ -1,6 +1,6 @@
 //! The first-run guide's one stored fact: whether this data area has seen it. The
 //! file, the legacy mapping and the cleanup of an older release's sample cards, and
-//! the two routes on a running `agboard serve`.
+//! the two routes on a running `agpj serve`.
 
 use std::fs;
 use std::io::{BufRead, BufReader};

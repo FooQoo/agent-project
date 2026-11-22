@@ -1,9 +1,9 @@
-//! The multi-project HTTP surface of `agboard serve`: the project list, the
+//! The multi-project HTTP surface of `agpj serve`: the project list, the
 //! per-project board and task routes, guard ordering, and the change
 //! notifications that reach connected browsers.
 //!
 //! Servers listen on port 0 in a temporary data directory. The CLI is run as
-//! the real `agboard` binary against the same `AGPJ_HOME`.
+//! the real `agpj` binary against the same `AGPJ_HOME`.
 
 #[path = "support/detail_lines.rs"]
 mod detail_lines;
