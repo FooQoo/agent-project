@@ -52,6 +52,7 @@ export function EpicPlanField({
   useEffect(() => {
     const choice = choiceOf(key);
     onPending(choice === null ? null : async () => void (await applyRef.current(choice)));
+    return () => onPending(null);
   }, [key, onPending]);
   const [open, setOpen] = useState(false);
   const named = sortVersions(versions.filter((version) => version !== current));
