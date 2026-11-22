@@ -1,4 +1,4 @@
-import { readFileSync, utimesSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { mainHome, mainOrigin, mainProject, projectId, workspace } from './agboard';
 
@@ -53,10 +53,16 @@ export async function currentVersion(): Promise<string | null> {
 /**
  * Takes the versions and the current version out of the main project, so a spec that listed some leaves the
  * board as the others expect it: a project that lists a version shows a planned-version tag on every card.
- * Cards lose their planned version when the board is reset to its fixture.
+ * A version is a file of `docs/release/`, so the files this spec's versions made are removed. Cards lose their
+ * planned version when the board is reset to its fixture.
  */
 export function clearVersions(): void {
-	const file = path.join(workspace(mainProject, mainHome()).folder, 'project.json');
+	const folder = workspace(mainProject, mainHome()).folder;
+	const releases = path.join(folder, 'docs', 'release');
+	if (existsSync(releases))
+		for (const name of readdirSync(releases))
+			if (name.endsWith('.md') && name !== 'TEMPLATE.md') rmSync(path.join(releases, name), { force: true });
+	const file = path.join(folder, 'project.json');
 	const project = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
 	delete project.versions;
 	delete project.currentVersion;

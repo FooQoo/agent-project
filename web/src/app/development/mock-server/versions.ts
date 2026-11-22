@@ -17,6 +17,10 @@ const BASE = /^\/api\/projects\/([^/]+)\/(versions|versions\/current)$/;
 const TASK = /^\/api\/projects\/([^/]+)\/tasks\/(\d+)\/planned-version$/;
 const EPIC = /^\/api\/projects\/([^/]+)\/epics\/([^/]+)\/planned-version$/;
 
+/** The server lists versions newest first, comparing digit runs as numbers. */
+const newestFirst = (versions: string[]) =>
+  [...versions].sort((a, b) => b.localeCompare(a, 'en', { numeric: true }));
+
 const invalid = (reason: string) => error(422, 'validation', 'invalid version.', reason);
 
 type Choice = { choice: 'named'; version: string } | { choice: 'current' } | { choice: 'unset' };
@@ -55,7 +59,7 @@ export const versionRoutes: Routes = (context, request) => {
   if (base && method === 'GET') {
     if (!found) return projectNotFound();
     return json(200, {
-      versions: found.project.versions ?? [],
+      versions: newestFirst(found.project.versions ?? []),
       currentVersion: found.project.currentVersion ?? null,
     });
   }
@@ -81,7 +85,7 @@ export const versionRoutes: Routes = (context, request) => {
     const changed = !versions.includes(name);
     if (changed) settings({ versions: [...versions, name] });
     return json(200, {
-      versions: changed ? [...versions, name] : versions,
+      versions: newestFirst(changed ? [...versions, name] : versions),
       currentVersion: current,
       changed,
     });
@@ -95,7 +99,7 @@ export const versionRoutes: Routes = (context, request) => {
       version === null || versions.includes(version) ? versions : [...versions, version];
     const changed = version !== current;
     if (changed || listed !== versions) settings({ versions: listed, currentVersion: version });
-    return json(200, { versions: listed, currentVersion: version, changed });
+    return json(200, { versions: newestFirst(listed), currentVersion: version, changed });
   }
 
   if (task) {
