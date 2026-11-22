@@ -98,10 +98,10 @@ fn a_done_task_without_conditions_has_its_own_class() {
         finish(&home, id);
     }
     let out = generate(&home, "v1");
-    assert_eq!(out["planned"], 4);
+    assert_eq!(out["planned"], 5);
     assert_eq!(out["verified"], 1);
     assert_eq!(out["doneWithoutAcceptance"], 1);
-    assert_eq!(out["remaining"], 2);
+    assert_eq!(out["remaining"], 3);
     let text = fs::read_to_string(release(&home, "v1")).unwrap();
     assert!(text.contains("- Done without acceptance conditions: 1"));
     let unchecked = section(&text, "Done without acceptance conditions");
@@ -116,7 +116,7 @@ fn a_done_task_without_conditions_has_its_own_class() {
         &home,
         &["--project", "Demo", "release", "doc", "--version", "v1"],
     );
-    assert!(human.contains("1 verified, 1 done without acceptance conditions, 2 remaining"));
+    assert!(human.contains("1 verified, 1 done without acceptance conditions, 3 remaining"));
 }
 
 #[test]
