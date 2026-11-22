@@ -289,3 +289,5 @@ fn a_project_that_does_not_exist_is_not_found() {
         Err(AgboardError::ProjectNotFound { .. })
     ));
 }
+
+mod stock;

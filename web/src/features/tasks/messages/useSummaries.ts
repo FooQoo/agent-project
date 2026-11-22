@@ -10,6 +10,9 @@ function changesSummaries(event: ChangedEvent): boolean {
   return event.changes.some((c) => c.resource === 'messages' && c.facets.includes('summary'));
 }
 
+/** The most summaries the tab lists; the server keeps to the same number. */
+export const MAX_SUMMARIES = 10;
+
 export interface SummariesController {
   /** The summaries not dismissed, newest first; empty until the first read arrives. */
   summaries: readonly PeriodicSummary[];
@@ -69,7 +72,7 @@ export function useSummaries(
   );
 
   const summaries = useMemo(
-    () => (read ?? []).filter((summary) => !hidden.has(summary.id)),
+    () => (read ?? []).filter((summary) => !hidden.has(summary.id)).slice(0, MAX_SUMMARIES),
     [read, hidden],
   );
   return {

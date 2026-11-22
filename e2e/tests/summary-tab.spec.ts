@@ -162,7 +162,7 @@ async function openResultFromScrolledList(page: Page) {
   await page.goto(`/?project=${projectId(mainProject)}&messages=summary`);
   const list = messageList(page);
   await expect(list.getByRole('tab', { name: /^Summary/ })).toHaveAttribute('aria-selected', 'true');
-  const link = list.getByRole('link', { name: /^Open result v1 of task #11: Scrolled result 3$/ });
+  const link = list.getByRole('link', { name: /^Open result v1 of task #11: Scrolled result 14$/ });
   await link.scrollIntoViewIfNeeded();
   const before = await scrolledTop(list);
   expect(before).toBeGreaterThan(0);
@@ -213,7 +213,7 @@ test.describe('on a phone', () => {
     await expectBackOnSummary(page, before);
     // The same result opens again once the closed task has left the address.
     await expect.poll(() => new URL(page.url()).searchParams.get('task')).toBeNull();
-    await messageList(page).getByRole('link', { name: /^Open result v1 of task #11: Scrolled result 3$/ }).click();
+    await messageList(page).getByRole('link', { name: /^Open result v1 of task #11: Scrolled result 14$/ }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(messageList(page)).toHaveCount(0);
     expect(new URL(page.url()).searchParams.get('task')).toBe('11');

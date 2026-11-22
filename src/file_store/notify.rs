@@ -29,6 +29,9 @@ use crate::error::AgboardError;
 /// The folder inside a project that holds the summary files.
 pub const NOTIFY_DIR: &str = "notify";
 const EXTENSION: &str = "ldjson";
+/// How many summaries stay listed. Writing a summary dismisses the ones beyond this many, and the
+/// list never returns more.
+pub const MAX_LISTED: usize = 10;
 
 /// One result a summary reports.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -252,5 +255,6 @@ impl FileStore {
     }
 }
 
+mod stock;
 #[cfg(test)]
 mod tests;
