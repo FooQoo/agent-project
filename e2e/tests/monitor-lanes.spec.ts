@@ -249,16 +249,16 @@ test('a horizontal swipe, even one that starts on a card, and the tabs switch be
   await expect(tab(page, 'Done 1', true)).toBeVisible();
   await expect(page.getByRole('article', { name: /Switch done/ })).toBeVisible();
 
-  // The done lane is the last: a swipe further left stays on it and opens the bulk-archive drawer.
+  // The done lane is the last: a swipe further left stays on it and starts the archive selection with every done card picked.
   await expect(page.getByRole('heading', { level: 2, name: /^Done/ })).toHaveCount(0);
   await swipeOver(page, swipeCard(page, 'Switch done'), -1);
-  const bulk = page.getByRole('dialog', { name: 'Archive completed tasks' });
+  const bulk = page.getByRole('region', { name: 'Archive the picked completed tasks' });
   await expect(bulk).toBeVisible();
   await bulk.getByRole('button', { name: 'Cancel' }).click();
   await expect(bulk).toHaveCount(0);
   await expect(tab(page, 'Done 1', true)).toBeVisible();
-  // The button after the last done card asks for the same drawer.
-  await expect(page.getByRole('button', { name: 'Archive all' })).toBeEnabled();
+  // The button after the last done card starts the same selection.
+  await expect(page.getByRole('button', { name: 'Select and archive' })).toBeEnabled();
 
   // Back to the right, across the cards, to the first lane.
   await swipeOver(page, swipeCard(page, 'Switch done'), 1);
@@ -643,8 +643,8 @@ test('swiping a chosen card back, or tapping outside it, closes its buttons with
 test('the Archive drawer lists the newest archived task first', async ({ page }) => {
   await openPhone(page, 'ArchiveOrder');
   await tab(page, 'Done 3').tap();
-  await page.getByRole('button', { name: 'Archive all' }).tap();
-  await page.getByRole('dialog', { name: 'Archive completed tasks' }).getByRole('button', { name: 'Archive 3 tasks' }).click();
+  await page.getByRole('button', { name: 'Select and archive' }).tap();
+  await page.getByRole('region', { name: 'Archive the picked completed tasks' }).getByRole('button', { name: 'Archive (3)' }).click();
   for (const title of ['Order one', 'Order two', 'Order three'])
     await expect.poll(() => show('ArchiveOrder', title).archivedAt).not.toBeNull();
   const [one, two, three] = ['Order one', 'Order two', 'Order three'].map((t) => ids.get(`ArchiveOrder:${t}`)!);
@@ -676,7 +676,7 @@ test('the Archive drawer lists the newest archived task first', async ({ page })
 test('the done lane archives all its cards at once, and the button is gone when the lane is empty', async ({ page }) => {
   await openPhone(page, 'Bulk');
   await tab(page, 'Done 3').tap();
-  const bulk = page.getByRole('button', { name: 'Archive all' });
+  const bulk = page.getByRole('button', { name: 'Select and archive' });
   await expect(bulk).toBeEnabled();
   // The button ends the list, so the cards keep their place whether or not it shows.
   const lastCard = await box(swipeCard(page, 'Bulk done one'));
@@ -684,15 +684,15 @@ test('the done lane archives all its cards at once, and the button is gone when 
   expect(bulkBox.y).toBeGreaterThanOrEqual(lastCard.y + lastCard.height);
   await bulk.tap();
 
-  const dialog = page.getByRole('dialog', { name: 'Archive completed tasks' });
-  await expect(dialog).toContainText('Archive 3 completed tasks');
+  const dialog = page.getByRole('region', { name: 'Archive the picked completed tasks' });
+  await expect(dialog).toContainText('3 selected');
   // Cancel first: nothing is archived.
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toHaveCount(0);
   for (const title of ['Bulk done one', 'Bulk done two', 'Bulk done three']) expect(show('Bulk', title).archivedAt).toBeNull();
 
   await bulk.tap();
-  await dialog.getByRole('button', { name: 'Archive 3 tasks' }).click();
+  await dialog.getByRole('button', { name: 'Archive (3)' }).click();
   await expect(dialog).toHaveCount(0);
   for (const title of ['Bulk done one', 'Bulk done two', 'Bulk done three'])
     await expect.poll(() => show('Bulk', title).archivedAt).not.toBeNull();
@@ -709,18 +709,18 @@ test('the done lane archives all its cards at once, and the button is gone when 
 test('the Archive all button still works after a short swipe on the done lane, and archives the cards', async ({ page }) => {
   await openPhone(page, 'BulkAfterSwipe');
   await tab(page, 'Done 2').tap();
-  const bulk = page.getByRole('button', { name: 'Archive all' });
+  const bulk = page.getByRole('button', { name: 'Select and archive' });
   await expect(bulk).toBeEnabled();
   // A swipe left that is too short to open the confirmation springs back and opens nothing.
   const b = await box(swipeCard(page, 'After swipe one'));
   const y = b.y + b.height / 2;
   await finger(page, { x: b.x + b.width * 0.6, y }, { x: b.x + b.width * 0.6 - 40, y });
-  const dialog = page.getByRole('dialog', { name: 'Archive completed tasks' });
+  const dialog = page.getByRole('region', { name: 'Archive the picked completed tasks' });
   await expect(dialog).toHaveCount(0);
   await expect(tab(page, 'Done 2', true)).toBeVisible();
 
   await bulk.tap();
-  await expect(dialog).toContainText('Archive 2 completed tasks');
+  await expect(dialog).toContainText('2 selected');
   // Cancel, swipe far enough to open it again, cancel, and the button must still answer.
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toHaveCount(0);
@@ -731,7 +731,7 @@ test('the Archive all button still works after a short swipe on the done lane, a
   for (const title of ['After swipe one', 'After swipe two']) expect(show('BulkAfterSwipe', title).archivedAt).toBeNull();
 
   await bulk.tap();
-  await dialog.getByRole('button', { name: 'Archive 2 tasks' }).click();
+  await dialog.getByRole('button', { name: 'Archive (2)' }).click();
   await expect(dialog).toHaveCount(0);
   for (const title of ['After swipe one', 'After swipe two'])
     await expect.poll(() => show('BulkAfterSwipe', title).archivedAt).not.toBeNull();
@@ -778,8 +778,8 @@ test('a card tile still acts after a swipe back and a cancelled archive, and the
 test('the Restore tile in the Archive drawer restores the task after a swipe open and a swipe back', async ({ page }) => {
   await openPhone(page, 'RestoreAfterSwipe');
   await tab(page, 'Done 2').tap();
-  await page.getByRole('button', { name: 'Archive all' }).tap();
-  await page.getByRole('dialog', { name: 'Archive completed tasks' }).getByRole('button', { name: 'Archive 2 tasks' }).click();
+  await page.getByRole('button', { name: 'Select and archive' }).tap();
+  await page.getByRole('region', { name: 'Archive the picked completed tasks' }).getByRole('button', { name: 'Archive (2)' }).click();
   for (const title of ['Restore one', 'Restore two'])
     await expect.poll(() => show('RestoreAfterSwipe', title).archivedAt).not.toBeNull();
 
@@ -812,7 +812,7 @@ test('the bulk archive button is not offered while the done lane is empty', asyn
   await openPhone(page, 'Quiet');
   await tab(page, 'Done 0').tap();
   await expect(tab(page, 'Done 0', true)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Archive all' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Select and archive' })).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
@@ -939,11 +939,10 @@ test('Settings opens as a drawer, Archive lists archived tasks in a drawer, and 
   await expect(list).toBeHidden();
 
   await tab(page, 'Done 1').tap();
-  await page.getByRole('button', { name: 'Archive all' }).tap();
-  const drawer = page.getByRole('dialog', { name: 'Archive completed tasks' });
+  await page.getByRole('button', { name: 'Select and archive' }).tap();
+  const drawer = page.getByRole('region', { name: 'Archive the picked completed tasks' });
   await expect(drawer).toBeVisible();
-  await expect(drawer).toHaveAttribute('data-slot', 'drawer-popup');
-  await expect(drawer.getByRole('row')).toHaveCount(2);
+  await expect(drawer.getByRole('button', { name: 'Archive (1)' })).toBeVisible();
   await drawer.getByRole('button', { name: 'Cancel' }).tap();
   await expect(drawer).toBeHidden();
   expect(show('Switch', 'Switch done').archivedAt).toBeNull();

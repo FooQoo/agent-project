@@ -1,4 +1,4 @@
-import type { TaskSummary, DialogAction, ProjectId } from '../../shared/api/contracts';
+import type { DialogAction, ProjectId } from '../../shared/api/contracts';
 import type { OperationKind } from '../../shared/lib/operations/operations';
 import type { ViewMode } from '../../shared/ui/app-header/Header';
 
@@ -29,7 +29,6 @@ export interface SessionState {
   archiveSelectedId: number | null;
   /** The epic whose details the epic list shows, by epic ID. */
   epicSelectedId: string | null;
-  bulkArchive: { projectId: ProjectId; targets: TaskSummary[] } | null;
   dialog: DialogAction | null;
   operation: Operation | null;
   pendingTarget: PendingTarget | null;
@@ -42,8 +41,6 @@ export type SessionAction =
   | { type: 'SET_VIEW_MODE'; mode: ViewMode }
   | { type: 'SELECT_ARCHIVE_CARD'; id: number | null }
   | { type: 'SELECT_EPIC'; id: string | null }
-  | { type: 'OPEN_BULK_ARCHIVE'; projectId: ProjectId; targets: TaskSummary[] }
-  | { type: 'CLOSE_BULK_ARCHIVE' }
   | {
       type: 'OPEN_OPERATION';
       operationId: number;
@@ -69,7 +66,6 @@ export function initSession(
     viewMode: 'board',
     archiveSelectedId: null,
     epicSelectedId: null,
-    bulkArchive: null,
     dialog: null,
     operation: null,
     pendingTarget: null,
@@ -90,7 +86,6 @@ function applyProject(state: SessionState, projectId: ProjectId | null): Session
     viewMode: 'board',
     archiveSelectedId: null,
     epicSelectedId: null,
-    bulkArchive: null,
     dialog: null,
     pendingTarget: null,
   };
@@ -134,7 +129,6 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         selectedId: action.mode === 'board' ? state.selectedId : null,
         archiveSelectedId: action.mode === 'archive' ? state.archiveSelectedId : null,
         epicSelectedId: action.mode === 'epics' ? state.epicSelectedId : null,
-        bulkArchive: action.mode === 'archive' ? state.bulkArchive : null,
       };
     case 'SELECT_ARCHIVE_CARD':
       if (state.operation !== null) return state;
@@ -142,18 +136,6 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
     case 'SELECT_EPIC':
       if (state.operation !== null) return state;
       return { ...state, epicSelectedId: action.id };
-    case 'OPEN_BULK_ARCHIVE':
-      if (
-        state.operation?.kind !== 'archive-done' ||
-        state.operation.projectId !== action.projectId
-      )
-        return state;
-      return {
-        ...state,
-        bulkArchive: { projectId: action.projectId, targets: action.targets.slice() },
-      };
-    case 'CLOSE_BULK_ARCHIVE':
-      return { ...state, bulkArchive: null };
     case 'OPEN_OPERATION':
       if (state.operation !== null) return state;
       return {

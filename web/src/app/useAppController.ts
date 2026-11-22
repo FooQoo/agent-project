@@ -192,10 +192,7 @@ export function useAppController(initial: AppInitial | undefined): AppController
   // Automatic updates wait while a modal is open and for 3 seconds after. The detail, archive and
   // epic panels sit beside the board and do not hold them: a person reading a task there watches the
   // agent's progress on the board and in the panel at the same time.
-  usePresentationHold(
-    session.operation !== null || session.dialog !== null || session.bulkArchive !== null,
-    'modal',
-  );
+  usePresentationHold(session.operation !== null || session.dialog !== null, 'modal');
   useBuildReload(
     serverBuild,
     session.operation !== null || session.answerLeases.length > 0,

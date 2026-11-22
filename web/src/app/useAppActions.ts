@@ -2,11 +2,12 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { openWhenLoaded } from './openWhenLoaded';
 import type { AppControllerModel, AppWorkspaceActions } from './contracts';
-import { WriteError, moveTask } from './api';
+import { moveTask } from './api';
 import { useDialogSubmit, useReorder } from './useBoardWrites';
 import { moveFailureNotice } from '../features/tasks/api/lifecycle';
 import { useEpicWrites } from '../features/epics/editor/epicApi';
-import { groupTasks } from '../features/tasks/model/board';
+import { archiveDone } from '../features/tasks/api/lifecycle';
+import { useArchiveSelected } from '../features/tasks/archive/useArchiveSelected';
 import type { ColumnName, ProjectId } from '../shared/api/contracts';
 import { useLaneMove } from '../features/tasks/useLaneMove';
 import { useBacklogMove } from '../features/backlog/useBacklogMove';
@@ -58,6 +59,12 @@ export function useAppActions(model: AppControllerModel) {
     refusal: (cause) => moveFailureNotice(cause, t),
   });
 
+  // The Done cards the person picked, archived in one save.
+  const archiveSelected = useArchiveSelected({
+    write: (ids) => archiveDone(sendProjectId as ProjectId, ids),
+    onSettled: reloadBoard,
+  });
+
   const reorder = useReorder(refreshProject);
   const epicWrites = useEpicWrites(refreshProject);
 
@@ -104,11 +111,9 @@ export function useAppActions(model: AppControllerModel) {
       if (!isProjectId(activeId)) return;
       reorder.mutate({ projectId: activeId, id: task.id, beforeId });
     },
-    onArchiveDone: () => {
-      if (!isProjectId(activeId) || session.operation !== null) return;
-      operations.begin('archive-done', activeId);
-      dispatch({ type: 'OPEN_BULK_ARCHIVE', projectId: activeId, targets: groupTasks(tasks).done });
-    },
+    onArchiveSelected: (ids) =>
+      session.operation === null ? archiveSelected.archive(ids) : Promise.resolve(false),
+    archiveBusy: archiveSelected.busy,
     onCloseEpic: () => dispatch({ type: 'SELECT_EPIC', id: null }),
     onEditEpic: () => {
       const epic = model.selectedEpic;
@@ -185,31 +190,6 @@ export function useAppActions(model: AppControllerModel) {
 
   const submitDialog = useDialogSubmit(session, refreshProject, openMessages);
 
-  const confirmBulkArchive = useCallback(async () => {
-    const bulkArchive = session.bulkArchive;
-    if (!bulkArchive) return;
-    const result = await archiveLifecycle.run(
-      'archive-done',
-      bulkArchive.projectId,
-      { taskIds: bulkArchive.targets.map((task) => task.id) },
-      { keepOperationOnError: true },
-    );
-    if (!result.ok) {
-      throw new Error(
-        result.error instanceof WriteError && result.error.status === 409
-          ? t('archive.bulkConflict')
-          : t('archive.error'),
-      );
-    }
-    dispatch({ type: 'CLOSE_BULK_ARCHIVE' });
-    refreshProject(bulkArchive.projectId);
-  }, [archiveLifecycle, dispatch, refreshProject, session.bulkArchive, t]);
-
-  const cancelBulkArchive = useCallback(() => {
-    if (session.operation?.kind === 'archive-done') operations.end(session.operation.id);
-    dispatch({ type: 'CLOSE_BULK_ARCHIVE' });
-  }, [dispatch, operations, session.operation]);
-
   const closeOperation = useCallback(() => {
     if (session.operation) operations.end(session.operation.id);
   }, [operations, session.operation]);
@@ -242,17 +222,17 @@ export function useAppActions(model: AppControllerModel) {
 
   return {
     workspace,
-    moveNotice: backlogSend.notice ?? backlogMove.notice ?? moveNotice,
+    moveNotice: backlogSend.notice ?? backlogMove.notice ?? archiveSelected.notice ?? moveNotice,
     dismissMoveNotice: backlogSend.notice
       ? backlogSend.dismissNotice
       : backlogMove.notice
         ? backlogMove.dismissNotice
-        : dismissMoveNotice,
+        : archiveSelected.notice
+          ? archiveSelected.dismissNotice
+          : dismissMoveNotice,
     backlogSend,
     backlogMove,
     submitDialog,
-    confirmBulkArchive,
-    cancelBulkArchive,
     closeOperation,
     savingChanged,
     openTaskFromEpic,

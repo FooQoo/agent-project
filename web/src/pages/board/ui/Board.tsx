@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from 'react';
-import { useBacklogSelection } from '../../../features/backlog/useSelection';
+import { useLaneSelection } from '../../../features/backlog/useSelection';
 import { groupTasks } from '../../../features/tasks/model/board';
 import type { TaskSummary, ColumnName } from '../../../shared/api/contracts';
 import type { BacklogTarget } from '../../../features/backlog/send';
@@ -25,7 +25,9 @@ export interface BoardProps {
   onMove: (task: TaskSummary, column: ColumnName) => void;
   /** A card was dropped in another place of its own lane: just before `beforeId`, or at the end. */
   onReorder?: (task: TaskSummary, beforeId: number | null) => void;
-  onArchiveDone?: () => void;
+  /** The picked Done cards were archived by the button of the selection bar. Resolves with whether every card was archived, which ends the selection mode. */
+  onArchiveSelected?: (ids: number[]) => Promise<boolean>;
+  archiveBusy?: boolean;
   /**
    * Cards of the Backlog were sent to Todo: by the button of the selection bar, or by dropping
    * them on the Todo lane. A drop on Doing or Done moves them there (`to`). The screen confirms a warning and shows the result. Returns whether the
@@ -60,7 +62,8 @@ function ProjectBoard({
   onRetry,
   onMove,
   onReorder,
-  onArchiveDone,
+  onArchiveSelected,
+  archiveBusy = false,
   onSend,
   onMoveBacklog,
   sendBusy = false,
@@ -71,13 +74,21 @@ function ProjectBoard({
   band,
 }: BoardProps) {
   const groups = groupTasks(tasks);
-  const selection = useBacklogSelection(groups.backlog.map((task) => task.id));
+  const selection = useLaneSelection(groups.backlog.map((task) => task.id));
+  // Entering the Done lane's selection picks every Done card; the person unpicks the ones to keep.
+  const doneSelection = useLaneSelection(
+    groups.done.map((task) => task.id),
+    { preselect: true },
+  );
   const [draggingId, setDraggingId] = useState<number | null>(null);
   // The lane under the pointer, also when the pointer is over one of its cards.
   const [overColumn, setOverColumn] = useState<string | null>(null);
   // A send that needs no confirmation ends the selection mode; a warning keeps it until answered.
   const send = (ids: number[], to: BacklogTarget = 'todo') => {
     if (onSend?.(ids, to)) selection.leave();
+  };
+  const archive = async (ids: number[]) => {
+    if (await onArchiveSelected?.(ids)) doneSelection.leave();
   };
   if (message !== null) {
     return (
@@ -155,14 +166,27 @@ function ProjectBoard({
               tasks={groups[column]}
               selectedId={selectedId}
               onSelect={onSelect}
-              onArchive={column === 'done' ? onArchiveDone : undefined}
               onOpenEpic={onOpenEpic}
               projectId={projectId}
               onAnswer={onAnswer}
-              backlog={
+              picker={
                 column === 'backlog' && onSend
-                  ? { selection, busy: sendBusy, onSend: send, draggingId }
-                  : undefined
+                  ? {
+                      action: 'send',
+                      selection,
+                      busy: sendBusy,
+                      onSubmit: send,
+                      draggingId,
+                    }
+                  : column === 'done' && onArchiveSelected
+                    ? {
+                        action: 'archive',
+                        selection: doneSelection,
+                        busy: archiveBusy,
+                        onSubmit: archive,
+                        draggingId: null,
+                      }
+                    : undefined
               }
             />
           ))}

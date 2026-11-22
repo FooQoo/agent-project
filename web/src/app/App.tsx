@@ -120,8 +120,6 @@ function AppScreen({ initial }: AppProps) {
         onCloseOperation={actions.closeOperation}
         onSavingChange={actions.savingChanged}
         onOpenTask={actions.openTaskFromEpic}
-        onConfirmBulkArchive={actions.confirmBulkArchive}
-        onCancelBulkArchive={actions.cancelBulkArchive}
         epicApi={actions.epicApiForOperation}
       />
     </div>

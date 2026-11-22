@@ -2,7 +2,7 @@ import { type RefObject, useEffect, useRef, useState } from 'react';
 import { ArchiveXIcon, ListChecksIcon } from 'lucide-react';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { BacklogSheet } from '../../../features/backlog/BacklogSheet';
-import { useBacklogSelection } from '../../../features/backlog/useSelection';
+import { useLaneSelection } from '../../../features/backlog/useSelection';
 import { useTranslation } from 'react-i18next';
 import type { MonitorTask as MonitorTaskModel, MonitorViewProps } from '../contracts';
 import { useLaneCarousel } from '../hooks/useLaneCarousel';
@@ -36,11 +36,13 @@ export interface MonitorLanesProps {
   onOpenDetail?: MonitorViewProps['onOpenDetail'];
   onOpenAnswer?: (item: MonitorTaskModel) => void;
   /**
-   * Swiping left on the last lane (Done) past its end, or the button after its cards, asks to
-   * archive every done card; the screen opens the confirmation. While the swipe goes, the lane
-   * follows the finger and uncovers an Archive all tile. Without it neither is offered.
+   * The picked Done cards were archived. Resolves with whether every card was archived, which ends the
+   * selection mode. Swiping left on the last lane (Done) past its end, or the button after its cards,
+   * starts the selection with every done card picked; while the swipe goes, the lane follows the finger
+   * and uncovers a tile. Without it neither is offered.
    */
-  onBulkArchive?: () => void;
+  onArchiveSelected?: (ids: number[]) => Promise<boolean>;
+  archiveBusy?: boolean;
   /**
    * The Backlog cards were picked and sent to Todo. Returns whether the send started without a
    * confirmation, which ends the selection mode. Without it the Backlog lane offers no selection.
@@ -78,7 +80,8 @@ export function MonitorLanes({
   onArchive,
   onOpenDetail,
   onOpenAnswer,
-  onBulkArchive,
+  onArchiveSelected,
+  archiveBusy = false,
   onSend,
   sendBusy = false,
   id,
@@ -97,10 +100,18 @@ export function MonitorLanes({
   // The card a hold chose: it shows a focus ring, and a sideways swipe on it opens its tiles.
   const [armed, setArmed] = useState<number | null>(previewRevealed ?? null);
 
-  const selection = useBacklogSelection(lanes.backlog.map((item) => item.task.id));
+  const selection = useLaneSelection(lanes.backlog.map((item) => item.task.id));
+  // Entering the Done lane's selection picks every done card; a person unpicks the ones to keep.
+  const doneSelection = useLaneSelection(
+    lanes.done.map((item) => item.task.id),
+    { preselect: true },
+  );
   const canSelect = onSend !== undefined && lanes.backlog.length > 0;
   const send = (ids: number[]) => {
     if (onSend?.(ids)) selection.leave();
+  };
+  const archive = async (ids: number[]) => {
+    if (await onArchiveSelected?.(ids)) doneSelection.leave();
   };
 
   const changeLane = (next: MonitorSection) => {
@@ -115,9 +126,13 @@ export function MonitorLanes({
     carousel(node);
   };
   const last = LANES[LANES.length - 1];
-  const canBulk = onBulkArchive !== undefined && lanes.done.length > 0;
+  const canBulk = onArchiveSelected !== undefined && lanes.done.length > 0;
   const doneRef = useRef<HTMLElement | null>(null);
-  const bulk = useLaneOverscroll(doneRef, lane === last && canBulk, () => onBulkArchive?.());
+  const bulk = useLaneOverscroll(
+    doneRef,
+    lane === last && canBulk && !doneSelection.selecting,
+    doneSelection.enter,
+  );
   const bulkOffset = previewBulkDrag === undefined ? bulk.offset : -previewBulkDrag;
   // The mirror of the Done lane's gesture: a swipe to the right past the Backlog's start is a shortcut for the
   // Select cards button at the foot of the lane. It starts the selection mode with nothing picked.
@@ -158,6 +173,11 @@ export function MonitorLanes({
   useEffect(() => {
     if (lane !== 'backlog' && selecting) leave();
   }, [lane, selecting, leave]);
+  // The same for the Done lane's selection.
+  const { selecting: archiving, leave: leaveArchive } = doneSelection;
+  useEffect(() => {
+    if (lane !== 'done' && archiving) leaveArchive();
+  }, [lane, archiving, leaveArchive]);
 
   return (
     <>
@@ -167,6 +187,7 @@ export function MonitorLanes({
             const items = lanes[name];
             const laneEmpty = items.length === 0;
             const isLast = name === last;
+            const picker = name === 'backlog' ? selection : name === 'done' ? doneSelection : null;
             // The two end lanes follow an overscroll swipe: Done to the left, the Backlog to the right.
             const edge = isLast ? bulk : name === 'backlog' ? pickAll : null;
             const edgeOffset = isLast ? bulkOffset : pickAll.offset;
@@ -190,14 +211,14 @@ export function MonitorLanes({
                   {name === lane && <PullIndicator state={shown.state} offset={shown.offset} />}
                   {laneEmpty ? (
                     <p className="monitor-empty">{t(`monitor.empty.${name}`)}</p>
-                  ) : name === 'backlog' && selection.selecting ? (
+                  ) : picker?.selecting ? (
                     items.map((item) => (
                       <div key={keyOf(item)} className="monitor-pick-row">
                         <Checkbox
                           className="monitor-pick-row__check"
-                          checked={selection.picked.includes(item.task.id)}
+                          checked={picker.picked.includes(item.task.id)}
                           aria-label={t('backlog.selectCard', { id: item.task.id })}
-                          onCheckedChange={() => selection.toggle(item.task.id)}
+                          onCheckedChange={() => picker.toggle(item.task.id)}
                         />
                         {/* A tap on the card picks it; the details are not opened while picking. */}
                         <div
@@ -205,7 +226,7 @@ export function MonitorLanes({
                           onClickCapture={(event) => {
                             event.preventDefault();
                             event.stopPropagation();
-                            selection.toggle(item.task.id);
+                            picker.toggle(item.task.id);
                           }}
                         >
                           <MonitorTask item={item} section={name} />
@@ -266,15 +287,15 @@ export function MonitorLanes({
                     </button>
                   )}
                   {/* Room under the last card for the selection sheet that stands over the lane's foot. */}
-                  {name === 'backlog' && selection.selecting && (
+                  {picker?.selecting && (
                     <div className="monitor-lane__sheet-room" aria-hidden="true" />
                   )}
-                  {name === 'done' && canBulk && (
+                  {name === 'done' && canBulk && !doneSelection.selecting && (
                     <button
                       type="button"
                       className="monitor-lane__bulk"
                       data-lane-ignore=""
-                      onClick={onBulkArchive}
+                      onClick={doneSelection.enter}
                     >
                       <ArchiveXIcon aria-hidden="true" />
                       {t('monitor.lanes.bulkArchive')}
@@ -295,6 +316,16 @@ export function MonitorLanes({
           busy={sendBusy}
           onCancel={selection.leave}
           onSend={() => send(selection.picked)}
+        />
+      )}
+      {onArchiveSelected !== undefined && (
+        <BacklogSheet
+          action="archive"
+          open={doneSelection.selecting}
+          count={doneSelection.picked.length}
+          busy={archiveBusy}
+          onCancel={doneSelection.leave}
+          onSend={() => void archive(doneSelection.picked)}
         />
       )}
     </>

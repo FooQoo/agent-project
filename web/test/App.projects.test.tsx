@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { selectLocale } from '../src/shared/i18n';
@@ -804,136 +804,82 @@ describe('switching while a form is open', () => {
     expect(screen.getByText('Select a task to see its details.')).toBeTruthy();
   });
 
-  it('shows the project name and exact reversible-data note in the bulk archive dialog', async () => {
+  it('starts the Done lane selection with every done card picked', async () => {
     selectLocale('ja');
     renderApp(urlOf(PROJECT_A.id));
-    await screen.findByRole('button', { name: '完了タスクをアーカイブ' });
+    const trigger = await screen.findByRole('button', { name: '完了タスクをアーカイブ' });
+    const doneIds = groupTasks(fixtureBoard.tasks).done.map((task) => task.id);
+    expect(doneIds).toHaveLength(2);
 
-    await userEvent.click(screen.getByRole('button', { name: '完了タスクをアーカイブ' }));
+    await userEvent.click(trigger);
 
-    const dialog = screen.getByRole('dialog');
-    expect(
-      within(dialog).getByText('agent-board の完了タスク2件をアーカイブします。'),
-    ).toBeTruthy();
-    expect(
-      within(dialog).getByText('本文・画像・履歴は保持され、アーカイブ一覧から復元できます。'),
-    ).toBeTruthy();
-    expect(within(dialog).getAllByRole('row')).toHaveLength(3);
-    expect(within(dialog).getAllByText('AI')).toHaveLength(2);
-    expect(within(dialog).queryByRole('button', { name: /閉じる|Close/ })).toBeNull();
+    const bar = screen.getByRole('region', { name: '選んだ完了タスクをアーカイブする' });
+    expect(within(bar).getByRole('button', { name: 'アーカイブ (2)' })).toBeTruthy();
+    expect(within(bar).getByRole('button', { name: 'やめる' })).toBeTruthy();
+    for (const id of doneIds)
+      expect(
+        (screen.getByRole('checkbox', { name: `#${id} を選ぶ` }) as HTMLInputElement).getAttribute(
+          'aria-checked',
+        ),
+      ).toBe('true');
+    expect(writes()).toHaveLength(0);
   });
 
-  it('keeps the exact target snapshot after a 409 and sends fresh targets only after reopening', async () => {
-    const initialDoneIds = groupTasks(fixtureBoard.tasks).done.map((task) => task.id);
-    const submittedIds: number[][] = [];
-    let conflict = true;
+  it('toggles a card, archives only the picked ones, and ends the mode', async () => {
+    const submitted: number[][] = [];
     backend.write = (url, init) => {
       if (url !== `/api/projects/${PROJECT_A.id}/tasks/archive-done`) return jsonResponse({}, 404);
-      submittedIds.push(JSON.parse(String(init.body)).ids as number[]);
-      if (conflict) {
-        conflict = false;
-        return jsonResponse(
-          { error: { code: 'request_changed', message: 'conflict', reason: 'changed' } },
-          409,
-        );
-      }
-      return jsonResponse({ tasks: [], archivedCount: submittedIds.at(-1)?.length ?? 0 });
+      submitted.push(JSON.parse(String(init.body)).ids as number[]);
+      return jsonResponse({ tasks: [], archivedCount: submitted.at(-1)?.length ?? 0 });
     };
-
+    const [keep, archive] = groupTasks(fixtureBoard.tasks).done.map((task) => task.id);
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
     await userEvent.click(screen.getByRole('button', { name: 'Archive completed tasks' }));
-    let dialog = screen.getByRole('dialog');
-    const targetRows = within(dialog).getAllByRole('row').slice(1);
-    expect(targetRows.map((row) => row.firstElementChild?.textContent)).toEqual(
-      initialDoneIds.map((id) => `#${id}`),
-    );
+    await userEvent.click(screen.getByRole('checkbox', { name: `Select #${keep}` }));
+    const bar = screen.getByRole('region', { name: 'Archive the picked completed tasks' });
 
-    backend.boards[PROJECT_A.id] = boardOf(
-      PROJECT_A,
-      [
-        ...fixtureBoard.tasks.filter((task) => task.id !== initialDoneIds[1]),
-        makeTask({ id: 17, title: 'Added after opening', taskStatus: 'done' }),
-      ],
-      2,
-    );
-    const boardUrl = `/api/projects/${PROJECT_A.id}/summary`;
-    // The open dialog holds the stream's updates back, so its rows keep the snapshot taken on opening.
-    act(() => FakeEventSource.latest.changed(PROJECT_A.id));
-    expect(
-      within(dialog)
-        .getAllByRole('row')
-        .slice(1)
-        .map((row) => row.firstElementChild?.textContent),
-    ).toEqual(initialDoneIds.map((id) => `#${id}`));
+    await userEvent.click(within(bar).getByRole('button', { name: 'Archive (1)' }));
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Archive 2 tasks' }));
-    expect(
-      await within(dialog).findByText(/Tasks changed while this confirmation was open/),
-    ).toBeTruthy();
-    expect(
-      within(dialog)
-        .getAllByRole('row')
-        .slice(1)
-        .map((row) => row.firstElementChild?.textContent),
-    ).toEqual(initialDoneIds.map((id) => `#${id}`));
-    expect(submittedIds).toEqual([initialDoneIds]);
-
-    const readsBeforeCancel = fetchMock.mock.calls.filter(([url]) => url === boardUrl).length;
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
-    // The held change is read three seconds after the dialog has closed.
-    await waitFor(
-      () =>
-        expect(fetchMock.mock.calls.filter(([url]) => url === boardUrl).length).toBeGreaterThan(
-          readsBeforeCancel,
-        ),
-      { timeout: 5000 },
+    await waitFor(() => expect(submitted).toEqual([[archive]]));
+    await waitFor(() =>
+      expect(screen.queryByRole('region', { name: /Archive the picked/ })).toBeNull(),
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Archive completed tasks' }));
-    dialog = screen.getByRole('dialog');
-    const reopenedIds = within(dialog)
-      .getAllByRole('row')
-      .slice(1)
-      .map((row) => Number(row.firstElementChild?.textContent?.slice(1)));
-    expect(reopenedIds).toEqual([initialDoneIds[0], 17]);
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Archive 2 tasks' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(submittedIds).toEqual([initialDoneIds, reopenedIds]);
   });
 
-  it('keeps a pending bulk archive open and rejects duplicate submissions until the write settles', async () => {
-    const response = deferred<Response>();
-    const started = deferred<void>();
-    backend.write = (url) => {
-      if (url !== `/api/projects/${PROJECT_A.id}/tasks/archive-done`) return jsonResponse({}, 404);
-      started.resolve();
-      return response.promise;
-    };
-
+  it('changes nothing on Cancel, and cannot archive with nothing picked', async () => {
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
     await userEvent.click(screen.getByRole('button', { name: 'Archive completed tasks' }));
-    const dialog = screen.getByRole('dialog');
-    const submit = within(dialog).getByRole('button', { name: 'Archive 2 tasks' });
+    const bar = screen.getByRole('region', { name: 'Archive the picked completed tasks' });
+    for (const box of screen.getAllByRole('checkbox', { name: /^Select #/ }))
+      if (box.getAttribute('aria-checked') === 'true') await userEvent.click(box);
+    const submit = within(bar).getByRole('button', { name: 'Archive (0)' }) as HTMLButtonElement;
+    expect(submit.disabled).toBe(true);
 
-    await userEvent.dblClick(submit);
-    await started.promise;
-    await waitFor(() => expect((submit as HTMLButtonElement).disabled).toBe(true));
-    expect(
-      writes().filter(([url]) => url === `/api/projects/${PROJECT_A.id}/tasks/archive-done`),
-    ).toHaveLength(1);
+    await userEvent.click(within(bar).getByRole('button', { name: 'Cancel' }));
 
-    await userEvent.keyboard('{Escape}');
-    fireEvent.pointerDown(document.body);
-    expect(screen.getByRole('dialog')).toBe(dialog);
-    expect(
-      (within(dialog).getByRole('button', { name: 'Cancel' }) as HTMLButtonElement).disabled,
-    ).toBe(true);
+    expect(screen.queryByRole('region', { name: /Archive the picked/ })).toBeNull();
+    expect(writes()).toHaveLength(0);
+  });
 
-    await act(async () => {
-      response.resolve(jsonResponse({ tasks: [], archivedCount: 2 }));
-    });
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  it('keeps the selection and says so when the server refuses the archive', async () => {
+    backend.write = (url) => {
+      if (url !== `/api/projects/${PROJECT_A.id}/tasks/archive-done`) return jsonResponse({}, 404);
+      return jsonResponse(
+        { error: { code: 'request_changed', message: 'conflict', reason: 'changed' } },
+        409,
+      );
+    };
+    renderApp(urlOf(PROJECT_A.id));
+    await screen.findByRole('region', { name: 'Todo' });
+    await userEvent.click(screen.getByRole('button', { name: 'Archive completed tasks' }));
+    const bar = screen.getByRole('region', { name: 'Archive the picked completed tasks' });
+
+    await userEvent.click(within(bar).getByRole('button', { name: 'Archive (2)' }));
+
+    expect(await screen.findByText(/none were archived/)).toBeTruthy();
+    expect(within(bar).getByRole('button', { name: 'Archive (2)' })).toBeTruthy();
   });
 
   it('lets the user switch again after the delete confirmation is cancelled', async () => {

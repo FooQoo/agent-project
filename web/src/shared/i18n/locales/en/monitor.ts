@@ -40,7 +40,7 @@ export const monitorEn = {
       tab: '{{lane}} {{count}}',
       toNext: '→ {{lane}}',
       toPrev: '← {{lane}}',
-      bulkArchive: 'Archive all',
+      bulkArchive: 'Select and archive',
       archiveTask: 'Archive #{{id}}',
       moveTask: 'Move #{{id}} to {{lane}}',
       archiveTitle: 'Archive task',

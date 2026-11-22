@@ -127,9 +127,9 @@ export function MonitorView(props: MonitorViewProps) {
   // Leaving Ask goes through its discard question: `next` runs only once the Ask sheet has closed.
   const leaveAsk = (next: () => void) =>
     props.asking && props.onAskClose ? props.onAskClose(next) : next();
-  const closeSheets = ({ except }: { except?: 'messages' | 'ask' | 'archive' | 'bulk' }) => {
+  const closeSheets = ({ except }: { except?: 'messages' | 'ask' | 'archive' }) => {
     if (except !== 'messages') panel.close();
-    if (except !== 'archive' && except !== 'bulk') closePending();
+    if (except !== 'archive') closePending();
     if (detail.open) closeDrawer(false);
   };
   // The archive is read only while its list is open, and again after each restore.
@@ -140,12 +140,11 @@ export function MonitorView(props: MonitorViewProps) {
     onWritten,
     overlay.unhide,
   );
-  const { backlogSend, backlogMove, moveNow, archiveOne, archiveAll, notice, dismissNotice } =
+  const { backlogSend, backlogMove, moveNow, archiveOne, archiveSelected, notice, dismissNotice } =
     useMonitorWrites({
       writes,
       projectId,
       overlay,
-      doneItems: ordered.done,
       closePending,
       onWritten,
       tasks: tasks.map((item) => item.task),
@@ -201,15 +200,8 @@ export function MonitorView(props: MonitorViewProps) {
         refreshing={props.refreshing}
         onSend={writes ? backlogSend.request : undefined}
         sendBusy={backlogSend.busy}
-        onBulkArchive={
-          writes
-            ? () =>
-                leaveAsk(() => {
-                  closeSheets({ except: 'bulk' });
-                  ask({ kind: 'bulk' });
-                })
-            : undefined
-        }
+        onArchiveSelected={writes ? archiveSelected.archive : undefined}
+        archiveBusy={archiveSelected.busy}
         onOpenAnswer={
           props.messagesApi
             ? (item) =>
@@ -221,17 +213,16 @@ export function MonitorView(props: MonitorViewProps) {
         }
       />
       <TransientNotice message={notice} onDismiss={dismissNotice} />
+      <TransientNotice message={archiveSelected.notice} onDismiss={archiveSelected.dismissNotice} />
       <BacklogSendLayer send={backlogSend} kind="sheet" />
       <BacklogSendLayer send={backlogMove} kind="sheet" />
       {writes && (
         <MonitorLaneDialogs
           pending={pending}
           projectName={props.projectName ?? ''}
-          doneItems={ordered.done}
           onCancel={closePending}
           onArchive={archiveOne}
           {...archiveSheet}
-          onBulkArchive={archiveAll}
         />
       )}
       <Suspense fallback={null}>

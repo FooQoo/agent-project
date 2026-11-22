@@ -4,16 +4,11 @@ import { preloadDecisionQuestion } from '../../features/tasks/answer/DecisionQue
 import { preloadDetailSection } from '../../features/tasks/detail/DetailSection';
 
 /**
- * The board's card, epic and bulk-archive dialogs, with the editor shell, attachments and condition
+ * The board's card and epic dialogs, with the editor shell, attachments and condition
  * editor they use, load after the board is shown (see `preloadable`).
  */
 export const actionDialog = preloadable(() =>
   import('./ActionDialog').then((module) => module.ActionDialog),
-);
-export const bulkArchiveDialog = preloadable(() =>
-  import('../../features/tasks/archive/BulkArchiveDialog').then(
-    (module) => module.BulkArchiveDialog,
-  ),
 );
 
 /** The docs dialog loads when it is first opened. */
@@ -28,7 +23,6 @@ export const docsDialog = preloadable(() =>
 export function preloadBoardCode(): void {
   for (const preload of [
     actionDialog.preload,
-    bulkArchiveDialog.preload,
     preloadDecisionQuestion,
     preloadDocumentBlocks,
     preloadDetailSection,

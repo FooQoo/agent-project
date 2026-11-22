@@ -489,7 +489,7 @@
               "states": [
                 "swipe left on the Done lane",
                 "tile follows the finger",
-                "bulk archive drawer"
+                "selection drawer with every done card picked"
               ],
               "interaction": true
             },
@@ -500,7 +500,10 @@
             },
             {
               "id": "pages-monitor-components-monitorlanes--bulk-archive-button",
-              "states": ["button after the last Done card", "bulk archive drawer"],
+              "states": [
+                "button after the last Done card",
+                "selection drawer with every done card picked"
+              ],
               "interaction": true
             },
             {
@@ -541,11 +544,6 @@
             {
               "id": "pages-monitor-components-monitorlanes--archive-confirm",
               "states": ["archive confirmation"],
-              "interaction": true
-            },
-            {
-              "id": "pages-monitor-components-monitorlanes--bulk-archive-confirm",
-              "states": ["bulk archive confirmation"],
               "interaction": true
             },
             {
