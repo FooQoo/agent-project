@@ -55,8 +55,8 @@ pub struct EpicVersionPlan {
 impl FileStore {
     /// Set or clear one task's planned version as a person. With `expected` (`Some(None)` for
     /// "no version", `Some(Some(v))` for a version), a task whose planned version is no longer
-    /// that is `planned_version_changed` and nothing is written. An archived task is refused; a
-    /// draft or Done task can be changed by a person.
+    /// that is `planned_version_changed` and nothing is written. A draft, Done, or archived task
+    /// can be changed by a person.
     pub fn set_task_planned_version_checked(
         &self,
         project: &crate::domain::ProjectId,
@@ -69,9 +69,6 @@ impl FileStore {
         let (project_dir, _lock) = lock_project(shared, project)?;
         let target = resolve(shared, project, choice)?;
         let mut task = reader::read_task_strict(shared, project, task_id)?;
-        if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id: task_id });
-        }
         if let Some(expected) = expected
             && task.planned_version.as_deref() != expected
         {

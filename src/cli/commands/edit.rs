@@ -26,17 +26,6 @@ pub fn run(ctx: &mut Context, args: &EditArgs) -> Result<Outcome, AgboardError> 
     };
     let mut changed = false;
     let mut task = None;
-    if let Some(choice) = &plan {
-        let result = ctx.files.set_task_planned_version(
-            &project,
-            args.id,
-            choice,
-            Actor::Ai,
-            ctx.clock.now(),
-        )?;
-        changed |= result.changed;
-        task = Some(result.value);
-    }
     if args.title.is_some() || description.is_some() {
         let result = ctx.files.edit_task(
             &project,
@@ -53,6 +42,19 @@ pub fn run(ctx: &mut Context, args: &EditArgs) -> Result<Outcome, AgboardError> 
             &project,
             args.id,
             target.as_ref(),
+            Actor::Ai,
+            ctx.clock.now(),
+        )?;
+        changed |= result.changed;
+        task = Some(result.value);
+    }
+    // The plan goes last: it is the one change a Done task accepts, so an edit that also
+    // touches another field is refused before anything is saved.
+    if let Some(choice) = &plan {
+        let result = ctx.files.set_task_planned_version(
+            &project,
+            args.id,
+            choice,
             Actor::Ai,
             ctx.clock.now(),
         )?;

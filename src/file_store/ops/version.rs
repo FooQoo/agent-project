@@ -137,8 +137,8 @@ impl FileStore {
 
     /// Set or clear the version a task is planned for. `Current` stores the project's current
     /// version as it is now. Only a real change records a history entry and moves `updatedAt`;
-    /// the same value again changes nothing. An AI cannot change an archived, draft, or Done
-    /// task; a person can change a draft or Done task but not an archived one.
+    /// the same value again changes nothing. The plan can be set on a Done or archived task, by
+    /// an AI as well as a person; an AI still cannot change a person's draft.
     pub fn set_task_planned_version(
         &self,
         project: &ProjectId,
@@ -151,14 +151,9 @@ impl FileStore {
         let (project_dir, _lock) = lock_project(shared, project)?;
         let target = resolve(shared, project, choice)?;
         let mut task = reader::read_task_strict(shared, project, task_id)?;
-        if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id: task_id });
-        }
-        if actor == Actor::Ai {
-            if task.draft == Some(Draft::Human) {
-                return Err(AgboardError::TaskIsDraft { id: task_id });
-            }
-            ensure_ai_task_not_done(&task, actor)?;
+        // The plan is the one field that stays open on a Done or archived task.
+        if actor == Actor::Ai && task.draft == Some(Draft::Human) {
+            return Err(AgboardError::TaskIsDraft { id: task_id });
         }
         let changed = self.apply_version(project, &mut task, target, now)?;
         if changed {
