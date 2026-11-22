@@ -5,7 +5,7 @@ mod common;
 use std::fs;
 use std::path::Path;
 
-use common::{Reply, Running, agboard, demo_project, multipart, png};
+use common::{Reply, Running, agpj, demo_project, multipart, png};
 use serde_json::{Value, json};
 
 const BOUNDARY: &str = "agboard-simple-request";
@@ -78,7 +78,7 @@ fn task(reply: &Reply, expected_status: u16) -> Value {
 fn a_simple_request_can_belong_to_an_existing_epic() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",

@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 use serde_json::Value;
 use tempfile::tempdir;
 
-use common::{Running, agboard};
+use common::{Running, agpj};
 
 /// Poll `check` until it returns a value, or fail at the deadline.
 fn until<T>(what: &str, mut check: impl FnMut() -> Option<T>) -> T {
@@ -135,7 +135,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
     }
 
     // A project with no task, so the only work the session meets is the request below.
-    let (code, _, err) = agboard(home.path(), &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home.path(), &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
     let server = Running::start(home.path());
     let id = server.get("/api/projects").json()["projects"][0]["id"]
@@ -214,7 +214,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
 
     // A request made on the board is pushed to the idle session, which accepts it with no
     // human action.
-    let (code, out, err) = agboard(
+    let (code, out, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -247,7 +247,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
 
     // A question the session asks carries its launch ID, and the person's answer is pushed back
     // to it.
-    let (code, out, err) = agboard(
+    let (code, out, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -267,7 +267,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
     until("the session to be idle again", || {
         (sessions(&server, &base)["health"]["waiting"] == true).then_some(())
     });
-    let (code, out, err) = agboard(
+    let (code, out, err) = agpj(
         home.path(),
         &[
             "--project",

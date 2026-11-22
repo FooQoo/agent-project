@@ -4,14 +4,14 @@
 
 mod common;
 
-use common::{agboard, demo_project};
+use common::{agpj, demo_project};
 
 fn add_with_body(home: &std::path::Path, body: &str) -> (i32, String) {
     let text =
         format!("---\nacceptance:\n  - id: AC-1\n    text: Works\n    done: false\n---\n\n{body}");
     let file = home.join("desc.md");
     std::fs::write(&file, text).unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home,
         &[
             "--project",

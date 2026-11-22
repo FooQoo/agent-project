@@ -6,7 +6,7 @@ mod common;
 
 use std::path::Path;
 
-use common::{Running, agboard, json_ok};
+use common::{Running, agpj, json_ok};
 use serde_json::{Value, json};
 
 fn run(home: &Path, args: &[&str]) -> Value {
@@ -26,7 +26,7 @@ impl Board {
     /// A project with the epic PLAN holding tasks 1 to 4, all Todo.
     fn new() -> Board {
         let home = tempfile::tempdir().unwrap();
-        let (code, _, err) = agboard(home.path(), &["project", "create", "Demo"]);
+        let (code, _, err) = agpj(home.path(), &["project", "create", "Demo"]);
         assert_eq!(code, 0, "{err}");
         run(
             home.path(),

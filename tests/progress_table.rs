@@ -10,7 +10,7 @@ use assert_cmd::Command;
 use serde_json::{Value, json};
 use tempfile::{TempDir, tempdir};
 
-fn agboard(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
+fn agpj(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
     Command::cargo_bin("agboard")
         .unwrap()
         .env("AGPJ_AUTOSTART", "0")
@@ -37,11 +37,11 @@ fn demo() -> TempDir {
     let folder = home.path().join("work");
     fs::create_dir_all(&folder).unwrap();
     let folder = folder.display().to_string();
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &["project", "create", "Demo", "--folder", &folder],
     ));
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -73,13 +73,11 @@ fn add(home: &Path, title: &str, epic: Option<&str>) -> i64 {
     if let Some(epic) = epic {
         args.extend(["--epic", epic]);
     }
-    ok_json(agboard(home, &args))["task"]["id"]
-        .as_i64()
-        .unwrap()
+    ok_json(agpj(home, &args))["task"]["id"].as_i64().unwrap()
 }
 
 fn progress(home: &Path) -> Value {
-    ok_json(agboard(home, &["--project", "Demo", "progress", "--json"]))
+    ok_json(agpj(home, &["--project", "Demo", "progress", "--json"]))
 }
 
 fn epic_task_ids(table: &Value, epic: &str) -> Vec<i64> {
@@ -182,7 +180,7 @@ fn the_progress_table_orders_epics_by_id_and_tasks_by_waves_then_creation() {
     let second = add(home.path(), "second", Some("ALPHA"));
     let third = add(home.path(), "third", Some("ALPHA"));
     let loose = add(home.path(), "loose", None);
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -211,7 +209,7 @@ fn the_progress_table_orders_epics_by_id_and_tasks_by_waves_then_creation() {
 #[test]
 fn epics_without_listed_tasks_are_left_out_and_done_and_pending_tasks_are_not_listed() {
     let home = demo();
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -230,7 +228,7 @@ fn epics_without_listed_tasks_are_left_out_and_done_and_pending_tasks_are_not_li
     let finished = add(home.path(), "finished", Some("ALPHA"));
     let _beta = add(home.path(), "beta task", Some("BETA"));
 
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -244,7 +242,7 @@ fn epics_without_listed_tasks_are_left_out_and_done_and_pending_tasks_are_not_li
             "start",
         ],
     ));
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -260,7 +258,7 @@ fn epics_without_listed_tasks_are_left_out_and_done_and_pending_tasks_are_not_li
             "--no-wait",
         ],
     ));
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -292,7 +290,7 @@ fn epics_without_listed_tasks_are_left_out_and_done_and_pending_tasks_are_not_li
 fn a_pending_task_returns_to_the_table_once_it_is_idle_again() {
     let home = demo();
     let task = add(home.path(), "asks", Some("ALPHA"));
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -306,7 +304,7 @@ fn a_pending_task_returns_to_the_table_once_it_is_idle_again() {
             "start",
         ],
     ));
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -323,7 +321,7 @@ fn a_pending_task_returns_to_the_table_once_it_is_idle_again() {
         ],
     ));
     assert!(epic_task_ids(&progress(home.path()), "ALPHA").is_empty());
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -376,7 +374,7 @@ fn epic_edit_stores_the_order_without_the_body_drops_tasks_that_left_and_refuses
     let home = demo();
     let kept = add(home.path(), "kept", Some("ALPHA"));
     let gone = add(home.path(), "gone", Some("ALPHA"));
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -388,7 +386,7 @@ fn epic_edit_stores_the_order_without_the_body_drops_tasks_that_left_and_refuses
             "# Document\n\nKeep this text.\n",
         ],
     ));
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -402,7 +400,7 @@ fn epic_edit_stores_the_order_without_the_body_drops_tasks_that_left_and_refuses
             "99",
         ],
     ));
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",
@@ -423,7 +421,7 @@ fn epic_edit_stores_the_order_without_the_body_drops_tasks_that_left_and_refuses
     );
     assert_eq!(epic_task_ids(&progress(home.path()), "ALPHA"), vec![kept]);
 
-    let refused = agboard(
+    let refused = agpj(
         home.path(),
         &[
             "--project",
@@ -449,7 +447,7 @@ fn the_human_table_lists_each_epic_and_the_unassigned_tasks() {
     let home = demo();
     add(home.path(), "inside", Some("ALPHA"));
     add(home.path(), "outside", None);
-    let text = ok(agboard(home.path(), &["--project", "Demo", "progress"]));
+    let text = ok(agpj(home.path(), &["--project", "Demo", "progress"]));
     assert!(text.contains("ALPHA Alpha epic"));
     assert!(!text.contains("epic (acceptance"));
     assert!(text.contains("#1 inside [ai, todo, idle] acceptance 0/0"));
@@ -463,7 +461,7 @@ fn an_archived_task_is_never_listed() {
     let home = demo();
     let task = add(home.path(), "to archive", Some("ALPHA"));
     let kept = add(home.path(), "still open", Some("ALPHA"));
-    ok(agboard(
+    ok(agpj(
         home.path(),
         &[
             "--project",

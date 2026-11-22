@@ -6,7 +6,7 @@ mod common;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use common::{agboard, json_ok};
+use common::{agpj, json_ok};
 use serde_json::Value;
 
 fn run(home: &Path, args: &[&str]) -> Value {
@@ -19,7 +19,7 @@ fn run(home: &Path, args: &[&str]) -> Value {
 fn demo() -> (tempfile::TempDir, PathBuf) {
     let root = tempfile::tempdir().unwrap();
     let home = root.path().to_path_buf();
-    let (code, _, err) = agboard(&home, &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(&home, &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
     (root, home)
 }
@@ -112,7 +112,7 @@ fn a_done_task_without_conditions_has_its_own_class() {
     assert!(remaining.contains(&format!("#{todo} Not started")));
     assert!(section(&text, "Verified").contains(&format!("#{checked} All met")));
     assert!(!section(&text, "Verified").contains(&format!("#{bare} ")));
-    let (_, human, _) = agboard(
+    let (_, human, _) = agpj(
         &home,
         &["--project", "Demo", "release", "doc", "--version", "v1"],
     );

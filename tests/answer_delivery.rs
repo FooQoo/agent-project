@@ -6,7 +6,7 @@ mod common;
 
 use std::io::Cursor;
 
-use common::{agboard, json_ok};
+use common::{agpj, json_ok};
 use serde_json::Value;
 
 const P: [&str; 2] = ["--project", "Demo"];
@@ -18,7 +18,7 @@ fn run(home: &std::path::Path, args: &[&str]) -> Value {
 
 /// A project with one AI task and one question asked for it, answered by a person.
 fn answered(home: &std::path::Path) -> String {
-    let (code, _, err) = agboard(home, &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home, &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
     let task = run(
         home,
@@ -83,7 +83,7 @@ fn an_unaccepted_answer_is_in_progress_and_leaves_when_accepted() {
     );
     assert!(accepted["question"]["reply"]["acceptedAt"].is_string());
     assert!(progress(home.path()).get("answers").is_none());
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -143,7 +143,7 @@ fn listening_returns_an_answer_before_any_task_until_it_is_accepted() {
 fn a_wait_that_returns_the_answer_accepts_it() {
     let home = tempfile::tempdir().unwrap();
     let id = answered(home.path());
-    let (code, out, err) = agboard(
+    let (code, out, err) = agpj(
         home.path(),
         &["--project", "Demo", "--json", "message", "wait", &id],
     );

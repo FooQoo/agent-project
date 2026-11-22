@@ -6,7 +6,7 @@ mod common;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use common::{agboard, json_error, json_ok};
+use common::{agpj, json_error, json_ok};
 use serde_json::Value;
 
 const START: &str = "<!-- agboard:generated:start -->";

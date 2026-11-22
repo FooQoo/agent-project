@@ -40,7 +40,7 @@ fn run(home: &Path, args: &[&str]) -> Output {
         .unwrap()
 }
 
-fn agboard(home: &Path, project: &str, args: &[&str]) -> Output {
+fn agpj(home: &Path, project: &str, args: &[&str]) -> Output {
     let mut full = vec!["--project", project];
     full.extend(args);
     run(home, &full)
@@ -107,13 +107,13 @@ fn all_text(home: &Path, extra: &[&str]) -> String {
 
 /// One project's snapshot without the time it was fetched.
 fn content(home: &Path, project: &str) -> Value {
-    let mut snapshot = stdout_json(&agboard(home, project, &["snapshot", "--json"]));
+    let mut snapshot = stdout_json(&agpj(home, project, &["snapshot", "--json"]));
     snapshot.as_object_mut().unwrap().remove("fetchedAt");
     snapshot
 }
 
 fn snapshot_of(home: &Path, project: &str) -> Value {
-    stdout_json(&agboard(home, project, &["snapshot", "--json"]))
+    stdout_json(&agpj(home, project, &["snapshot", "--json"]))
 }
 
 fn project_id(home: &Path, name: &str) -> String {
@@ -159,7 +159,7 @@ fn names_of(list: &Value) -> Vec<String> {
 }
 
 fn add(home: &Path, project: &str, title: &str, assignee: &str) {
-    ok(&agboard(
+    ok(&agpj(
         home,
         project,
         &[
@@ -176,7 +176,7 @@ fn add(home: &Path, project: &str, title: &str, assignee: &str) {
 }
 
 fn mv(home: &Path, project: &str, id: &str, column: &str, actor: &str, reason: &str) {
-    ok(&agboard(
+    ok(&agpj(
         home,
         project,
         &["mv", id, column, "--actor", actor, "--reason", reason],
@@ -185,7 +185,7 @@ fn mv(home: &Path, project: &str, id: &str, column: &str, actor: &str, reason: &
 
 fn state(home: &Path, project: &str, id: &str, run_state: &str, reason: &str) {
     if run_state == "pending" {
-        ok(&agboard(
+        ok(&agpj(
             home,
             project,
             &[
@@ -201,7 +201,7 @@ fn state(home: &Path, project: &str, id: &str, run_state: &str, reason: &str) {
             ],
         ));
     } else {
-        ok(&agboard(
+        ok(&agpj(
             home,
             project,
             &["state", id, run_state, "--actor", "ai", "--reason", reason],
@@ -595,7 +595,7 @@ fn filters_apply_to_every_project_and_keep_the_projects_with_no_match() {
             // Each project agrees with its own filtered `ls`.
             let mut own_args = vec!["ls", "--json"];
             own_args.extend(&args);
-            let own = stdout_json(&agboard(home.path(), name, &own_args));
+            let own = stdout_json(&agpj(home.path(), name, &own_args));
             assert_eq!(got["tasks"], own["tasks"], "{name} {args:?} own ls");
         }
     }
@@ -877,7 +877,7 @@ fn only_a_list_may_ask_for_every_project_and_never_together_with_a_project() {
     // Every refusal left the data alone.
     assert_eq!(area(home.path()), before);
     // And the plain way of listing one project still works.
-    let own = stdout_json(&agboard(home.path(), "Apple", &["ls", "--json"]));
+    let own = stdout_json(&agpj(home.path(), "Apple", &["ls", "--json"]));
     assert_eq!(own["tasks"].as_array().unwrap().len(), 2);
 }
 
@@ -904,7 +904,7 @@ fn the_text_listing_shows_each_project_under_its_name_with_the_columns_of_ls() {
     // Under each heading is what `--project NAME ls` prints for that project.
     let mut expected = Vec::new();
     for name in ["Apple", "Kiwi", "Mango", "Zebra"] {
-        let own = stdout_text(&agboard(home.path(), name, &["ls"]));
+        let own = stdout_text(&agpj(home.path(), name, &["ls"]));
         expected.push(format!("Project: {name}\n{own}"));
     }
     assert_eq!(text.trim_end(), expected.join("\n").trim_end());

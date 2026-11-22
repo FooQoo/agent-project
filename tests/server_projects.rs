@@ -329,7 +329,7 @@ impl EventStream {
     }
 }
 
-fn agboard(home: &Path, args: &[&str]) -> (i32, String, String) {
+fn agpj(home: &Path, args: &[&str]) -> (i32, String, String) {
     let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
@@ -532,7 +532,7 @@ fn the_catalog_version_follows_catalog_changes_and_the_list_is_re_read() {
         .as_str()
         .unwrap()
         .to_string();
-    let (code, _, err) = agboard(home.path(), &["project", "create", "fresh"]);
+    let (code, _, err) = agpj(home.path(), &["project", "create", "fresh"]);
     assert_eq!(code, 0, "{err}");
     let after = server.get("/api/projects").json();
     assert_eq!(after["projects"].as_array().unwrap().len(), 1);
@@ -855,7 +855,7 @@ fn a_write_to_a_project_that_was_deleted_is_404_and_never_lands_in_another() {
 fn renaming_a_project_keeps_the_same_id_working() {
     let (home, a, _) = two_projects();
     let server = Running::start(home.path());
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "alpha", "project", "rename", "renamed"],
     );
@@ -1040,7 +1040,7 @@ fn a_cli_change_reaches_an_open_event_stream_after_ready() {
     let (home, _, _) = two_projects();
     let server = Running::start(home.path());
     let mut events = server.events();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -1074,7 +1074,7 @@ fn catalog_changes_by_the_cli_are_notified_and_visible_in_the_list() {
             vec!["uno"],
         ),
     ] {
-        let (code, _, err) = agboard(home.path(), &args);
+        let (code, _, err) = agpj(home.path(), &args);
         assert_eq!(code, 0, "{err}");
         let before = events.changed_count();
         assert!(events.changed() || before > 0, "{}", events.received);
@@ -1112,7 +1112,7 @@ fn changes_that_do_not_change_anything_send_nothing() {
             "human",
         ],
     ] {
-        agboard(home.path(), &args);
+        agpj(home.path(), &args);
     }
     // HTTP: a no-op move, a refused request and a rolled-back write.
     let moved = server.write(
@@ -1183,7 +1183,7 @@ fn a_cli_change_notifies_the_server_of_the_same_data_area_only() {
     let two = Running::start(home_two.path());
     let mut events_one = one.events();
     let mut events_two = two.events();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home_one.path(),
         &[
             "--project",

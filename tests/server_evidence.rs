@@ -7,7 +7,7 @@ use std::path::Path;
 
 use agent_project::domain::ProjectId;
 use agent_project::file_store::FileStore;
-use common::{Running, agboard, demo_project, json_error, json_ok, multipart, png};
+use common::{Running, agpj, demo_project, json_error, json_ok, multipart, png};
 use serde_json::{Value, json};
 
 const BOUNDARY: &str = "agboard-test-boundary";
@@ -35,7 +35,7 @@ fn image_body(id: &str) -> Vec<u8> {
 }
 
 fn add_second_task(home: &Path) {
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home,
         &[
             "--project",
@@ -107,7 +107,7 @@ fn an_epic_image_is_served_only_through_its_own_epic() {
     demo_project(home.path());
     add_second_task(home.path());
     for id in ["FILE-SHARE", "OTHER"] {
-        let (code, _, err) = agboard(
+        let (code, _, err) = agpj(
             home.path(),
             &[
                 "--project",
@@ -258,9 +258,9 @@ fn task_text_evidence_routes_are_removed() {
 fn an_image_of_another_project_is_not_found_even_with_the_same_task_number() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
-    let (code, _, err) = agboard(home.path(), &["project", "create", "Other"]);
+    let (code, _, err) = agpj(home.path(), &["project", "create", "Other"]);
     assert_eq!(code, 0, "{err}");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",

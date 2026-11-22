@@ -7,7 +7,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use common::{agboard, demo_project};
+use common::{agpj, demo_project};
 
 /// The text of every `TASK.md` under `home`, joined.
 fn all_task_text(home: &Path) -> String {
@@ -116,7 +116,7 @@ fn a_text_option_without_its_value_fails_instead_of_taking_the_next_flag() {
     for case in cases {
         let mut args = vec!["--project", "Demo"];
         args.extend_from_slice(case);
-        let (code, out, err) = agboard(home.path(), &args);
+        let (code, out, err) = agpj(home.path(), &args);
         assert_eq!(code, 2, "{case:?} should be refused: {out}{err}");
         assert!(out.is_empty(), "{case:?} printed {out}");
         assert!(err.contains("invalid_argument"), "{case:?}: {err}");
@@ -130,7 +130,7 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
 
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -145,7 +145,7 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
 
     let file = home.path().join("reason.txt");
     std::fs::write(&file, "- file form\n").unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -186,7 +186,7 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
 fn a_spaced_dash_value_is_refused_with_a_hint_to_use_equals() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",

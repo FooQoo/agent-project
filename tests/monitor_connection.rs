@@ -21,7 +21,7 @@ use support::home;
 
 // ------------------------------------------------------------- command line
 
-fn agboard(home: &Path) -> Command {
+fn agpj(home: &Path) -> Command {
     let mut cmd = Command::cargo_bin("agboard").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0").env("AGPJ_OPEN_BROWSER", "0");
     cmd.env("AGPJ_WATCH", "poll")
@@ -36,7 +36,7 @@ fn agboard(home: &Path) -> Command {
 
 fn exit_of(args: &[&str], envs: &[(&str, &str)]) -> (i32, String) {
     let home = tempfile::tempdir().unwrap();
-    let mut cmd = agboard(home.path());
+    let mut cmd = agpj(home.path());
     // The OS picks the port if parsing wrongly succeeds; never 7420.
     cmd.args(["serve", "--port", "0"]).args(args);
     for (k, v) in envs {

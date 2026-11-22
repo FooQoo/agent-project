@@ -12,7 +12,7 @@ use agent_project::file_store::qa::AnswerVia;
 use agent_project::file_store::validate::EpicId;
 use agent_project::file_store::{AnswerItem, AskInput, AskQuestion, FileStore, SendRequestInput};
 use chrono::{DateTime, TimeZone, Utc};
-use common::{Running, agboard, demo_project, json_error, json_ok};
+use common::{Running, agpj, demo_project, json_error, json_ok};
 use serde_json::json;
 
 fn at(minute: u32) -> DateTime<Utc> {
@@ -273,7 +273,7 @@ fn the_cli_and_the_api_name_the_unanswered_questions_and_the_summary_lists_messa
         "ai",
         "--backlog",
     ]);
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -307,7 +307,7 @@ fn the_cli_and_the_api_name_the_unanswered_questions_and_the_summary_lists_messa
         ],
     );
     assert_eq!((code, name.as_str()), (1, "send_with_open_questions"));
-    let (_, _, err_text) = agboard(
+    let (_, _, err_text) = agpj(
         home.path(),
         &["--project", "Demo", "mv", "2", "todo", "--actor", "human"],
     );
@@ -328,7 +328,7 @@ fn the_cli_and_the_api_name_the_unanswered_questions_and_the_summary_lists_messa
     server.stop();
 
     // Answer it, and the person sends the task without a warning.
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",

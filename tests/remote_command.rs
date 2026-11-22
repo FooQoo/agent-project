@@ -17,7 +17,7 @@ use support::home;
 mod harness;
 use harness::*;
 
-fn agboard(home: &Path, args: &[&str]) -> Output {
+fn agpj(home: &Path, args: &[&str]) -> Output {
     let mut cmd = Command::cargo_bin("agboard").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
@@ -40,7 +40,7 @@ fn err(o: &Output) -> String {
 }
 
 fn project_id(home: &Path) -> String {
-    let listed = agboard(home, &["--json", "project", "ls"]);
+    let listed = agpj(home, &["--json", "project", "ls"]);
     let v: Value = serde_json::from_slice(&listed.stdout).unwrap();
     v["projects"][0]["id"].as_str().unwrap().to_string()
 }
@@ -59,7 +59,7 @@ fn ready_connection_prints_the_state_the_project_address_and_the_passcode() {
     let passcode = s.passcode();
     let id = project_id(home.path());
 
-    let text = agboard(home.path(), &["--project", "monitor", "show", "remote"]);
+    let text = agpj(home.path(), &["--project", "monitor", "show", "remote"]);
     assert!(text.status.success(), "{}", err(&text));
     assert_eq!(
         out(&text),
@@ -68,7 +68,7 @@ fn ready_connection_prints_the_state_the_project_address_and_the_passcode() {
         )
     );
 
-    let json = agboard(
+    let json = agpj(
         home.path(),
         &["--json", "--project", "monitor", "show", "remote"],
     );
@@ -100,7 +100,7 @@ fn without_a_project_it_reports_the_settings_and_the_state_and_prints_no_passcod
     connect(&s);
     let passcode = s.passcode();
 
-    let run = agboard(home.path(), &["--json", "show", "remote"]);
+    let run = agpj(home.path(), &["--json", "show", "remote"]);
     assert_eq!(run.status.code(), Some(0), "{}", err(&run));
     let v: Value = serde_json::from_str(&out(&run)).unwrap();
     assert_eq!(v["status"], "ready");
@@ -110,7 +110,7 @@ fn without_a_project_it_reports_the_settings_and_the_state_and_prints_no_passcod
     assert!(v.get("passcode").is_none() && v.get("url").is_none());
     assert!(!out(&run).contains(&passcode) && !out(&run).contains(TOKEN));
 
-    let text = agboard(home.path(), &["show", "remote"]);
+    let text = agpj(home.path(), &["show", "remote"]);
     assert!(
         out(&text).contains(&format!("Connection: ready at {PUBLIC}")),
         "{}",
@@ -122,7 +122,7 @@ fn without_a_project_it_reports_the_settings_and_the_state_and_prints_no_passcod
 #[test]
 fn without_a_project_and_without_a_server_it_still_shows_the_saved_settings() {
     let home = home();
-    let run = agboard(home.path(), &["--json", "show", "remote"]);
+    let run = agpj(home.path(), &["--json", "show", "remote"]);
     assert_eq!(run.status.code(), Some(0), "{}", err(&run));
     let v: Value = serde_json::from_str(&out(&run)).unwrap();
     assert_eq!(v["status"], "no_server");
@@ -132,7 +132,7 @@ fn without_a_project_and_without_a_server_it_still_shows_the_saved_settings() {
 #[test]
 fn the_old_remote_command_is_gone() {
     let home = home();
-    let run = agboard(home.path(), &["--project", "monitor", "remote"]);
+    let run = agpj(home.path(), &["--project", "monitor", "remote"]);
     assert_eq!(run.status.code(), Some(2), "{}", err(&run));
     assert!(out(&run).is_empty());
 }
@@ -142,7 +142,7 @@ fn an_unknown_project_is_an_error_not_the_entrance() {
     let home = home();
     let s = Server::start(home.path(), Opts::default());
     connect(&s);
-    let run = agboard(home.path(), &["--project", "nope", "show", "remote"]);
+    let run = agpj(home.path(), &["--project", "nope", "show", "remote"]);
     assert_eq!(run.status.code(), Some(4), "{}", err(&run));
     assert!(!out(&run).contains(PUBLIC));
 }
@@ -155,7 +155,7 @@ fn without_a_running_server_it_fails_and_prints_no_address_or_passcode() {
         if json {
             args.insert(0, "--json");
         }
-        let run = agboard(home.path(), &args);
+        let run = agpj(home.path(), &args);
         assert_eq!(run.status.code(), Some(1));
         assert_eq!(out(&run), "");
         let e = err(&run);
@@ -168,7 +168,7 @@ fn a_connection_that_is_not_ready_fails_and_prints_no_address_or_passcode() {
     let home = home();
     let s = Server::start(home.path(), Opts::default());
     // Not turned on yet.
-    let run = agboard(
+    let run = agpj(
         home.path(),
         &["--json", "--project", "monitor", "show", "remote"],
     );
@@ -184,7 +184,7 @@ fn a_connection_that_is_not_ready_fails_and_prints_no_address_or_passcode() {
     assert_eq!(s.put(true, 0).status, 200);
     assert_eq!(s.start_ngrok(json!({"token": TOKEN})).status, 202);
     s.wait_status("failed");
-    let run = agboard(home.path(), &["--project", "monitor", "show", "remote"]);
+    let run = agpj(home.path(), &["--project", "monitor", "show", "remote"]);
     assert_eq!(run.status.code(), Some(1));
     assert_eq!(out(&run), "");
     assert!(err(&run).contains("connect_failed"), "{}", err(&run));

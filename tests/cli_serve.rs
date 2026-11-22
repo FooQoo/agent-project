@@ -29,7 +29,7 @@ fn serial() -> MutexGuard<'static, ()> {
     SERIAL.lock().unwrap_or_else(|e| e.into_inner())
 }
 
-fn agboard(home: &Path) -> Command {
+fn agpj(home: &Path) -> Command {
     let mut cmd = Command::cargo_bin("agboard").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
@@ -64,10 +64,7 @@ fn run(home: &Path, args: &[&str]) -> Output {
     if command != Some("serve") {
         args.splice(0..0, ["--project", "demo"]);
     }
-    let output = agboard(home)
-        .args(folder_args(home, &args))
-        .output()
-        .unwrap();
+    let output = agpj(home).args(folder_args(home, &args)).output().unwrap();
     Output {
         code: output.status.code().unwrap(),
         out: String::from_utf8(output.stdout).unwrap(),
@@ -616,7 +613,7 @@ fn serve_takes_no_project_and_changes_made_through_two_projects_are_notified() {
     let _lock = serial();
     let home = tempfile::tempdir().unwrap();
     let port = free_port();
-    let o = agboard(home.path())
+    let o = agpj(home.path())
         .args(["--project", "x", "serve", "--port", &port.to_string()])
         .output()
         .unwrap();
@@ -626,7 +623,7 @@ fn serve_takes_no_project_and_changes_made_through_two_projects_are_notified() {
 
     let (serving, _) = Serving::start(home.path());
     for name in ["alpha", "beta"] {
-        let o = agboard(home.path())
+        let o = agpj(home.path())
             .args(folder_args(home.path(), &["project", "create", name]))
             .output()
             .unwrap();

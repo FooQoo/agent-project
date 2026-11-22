@@ -6,7 +6,7 @@ mod common;
 
 use std::path::Path;
 
-use common::{Running, agboard, demo_project, json_ok};
+use common::{Running, agpj, demo_project, json_ok};
 use serde_json::{Value, json};
 
 /// The ID of the project named "Demo".
@@ -164,7 +164,7 @@ fn an_epic_is_created_listed_read_and_changed_over_http() {
 fn a_task_takes_and_leaves_an_epic_over_http_and_a_person_may_change_an_archived_task() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -200,7 +200,7 @@ fn a_task_takes_and_leaves_an_epic_over_http_and_a_person_may_change_an_archived
     assert_eq!(cleared.json()["task"]["epicId"], Value::Null);
 
     // A task that is archived takes no AI change, but a person may change it.
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -238,7 +238,7 @@ fn an_answer_names_a_choice_or_a_note_and_an_unknown_choice_is_422() {
             .to_string(),
     )
     .unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",

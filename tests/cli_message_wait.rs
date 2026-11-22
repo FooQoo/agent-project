@@ -10,7 +10,7 @@ use std::process::{Child, Command, Stdio};
 use serde_json::Value;
 use tempfile::tempdir;
 
-use common::{Running, agboard, decision_json, demo_project, json_error, json_ok};
+use common::{Running, agpj, decision_json, demo_project, json_error, json_ok};
 
 fn demo(args: &[&str]) -> Vec<String> {
     let mut all = vec!["--project".to_string(), "Demo".to_string()];
@@ -21,7 +21,7 @@ fn demo(args: &[&str]) -> Vec<String> {
 fn run(home: &Path, args: &[&str]) -> (i32, String, String) {
     let all = demo(args);
     let refs: Vec<&str> = all.iter().map(String::as_str).collect();
-    agboard(home, &refs)
+    agpj(home, &refs)
 }
 
 fn lines(out: &str) -> Vec<Value> {
@@ -331,7 +331,7 @@ fn edit_with_desc_file_keeps_question_refs_and_the_task_stays_pending() {
     let file = home.path().join("desc.md");
     std::fs::write(&file, "---\nquestions: [Q-9]\n---\nReplaced body\n").unwrap();
     let path = file.to_str().unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--desc-file", path],
     );
@@ -343,7 +343,7 @@ fn edit_with_desc_file_keeps_question_refs_and_the_task_stays_pending() {
 
     // The same holds for a plain file without frontmatter.
     std::fs::write(&file, "Second body\n").unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--desc-file", path],
     );

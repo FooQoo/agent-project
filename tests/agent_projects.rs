@@ -19,7 +19,7 @@ fn bin() -> Command {
     command
 }
 
-fn agboard(home: &Path, project: &str, args: &[&str]) -> Output {
+fn agpj(home: &Path, project: &str, args: &[&str]) -> Output {
     bin()
         .env("AGBOARD_WATCH", "poll")
         .env("AGPJ_HOME", home)
@@ -51,7 +51,7 @@ fn ok(output: &Output) {
 }
 
 fn add_task(home: &Path, project: &str, title: &str) {
-    ok(&agboard(
+    ok(&agpj(
         home,
         project,
         &["add", title, "--assignee", "ai", "--actor", "human"],
@@ -80,7 +80,7 @@ fn tree_of(dir: &Path) -> Vec<(std::path::PathBuf, Vec<u8>)> {
 }
 
 fn snapshot(home: &Path, project: &str) -> Value {
-    let output = agboard(home, project, &["snapshot", "--json"]);
+    let output = agpj(home, project, &["snapshot", "--json"]);
     ok(&output);
     serde_json::from_slice(&output.stdout).unwrap()
 }
@@ -246,14 +246,14 @@ fn error_of(output: &Output) -> Value {
 
 fn two_projects(home: &Path) {
     for (project, title) in [("Alpha", "Alpha secret"), ("Beta", "Beta secret")] {
-        ok(&agboard(home, project, &["init"]));
+        ok(&agpj(home, project, &["init"]));
         add_task(home, project, title);
-        ok(&agboard(
+        ok(&agpj(
             home,
             project,
             &["mv", "1", "doing", "--actor", "ai", "--reason", "Start"],
         ));
-        ok(&agboard(
+        ok(&agpj(
             home,
             project,
             &[
@@ -275,11 +275,11 @@ fn two_projects(home: &Path) {
 fn the_hook_passes_only_the_named_projects_progress_table() {
     let home = tempdir().unwrap();
     // Both projects have a task #1, so a mix-up would be visible.
-    ok(&agboard(home.path(), "Alpha", &["init"]));
-    ok(&agboard(home.path(), "Beta", &["init"]));
+    ok(&agpj(home.path(), "Alpha", &["init"]));
+    ok(&agpj(home.path(), "Beta", &["init"]));
     for (project, title) in [("Alpha", "Alpha secret"), ("Beta", "Beta secret")] {
         add_task(home.path(), project, title);
-        ok(&agboard(
+        ok(&agpj(
             home.path(),
             project,
             &[
@@ -292,7 +292,7 @@ fn the_hook_passes_only_the_named_projects_progress_table() {
                 &format!("{project} started"),
             ],
         ));
-        ok(&agboard(
+        ok(&agpj(
             home.path(),
             project,
             &[
@@ -374,11 +374,7 @@ fn a_renamed_project_needs_its_new_name_and_a_recreated_one_is_a_new_project() {
     let home = tempdir().unwrap();
     two_projects(home.path());
     let original = snapshot(home.path(), "Alpha");
-    ok(&agboard(
-        home.path(),
-        "Alpha",
-        &["project", "rename", "Gamma"],
-    ));
+    ok(&agpj(home.path(), "Alpha", &["project", "rename", "Gamma"]));
 
     // The old name no longer names anything, so the hook says so; it does not
     // fall back to another project.
@@ -391,7 +387,7 @@ fn a_renamed_project_needs_its_new_name_and_a_recreated_one_is_a_new_project() {
     assert_eq!(renamed["project"]["name"], "Gamma");
 
     // Creating the old name again gives another project, not the old one.
-    ok(&agboard(home.path(), "Alpha", &["init"]));
+    ok(&agpj(home.path(), "Alpha", &["init"]));
     let again = context(&hook(home.path(), Some("Alpha"), "claude", SESSION_START));
     let again: Value =
         serde_json::from_str(again.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
@@ -568,7 +564,7 @@ fn hook_explicit_project_overrides_cwd_binding_and_missing_binding_is_an_error()
         &["project", "create", "Alpha"],
     ));
     add_task(home.path(), "Alpha", "Bound task");
-    ok(&agboard(home.path(), "Beta", &["init"]));
+    ok(&agpj(home.path(), "Beta", &["init"]));
     // The unbound directory stays unregistered; Beta is used only as the
     // explicit override in the first request below.
     add_task(home.path(), "Beta", "Explicit task");
@@ -747,11 +743,7 @@ fn a_rename_while_waiting_returns_the_latest_snapshot_of_the_same_project() {
 
     let waiter = spawn_wait(home.path(), "Alpha", &after, None);
     std::thread::sleep(Duration::from_millis(500));
-    ok(&agboard(
-        home.path(),
-        "Alpha",
-        &["project", "rename", "Gamma"],
-    ));
+    ok(&agpj(home.path(), "Alpha", &["project", "rename", "Gamma"]));
     let output = finish(waiter, Duration::from_secs(10));
     ok(&output);
     let result: Value = serde_json::from_slice(&output.stdout).unwrap();
@@ -763,11 +755,7 @@ fn a_rename_while_waiting_returns_the_latest_snapshot_of_the_same_project() {
     let after = result["cursor"].as_str().unwrap().to_string();
     let waiter = spawn_wait(home.path(), "Gamma", &after, None);
     std::thread::sleep(Duration::from_millis(500));
-    ok(&agboard(
-        home.path(),
-        "Gamma",
-        &["project", "rename", "Delta"],
-    ));
+    ok(&agpj(home.path(), "Gamma", &["project", "rename", "Delta"]));
     add_task(home.path(), "Delta", "After two renames");
     let output = finish(waiter, Duration::from_secs(10));
     ok(&output);

@@ -11,8 +11,8 @@ use tempfile::tempdir;
 
 use serve_process::ServeProcess;
 
-/// Run `agboard --project "Agent Board" <args>`.
-fn agboard(home: &std::path::Path, args: &[&str]) -> std::process::Output {
+/// Run `agpj --project "Agent Board" <args>`.
+fn agpj(home: &std::path::Path, args: &[&str]) -> std::process::Output {
     agpj_for(home, "Agent Board", args)
 }
 
@@ -52,9 +52,9 @@ fn start_server(home: &std::path::Path) -> ServeProcess {
 #[test]
 fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
     let home = tempdir().unwrap();
-    assert!(agboard(home.path(), &["init"]).status.success());
+    assert!(agpj(home.path(), &["init"]).status.success());
     assert!(
-        agboard(
+        agpj(
             home.path(),
             &[
                 "add",
@@ -69,7 +69,7 @@ fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
         .success()
     );
     assert!(
-        agboard(
+        agpj(
             home.path(),
             &[
                 "mv",
@@ -84,7 +84,7 @@ fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
         .status
         .success()
     );
-    let pending = agboard(
+    let pending = agpj(
         home.path(),
         &[
             "message",
@@ -102,7 +102,7 @@ fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
     assert!(pending.status.success());
     let pending: Value = serde_json::from_slice(&pending.stdout).unwrap();
     assert_eq!(pending["type"], "registered");
-    let baseline = agboard(home.path(), &["snapshot", "--json"]);
+    let baseline = agpj(home.path(), &["snapshot", "--json"]);
     assert!(baseline.status.success());
     let baseline: Value = serde_json::from_slice(&baseline.stdout).unwrap();
     let after = baseline["cursor"].as_str().unwrap().to_string();
@@ -128,7 +128,7 @@ fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
         .stderr(Stdio::piped())
         .spawn()
         .unwrap();
-    let answer = agboard(
+    let answer = agpj(
         home.path(),
         &[
             "message",
@@ -166,7 +166,7 @@ fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
             .unwrap()
             .contains("Answer: Keep the current behavior and explain the tradeoff.")
     );
-    let resume = agboard(
+    let resume = agpj(
         home.path(),
         &[
             "state",
@@ -179,7 +179,7 @@ fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
         ],
     );
     assert!(resume.status.success());
-    let latest = agboard(home.path(), &["snapshot", "--json"]);
+    let latest = agpj(home.path(), &["snapshot", "--json"]);
     let latest: Value = serde_json::from_slice(&latest.stdout).unwrap();
     assert_eq!(latest["tasks"][0]["agentStatus"], "running");
     assert_eq!(latest["tasks"][0]["history"].as_array().unwrap().len(), 5);
@@ -188,7 +188,7 @@ fn wait_returns_the_latest_full_snapshot_for_a_change_around_subscription() {
 #[test]
 fn wait_timeout_and_unavailable_are_not_reported_as_board_changes() {
     let home = tempdir().unwrap();
-    let missing = agboard(
+    let missing = agpj(
         home.path(),
         &[
             "--json",
@@ -209,14 +209,14 @@ fn wait_timeout_and_unavailable_are_not_reported_as_board_changes() {
 #[test]
 fn wait_keeps_the_event_stream_open_until_its_timeout() {
     let home = tempdir().unwrap();
-    assert!(agboard(home.path(), &["init"]).status.success());
-    let baseline = agboard(home.path(), &["snapshot", "--json"]);
+    assert!(agpj(home.path(), &["init"]).status.success());
+    let baseline = agpj(home.path(), &["snapshot", "--json"]);
     let baseline: Value = serde_json::from_slice(&baseline.stdout).unwrap();
     let after = baseline["cursor"].as_str().unwrap().to_string();
     let _server = start_server(home.path());
 
     let began = Instant::now();
-    let output = agboard(
+    let output = agpj(
         home.path(),
         &["--json", "wait", "--after", &after, "--timeout", "4"],
     );
@@ -233,9 +233,9 @@ fn wait_keeps_the_event_stream_open_until_its_timeout() {
 #[test]
 fn a_change_to_another_project_does_not_end_the_wait() {
     let home = tempdir().unwrap();
-    assert!(agboard(home.path(), &["init"]).status.success());
+    assert!(agpj(home.path(), &["init"]).status.success());
     assert!(agpj_for(home.path(), "Other", &["init"]).status.success());
-    let baseline = agboard(home.path(), &["snapshot", "--json"]);
+    let baseline = agpj(home.path(), &["snapshot", "--json"]);
     let baseline: Value = serde_json::from_slice(&baseline.stdout).unwrap();
     let after = baseline["cursor"].as_str().unwrap().to_string();
     let _server = start_server(home.path());
@@ -275,12 +275,12 @@ fn a_change_to_another_project_does_not_end_the_wait() {
 #[test]
 fn a_cursor_from_another_project_or_a_bare_number_is_refused() {
     let home = tempdir().unwrap();
-    assert!(agboard(home.path(), &["init"]).status.success());
+    assert!(agpj(home.path(), &["init"]).status.success());
     assert!(agpj_for(home.path(), "Other", &["init"]).status.success());
     let other = agpj_for(home.path(), "Other", &["snapshot", "--json"]);
     let other: Value = serde_json::from_slice(&other.stdout).unwrap();
     let foreign = other["cursor"].as_str().unwrap();
-    let output = agboard(
+    let output = agpj(
         home.path(),
         &["--json", "wait", "--after", foreign, "--timeout", "0"],
     );
@@ -288,7 +288,7 @@ fn a_cursor_from_another_project_or_a_bare_number_is_refused() {
     let error: Value = serde_json::from_slice(&output.stderr).unwrap();
     assert_eq!(error["error"]["code"], "cursor_invalid");
 
-    let output = agboard(
+    let output = agpj(
         home.path(),
         &["--json", "wait", "--after", "0", "--timeout", "0"],
     );
@@ -298,8 +298,8 @@ fn a_cursor_from_another_project_or_a_bare_number_is_refused() {
 #[test]
 fn wait_names_serve_json_when_the_recorded_server_does_not_answer() {
     let home = tempdir().unwrap();
-    assert!(agboard(home.path(), &["init"]).status.success());
-    let snapshot = agboard(home.path(), &["snapshot", "--json"]);
+    assert!(agpj(home.path(), &["init"]).status.success());
+    let snapshot = agpj(home.path(), &["snapshot", "--json"]);
     let cursor = serde_json::from_slice::<Value>(&snapshot.stdout).unwrap()["cursor"]
         .as_str()
         .unwrap()
@@ -310,7 +310,7 @@ fn wait_names_serve_json_when_the_recorded_server_does_not_answer() {
         r#"{"pid":999999,"port":1,"started_at":"2026-10-12T00:00:00Z"}"#,
     )
     .unwrap();
-    let waited = agboard(
+    let waited = agpj(
         home.path(),
         &["--json", "wait", "--after", &cursor, "--timeout", "3"],
     );
@@ -319,5 +319,5 @@ fn wait_names_serve_json_when_the_recorded_server_does_not_answer() {
     assert_eq!(error["error"]["code"], "board_unavailable");
     let reason = error["error"]["reason"].as_str().unwrap();
     assert!(reason.contains("serve.json"), "{reason}");
-    assert!(reason.contains("agboard serve"), "{reason}");
+    assert!(reason.contains("agpj serve"), "{reason}");
 }

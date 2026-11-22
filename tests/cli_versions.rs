@@ -6,7 +6,7 @@ mod common;
 
 use std::path::Path;
 
-use common::{agboard, json_error, json_ok};
+use common::{agpj, json_error, json_ok};
 use serde_json::Value;
 
 fn run(home: &Path, args: &[&str]) -> Value {
@@ -25,7 +25,7 @@ fn fail(home: &Path, args: &[&str]) -> (i32, String) {
 fn plain(home: &Path, args: &[&str]) -> String {
     let mut all = vec!["--project", "Demo"];
     all.extend(args);
-    let (code, out, err) = agboard(home, &all);
+    let (code, out, err) = agpj(home, &all);
     assert_eq!(code, 0, "{args:?} failed: {err}");
     out
 }
@@ -37,7 +37,7 @@ fn add(home: &Path, title: &str, extra: &[&str]) -> i64 {
 }
 
 fn demo(home: &Path) {
-    let (code, _, err) = agboard(home, &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home, &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
 }
 
@@ -79,7 +79,7 @@ fn waves_board(home: &Path) {
     demo(home);
     list_versions(home, &["v1.8.0", "v1.9.0"]);
     run(home, &["version", "current", "v1.9.0"]);
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home,
         &[
             "--project",
@@ -481,11 +481,11 @@ fn a_version_filter_in_progress_hides_tasks_but_never_makes_one_ready() {
 fn the_root_version_flag_still_prints_the_binary_version() {
     let home = tempfile::tempdir().unwrap();
     demo(home.path());
-    let (code, out, _) = agboard(home.path(), &["--version"]);
+    let (code, out, _) = agpj(home.path(), &["--version"]);
     assert_eq!(code, 0);
     assert!(out.starts_with("agpj "), "{out}");
     // The option of the subcommands is a different one.
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "Demo", "ls", "--version", "v1.8.0"],
     );

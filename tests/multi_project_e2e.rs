@@ -52,7 +52,7 @@ fn run(home: &Path, project: Option<&str>, args: &[&str]) -> Output {
         .unwrap()
 }
 
-fn agboard(home: &Path, project: &str, args: &[&str]) -> Output {
+fn agpj(home: &Path, project: &str, args: &[&str]) -> Output {
     run(home, Some(project), args)
 }
 
@@ -101,7 +101,7 @@ fn import_fixture(home: &Path, project: &str, file: &str) {
     for task in backup["tasks"].as_array().unwrap() {
         let body = valid_body(task["description"].as_str().unwrap());
         let assignee = task["assignee"].as_str().unwrap();
-        ok(&agboard(
+        ok(&agpj(
             home,
             project,
             &[
@@ -118,7 +118,7 @@ fn import_fixture(home: &Path, project: &str, file: &str) {
         let id = task["id"].as_i64().unwrap().to_string();
         let lane = task["taskStatus"].as_str().unwrap();
         if lane != "todo" {
-            ok(&agboard(
+            ok(&agpj(
                 home,
                 project,
                 &["mv", &id, lane, "--actor", "human", "--reason", "fixture"],
@@ -143,7 +143,7 @@ fn import_fixture(home: &Path, project: &str, file: &str) {
             } else {
                 vec!["state", &id, state, "--actor", "ai", "--reason", reason]
             };
-            ok(&agboard(home, project, &args));
+            ok(&agpj(home, project, &args));
         }
     }
 }
@@ -175,7 +175,7 @@ fn pending_request(home: &Path, project: &str, id: i64) -> String {
 }
 
 fn snapshot(home: &Path, project: &str) -> Value {
-    stdout_json(&agboard(home, project, &["snapshot", "--json"]))
+    stdout_json(&agpj(home, project, &["snapshot", "--json"]))
 }
 
 /// The snapshot without the time it was fetched, for comparing contents.
@@ -554,7 +554,7 @@ fn a_new_data_area_starts_with_no_projects_and_projects_are_managed_by_name() {
         2,
     );
     assert_error(
-        &agboard(
+        &agpj(
             home.path(),
             "Beta",
             &["--json", "project", "rename", "Alpha"],
@@ -566,14 +566,10 @@ fn a_new_data_area_starts_with_no_projects_and_projects_are_managed_by_name() {
 
     // A rename keeps the ID; the old name no longer finds the project.
     let beta_id = project_id(home.path(), "Beta");
-    ok(&agboard(
-        home.path(),
-        "Beta",
-        &["project", "rename", "Gamma"],
-    ));
+    ok(&agpj(home.path(), "Beta", &["project", "rename", "Gamma"]));
     assert_eq!(project_id(home.path(), "Gamma"), beta_id);
     assert_error(
-        &agboard(home.path(), "Beta", &["--json", "snapshot"]),
+        &agpj(home.path(), "Beta", &["--json", "snapshot"]),
         "project_not_found",
         4,
     );
@@ -644,23 +640,23 @@ fn every_command_that_works_on_a_project_refuses_to_guess_one() {
     }
     // The commands that are for the whole data area do not take a project.
     assert_error(
-        &agboard(home.path(), "Alpha", &["--json", "project", "ls"]),
+        &agpj(home.path(), "Alpha", &["--json", "project", "ls"]),
         "invalid_argument",
         2,
     );
     assert_error(
-        &agboard(home.path(), "Alpha", &["--json", "project", "create", "Z"]),
+        &agpj(home.path(), "Alpha", &["--json", "project", "create", "Z"]),
         "invalid_argument",
         2,
     );
     assert_error(
-        &agboard(home.path(), "Alpha", &["--json", "serve", "--port", "0"]),
+        &agpj(home.path(), "Alpha", &["--json", "serve", "--port", "0"]),
         "invalid_argument",
         2,
     );
     // An unknown name is not found either.
     assert_error(
-        &agboard(home.path(), "Nope", &["--json", "snapshot"]),
+        &agpj(home.path(), "Nope", &["--json", "snapshot"]),
         "project_not_found",
         4,
     );
@@ -699,7 +695,7 @@ fn the_server_writes_only_where_the_url_points_and_tells_browsers_what_changed()
 
     // The browser's connection hears about changes by the CLI, in either project.
     let mut events = server.events();
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Beta",
         &["edit", "1", "--title", "Beta: renamed task"],
@@ -760,7 +756,7 @@ fn the_server_writes_only_where_the_url_points_and_tells_browsers_what_changed()
     );
 
     // A renamed project keeps its ID, so a page that holds the ID keeps working.
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Alpha",
         &["project", "rename", "Alpha Renamed"],
@@ -851,12 +847,12 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
         .to_string();
     let mut waiter = spawn_wait(home.path(), "Alpha", &after, None);
     std::thread::sleep(Duration::from_millis(500));
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Beta",
         &["edit", "1", "--title", "Beta changes meanwhile"],
     ));
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Beta",
         &[
@@ -897,7 +893,7 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
     assert!(!String::from_utf8_lossy(&output.stdout).contains("Beta"));
 
     // The agent resumes from the answer it was given, and the next hook shows active metadata only.
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Alpha",
         &[
@@ -930,12 +926,12 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
         .to_string();
     let waiter = spawn_wait(home.path(), "Alpha", &after, None);
     std::thread::sleep(Duration::from_millis(500));
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Alpha",
         &["project", "rename", "Alpha Two"],
     ));
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Alpha Two",
         &[
@@ -973,7 +969,7 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
         assert!(output.stdout.is_empty());
 
         ok(&run(home.path(), None, &["project", "create", "Alpha Two"]));
-        ok(&agboard(
+        ok(&agpj(
             home.path(),
             "Alpha Two",
             &["add", "New project", "--assignee", "ai", "--actor", "human"],

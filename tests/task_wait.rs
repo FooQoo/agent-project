@@ -18,7 +18,7 @@ use tempfile::{TempDir, tempdir};
 
 use serve_process::ServeProcess;
 
-fn agboard(home: &Path, args: &[&str]) -> std::process::Output {
+fn agpj(home: &Path, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
@@ -31,7 +31,7 @@ fn agboard(home: &Path, args: &[&str]) -> std::process::Output {
 }
 
 fn success(home: &Path, args: &[&str]) -> String {
-    let output = agboard(home, args);
+    let output = agpj(home, args);
     assert!(
         output.status.success(),
         "{}
@@ -645,7 +645,7 @@ fn a_dropped_event_stream_is_an_error_not_an_idle_timeout() {
 #[test]
 fn errors_and_invalid_cli_inputs_are_not_idle_completions() {
     let (home, _) = demo();
-    let no_server = agboard(
+    let no_server = agpj(
         home.path(),
         &[
             "--project",
@@ -716,7 +716,7 @@ fn malformed_project_data_fails_instead_of_becoming_an_idle_timeout() {
         .join("task.json");
     fs::write(task_json, "{").unwrap();
 
-    let result = agboard(
+    let result = agpj(
         home.path(),
         &[
             "--project",

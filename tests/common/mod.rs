@@ -37,7 +37,7 @@ pub const BODY: &str = "## 作業内容\n\nDetails\n\n## 完了条件と確認�
 
 /// Run the `agboard` binary in `home` with no terminal on standard input.
 /// Returns the exit code, standard output, and standard error.
-pub fn agboard(home: &Path, args: &[&str]) -> (i32, String, String) {
+pub fn agpj(home: &Path, args: &[&str]) -> (i32, String, String) {
     let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
@@ -58,14 +58,14 @@ pub fn agboard(home: &Path, args: &[&str]) -> (i32, String, String) {
 
 /// Run a command that must succeed and parse its JSON output.
 pub fn json_ok(home: &Path, args: &[&str]) -> Value {
-    let (code, out, err) = agboard(home, args);
+    let (code, out, err) = agpj(home, args);
     assert_eq!(code, 0, "{args:?} failed: {err}");
     serde_json::from_str(&out).unwrap_or_else(|_| panic!("not JSON: {out}"))
 }
 
 /// Run a command that must fail and return its JSON error code.
 pub fn json_error(home: &Path, args: &[&str]) -> (i32, String) {
-    let (code, _out, err) = agboard(home, &[&["--json"], args].concat());
+    let (code, _out, err) = agpj(home, &[&["--json"], args].concat());
     assert_ne!(code, 0, "{args:?} unexpectedly succeeded");
     let value: Value =
         serde_json::from_str(&err).unwrap_or_else(|_| panic!("stderr is not JSON: {err}"));
@@ -74,9 +74,9 @@ pub fn json_error(home: &Path, args: &[&str]) -> (i32, String) {
 
 /// A project named "Demo" with one task (#1, AI, Doing, idle).
 pub fn demo_project(home: &Path) {
-    let (code, _, err) = agboard(home, &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home, &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home,
         &[
             "--project",
@@ -90,7 +90,7 @@ pub fn demo_project(home: &Path) {
         ],
     );
     assert_eq!(code, 0, "{err}");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home,
         &[
             "--project",

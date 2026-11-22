@@ -110,7 +110,7 @@ fn a_publication_needs_a_link_and_a_valid_version_and_is_not_final() {
     let home = tempfile::tempdir().unwrap();
     done_task(home.path());
     // clap requires the link, so the CLI refuses before the store is reached.
-    let (code, _, _) = common::agboard(
+    let (code, _, _) = common::agpj(
         home.path(),
         &[
             "--project",
@@ -146,7 +146,7 @@ fn a_publication_needs_a_link_and_a_valid_version_and_is_not_final() {
         ),
         "invalid_value"
     );
-    let (code, _, _) = common::agboard(
+    let (code, _, _) = common::agpj(
         home.path(),
         &[
             "--project",

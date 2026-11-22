@@ -6,7 +6,7 @@ use std::path::Path;
 use assert_cmd::Command;
 use serde_json::Value;
 
-fn agboard(home: &Path) -> Command {
+fn agpj(home: &Path) -> Command {
     let mut cmd = Command::cargo_bin("agboard").unwrap();
     cmd.env("AGPJ_AUTOSTART", "0").env("AGPJ_OPEN_BROWSER", "0");
     cmd.env("AGPJ_WATCH", "poll")
@@ -17,13 +17,13 @@ fn agboard(home: &Path) -> Command {
 }
 
 fn json(home: &Path, args: &[&str]) -> Value {
-    let out = agboard(home).args(args).assert().success();
+    let out = agpj(home).args(args).assert().success();
     serde_json::from_slice(&out.get_output().stdout).unwrap()
 }
 
 /// A data area with one project named "Demo"; returns its ID.
 fn demo(home: &Path) -> String {
-    agboard(home)
+    agpj(home)
         .args(["project", "create", "Demo"])
         .assert()
         .success();
@@ -78,7 +78,7 @@ fn a_cursor_names_the_content_version_and_a_different_version_answers_at_once() 
     );
 
     // The same version does not answer: with no time to wait, the answer is a timeout.
-    agboard(home.path())
+    agpj(home.path())
         .args([
             "--project",
             "Demo",
@@ -94,7 +94,7 @@ fn a_cursor_names_the_content_version_and_a_different_version_answers_at_once() 
         .stderr(predicates::str::contains("wait_timeout"));
 
     // After a change the version differs, so the same old cursor is answered at once.
-    agboard(home.path())
+    agpj(home.path())
         .args([
             "--project", "Demo", "add", "Changed", "--assignee", "ai", "--actor", "human",
             "--desc", "## 作業内容\n\nWork.\n\n## 完了条件と確認結果\n\n- [ ] AC-1. Works\n  - 確認結果: 未確認\n  - 根拠: 未記入\n  - 調整役の確認: 未確認\n\n## 実行記録\n\n",
@@ -123,7 +123,7 @@ fn the_old_revision_cursor_is_refused() {
     let home = tempfile::tempdir().unwrap();
     let id = demo(home.path());
     let old = format!("{id}:3");
-    agboard(home.path())
+    agpj(home.path())
         .args([
             "--project",
             "Demo",
@@ -144,7 +144,7 @@ fn init_empties_the_named_project_and_keeps_its_id_name_and_task_number() {
     let home = tempfile::tempdir().unwrap();
     let id = demo(home.path());
     let body = "## 作業内容\n\nWork.\n\n## 完了条件と確認結果\n\n- [ ] AC-1. Works\n  - 確認結果: 未確認\n  - 根拠: 未記入\n  - 調整役の確認: 未確認\n\n## 実行記録\n\n";
-    agboard(home.path())
+    agpj(home.path())
         .args([
             "--project",
             "Demo",
@@ -161,7 +161,7 @@ fn init_empties_the_named_project_and_keeps_its_id_name_and_task_number() {
         .success();
     // An existing project is replaced only after a person says yes; with --json
     // the confirmation is refused and nothing changes.
-    agboard(home.path())
+    agpj(home.path())
         .args(["--project", "Demo", "--json", "init"])
         .assert()
         .code(1)

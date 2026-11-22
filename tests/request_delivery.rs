@@ -5,11 +5,11 @@ mod common;
 
 use std::io::Cursor;
 
-use common::{agboard, json_ok};
+use common::{agpj, json_ok};
 use serde_json::Value;
 
 fn project(home: &std::path::Path) {
-    let (code, _, err) = agboard(home, &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home, &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
 }
 

@@ -19,7 +19,7 @@ use tempfile::tempdir;
 
 // ---- helpers --------------------------------------------------------------
 
-fn agboard(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
+fn agpj(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
     Command::cargo_bin("agboard")
         .unwrap()
         .env("AGPJ_AUTOSTART", "0")
@@ -51,17 +51,17 @@ const TASK: [&str; 5] = ["--assignee", "ai", "--actor", "human", "--json"];
 fn add_task(home: &Path, project: &str, title: &str) -> Value {
     let mut args = vec!["--project", project, "add", title];
     args.extend(TASK);
-    stdout_json(agboard(home, &args))
+    stdout_json(agpj(home, &args))
 }
 
 /// Everything observable: the catalog and every project's full snapshot
 /// (without the fetch time).
 fn world(home: &Path) -> Value {
-    let catalog = stdout_json(agboard(home, &["project", "ls", "--json"]));
+    let catalog = stdout_json(agpj(home, &["project", "ls", "--json"]));
     let mut projects = Vec::new();
     for project in catalog["projects"].as_array().unwrap() {
         let name = project["name"].as_str().unwrap();
-        let mut snapshot = stdout_json(agboard(home, &["--project", name, "snapshot", "--json"]));
+        let mut snapshot = stdout_json(agpj(home, &["--project", name, "snapshot", "--json"]));
         snapshot.as_object_mut().unwrap().remove("fetchedAt");
         projects.push(snapshot);
     }
@@ -69,7 +69,7 @@ fn world(home: &Path) -> Value {
 }
 
 fn titles(home: &Path, project: &str) -> Vec<String> {
-    stdout_json(agboard(home, &["--project", project, "ls", "--json"]))["tasks"]
+    stdout_json(agpj(home, &["--project", project, "ls", "--json"]))["tasks"]
         .as_array()
         .unwrap()
         .iter()
@@ -78,8 +78,8 @@ fn titles(home: &Path, project: &str) -> Vec<String> {
 }
 
 fn two_projects(home: &Path) {
-    agboard(home, &["project", "create", "A"]).success();
-    agboard(home, &["project", "create", "B"]).success();
+    agpj(home, &["project", "create", "A"]).success();
+    agpj(home, &["project", "create", "B"]).success();
 }
 
 // ---- AC-1, AC-3: create, list, rename, isolation ----------------------------
@@ -93,7 +93,7 @@ fn two_projects_keep_equal_task_numbers_apart() {
     assert_eq!(a["task"]["id"], 1);
     assert_eq!(b["task"]["id"], 1);
 
-    agboard(
+    agpj(
         home.path(),
         &[
             "--project",
@@ -108,7 +108,7 @@ fn two_projects_keep_equal_task_numbers_apart() {
         ],
     )
     .success();
-    agboard(
+    agpj(
         home.path(),
         &[
             "--project",
@@ -124,11 +124,11 @@ fn two_projects_keep_equal_task_numbers_apart() {
     )
     .success();
 
-    let shown_a = stdout_json(agboard(
+    let shown_a = stdout_json(agpj(
         home.path(),
         &["--project", "A", "show", "1", "--json"],
     ));
-    let shown_b = stdout_json(agboard(
+    let shown_b = stdout_json(agpj(
         home.path(),
         &["--project", "B", "show", "1", "--json"],
     ));
@@ -141,7 +141,7 @@ fn two_projects_keep_equal_task_numbers_apart() {
     assert_eq!(shown_b["task"]["history"].as_array().unwrap().len(), 1);
 
     // A task number that exists in neither project is not found, per project.
-    agboard(home.path(), &["--project", "B", "show", "2", "--json"])
+    agpj(home.path(), &["--project", "B", "show", "2", "--json"])
         .failure()
         .code(3);
     assert_eq!(titles(home.path(), "A"), ["only in A"]);
@@ -151,21 +151,18 @@ fn two_projects_keep_equal_task_numbers_apart() {
 #[test]
 fn project_create_prints_the_project_and_ls_lists_by_name_with_the_catalog_version() {
     let home = tempdir().unwrap();
-    let created = stdout_json(agboard(
-        home.path(),
-        &["project", "create", "Zed", "--json"],
-    ));
+    let created = stdout_json(agpj(home.path(), &["project", "create", "Zed", "--json"]));
     assert_eq!(created["project"]["name"], "Zed");
     assert!(created["project"]["id"].as_str().unwrap().len() >= 16);
     assert!(created["project"]["createdAt"].is_string());
-    agboard(home.path(), &["project", "create", "Alpha one"]).success();
-    let out = agboard(home.path(), &["project", "create", "Mid"]).success();
+    agpj(home.path(), &["project", "create", "Alpha one"]).success();
+    let out = agpj(home.path(), &["project", "create", "Mid"]).success();
     assert!(
         String::from_utf8_lossy(&out.get_output().stdout).contains("Created project \"Mid\""),
         "human output names the project"
     );
 
-    let raw = agboard(home.path(), &["project", "ls", "--json"])
+    let raw = agpj(home.path(), &["project", "ls", "--json"])
         .success()
         .get_output()
         .stdout
@@ -185,7 +182,7 @@ fn project_create_prints_the_project_and_ls_lists_by_name_with_the_catalog_versi
     assert!(pos("\"projects\"") < pos("\"catalogVersion\""));
     assert!(pos("\"id\"") < pos("\"name\"") && pos("\"name\"") < pos("\"createdAt\""));
 
-    let human = agboard(home.path(), &["project", "ls"]).success();
+    let human = agpj(home.path(), &["project", "ls"]).success();
     let human = String::from_utf8_lossy(&human.get_output().stdout).to_string();
     assert!(human.contains("Alpha one") && human.contains("Zed"));
 }
@@ -204,7 +201,7 @@ fn creating_or_renaming_to_an_existing_name_is_refused_and_changes_nothing() {
         vec!["--project", "A", "project", "rename", "B", "--json"],
     ] {
         assert_eq!(
-            error_code(agboard(home.path(), &args), 2),
+            error_code(agpj(home.path(), &args), 2),
             "project_name_exists",
             "{args:?}"
         );
@@ -217,7 +214,7 @@ fn renaming_to_the_same_normalized_name_succeeds_without_a_change() {
     let home = tempdir().unwrap();
     two_projects(home.path());
     let before = world(home.path());
-    let out = agboard(
+    let out = agpj(
         home.path(),
         &["--project", "A", "project", "rename", "  A ", "--json"],
     );
@@ -286,7 +283,7 @@ fn every_project_command_refuses_a_missing_project() {
 #[test]
 fn an_unknown_project_is_not_found_and_never_replaced_by_another() {
     let home = tempdir().unwrap();
-    agboard(home.path(), &["project", "create", "Only"]).success();
+    agpj(home.path(), &["project", "create", "Only"]).success();
     let before = world(home.path());
     for command in [
         vec!["--project", "Nope", "ls", "--json"],
@@ -310,7 +307,7 @@ fn an_unknown_project_is_not_found_and_never_replaced_by_another() {
         vec!["--project", "only", "ls", "--json"],
     ] {
         assert_eq!(
-            error_code(agboard(home.path(), &command), 4),
+            error_code(agpj(home.path(), &command), 4),
             "project_not_found",
             "{command:?}"
         );
@@ -321,7 +318,7 @@ fn an_unknown_project_is_not_found_and_never_replaced_by_another() {
 #[test]
 fn project_option_syntax_before_or_after_the_command_with_spaces_and_duplicates() {
     let home = tempdir().unwrap();
-    agboard(home.path(), &["project", "create", "My team board"]).success();
+    agpj(home.path(), &["project", "create", "My team board"]).success();
     // Before the subcommand, after it, and after its own arguments.
     for args in [
         vec!["--project", "My team board", "ls", "--json"],
@@ -329,7 +326,7 @@ fn project_option_syntax_before_or_after_the_command_with_spaces_and_duplicates(
         vec!["ls", "--json", "--project", "My team board"],
         vec!["--json", "--project=My team board", "ls"],
     ] {
-        let value = stdout_json(agboard(home.path(), &args));
+        let value = stdout_json(agpj(home.path(), &args));
         assert!(value["tasks"].is_array(), "{args:?}");
     }
     // The option given twice is rejected, even with the same value.
@@ -345,7 +342,7 @@ fn project_option_syntax_before_or_after_the_command_with_spaces_and_duplicates(
     ] {
         assert_eq!(
             error_code(
-                agboard(home.path(), &[args.as_slice(), &["--json"]].concat()),
+                agpj(home.path(), &[args.as_slice(), &["--json"]].concat()),
                 2
             ),
             "invalid_argument",
@@ -355,7 +352,7 @@ fn project_option_syntax_before_or_after_the_command_with_spaces_and_duplicates(
     // A project name that is empty or spans lines is an invalid value.
     for bad in ["", "   ", "a\nb"] {
         assert_eq!(
-            error_code(agboard(home.path(), &["--project", bad, "ls", "--json"]), 2),
+            error_code(agpj(home.path(), &["--project", bad, "ls", "--json"]), 2),
             "invalid_value",
             "{bad:?}"
         );
@@ -371,15 +368,15 @@ fn global_commands_reject_project_and_work_with_no_projects() {
         vec!["--project", "x", "serve", "--port", "0", "--json"],
     ] {
         assert_eq!(
-            error_code(agboard(home.path(), &args), 2),
+            error_code(agpj(home.path(), &args), 2),
             "invalid_argument",
             "{args:?}"
         );
     }
     // project create/ls and --help/--version do not need a project.
-    agboard(home.path(), &["--help"]).success();
-    agboard(home.path(), &["--version"]).success();
-    agboard(home.path(), &["--project", "x", "--help"]).success();
+    agpj(home.path(), &["--help"]).success();
+    agpj(home.path(), &["--version"]).success();
+    agpj(home.path(), &["--project", "x", "--help"]).success();
 }
 
 // ---- AC-4: deletion needs a human -----------------------------------------
@@ -756,9 +753,9 @@ fn the_notification_goes_to_the_serve_of_the_same_data_directory_only() {
 fn a_real_cli_change_reaches_the_server_of_its_own_data_directory() {
     let home = tempdir().unwrap();
     let spy = NotifySpy::start(home.path());
-    agboard(home.path(), &["project", "create", "A"]).success();
-    agboard(home.path(), &["project", "create", "A"]).failure();
-    agboard(home.path(), &["project", "ls"]).success();
+    agpj(home.path(), &["project", "create", "A"]).success();
+    agpj(home.path(), &["project", "create", "A"]).failure();
+    agpj(home.path(), &["project", "ls"]).success();
     assert_eq!(spy.stop(), 1);
 }
 
@@ -951,7 +948,7 @@ mod races {
 #[test]
 fn help_lists_project_commands_and_every_example_names_its_project() {
     let home = tempdir().unwrap();
-    let top = agboard(home.path(), &["--help"]).success();
+    let top = agpj(home.path(), &["--help"]).success();
     let top = String::from_utf8_lossy(&top.get_output().stdout).to_string();
     assert!(top.contains("project"));
     assert!(top.contains("agboard project ls --json"));
@@ -984,7 +981,7 @@ fn help_lists_project_commands_and_every_example_names_its_project() {
         vec!["project", "rm"],
     ]);
     for command in commands {
-        let help = agboard(home.path(), &[command.as_slice(), &["--help"]].concat()).success();
+        let help = agpj(home.path(), &[command.as_slice(), &["--help"]].concat()).success();
         let help = String::from_utf8_lossy(&help.get_output().stdout).to_string();
         let examples: Vec<&str> = help
             .lines()
