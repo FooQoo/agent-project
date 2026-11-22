@@ -1,7 +1,7 @@
 //! Shared harness for the epic, request, and shared-file HTTP and CLI tests.
 //!
 //! Servers listen on port 0 in a temporary data area. The CLI is the real
-//! `agboard` binary run against the same `AGBOARD_HOME`.
+//! `agpj` binary run against the same `AGPJ_HOME`.
 
 #![allow(dead_code)]
 
@@ -18,9 +18,9 @@ use std::time::Duration;
 #[path = "../support/server_thread.rs"]
 mod server_thread;
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::{ServeConfig, run_until_in};
+use agent_project::error::AgpjError;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::{ServeConfig, run_until_in};
 use serde_json::Value;
 
 /// A valid 1x1 PNG.
@@ -35,14 +35,14 @@ pub fn png() -> Vec<u8> {
 /// A TASK.md body that the file store accepts.
 pub const BODY: &str = "## 作業内容\n\nDetails\n\n## 完了条件と確認結果\n\n- [ ] AC-1. Done\n  - 確認結果: 未確認\n  - 根拠: 未記入\n  - 調整役の確認: 未確認\n\n## 実行記録\n\n";
 
-/// Run the `agboard` binary in `home` with no terminal on standard input.
+/// Run the `agpj` binary in `home` with no terminal on standard input.
 /// Returns the exit code, standard output, and standard error.
-pub fn agboard(home: &Path, args: &[&str]) -> (i32, String, String) {
-    let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+pub fn agpj(home: &Path, args: &[&str]) -> (i32, String, String) {
+    let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)
         .args(folder_args(home, args))
@@ -58,14 +58,14 @@ pub fn agboard(home: &Path, args: &[&str]) -> (i32, String, String) {
 
 /// Run a command that must succeed and parse its JSON output.
 pub fn json_ok(home: &Path, args: &[&str]) -> Value {
-    let (code, out, err) = agboard(home, args);
+    let (code, out, err) = agpj(home, args);
     assert_eq!(code, 0, "{args:?} failed: {err}");
     serde_json::from_str(&out).unwrap_or_else(|_| panic!("not JSON: {out}"))
 }
 
 /// Run a command that must fail and return its JSON error code.
 pub fn json_error(home: &Path, args: &[&str]) -> (i32, String) {
-    let (code, _out, err) = agboard(home, &[&["--json"], args].concat());
+    let (code, _out, err) = agpj(home, &[&["--json"], args].concat());
     assert_ne!(code, 0, "{args:?} unexpectedly succeeded");
     let value: Value =
         serde_json::from_str(&err).unwrap_or_else(|_| panic!("stderr is not JSON: {err}"));
@@ -74,9 +74,9 @@ pub fn json_error(home: &Path, args: &[&str]) -> (i32, String) {
 
 /// A project named "Demo" with one task (#1, AI, Doing, idle).
 pub fn demo_project(home: &Path) {
-    let (code, _, err) = agboard(home, &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home, &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home,
         &[
             "--project",
@@ -90,7 +90,7 @@ pub fn demo_project(home: &Path) {
         ],
     );
     assert_eq!(code, 0, "{err}");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home,
         &[
             "--project",
@@ -131,17 +131,17 @@ impl Reply {
     }
 }
 
-/// A running `agboard serve` on port 0, stopped on drop.
+/// A running `agpj serve` on port 0, stopped on drop.
 pub struct Running {
     pub addr: SocketAddr,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 impl Running {
     pub fn start(home: &Path) -> Running {
         // The data area is passed in, so servers start in parallel without
-        // touching AGBOARD_HOME, and the poll watch starts without FSEvents.
+        // touching AGPJ_HOME, and the poll watch starts without FSEvents.
         let data_dir = home.to_path_buf();
         let (ready_tx, ready_rx) = mpsc::channel();
         let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
@@ -175,7 +175,7 @@ impl Running {
     /// The write token the board page carries.
     pub fn token(&self) -> String {
         let page = self.get("/").body;
-        let marker = "name=\"agboard-token\" content=\"";
+        let marker = "name=\"agpj-token\" content=\"";
         let start = page.find(marker).expect("token meta tag") + marker.len();
         page[start..start + 64].to_string()
     }
@@ -185,7 +185,7 @@ impl Running {
         vec![
             ("Origin".into(), format!("http://127.0.0.1:{}", self.port())),
             ("Sec-Fetch-Site".into(), "same-origin".into()),
-            ("X-Agboard-Token".into(), token.into()),
+            ("X-Agpj-Token".into(), token.into()),
         ]
     }
 

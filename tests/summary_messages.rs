@@ -4,15 +4,15 @@
 
 mod common;
 
-use agent_board::domain::{Actor, Assignee, Column, NewTask, ProjectId};
-use agent_board::error::AgboardError;
-use agent_board::file_store::message::messages;
-use agent_board::file_store::model::NewEpic;
-use agent_board::file_store::qa::AnswerVia;
-use agent_board::file_store::validate::EpicId;
-use agent_board::file_store::{AnswerItem, AskInput, AskQuestion, FileStore, SendRequestInput};
+use agent_project::domain::{Actor, Assignee, Column, NewTask, ProjectId};
+use agent_project::error::AgpjError;
+use agent_project::file_store::message::messages;
+use agent_project::file_store::model::NewEpic;
+use agent_project::file_store::qa::AnswerVia;
+use agent_project::file_store::validate::EpicId;
+use agent_project::file_store::{AnswerItem, AskInput, AskQuestion, FileStore, SendRequestInput};
 use chrono::{DateTime, TimeZone, Utc};
-use common::{Running, agboard, demo_project, json_error, json_ok};
+use common::{Running, agpj, demo_project, json_error, json_ok};
 use serde_json::json;
 
 fn at(minute: u32) -> DateTime<Utc> {
@@ -204,7 +204,7 @@ fn a_send_is_a_warning_for_a_person_while_a_question_about_it_has_no_answer() {
         .send_task(&f.project, task, Actor::Human, false, at(4))
         .unwrap_err();
     assert!(
-        matches!(&warned, AgboardError::SendWithOpenQuestions { ids } if ids.as_slice() == std::slice::from_ref(&q))
+        matches!(&warned, AgpjError::SendWithOpenQuestions { ids } if ids.as_slice() == std::slice::from_ref(&q))
     );
     assert_eq!(
         f.store.task(&f.project, task).unwrap().task_status,
@@ -231,7 +231,7 @@ fn an_epic_send_is_a_warning_while_a_question_about_its_cards_has_no_answer() {
         .send_epic(&f.project, &epic, None, Actor::Human, false, at(7))
         .unwrap_err();
     assert!(
-        matches!(&warned, AgboardError::SendWithOpenQuestions { ids } if ids.as_slice() == std::slice::from_ref(&q))
+        matches!(&warned, AgpjError::SendWithOpenQuestions { ids } if ids.as_slice() == std::slice::from_ref(&q))
     );
     assert_eq!(
         f.store.task(&f.project, one).unwrap().task_status,
@@ -273,7 +273,7 @@ fn the_cli_and_the_api_name_the_unanswered_questions_and_the_summary_lists_messa
         "ai",
         "--backlog",
     ]);
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -307,7 +307,7 @@ fn the_cli_and_the_api_name_the_unanswered_questions_and_the_summary_lists_messa
         ],
     );
     assert_eq!((code, name.as_str()), (1, "send_with_open_questions"));
-    let (_, _, err_text) = agboard(
+    let (_, _, err_text) = agpj(
         home.path(),
         &["--project", "Demo", "mv", "2", "todo", "--actor", "human"],
     );
@@ -328,7 +328,7 @@ fn the_cli_and_the_api_name_the_unanswered_questions_and_the_summary_lists_messa
     server.stop();
 
     // Answer it, and the person sends the task without a warning.
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",

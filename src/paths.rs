@@ -3,10 +3,10 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// Name of the data directory directly under the home directory.
-pub const DEFAULT_DATA_DIR_NAME: &str = ".agent-board";
+pub const DEFAULT_DATA_DIR_NAME: &str = ".agent-project";
 
 /// How a running server was started: by a person (`serve`, `serve -d`) or by
 /// the CLI when a command needed one. Only an automatic server stops by itself.
@@ -18,7 +18,7 @@ pub enum ServeMode {
     Auto,
 }
 
-/// Contents of `serve.json`: how the CLI finds a running `agboard serve`.
+/// Contents of `serve.json`: how the CLI finds a running `agpj serve`.
 /// A file without `mode` was written by a manual server.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ServeInfo {
@@ -36,37 +36,37 @@ pub struct ServeInfo {
     pub idle_timeout_seconds: Option<u64>,
 }
 
-/// The data directory: `$AGBOARD_HOME` when it is set and not empty, otherwise
-/// `.agent-board` directly under the home directory. When neither can be found
+/// The data directory: `$AGPJ_HOME` when it is set and not empty, otherwise
+/// `.agent-project` directly under the home directory. When neither can be found
 /// this is an error; the working directory is never used instead.
-pub fn data_dir() -> Result<PathBuf, AgboardError> {
-    data_dir_from(std::env::var_os("AGBOARD_HOME"), dirs::home_dir())
+pub fn data_dir() -> Result<PathBuf, AgpjError> {
+    data_dir_from(std::env::var_os("AGPJ_HOME"), dirs::home_dir())
 }
 
 /// [`data_dir`] with its inputs given, so the rule needs no process environment.
-/// An empty `AGBOARD_HOME` counts as unset.
+/// An empty `AGPJ_HOME` counts as unset.
 pub fn data_dir_from(
-    agboard_home: Option<OsString>,
+    agpj_home: Option<OsString>,
     home: Option<PathBuf>,
-) -> Result<PathBuf, AgboardError> {
-    if let Some(dir) = agboard_home.filter(|value| !value.is_empty()) {
+) -> Result<PathBuf, AgpjError> {
+    if let Some(dir) = agpj_home.filter(|value| !value.is_empty()) {
         return Ok(PathBuf::from(dir));
     }
     match home.filter(|dir| !dir.as_os_str().is_empty()) {
         Some(home) => Ok(home.join(DEFAULT_DATA_DIR_NAME)),
-        None => Err(AgboardError::BoardUnavailable {
-            reason: "The home directory cannot be found. Set AGBOARD_HOME to the data directory."
+        None => Err(AgpjError::BoardUnavailable {
+            reason: "The home directory cannot be found. Set AGPJ_HOME to the data directory."
                 .to_string(),
         }),
     }
 }
 
 /// The shared file area: every project's canonical files live below it.
-pub fn shared_dir() -> Result<PathBuf, AgboardError> {
+pub fn shared_dir() -> Result<PathBuf, AgpjError> {
     Ok(data_dir()?.join("shared"))
 }
 
-pub fn serve_info_path() -> Result<PathBuf, AgboardError> {
+pub fn serve_info_path() -> Result<PathBuf, AgpjError> {
     Ok(data_dir()?.join("serve.json"))
 }
 
@@ -114,25 +114,25 @@ mod tests {
 
     use super::*;
 
-    // AGBOARD_HOME is process-global, so tests that change it must not overlap.
+    // AGPJ_HOME is process-global, so tests that change it must not overlap.
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     fn with_home<T>(home: Option<&std::path::Path>, f: impl FnOnce() -> T) -> T {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let previous = std::env::var_os("AGBOARD_HOME");
+        let previous = std::env::var_os("AGPJ_HOME");
         // SAFETY: access to the environment is serialized by ENV_LOCK.
         unsafe {
             match home {
-                Some(path) => std::env::set_var("AGBOARD_HOME", path),
-                None => std::env::remove_var("AGBOARD_HOME"),
+                Some(path) => std::env::set_var("AGPJ_HOME", path),
+                None => std::env::remove_var("AGPJ_HOME"),
             }
         }
         let result = f();
         // SAFETY: as above.
         unsafe {
             match previous {
-                Some(value) => std::env::set_var("AGBOARD_HOME", value),
-                None => std::env::remove_var("AGBOARD_HOME"),
+                Some(value) => std::env::set_var("AGPJ_HOME", value),
+                None => std::env::remove_var("AGPJ_HOME"),
             }
         }
         result
@@ -149,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    fn agboard_home_takes_precedence_over_the_home_directory() {
+    fn agpj_home_takes_precedence_over_the_home_directory() {
         let tmp = tempfile::tempdir().unwrap();
         let resolved = data_dir_from(Some(tmp.path().into()), Some(PathBuf::from("/srv/someone")));
         assert_eq!(resolved.unwrap(), tmp.path());
@@ -160,16 +160,16 @@ mod tests {
         let resolved = data_dir_from(None, Some(PathBuf::from("/srv/someone")));
         assert_eq!(
             resolved.unwrap(),
-            PathBuf::from("/srv/someone").join(".agent-board")
+            PathBuf::from("/srv/someone").join(".agent-project")
         );
     }
 
     #[test]
-    fn an_empty_agboard_home_counts_as_unset() {
+    fn an_empty_agpj_home_counts_as_unset() {
         let resolved = data_dir_from(Some(OsString::new()), Some(PathBuf::from("/srv/someone")));
         assert_eq!(
             resolved.unwrap(),
-            PathBuf::from("/srv/someone").join(".agent-board")
+            PathBuf::from("/srv/someone").join(".agent-project")
         );
     }
 
@@ -179,12 +179,12 @@ mod tests {
         assert_eq!(error.code(), "board_unavailable");
         let empty_home = data_dir_from(None, Some(PathBuf::new())).unwrap_err();
         assert_eq!(empty_home.code(), "board_unavailable");
-        // An explicit AGBOARD_HOME still works without a home directory.
+        // An explicit AGPJ_HOME still works without a home directory.
         assert!(data_dir_from(Some("/data".into()), None).is_ok());
     }
 
     #[test]
-    fn data_dir_prefers_agboard_home() {
+    fn data_dir_prefers_agpj_home() {
         let tmp = tempfile::tempdir().unwrap();
         with_home(Some(tmp.path()), || {
             assert_eq!(data_dir().unwrap(), tmp.path());
@@ -194,11 +194,11 @@ mod tests {
     }
 
     #[test]
-    fn data_dir_defaults_to_agent_board_in_the_home_directory() {
+    fn data_dir_defaults_to_agent_project_in_the_home_directory() {
         with_home(None, || {
             assert_eq!(
                 data_dir().unwrap(),
-                dirs::home_dir().unwrap().join(".agent-board")
+                dirs::home_dir().unwrap().join(".agent-project")
             );
         });
     }

@@ -4,12 +4,12 @@ The JSON that agents receive. The pieces are explained in [Agent integration](..
 
 ## Progress table
 
-`agboard progress --json` and the hook return the same table:
+`agpj progress --json` and the hook return the same table:
 
 ```json
 {
   "fetchedAt": "2026-10-17T00:48:47Z",
-  "project": { "id": "ef18518d…", "name": "agent-board", "createdAt": "2026-10-10T22:59:43Z" },
+  "project": { "id": "ef18518d…", "name": "agent-project", "createdAt": "2026-10-10T22:59:43Z" },
   "version": "781ad752…",
   "cursor": "f1:ef18518d…:781ad752…",
   "locale": "ja",
@@ -57,23 +57,23 @@ The JSON that agents receive. The pieces are explained in [Agent integration](..
 - When an AI task has at least one acceptance condition, all of them done, and no `--final` result, the table has a `finalResultMissing` array in ID order, at most five entries: `{"id":21,"title":"…","taskPath":"…/tasks/21/TASK.md"}`. A Backlog task is never a candidate. A task is listed while it is still in Todo or Doing, and for 24 hours after its lane changed to Done, which covers automatic Done happening before the agent writes the result. Drafts, human tasks, archived tasks, and tasks with invalid conditions are never listed. The agent records `result add --final` for each entry, and recording it removes the entry. Nothing is blocked or delayed: automatic Done does not wait for the result. Without such a task the field is absent.
 - `epicsToClose` lists epics (other than `BUG` and `ENHANCEMENT`) whose unarchived tasks are all Done and whose `EPIC.md` body still has an unchecked `- [ ]`, in ID order: `[{"id":"SPEC-MIGRATION","name":"…","documentPath":"…/epics/SPEC-MIGRATION/EPIC.md"}]`. It is left out when none qualifies.
 - A running AI task carries `lastActivityAt`, the time of its latest history entry or, when it has none, of its last run-state change: `{"id":98,…,"agentStatus":"running","lastActivityAt":"2026-11-20T03:12:00Z"}`. An AI task in Doing with a `--final` result carries `"hasFinalResult": true`. Both are left out otherwise. The `stale-running` and `conditions` rules read them.
-- `reminders` lists what the [nudge rules](../concepts/agents.md#nudge-rules) that read only this table found: `[{"rule":"final-result","kind":"definite","text":"Task #21 has all conditions met but no final result: record agboard result add 21 --final ...","taskId":21}]`. `rule` is the rule's id. `kind` is `definite` for a violation the rule verified and `check` for something the agent should judge. `text` is the reminder. `taskId`, `messageId`, and `epicId` appear only when the reminder is about one. The entries follow the registry order. The hook attaches the table during work, so the reminders reach the agent without a command. Without a reminder the field is absent. The existing fields are unchanged.
+- `reminders` lists what the [nudge rules](../concepts/agents.md#nudge-rules) that read only this table found: `[{"rule":"final-result","kind":"definite","text":"Task #21 has all conditions met but no final result: record agpj result add 21 --final ...","taskId":21}]`. `rule` is the rule's id. `kind` is `definite` for a violation the rule verified and `check` for something the agent should judge. `text` is the reminder. `taskId`, `messageId`, and `epicId` appear only when the reminder is about one. The entries follow the registry order. The hook attaches the table during work, so the reminders reach the agent without a command. Without a reminder the field is absent. The existing fields are unchanged.
 - There are no bodies and no history. Agents read the `documentPath` and `taskPath` files they need.
 - `cursor` is what `wait --after` takes.
-- `locale` is the language saved in the board's settings, a short hint for the language of the agent's replies. It is read from `<data-root>/.internal/preferences.json` without the server, and is present only when the saved language is not English (today, `"ja"`). It is absent for English, when no language is saved, and when the file is missing or invalid, so existing readers are unaffected. The text form of `agboard progress` does not show it.
+- `locale` is the language saved in the board's settings, a short hint for the language of the agent's replies. It is read from `<data-root>/.internal/preferences.json` without the server, and is present only when the saved language is not English (today, `"ja"`). It is absent for English, when no language is saved, and when the file is missing or invalid, so existing readers are unaffected. The text form of `agpj progress` does not show it.
 - The paths appear only in local CLI and hook output, never in remote JSON.
 - The earlier `planPath` field is no longer produced or accepted. See the [data guide](../../guide/operations/data.md).
 
 ## Hook output
 
-`agboard hook --agent claude|codex` writes JSON for the agent:
+`agpj hook --agent claude|codex` writes JSON for the agent:
 
 ```json
-{ "hookSpecificOutput": { "hookEventName": "PostToolUse", "additionalContext": "AGBOARD_PROGRESS\n{…}" } }
+{ "hookSpecificOutput": { "hookEventName": "PostToolUse", "additionalContext": "AGPJ_PROGRESS\n{…}" } }
 ```
 
-- `additionalContext` is `AGBOARD_PROGRESS` followed by the table above, or `AGBOARD_ERROR` followed by a body with a `code` and a reason, and a reminder not to make board-dependent changes.
-- `AGBOARD_ERROR` codes: `bound_project_missing`, `project_not_found`, `board_unavailable`, `context_too_large`, `invalid_hook_input` (bad JSON, or a `cwd` that is not a string or not absolute), and `hook_cwd_unavailable` (the `cwd` does not exist or cannot be read). `folder_unbound` is no longer a hook output.
+- `additionalContext` is `AGPJ_PROGRESS` followed by the table above, or `AGPJ_ERROR` followed by a body with a `code` and a reason, and a reminder not to make board-dependent changes.
+- `AGPJ_ERROR` codes: `bound_project_missing`, `project_not_found`, `board_unavailable`, `context_too_large`, `invalid_hook_input` (bad JSON, or a `cwd` that is not a string or not absolute), and `hook_cwd_unavailable` (the `cwd` does not exist or cannot be read). `folder_unbound` is no longer a hook output.
 - **Silent skip.** When the bindings are valid, the `cwd` is readable, and no binding matches, the hook writes nothing to stdout or stderr and exits 0, so a Global Hook does not disturb work in folders with no project. See [Hook skip and errors](../concepts/agents.md#hook-skip-and-errors).
 - **Stop.** On the Stop event the hook writes nothing, or once `{ "decision": "block", "reason": "..." }` when a rule gives a checklist item at the end of the turn (a question not on the board, an unrecorded result). The reason is a checklist: confirmed violations under `Found:` as `- NG: ...`, and items for the agent to judge under `Check:` as `- [ ] ...`. See [Stop](../concepts/agents.md).
 - When it adds a table, the hook also starts the server in the background if none runs. Its output does not change, and failures are left in `serve.log`.
@@ -81,7 +81,7 @@ The JSON that agents receive. The pieces are explained in [Agent integration](..
 
 ## Snapshot and wait
 
-`agboard snapshot --json` and `agboard wait --after <cursor> --json` return the project snapshot: `fetchedAt`, `project`, `version`, `cursor`, `epics`, `tasks` (each with full history), `nextTaskId`, and `problems`. Use the new `cursor` for the next `wait`.
+`agpj snapshot --json` and `agpj wait --after <cursor> --json` return the project snapshot: `fetchedAt`, `project`, `version`, `cursor`, `epics`, `tasks` (each with full history), `nextTaskId`, and `problems`. Use the new `cursor` for the next `wait`.
 
 `wait` blocks until the project's version differs from the cursor. It exits with an error instead of a snapshot for `wait_timeout`, `board_unavailable`, `cursor_invalid`, and `project_not_found`; none of them means "answered". See [Error codes](./errors.md).
 
@@ -115,17 +115,17 @@ The timeout is required and ranges from 1 to 86,400 seconds. Connection, project
 
 ## Open
 
-`agboard open --json` starts the server when none runs (unless `AGBOARD_AUTOSTART=0`), opens the board of the bound or named project, and prints one object:
+`agpj open --json` starts the server when none runs (unless `AGPJ_AUTOSTART=0`), opens the board of the bound or named project, and prints one object:
 
 ```json
 {"url":"http://127.0.0.1:7420/?project=<id>","projectId":"<id>","opened":true}
 ```
 
-`opened` is `false` with `--print`, and when the browser may not be opened; then `notice` says why, for example `"AGBOARD_OPEN_BROWSER=0 turns opening the browser off."`. A server that cannot be reached is `board_unavailable`, and a program that cannot be started is `browser_open_failed`. See [Error codes](./errors.md#server-and-waiting).
+`opened` is `false` with `--print`, and when the browser may not be opened; then `notice` says why, for example `"AGPJ_OPEN_BROWSER=0 turns opening the browser off."`. A server that cannot be reached is `board_unavailable`, and a program that cannot be started is `browser_open_failed`. See [Error codes](./errors.md#server-and-waiting).
 
 ## Remote
 
-`agboard --project <name> show remote --json` asks the running server for the ngrok connection and prints one object when it is `ready`. The saved settings are in the same object:
+`agpj --project <name> show remote --json` asks the running server for the ngrok connection and prints one object when it is `ready`. The saved settings are in the same object:
 
 ```json
 {"status":"ready","url":"https://<name>.ngrok-free.app/?project=<id>","entrance":"https://<name>.ngrok-free.app","passcode":"2418","project":{"id":"<id>","name":"<name>"},"enabled":true,"domain":"example.ngrok-free.dev","tokenSaved":true,"keychainAvailable":true}
@@ -135,7 +135,7 @@ The timeout is required and ranges from 1 to 86,400 seconds. Connection, project
 
 Anything else prints nothing on standard output and exits 1 with `remote_unavailable`: no server is running, or the connection is not `ready`. The error carries no address and no passcode. The server answers this only on its local address, so the passcode reaches the person at this computer and never passes through the tunnel. See [Error codes](./errors.md#server-and-waiting).
 
-Without `--project`, `agboard show remote --json` never fails because the connection is down, and prints no passcode and no project address:
+Without `--project`, `agpj show remote --json` never fails because the connection is down, and prints no passcode and no project address:
 
 ```json
 {"enabled":true,"domain":"example.ngrok-free.dev","tokenSaved":false,"keychainAvailable":true,"status":"ready","entrance":"https://<name>.ngrok-free.dev"}
@@ -143,11 +143,11 @@ Without `--project`, `agboard show remote --json` never fails because the connec
 
 `status` is `no_server` when no server runs and `unknown` when the server did not answer; otherwise it is the state of the connection (`ready`, `disabled`, `starting`, `reconnecting`, `failed`, and so on). `entrance` is the address only while the connection is `ready`, else `null`. The ngrok token is never in the output; `tokenSaved` says whether the OS keychain holds one.
 
-`agboard setup remote --domain … --enabled … --token-stdin --json` prints the saved settings in the same four fields (`enabled`, `domain`, `tokenSaved`, `keychainAvailable`), with `saved: true` and a `note` that says the settings apply the next time the connection starts. When the save sets the Tailscale provider it also carries a `tailscale` object, `{ "status": "ready" | "not_installed" | "not_logged_in" | "https_disabled", "domain": string | null }`, from a check that is advice only and never fails the save.
+`agpj setup remote --domain … --enabled … --token-stdin --json` prints the saved settings in the same four fields (`enabled`, `domain`, `tokenSaved`, `keychainAvailable`), with `saved: true` and a `note` that says the settings apply the next time the connection starts. When the save sets the Tailscale provider it also carries a `tailscale` object, `{ "status": "ready" | "not_installed" | "not_logged_in" | "https_disabled", "domain": string | null }`, from a check that is advice only and never fails the save.
 
 ## message events
 
-`agboard message ask --actor ai --questions-json <json|-> [--task <id>]…` takes:
+`agpj message ask --actor ai --questions-json <json|-> [--task <id>]…` takes:
 
 ```json
 {

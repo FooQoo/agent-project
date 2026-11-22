@@ -1,6 +1,6 @@
 # 共有ファイル
 
-Agent Boardが保存するすべてのファイルを、項目と例とともに示します。ファイルの使われ方は[タスクと状態](../concepts/tasks-and-states.md)と[保存と復旧](../concepts/saving-and-recovery.md)にあります。
+Agent Projectが保存するすべてのファイルを、項目と例とともに示します。ファイルの使われ方は[タスクと状態](../concepts/tasks-and-states.md)と[保存と復旧](../concepts/saving-and-recovery.md)にあります。
 
 ## タスク
 
@@ -21,7 +21,7 @@ Agent Boardが保存するすべてのファイルを、項目と例とともに
 | `draft` | `null`または`"human"`。`human`は人がブラウザで書いている下書きで、編集ロックです。以前のバージョンのファイルは`isDraft`を持ち、`true`は`human`、`false`は`null`として読む。書き込みは`draft`だけを使う。エピックの場合、CLIの`epic edit`は`human`の下書きを`epic_is_draft`で拒否する。 |
 | `questions` | `TASK.md`のfrontmatterにあり、タスクが参照するプロジェクトの質問のIDを`[Q-12, Q-15]`のように並べます。省略・`null`・空はどれも0件で、重複は拒否します。 |
 | `plannedVersion` | `TASK.md`のフロントマター。タスクがリリースを予定している版で、たとえば`v1.8.0`です。キーがなければ予定なしです。[リリース予定の版](#planned-versions)を参照。 |
-| `requestAnswers` | 以前のAgent Boardが記録した回答。記録として残し、新しくは追加しません。 |
+| `requestAnswers` | 以前のAgent Projectが記録した回答。記録として残し、新しくは追加しません。 |
 | `archivedAt` | `null`、またはアーカイブ日時。 |
 | `attachments` | 画像のID・名前・サイズ・MIME型・作成日時。 |
 | `results` | 依頼者に届けた成果。古いものから順に並び、ない場合は`[]`。[成果](#results)を参照。 |
@@ -34,7 +34,7 @@ Agent Boardが保存するすべてのファイルを、項目と例とともに
 
 ## ディスク上のファイル
 
-データ領域は、どのOSでもホームディレクトリの`.agent-board/`、または空でない`AGBOARD_HOME`です。ホームディレクトリを解決できなければ、作業フォルダで代用せずにコマンドが失敗します。
+データ領域は、どのOSでもホームディレクトリの`.agent-project/`、または空でない`AGPJ_HOME`です。ホームディレクトリを解決できなければ、作業フォルダで代用せずにコマンドが失敗します。
 
 ```text
 <data-root>/
@@ -68,10 +68,10 @@ Agent Boardが保存するすべてのファイルを、項目と例とともに
 ```
 
 - JSONはUTF-8・camelCase・2スペースのインデントで、末尾に改行を一つ付けます。未知の項目は拒否します。
-- `workspace.json`は`{"format":"agboard-files","formatVersion":1}`です。`project.json`は`formatVersion: 1`です。バックログを使う`task.json`・`epic.json`は`formatVersion: 2`、通常のカードのファイルは`formatVersion: 1`のままで、どちらも読めます。それ以外のバージョンは`format_unsupported`を報告し、変更せずに残します。以前のバージョンの`agboard`はバージョン2のファイルを読めません。古いAI下書きは一度だけ自動で変換します（[保存と復旧](../concepts/saving-and-recovery.md#形式のバージョンとdraftの値)を参照）。
+- `workspace.json`は`{"format":"agboard-files","formatVersion":1}`です。`project.json`は`formatVersion: 1`です。バックログを使う`task.json`・`epic.json`は`formatVersion: 2`、通常のカードのファイルは`formatVersion: 1`のままで、どちらも読めます。それ以外のバージョンは`format_unsupported`を報告し、変更せずに残します。以前のバージョンの`agpj`はバージョン2のファイルを読めません。古いAI下書きは一度だけ自動で変換します（[保存と復旧](../concepts/saving-and-recovery.md#形式のバージョンとdraftの値)を参照）。
 - `.`で始まる名前は正本ではありません。`README.md`はフォルダと編集の規則の案内で、製品が作成時に書きます。
 - 画像は所有者の`assets/`に置きます。本文からは`assets/<attachment-id>.<ext>`（または旧形式の`attachment:<id>`）で画像を参照します。画像はPNG・JPEG・WebP・GIFで、1件10 MiBまで、所有者ごとに20件・合計50 MiBまでです。
-- `bindings.json`と`serve.json`はそのマシンだけで使うファイルです。`serve.json`は、CLIに通知先を、`wait`に接続先を教えます。トークンは含みません。`agboard stop`もこのファイルからサーバーを見つけます。
+- `bindings.json`と`serve.json`はそのマシンだけで使うファイルです。`serve.json`は、CLIに通知先を、`wait`に接続先を教えます。トークンは含みません。`agpj stop`もこのファイルからサーバーを見つけます。
 
   ```json
   {"pid":41235,"port":7420,"started_at":"2026-11-14T03:00:00Z","mode":"auto","idleTimeoutSeconds":1800}
@@ -80,7 +80,7 @@ Agent Boardが保存するすべてのファイルを、項目と例とともに
   `mode`は、コマンドが起動したサーバーなら`auto`、`serve`と`serve -d`なら`manual`です。この項目がないファイルは`manual`として読みます。`idleTimeoutSeconds`は自動のサーバーだけが持ちます。
 - `serve.log`は、`serve -d`かコマンドが裏で起動したサーバーの出力です（所有者のみ読み取り可、起動のたびに作り直し）。自動のサーバーは、別のポートを使った理由と止まったことをここに書きます。どのサーバーも、常駐エージェントが起動したとき、停止を求められたとき、終了したときに、UTCの時刻つきで1行ずつ標準エラー出力に書きます。バックグラウンドのサーバー（`serve -d`）は標準エラー出力を`serve.log`に送り、フォアグラウンドのサーバーは端末に表示します（[張り付くセッションの起動](../concepts/agents.md#張り付くセッションの起動)を参照）。
 - `resident/<ツール>.log`（`claude-code.log`または`codex.log`）は、そのツールのためにボードが起動したセッションの標準出力と標準エラーです（所有者のみ読み取り可）。起動のたびに新しいファイルになり、直前の4回分は`<ツール>.1.log`（直前の起動）から`<ツール>.4.log`として残ります。エージェントが出力した内容を含みうるので、あなたのアカウントで動くエージェントのほかの出力と同じように扱ってください。[張り付くセッションの起動](../concepts/agents.md#張り付くセッションの起動)を参照してください。
-- `autostart.lock`は、同時にサーバーを起動しようとしたコマンドの順番を決めます。`autostart.paused`は`agboard stop`が残すファイルで、Hookがまたサーバーを起動しないようにします。待つコマンド、`serve`、`serve -d`がこれを消します。[サーバーと画面](../concepts/server-and-ui.md#serveの起動と停止)を参照してください。
+- `autostart.lock`は、同時にサーバーを起動しようとしたコマンドの順番を決めます。`autostart.paused`は`agpj stop`が残すファイルで、Hookがまたサーバーを起動しないようにします。待つコマンド、`serve`、`serve -d`がこれを消します。[サーバーと画面](../concepts/server-and-ui.md#serveの起動と停止)を参照してください。
 
 `docs/`には、プロジェクトのMarkdown文書を置きます。ドキュメントのダイアログがこれを読みます（[プロジェクトのドキュメント](#プロジェクトのドキュメント)を参照）。
 
@@ -142,7 +142,7 @@ history:
 
 - **一覧。** プロジェクトの版は、そのDocsフォルダの`docs/release/`直下にある`*.md`ファイルの、拡張子を除いた名前です。`docs/release/v1.8.0.md`があれば`v1.8.0`が載ります。サブフォルダ、`.md`以外のファイル、隠しファイル、名前が有効な版名でないファイルは無視します（リリースのテンプレートである`TEMPLATE.md`は版にならず、`TEMPLATE`は版の名前に使えません）。Docsのほかの場所にある`*.md`も対象外です。一覧は自然順で、新しいものから並べます。数字の並びは数として比べるので、`v1.10.0`は`v1.9.0`より前になります。CLI、Web API、Summaryはこの順で返します。一覧はプロジェクトごとに独立していて、1つのプロジェクトに載せられる版は200までです。
 - **テンプレート。** `docs/release/TEMPLATE.md`はリリースノートのテンプレートです。ないときは、版を追加する際に標準のテンプレートを先に書きます。置き換える冒頭の1文のあとに、`## Changes`、`## Fixes`、`## Breaking changes`、`## Required update steps`が続き、それぞれ`None.`が入ります。すでにあるテンプレートはそのまま読み、書き換えません。プロジェクトごとに編集できます。
-- **生成した文書。** `release doc`と`POST …/release-doc`は、ある版の生成ブロックを`docs/release/<version>.md`の`<!-- agboard:generated:start -->`と`<!-- agboard:generated:end -->`の行の間に書き、ファイルのほかの部分は1バイトも変えません。マーカーのないファイルは末尾にブロックを追加し、マーカーが壊れているファイルは拒否します（`release_doc_refused`）。新しいプロジェクトには空の`docs/release/`フォルダがあり、既存のプロジェクトでは版を最初に追加または生成したときにできます。[リリースドキュメントを生成する](../../guide/reference/cli.md#generate-a-release-document)を参照してください。
+- **生成した文書。** `release doc`と`POST …/release-doc`は、ある版の生成ブロックを`docs/release/<version>.md`の`<!-- agpj:generated:start -->`と`<!-- agpj:generated:end -->`の行の間に書き、ファイルのほかの部分は1バイトも変えません。マーカーのないファイルは末尾にブロックを追加し、マーカーが壊れているファイルは拒否します（`release_doc_refused`）。新しいプロジェクトには空の`docs/release/`フォルダがあり、既存のプロジェクトでは版を最初に追加または生成したときにできます。[リリースドキュメントを生成する](../../guide/reference/cli.md#generate-a-release-document)を参照してください。
 - **追加。** `version add`、`POST …/versions`、まだ載っていない版をカレントに設定する操作は、テンプレートをコピーして`docs/release/<版>.md`を作ります。`docs/release/`がなければそれも作ります。ファイルは隠しの一時ファイルに全体を書いてから所定の場所にリンクするので、完成した形で現れるか、まったく現れないかのどちらかで、既存のファイルは上書きしません。すでにファイルがある版は一覧にあるものとして扱い、`changed: false`を返します。ファイルの内容はボードのデータではないので、同じファイルにリリースドキュメントを書けます。版を追加しても現在の版は変わりません。
 - **リリースノートのカード。** 同じ操作が、担当がAIで、タイトルが`Write the release notes for <版>`（ボードの言語が日本語なら`<版> のリリースノートを作成する`）のBacklogのカードを1枚作ります。予定の版（`plannedVersion`）はその版自身で、書く対象のリリースに予定されたカードになります（作成の履歴に加えて、予定の版を変えた履歴は付きません）。本文には`docs/release/<版>.md`とテンプレートを示し、人がTodoに送ってから着手することを書きます。カードの`task.json`には`releaseNotesVersion: "<版>"`が入ります。カードを作る前に、そのキーを持つカードをアーカイブ済みも含めて探すので、同じ版をもう一度追加しても、失敗後に再試行しても、2枚目は作りません。先にファイル、次にカードを、どちらもプロジェクトの書き込みロックの下で作ります。カードを作れなかったときも版は一覧に残り、もう一度追加するとカードが作られます。現在の版の設定は、ファイルも新しく作ったときだけカードを作ります。`task.json`が読めないカードは飛ばすので、版の追加を妨げません。
 - **カレントの版。** `project.json`は`currentVersion`（版の名前、`null`、または省略）を持つことがあります。`project.json`に`versions`の一覧はありません。以前のビルドが残した`versions`は読み取って無視し、書き戻しません。CLIやAPIで設定するときは、一覧にある版でなければなりません。あとでそのファイルが消えると、保存した名前は残したまま、現在の版はないものとして読みます。`version ls`、Web API、Summaryは`currentVersion: null`を返し、`--current-version`は`no_current_version`で失敗し、`current`の選択は拒否されます。何も消さないので、ファイルをもう一度置けばカレントの版が戻ります。
@@ -166,7 +166,7 @@ history:
 
 ### 成果 {#results}
 
-成果は、依頼者が見られるものとしてエージェントが`agboard result add`で届けるものです（[成果を届ける](../../guide/reference/cli.md#deliver-a-result)を参照）。成果は`TASK.md`ではなく`task.json`に保存します。クライアントが版を指定して読む構造化データだからです。`TASK.md`で時系列のテキストを持つのは、これまでどおり履歴だけです。`results`の各項目は次のとおりです。
+成果は、依頼者が見られるものとしてエージェントが`agpj result add`で届けるものです（[成果を届ける](../../guide/reference/cli.md#deliver-a-result)を参照）。成果は`TASK.md`ではなく`task.json`に保存します。クライアントが版を指定して読む構造化データだからです。`TASK.md`で時系列のテキストを持つのは、これまでどおり履歴だけです。`results`の各項目は次のとおりです。
 
 | フィールド | 意味 |
 | --- | --- |
@@ -177,7 +177,7 @@ history:
 | `summary` | 1〜2,000文字の文章。公開の記録（`result add --published V`）には専用のフィールドがなく、先頭行が`Published: V`で`link`が必須です。`release doc`はこれを読みます。 |
 | `attachmentId` | 任意。画像が1枚だけの成果の、タスクの`attachments`にある画像のID。ファイルは添付画像のルートから読みます。画像が1枚の成果はこの項目で書くので、古い版でもそのまま読めます。 |
 | `attachmentIds` | 任意。画像が2枚以上の成果の画像IDを、エージェントが指定した順に並べたもの（最大20枚）。この項目があればそちらから、なければ`attachmentId`から画像を読むので、1枚で書いた既存のデータもそのまま動きます。どちらの項目でも、成果が使っている画像は削除できません。 |
-| `link` | 任意。主な成果物のURLまたは保存場所。1行で1〜2,000文字。指定したまま保存し、Agent Boardが開くことはありません。 |
+| `link` | 任意。主な成果物のURLまたは保存場所。1行で1〜2,000文字。指定したまま保存し、Agent Projectが開くことはありません。 |
 | `at` | 成果を記録したUTC時刻。 |
 
 成果を記録しても、`taskStatus`と`agentStatus`は変わりません。プロジェクトのロックの下で、画像があれば順に先に書き、そのあと`task.json`と`TASK.md`を、履歴1件と一緒に保存します。画像が拒否されたときや保存に失敗したときは、それまでに書いた画像ファイルを消し、項目も残らないため、失敗した保存が届ける対象になることはありません。同じキーが同じ内容ですでにあるときは、何も書かず、既存の項目を返します。1つのタスクに残せる成果は100件までです。
@@ -238,7 +238,7 @@ createdAt: 2026-11-14T03:00:00Z
 | `tasks` | 省略できます。質問の対象としたタスク番号です。`message link`と`message unlink`で、そのタスクの`questions`と揃えて保ちます。 |
 | `choices` | 省略できます。2〜10個。選択肢のIDは質問内で一意（1〜64文字の`[A-Za-z0-9_-]`）、ラベルは1〜200文字です。選択肢がなければ、テキストで答えます。 |
 | `recommended` | 省略できます。選択肢のIDを1つ指定します。 |
-| `askedBy` | 省略できます。質問を出した、ボードが起動したセッションの起動ID（`AGBOARD_RESIDENT_ID`）です。変数が設定されているとき、`message ask`が書きます。ボードはこれを使って、回答をそのセッションへ押し込みます。外部のセッションが出した質問にはありません。 |
+| `askedBy` | 省略できます。質問を出した、ボードが起動したセッションの起動ID（`AGPJ_RESIDENT_ID`）です。変数が設定されているとき、`message ask`が書きます。ボードはこれを使って、回答をそのセッションへ押し込みます。外部のセッションが出した質問にはありません。 |
 | `reply` | 回答があるまでは`null`。`choice`は質問に選択肢がないときは入らず、選択肢があるときは`choice`と`text`の少なくとも一方が入ります。`text`は1〜2,000文字で、選択肢がなければ必須です。`images`は任意（空なら省略）で、回答に添えた画像の平易なファイル名を最大20件並べます。画像は質問の`attachments/`に、質問自身の画像と並んで保存されます。`via`は`ui`・`chat`・`cli`、`at`は記録した時刻です。`acceptedAt`は任意で、AIが回答を受け取るまでは省略または`null`、受け取るとその時刻です。 |
 
 依頼の項目です。
@@ -257,7 +257,7 @@ createdAt: 2026-11-14T03:00:00Z
 
 ## モニター接続の設定
 
-ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.internal/monitor-connection.json`に保存します。このファイルはアプリのもので、PCの設定画面、`serve`、[`agboard setup remote`](../../guide/reference/cli.md#save-the-remote-access-settings)だけが書き、手で編集するものではありません。共有領域には含まれないため、プロジェクトのバックアップには入りません。所有者だけが読み書きできる権限（OSにある場合は`0600`）でatomicに置き換えます。
+ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.internal/monitor-connection.json`に保存します。このファイルはアプリのもので、PCの設定画面、`serve`、[`agpj setup remote`](../../guide/reference/cli.md#save-the-remote-access-settings)だけが書き、手で編集するものではありません。共有領域には含まれないため、プロジェクトのバックアップには入りません。所有者だけが読み書きできる権限（OSにある場合は`0600`）でatomicに置き換えます。
 
 ```json
 {
@@ -275,9 +275,9 @@ ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.i
 | `revision` | 保存のたびに増える。トークンだけを変えるコマンドラインからの保存でも増える。設定APIが、別の画面での変更を検出するために使い、動いているサーバーが、コマンドラインでの変更に気づくために使う。 |
 | `enabled` | 次の`serve`で接続を再び始めるか。停止すると`false`で保存する。 |
 | `provider` | 省略できる。`ngrok`（省略時の既定）か`tailscale`で、スマホがボードに届く方法。ほかの値はファイルを読めないものにする。 |
-| `domain` | 省略できる。エンドポイントを要求するngrokのドメインで、小文字のホスト名だけ。開始のたびに公開アドレスが同じになる。保存していないときは書かない。ホスト名でない値は、読み込み時に無視する。環境変数`AGBOARD_NGROK_DOMAIN`があるときはそちらを使い、ファイルには書かない。 |
+| `domain` | 省略できる。エンドポイントを要求するngrokのドメインで、小文字のホスト名だけ。開始のたびに公開アドレスが同じになる。保存していないときは書かない。ホスト名でない値は、読み込み時に無視する。環境変数`AGPJ_NGROK_DOMAIN`があるときはそちらを使い、ファイルには書かない。 |
 
-ファイルには、ngrokのトークン、スマホの合言葉、session、CSRFトークンを入れません。利用者が保存を選んだトークンは、代わりにこのPCの安全な保管場所（OSの資格情報ストア。service `agent-board`、account `ngrok-authtoken`）に置きます。`monitor/config.json`はありません。
+ファイルには、ngrokのトークン、スマホの合言葉、session、CSRFトークンを入れません。利用者が保存を選んだトークンは、代わりにこのPCの安全な保管場所（OSの資格情報ストア。service `agent-project`、account `ngrok-authtoken`）に置きます。`monitor/config.json`はありません。
 
 ## 登録済みの端末
 
@@ -420,7 +420,7 @@ ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.i
 | `theme.mode` | `light`か`dark`。既定は`light`。 |
 | `theme.accent` | 12色のいずれか: `blue`・`sky`・`cyan`・`teal`・`green`・`lime`・`yellow`・`orange`・`red`・`pink`・`purple`・`gray`。既定は`blue`。 |
 
-進行表もこのファイルを読みます。`agboard progress --json`とHookは、保存した言語が英語以外のとき、表に`locale`を加え、エージェントがユーザーの言語で返答し続ける手がかりにします（[Hook・進捗・waitの出力](./agent-output.md#進行表)を参照）。READMEの言語と同じく、ファイルだけを読むのでサーバーが動いていなくても読め、ファイルがないか不正なときはフィールドを省くだけです。
+進行表もこのファイルを読みます。`agpj progress --json`とHookは、保存した言語が英語以外のとき、表に`locale`を加え、エージェントがユーザーの言語で返答し続ける手がかりにします（[Hook・進捗・waitの出力](./agent-output.md#進行表)を参照）。READMEの言語と同じく、ファイルだけを読むのでサーバーが動いていなくても読め、ファイルがないか不正なときはフィールドを省くだけです。
 
 保存では、送った項目だけを変えます。ほかの項目は保存済みの値を保ちます。後から保存した内容が優先され、競合の確認はありません。このファイルには秘密の値を含みません。トークン、合言葉、sessionは入りません。
 
@@ -463,26 +463,26 @@ CLI・Web API・Hookは、camelCaseの同じタスクの表現を使います。
 
 ## setupが書き込むファイル {#agent-settings}
 
-`agboard setup`は独自の記録を持ちません。何が導入されているかは各エージェントのプラグインの一覧が示し、データ領域の外で変更するのは次のファイルだけです。
+`agpj setup`は独自の記録を持ちません。何が導入されているかは各エージェントのプラグインの一覧が示し、データ領域の外で変更するのは次のファイルだけです。
 
 | ファイル | 変更 |
 | --- | --- |
 | `$CODEX_HOME/config.toml`（通常は`~/.codex/config.toml`） | `sandbox_workspace_write.writable_roots`にデータフォルダを加えます。`workspace-write`で、権限プロファイルがないときだけです。 |
-| `$CODEX_HOME/rules/agboard.rules` | 存在しないときに、`prefix_rule(pattern=["agboard"], decision="allow")`を書いて作ります。フルアクセスでは書きません。 |
+| `$CODEX_HOME/rules/agpj.rules` | 存在しないときに、`prefix_rule(pattern=["agpj"], decision="allow")`を書いて作ります。フルアクセスでは書きません。 |
 | `$CLAUDE_CONFIG_DIR/settings.json`（通常は`~/.claude/settings.json`） | `permissions.additionalDirectories`にデータフォルダを加えます。 |
 
-- 変更するファイルは、先に同じ場所へ`<file>.agboard-backup…`として、元のファイルのアクセス権のままバックアップします。新しく作るファイルは所有者だけが読み書きできます。
+- 変更するファイルは、先に同じ場所へ`<file>.agpj-backup…`として、元のファイルのアクセス権のままバックアップします。新しく作るファイルは所有者だけが読み書きできます。
 - Codexのhookの信頼は、`codex app-server`を通して、Codex自身が設定の`hooks.state`に保存します。
-- 導入したプラグインは、各エージェントがプラグインを置く場所にあり、agboardはそこに書き込みません。
-- `agboard update`は、これらのファイルを変更しません。
+- 導入したプラグインは、各エージェントがプラグインを置く場所にあり、agpjはそこに書き込みません。
+- `agpj update`は、これらのファイルを変更しません。
 
 ## フォルダの紐付け
 
-フォルダの紐付けは、実フォルダとProjectIdを対応づけ、Hookと`agboard progress`が作業フォルダが属するプロジェクトを識別できるようにします。端末ローカルのデータ領域にだけ保存し、共有領域や追跡ファイルには保存しません。ProjectIdを保存するので、名前変更に追従し、同じ名前で作り直したプロジェクトへは移りません。最も近い紐付け済みの祖先フォルダを使います。存在しないフォルダ・壊れた紐付け・削除済みのProjectIdは、説明つきのエラーにします。
+フォルダの紐付けは、実フォルダとProjectIdを対応づけ、Hookと`agpj progress`が作業フォルダが属するプロジェクトを識別できるようにします。端末ローカルのデータ領域にだけ保存し、共有領域や追跡ファイルには保存しません。ProjectIdを保存するので、名前変更に追従し、同じ名前で作り直したプロジェクトへは移りません。最も近い紐付け済みの祖先フォルダを使います。存在しないフォルダ・壊れた紐付け・削除済みのProjectIdは、説明つきのエラーにします。
 
 ## プロジェクトのドキュメント
 
-`shared/projects/<project-id>/docs/`は、プロジェクトの文書のフォルダです。ボードではなく利用者のものです。ファイルには形式も`formatVersion`も項目もなく、Agent Boardは検証しません。
+`shared/projects/<project-id>/docs/`は、プロジェクトの文書のフォルダです。ボードではなく利用者のものです。ファイルには形式も`formatVersion`も項目もなく、Agent Projectは検証しません。
 
 - **プロジェクトと一緒に作る。** `project create`と、プロジェクトを作るときの`init`は、新しいプロジェクトの一時フォルダの中に`docs/`と`README.md`を作り、それからフォルダを正式な名前に変えます。READMEは英語か日本語で、`.internal/preferences.json`のアプリの言語に合わせます（`ja`なら日本語、それ以外は英語）。文面は`src/docs/templates/`にあります。
 - **起動時に補う。** `serve`は、`docs/`がないプロジェクトに`docs/`とREADMEを作ります。すでにあるフォルダには触れないので、利用者が消したREADMEは消えたままです。ここでの失敗は無視します。フォルダがなければ空のツリーとして読むためです。

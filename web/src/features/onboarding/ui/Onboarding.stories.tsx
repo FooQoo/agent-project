@@ -175,7 +175,7 @@ export const WelcomeWithoutPreviewBadge: Story = {
   args: { kind: 'welcome' },
   play: async () => {
     const dialog = within(document.body).getByRole('dialog');
-    await expect(dialog).toHaveAccessibleName('Try Agent Board');
+    await expect(dialog).toHaveAccessibleName('Try Agent Project');
     await expect(within(dialog).queryByText('Public preview')).toBeNull();
     await expect(within(dialog).queryByRole('link')).toBeNull();
   },

@@ -4,9 +4,9 @@
 use std::sync::mpsc;
 use std::time::Duration;
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::lock::{LifecycleLock, WriteLock};
-use agent_board::lifecycle::LifecycleGuard;
+use agent_project::error::AgpjError;
+use agent_project::file_store::lock::{LifecycleLock, WriteLock};
+use agent_project::lifecycle::LifecycleGuard;
 
 #[test]
 fn lifecycle_lock_refuses_a_second_holder_until_the_first_is_dropped() {
@@ -16,7 +16,7 @@ fn lifecycle_lock_refuses_a_second_holder_until_the_first_is_dropped() {
     let Err(err) = LifecycleLock::acquire(dir.path()) else {
         panic!("a second lifecycle lock must not be granted");
     };
-    assert_eq!(err, AgboardError::DatabaseBusy);
+    assert_eq!(err, AgpjError::DatabaseBusy);
 
     drop(first);
     LifecycleLock::acquire(dir.path()).unwrap();

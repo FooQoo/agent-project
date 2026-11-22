@@ -10,11 +10,11 @@ use std::process::Command;
 use common::Running;
 
 fn cli(home: &Path, args: &[&str]) -> String {
-    let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+    let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)
         .args(args)
@@ -123,7 +123,7 @@ fn creating_a_project_never_touches_another_projects_readme() {
 #[test]
 fn deleting_a_project_deletes_its_docs_folder_too() {
     let home = tempfile::tempdir().unwrap();
-    let store = agent_board::file_store::FileStore::open(&home.path().join("shared"));
+    let store = agent_project::file_store::FileStore::open(&home.path().join("shared"));
     let id = store
         .create_project("doomed", chrono::Utc::now())
         .unwrap()

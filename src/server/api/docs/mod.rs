@@ -11,8 +11,8 @@ mod tree;
 use axum::response::Response;
 use serde::Deserialize;
 
-use crate::error::AgboardError;
-use crate::server::response::agboard_error_response;
+use crate::error::AgpjError;
+use crate::server::response::agpj_error_response;
 
 pub(super) use assets::get_docs_asset;
 pub(super) use file_get::get_docs_file;
@@ -31,6 +31,6 @@ impl PathQuery {
     }
 }
 
-fn failure(error: AgboardError) -> Box<Response> {
-    Box::new(agboard_error_response(&error))
+fn failure(error: AgpjError) -> Box<Response> {
+    Box::new(agpj_error_response(&error))
 }

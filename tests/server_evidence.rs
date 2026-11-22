@@ -5,12 +5,12 @@ mod common;
 
 use std::path::Path;
 
-use agent_board::domain::ProjectId;
-use agent_board::file_store::FileStore;
-use common::{Running, agboard, demo_project, json_error, json_ok, multipart, png};
+use agent_project::domain::ProjectId;
+use agent_project::file_store::FileStore;
+use common::{Running, agpj, demo_project, json_error, json_ok, multipart, png};
 use serde_json::{Value, json};
 
-const BOUNDARY: &str = "agboard-test-boundary";
+const BOUNDARY: &str = "agpj-test-boundary";
 const IMAGE_ID: &str = "0123456789abcdef0123456789abcdef";
 
 fn project_id(home: &Path) -> String {
@@ -35,7 +35,7 @@ fn image_body(id: &str) -> Vec<u8> {
 }
 
 fn add_second_task(home: &Path) {
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home,
         &[
             "--project",
@@ -107,7 +107,7 @@ fn an_epic_image_is_served_only_through_its_own_epic() {
     demo_project(home.path());
     add_second_task(home.path());
     for id in ["FILE-SHARE", "OTHER"] {
-        let (code, _, err) = agboard(
+        let (code, _, err) = agpj(
             home.path(),
             &[
                 "--project",
@@ -184,7 +184,7 @@ fn a_person_may_add_images_to_a_draft_but_the_cli_may_not() {
         .set_draft(
             &pid.parse::<ProjectId>().unwrap(),
             1,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             chrono::Utc::now(),
         )
@@ -258,9 +258,9 @@ fn task_text_evidence_routes_are_removed() {
 fn an_image_of_another_project_is_not_found_even_with_the_same_task_number() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
-    let (code, _, err) = agboard(home.path(), &["project", "create", "Other"]);
+    let (code, _, err) = agpj(home.path(), &["project", "create", "Other"]);
     assert_eq!(code, 0, "{err}");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",

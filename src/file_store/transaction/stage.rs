@@ -4,7 +4,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::io::{random_hex, sync_dir, write_error};
 
 /// Injection points used by storage tests. Hooks are ordinary Rust arguments;
@@ -82,7 +82,7 @@ pub(super) fn point(
     hook: &mut Hook<'_>,
     stage: Stage,
     interrupted: &mut bool,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     hook(stage).map_err(|fault| {
         *interrupted = fault == Fault::Interrupt;
         write_error(
@@ -98,7 +98,7 @@ pub(super) fn replace(
     stages: [Stage; 4],
     hook: &mut Hook<'_>,
     interrupted: &mut bool,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     let parent = path.parent().expect("validated target parent");
     let temp = parent.join(format!(
         ".{}.tmp-{}",

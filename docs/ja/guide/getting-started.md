@@ -4,7 +4,7 @@ title: インストールと起動
 
 # インストールと起動
 
-このページを読み終えると、Homebrewで`agboard`をインストールし、作業フォルダにプロジェクトを作り、エージェントを設定し、ブラウザでボードを開けます。続いて[クイックスタート](./quickstart)で基本操作を試してください。
+このページを読み終えると、Homebrewで`agpj`をインストールし、作業フォルダにプロジェクトを作り、エージェントを設定し、ブラウザでボードを開けます。続いて[クイックスタート](./quickstart)で基本操作を試してください。
 
 手順は、インストール、プロジェクトの作成またはフォルダの登録、エージェントの設定、サーバーの起動の順です。
 
@@ -14,18 +14,24 @@ title: インストールと起動
 - [Homebrew](https://brew.sh)。Homebrew自体にも、環境によってはCommand Line Toolsなどの前提があります。その内容はHomebrewのドキュメントに従ってください。
 - 設定の手順で使う、`PATH`上のClaude CodeまたはCodex（`claude`か`codex`のコマンド）と、GitHubへのネットワーク接続。
 
-Agent Boardを自分でビルドする必要はありません。Homebrewで入るのは、Web画面を内蔵したビルド済みのコマンドです。Rust、Node.js、pnpmは不要で、リポジトリをcloneすることもありません。ソースからビルドする場合は、[開発環境のセットアップ](../dev/getting-started/setup)を参照してください。
+Agent Projectを自分でビルドする必要はありません。Homebrewで入るのは、Web画面を内蔵したビルド済みのコマンドです。Rust、Node.js、pnpmは不要で、リポジトリをcloneすることもありません。ソースからビルドする場合は、[開発環境のセットアップ](../dev/getting-started/setup)を参照してください。
 
 ## インストール
 
 ```sh
-brew install fooqoo/tap/agboard
-agboard --version
+brew install fooqoo/tap/agpj
+agpj --version
 ```
 
-このコマンドは、Developer ID証明書で署名され、Appleの公証を受けています。macOSが実行を拒否したときは、Gatekeeperを無効にせず、[トラブルシューティング](./operations/troubleshooting#macos-will-not-run-agboard)を参照してください。
+このコマンドは、Developer ID証明書で署名され、Appleの公証を受けています。macOSが実行を拒否したときは、Gatekeeperを無効にせず、[トラブルシューティング](./operations/troubleshooting#macos-will-not-run-agpj)を参照してください。
 
-Agent BoardはMITライセンスで公開しています。ライセンスと、同梱する第三者コンポーネントの通知は、Homebrewのprefix配下の`share/agboard`（`$(brew --prefix)/share/agboard`）にインストールされます。
+Agent ProjectはMITライセンスで公開しています。ライセンスと、同梱する第三者コンポーネントの通知は、Homebrewのprefix配下の`share/agpj`（`$(brew --prefix)/share/agpj`）にインストールされます。
+
+## Agent Boardをお使いだった方へ
+
+Agent Projectは、Agent Boardの新しい名前です。インストールは`brew install fooqoo/tap/agpj`で、古いコマンドを置き換えるものではありません。これまでのプロジェクトを使い続けるには、データフォルダを`mv ~/.agent-board ~/.agent-project`で一度だけ移します。このガイドの環境変数とコマンドは、`AGBOARD_`と`agboard`を`AGPJ_`と`agpj`に読み替えてください。
+
+最後のAgent Board（v1.1.1）は、[FooQoo/agent-board](https://github.com/FooQoo/agent-board)と専用のサイト[fooqoo.github.io/agent-board](https://fooqoo.github.io/agent-board/)に残してあり、`brew install fooqoo/tap/agboard`で今もインストールできます。新しい開発はAgent Projectで行います。
 
 ## プロジェクトを作成する、またはフォルダを登録する {#create-or-bind-a-project}
 
@@ -33,13 +39,13 @@ Agent BoardはMITライセンスで公開しています。ライセンスと、
 
 ```sh
 cd my-project
-agboard project create "My project"
+agpj project create "My project"
 ```
 
 `project create`は、プロジェクトを作成し、現在のフォルダをそのプロジェクトに登録します。プロジェクトがすでにある場合は、代わりにこのフォルダをそのプロジェクトに登録します。
 
 ```sh
-agboard project bind "My project"
+agpj project bind "My project"
 ```
 
 プロジェクトの名前変更や、ほかのフォルダの登録は、[データとバックアップ](./operations/data#projects-and-folders)を参照してください。
@@ -47,22 +53,22 @@ agboard project bind "My project"
 ## エージェントを設定する
 
 ```sh
-agboard setup
+agpj setup
 ```
 
-`setup`は、使うエージェントを尋ねて計画を表示し、`y`と答えると、Claude Code、Codex、または両方にAgent Boardプラグイン（SkillとHook）を導入します。コンピューターごとに一度実行すればよく、どのフォルダでも実行できます。尋ねる内容、変更するもの、その後の操作は、[エージェントを設定する](./delegate/agents#set-up-your-agents)を参照してください。
+`setup`は、使うエージェントを尋ねて計画を表示し、`y`と答えると、Claude Code、Codex、または両方にAgent Projectプラグイン（SkillとHook）を導入します。コンピューターごとに一度実行すればよく、どのフォルダでも実行できます。尋ねる内容、変更するもの、その後の操作は、[エージェントを設定する](./delegate/agents#set-up-your-agents)を参照してください。
 
 ## ボードを開始する
 
 サーバーを起動します。
 
 ```sh
-agboard serve
+agpj serve
 ```
 
-[http://127.0.0.1:7420/](http://127.0.0.1:7420/)を開き、ヘッダーでプロジェクトを選びます。止めるには、そのターミナルでCtrl+Cを押します。エージェントのために動かし続ける必要はありません。サーバーが動いていなければ、待つコマンドとエージェントのHookが裏で起動し、そのサーバーは30分使われないと自分で止まります。裏で動かし続けたいときは、`agboard serve -d`を使います。サーバーは`127.0.0.1`だけで待ち受けます。7420が使われているときは、`--port`で別のポートを選びます。
+[http://127.0.0.1:7420/](http://127.0.0.1:7420/)を開き、ヘッダーでプロジェクトを選びます。止めるには、そのターミナルでCtrl+Cを押します。エージェントのために動かし続ける必要はありません。サーバーが動いていなければ、待つコマンドとエージェントのHookが裏で起動し、そのサーバーは30分使われないと自分で止まります。裏で動かし続けたいときは、`agpj serve -d`を使います。サーバーは`127.0.0.1`だけで待ち受けます。7420が使われているときは、`--port`で別のポートを選びます。
 
-![プロジェクトを選んだブラウザのAgent Board。未着手・進行中・完了にタスクが並ぶ](../../images/board.ja.png){.screenshot}
+![プロジェクトを選んだブラウザのAgent Project。未着手・進行中・完了にタスクが並ぶ](../../images/board.ja.png){.screenshot}
 
 選んだプロジェクトがヘッダーに表示されてボードが開きます。タスクは未着手・進行中・完了の列に並びます。
 
@@ -73,15 +79,15 @@ agboard serve
 Homebrewでコマンドを更新します。
 
 ```sh
-brew upgrade fooqoo/tap/agboard
-agboard --version
+brew upgrade fooqoo/tap/agpj
+agpj --version
 ```
 
-`brew upgrade`が置き換えるのは、コマンドとその中のWeb画面です。エージェントのAgent Boardプラグインは、自分で更新されます。次にエージェントのセッションが始まるとき、Hookがプラグインの違いに気づき、バックグラウンドで入れ直します。新しいプラグインは、その次のセッションから有効になります。Agent Boardについてのエージェントへの指示はコマンド自身が出すので、すぐに新しいものになります。`agboard update`を自分で実行するのは、Codexのhookの信頼など自動更新ではできないとき、またはプラグインを直したいときだけです。詳しくは[プラグインを更新する](./delegate/agents#update-the-plugin)を参照してください。
+`brew upgrade`が置き換えるのは、コマンドとその中のWeb画面です。エージェントのAgent Projectプラグインは、自分で更新されます。次にエージェントのセッションが始まるとき、Hookがプラグインの違いに気づき、バックグラウンドで入れ直します。新しいプラグインは、その次のセッションから有効になります。Agent Projectについてのエージェントへの指示はコマンド自身が出すので、すぐに新しいものになります。`agpj update`を自分で実行するのは、Codexのhookの信頼など自動更新ではできないとき、またはプラグインを直したいときだけです。詳しくは[プラグインを更新する](./delegate/agents#update-the-plugin)を参照してください。
 
-更新したら、新しいコマンドと画面を使うために、`agboard serve`を止めて起動し直します。開いているボードやモニターは、サーバーが戻ると自動で再読み込みします。編集中や回答の入力中は、それが終わるまで待ちます。
+更新したら、新しいコマンドと画面を使うために、`agpj serve`を止めて起動し直します。開いているボードやモニターは、サーバーが戻ると自動で再読み込みします。編集中や回答の入力中は、それが終わるまで待ちます。
 
-Hookとエージェントのスキルは、`PATH`の`agboard`を実行するので、インストールした版を使います。開発中のビルド（`cargo build`、`cargo run`、`target/debug/agboard`）は別の実行ファイルです。
+Hookとエージェントのスキルは、`PATH`の`agpj`を実行するので、インストールした版を使います。開発中のビルド（`cargo build`、`cargo run`、`target/debug/agpj`）は別の実行ファイルです。
 
 ## 次に読む
 

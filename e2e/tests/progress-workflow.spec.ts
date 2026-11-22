@@ -3,24 +3,24 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '../helpers/fixtures';
 import {
-  agboardBinary,
-  agboardCatalogOk,
-  agboardOk,
+  agpjBinary,
+  agpjCatalogOk,
+  agpjOk,
   makeHome,
   removeHome,
   replaceFileAtomically,
   startServe,
   stopServe,
   workspace,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 import { readBoardAfterReset } from '../helpers/ui';
 import { fillAnswer, send, openAnswer } from '../helpers/answer';
 import { closeMessages } from '../helpers/answer-flow';
 
 function run(args: string[], home: string, cwd: string, input = ''): { code: number; stdout: string; stderr: string } {
-  const result = spawnSync(agboardBinary(), args, {
+  const result = spawnSync(agpjBinary(), args, {
     cwd,
-    env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     encoding: 'utf8',
     input,
   });
@@ -29,7 +29,7 @@ function run(args: string[], home: string, cwd: string, input = ''): { code: num
 }
 
 function startWaiter(home: string, cwd: string, project: string, id: number): ChildProcess {
-  const child = spawn(agboardBinary(), [
+  const child = spawn(agpjBinary(), [
     '--project', project,
     'message', 'ask', '--actor', 'ai', '--task', String(id),
     '--questions-json', JSON.stringify({
@@ -40,7 +40,7 @@ function startWaiter(home: string, cwd: string, project: string, id: number): Ch
     }),
   ], {
     cwd,
-    env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   return child;
@@ -66,20 +66,20 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
   let serve: Awaited<ReturnType<typeof startServe>> | undefined;
   let waiter: ChildProcess | undefined;
   try {
-    agboardCatalogOk(['project', 'create', 'Workflow E2E', '--folder', projectFolder], home);
-    agboardCatalogOk(['project', 'bind', 'Workflow E2E', '--folder', nested], home);
+    agpjCatalogOk(['project', 'create', 'Workflow E2E', '--folder', projectFolder], home);
+    agpjCatalogOk(['project', 'bind', 'Workflow E2E', '--folder', nested], home);
     const project = 'Workflow E2E';
-    const projectId = JSON.parse(agboardCatalogOk(['project', 'ls', '--json'], home).stdout)
+    const projectId = JSON.parse(agpjCatalogOk(['project', 'ls', '--json'], home).stdout)
       .projects.find((item: { name: string }) => item.name === 'Workflow E2E').id as string;
 
     const projectArgs = (args: string[]) => ['--project', project, ...args];
-    agboardOk(project, ['epic', 'add', 'RELEASE', '--name', 'Release work', '--actor', 'human'], home);
-    agboardOk(project, ['add', 'Publish release', '--epic', 'RELEASE', '--assignee', 'ai', '--actor', 'human', `--desc=Private task body for progress omission check.`], home);
-    agboardOk(project, ['add', 'Prepare release notes', '--epic', 'RELEASE', '--assignee', 'ai', '--actor', 'human', `--desc=Another private task body.`], home);
-    const tasks = JSON.parse(agboardOk(project, ['ls', '--json'], home).stdout).tasks as Array<{ id: number; title: string }>;
+    agpjOk(project, ['epic', 'add', 'RELEASE', '--name', 'Release work', '--actor', 'human'], home);
+    agpjOk(project, ['add', 'Publish release', '--epic', 'RELEASE', '--assignee', 'ai', '--actor', 'human', `--desc=Private task body for progress omission check.`], home);
+    agpjOk(project, ['add', 'Prepare release notes', '--epic', 'RELEASE', '--assignee', 'ai', '--actor', 'human', `--desc=Another private task body.`], home);
+    const tasks = JSON.parse(agpjOk(project, ['ls', '--json'], home).stdout).tasks as Array<{ id: number; title: string }>;
     const publish = tasks.find((task) => task.title === 'Publish release')!.id;
     const notes = tasks.find((task) => task.title === 'Prepare release notes')!.id;
-    agboardOk(project, ['epic', 'edit', 'RELEASE', '--waves', `${notes}`, `${publish}`], home);
+    agpjOk(project, ['epic', 'edit', 'RELEASE', '--waves', `${notes}`, `${publish}`], home);
 
     const progress = run(['progress', '--json'], home, work);
     expect(progress.code, progress.stderr).toBe(0);
@@ -93,7 +93,7 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
     }));
     expect(hook.code, hook.stderr).toBe(0);
     const hookOutput = JSON.parse(hook.stdout).hookSpecificOutput.additionalContext as string;
-    expect(hookOutput).toContain('AGBOARD_PROGRESS\n');
+    expect(hookOutput).toContain('AGPJ_PROGRESS\n');
     expect(hookOutput).toContain('Workflow E2E');
     const unregistered = run(['progress', '--json'], home, home);
     expect(unregistered.code).not.toBe(0);
@@ -105,7 +105,7 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
       .replace(/^---\n/, '---\nacceptance:\n  - id: AC-1\n    text: Release plan confirmed\n    done: false\n')
       .replace('Private task body for progress omission check.', 'Publish the approved release.');
     replaceFileAtomically(taskFile, taskWithAcceptance);
-    agboardOk(project, ['mv', String(publish), 'doing', '--actor', 'ai', '--reason', 'Preparing release'], home);
+    agpjOk(project, ['mv', String(publish), 'doing', '--actor', 'ai', '--reason', 'Preparing release'], home);
     serve = await startServe(home);
     waiter = startWaiter(home, work, project, publish);
     const waitResult = waiterResult(waiter);
@@ -114,16 +114,16 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
         const result = await waitResult;
         throw new Error(`wait command exited ${result.code}: ${result.stderr}${result.stdout}`);
       }
-      return JSON.parse(agboardOk(project, ['show', String(publish), '--json'], home).stdout).task.agentStatus;
+      return JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task.agentStatus;
     }).toBe('awaiting_answer');
 
     // Completing the condition cannot auto-Done a card while it is waiting for a human answer.
     const taskWhilePending = readFileSync(taskFile, 'utf8');
     replaceFileAtomically(taskFile, taskWhilePending.replace('done: false', 'done: true'));
     expect((await page.request.post(new URL('/api/notify', serve.url).toString())).status()).toBe(204);
-    expect(JSON.parse(agboardOk(project, ['show', String(publish), '--json'], home).stdout).task.acceptance)
+    expect(JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task.acceptance)
       .toEqual([{ id: 'AC-1', text: 'Release plan confirmed', done: true }]);
-    expect(JSON.parse(agboardOk(project, ['show', String(publish), '--json'], home).stdout).task)
+    expect(JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task)
       .toMatchObject({ taskStatus: 'doing', agentStatus: 'awaiting_answer' });
 
     await page.goto(`${serve.url}?project=${projectId}`);
@@ -143,16 +143,16 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
     const completed = await waitResult;
     expect(completed.code, completed.stderr).toBe(0);
     expect(completed.stdout).toContain('Choose Plan A and publish after review.');
-    await expect.poll(() => JSON.parse(agboardOk(project, ['show', String(publish), '--json'], home).stdout).task.taskStatus)
+    await expect.poll(() => JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task.taskStatus)
       .toBe('done');
-    const shown = JSON.parse(agboardOk(project, ['show', String(publish), '--json'], home).stdout).task;
+    const shown = JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task;
     expect(shown).toMatchObject({ taskStatus: 'done', agentStatus: 'ran', pendingRequestId: null });
     expect(shown.acceptance).toEqual([{ id: 'AC-1', text: 'Release plan confirmed', done: true }]);
 
     const rejected = run(projectArgs(['edit', String(publish), '--title', 'AI changed Done']), home, work);
     expect(rejected.code).not.toBe(0);
     expect(rejected.stderr).toContain(`task #${publish} is done and read-only for agents`);
-    expect(JSON.parse(agboardOk(project, ['show', String(publish), '--json'], home).stdout).task.title)
+    expect(JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task.title)
       .toBe('Publish release');
   } finally {
     if (waiter && waiter.exitCode === null && waiter.signalCode === null) waiter.kill('SIGTERM');

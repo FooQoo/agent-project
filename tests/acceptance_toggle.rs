@@ -36,7 +36,7 @@ fn status(home: &Path, id: i64) -> String {
 /// CLI so that each test starts the server once.
 fn setup(assignee: &str) -> (tempfile::TempDir, String, i64) {
     let home = tempfile::tempdir().unwrap();
-    let (code, _, err) = common::agboard(home.path(), &["project", "create", "Demo"]);
+    let (code, _, err) = common::agpj(home.path(), &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
     let pid = project_id(home.path());
     let desc = home.path().join("task.md");

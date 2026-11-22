@@ -43,7 +43,7 @@ pub enum ConfigError {
 }
 
 /// An exclusive lock, across processes, on the settings file. Whoever reads the settings in order
-/// to change them (this server, `agboard setup remote`) holds it from the read to the save, so
+/// to change them (this server, `agpj setup remote`) holds it from the read to the save, so
 /// two writers never both build on the same revision. Released when dropped.
 pub struct ConfigLock(#[allow(dead_code)] Option<std::fs::File>);
 

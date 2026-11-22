@@ -3,11 +3,9 @@
 use super::cases::{ASK, Case, case};
 use super::test_support::{Scenario, call, write_call};
 
-const ASK_NO_WAIT: &str = "agboard message ask --actor ai --no-wait --questions-json '{}'";
-const ASK_IMAGE: &str =
-    "agboard message ask --actor ai --questions-json '{\"images\":[\"att-1\"]}'";
-const CODEX_ASK: &str =
-    "{\"cmd\":\"agboard message ask --actor ai --no-wait --questions-json '{}'\"}";
+const ASK_NO_WAIT: &str = "agpj message ask --actor ai --no-wait --questions-json '{}'";
+const ASK_IMAGE: &str = "agpj message ask --actor ai --questions-json '{\"images\":[\"att-1\"]}'";
+const CODEX_ASK: &str = "{\"cmd\":\"agpj message ask --actor ai --no-wait --questions-json '{}'\"}";
 
 fn turn(message: &'static str, calls: Vec<super::Call>) -> Scenario {
     Scenario::turn(message, calls, None)
@@ -45,7 +43,7 @@ pub fn all() -> Vec<Case> {
                 "Q-3 asked.",
                 vec![
                     shot(),
-                    call("agboard attachment add --file /tmp/mock.png"),
+                    call("agpj attachment add --file /tmp/mock.png"),
                     call(ASK),
                 ],
             ),
@@ -72,7 +70,7 @@ pub fn all() -> Vec<Case> {
             "question-in-chat",
             "a help call only",
             false,
-            turn("Done.", vec![call("agboard message ask --help")]),
+            turn("Done.", vec![call("agpj message ask --help")]),
         ),
         case(
             "question-in-chat",
@@ -101,7 +99,7 @@ pub fn all() -> Vec<Case> {
             false,
             turn(
                 "Q-3 asked.",
-                vec![call(ASK_NO_WAIT), call("agboard message wait Q-3")],
+                vec![call(ASK_NO_WAIT), call("agpj message wait Q-3")],
             ),
         ),
         case(

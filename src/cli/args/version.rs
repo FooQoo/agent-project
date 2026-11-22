@@ -1,9 +1,9 @@
-//! Arguments of `agboard version` and the version options of the other commands.
+//! Arguments of `agpj version` and the version options of the other commands.
 
 use clap::{Args, Subcommand};
 
 use crate::domain::{VersionFilter, validate_version_name};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 #[derive(Args, Debug)]
 pub struct VersionArgs {
@@ -15,15 +15,15 @@ pub struct VersionArgs {
 pub enum VersionCommand {
     /// List the project's versions and its current one
     #[command(
-        after_help = "Examples:\n  agboard --project demo version ls\n  agboard --project demo version ls --json"
+        after_help = "Examples:\n  agpj --project demo version ls\n  agpj --project demo version ls --json"
     )]
     Ls,
     /// List a version in the project without making it current
-    #[command(after_help = "Examples:\n  agboard --project demo version add v1.9.0")]
+    #[command(after_help = "Examples:\n  agpj --project demo version add v1.9.0")]
     Add(VersionAddArgs),
     /// Show the project's current version, set it, or clear it
     #[command(
-        after_help = "A version that is not listed yet is listed when it is set. Tasks keep the version they were given: changing the current version moves none of them.\n\nExamples:\n  agboard --project demo version current\n  agboard --project demo version current v1.8.0\n  agboard --project demo version current --clear"
+        after_help = "A version that is not listed yet is listed when it is set. Tasks keep the version they were given: changing the current version moves none of them.\n\nExamples:\n  agpj --project demo version current\n  agpj --project demo version current v1.8.0\n  agpj --project demo version current --clear"
     )]
     Current(VersionCurrentArgs),
 }
@@ -61,7 +61,7 @@ pub struct PlanArgs {
 
 impl PlanArgs {
     /// The choice asked for, or `None` when no option was given.
-    pub fn choice(&self) -> Result<Option<crate::file_store::VersionChoice>, AgboardError> {
+    pub fn choice(&self) -> Result<Option<crate::file_store::VersionChoice>, AgpjError> {
         use crate::file_store::VersionChoice;
         if let Some(name) = &self.planned_version {
             return Ok(Some(VersionChoice::Named(validate_version_name(name)?)));
@@ -96,15 +96,15 @@ impl VersionFilterArgs {
     /// was given; a project with none is `no_current_version`.
     pub fn resolve(
         &self,
-        current: impl FnOnce() -> Result<Option<String>, AgboardError>,
-    ) -> Result<Option<VersionFilter>, AgboardError> {
+        current: impl FnOnce() -> Result<Option<String>, AgpjError>,
+    ) -> Result<Option<VersionFilter>, AgpjError> {
         if let Some(name) = &self.version {
             return Ok(Some(VersionFilter::Planned(validate_version_name(name)?)));
         }
         if self.current_version {
             return current()?
                 .map(|name| Some(VersionFilter::Planned(name)))
-                .ok_or(AgboardError::NoCurrentVersion);
+                .ok_or(AgpjError::NoCurrentVersion);
         }
         Ok(self.unplanned.then_some(VersionFilter::Unplanned))
     }

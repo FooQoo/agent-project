@@ -1,13 +1,13 @@
 import { expect, test } from '../helpers/fixtures';
 import {
-  agboardOk,
+  agpjOk,
   createEmptyProject,
   makeHome,
   removeHome,
   startServe,
   stopServe,
   type Serve,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 import { fillRequest, openAskAi, sendRequest } from '../helpers/ask-ai';
 import { waitForSync } from '../helpers/ui';
 
@@ -38,7 +38,7 @@ test.afterAll(async () => {
   removeHome(home);
 });
 
-const requests = (): string => agboardOk('Stale Board', ['message', 'ls', '--type', 'request', '--status', 'all', '--json'], home).stdout;
+const requests = (): string => agpjOk('Stale Board', ['message', 'ls', '--type', 'request', '--status', 'all', '--json'], home).stdout;
 
 test('after a restart, a save from an open page asks for a reload, and the reload lets the same save go through', async ({ page }) => {
   await page.goto('/');

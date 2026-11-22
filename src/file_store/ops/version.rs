@@ -10,7 +10,7 @@ use super::{
     ensure_ai_task_not_done, lock_project, reason_or_default, save_project, save_task, stamp,
 };
 use crate::domain::{Actor, Changed, Draft, ProjectId, validate_version_name};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::model::{HistoryRecord, ProjectFile, TaskFile, TaskView};
 use crate::file_store::reader;
@@ -60,7 +60,7 @@ pub struct EpicVersionSet {
 impl FileStore {
     /// The project's versions (the files in `docs/release/`) and its current version. A current
     /// version whose file is missing is reported as none.
-    pub fn project_versions(&self, project: &ProjectId) -> Result<ProjectVersions, AgboardError> {
+    pub fn project_versions(&self, project: &ProjectId) -> Result<ProjectVersions, AgpjError> {
         let file = reader::read_project_file(self.shared_dir(), project)?;
         Ok(versions_of(self.shared_dir(), project, &file))
     }
@@ -74,7 +74,7 @@ impl FileStore {
         project: &ProjectId,
         name: &str,
         now: DateTime<Utc>,
-    ) -> Result<Changed<ProjectVersions>, AgboardError> {
+    ) -> Result<Changed<ProjectVersions>, AgpjError> {
         let name = validate_version_name(name)?;
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
@@ -95,7 +95,7 @@ impl FileStore {
         project: &ProjectId,
         name: Option<&str>,
         now: DateTime<Utc>,
-    ) -> Result<Changed<ProjectVersions>, AgboardError> {
+    ) -> Result<Changed<ProjectVersions>, AgpjError> {
         let name = name.map(validate_version_name).transpose()?;
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
@@ -128,7 +128,7 @@ impl FileStore {
         &self,
         project: &ProjectId,
         choice: &VersionChoice,
-    ) -> Result<VersionChoice, AgboardError> {
+    ) -> Result<VersionChoice, AgpjError> {
         Ok(match resolve(self.shared_dir(), project, choice)? {
             Some(name) => VersionChoice::Named(name),
             None => VersionChoice::Unset,
@@ -146,14 +146,14 @@ impl FileStore {
         choice: &VersionChoice,
         actor: Actor,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let target = resolve(shared, project, choice)?;
         let mut task = reader::read_task_strict(shared, project, task_id)?;
         // The plan is the one field that stays open on a Done or archived task.
         if actor == Actor::Ai && task.draft == Some(Draft::Human) {
-            return Err(AgboardError::TaskIsDraft { id: task_id });
+            return Err(AgpjError::TaskIsDraft { id: task_id });
         }
         let changed = self.apply_version(project, &mut task, target, now)?;
         if changed {
@@ -175,7 +175,7 @@ impl FileStore {
         choice: &VersionChoice,
         actor: Actor,
         now: DateTime<Utc>,
-    ) -> Result<EpicVersionSet, AgboardError> {
+    ) -> Result<EpicVersionSet, AgpjError> {
         self.set_epic_planned_version_in_scope(
             project,
             epic,
@@ -196,7 +196,7 @@ impl FileStore {
         scope: EpicVersionScope,
         actor: Actor,
         now: DateTime<Utc>,
-    ) -> Result<EpicVersionSet, AgboardError> {
+    ) -> Result<EpicVersionSet, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         read_epic_file(shared, project, epic)?;
@@ -239,7 +239,7 @@ impl FileStore {
         task: &mut TaskFile,
         markdown: Option<&str>,
         now: DateTime<Utc>,
-    ) -> Result<(), AgboardError> {
+    ) -> Result<(), AgpjError> {
         if let Some(Ok(Some(version))) =
             markdown.map(crate::file_store::frontmatter::planned_version_of)
         {
@@ -255,7 +255,7 @@ impl FileStore {
         task: &mut TaskFile,
         target: Option<String>,
         now: DateTime<Utc>,
-    ) -> Result<bool, AgboardError> {
+    ) -> Result<bool, AgpjError> {
         if task.planned_version == target {
             return Ok(false);
         }

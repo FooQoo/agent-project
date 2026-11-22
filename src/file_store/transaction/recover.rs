@@ -7,12 +7,12 @@ use super::Recovery;
 use super::journal::{Journal, Phase, hashes};
 use super::paths::{journal_dir, read_pair, validate_targets};
 use super::stage::{Fault, Stage, point, replace};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::io::{sync_dir, write_error};
 
 /// Resolve all journals before publishing state. Hash conflicts leave every
 /// conflicting pair untouched and return file_error. Recovery is repeatable.
-pub fn recover_locked(project: &Path) -> Result<Recovery, AgboardError> {
+pub fn recover_locked(project: &Path) -> Result<Recovery, AgpjError> {
     recover_with_hook_locked(project, |_| Ok(()))
 }
 
@@ -20,7 +20,7 @@ pub fn recover_locked(project: &Path) -> Result<Recovery, AgboardError> {
 pub fn recover_with_hook_locked(
     project: &Path,
     mut hook: impl FnMut(Stage) -> Result<(), Fault>,
-) -> Result<Recovery, AgboardError> {
+) -> Result<Recovery, AgpjError> {
     super::batch::recover_batches_locked(project)?;
     let dir = journal_dir(project)?;
     let entries = match fs::read_dir(&dir) {

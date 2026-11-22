@@ -1,14 +1,14 @@
-//! `agboard show remote`: the saved ngrok settings, the connection state, and, with a project,
+//! `agpj show remote`: the saved ngrok settings, the connection state, and, with a project,
 //! the public address of the board and the 4-digit passcode, so that an agent can hand the user
 //! a link to open the board on a phone.
 //!
 //! The running server is found through `serve.json` and asked on its loopback
-//! address, as `agboard open` finds it. The server answers
+//! address, as `agpj open` finds it. The server answers
 //! `GET /api/monitor-connections` on the local router only, so the passcode
 //! goes to the person at this computer and never through the tunnel. Nothing
 //! is started here.
 //!
-//! - With a project, the command is what the old `agboard remote` was: only a ready connection with
+//! - With a project, the command is what the old `agpj remote` was: only a ready connection with
 //!   an address and a passcode gives an outcome, anything else is `remote_unavailable`. The
 //!   outcome also carries the saved settings.
 //! - Without a project it reports the saved settings and whatever state the connection is
@@ -22,7 +22,7 @@ use std::time::Duration;
 use serde_json::{Value, json};
 
 use crate::cli::Outcome;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::remote_settings::{self as saved, Saved};
 use crate::server::monitor_connection::keychain::TokenVault;
 
@@ -35,7 +35,7 @@ pub fn run(
     data_dir: &Path,
     project: Option<(String, String)>,
     vault: &dyn TokenVault,
-) -> Result<Outcome, AgboardError> {
+) -> Result<Outcome, AgpjError> {
     let settings = saved::read(data_dir, vault)?;
     let info = crate::paths::read_serve_info_in(data_dir).filter(crate::server::is_serving);
     let Some(project) = project else {
@@ -44,7 +44,7 @@ pub fn run(
     };
     let info = info.ok_or_else(|| {
         unavailable(
-            "No server is running, so there is no ngrok connection. Start one with \"agboard serve\" and turn the connection on in the board's settings, or with \"NGROK_AUTHTOKEN=... agboard serve --monitor ngrok\".",
+            "No server is running, so there is no ngrok connection. Start one with \"agpj serve\" and turn the connection on in the board's settings, or with \"NGROK_AUTHTOKEN=... agpj serve --monitor ngrok\".",
         )
     })?;
     let status = fetch_status(info.port)?;
@@ -58,7 +58,7 @@ pub fn run(
 
 /// The saved settings and the state of the connection, for a run with no project. A server that
 /// is not running, or that did not answer, is a state to report, not an error.
-fn overview(settings: &Saved, status: Option<Result<Value, AgboardError>>) -> Outcome {
+fn overview(settings: &Saved, status: Option<Result<Value, AgpjError>>) -> Outcome {
     let (state, entrance) = match &status {
         None => ("no_server", None),
         Some(Err(_)) => ("unknown", None),
@@ -96,7 +96,7 @@ fn state_is_ready(status: &Value) -> bool {
 /// The outcome for the status the server returned. Only a ready connection
 /// with an address and a passcode gives one; anything else is
 /// `remote_unavailable`, with no address or passcode in the message.
-fn build(status: &Value, (id, name): (String, String)) -> Result<Outcome, AgboardError> {
+fn build(status: &Value, (id, name): (String, String)) -> Result<Outcome, AgpjError> {
     let state = status["status"].as_str().unwrap_or("unknown");
     if state != "ready" {
         return Err(unavailable(&not_ready_reason(status, state)));
@@ -135,19 +135,19 @@ fn not_ready_reason(status: &Value, state: &str) -> String {
         reason.push_str(&format!(" Failure: {failure}."));
     }
     reason.push_str(
-        " Start it with \"NGROK_AUTHTOKEN=... agboard serve --monitor ngrok\" or from the board's connection settings, and run this again once it is ready. \"agboard show remote\" without --project shows the saved settings.",
+        " Start it with \"NGROK_AUTHTOKEN=... agpj serve --monitor ngrok\" or from the board's connection settings, and run this again once it is ready. \"agpj show remote\" without --project shows the saved settings.",
     );
     reason
 }
 
-fn unavailable(reason: &str) -> AgboardError {
-    AgboardError::RemoteUnavailable {
+fn unavailable(reason: &str) -> AgpjError {
+    AgpjError::RemoteUnavailable {
         reason: reason.to_string(),
     }
 }
 
 /// `GET /api/monitor-connections` on the loopback address of the server.
-fn fetch_status(port: u16) -> Result<Value, AgboardError> {
+fn fetch_status(port: u16) -> Result<Value, AgpjError> {
     let failed = |why: String| {
         unavailable(&format!(
             "The server on port {port} did not give its ngrok status: {why}."
@@ -235,7 +235,7 @@ mod tests {
         ] {
             assert!(matches!(
                 build(&status, demo()),
-                Err(AgboardError::RemoteUnavailable { .. })
+                Err(AgpjError::RemoteUnavailable { .. })
             ));
         }
     }

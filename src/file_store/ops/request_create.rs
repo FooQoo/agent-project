@@ -12,7 +12,7 @@ use super::{
     HistoryKind, Transition, lane_end, lock_project, save_project, stamp, transition_event,
 };
 use crate::domain::{Attachment, Column, ProjectId, RunState, validate_attachment, validate_title};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 impl FileStore {
     /// Create a simple AI task and publish its complete directory with one
@@ -22,7 +22,7 @@ impl FileStore {
         project: &ProjectId,
         request: SimpleRequestInput,
         now: DateTime<Utc>,
-    ) -> Result<model::TaskView, AgboardError> {
+    ) -> Result<model::TaskView, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let title = validate_title(&request.title)?;
@@ -44,7 +44,7 @@ impl FileStore {
         let mut seen_ids = std::collections::HashSet::new();
         for image in &request.images {
             if !seen_ids.insert(&image.id) {
-                return Err(AgboardError::InvalidValue {
+                return Err(AgpjError::InvalidValue {
                     field: "attachmentId".into(),
                     reason: "Attachment IDs must be unique.".into(),
                 });
@@ -52,7 +52,7 @@ impl FileStore {
             let media_type = validate_attachment(&image.id, &image.name, &image.bytes)?;
             total_bytes = total_bytes.saturating_add(image.bytes.len());
             if total_bytes > crate::domain::MAX_TASK_ATTACHMENT_BYTES {
-                return Err(AgboardError::AttachmentLimitExceeded);
+                return Err(AgpjError::AttachmentLimitExceeded);
             }
             attachments.push((
                 media_type.to_string(),
@@ -65,7 +65,7 @@ impl FileStore {
             ));
         }
         if request.images.len() > crate::domain::MAX_TASK_ATTACHMENTS {
-            return Err(AgboardError::AttachmentLimitExceeded);
+            return Err(AgpjError::AttachmentLimitExceeded);
         }
 
         let mut project_file = reader::read_project_file(shared, project)?;
@@ -131,7 +131,7 @@ impl FileStore {
         let parsed = parse_task(&full_body, ParseMode::NewInput);
         let markdown =
             compose_task(&full_body, &parsed.body, None, &task.history).map_err(|defect| {
-                AgboardError::FileInvalid {
+                AgpjError::FileInvalid {
                     file: format!("tasks/{id}/TASK.md"),
                     field: defect.field,
                     reason: defect.reason,
@@ -153,7 +153,7 @@ impl FileStore {
         let staging = staging_root
             .join(io::random_hex(16).map_err(|e| io::write_error("request-staging", e))?);
         fs::create_dir(&staging).map_err(|e| io::write_error("request-staging", e))?;
-        let result = (|| -> Result<(), AgboardError> {
+        let result = (|| -> Result<(), AgpjError> {
             io::write_json(
                 &layout::task_json(&staging),
                 &model::TaskMetadata::from(&task),

@@ -6,7 +6,7 @@ use chrono::{DateTime, Utc};
 use super::super::{lock_project, stamp};
 use super::{message_change, referrers};
 use crate::domain::{Actor, Changed, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::model::HistoryRecord;
 use crate::file_store::qa::{Message, MessageState, MessageView, read_message};
@@ -21,18 +21,18 @@ impl FileStore {
         id: &str,
         actor: Actor,
         now: DateTime<Utc>,
-    ) -> Result<Changed<MessageView>, AgboardError> {
+    ) -> Result<Changed<MessageView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut message = read_message(shared, &project_dir, id)?;
         match (&message, actor) {
             (Message::Question(_), Actor::Human) => {
-                return Err(AgboardError::AiOnly {
+                return Err(AgpjError::AiOnly {
                     action: "withdrawing a question".into(),
                 });
             }
             (Message::Request(_), Actor::Ai) => {
-                return Err(AgboardError::HumanOnly {
+                return Err(AgpjError::HumanOnly {
                     action: "withdrawing a request".into(),
                 });
             }
@@ -46,7 +46,7 @@ impl FileStore {
                 });
             }
             MessageState::Closed => {
-                return Err(AgboardError::MessageClosed { id: id.to_owned() });
+                return Err(AgpjError::MessageClosed { id: id.to_owned() });
             }
             MessageState::Open => {}
         }
@@ -87,7 +87,7 @@ impl FileStore {
 }
 
 /// The message as the snapshot reads it now; the caller holds the project lock.
-fn view_of(store: &FileStore, project: &ProjectId, id: &str) -> Result<MessageView, AgboardError> {
+fn view_of(store: &FileStore, project: &ProjectId, id: &str) -> Result<MessageView, AgpjError> {
     let (questions, requests) = super::read::views_locked(store.shared_dir(), project)?;
     questions
         .into_iter()
@@ -99,5 +99,5 @@ fn view_of(store: &FileStore, project: &ProjectId, id: &str) -> Result<MessageVi
                 .find(|r| r.id == id)
                 .map(MessageView::Request)
         })
-        .ok_or_else(|| AgboardError::MessageNotFound { id: id.to_owned() })
+        .ok_or_else(|| AgpjError::MessageNotFound { id: id.to_owned() })
 }

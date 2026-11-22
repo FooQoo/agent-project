@@ -94,7 +94,7 @@ impl Session {
             step.events.push(DriverEvent::Unknown);
             step.sends.push(json!({"id": id, "error": {
                 "code": -32601,
-                "message": "Agent Board does not handle this request.",
+                "message": "Agent Project does not handle this request.",
             }}));
             return;
         };

@@ -61,7 +61,7 @@ export function BoardMessage({ kind, onRetry }: BoardMessageProps) {
         <FolderIcon aria-hidden="true" className="board-message__icon" />
         <p className="board-message__title">{t('board.noProjects')}</p>
         <p className="board-message__sub">{t('board.noProjectsHint')}</p>
-        <code className="board-message__command">agboard project create NAME</code>
+        <code className="board-message__command">agpj project create NAME</code>
       </div>
     );
   }

@@ -1,4 +1,4 @@
-use agent_board::file_store::{
+use agent_project::file_store::{
     history::{ParseMode, compose_task, parse_task},
     model::{HistoryRecord, TaskFile, TaskMetadata},
 };

@@ -38,7 +38,7 @@ export interface ConnectionSnapshot {
   /** The provider of the connection that is starting, ready or reconnecting; null when none runs.
    * It can differ from `settings.provider`, which is only what is saved. */
   activeProvider: Provider | null;
-  /** The domain from the AGBOARD_NGROK_DOMAIN environment variable; when set, it is the one used. */
+  /** The domain from the AGPJ_NGROK_DOMAIN environment variable; when set, it is the one used. */
   domainEnv: string | null;
   /** Whether a token is available: from the environment, this PC's secure storage or this run. */
   tokenConfigured: boolean;
@@ -90,8 +90,8 @@ async function request<T = ConnectionSnapshot>(
           ? {}
           : {
               'Content-Type': 'application/json',
-              'X-Agboard-Token': readToken(),
-              'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+              'X-Agpj-Token': readToken(),
+              'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
             }),
       },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),

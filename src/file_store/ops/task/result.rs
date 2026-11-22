@@ -28,7 +28,7 @@ use crate::domain::validate_version_name;
 use crate::domain::{
     Attachment, AttachmentInput, Draft, ProjectId, ResultKind, TaskResult, derive_result_title,
 };
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The most results one task keeps.
 pub const MAX_RESULTS: usize = 100;
@@ -81,7 +81,7 @@ impl FileStore {
         id: i64,
         input: ResultInput,
         now: DateTime<Utc>,
-    ) -> Result<RecordedResult, AgboardError> {
+    ) -> Result<RecordedResult, AgpjError> {
         let mut summary = clean_text("summary", &input.summary)?;
         let link = input.link.as_deref().map(clean_link).transpose()?;
         let published = match input.published.as_deref() {
@@ -172,7 +172,7 @@ impl FileStore {
         }
 
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         // A final result may still be recorded on a Done task that has none: automatic Done
         // can happen before the agent writes it.
@@ -182,7 +182,7 @@ impl FileStore {
             ensure_ai_task_not_done(&task, crate::domain::Actor::Ai)?;
         }
         if task.draft == Some(Draft::Human) {
-            return Err(AgboardError::TaskIsDraft { id });
+            return Err(AgpjError::TaskIsDraft { id });
         }
         if task.results.len() >= MAX_RESULTS {
             return Err(invalid(

@@ -8,19 +8,19 @@ use axum::http::HeaderMap;
 use super::AppState;
 use super::guard::header_text;
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::index::ProjectEntry;
 
 /// Run `work` on the shared files on a blocking thread.
 pub(crate) async fn with_files<T: Send + 'static>(
     state: &AppState,
-    work: impl FnOnce(FileStore) -> Result<T, AgboardError> + Send + 'static,
-) -> Result<T, AgboardError> {
+    work: impl FnOnce(FileStore) -> Result<T, AgpjError> + Send + 'static,
+) -> Result<T, AgpjError> {
     let shared = state.shared.clone();
     tokio::task::spawn_blocking(move || work(FileStore::open(&shared)))
         .await
-        .map_err(|e| AgboardError::DatabaseError {
+        .map_err(|e| AgpjError::DatabaseError {
             reason: format!("The file task failed: {e}"),
         })?
 }
@@ -29,9 +29,9 @@ pub(crate) async fn with_files<T: Send + 'static>(
 pub(crate) async fn with_request_files<T: Send + 'static>(
     state: &AppState,
     headers: &HeaderMap,
-    work: impl FnOnce(FileStore) -> Result<T, AgboardError> + Send + 'static,
-) -> Result<T, AgboardError> {
-    let language = header_text(headers, "x-agboard-language")
+    work: impl FnOnce(FileStore) -> Result<T, AgpjError> + Send + 'static,
+) -> Result<T, AgpjError> {
+    let language = header_text(headers, "x-agpj-language")
         .and_then(crate::file_store::history_language::HistoryLanguage::from_setting);
     with_files(state, move |store| {
         work(store.with_history_language(language))
@@ -54,7 +54,7 @@ pub(crate) fn refresh_index(state: &AppState) {
 
 /// The project named in the URL. The URL is a name for a project, never a
 /// credential: an ID that is not well formed is `invalid_value`.
-pub(crate) fn parse_project_id(raw: &str) -> Result<ProjectId, AgboardError> {
+pub(crate) fn parse_project_id(raw: &str) -> Result<ProjectId, AgpjError> {
     raw.parse()
 }
 
@@ -63,7 +63,7 @@ pub(crate) fn parse_project_id(raw: &str) -> Result<ProjectId, AgboardError> {
 pub(crate) fn indexed_view(
     state: &AppState,
     id: &ProjectId,
-) -> Result<Arc<crate::file_store::reader::ProjectSnapshot>, AgboardError> {
+) -> Result<Arc<crate::file_store::reader::ProjectSnapshot>, AgpjError> {
     indexed_view_in(&state.shared, &state.index, id)
 }
 
@@ -71,7 +71,7 @@ pub(crate) fn indexed_view_in(
     shared: &std::path::Path,
     index: &std::sync::RwLock<crate::file_store::index::ProjectIndex>,
     id: &ProjectId,
-) -> Result<Arc<crate::file_store::reader::ProjectSnapshot>, AgboardError> {
+) -> Result<Arc<crate::file_store::reader::ProjectSnapshot>, AgpjError> {
     indexed_ready_in(shared, index, id, |entry| match entry {
         ProjectEntry::Ready { view, .. } => Some(view.clone()),
         ProjectEntry::Invalid { .. } => None,
@@ -83,7 +83,7 @@ pub(crate) fn indexed_projection_in(
     shared: &std::path::Path,
     index: &std::sync::RwLock<crate::file_store::index::ProjectIndex>,
     id: &ProjectId,
-) -> Result<Arc<crate::file_store::projection::Projection>, AgboardError> {
+) -> Result<Arc<crate::file_store::projection::Projection>, AgpjError> {
     indexed_ready_in(shared, index, id, |entry| match entry {
         ProjectEntry::Ready { projection, .. } => Some(projection.clone()),
         ProjectEntry::Invalid { .. } => None,
@@ -97,10 +97,10 @@ fn indexed_ready_in<T>(
     index: &std::sync::RwLock<crate::file_store::index::ProjectIndex>,
     id: &ProjectId,
     pick: impl FnOnce(&ProjectEntry) -> Option<T>,
-) -> Result<T, AgboardError> {
+) -> Result<T, AgpjError> {
     // A folder that is gone is a deleted project, even before the watcher reloads.
     if !crate::file_store::layout::project_dir(shared, id).is_dir() {
-        return Err(AgboardError::ProjectNotFound {
+        return Err(AgpjError::ProjectNotFound {
             project: id.to_string(),
         });
     }
@@ -121,32 +121,30 @@ fn indexed_ready_in<T>(
         }
     }
     let index = index.read().unwrap_or_else(|e| e.into_inner());
-    let entry = index
-        .entry(id)
-        .ok_or_else(|| AgboardError::ProjectNotFound {
-            project: id.to_string(),
-        })?;
+    let entry = index.entry(id).ok_or_else(|| AgpjError::ProjectNotFound {
+        project: id.to_string(),
+    })?;
     if let Some(found) = pick(entry) {
         return Ok(found);
     }
     match entry {
         ProjectEntry::Invalid { error, .. } => Err(match error {
-            AgboardError::FileInvalid {
+            AgpjError::FileInvalid {
                 file,
                 field,
                 reason,
-            } => AgboardError::FileInvalid {
+            } => AgpjError::FileInvalid {
                 file: file.clone(),
                 field: field.clone(),
                 reason: reason.clone(),
             },
-            other => AgboardError::FileError {
+            other => AgpjError::FileError {
                 action: crate::error::FileAction::Read,
                 file: id.to_string(),
                 reason: other.reason(),
             },
         }),
-        ProjectEntry::Ready { .. } => Err(AgboardError::ProjectNotFound {
+        ProjectEntry::Ready { .. } => Err(AgpjError::ProjectNotFound {
             project: id.to_string(),
         }),
     }
@@ -156,7 +154,7 @@ fn indexed_ready_in<T>(
 pub(crate) fn read_checked(
     store: &FileStore,
     path: &std::path::Path,
-) -> Result<Vec<u8>, AgboardError> {
+) -> Result<Vec<u8>, AgpjError> {
     let label = crate::file_store::layout::shared_label(store.shared_dir(), path);
     crate::file_store::io::read_bytes(path, &label)
 }

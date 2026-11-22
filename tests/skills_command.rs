@@ -1,19 +1,19 @@
-//! `agboard skills`: the Agent Board Skill and its topics, printed by the
+//! `agpj skills`: the Agent Project Skill and its topics, printed by the
 //! binary. It reads nothing, writes nothing, and always exits 0.
 
 use std::process::Command;
 
-/// Runs `agboard skills <args>` with an empty environment and a folder of its
+/// Runs `agpj skills <args>` with an empty environment and a folder of its
 /// own as the only place it could write to; returns the exit code, stdout, and
 /// whether the folder is still empty.
 fn skills(args: &[&str]) -> (i32, String, bool) {
     let home = tempfile::tempdir().unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env_clear()
         .env("HOME", home.path())
-        .env("AGBOARD_HOME", home.path().join("data"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
+        .env("AGPJ_HOME", home.path().join("data"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
         .current_dir(home.path())
         .arg("skills")
         .args(args)
@@ -33,8 +33,8 @@ fn skills(args: &[&str]) -> (i32, String, bool) {
 fn skills_prints_the_skill_body_without_frontmatter_and_writes_nothing() {
     let (code, out, untouched) = skills(&[]);
     assert_eq!(code, 0);
-    assert!(untouched, "agboard skills wrote a file");
-    assert!(out.starts_with("# Agent Board\n"), "{}", &out[..80]);
+    assert!(untouched, "agpj skills wrote a file");
+    assert!(out.starts_with("# Agent Project\n"), "{}", &out[..80]);
     assert!(!out.starts_with("---"));
     assert!(out.contains("## 1. Resolve the project from the working folder"));
     // The references are topics, not files.
@@ -57,7 +57,7 @@ fn skills_prints_the_skill_body_without_frontmatter_and_writes_nothing() {
         "waiting",
     ] {
         assert!(
-            out.contains(&format!("agboard skills {topic}")),
+            out.contains(&format!("agpj skills {topic}")),
             "the body omits {topic}"
         );
     }
@@ -110,7 +110,7 @@ fn every_topic_prints_its_text() {
     assert!(template.contains("recommended, not required"));
     let (_, resident, _) = skills(&["resident"]);
     for needed in [
-        "AGBOARD_RESIDENT_ID",
+        "AGPJ_RESIDENT_ID",
         "run_in_background",
         "wait --until task --idle-timeout 3600",
         "run the same wait again immediately",
@@ -140,25 +140,25 @@ fn an_unknown_topic_exits_zero_and_lists_the_topics() {
         "resident",
         "enhancement-epic-template",
     ] {
-        assert!(out.contains(&format!("`agboard skills {topic}`")), "{out}");
+        assert!(out.contains(&format!("`agpj skills {topic}`")), "{out}");
     }
-    assert!(out.contains("upgrade agboard"));
+    assert!(out.contains("upgrade agpj"));
 }
 
 #[test]
 fn skills_works_without_a_data_directory() {
-    let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env_clear()
         .args(["skills"])
         .output()
         .unwrap();
     assert_eq!(output.status.code(), Some(0));
-    assert!(String::from_utf8_lossy(&output.stdout).starts_with("# Agent Board\n"));
+    assert!(String::from_utf8_lossy(&output.stdout).starts_with("# Agent Project\n"));
 }
 
 #[test]
 fn the_task_template_still_parses_as_new_task_input() {
-    use agent_board::file_store::history::{ParseMode, parse_task};
+    use agent_project::file_store::history::{ParseMode, parse_task};
     let (_, template, _) = skills(&["task-template"]);
     let block = template
         .split("```markdown\n")

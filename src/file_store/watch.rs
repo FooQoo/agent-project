@@ -25,7 +25,7 @@ use super::FileStore;
 use super::index::ProjectIndex;
 use super::projection::ChangeSink;
 use crate::domain::ProjectId;
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 pub use classify::classify;
 pub use mode::{POLL_INTERVAL, WatchMode};
 
@@ -94,7 +94,7 @@ impl Watch {
         shared: &Path,
         index: Arc<RwLock<ProjectIndex>>,
         changed: impl Into<ChangeSink>,
-    ) -> Result<(Watch, Reloader), AgboardError> {
+    ) -> Result<(Watch, Reloader), AgpjError> {
         Watch::start_with_docs(shared, WatchMode::Native, index, changed, DocsSink::none())
     }
 
@@ -105,7 +105,7 @@ impl Watch {
         index: Arc<RwLock<ProjectIndex>>,
         changed: impl Into<ChangeSink>,
         docs: DocsSink,
-    ) -> Result<(Watch, Reloader), AgboardError> {
+    ) -> Result<(Watch, Reloader), AgpjError> {
         std::fs::create_dir_all(shared).map_err(|e| watch_error(shared, e))?;
         let root = shared.canonicalize().map_err(|e| watch_error(shared, e))?;
         let (tx, rx) = mpsc::unbounded_channel::<Target>();
@@ -162,8 +162,8 @@ impl Watch {
     }
 }
 
-fn watch_error(shared: &Path, error: impl std::fmt::Display) -> AgboardError {
-    AgboardError::FileError {
+fn watch_error(shared: &Path, error: impl std::fmt::Display) -> AgpjError {
+    AgpjError::FileError {
         action: FileAction::Read,
         file: shared.display().to_string(),
         reason: format!("Cannot watch the shared folder: {error}"),

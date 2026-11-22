@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { agboardOk, resetBoard, mainProject, nextTaskId } from '../helpers/agboard';
+import { agpjOk, resetBoard, mainProject, nextTaskId } from '../helpers/agpj';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
 import { putDraft } from '../helpers/drafts';
 import { waitForSync, editorValue } from '../helpers/ui';
@@ -20,7 +20,7 @@ for (const locale of ['en', 'ja'] as const) {
       await waitForSync(page);
       // An empty draft, created the way the CLI does, opened in its full-screen editor.
       const id = nextTaskId(mainProject);
-      agboardOk(mainProject, ['add', 'Cursor check', '--assignee', 'human', '--actor', 'human']);
+      agpjOk(mainProject, ['add', 'Cursor check', '--assignee', 'human', '--actor', 'human']);
       await page.reload();
       await waitForSync(page);
       await page.getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) }).click();

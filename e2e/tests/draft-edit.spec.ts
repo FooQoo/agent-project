@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { agboardOk, listTasks, mainProject, nextTaskId, resetBoard, taskBody, type TaskJson } from '../helpers/agboard';
+import { agpjOk, listTasks, mainProject, nextTaskId, resetBoard, taskBody, type TaskJson } from '../helpers/agpj';
 import { putDraft } from '../helpers/drafts';
 import { editorValue, readBoardAfterReset, waitForSync } from '../helpers/ui';
 
@@ -16,7 +16,7 @@ interface ShownTask extends TaskJson {
 }
 
 function show(id: number): ShownTask {
-  return JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  return JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 }
 
 /** The names of the toolbar buttons beside the tabs, left to right. */
@@ -35,7 +35,7 @@ let id: number;
 test.beforeEach(async ({ page }) => {
   resetBoard(mainProject);
   id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', 'Draft me', `--desc=${SEED}`]);
+  agpjOk(mainProject, ['add', 'Draft me', `--desc=${SEED}`]);
   await page.goto('/');
   await waitForSync(page);
   await readBoardAfterReset(page);

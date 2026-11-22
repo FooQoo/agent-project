@@ -9,7 +9,7 @@ use super::super::{
 use super::send::{RequestImage, checked_images, stage_images};
 use super::{message_change, options_line};
 use crate::domain::{Actor, ProjectId, RunState};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::frontmatter::compose_questions;
 use crate::file_store::history::{ParseMode, parse_task};
@@ -36,24 +36,24 @@ pub struct AskQuestion {
 #[derive(Debug, Clone)]
 pub struct AskInput {
     pub actor: Actor,
-    /// The board-launched session that asks (`AGBOARD_RESIDENT_ID`), recorded on each question.
+    /// The board-launched session that asks (`AGPJ_RESIDENT_ID`), recorded on each question.
     pub asked_by: Option<String>,
     pub questions: Vec<AskQuestion>,
     /// Tasks that wait on every question.
     pub tasks: Vec<i64>,
 }
 
-fn invalid(field: impl Into<String>, reason: impl Into<String>) -> AgboardError {
-    AgboardError::InvalidValue {
+fn invalid(field: impl Into<String>, reason: impl Into<String>) -> AgpjError {
+    AgpjError::InvalidValue {
         field: field.into(),
         reason: reason.into(),
     }
 }
 
 /// Check and normalize the questions before anything is read or written.
-fn normalize(input: &AskInput) -> Result<Vec<Question>, AgboardError> {
+fn normalize(input: &AskInput) -> Result<Vec<Question>, AgpjError> {
     if input.actor != Actor::Ai {
-        return Err(AgboardError::AiOnly {
+        return Err(AgpjError::AiOnly {
             action: "asking a question".into(),
         });
     }
@@ -97,7 +97,7 @@ impl FileStore {
         project: &ProjectId,
         input: AskInput,
         now: DateTime<Utc>,
-    ) -> Result<Vec<Question>, AgboardError> {
+    ) -> Result<Vec<Question>, AgpjError> {
         let mut questions = normalize(&input)?;
         let staged_images = input
             .questions
@@ -105,7 +105,7 @@ impl FileStore {
             .enumerate()
             .map(|(index, asked)| {
                 checked_images(&asked.images).map_err(|error| match error {
-                    AgboardError::InvalidValue { field, reason } => {
+                    AgpjError::InvalidValue { field, reason } => {
                         invalid(format!("questions[{index}].{field}"), reason)
                     }
                     other => other,
@@ -131,10 +131,10 @@ impl FileStore {
         for (id, _) in &per_task {
             let task = reader::read_task_strict(shared, project, *id)?;
             if task.archived_at.is_some() {
-                return Err(AgboardError::TaskArchived { id: *id });
+                return Err(AgpjError::TaskArchived { id: *id });
             }
             if task.draft == Some(crate::domain::Draft::Human) {
-                return Err(AgboardError::TaskIsDraft { id: *id });
+                return Err(AgpjError::TaskIsDraft { id: *id });
             }
             ensure_ai_task_not_done(&task, input.actor)?;
             tasks.push(task);
@@ -171,7 +171,7 @@ impl FileStore {
                 &layout::task_md(&layout::task_dir(&project_dir, task.id)),
             );
             if let Some(d) = parsed.questions_defects.first() {
-                return Err(AgboardError::FileInvalid {
+                return Err(AgpjError::FileInvalid {
                     file: label,
                     field: d.field.clone(),
                     reason: d.reason.clone(),
@@ -220,12 +220,11 @@ impl FileStore {
                 task.agent_status_changed_at = at;
             }
             task.updated_at = at;
-            let composed =
-                compose_questions(&text, &ids).map_err(|d| AgboardError::FileInvalid {
-                    file: label,
-                    field: d.field,
-                    reason: d.reason,
-                })?;
+            let composed = compose_questions(&text, &ids).map_err(|d| AgpjError::FileInvalid {
+                file: label,
+                field: d.field,
+                reason: d.reason,
+            })?;
             changes.extend(super::super::save::task_pair_changes(
                 shared,
                 &project_dir,
@@ -243,7 +242,7 @@ impl FileStore {
         if let Some(dir) = staging {
             // The question files are in place; each image folder now moves under its question
             // with one rename.
-            let placed = (|| -> Result<(), AgboardError> {
+            let placed = (|| -> Result<(), AgpjError> {
                 for (index, question) in questions.iter().enumerate() {
                     let from = dir.join(index.to_string());
                     if from.is_dir() {

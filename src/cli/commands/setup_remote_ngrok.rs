@@ -1,12 +1,12 @@
-//! The ngrok-only questions of `agboard setup remote`.
+//! The ngrok-only questions of `agpj setup remote`.
 
 use super::setup_remote::{Answers, cancel_false, confirm};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::remote_settings::{self as saved, Saved};
 
 /// The ngrok-only questions: the fixed domain and the token.
 /// Returns `false` when a question was cancelled, so the caller saves nothing.
-pub(super) fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<bool, AgboardError> {
+pub(super) fn ask_ngrok(now: &Saved, answers: &mut Answers) -> Result<bool, AgpjError> {
     let change_domain = match &now.domain {
         Some(_) => match confirm("Change the fixed domain?") {
             Some(answer) => answer,

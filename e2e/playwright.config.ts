@@ -2,18 +2,18 @@ import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
-import { repoRoot } from './helpers/agboard';
+import { repoRoot } from './helpers/agpj';
 
-// Every `agboard` the suite runs inherits this environment. A command that would start a server in the background
+// Every `agpj` the suite runs inherits this environment. A command that would start a server in the background
 // (a wait, the hook) must not do so: the specs start the servers they need, and an automatic one would try port 7420.
-process.env.AGBOARD_AUTOSTART = '0';
+process.env.AGPJ_AUTOSTART = '0';
 // No command opens a real browser window during the suite.
-process.env.AGBOARD_OPEN_BROWSER = '0';
+process.env.AGPJ_OPEN_BROWSER = '0';
 
-// Each worker starts its own `agboard serve` on a port the system picks, with its own data area (see
+// Each worker starts its own `agpj serve` on a port the system picks, with its own data area (see
 // helpers/fixtures.ts), so workers and separate checkouts never share a port or a board. Specs in a file still run
 // in order, because many of them build on the board the previous test left.
-const workers = Number(process.env.AGBOARD_E2E_WORKERS) || Math.max(1, Math.floor(os.cpus().length / 2));
+const workers = Number(process.env.AGPJ_E2E_WORKERS) || Math.max(1, Math.floor(os.cpus().length / 2));
 
 // Traces, screenshots, and failure context go to the OS temp directory, not into the repository. Playwright empties
 // this folder at the start of a run, so each checkout has its own.
@@ -26,7 +26,7 @@ export default defineConfig({
   retries: 0,
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  outputDir: path.join(os.tmpdir(), `agent-board-e2e-results-${checkout}`),
+  outputDir: path.join(os.tmpdir(), `agent-project-e2e-results-${checkout}`),
   reporter: [['list']],
   globalSetup: './global-setup.ts',
   use: {

@@ -16,7 +16,7 @@ use super::{AppState, MonitorOptions, MonitorReady, api, assets, bind, change_fe
 use super::{STALE_TEMPORARY_AGE, notification_settings, preferences, resident, sessions};
 use crate::clock::format_utc;
 use crate::docs::DocsLocale;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::index::ProjectIndex;
 use crate::file_store::watch::{DocsSink, Watch, WatchMode};
 use crate::lifecycle::LifecycleGuard;
@@ -26,10 +26,10 @@ use crate::paths::{self, ServeInfo, ServeMode};
 /// data directory.
 const AUTO_LIFECYCLE_WAIT: Duration = Duration::from_secs(10);
 
-/// How long a session whose wait ended stays counted: `AGBOARD_SESSION_GRACE_MS` when set to a
+/// How long a session whose wait ended stays counted: `AGPJ_SESSION_GRACE_MS` when set to a
 /// number of milliseconds (tests shorten it), else [`sessions::GRACE`].
 fn session_grace() -> Duration {
-    std::env::var("AGBOARD_SESSION_GRACE_MS")
+    std::env::var("AGPJ_SESSION_GRACE_MS")
         .ok()
         .and_then(|text| text.trim().parse::<u64>().ok())
         .map_or(sessions::GRACE, Duration::from_millis)
@@ -81,13 +81,13 @@ pub(crate) fn run<F: Future<Output = ()>>(
     monitor: MonitorOptions,
     shutdown: F,
     on_ready: impl FnOnce(Ready),
-) -> Result<Ended, AgboardError> {
+) -> Result<Ended, AgpjError> {
     let data_dir = launch.data_dir.to_path_buf();
     let serve_path = data_dir.join("serve.json");
     let running = || {
         paths::read_serve_info_in(&data_dir)
             .filter(instance::is_serving)
-            .map(|info| AgboardError::AlreadyServing {
+            .map(|info| AgpjError::AlreadyServing {
                 port: info.port,
                 auto: info.mode == ServeMode::Auto,
             })
@@ -261,7 +261,7 @@ async fn wait_until_unused(
     }
 }
 
-/// On SIGUSR1 (`agboard serve -d` while this server runs), stop counting idle
+/// On SIGUSR1 (`agpj serve -d` while this server runs), stop counting idle
 /// time and record the server as manual.
 fn switch_to_manual_on_signal(auto: Arc<AtomicBool>, serve_path: std::path::PathBuf, pid: u32) {
     use tokio::signal::unix::{SignalKind, signal};
@@ -295,6 +295,6 @@ fn count_changes_as_use(state: &Arc<AppState>) {
     });
 }
 
-fn internal(reason: String) -> AgboardError {
-    AgboardError::DatabaseError { reason }
+fn internal(reason: String) -> AgpjError {
+    AgpjError::DatabaseError { reason }
 }

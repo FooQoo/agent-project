@@ -13,7 +13,7 @@ use std::time::Duration;
 
 use super::lines::{Line, MAX_LINE, for_each_line};
 use super::{DriverEvent, StartSpec};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::resident::cli;
 use crate::server::resident::process::{
     Exit, group_alive, kill_members, signal_group, wait_group_gone,
@@ -39,7 +39,7 @@ impl Log {
 
     /// A note of the board's own, marked so it is not taken for CLI output.
     pub(super) fn note(&self, text: &str) {
-        self.line(&format!("agboard: {text}"));
+        self.line(&format!("agpj: {text}"));
     }
 }
 
@@ -74,8 +74,8 @@ impl Proc {
         spec: &StartSpec,
         piped_stdin: bool,
         reader: Option<Reader>,
-    ) -> Result<Proc, AgboardError> {
-        let failed = |reason: String| AgboardError::SessionLaunchFailed { reason };
+    ) -> Result<Proc, AgpjError> {
+        let failed = |reason: String| AgpjError::SessionLaunchFailed { reason };
         let log_file = spec
             .log
             .try_clone()
@@ -224,7 +224,7 @@ impl Proc {
 }
 
 /// One line to the CLI. `Ok` also when the CLI is already gone: its exit is reported as an event.
-pub(super) fn send_line(stdin: &SharedStdin, text: &str) -> Result<(), AgboardError> {
+pub(super) fn send_line(stdin: &SharedStdin, text: &str) -> Result<(), AgpjError> {
     let mut guard = stdin.lock().unwrap_or_else(|e| e.into_inner());
     let Some(pipe) = guard.as_mut() else {
         return Ok(());

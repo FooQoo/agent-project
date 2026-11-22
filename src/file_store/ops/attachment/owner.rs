@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use crate::domain::{Attachment, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::io;
 use crate::file_store::layout;
 use crate::file_store::model::{AttachmentOwner, EpicFile, TaskFile};
@@ -56,15 +56,15 @@ impl Loaded {
     /// A task that is archived takes no image changes for anyone. A draft
     /// takes none from the agent side (`block_drafts`); a person may change
     /// it. Epics have neither state.
-    pub(super) fn ensure_writable(&self, block_drafts: bool) -> Result<(), AgboardError> {
+    pub(super) fn ensure_writable(&self, block_drafts: bool) -> Result<(), AgpjError> {
         match self {
             Loaded::Task(task) if task.archived_at.is_some() => {
-                Err(AgboardError::TaskArchived { id: task.id })
+                Err(AgpjError::TaskArchived { id: task.id })
             }
             Loaded::Task(task) if block_drafts => {
                 ensure_ai_task_not_done(task, crate::domain::Actor::Ai)?;
                 if task.draft == Some(crate::domain::Draft::Human) {
-                    Err(AgboardError::TaskIsDraft { id: task.id })
+                    Err(AgpjError::TaskIsDraft { id: task.id })
                 } else {
                     Ok(())
                 }
@@ -72,7 +72,7 @@ impl Loaded {
             Loaded::Task(task)
                 if block_drafts && task.draft == Some(crate::domain::Draft::Human) =>
             {
-                Err(AgboardError::TaskIsDraft { id: task.id })
+                Err(AgpjError::TaskIsDraft { id: task.id })
             }
             _ => Ok(()),
         }
@@ -83,7 +83,7 @@ pub(super) fn load(
     shared: &Path,
     project: &ProjectId,
     owner: &AttachmentOwner,
-) -> Result<Loaded, AgboardError> {
+) -> Result<Loaded, AgpjError> {
     match owner {
         AttachmentOwner::Task(id) => Ok(Loaded::Task(Box::new(reader::read_task_strict(
             shared, project, *id,
@@ -94,7 +94,7 @@ pub(super) fn load(
     }
 }
 
-pub(super) fn save(shared: &Path, project_dir: &Path, loaded: &Loaded) -> Result<(), AgboardError> {
+pub(super) fn save(shared: &Path, project_dir: &Path, loaded: &Loaded) -> Result<(), AgpjError> {
     match loaded {
         Loaded::Task(task) => save_task(shared, project_dir, task),
         Loaded::Epic(epic) => {

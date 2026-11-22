@@ -10,7 +10,7 @@ use axum::http::StatusCode;
 use axum::response::Response;
 
 use crate::server::AppState;
-use crate::server::response::{agboard_error_response, json_response};
+use crate::server::response::{agpj_error_response, json_response};
 use crate::server::store::{parse_project_id, with_files};
 
 /// `GET …/summaries`: newest first. Dismissed summaries are left out and at most ten are
@@ -22,7 +22,7 @@ pub(super) async fn list_summaries(
 ) -> Response {
     let project = match parse_project_id(&project) {
         Ok(project) => project,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let include_dismissed = query.get("dismissed").is_some_and(|v| v == "include");
     let read = with_files(&state, move |store| {
@@ -38,7 +38,7 @@ pub(super) async fn list_summaries(
             StatusCode::OK,
             &serde_json::json!({ "summaries": summaries }),
         ),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -49,10 +49,10 @@ pub(super) async fn dismiss_summary(
 ) -> Response {
     let project = match parse_project_id(&project) {
         Ok(project) => project,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     match with_files(&state, move |store| store.dismiss_summary(&project, &id)).await {
         Ok(summary) => json_response(StatusCode::OK, &serde_json::json!({ "summary": summary })),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

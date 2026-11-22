@@ -1,9 +1,9 @@
-//! The multi-project HTTP surface of `agboard serve`: the project list, the
+//! The multi-project HTTP surface of `agpj serve`: the project list, the
 //! per-project board and task routes, guard ordering, and the change
 //! notifications that reach connected browsers.
 //!
 //! Servers listen on port 0 in a temporary data directory. The CLI is run as
-//! the real `agboard` binary against the same `AGBOARD_HOME`.
+//! the real `agpj` binary against the same `AGPJ_HOME`.
 
 #[path = "support/detail_lines.rs"]
 mod detail_lines;
@@ -20,11 +20,11 @@ use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::{ServeConfig, run_until_in};
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
+use agent_project::error::AgpjError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::{ServeConfig, run_until_in};
 use chrono::{DateTime, TimeZone, Utc};
 use serde_json::{Value, json};
 
@@ -58,15 +58,15 @@ fn body_of(count: usize) -> String {
 
 fn replace_task_body_preserving_history(path: &Path, description: &str) {
     let current = std::fs::read_to_string(path).unwrap();
-    let stored = agent_board::file_store::history::parse_task(
+    let stored = agent_project::file_store::history::parse_task(
         &current,
-        agent_board::file_store::history::ParseMode::Stored,
+        agent_project::file_store::history::ParseMode::Stored,
     );
-    let input = agent_board::file_store::history::parse_task(
+    let input = agent_project::file_store::history::parse_task(
         description,
-        agent_board::file_store::history::ParseMode::NewInput,
+        agent_project::file_store::history::ParseMode::NewInput,
     );
-    let next = agent_board::file_store::history::compose_task(
+    let next = agent_project::file_store::history::compose_task(
         description,
         &input.body,
         Some(&input.acceptance),
@@ -130,13 +130,13 @@ impl Reply {
 struct Running {
     addr: SocketAddr,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 impl Running {
     fn start(home: &Path) -> Running {
         // The data area is passed in, so servers start in parallel without
-        // touching AGBOARD_HOME, and the poll watch starts without FSEvents.
+        // touching AGPJ_HOME, and the poll watch starts without FSEvents.
         let data_dir = home.to_path_buf();
         let (ready_tx, ready_rx) = mpsc::channel();
         let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
@@ -169,7 +169,7 @@ impl Running {
 
     fn token(&self) -> String {
         let page = self.get("/").body;
-        let marker = "name=\"agboard-token\" content=\"";
+        let marker = "name=\"agpj-token\" content=\"";
         let start = page.find(marker).expect("token meta tag") + marker.len();
         page[start..start + 64].to_string()
     }
@@ -178,7 +178,7 @@ impl Running {
         vec![
             ("Origin".into(), format!("http://127.0.0.1:{}", self.port())),
             ("Sec-Fetch-Site".into(), "same-origin".into()),
-            ("X-Agboard-Token".into(), token.into()),
+            ("X-Agpj-Token".into(), token.into()),
         ]
     }
 
@@ -329,12 +329,12 @@ impl EventStream {
     }
 }
 
-fn agboard(home: &Path, args: &[&str]) -> (i32, String, String) {
-    let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+fn agpj(home: &Path, args: &[&str]) -> (i32, String, String) {
+    let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)
         .args(args)
@@ -532,7 +532,7 @@ fn the_catalog_version_follows_catalog_changes_and_the_list_is_re_read() {
         .as_str()
         .unwrap()
         .to_string();
-    let (code, _, err) = agboard(home.path(), &["project", "create", "fresh"]);
+    let (code, _, err) = agpj(home.path(), &["project", "create", "fresh"]);
     assert_eq!(code, 0, "{err}");
     let after = server.get("/api/projects").json();
     assert_eq!(after["projects"].as_array().unwrap().len(), 1);
@@ -855,7 +855,7 @@ fn a_write_to_a_project_that_was_deleted_is_404_and_never_lands_in_another() {
 fn renaming_a_project_keeps_the_same_id_working() {
     let (home, a, _) = two_projects();
     let server = Running::start(home.path());
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "alpha", "project", "rename", "renamed"],
     );
@@ -915,7 +915,7 @@ fn a_guard_violation_is_403_for_existing_and_missing_projects_alike() {
         let mut headers = vec![
             ("Origin".to_string(), format!("http://127.0.0.1:{port}")),
             ("Sec-Fetch-Site".to_string(), "same-origin".to_string()),
-            ("X-Agboard-Token".to_string(), token.clone()),
+            ("X-Agpj-Token".to_string(), token.clone()),
         ];
         headers.retain(|(name, _)| name != skip);
         headers
@@ -930,8 +930,8 @@ fn a_guard_violation_is_403_for_existing_and_missing_projects_alike() {
         ("bad origin", wrong("Origin", "http://evil.example")),
         ("no fetch site", good("Sec-Fetch-Site")),
         ("cross-site", wrong("Sec-Fetch-Site", "cross-site")),
-        ("no token", good("X-Agboard-Token")),
-        ("bad token", wrong("X-Agboard-Token", &"0".repeat(64))),
+        ("no token", good("X-Agpj-Token")),
+        ("bad token", wrong("X-Agpj-Token", &"0".repeat(64))),
         ("bad host", {
             let mut headers = good("");
             headers.push(("Host".to_string(), "evil.example".to_string()));
@@ -1018,8 +1018,8 @@ fn a_busy_database_is_503() {
     let (home, a, _) = two_projects();
     let server = Running::start(home.path());
     let project_dir = home.path().join("shared/projects").join(a.as_str());
-    let _held = agent_board::file_store::lock::WriteLock::acquire(
-        &agent_board::file_store::layout::write_lock(&project_dir),
+    let _held = agent_project::file_store::lock::WriteLock::acquire(
+        &agent_project::file_store::layout::write_lock(&project_dir),
     )
     .unwrap();
     let reply = server.write(
@@ -1040,7 +1040,7 @@ fn a_cli_change_reaches_an_open_event_stream_after_ready() {
     let (home, _, _) = two_projects();
     let server = Running::start(home.path());
     let mut events = server.events();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -1074,7 +1074,7 @@ fn catalog_changes_by_the_cli_are_notified_and_visible_in_the_list() {
             vec!["uno"],
         ),
     ] {
-        let (code, _, err) = agboard(home.path(), &args);
+        let (code, _, err) = agpj(home.path(), &args);
         assert_eq!(code, 0, "{err}");
         let before = events.changed_count();
         assert!(events.changed() || before > 0, "{}", events.received);
@@ -1112,7 +1112,7 @@ fn changes_that_do_not_change_anything_send_nothing() {
             "human",
         ],
     ] {
-        agboard(home.path(), &args);
+        agpj(home.path(), &args);
     }
     // HTTP: a no-op move, a refused request and a rolled-back write.
     let moved = server.write(
@@ -1183,7 +1183,7 @@ fn a_cli_change_notifies_the_server_of_the_same_data_area_only() {
     let two = Running::start(home_two.path());
     let mut events_one = one.events();
     let mut events_two = two.events();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home_one.path(),
         &[
             "--project",
@@ -1221,7 +1221,7 @@ fn draft_task(home: &Path, project: &ProjectId, id: i64) {
         .set_draft(
             project,
             id,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             t(9),
         )
@@ -1652,13 +1652,13 @@ fn the_page_carries_a_content_security_policy_and_no_referrer() {
     }
 }
 
-fn two_choices() -> Vec<agent_board::file_store::model::Choice> {
+fn two_choices() -> Vec<agent_project::file_store::model::Choice> {
     vec![
-        agent_board::file_store::model::Choice {
+        agent_project::file_store::model::Choice {
             id: "a".into(),
             label: "Plan A".into(),
         },
-        agent_board::file_store::model::Choice {
+        agent_project::file_store::model::Choice {
             id: "b".into(),
             label: "Plan B".into(),
         },

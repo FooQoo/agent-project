@@ -13,7 +13,7 @@ use crate::file_store::model::AttachmentOwner;
 use crate::file_store::model::SimpleRequestInput;
 use crate::file_store::{DraftSave, ImageChanges};
 use crate::server::AppState;
-use crate::server::response::{agboard_error_response, error_response, json_response};
+use crate::server::response::{agpj_error_response, error_response, json_response};
 use crate::server::store::{parse_project_id, refresh_index, with_request_files};
 
 pub(super) async fn edit_task_multipart(
@@ -24,7 +24,7 @@ pub(super) async fn edit_task_multipart(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -98,7 +98,7 @@ pub(super) async fn edit_task_multipart(
                 &serde_json::json!({"task": value, "changed": changed}),
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -110,7 +110,7 @@ pub(super) async fn create_task_multipart(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let multipart = match multipart {
         Ok(value) => value,
@@ -173,7 +173,7 @@ pub(super) async fn create_task_multipart(
                 refresh_index(&state);
                 json_response(StatusCode::CREATED, &serde_json::json!({"task": task}))
             }
-            Err(error) => agboard_error_response(&error),
+            Err(error) => agpj_error_response(&error),
         };
     }
     if payload.meta.request_kind.is_some() || payload.meta.epic_id.is_some() {
@@ -225,7 +225,7 @@ pub(super) async fn create_task_multipart(
     }
     for input in &payload.additions {
         if let Err(error) = validate_attachment(&input.id, &input.name, &input.bytes) {
-            return agboard_error_response(&error);
+            return agpj_error_response(&error);
         }
     }
     let additions = payload.additions;
@@ -254,6 +254,6 @@ pub(super) async fn create_task_multipart(
             refresh_index(&state);
             json_response(StatusCode::CREATED, &serde_json::json!({"task": task}))
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

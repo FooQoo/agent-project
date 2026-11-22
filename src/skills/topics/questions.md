@@ -18,11 +18,11 @@ Every question goes on the board with `message ask`, never only in chat. Permiss
 ```
 
 ```sh
-agboard --project "<name>" message ask --actor ai --task <id> --questions-json '<json>' --json
-cat <path> | agboard --project "<name>" message ask --actor ai --task <id> --questions-json - --json
+agpj --project "<name>" message ask --actor ai --task <id> --questions-json '<json>' --json
+cat <path> | agpj --project "<name>" message ask --actor ai --task <id> --questions-json - --json
 ```
 
-- `questions`: 1 to 20 questions, asked together. `body`: 1 to 5,000 characters, written in Markdown and drawn like the task body. An image attached to the same task uses the reference form in `agboard skills file-format`. `images`: optional file paths, saved with the question and shown in the `body` as `![alt](attachments/<file name>)`. `choices`: optional, 2 to 10 items (a question without choices is answered in words); each `id` is 1 to 64 characters of `[A-Za-z0-9_-]`, unique in the question; each `label` is 1 to 200 characters. `recommendedChoiceId` is optional. `tasks` links one question to only those tasks.
+- `questions`: 1 to 20 questions, asked together. `body`: 1 to 5,000 characters, written in Markdown and drawn like the task body. An image attached to the same task uses the reference form in `agpj skills file-format`. `images`: optional file paths, saved with the question and shown in the `body` as `![alt](attachments/<file name>)`. `choices`: optional, 2 to 10 items (a question without choices is answered in words); each `id` is 1 to 64 characters of `[A-Za-z0-9_-]`, unique in the question; each `label` is 1 to 200 characters. `recommendedChoiceId` is optional. `tasks` links one question to only those tasks.
 - **Visual questions carry their images** in `images`, shown in the `body`; never only a local link (the user may be on a phone).
 - The command prints one JSON line per event. The first line is `registered`, with the question IDs (`Q-<n>`); keep them. While it waits it prints a short `waiting` line every 60 seconds. The last line is `answered` with all answers (exit 0), `timeout` (exit 5), `withdrawn` (exit 6), or `error`.
 - The task must be an AI task in `todo` or `doing`. While it waits, `state <id> running` is refused with `questions_unanswered`.
@@ -57,7 +57,7 @@ Do not make the choices variations of your own first reading: include the readin
 
 ## Wait for the answers
 
-Keep the command running until its last line, with the default 600-second limit. Run it in the background where your agent can and is told when it ends (Claude Code); otherwise run it in the foreground (Codex reads a long command in chunks and does not cut it off). After `timeout`, the questions stay open: wait again with `agboard --project "<name>" message wait <Q-id> [<Q-id>...] --json`, the same way, for as long as the answer is needed. Never ask the same questions a second time. `withdrawn` means no question is open any more and some were withdrawn. After an `error` such as `board_unavailable`, wait again with `message wait`. None of these is an answer, and dependent work waits for the actual answer. A command that waits starts the server itself; do not start `agboard serve` first. Use `--no-wait` only when the user explicitly asks to register a question and return immediately.
+Keep the command running until its last line, with the default 600-second limit. Run it in the background where your agent can and is told when it ends (Claude Code); otherwise run it in the foreground (Codex reads a long command in chunks and does not cut it off). After `timeout`, the questions stay open: wait again with `agpj --project "<name>" message wait <Q-id> [<Q-id>...] --json`, the same way, for as long as the answer is needed. Never ask the same questions a second time. `withdrawn` means no question is open any more and some were withdrawn. After an `error` such as `board_unavailable`, wait again with `message wait`. None of these is an answer, and dependent work waits for the actual answer. A command that waits starts the server itself; do not start `agpj serve` first. Use `--no-wait` only when the user explicitly asks to register a question and return immediately.
 
 ## In a conversation, also show the question in the chat as plain text
 
@@ -68,13 +68,13 @@ Right after `registered`, write the question, each choice with its `id` and labe
 - **A chat answer.** Record it with the user's own words, then continue:
 
 ```sh
-agboard --project "<name>" message answer <Q-id> --actor human --via chat [--choice <id>] [--text "<their words>"]
+agpj --project "<name>" message answer <Q-id> --actor human --via chat [--choice <id>] [--text "<their words>"]
 ```
 
 The waiting command then ends with `answered` on its own; do not record the answer twice. If the board already has an answer, `message answer` fails with `question_answered` and prints it: the first answer stands. Continue with it and tell the user which answer stands; if they want the other one, ask a new question. Never answer a question yourself, and use `--actor human` only for the user's own words. When nobody is in the conversation, such as while listening or during a long unattended run, ask and wait on the board only.
 
 ## Afterwards
 
-If the board is unavailable, report the connection problem and leave dependent work blocked; do not ask only in the chat instead. To show the user the board, run `agboard open`. Read a question and its answer with `agboard --project "<name>" message show <Q-id> --json`, and the open messages with `message ls --json`. An answer also appends a concise history reason to each task that refers to the question. To open the board on the phone, run `agboard skills phone`.
+If the board is unavailable, report the connection problem and leave dependent work blocked; do not ask only in the chat instead. To show the user the board, run `agpj open`. Read a question and its answer with `agpj --project "<name>" message show <Q-id> --json`, and the open messages with `message ls --json`. An answer also appends a concise history reason to each task that refers to the question. To open the board on the phone, run `agpj skills phone`.
 
-After the answer, read the complete snapshot and history, reconsider the plan, and resume as `agboard skills waiting` describes.
+After the answer, read the complete snapshot and history, reconsider the plan, and resume as `agpj skills waiting` describes.

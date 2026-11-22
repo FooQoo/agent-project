@@ -43,7 +43,7 @@ fn a_claude_turn_starts_at_the_last_real_user_message() {
             bash("gh pr create"),
             user("next"),
             bash("ls"),
-            tool_result("agboard message ask in a result"),
+            tool_result("agpj message ask in a result"),
             write_tool("/tmp/a.png"),
             assistant_text("Q?"),
         ],
@@ -57,7 +57,7 @@ fn a_claude_turn_starts_at_the_last_real_user_message() {
 
 #[test]
 fn codex_rollouts_are_scanned_by_turn_id() {
-    let ask_js = r#"const r = await tools.exec_command({cmd: "agboard --project demo message ask --actor ai --json"}); text(r);"#;
+    let ask_js = r#"const r = await tools.exec_command({cmd: "agpj --project demo message ask --actor ai --json"}); text(r);"#;
     let lines = [
         codex_line("task_started", serde_json::json!({"turn_id":"turn-1"})),
         codex_line(

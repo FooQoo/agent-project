@@ -1,6 +1,6 @@
 //! The saved ngrok connection settings, read and written from the command line.
 //!
-//! `agboard setup remote` and the optional step of `agboard setup` both go
+//! `agpj setup remote` and the optional step of `agpj setup` both go
 //! through here, so they validate and store exactly as the board's connection
 //! dialog does: the non-secret settings in
 //! `<data-root>/.internal/monitor-connection.json` (the server's own
@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use serde_json::{Value, json};
 
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 use crate::server::monitor_connection::config::{ConfigError, ConfigStore};
 use crate::server::monitor_connection::contracts::{ConnectionConfig, Provider};
 use crate::server::monitor_connection::keychain::{
@@ -27,11 +27,11 @@ use crate::server::monitor_connection::lifecycle::{Secret, parse_domain, parse_t
 /// The file, as the data area's users see it in messages.
 const FILE: &str = ".internal/monitor-connection.json";
 
-/// The vault the command line uses: the OS keychain. `AGBOARD_KEYCHAIN=none`
+/// The vault the command line uses: the OS keychain. `AGPJ_KEYCHAIN=none`
 /// makes the keychain unavailable, so a test or a locked-down machine never
 /// touches it.
 pub fn vault_from_process() -> Arc<dyn TokenVault> {
-    if std::env::var("AGBOARD_KEYCHAIN").is_ok_and(|v| v == "none") {
+    if std::env::var("AGPJ_KEYCHAIN").is_ok_and(|v| v == "none") {
         Arc::new(NoKeychain)
     } else {
         Arc::new(OsKeychain)
@@ -109,21 +109,21 @@ impl Change {
 }
 
 /// A domain as typed, or `invalid_domain`.
-pub fn domain_of(raw: &str) -> Result<String, AgboardError> {
-    parse_domain(raw).ok_or(AgboardError::InvalidDomain)
+pub fn domain_of(raw: &str) -> Result<String, AgpjError> {
+    parse_domain(raw).ok_or(AgpjError::InvalidDomain)
 }
 
 /// A token as typed, or an `invalid_argument` that never echoes it.
-pub fn token_of(raw: &str) -> Result<Secret, AgboardError> {
-    parse_token(raw).ok_or_else(|| AgboardError::InvalidArgument {
+pub fn token_of(raw: &str) -> Result<Secret, AgpjError> {
+    parse_token(raw).ok_or_else(|| AgpjError::InvalidArgument {
         message: "the ngrok token is not valid: it must not be empty or contain spaces."
             .to_string(),
         command: Some("setup".to_string()),
     })
 }
 
-fn file_error(action: FileAction, error: &ConfigError) -> AgboardError {
-    AgboardError::FileError {
+fn file_error(action: FileAction, error: &ConfigError) -> AgpjError {
+    AgpjError::FileError {
         action,
         file: FILE.to_string(),
         reason: match error {
@@ -133,14 +133,14 @@ fn file_error(action: FileAction, error: &ConfigError) -> AgboardError {
     }
 }
 
-fn vault_error() -> AgboardError {
-    AgboardError::KeychainUnavailable {
+fn vault_error() -> AgpjError {
+    AgpjError::KeychainUnavailable {
         reason: "Secure storage on this computer is not available. Nothing was saved. Start the connection with NGROK_AUTHTOKEN in the environment, or enter the token in the board.".to_string(),
     }
 }
 
 /// The saved settings. A file that cannot be read is an error here.
-pub fn read(data_dir: &std::path::Path, vault: &dyn TokenVault) -> Result<Saved, AgboardError> {
+pub fn read(data_dir: &std::path::Path, vault: &dyn TokenVault) -> Result<Saved, AgpjError> {
     let config = ConfigStore::new(data_dir)
         .load()
         .map_err(|e| file_error(FileAction::Read, &e))?;
@@ -166,7 +166,7 @@ pub fn apply(
     data_dir: &std::path::Path,
     vault: &dyn TokenVault,
     change: Change,
-) -> Result<Saved, AgboardError> {
+) -> Result<Saved, AgpjError> {
     let store = ConfigStore::new(data_dir);
     // The keychain can stop to ask the user, so it is written before the lock is taken and read
     // after it is released: the lock is held only for the read and the save of the file.
@@ -176,7 +176,7 @@ pub fn apply(
     };
     // When the settings file cannot be saved the token goes back, so the keychain and the
     // revision a running board follows never disagree.
-    let undo = |error: AgboardError| {
+    let undo = |error: AgpjError| {
         if let Some(previous) = previous.clone() {
             put_back(vault, previous);
         }

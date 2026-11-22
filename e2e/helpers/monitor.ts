@@ -3,28 +3,28 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-  agboardBinary,
-  agboardCatalogOk,
+  agpjBinary,
+  agpjCatalogOk,
   decisionJson,
   projectId,
   skipGuide,
   taskBody,
   workspace,
-} from './agboard';
+} from './agpj';
 
 // The phone monitor is reached through the ngrok entrance: the dedicated loopback
 // backend behind an Edge stand-in. See phone-entrance.mjs for what is and is not covered.
 export { startPhoneEntrance, type PhoneEntrance } from './phone-entrance.mjs';
 
 function run(home: string, args: string[]): string {
-  const result = spawnSync(agboardBinary(), args, {
+  const result = spawnSync(agpjBinary(), args, {
     cwd: home,
-    env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     encoding: 'utf8',
   });
-  if (result.error) throw new Error(`agboard ${args.join(' ')} did not run: ${result.error.message}`, { cause: result.error });
+  if (result.error) throw new Error(`agpj ${args.join(' ')} did not run: ${result.error.message}`, { cause: result.error });
   if (result.status !== 0) {
-    throw new Error(`agboard ${args.join(' ')} failed (${result.signal ?? `exit ${result.status}`}): ${result.stderr}`);
+    throw new Error(`agpj ${args.join(' ')} failed (${result.signal ?? `exit ${result.status}`}): ${result.stderr}`);
   }
   return result.stdout;
 }
@@ -53,9 +53,9 @@ function writeJson(file: string, value: unknown): void {
 
 /** Build an isolated two-project file-store fixture using the real CLI and the documented shared files. */
 export function createMonitorHome(): string {
-  const home = mkdtempSync(path.join(os.tmpdir(), 'agent-board-monitor-'));
+  const home = mkdtempSync(path.join(os.tmpdir(), 'agent-project-monitor-'));
   skipGuide(home);
-  for (const name of ['Alpha', 'Beta', 'Empty', 'DeleteMe']) agboardCatalogOk(['project', 'create', name], home);
+  for (const name of ['Alpha', 'Beta', 'Empty', 'DeleteMe']) agpjCatalogOk(['project', 'create', name], home);
 
   const alphaPending = task(home, 'Alpha', 'Alpha pending review', 'Pending request body.');
   move(home, 'Alpha', alphaPending, 'doing', 'Start review');

@@ -14,7 +14,7 @@ export class WriteError extends Error {
   }
 }
 
-export const STALE_PAGE_EVENT = 'agboard:stale-page';
+export const STALE_PAGE_EVENT = 'agpj:stale-page';
 
 export function writeFailure(
   message: string,

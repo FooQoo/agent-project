@@ -7,7 +7,7 @@
 use std::io;
 use std::net::TcpListener;
 
-use crate::error::{AgboardError, PortHolder};
+use crate::error::{AgpjError, PortHolder};
 
 /// The kind of a failure to listen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,20 +39,20 @@ pub(crate) fn is_denied(error: &io::Error) -> bool {
 }
 
 /// The error of a failure to listen on `port`.
-pub(crate) fn bind_error(error: &io::Error, port: u16) -> AgboardError {
+pub(crate) fn bind_error(error: &io::Error, port: u16) -> AgpjError {
     match classify(error) {
-        BindFailure::InUse => AgboardError::PortInUse {
+        BindFailure::InUse => AgpjError::PortInUse {
             port,
             holder: port_holder(port),
         },
-        BindFailure::Denied => AgboardError::LocalNetworkDenied,
-        BindFailure::Other => AgboardError::BoardUnavailable {
+        BindFailure::Denied => AgpjError::LocalNetworkDenied,
+        BindFailure::Other => AgpjError::BoardUnavailable {
             reason: format!("Cannot listen on 127.0.0.1:{port}: {error}."),
         },
     }
 }
 
-/// What holds `port`: an Agent Board server answers its health check with its
+/// What holds `port`: an Agent Project server answers its health check with its
 /// process ID; anything else is another program.
 pub(crate) fn port_holder(port: u16) -> PortHolder {
     match super::instance::health_pid(port) {
@@ -62,13 +62,13 @@ pub(crate) fn port_holder(port: u16) -> PortHolder {
 }
 
 /// Listen on exactly `port` (0 lets the OS choose).
-pub(crate) fn bind_exact(port: u16) -> Result<TcpListener, AgboardError> {
+pub(crate) fn bind_exact(port: u16) -> Result<TcpListener, AgpjError> {
     TcpListener::bind(("127.0.0.1", port)).map_err(|e| bind_error(&e, port))
 }
 
 /// Listen on `port`, or on a port the OS chooses when `port` is taken. The
 /// second value says why another port was used.
-pub(crate) fn bind_preferring(port: u16) -> Result<(TcpListener, Option<String>), AgboardError> {
+pub(crate) fn bind_preferring(port: u16) -> Result<(TcpListener, Option<String>), AgpjError> {
     if port == 0 {
         return bind_exact(0).map(|listener| (listener, None));
     }
@@ -91,7 +91,7 @@ pub(crate) fn bind_preferring(port: u16) -> Result<(TcpListener, Option<String>)
 pub(crate) fn another_port_notice(port: u16, holder: PortHolder, chosen: u16) -> String {
     match holder {
         PortHolder::AgentBoard { pid } => format!(
-            "Port {port} is used by another Agent Board server (pid {pid}) with a different data folder, so this server uses port {chosen}."
+            "Port {port} is used by another Agent Project server (pid {pid}) with a different data folder, so this server uses port {chosen}."
         ),
         PortHolder::OtherProgram | PortHolder::Unknown => {
             format!("Port {port} is used by another program, so this server uses port {chosen}.")
@@ -157,7 +157,7 @@ mod tests {
         let error = bind_exact(port).unwrap_err();
         assert_eq!(
             error,
-            AgboardError::PortInUse {
+            AgpjError::PortInUse {
                 port,
                 holder: PortHolder::OtherProgram
             }
@@ -181,10 +181,10 @@ mod tests {
     }
 
     #[test]
-    fn the_notice_names_another_agent_board_server() {
+    fn the_notice_names_another_agent_project_server() {
         assert_eq!(
             another_port_notice(7420, PortHolder::AgentBoard { pid: 41235 }, 52114),
-            "Port 7420 is used by another Agent Board server (pid 41235) with a different data folder, so this server uses port 52114."
+            "Port 7420 is used by another Agent Project server (pid 41235) with a different data folder, so this server uses port 52114."
         );
     }
 }

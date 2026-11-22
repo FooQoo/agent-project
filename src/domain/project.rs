@@ -6,12 +6,12 @@ use std::str::FromStr;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 const ID_LEN: usize = 32;
 
-fn invalid(field: &str, reason: &str) -> AgboardError {
-    AgboardError::InvalidValue {
+fn invalid(field: &str, reason: &str) -> AgpjError {
+    AgpjError::InvalidValue {
         field: field.to_string(),
         reason: reason.to_string(),
     }
@@ -32,9 +32,9 @@ pub struct ProjectId(String);
 impl ProjectId {
     /// Generate a new random identifier. A failure of the system random source
     /// is reported as `database_error`.
-    pub fn generate() -> Result<ProjectId, AgboardError> {
+    pub fn generate() -> Result<ProjectId, AgpjError> {
         let mut bytes = [0u8; ID_LEN / 2];
-        getrandom::fill(&mut bytes).map_err(|e| AgboardError::DatabaseError {
+        getrandom::fill(&mut bytes).map_err(|e| AgpjError::DatabaseError {
             reason: e.to_string(),
         })?;
         Ok(ProjectId(
@@ -48,7 +48,7 @@ impl ProjectId {
 }
 
 impl FromStr for ProjectId {
-    type Err = AgboardError;
+    type Err = AgpjError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if is_lower_hex(s) {
@@ -78,7 +78,7 @@ impl<'de> Deserialize<'de> for ProjectId {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let text = String::deserialize(d)?;
         text.parse()
-            .map_err(|e: AgboardError| serde::de::Error::custom(e.reason()))
+            .map_err(|e: AgpjError| serde::de::Error::custom(e.reason()))
     }
 }
 
@@ -112,7 +112,7 @@ pub struct ChangeCursor {
 }
 
 impl ChangeCursor {
-    pub fn new(project_id: ProjectId, version: &str) -> Result<ChangeCursor, AgboardError> {
+    pub fn new(project_id: ProjectId, version: &str) -> Result<ChangeCursor, AgpjError> {
         if !is_lower_hex(version) {
             return Err(invalid(
                 "cursor",
@@ -127,7 +127,7 @@ impl ChangeCursor {
 }
 
 impl FromStr for ChangeCursor {
-    type Err = AgboardError;
+    type Err = AgpjError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let bad = || invalid("cursor", "A cursor looks like f1:<project-id>:<version>.");
@@ -154,7 +154,7 @@ impl<'de> Deserialize<'de> for ChangeCursor {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let text = String::deserialize(d)?;
         text.parse()
-            .map_err(|e: AgboardError| serde::de::Error::custom(e.reason()))
+            .map_err(|e: AgpjError| serde::de::Error::custom(e.reason()))
     }
 }
 
@@ -188,7 +188,7 @@ mod tests {
             "０123456789abcdef0123456789abcdef",
         ] {
             let err = bad.parse::<ProjectId>().unwrap_err();
-            assert!(matches!(err, AgboardError::InvalidValue { .. }), "{bad:?}");
+            assert!(matches!(err, AgpjError::InvalidValue { .. }), "{bad:?}");
         }
     }
 
@@ -273,7 +273,7 @@ mod tests {
             "42".to_string(),
         ] {
             let err = bad.parse::<ChangeCursor>().unwrap_err();
-            assert!(matches!(err, AgboardError::InvalidValue { .. }), "{bad:?}");
+            assert!(matches!(err, AgpjError::InvalidValue { .. }), "{bad:?}");
         }
         assert!(serde_json::from_str::<ChangeCursor>("42").is_err());
         assert!(serde_json::from_str::<ChangeCursor>(&format!("\"{ID}:42\"")).is_err());

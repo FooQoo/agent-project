@@ -14,7 +14,7 @@ interface CardText {
 }
 
 const CARDS: Record<number, CardText> = {
-  8: { title: 'ボードを初期化する', body: 'agboard init でボードの保存先を作る。' },
+  8: { title: 'ボードを初期化する', body: 'agpj init でボードの保存先を作る。' },
   9: {
     title: 'タスク一覧を JSON で返す',
     body: 'エージェントが読めるよう、タスクを JSON で出力する。',
@@ -25,7 +25,7 @@ const CARDS: Record<number, CardText> = {
     title: 'ボードの表示を確認する',
     body: '1280、800、480 px の幅でレイアウトを確認する。\n横スクロールが出ないかを見る。',
   },
-  14: { title: 'Windows 版をビルドする', body: 'Windows x64 向けに Agent Board をビルドする。' },
+  14: { title: 'Windows 版をビルドする', body: 'Windows x64 向けに Agent Project をビルドする。' },
   15: { title: 'セットアップガイドを書く', body: '' },
   16: { title: '空のボードの見た目を整える', body: '' },
 };
@@ -78,7 +78,7 @@ export const JA_LONG_MARKDOWN = `ボードを用意するための計画です�
 そのまま改行として表示されます。
 
 ## 目的
-\`agboard init\` でボードの保存先を作る。保存先がすでにあれば、何も変えない。
+\`agpj init\` でボードの保存先を作る。保存先がすでにあれば、何も変えない。
 
 ### メモ
 H2 より下の見出しは、そのセクションの中に入る。
@@ -101,7 +101,7 @@ H2 より下の見出しは、そのセクションの中に入る。
 | 2 回目の実行 | 何も変わらない | AC-2 |
 
 \`\`\`sh
-AGBOARD_HOME=$(mktemp -d) agboard init --name a-very-long-board-name-that-does-not-wrap --description "long line"
+AGPJ_HOME=$(mktemp -d) agpj init --name a-very-long-board-name-that-does-not-wrap --description "long line"
 \`\`\`
 
 > レビューでのコメントの引用。

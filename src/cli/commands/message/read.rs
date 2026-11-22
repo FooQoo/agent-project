@@ -8,7 +8,7 @@ use crate::cli::args::{
     MessageLinkArgs, MessageLsArgs, MessageShowArgs, MessageStatusArg, MessageTypeArg,
     MessageWithdrawArgs,
 };
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::qa::{MessageView, QuestionView, RequestView};
 
 fn referenced(question: &QuestionView) -> String {
@@ -24,7 +24,7 @@ fn referenced(question: &QuestionView) -> String {
     }
 }
 
-pub(super) fn list(ctx: &Context, args: &MessageLsArgs) -> Result<Printed, AgboardError> {
+pub(super) fn list(ctx: &Context, args: &MessageLsArgs) -> Result<Printed, AgpjError> {
     let wanted = match args.status {
         MessageStatusArg::Open => Some("open"),
         MessageStatusArg::Closed => Some("closed"),
@@ -114,7 +114,7 @@ fn describe_request(r: &RequestView) -> String {
     text
 }
 
-pub(super) fn show(ctx: &Context, args: &MessageShowArgs) -> Result<Printed, AgboardError> {
+pub(super) fn show(ctx: &Context, args: &MessageShowArgs) -> Result<Printed, AgpjError> {
     let project = ctx.project_id()?;
     let project_dir = crate::file_store::layout::project_dir(ctx.files.shared_dir(), project);
     Ok(match ctx.files.message(project, &args.id)? {
@@ -134,7 +134,7 @@ pub(super) fn show(ctx: &Context, args: &MessageShowArgs) -> Result<Printed, Agb
     })
 }
 
-pub(super) fn withdraw(ctx: &Context, args: &MessageWithdrawArgs) -> Result<Printed, AgboardError> {
+pub(super) fn withdraw(ctx: &Context, args: &MessageWithdrawArgs) -> Result<Printed, AgpjError> {
     let project = ctx.project_id()?;
     let changed =
         ctx.files
@@ -150,11 +150,7 @@ pub(super) fn withdraw(ctx: &Context, args: &MessageWithdrawArgs) -> Result<Prin
     })
 }
 
-pub(super) fn link(
-    ctx: &Context,
-    args: &MessageLinkArgs,
-    add: bool,
-) -> Result<Printed, AgboardError> {
+pub(super) fn link(ctx: &Context, args: &MessageLinkArgs, add: bool) -> Result<Printed, AgpjError> {
     let project = ctx.project_id()?;
     let task = ctx.files.link_questions(
         project,

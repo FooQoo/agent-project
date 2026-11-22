@@ -3,7 +3,7 @@
 //! The server reports its address through a channel once it is ready and stops when its oneshot
 //! fires. A start that is still running after [`SERVER_WAIT`] is asked to stop and fails the test.
 //! Its thread is left behind instead of joined: joining a server that never ends would block
-//! while the caller still holds the lock that serializes `AGBOARD_HOME`, and every other test of
+//! while the caller still holds the lock that serializes `AGPJ_HOME`, and every other test of
 //! the binary would then wait on that lock forever.
 
 #![allow(dead_code)]

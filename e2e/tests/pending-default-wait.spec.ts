@@ -1,9 +1,9 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { expect, test } from '../helpers/fixtures';
 import {
-  agboardBinary, agboardCatalogOk, agboardOk, decisionJson, makeHome, projectId, removeHome, startServe, stopServe,
+  agpjBinary, agpjCatalogOk, agpjOk, decisionJson, makeHome, projectId, removeHome, startServe, stopServe,
   type Serve, type TaskJson,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 import { answerButton, send, openAnswer } from '../helpers/answer';
 import { closeMessages } from '../helpers/answer-flow';
 
@@ -13,7 +13,7 @@ import { closeMessages } from '../helpers/answer-flow';
 const project = 'default-wait';
 
 function show(home: string, id: number): TaskJson & { agentStatus: string; pendingRequestId: string | null } {
-  return JSON.parse(agboardOk(project, ['show', String(id), '--json'], home).stdout).task;
+  return JSON.parse(agpjOk(project, ['show', String(id), '--json'], home).stdout).task;
 }
 
 async function reap(child: ChildProcess | undefined): Promise<void> {
@@ -28,15 +28,15 @@ test('default pending waits for a browser answer', async ({ page }) => {
   let serve: Serve | undefined;
   let waiter: ChildProcess | undefined;
   try {
-    agboardCatalogOk(['project', 'create', project], home);
-    agboardOk(project, ['add', 'Ask and wait', '--assignee', 'ai', '--actor', 'human'], home);
+    agpjCatalogOk(['project', 'create', project], home);
+    agpjOk(project, ['add', 'Ask and wait', '--assignee', 'ai', '--actor', 'human'], home);
     serve = await startServe(home);
 
     // The request has no wait setting at all: the child must wait for the answer on its own.
-    waiter = spawn(agboardBinary(), [
+    waiter = spawn(agpjBinary(), [
       '--project', project, 'message', 'ask', '--actor', 'ai', '--task', '1', '--json',
       '--questions-json', decisionJson('Which plan should the default wait use?'),
-    ], { cwd: home, env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    ], { cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' }, stdio: ['ignore', 'pipe', 'pipe'] });
     let stdout = '';
     let stderr = '';
     waiter.stdout?.on('data', (chunk) => { stdout += chunk; });

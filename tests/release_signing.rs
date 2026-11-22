@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 const ROOT: &str = env!("CARGO_MANIFEST_DIR");
-const ID: &str = "io.github.FooQoo.agent-board.agboard";
+const ID: &str = "io.github.FooQoo.agent-project.agpj";
 const TEAM: &str = "TEAM123456";
 const T_ARM: &str = "aarch64-apple-darwin";
 const T_X86: &str = "x86_64-apple-darwin";
@@ -89,7 +89,7 @@ case "$1" in
   --verify) exit "${FAKE_VERIFY_EXIT:-0}" ;;
   -dv)
     {
-      echo "Identifier=${FAKE_IDENT:-io.github.FooQoo.agent-board.agboard}"
+      echo "Identifier=${FAKE_IDENT:-io.github.FooQoo.agent-project.agpj}"
       echo "CodeDirectory v=20500 size=1 flags=${FAKE_FLAGS:-0x10000(runtime)} hashes=1 location=embedded"
       echo "Signature=${FAKE_SIGNATURE:-size=9000}"
       echo "Authority=${FAKE_AUTH:-Developer ID Application: Fixture (TEAM123456)}"
@@ -213,7 +213,7 @@ exit 0"#,
     }
 
     fn binary(&self) -> PathBuf {
-        let p = self.path("agboard");
+        let p = self.path("agpj");
         fs::write(&p, b"unsigned-bytes").unwrap();
         p
     }
@@ -284,7 +284,7 @@ fn prepare_makes_a_job_keychain_resolves_one_identity_and_cleanup_removes_it() {
     assert_no_secrets(&text(&out));
     let env = fs::read_to_string(w.path("github_env")).unwrap();
     assert!(env.contains(&format!(
-        "SIGNING_KEYCHAIN_PATH={}/agboard-signing/agboard-signing.keychain-db",
+        "SIGNING_KEYCHAIN_PATH={}/agpj-signing/agpj-signing.keychain-db",
         w.path("runner").display()
     )));
     assert!(env.contains("SIGNING_IDENTITY=AAAA1111"), "{env}");
@@ -292,14 +292,14 @@ fn prepare_makes_a_job_keychain_resolves_one_identity_and_cleanup_removes_it() {
     let log = w.log();
     assert!(log.contains("security create-keychain"));
     assert!(log.contains("-T /usr/bin/codesign"));
-    assert!(!w.path("runner/agboard-signing/cert.p12").exists());
+    assert!(!w.path("runner/agpj-signing/cert.p12").exists());
     assert_password_never_on_a_command_line(&w);
 
     let mut clean = w.cmd("sign-macos.sh", &["cleanup"]);
     let out = clean.output().unwrap();
     assert_eq!(out.status.code(), Some(0), "{}", text(&out));
     assert!(w.path("state/deleted").exists(), "keychain was not deleted");
-    assert!(!w.path("runner/agboard-signing").exists());
+    assert!(!w.path("runner/agpj-signing").exists());
     // The original search list came back.
     let list = fs::read_to_string(w.path("state/list")).unwrap();
     assert_eq!(list.trim(), "/fake/login.keychain-db");
@@ -321,7 +321,7 @@ fn prepare_without_the_certificate_secret_stops_with_exit_2_and_makes_no_keychai
     assert_eq!(out.status.code(), Some(2), "{}", text(&out));
     assert!(text(&out).contains("MACOS_CERT_P12"));
     assert!(!w.log().contains("create-keychain"));
-    assert!(!w.path("runner/agboard-signing").exists());
+    assert!(!w.path("runner/agpj-signing").exists());
 }
 
 #[test]
@@ -352,7 +352,7 @@ fn prepare_stops_with_exit_3_unless_exactly_one_identity_of_the_team_resolves() 
             w.path("state/deleted").exists(),
             "{name}: the keychain was left behind"
         );
-        assert!(!w.path("runner/agboard-signing").exists(), "{name}");
+        assert!(!w.path("runner/agpj-signing").exists(), "{name}");
     }
 }
 
@@ -367,7 +367,7 @@ fn prepare_stops_when_the_certificate_cannot_be_imported() {
     assert!(w.path("state/deleted").exists());
     assert_password_never_on_a_command_line(&w);
     // Nothing decrypted or re-wrapped survives the failure.
-    assert!(!w.path("runner/agboard-signing").exists());
+    assert!(!w.path("runner/agpj-signing").exists());
 }
 
 #[test]
@@ -381,7 +381,7 @@ fn prepare_stops_with_exit_2_when_the_certificate_password_is_wrong() {
         .unwrap();
     assert_eq!(out.status.code(), Some(2), "{}", text(&out));
     assert!(!w.log().contains("security import"));
-    assert!(!w.path("runner/agboard-signing").exists());
+    assert!(!w.path("runner/agpj-signing").exists());
     let pem = fs::read_to_string(w.path("state/pem_path")).unwrap_or_default();
     assert!(pem.is_empty() || !Path::new(&pem).exists());
 }
@@ -729,16 +729,16 @@ impl Evidence {
         fs::create_dir_all(&dir).unwrap();
         let stage = self.dir.path().join(format!("stage-{target}"));
         fs::create_dir_all(&stage).unwrap();
-        fs::write(stage.join("agboard"), binary).unwrap();
+        fs::write(stage.join("agpj"), binary).unwrap();
         fs::write(stage.join("LICENSE"), "license").unwrap();
         fs::write(stage.join("THIRD_PARTY_NOTICES.txt"), "notices").unwrap();
         let status = Command::new("tar")
             .env("COPYFILE_DISABLE", "1")
             .args(["-czf"])
-            .arg(dir.join(format!("agboard-1.0.0-{target}.tar.gz")))
+            .arg(dir.join(format!("agpj-1.0.0-{target}.tar.gz")))
             .arg("-C")
             .arg(&stage)
-            .args(["agboard", "LICENSE", "THIRD_PARTY_NOTICES.txt"])
+            .args(["agpj", "LICENSE", "THIRD_PARTY_NOTICES.txt"])
             .status()
             .unwrap();
         assert!(status.success());
@@ -799,7 +799,7 @@ fn gate_passes_when_both_cpus_are_signed_and_accepted_and_writes_checksums() {
     let sums = fs::read_to_string(e.dir.path().join("out/assets/SHA256SUMS")).unwrap();
     let mut lines = sums.lines();
     for target in [T_ARM, T_X86] {
-        let name = format!("agboard-1.0.0-{target}.tar.gz");
+        let name = format!("agpj-1.0.0-{target}.tar.gz");
         let bytes = fs::read(e.target(target).join(&name)).unwrap();
         assert_eq!(lines.next().unwrap(), format!("{}  {name}", sha256(&bytes)));
         assert!(e.dir.path().join("out/assets").join(&name).is_file());
@@ -822,7 +822,7 @@ fn gate_fails_when_one_cpu_has_no_evidence() {
 #[test]
 fn gate_fails_when_a_cpu_is_missing_its_archive_or_records() {
     for file in [
-        "agboard-1.0.0-x86_64-apple-darwin.tar.gz",
+        "agpj-1.0.0-x86_64-apple-darwin.tar.gz",
         "signature.json",
         "notary.json",
     ] {
@@ -908,15 +908,15 @@ fn gate_rejects_an_archive_with_unexpected_members() {
     let dir = e.target(T_ARM);
     let stage = e.dir.path().join("extra");
     fs::create_dir_all(&stage).unwrap();
-    fs::write(stage.join("agboard"), format!("signed-bytes-{T_ARM}")).unwrap();
+    fs::write(stage.join("agpj"), format!("signed-bytes-{T_ARM}")).unwrap();
     fs::write(stage.join("stray"), "x").unwrap();
     let status = Command::new("tar")
         .env("COPYFILE_DISABLE", "1")
         .arg("-czf")
-        .arg(dir.join(format!("agboard-1.0.0-{T_ARM}.tar.gz")))
+        .arg(dir.join(format!("agpj-1.0.0-{T_ARM}.tar.gz")))
         .arg("-C")
         .arg(&stage)
-        .args(["agboard", "stray"])
+        .args(["agpj", "stray"])
         .status()
         .unwrap();
     assert!(status.success());

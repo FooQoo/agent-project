@@ -1,6 +1,6 @@
 # Security model
 
-Agent Board is a local tool for one person working with cooperative agents. This page states what it protects, how each protection works, and what it deliberately does not prevent. Read it before changing anything that writes data, serves content, or touches agent settings.
+Agent Project is a local tool for one person working with cooperative agents. This page states what it protects, how each protection works, and what it deliberately does not prevent. Read it before changing anything that writes data, serves content, or touches agent settings.
 
 ## Assumptions and goals
 
@@ -28,7 +28,7 @@ Everything below serves one of these two goals. When a protection only restrains
 
 ## Exposure
 
-- By default `agboard serve` listens only on `127.0.0.1`, and every request must carry `Host: 127.0.0.1:<port>` or `localhost:<port>`. Users on the same machine are not authenticated.
+- By default `agpj serve` listens only on `127.0.0.1`, and every request must carry `Host: 127.0.0.1:<port>` or `localhost:<port>`. Users on the same machine are not authenticated.
 - A server that a command started listens the same way. It may take a port the OS chooses when 7420 is taken, and it stops by itself after it has gone unused. Starting it opens nothing beyond `127.0.0.1`.
 - Only when the ngrok connection is started does the server add a separate loopback entry, which ngrok forwards to. The local port is never forwarded. The entry serves the board's page and API behind the checks described in [The ngrok entrance](#the-ngrok-entrance). The board page it serves holds no token.
 - Through the entry, a session can do what the board page can do: read, answer, edit, move, archive, and delete tasks and epics, and read the project docs. It cannot reach what acts on the PC itself: the connection settings, `POST /api/notify`, and opening a docs path with the operating system.
@@ -36,12 +36,12 @@ Everything below serves one of these two goals. When a protection only restrains
 
 ## The ngrok entrance
 
-Anyone who can open the ngrok address reaches ngrok's Edge first, not the board. With a fixed ngrok domain set (in the dialog or by `AGBOARD_NGROK_DOMAIN`), the public address is the same at every start and is no longer a hard-to-find value that changes; it can be bookmarked, and it is known to anyone who has seen it once. It is not a secret to rely on: the passcode, the session, and the `Host` and Origin checks carry the protection, and each start still makes a new passcode. The endpoint is opened without a Traffic Policy, because the free ngrok plan rejects one, so the Edge does no sign-in and adds nothing. A request must pass every layer below, in order. The layers and the lifecycle are described in [Remote access](./remote-access.md#authentication-and-write-protection).
+Anyone who can open the ngrok address reaches ngrok's Edge first, not the board. With a fixed ngrok domain set (in the dialog or by `AGPJ_NGROK_DOMAIN`), the public address is the same at every start and is no longer a hard-to-find value that changes; it can be bookmarked, and it is known to anyone who has seen it once. It is not a secret to rely on: the passcode, the session, and the `Host` and Origin checks carry the protection, and each start still makes a new passcode. The endpoint is opened without a Traffic Policy, because the free ngrok plan rejects one, so the Edge does no sign-in and adds nothing. A request must pass every layer below, in order. The layers and the lifecycle are described in [Remote access](./remote-access.md#authentication-and-write-protection).
 
 | Layer | What it checks | What it stops |
 | --- | --- | --- |
 | Host | The endpoint is opened without a Traffic Policy, so the Edge adds nothing. The `Host` header must be exactly the public HTTPS address; anything else gets the same 403. | A browser or a website that reaches the loopback port (its `Host` is the loopback address or another name), a request for another Host, and a forged `ngrok-auth-user-*` or `X-Forwarded-*` header. |
-| Passcode and session | A 4-digit passcode made for each start opens an in-memory application session (`agboard_remote_session`, `Secure; HttpOnly; SameSite=Lax; Path=/`, at most 12 hours) bound to this start and address. The passcode is compared in constant time; five wrong ones in a row end all attempts until the next start. A right passcode also registers the device (`agboard_remote_device`, `Secure; HttpOnly; SameSite=Lax; Path=/`, 400 days; only a digest is stored on the PC), and a registered device opens a new session without the passcode; see [Registered devices](./remote-access.md#registered-devices). | Reading or changing the board without having been given the passcode; guessing more than five times per start; reusing a session after a stop or a restart. |
+| Passcode and session | A 4-digit passcode made for each start opens an in-memory application session (`agpj_remote_session`, `Secure; HttpOnly; SameSite=Lax; Path=/`, at most 12 hours) bound to this start and address. The passcode is compared in constant time; five wrong ones in a row end all attempts until the next start. A right passcode also registers the device (`agpj_remote_device`, `Secure; HttpOnly; SameSite=Lax; Path=/`, 400 days; only a digest is stored on the PC), and a registered device opens a new session without the passcode; see [Registered devices](./remote-access.md#registered-devices). | Reading or changing the board without having been given the passcode; guessing more than five times per start; reusing a session after a stop or a restart. |
 | Web Push messages | A notification is encrypted for one phone (RFC 8291, with the key pair of that phone's subscription) and signed with the VAPID key (RFC 8292), then posted to the phone's push service. The service, run by Apple, Google, or Mozilla, sees the endpoint, the message size, the timing, and the VAPID public key, not the title, body, or link, which only the phone can open. A notification holds the card title, one short line from the summary, question, or history, and a link to the board; it never holds a passcode, token, or key. A push service that answers 404 or 410 loses its subscription at once, and nothing is sent to an endpoint the PC did not receive from a registered phone. Nothing is sent while the remote connection is down. See [Web Push delivery](./notifications.md#web-push-delivery). | A push service, or anyone on the path to it, reading what the board sends; a notification aimed at a phone that was removed; the board stalling on a slow or hostile push service (a request gives up after 15 seconds and follows no redirect). |
 | Web Push subscription | A registered phone may keep one push subscription (endpoint and keys) in `.internal/push-subscriptions.json`, and the PC keeps a VAPID private key in `.internal/vapid-key.json`, both owner-only and replaced atomically. The key is never returned; only the public key is given to the phone. A subscription needs a registered device and is deleted with it. The endpoint must be a public `https` address of a named host, so the sender is never pointed at the PC's own network. See [Web Push subscriptions](./remote-access.md#web-push-subscriptions). | Subscribing from a session that cannot be tied to a device; a push endpoint aimed at an internal address; a removed phone that keeps being notified. |
 | CSRF and Origin | For every change (adding, editing, moving, archiving, or deleting a task or an epic, an answer, an acceptance check, a preferences save, or disconnect): the exact public Origin, `Sec-Fetch-Site: same-origin`, and a CSRF token derived from the session. | A website that makes the phone's browser change the board. |
@@ -50,8 +50,8 @@ Anyone who can open the ngrok address reaches ngrok's Edge first, not the board.
 - The passcode is shown to the PC only: in the local status answer while the connection is `ready`, in the connection dialog, and on the `serve` startup line. It is never written to a file, a log, `serve.json`, the page, or an error; the failed-guess count is never reported.
 - The passcode, sessions, CSRF tokens, and the ngrok token live only in memory. Stopping, starting again, or restarting the server drops them, ends open event streams, and makes a new passcode with a clean count.
 - The ngrok token is accepted only in the body of the local start request, is never returned or written to the settings file, and, when the user chooses to keep it, is stored in the PC's secure storage (the OS credential store). The `NGROK_AUTHTOKEN` environment variable takes priority over a saved token.
-- **Traffic Inspector.** ngrok ends the HTTPS connection, so it can process traffic, and its Traffic Inspector keeps request and response details when **Full Capture** is enabled for the account. Agent Board cannot turn that off; the user checks that it is disabled in the ngrok dashboard under **Settings** → **Observability**.
-- Without a session the entry serves only the page shell and its static files, and none of them holds a token or board data; every API and the event stream answer 401 until a session exists. Unknown routes are 404 and disallowed methods are 405, and authentication is evaluated before the target is looked up. A change needs the exact public Origin, `Sec-Fetch-Site: same-origin`, and the session's CSRF token; the local `X-Agboard-Token` plays no part and is removed.
+- **Traffic Inspector.** ngrok ends the HTTPS connection, so it can process traffic, and its Traffic Inspector keeps request and response details when **Full Capture** is enabled for the account. Agent Project cannot turn that off; the user checks that it is disabled in the ngrok dashboard under **Settings** → **Observability**.
+- Without a session the entry serves only the page shell and its static files, and none of them holds a token or board data; every API and the event stream answer 401 until a session exists. Unknown routes are 404 and disallowed methods are 405, and authentication is evaluated before the target is looked up. A change needs the exact public Origin, `Sec-Fetch-Site: same-origin`, and the session's CSRF token; the local `X-Agpj-Token` plays no part and is removed.
 
 ## The Tailscale entrance
 
@@ -76,11 +76,11 @@ The local listener accepts a write (create, edit, draft toggle, epic create and 
 1. `Host` meets the local loopback condition.
 2. `Origin` is `http://127.0.0.1:<port>` or `http://localhost:<port>`.
 3. `Sec-Fetch-Site` is `same-origin`.
-4. `X-Agboard-Token` matches the token generated when this `serve` started (32 random bytes in hexadecimal). The token is embedded only in the HTML of `GET /` and never appears in `serve.json`, API responses, or logs.
+4. `X-Agpj-Token` matches the token generated when this `serve` started (32 random bytes in hexadecimal). The token is embedded only in the HTML of `GET /` and never appears in `serve.json`, API responses, or logs.
 
 The guard runs before the target is looked up, and the actor is always recorded as `human`. `POST /api/notify` only asks clients to re-fetch and needs no token.
 
-These checks prove that a request came from the page in a browser. They do not stop a local program that forges headers and scrapes the token from the HTML. That is why `agboard --help` tells agents to ask a person for deletion and does not describe the API.
+These checks prove that a request came from the page in a browser. They do not stop a local program that forges headers and scrapes the token from the HTML. That is why `agpj --help` tells agents to ask a person for deletion and does not describe the API.
 
 ## Deletion is for people
 
@@ -130,7 +130,7 @@ What is refused:
 - **No writes.** There is no route that writes, creates, renames, or deletes a file in the docs. A `PUT` to the file route is refused (405).
 - **Exposure.** The routes are on the board router. The ngrok entrance serves them behind its session, so a phone with a session can read the docs, but `docs/open`, which starts a program on the PC, is never served there.
 
-The root folder comes from the server's own data area and the ProjectId in the URL, never from the request body. The folder is the user's: Agent Board writes only the README, when it creates the folder.
+The root folder comes from the server's own data area and the ProjectId in the URL, never from the request body. The folder is the user's: Agent Project writes only the README, when it creates the folder.
 
 ### MDX in the Docs
 
@@ -153,7 +153,7 @@ What this protects: the token and the files stay out of reach of a document's co
 
 ## Agent access setup
 
-`setup` adds only the resolved Agent Board data area, never the whole home directory or other folders. That grants the agent access to all of the user's board data, so it is applied to the agent's user settings.
+`setup` adds only the resolved Agent Project data area, never the whole home directory or other folders. That grants the agent access to all of the user's board data, so it is applied to the agent's user settings.
 
 - Existing allow, deny, and ask rules, permission modes, models, hooks, and network settings are preserved. Full access, `bypassPermissions`, blanket Bash permissions, and relaxed managed policies are never added. If the folder cannot be added under the current scheme, setup does not report success.
 - Backups and temporary files may contain the same sensitive settings, so existing access restrictions are not widened.
@@ -162,12 +162,12 @@ What this protects: the token and the files stay out of reach of a document's co
 
 ## Plugin installation
 
-`setup` and `update` install the Agent Board plugin and change the settings of other programs, so their boundary is stated here. The mechanics are in [Setup and update](./agents.md#setup-and-update).
+`setup` and `update` install the Agent Project plugin and change the settings of other programs, so their boundary is stated here. The mechanics are in [Setup and update](./agents.md#setup-and-update).
 
-- **Where the plugin comes from.** The marketplace is this repository over HTTPS, pinned to the tag of the running version. The agents' own plugin commands fetch it; agboard downloads nothing itself. The integrity of the plugin rests on the repository and its release tags, not on a signature that agboard checks.
+- **Where the plugin comes from.** The marketplace is this repository over HTTPS, pinned to the tag of the running version. The agents' own plugin commands fetch it; agpj downloads nothing itself. The integrity of the plugin rests on the repository and its release tags, not on a signature that agpj checks.
 - **What is protected.** The agent's existing settings and your own edits. Every settings file is validated before any write, backed up, and written through a temporary file and an atomic replace. A file that changed after planning is never overwritten, and a failed run undoes only what it wrote.
-- **What it adds.** The data folder as a writable or additional directory, and for Codex, `rules/agboard.rules` with one `prefix_rule` that allows commands starting with `agboard`. The rules file is written only when it does not exist, and not under full access. Permission modes, managed policies, and network settings are never changed, and a folder that cannot be added under the current scheme becomes a manual step instead.
-- **Hook trust needs consent.** Codex runs a plugin's hooks only after they are trusted. setup and update trust only the Agent Board plugin's hooks, through `codex app-server`, and only after the confirmation question, which names this step, or `--yes`.
+- **What it adds.** The data folder as a writable or additional directory, and for Codex, `rules/agpj.rules` with one `prefix_rule` that allows commands starting with `agpj`. The rules file is written only when it does not exist, and not under full access. Permission modes, managed policies, and network settings are never changed, and a folder that cannot be added under the current scheme becomes a manual step instead.
+- **Hook trust needs consent.** Codex runs a plugin's hooks only after they are trusted. setup and update trust only the Agent Project plugin's hooks, through `codex app-server`, and only after the confirmation question, which names this step, or `--yes`.
 - **Fixed commands.** The Hook command is fixed in the plugin and is never built from task text or tool input.
 - **Backups hold your settings.** They keep the original file's access rights, and are never put in a shared folder for you.
 
@@ -176,9 +176,9 @@ What this protects: the token and the files stay out of reach of a document's co
 The board can start a headless Claude Code or Codex session in a project's bound folder (see [Launching resident agents](./agents.md#launching-resident-agents)). **Nobody watches such a session, and its approvals are automatic.** Neither agent stops to ask you.
 
 - Claude Code is started in auto mode (`--permission-mode auto --permission-prompts none`). A reviewer checks each action, and an action that would have asked is refused and returned to the agent as a denied tool result; nothing waits for you.
-- Codex runs as `codex app-server`, and the session's thread is started with the workspace-write sandbox, `approvalPolicy` `on-request`, and `approvalsReviewer` `auto_review`: the sandbox stays on, and the approvals the sandbox raises go through automatic review. The board adds its own data area as writable (`sandbox_workspace_write.writable_roots`), so the session's `agboard` commands are not blocked by the sandbox before the review. The project folder is the working folder (`cwd`). The server loads your `~/.codex/config.toml` as well, so its MCP servers, hooks, and writable folders apply to the session.
+- Codex runs as `codex app-server`, and the session's thread is started with the workspace-write sandbox, `approvalPolicy` `on-request`, and `approvalsReviewer` `auto_review`: the sandbox stays on, and the approvals the sandbox raises go through automatic review. The board adds its own data area as writable (`sandbox_workspace_write.writable_roots`), so the session's `agpj` commands are not blocked by the sandbox before the review. The project folder is the working folder (`cwd`). The server loads your `~/.codex/config.toml` as well, so its MCP servers, hooks, and writable folders apply to the session.
 - Automatic review is not a person. It can approve an action you would not, and a mistaken or hijacked instruction, for example one written in a task or in a web page the agent reads, can still reach what the session's account and approved actions reach. The session also holds your signed-in agent account. Launch these sessions only in projects you trust.
-- The launcher scrubs the agents' own session variables from the child and sets `AGBOARD_RESIDENT_ID`, `AGBOARD_SESSION_TOOL`, and `AGBOARD_SESSION_ORIGIN` so the child is told apart from a session you started yourself. This is identification, not a restriction.
+- The launcher scrubs the agents' own session variables from the child and sets `AGPJ_RESIDENT_ID`, `AGPJ_SESSION_TOOL`, and `AGPJ_SESSION_ORIGIN` so the child is told apart from a session you started yourself. This is identification, not a restriction.
 - Only the local page can start or stop a session. The routes are not served through the ngrok entrance, so a phone that is allowed in cannot launch one. Each launch needs the page's write guard like any other write.
 - The log of a launched session (`GET …/sessions/log`) is local-only too: it can hold whatever the agent printed, so a phone that is allowed in cannot read it.
 - The board launches at most one session in total, whichever tool, and stops it when the server stops.
@@ -203,6 +203,6 @@ These limits are deliberate. Keep them in mind when someone asks for "just one m
 - **Writes based on cross-project reads** cannot be prevented by requiring `--project`, because the agent writes the name itself.
 - **A docs folder swapped between the check and the open.** The path check and the open are separate steps, and only the standard library is used. A program that replaces a folder inside `docs/` with a symbolic link after the check and before the open can make the server read or write through that link. The final `O_NOFOLLOW` protects only the last part of the path. Such a program already runs as the same user and can change the files directly.
 - **Opening a docs file.** **Open in editor** starts whatever app the operating system assigns to the file's type, with the user's rights. A file someone placed in `docs/` can be opened this way, as if the user double-clicked it in the file manager.
-- **Opening the board in the browser.** An automatic server and `agboard open` hand the opener one address, `http://127.0.0.1:<port>/?project=<projectId>`, built from the server's port and a checked project ID, never from task text or a request, and never through a shell. `AGBOARD_BROWSER_OPENER` starts whatever program the environment names, with the user's rights. Whoever can set the environment of the user's commands can already run programs as the user.
+- **Opening the board in the browser.** An automatic server and `agpj open` hand the opener one address, `http://127.0.0.1:<port>/?project=<projectId>`, built from the server's port and a checked project ID, never from task text or a request, and never through a shell. `AGPJ_BROWSER_OPENER` starts whatever program the environment names, with the user's rights. Whoever can set the environment of the user's commands can already run programs as the user.
 - **The `docs/` folder itself.** The checks start below `docs/`. The data area, the project folder, and `docs/` itself are trusted, as for every other shared file.
 - **The lifecycle lock** and **`autostart.lock`** prevent a second `serve` among cooperative processes; they do not authorize anything.

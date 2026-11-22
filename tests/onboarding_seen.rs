@@ -1,15 +1,15 @@
 //! The first-run guide's one stored fact: whether this data area has seen it. The
 //! file, the legacy mapping and the cleanup of an older release's sample cards, and
-//! the two routes on a running `agboard serve`.
+//! the two routes on a running `agpj serve`.
 
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
 
-use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::file_store::FileStore;
-use agent_board::file_store::onboarding_state::{GuideOutcome, GuideStatus};
+use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+use agent_project::file_store::FileStore;
+use agent_project::file_store::onboarding_state::{GuideOutcome, GuideStatus};
 use chrono::{TimeZone, Utc};
 use serde_json::{Value, json};
 
@@ -260,11 +260,11 @@ struct Server {
 
 impl Server {
     fn start(home: &Path) -> Server {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
-            .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home)
+        let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
+            .env("AGPJ_WATCH", "poll")
+            .env("AGPJ_HOME", home)
             .env("TZ", "UTC")
             .args(["serve", "--port", "0"])
             .stdout(Stdio::piped())
@@ -297,7 +297,7 @@ impl Server {
             .call()
             .unwrap();
         let page = response.body_mut().read_to_string().unwrap();
-        let marker = "name=\"agboard-token\" content=\"";
+        let marker = "name=\"agpj-token\" content=\"";
         let start = page.find(marker).unwrap() + marker.len();
         page[start..start + 64].to_string()
     }
@@ -321,7 +321,7 @@ impl Server {
             .header("Sec-Fetch-Site", "same-origin")
             .header("Content-Type", "application/json");
         if let Some(token) = token {
-            request = request.header("X-Agboard-Token", token);
+            request = request.header("X-Agpj-Token", token);
         }
         let mut response = request.send(body.to_string()).unwrap();
         let status = response.status().as_u16();

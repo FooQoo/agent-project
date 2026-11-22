@@ -1,7 +1,7 @@
 //! Starting the server when a command needs it, and its stopping by itself.
 //!
-//! These tests run the real binary with `AGBOARD_HOME` in a temporary
-//! directory and with autostart on. `AGBOARD_AUTOSTART_PORT=0` makes every
+//! These tests run the real binary with `AGPJ_HOME` in a temporary
+//! directory and with autostart on. `AGPJ_AUTOSTART_PORT=0` makes every
 //! automatic server listen on a port the OS picks, never 7420. A guard kills
 //! every server a test started, even when the test fails.
 
@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 
 use serde_json::Value;
 
-const STARTED_PREFIX: &str = "Started the Agent Board server at http://127.0.0.1:";
+const STARTED_PREFIX: &str = "Started the Agent Project server at http://127.0.0.1:";
 const QUESTION: &str = r#"{"questions":[{"body":"Which?","choices":[{"id":"a","label":"A"},{"id":"b","label":"B"}]}]}"#;
 const STARTED_SUFFIX: &str = "/ in the background. It stops by itself after ";
 
@@ -33,8 +33,8 @@ impl Board {
         let folder = home.path().join("project-folder");
         std::fs::create_dir_all(&folder).unwrap();
         let mut env = vec![
-            ("AGBOARD_AUTOSTART_PORT", "0".to_string()),
-            ("AGBOARD_OPEN_BROWSER", "0".to_string()),
+            ("AGPJ_AUTOSTART_PORT", "0".to_string()),
+            ("AGPJ_OPEN_BROWSER", "0".to_string()),
         ];
         env.extend(extra.iter().map(|(k, v)| (*k, v.to_string())));
         let board = Self { home, folder, env };
@@ -54,12 +54,12 @@ impl Board {
     }
 
     fn command(&self) -> Command {
-        let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+        let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
         command
-            .env_remove("AGBOARD_AUTOSTART")
-            .env_remove("AGBOARD_IDLE_TIMEOUT")
-            .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", self.dir())
+            .env_remove("AGPJ_AUTOSTART")
+            .env_remove("AGPJ_IDLE_TIMEOUT")
+            .env("AGPJ_WATCH", "poll")
+            .env("AGPJ_HOME", self.dir())
             .env("TZ", "UTC")
             .envs(self.env.iter().map(|(k, v)| (*k, v.as_str())))
             .stdin(Stdio::null());
@@ -344,10 +344,7 @@ fn commands_started_together_share_one_server() {
 
 #[test]
 fn an_unused_server_stops_by_itself_and_the_next_wait_starts_another() {
-    let board = Board::with_env(&[
-        ("AGBOARD_IDLE_TIMEOUT", "60"),
-        ("AGBOARD_IDLE_CHECK_MS", "500"),
-    ]);
+    let board = Board::with_env(&[("AGPJ_IDLE_TIMEOUT", "60"), ("AGPJ_IDLE_CHECK_MS", "500")]);
     let output = board.run(&Board::wait_args("1"));
     let stderr = text(&output.stderr);
     assert!(
@@ -372,10 +369,7 @@ fn an_unused_server_stops_by_itself_and_the_next_wait_starts_another() {
 
 #[test]
 fn an_open_event_stream_keeps_the_server_running() {
-    let board = Board::with_env(&[
-        ("AGBOARD_IDLE_TIMEOUT", "60"),
-        ("AGBOARD_IDLE_CHECK_MS", "500"),
-    ]);
+    let board = Board::with_env(&[("AGPJ_IDLE_TIMEOUT", "60"), ("AGPJ_IDLE_CHECK_MS", "500")]);
     let port = start_by_waiting(&board);
     let pid = board.serve_info().unwrap()["pid"].as_u64().unwrap();
     let mut stream = TcpStream::connect((Ipv4Addr::LOCALHOST, port)).unwrap();
@@ -407,7 +401,7 @@ fn serve_d_keeps_an_automatic_server_and_a_foreground_serve_points_to_it() {
         error["error"]["reason"]
             .as_str()
             .unwrap()
-            .contains("agboard serve -d"),
+            .contains("agpj serve -d"),
         "{error}"
     );
 
@@ -434,10 +428,7 @@ fn the_hook_starts_the_server_in_the_background_but_not_after_stop() {
     let board = Board::new();
     let hooked = board.hook();
     assert!(hooked.status.success(), "{hooked:?}");
-    assert!(
-        text(&hooked.stdout).contains("AGBOARD_PROGRESS"),
-        "{hooked:?}"
-    );
+    assert!(text(&hooked.stdout).contains("AGPJ_PROGRESS"), "{hooked:?}");
     assert!(
         until(Duration::from_secs(20), || board.serve_info().is_some()),
         "the hook should start a server"
@@ -465,7 +456,7 @@ fn the_hook_starts_the_server_in_the_background_but_not_after_stop() {
 
 #[test]
 fn autostart_off_keeps_the_old_error() {
-    let board = Board::with_env(&[("AGBOARD_AUTOSTART", "0")]);
+    let board = Board::with_env(&[("AGPJ_AUTOSTART", "0")]);
     let output = board.run(&Board::wait_args("1"));
     assert!(!output.status.success(), "{output:?}");
     let error: Value = serde_json::from_slice(&output.stderr).unwrap();
@@ -474,7 +465,7 @@ fn autostart_off_keeps_the_old_error() {
         error["error"]["reason"]
             .as_str()
             .unwrap()
-            .contains("Run \"agboard serve\""),
+            .contains("Run \"agpj serve\""),
         "{error}"
     );
     let hooked = board.hook();
@@ -488,7 +479,7 @@ fn autostart_off_keeps_the_old_error() {
 fn a_taken_preferred_port_gives_another_and_says_why() {
     let held = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
     let taken = held.local_addr().unwrap().port();
-    let board = Board::with_env(&[("AGBOARD_AUTOSTART_PORT", &taken.to_string())]);
+    let board = Board::with_env(&[("AGPJ_AUTOSTART_PORT", &taken.to_string())]);
     let output = board.run(&Board::wait_args("1"));
     let stderr = text(&output.stderr);
     let port = started_port(&stderr);
@@ -515,7 +506,7 @@ fn a_manual_serve_names_what_holds_its_port() {
     );
     drop(held);
 
-    // Another Agent Board server, of another data folder, is named with its pid.
+    // Another Agent Project server, of another data folder, is named with its pid.
     let other = Board::new();
     let port = start_by_waiting(&other);
     let other_pid = other.serve_info().unwrap()["pid"].clone();
@@ -525,7 +516,7 @@ fn a_manual_serve_names_what_holds_its_port() {
     assert_eq!(
         error["error"]["reason"],
         format!(
-            "Port {port} is used by another Agent Board server (pid {other_pid}) with a different data folder. Choose another port with --port."
+            "Port {port} is used by another Agent Project server (pid {other_pid}) with a different data folder. Choose another port with --port."
         )
     );
 }

@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { agboardOk, mainProject, nextTaskId, resetBoard } from '../helpers/agboard';
+import { agpjOk, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
 import { waitForSync } from '../helpers/ui';
 
 // The epic list from the header: every epic with its task counts, the details beside it, the existing editor,
@@ -18,9 +18,9 @@ const actionGap = (page: import('@playwright/test').Page) =>
 
 test('epic details confirm deletion, retain refusals, and remove an unused epic', async ({ page }) => {
 	resetBoard(mainProject);
-	agboardOk(mainProject, ['epic', 'add', 'EMPTYDEL', '--name', 'Empty epic sample', '--actor', 'ai']);
-	agboardOk(mainProject, ['epic', 'add', 'USEDDEL', '--name', 'Occupied epic sample', '--actor', 'ai']);
-	agboardOk(mainProject, ['add', 'Keep the used epic', '--assignee', 'ai', '--actor', 'human', '--epic', 'USEDDEL']);
+	agpjOk(mainProject, ['epic', 'add', 'EMPTYDEL', '--name', 'Empty epic sample', '--actor', 'ai']);
+	agpjOk(mainProject, ['epic', 'add', 'USEDDEL', '--name', 'Occupied epic sample', '--actor', 'ai']);
+	agpjOk(mainProject, ['add', 'Keep the used epic', '--assignee', 'ai', '--actor', 'human', '--epic', 'USEDDEL']);
 	await page.goto('/');
 	await waitForSync(page);
 	await page.getByRole('button', { name: 'Epics', exact: true }).click();
@@ -45,11 +45,11 @@ test('the header lists the epics with their counts, and selecting one shows its 
 	page,
 }) => {
 	resetBoard(mainProject);
-	agboardOk(mainProject, ['epic', 'add', 'LISTFLOW', '--name', 'Epic list flow', '--actor', 'ai']);
-	agboardOk(mainProject, ['add', 'Flow todo', '--assignee', 'ai', '--actor', 'human', '--epic', 'LISTFLOW']);
+	agpjOk(mainProject, ['epic', 'add', 'LISTFLOW', '--name', 'Epic list flow', '--actor', 'ai']);
+	agpjOk(mainProject, ['add', 'Flow todo', '--assignee', 'ai', '--actor', 'human', '--epic', 'LISTFLOW']);
 	const doingId = nextTaskId(mainProject);
-	agboardOk(mainProject, ['add', 'Flow doing', '--assignee', 'ai', '--actor', 'human', '--epic', 'LISTFLOW']);
-	agboardOk(mainProject, ['mv', String(doingId), 'doing', '--actor', 'ai', '--reason', 'Start']);
+	agpjOk(mainProject, ['add', 'Flow doing', '--assignee', 'ai', '--actor', 'human', '--epic', 'LISTFLOW']);
+	agpjOk(mainProject, ['mv', String(doingId), 'doing', '--actor', 'ai', '--reason', 'Start']);
 
 	await page.goto('/');
 	await waitForSync(page);
@@ -93,7 +93,7 @@ test('the header lists the epics with their counts, and selecting one shows its 
 
 test('an epic with no tasks reads zero in every state', async ({ page }) => {
 	resetBoard(mainProject);
-	agboardOk(mainProject, ['epic', 'add', 'NOTASKS', '--name', 'No tasks yet', '--actor', 'ai']);
+	agpjOk(mainProject, ['epic', 'add', 'NOTASKS', '--name', 'No tasks yet', '--actor', 'ai']);
 
 	await page.goto('/');
 	await waitForSync(page);
@@ -109,8 +109,8 @@ test('an epic with no tasks reads zero in every state', async ({ page }) => {
 
 test('a task archived from the board is counted as archived in its epic, once', async ({ page }) => {
 	resetBoard(mainProject);
-	agboardOk(mainProject, ['epic', 'add', 'ARCHCOUNT', '--name', 'Archive count', '--actor', 'ai']);
-	agboardOk(mainProject, ['add', 'Counted once', '--assignee', 'ai', '--actor', 'human', '--epic', 'ARCHCOUNT']);
+	agpjOk(mainProject, ['epic', 'add', 'ARCHCOUNT', '--name', 'Archive count', '--actor', 'ai']);
+	agpjOk(mainProject, ['add', 'Counted once', '--assignee', 'ai', '--actor', 'human', '--epic', 'ARCHCOUNT']);
 
 	await page.goto('/');
 	await waitForSync(page);

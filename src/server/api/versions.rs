@@ -8,11 +8,11 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
 use serde::Deserialize;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::{ProjectVersions, VersionChoice};
 use crate::server::AppState;
 use crate::server::request::StrictJson;
-use crate::server::response::{agboard_error_response, json_response};
+use crate::server::response::{agpj_error_response, json_response};
 use crate::server::store::{indexed_view, parse_project_id, refresh_index, with_request_files};
 
 fn versions_json(value: &ProjectVersions, changed: Option<bool>) -> serde_json::Value {
@@ -33,7 +33,7 @@ pub(super) async fn get_versions(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     match indexed_view(&state, &project_id) {
         Ok(view) => json_response(
@@ -46,7 +46,7 @@ pub(super) async fn get_versions(
                 None,
             ),
         ),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -65,7 +65,7 @@ pub(super) async fn add_version(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
         store.add_version(&project_id, &input.name, chrono::Utc::now())
@@ -91,7 +91,7 @@ pub(super) async fn set_current_version(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
         store.set_current_version(&project_id, input.version.as_deref(), chrono::Utc::now())
@@ -102,7 +102,7 @@ pub(super) async fn set_current_version(
 
 fn versions_answer(
     state: &AppState,
-    result: Result<crate::domain::Changed<ProjectVersions>, AgboardError>,
+    result: Result<crate::domain::Changed<ProjectVersions>, AgpjError>,
 ) -> Response {
     match result {
         Ok(result) => {
@@ -114,7 +114,7 @@ fn versions_answer(
                 &versions_json(&result.value, Some(result.changed)),
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -135,7 +135,7 @@ pub(super) async fn generate_release_doc(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let choice = match input.version {
         Some(name) => VersionChoice::Named(name),
@@ -166,6 +166,6 @@ pub(super) async fn generate_release_doc(
                 }),
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

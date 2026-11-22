@@ -104,7 +104,7 @@ impl MonitorConnections {
         }
     }
 
-    /// Take in settings saved from the command line (`agboard setup remote`, `agboard setup`),
+    /// Take in settings saved from the command line (`agpj setup remote`, `agpj setup`),
     /// which write the file without going through this server. They always move the revision
     /// forward, so a file whose revision is not the one held here is newer. A saved token is
     /// found again too: the keychain is looked at again on the next read. A connection that is

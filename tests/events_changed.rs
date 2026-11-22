@@ -11,9 +11,9 @@ use std::net::{SocketAddr, TcpStream};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use agent_board::domain::ProjectId;
-use agent_board::file_store::FileStore;
-use agent_board::server::contracts::{ChangeId, ChangeResource, Changed, Facet};
+use agent_project::domain::ProjectId;
+use agent_project::file_store::FileStore;
+use agent_project::server::contracts::{ChangeId, ChangeResource, Changed, Facet};
 use chrono::Utc;
 
 static SERIAL: Mutex<()> = Mutex::new(());
@@ -202,8 +202,8 @@ fn events_a_version_change_announces_the_project_and_a_planned_version_the_task(
         .set_task_planned_version(
             &project,
             1,
-            &agent_board::file_store::VersionChoice::Current,
-            agent_board::domain::Actor::Human,
+            &agent_project::file_store::VersionChoice::Current,
+            agent_project::domain::Actor::Human,
             Utc::now(),
         )
         .unwrap();

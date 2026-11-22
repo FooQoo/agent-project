@@ -65,7 +65,7 @@ if [ "$n" = codex ]; then
     printf '%s\n' "$line" >> "$d/codex.stdin"
     id=$(printf '%s' "$line" | sed -n 's/^{"id":\([0-9][0-9]*\),.*/\1/p')
     case "$line" in
-      *'"method":"initialize"'*) printf '{"id":%s,"result":{"userAgent":"agboard/9.9.9 (fake)"}}\n' "$id" ;;
+      *'"method":"initialize"'*) printf '{"id":%s,"result":{"userAgent":"agpj/9.9.9 (fake)"}}\n' "$id" ;;
       *'"method":"thread/start"'*) printf '{"id":%s,"result":{"thread":{"id":"fake-thread"}}}\n' "$id" ;;
       *'"method":"turn/start"'*)
         printf '{"id":%s,"result":{"turn":{"id":"turn-1"}}}\n' "$id"
@@ -144,7 +144,7 @@ fn fixture_with(timing: Timing, factory: driver::DriverFactory) -> Fixture {
 }
 
 impl Fixture {
-    fn launch(&self, tool: Tool, model: Option<&str>) -> Result<Launched, AgboardError> {
+    fn launch(&self, tool: Tool, model: Option<&str>) -> Result<Launched, AgpjError> {
         self.launcher
             .launch(&project(), "demo", self.folder.path(), tool, model)
     }
@@ -197,7 +197,7 @@ fn claude_starts_headless_with_every_permission_and_a_scrubbed_environment() {
         std::env::set_var("CLAUDE_CODE_X", "1");
         std::env::set_var("CODEX_X", "1");
         std::env::set_var("CODEX_HOME", "/kept");
-        std::env::set_var("AGBOARD_RESIDENT_ID", "inherited");
+        std::env::set_var("AGPJ_RESIDENT_ID", "inherited");
     }
     let fx = fixture();
     let launched = fx.launch(Tool::ClaudeCode, Some("sonnet")).unwrap();
@@ -208,7 +208,7 @@ fn claude_starts_headless_with_every_permission_and_a_scrubbed_environment() {
             "CLAUDE_CODE_X",
             "CODEX_X",
             "CODEX_HOME",
-            "AGBOARD_RESIDENT_ID",
+            "AGPJ_RESIDENT_ID",
         ] {
             std::env::remove_var(name);
         }
@@ -232,7 +232,7 @@ fn claude_starts_headless_with_every_permission_and_a_scrubbed_environment() {
         first["message"]["content"]
             .as_str()
             .unwrap()
-            .starts_with("You were launched by Agent Board"),
+            .starts_with("You were launched by Agent Project"),
         "{first}"
     );
     assert!(
@@ -248,15 +248,11 @@ fn claude_starts_headless_with_every_permission_and_a_scrubbed_environment() {
         "{record}"
     );
     assert!(record.lines().any(|l| l == "CODEX_HOME=/kept"), "{record}");
-    assert!(
-        record
-            .lines()
-            .any(|l| l == "AGBOARD_SESSION_TOOL=claude-code")
-    );
-    assert!(record.lines().any(|l| l == "AGBOARD_SESSION_ORIGIN=board"));
+    assert!(record.lines().any(|l| l == "AGPJ_SESSION_TOOL=claude-code"));
+    assert!(record.lines().any(|l| l == "AGPJ_SESSION_ORIGIN=board"));
     let resident = record
         .lines()
-        .find_map(|l| l.strip_prefix("AGBOARD_RESIDENT_ID="))
+        .find_map(|l| l.strip_prefix("AGPJ_RESIDENT_ID="))
         .unwrap();
     assert!(resident.starts_with("resident-") && resident != "inherited");
     let folder = std::fs::canonicalize(fx.folder.path()).unwrap();

@@ -9,7 +9,7 @@ use crate::agent::message_wait::{Heartbeat, MessageWaitEnd, read_questions, wait
 use crate::cli::args::{MessageAskArgs, MessageWaitArgs};
 use crate::cli::run::fail;
 use crate::cli::{Context, Env, output};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::qa::{MessageState, Question, QuestionView};
 
 /// The exit code of a wait that ran out of time; the questions stay open.
@@ -148,7 +148,7 @@ impl Events<'_> {
     }
 
     /// A failure after the questions were asked: they stay.
-    fn error(&mut self, error: &AgboardError, stderr: &mut dyn Write) -> i32 {
+    fn error(&mut self, error: &AgpjError, stderr: &mut dyn Write) -> i32 {
         if self.json {
             self.line(
                 json!({"type": "error", "error": {"code": error.code(), "message": error.message(), "reason": error.reason()}}),
@@ -165,7 +165,7 @@ impl Events<'_> {
 /// saved. When it is not running and starting is allowed, it is started now,
 /// so a server that cannot start leaves no question behind. A server started
 /// now opens the project's board.
-fn ensure_serving(ctx: &Context) -> Result<(), AgboardError> {
+fn ensure_serving(ctx: &Context) -> Result<(), AgpjError> {
     let dir = data_dir(ctx.files.shared_dir());
     if crate::autostart::enabled() {
         return crate::autostart::ensure_serving(&dir, Some(ctx.project_id()?)).map(|_| ());
@@ -175,9 +175,9 @@ fn ensure_serving(ctx: &Context) -> Result<(), AgboardError> {
     if running {
         Ok(())
     } else {
-        Err(AgboardError::BoardUnavailable {
+        Err(AgpjError::BoardUnavailable {
             reason:
-                "A wait needs a running server. Run \"agboard serve\" first, or ask with --no-wait."
+                "A wait needs a running server. Run \"agpj serve\" first, or ask with --no-wait."
                     .into(),
         })
     }
@@ -234,7 +234,7 @@ pub(super) fn ask(ctx: &mut Context, env: &mut Env, args: &MessageAskArgs) -> i3
         }
         let project = ctx.project_id()?.clone();
         let questions = ctx.files.ask_questions(&project, input, ctx.clock.now())?;
-        Ok::<_, AgboardError>((questions, timeout))
+        Ok::<_, AgpjError>((questions, timeout))
     })();
     let (questions, timeout) = match prepared {
         Ok(found) => found,
@@ -264,7 +264,7 @@ pub(super) fn wait(ctx: &mut Context, env: &mut Env, args: &MessageWaitArgs) -> 
         if questions.iter().any(|q| q.state() == MessageState::Open) {
             ensure_serving(ctx)?;
         }
-        Ok::<_, AgboardError>((questions, timeout))
+        Ok::<_, AgpjError>((questions, timeout))
     })();
     let (questions, timeout) = match prepared {
         Ok(found) => found,

@@ -11,7 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 /** The repository root (the parent of e2e/). */
 export const repoRoot = path.resolve(here, '..', '..');
 export const seedFile = path.resolve(here, '..', 'fixtures', 'agent-board.json');
-const ptyAnswer = path.resolve(here, 'agboard_pty_answer.py');
+const ptyAnswer = path.resolve(here, 'agpj_pty_answer.py');
 const serveCaughtUp = path.resolve(here, 'serve-caught-up.mjs');
 
 /**
@@ -25,8 +25,8 @@ export const betaFixture = path.resolve(here, '..', 'fixtures', 'multi-project-b
 /** The project the main serve shows. Every helper takes the project explicitly; none has a default. */
 export const mainProject = 'agent-board';
 
-export function agboardBinary(): string {
-  return process.env.AGBOARD_E2E_BINARY ?? path.join(repoRoot, 'target', 'debug', 'agboard');
+export function agpjBinary(): string {
+  return process.env.AGPJ_E2E_BINARY ?? path.join(repoRoot, 'target', 'debug', 'agpj');
 }
 
 /*
@@ -38,15 +38,15 @@ const notInWorker = 'is not set; import test from helpers/fixtures';
 
 /** The data directory of this worker, shared by its main serve and the CLI helper. */
 export function mainHome(): string {
-  const home = process.env.AGBOARD_E2E_HOME;
-  if (!home) throw new Error(`AGBOARD_E2E_HOME ${notInWorker}`);
+  const home = process.env.AGPJ_E2E_HOME;
+  if (!home) throw new Error(`AGPJ_E2E_HOME ${notInWorker}`);
   return home;
 }
 
 /** The URL of this worker's main serve, such as `http://127.0.0.1:53124/`. */
 export function mainUrl(): string {
-  const url = process.env.AGBOARD_E2E_MAIN_URL;
-  if (!url) throw new Error(`AGBOARD_E2E_MAIN_URL ${notInWorker}`);
+  const url = process.env.AGPJ_E2E_MAIN_URL;
+  if (!url) throw new Error(`AGPJ_E2E_MAIN_URL ${notInWorker}`);
   return url;
 }
 
@@ -65,7 +65,7 @@ export function mainPort(): number {
  * see the board as before the guide existed; the guide's own tests pass `unseen`.
  */
 export function makeHome(label: string, guide: 'skipped' | 'unseen' = 'skipped'): string {
-  const home = mkdtempSync(path.join(os.tmpdir(), `agent-board-e2e-${label}-`));
+  const home = mkdtempSync(path.join(os.tmpdir(), `agent-project-e2e-${label}-`));
   if (guide === 'skipped') skipGuide(home);
   return home;
 }
@@ -84,34 +84,34 @@ export function removeHome(home: string): void {
   rmSync(home, { recursive: true, force: true });
 }
 
-function agboardEnv(home: string): NodeJS.ProcessEnv {
-  return { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' };
+function agpjEnv(home: string): NodeJS.ProcessEnv {
+  return { ...process.env, AGPJ_HOME: home, TZ: 'UTC' };
 }
 
 /**
- * The environment of an `agboard serve` the tests start. `AGBOARD_WATCH=poll` makes the serve poll the shared
+ * The environment of an `agpj serve` the tests start. `AGPJ_WATCH=poll` makes the serve poll the shared
  * folder instead of registering a macOS FSEvents watch, which can take tens of seconds per start.
  */
 export function serveEnv(home: string): NodeJS.ProcessEnv {
-  return { ...agboardEnv(home), AGBOARD_WATCH: 'poll' };
+  return { ...agpjEnv(home), AGPJ_WATCH: 'poll' };
 }
 
-export interface AgboardResult {
+export interface AgpjResult {
   code: number;
   stdout: string;
   stderr: string;
 }
 
 /**
- * Run a project command, `agboard --project <project> <args>`, against `home` (the main home by default),
+ * Run a project command, `agpj --project <project> <args>`, against `home` (the main home by default),
  * without a terminal. The project is always named by the caller.
  */
-export function agboard(project: string, args: string[], home: string = mainHome()): AgboardResult {
+export function agpj(project: string, args: string[], home: string = mainHome()): AgpjResult {
   return run(['--project', project, ...withTestDefaults(args)], home);
 }
 
 /** Run a whole-catalog command such as `project create NAME` or `project ls`, which takes no `--project`. */
-export function agboardCatalog(args: string[], home: string = mainHome()): AgboardResult {
+export function agpjCatalog(args: string[], home: string = mainHome()): AgpjResult {
   return run(withOwnFolder(args, home), home);
 }
 
@@ -127,9 +127,9 @@ function withOwnFolder(args: string[], home: string): string[] {
   return [...args.slice(0, at + 3), '--folder', folder, ...args.slice(at + 3)];
 }
 
-function run(args: string[], home: string): AgboardResult {
-  const result = spawnSync(agboardBinary(), args, {
-    env: agboardEnv(home),
+function run(args: string[], home: string): AgpjResult {
+  const result = spawnSync(agpjBinary(), args, {
+    env: agpjEnv(home),
     cwd: home,
     encoding: 'utf8',
     input: '',
@@ -138,19 +138,19 @@ function run(args: string[], home: string): AgboardResult {
   return { code: result.status ?? -1, stdout: result.stdout, stderr: result.stderr };
 }
 
-/** Like `agboard`, but the command must succeed. */
-export function agboardOk(project: string, args: string[], home: string = mainHome()): AgboardResult {
-  const result = agboard(project, args, home);
+/** Like `agpj`, but the command must succeed. */
+export function agpjOk(project: string, args: string[], home: string = mainHome()): AgpjResult {
+  const result = agpj(project, args, home);
   if (result.code !== 0) {
-    throw new Error(`agboard --project ${project} ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
+    throw new Error(`agpj --project ${project} ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
   }
   return result;
 }
 
-/** Like `agboardCatalog`, but the command must succeed. */
-export function agboardCatalogOk(args: string[], home: string = mainHome()): AgboardResult {
-  const result = agboardCatalog(args, home);
-  if (result.code !== 0) throw new Error(`agboard ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
+/** Like `agpjCatalog`, but the command must succeed. */
+export function agpjCatalogOk(args: string[], home: string = mainHome()): AgpjResult {
+  const result = agpjCatalog(args, home);
+  if (result.code !== 0) throw new Error(`agpj ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
   return result;
 }
 
@@ -160,9 +160,9 @@ export interface ProjectJson {
   createdAt: string;
 }
 
-/** The projects from `agboard project ls --json`. */
+/** The projects from `agpj project ls --json`. */
 export function listProjects(home: string = mainHome()): ProjectJson[] {
-  return JSON.parse(agboardCatalogOk(['project', 'ls', '--json'], home).stdout).projects;
+  return JSON.parse(agpjCatalogOk(['project', 'ls', '--json'], home).stdout).projects;
 }
 
 /** The immutable ID of the project called `name`. */
@@ -180,9 +180,9 @@ export interface WorkspaceJson {
   epics: string;
 }
 
-/** The shared folder of `project`, from `agboard workspace --json`. */
+/** The shared folder of `project`, from `agpj workspace --json`. */
 export function workspace(project: string, home: string = mainHome()): WorkspaceJson {
-  return JSON.parse(agboardOk(project, ['workspace', '--json'], home).stdout);
+  return JSON.parse(agpjOk(project, ['workspace', '--json'], home).stdout);
 }
 
 export interface TaskJson {
@@ -197,9 +197,9 @@ export interface TaskJson {
   pendingChoices?: { id: string; label: string }[];
 }
 
-/** The cards of `project` from `agboard ls --json`. */
+/** The cards of `project` from `agpj ls --json`. */
 export function listTasks(project: string, home: string = mainHome()): TaskJson[] {
-  return JSON.parse(agboardOk(project, ['ls', '--json'], home).stdout).tasks;
+  return JSON.parse(agpjOk(project, ['ls', '--json'], home).stdout).tasks;
 }
 
 /**
@@ -390,22 +390,22 @@ export function seedProject(project: string, file: string, home: string = mainHo
 /** Create `project` if it does not exist yet. */
 export function ensureProject(project: string, home: string = mainHome()): void {
   if (!listProjects(home).some((existing) => existing.name === project)) {
-    agboardCatalogOk(['project', 'create', project], home);
+    agpjCatalogOk(['project', 'create', project], home);
   }
 }
 
 /**
  * Answer a "[y/N] " prompt of a human-only command (`rm`, `project rm`) the way a person at a terminal
- * would. Runs `agboard` on a pseudo-terminal through a small Python helper, because Node cannot allocate one.
+ * would. Runs `agpj` on a pseudo-terminal through a small Python helper, because Node cannot allocate one.
  */
-export function agboardOnTerminal(
+export function agpjOnTerminal(
   project: string,
   answer: string,
   args: string[],
   home: string = mainHome(),
-): AgboardResult {
-  const result = spawnSync('python3', [ptyAnswer, answer, agboardBinary(), '--project', project, ...args], {
-    env: agboardEnv(home),
+): AgpjResult {
+  const result = spawnSync('python3', [ptyAnswer, answer, agpjBinary(), '--project', project, ...args], {
+    env: agpjEnv(home),
     cwd: home,
     encoding: 'utf8',
   });
@@ -414,7 +414,7 @@ export function agboardOnTerminal(
 }
 
 /**
- * Put `project` back to the version-two Agent Board fixture. The project keeps its ID; its tasks and epics are
+ * Put `project` back to the version-two Agent Project fixture. The project keeps its ID; its tasks and epics are
  * replaced by the fixture's cards.
  */
 export function resetBoard(project: string, home: string = mainHome()): void {
@@ -429,7 +429,7 @@ export function resetBoard(project: string, home: string = mainHome()): void {
 export function restoreProject(project: string, file: string, home: string = mainHome(), serveUrl?: string): void {
   ensureProject(project, home);
   seedProject(project, file, home);
-  const url = serveUrl ?? (home === process.env.AGBOARD_E2E_HOME ? process.env.AGBOARD_E2E_MAIN_URL : undefined);
+  const url = serveUrl ?? (home === process.env.AGPJ_E2E_HOME ? process.env.AGPJ_E2E_MAIN_URL : undefined);
   if (url) waitForServeToShow(url, project, file, projectId(project, home));
 }
 
@@ -450,7 +450,7 @@ function waitForServeToShow(url: string, project: string, file: string, id: stri
 
 /** Delete `project` and its cards the way a person does: with a `y` on a terminal. */
 export function removeProject(project: string, home: string = mainHome()): void {
-  const result = agboardOnTerminal(project, 'y', ['project', 'rm'], home);
+  const result = agpjOnTerminal(project, 'y', ['project', 'rm'], home);
   if (result.code !== 0) throw new Error(`deleting ${project} failed: ${result.stdout}${result.stderr}`);
 }
 
@@ -477,7 +477,7 @@ function withTestDefaults(args: string[]): string[] {
 
 /** A project with no cards. */
 export function createEmptyProject(home: string, name: string): void {
-  agboardCatalogOk(['project', 'create', name], home);
+  agpjCatalogOk(['project', 'create', name], home);
 }
 
 async function portIsFree(port: number): Promise<boolean> {
@@ -502,7 +502,7 @@ export interface Serve {
 export const serveStartTimeout = 90_000;
 
 /**
- * The address on the startup line, `{"url":"http://127.0.0.1:<port>/"}`, which `agboard --json serve` prints once
+ * The address on the startup line, `{"url":"http://127.0.0.1:<port>/"}`, which `agpj --json serve` prints once
  * it has bound its port.
  */
 function readStartupUrl(child: ChildProcess, stderr: () => string): Promise<string> {
@@ -518,9 +518,9 @@ function readStartupUrl(child: ChildProcess, stderr: () => string): Promise<stri
     };
     const timer = setTimeout(() => {
       child.kill('SIGKILL');
-      finish(() => reject(new Error(`agboard serve printed no address within ${serveStartTimeout} ms: ${stderr()}`)));
+      finish(() => reject(new Error(`agpj serve printed no address within ${serveStartTimeout} ms: ${stderr()}`)));
     }, serveStartTimeout);
-    const onExit = (code: number | null) => finish(() => reject(new Error(`agboard serve exited with ${code}: ${stderr()}`)));
+    const onExit = (code: number | null) => finish(() => reject(new Error(`agpj serve exited with ${code}: ${stderr()}`)));
     const onData = (chunk: Buffer) => {
       buffer += chunk.toString('utf8');
       const newline = buffer.indexOf('\n');
@@ -530,7 +530,7 @@ function readStartupUrl(child: ChildProcess, stderr: () => string): Promise<stri
         try {
           resolve((JSON.parse(line) as { url: string }).url);
         } catch {
-          reject(new Error(`agboard serve printed an unexpected startup line: ${line}`));
+          reject(new Error(`agpj serve printed an unexpected startup line: ${line}`));
         }
       });
     };
@@ -542,7 +542,7 @@ function readStartupUrl(child: ChildProcess, stderr: () => string): Promise<stri
 async function waitForHealth(url: string, child: ChildProcess): Promise<void> {
   const deadline = Date.now() + serveStartTimeout;
   while (Date.now() < deadline) {
-    if (child.exitCode !== null) throw new Error(`agboard serve exited with ${child.exitCode}`);
+    if (child.exitCode !== null) throw new Error(`agpj serve exited with ${child.exitCode}`);
     try {
       const response = await fetch(`${url}api/health`);
       if (response.ok) return;
@@ -551,17 +551,17 @@ async function waitForHealth(url: string, child: ChildProcess): Promise<void> {
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  throw new Error(`agboard serve did not answer at ${url}`);
+  throw new Error(`agpj serve did not answer at ${url}`);
 }
 
 /**
- * Start `agboard serve` on `home` and wait until it answers. It listens on a port the system picks (`--port 0`),
+ * Start `agpj serve` on `home` and wait until it answers. It listens on a port the system picks (`--port 0`),
  * read back from its startup line. A spec that restarts a serve under an open page passes the earlier serve's
  * port, so the page reconnects to the same address.
  */
 export async function startServe(home: string, port = 0): Promise<Serve> {
   if (port !== 0 && !(await portIsFree(port))) throw new Error(`port ${port} is already in use`);
-  const child = spawn(agboardBinary(), ['--json', 'serve', '--port', String(port)], {
+  const child = spawn(agpjBinary(), ['--json', 'serve', '--port', String(port)], {
     env: serveEnv(home),
     cwd: home,
     stdio: ['ignore', 'pipe', 'pipe'],

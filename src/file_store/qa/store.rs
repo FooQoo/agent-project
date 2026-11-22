@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use super::check::check_message;
 use super::codec::parse_message;
 use super::model::{Message, Question, Request, question_number};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::io;
 use crate::file_store::layout;
 use crate::file_store::model::Problem;
@@ -38,7 +38,7 @@ pub fn message_relative(id: &str) -> PathBuf {
 }
 
 /// The message IDs of a project in number order.
-pub fn message_ids(project_dir: &Path) -> Result<Vec<String>, AgboardError> {
+pub fn message_ids(project_dir: &Path) -> Result<Vec<String>, AgpjError> {
     let dir = qa_dir(project_dir);
     if !dir.is_dir() {
         return Ok(Vec::new());
@@ -59,21 +59,21 @@ pub fn message_ids(project_dir: &Path) -> Result<Vec<String>, AgboardError> {
 }
 
 /// Read one message strictly. A message that does not exist is `message_not_found`.
-pub fn read_message(shared: &Path, project_dir: &Path, id: &str) -> Result<Message, AgboardError> {
+pub fn read_message(shared: &Path, project_dir: &Path, id: &str) -> Result<Message, AgpjError> {
     let dir = message_dir(project_dir, id);
     if question_number(id).is_none() || !dir.is_dir() {
-        return Err(AgboardError::MessageNotFound { id: id.to_string() });
+        return Err(AgpjError::MessageNotFound { id: id.to_string() });
     }
     let path = message_file(&dir);
     let label = layout::shared_label(shared, &path);
     if !path.is_file() {
-        return Err(AgboardError::FileUnreadable {
+        return Err(AgpjError::FileUnreadable {
             file: label,
             reason: "QA.md is missing.".into(),
         });
     }
     let text = io::read_text(&path, &label)?;
-    let invalid = |d: crate::file_store::validate::Defect| AgboardError::FileInvalid {
+    let invalid = |d: crate::file_store::validate::Defect| AgpjError::FileInvalid {
         file: label.clone(),
         field: d.field,
         reason: d.reason,
@@ -96,7 +96,7 @@ pub struct QaIndex {
 
 impl QaIndex {
     /// Read every message of a project. Only a failure to list the folder is an error.
-    pub fn load(shared: &Path, project_dir: &Path) -> Result<QaIndex, AgboardError> {
+    pub fn load(shared: &Path, project_dir: &Path) -> Result<QaIndex, AgpjError> {
         let mut index = QaIndex::default();
         for id in message_ids(project_dir)? {
             match read_message(shared, project_dir, &id) {

@@ -16,7 +16,7 @@ use super::validate::EpicId;
 use crate::clock::format_utc;
 use crate::domain::Attachment;
 use crate::domain::markdown_blocks::{self, BlockKind as SplitKind};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::contracts::Version;
 use crate::server::contracts::detail::{
     BlockKind, DetailAttachment, DetailEvent, DetailImage, DetailResource, ResourceId, Section,
@@ -46,12 +46,12 @@ impl DetailSnapshot {
         snapshot: &ProjectSnapshot,
         id: i64,
         sections: &[Section],
-    ) -> Result<Self, AgboardError> {
+    ) -> Result<Self, AgpjError> {
         let task = snapshot
             .tasks
             .iter()
             .find(|task| task.id == id)
-            .ok_or(AgboardError::TaskNotFound { id })?;
+            .ok_or(AgpjError::TaskNotFound { id })?;
         let all = task_versions(task);
         Ok(Self {
             resource: DetailResource::Task,
@@ -73,12 +73,12 @@ impl DetailSnapshot {
         snapshot: &ProjectSnapshot,
         id: &EpicId,
         sections: &[Section],
-    ) -> Result<Self, AgboardError> {
+    ) -> Result<Self, AgpjError> {
         let epic = snapshot
             .epics
             .iter()
             .find(|epic| epic.id == *id)
-            .ok_or_else(|| AgboardError::EpicNotFound { id: id.to_string() })?;
+            .ok_or_else(|| AgpjError::EpicNotFound { id: id.to_string() })?;
         Ok(Self {
             resource: DetailResource::Epic,
             id: ResourceId::Epic(id.to_string()),

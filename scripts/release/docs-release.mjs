@@ -6,7 +6,7 @@
 //   .vitepress/release.json   the release state that was found (git-ignored)
 //
 // Source of the releases (exactly one):
-//   --github          the GitHub API of --repo (default FooQoo/agent-board); the
+//   --github          the GitHub API of --repo (default FooQoo/agent-project); the
 //                     public build uses this. Any API error or invalid release
 //                     stops the script and writes nothing, so the last
 //                     published site stays as it is.
@@ -23,7 +23,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const DEFAULT_REPO = 'FooQoo/agent-board';
+const DEFAULT_REPO = 'FooQoo/agent-project';
 const TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
 
 // The release notes are written in English and carry these headings.
@@ -51,7 +51,7 @@ function parseArgs(argv) {
 }
 
 async function fetchReleases(options) {
-  const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'agent-board-docs-release', 'X-GitHub-Api-Version': '2022-11-28' };
+  const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'agent-project-docs-release', 'X-GitHub-Api-Version': '2022-11-28' };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const all = [];
   for (let page = 1; page <= 10; page++) {

@@ -1,4 +1,4 @@
-//! `agboard progress`: the tasks an agent can pick up, by epic in wave
+//! `agpj progress`: the tasks an agent can pick up, by epic in wave
 //! order. The table is built by `crate::progress`, the same code the hook uses.
 
 use std::fmt::Write as _;
@@ -8,10 +8,10 @@ use serde_json::json;
 use crate::cli::args::ProgressCommandArgs;
 use crate::cli::{Context, Outcome};
 use crate::domain::{Assignee, Column, RunState};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::progress::{self, Include, Progress, ProgressTask};
 
-pub fn run(ctx: &Context, args: &ProgressCommandArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &Context, args: &ProgressCommandArgs) -> Result<Outcome, AgpjError> {
     let project = ctx.project_id()?;
     let filter = args
         .version

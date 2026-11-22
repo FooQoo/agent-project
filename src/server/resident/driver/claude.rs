@@ -20,7 +20,7 @@ use super::claude_parse::{Pending, TaskChange, parse_line, permission_response};
 use super::lines::{Line, MAX_LINE, for_each_line};
 use super::proc::{Out, Proc, send_line};
 use super::{AgentDriver, DriverEvent, PermissionAnswer, StartSpec};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::resident::cli;
 
 pub struct ClaudeDriver {
@@ -45,15 +45,15 @@ impl ClaudeDriver {
         }
     }
 
-    fn proc(&self) -> Result<&Proc, AgboardError> {
+    fn proc(&self) -> Result<&Proc, AgpjError> {
         self.proc
             .get()
-            .ok_or_else(|| AgboardError::SessionLaunchFailed {
+            .ok_or_else(|| AgpjError::SessionLaunchFailed {
                 reason: "The session has not been started.".to_string(),
             })
     }
 
-    fn send(&self, line: &serde_json::Value) -> Result<(), AgboardError> {
+    fn send(&self, line: &serde_json::Value) -> Result<(), AgpjError> {
         send_line(&self.proc()?.stdin, &line.to_string())
     }
 }
@@ -136,7 +136,7 @@ fn note_task(out: &Out, tasks: &mut Tasks, change: &TaskChange) {
 }
 
 impl AgentDriver for ClaudeDriver {
-    fn start(&self, spec: StartSpec) -> Result<(), AgboardError> {
+    fn start(&self, spec: StartSpec) -> Result<(), AgpjError> {
         let pending = self.pending.clone();
         let tasks = self.tasks.clone();
         let reader: super::proc::Reader =
@@ -149,7 +149,7 @@ impl AgentDriver for ClaudeDriver {
             Some(reader),
         )?;
         if self.proc.set(proc).is_err() {
-            return Err(AgboardError::SessionLaunchFailed {
+            return Err(AgpjError::SessionLaunchFailed {
                 reason: "The session was already started.".to_string(),
             });
         }
@@ -181,19 +181,19 @@ impl AgentDriver for ClaudeDriver {
         }
     }
 
-    fn send_user_message(&self, text: &str) -> Result<(), AgboardError> {
+    fn send_user_message(&self, text: &str) -> Result<(), AgpjError> {
         self.proc()?.busy.store(true, Ordering::SeqCst);
         self.send(&json!({"type": "user", "message": {"role": "user", "content": text}}))
     }
 
-    fn answer_permission(&self, id: &str, answer: PermissionAnswer) -> Result<(), AgboardError> {
+    fn answer_permission(&self, id: &str, answer: PermissionAnswer) -> Result<(), AgpjError> {
         let input = self
             .pending
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .remove(id);
         let Some(input) = input else {
-            return Err(AgboardError::SessionLaunchFailed {
+            return Err(AgpjError::SessionLaunchFailed {
                 reason: format!("No permission request \"{id}\" is waiting."),
             });
         };
@@ -204,11 +204,11 @@ impl AgentDriver for ClaudeDriver {
         self.send(&permission_response(id, behavior))
     }
 
-    fn interrupt(&self) -> Result<(), AgboardError> {
+    fn interrupt(&self) -> Result<(), AgpjError> {
         let n = self.requests.fetch_add(1, Ordering::SeqCst);
         self.send(&json!({
             "type": "control_request",
-            "request_id": format!("agboard-{n}"),
+            "request_id": format!("agpj-{n}"),
             "request": {"subtype": "interrupt"},
         }))
     }

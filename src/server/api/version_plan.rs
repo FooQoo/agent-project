@@ -10,11 +10,11 @@ use serde::{Deserialize, Deserializer};
 
 use super::epics::parse_epic_id;
 use super::parse_task_id;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::{EpicVersionScope, VersionChoice};
 use crate::server::AppState;
 use crate::server::request::StrictJson;
-use crate::server::response::{agboard_error_response, json_response};
+use crate::server::response::{agpj_error_response, json_response};
 use crate::server::store::{parse_project_id, refresh_index, with_request_files};
 
 /// Which version to plan: a named one, the project's current one, or none.
@@ -26,16 +26,16 @@ enum Choice {
     Unset,
 }
 
-fn choice_of(choice: Choice, version: Option<String>) -> Result<VersionChoice, AgboardError> {
+fn choice_of(choice: Choice, version: Option<String>) -> Result<VersionChoice, AgpjError> {
     match (choice, version) {
         (Choice::Named, Some(name)) => Ok(VersionChoice::Named(name)),
         (Choice::Current, None) => Ok(VersionChoice::Current),
         (Choice::Unset, None) => Ok(VersionChoice::Unset),
-        (Choice::Named, None) => Err(AgboardError::InvalidValue {
+        (Choice::Named, None) => Err(AgpjError::InvalidValue {
             field: "version".into(),
             reason: "A named choice needs a version.".into(),
         }),
-        (_, Some(_)) => Err(AgboardError::InvalidValue {
+        (_, Some(_)) => Err(AgpjError::InvalidValue {
             field: "version".into(),
             reason: "Only a named choice takes a version.".into(),
         }),
@@ -68,7 +68,7 @@ pub(super) async fn set_task_version(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -76,7 +76,7 @@ pub(super) async fn set_task_version(
     };
     let choice = match choice_of(input.choice, input.version) {
         Ok(choice) => choice,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let expected = input.expected_planned_version;
     let result = with_request_files(&state, &headers, move |store| {
@@ -100,9 +100,9 @@ pub(super) async fn set_task_version(
             )
         }
         // The page names the version the task has now, so it can show it without reading again.
-        Err(error @ AgboardError::PlannedVersionChanged { .. }) => {
+        Err(error @ AgpjError::PlannedVersionChanged { .. }) => {
             let current = match &error {
-                AgboardError::PlannedVersionChanged { current, .. } => current.clone(),
+                AgpjError::PlannedVersionChanged { current, .. } => current.clone(),
                 _ => None,
             };
             json_response(
@@ -117,7 +117,7 @@ pub(super) async fn set_task_version(
                 }),
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -152,15 +152,15 @@ pub(super) async fn set_epic_version(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let epic_id = match parse_epic_id(&raw_epic) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let choice = match choice_of(input.choice, input.version) {
         Ok(choice) => choice,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let scope = match input.scope {
         Scope::UnplannedOnly => EpicVersionScope::UnplannedOnly,
@@ -203,6 +203,6 @@ pub(super) async fn set_epic_version(
                 }),
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

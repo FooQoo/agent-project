@@ -1,4 +1,4 @@
-import { fixture, longMarkdown } from 'virtual:agboard-mock-seed';
+import { fixture, longMarkdown } from 'virtual:agpj-mock-seed';
 import { applyLocale } from '../../../shared/i18n';
 import { createMockServer } from '../mock-server/server.ts';
 import { startMockWorker } from './browser.ts';
@@ -6,7 +6,7 @@ import { browserLanguages, demoLocale } from './locale.ts';
 
 /**
  * Starts the board's sample-data server in the page, behind a Service Worker, for the two modes
- * that run without `agboard serve`: the dev sample-data mode (`vite --mode mock`) and the browser
+ * that run without `agpj serve`: the dev sample-data mode (`vite --mode mock`) and the browser
  * demo (`vite build --mode demo`). `app/entry/board.tsx` loads this only in those modes, so the
  * product build contains none of it. Nothing is saved: a reload starts again from the sample data.
  *

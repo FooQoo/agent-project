@@ -2,181 +2,181 @@ mod messages;
 
 use super::*;
 
-pub(super) fn all_errors() -> Vec<AgboardError> {
+pub(super) fn all_errors() -> Vec<AgpjError> {
     vec![
-        AgboardError::ProjectNotFound {
+        AgpjError::ProjectNotFound {
             project: "Alpha".into(),
         },
-        AgboardError::ProjectNameExists {
+        AgpjError::ProjectNameExists {
             name: "Alpha".into(),
         },
-        AgboardError::TaskNotFound { id: 7 },
-        AgboardError::InvalidArgument {
+        AgpjError::TaskNotFound { id: 7 },
+        AgpjError::InvalidArgument {
             message: "unexpected argument '--x'".into(),
             command: Some("add".into()),
         },
-        AgboardError::InvalidValue {
+        AgpjError::InvalidValue {
             field: "title".into(),
             reason: "r".into(),
         },
-        AgboardError::InvalidStateForColumn {
+        AgpjError::InvalidStateForColumn {
             id: 11,
             state: RunState::Running,
             column: Column::Todo,
         },
-        AgboardError::InvalidStateForAssignee,
-        AgboardError::InvalidStateChange {
+        AgpjError::InvalidStateForAssignee,
+        AgpjError::InvalidStateChange {
             from: RunState::Ran,
             to: RunState::Idle,
         },
-        AgboardError::NoCurrentVersion,
-        AgboardError::TaskIsDraft { id: 5 },
-        AgboardError::TaskInBacklog { id: 5 },
-        AgboardError::EpicIsDraft { id: "E".into() },
-        AgboardError::SendWithOpenQuestions {
+        AgpjError::NoCurrentVersion,
+        AgpjError::TaskIsDraft { id: 5 },
+        AgpjError::TaskInBacklog { id: 5 },
+        AgpjError::EpicIsDraft { id: "E".into() },
+        AgpjError::SendWithOpenQuestions {
             ids: vec!["Q-1".into()],
         },
-        AgboardError::HumanOnly {
+        AgpjError::HumanOnly {
             action: "start".into(),
         },
-        AgboardError::TaskIsDone { id: 5 },
-        AgboardError::AcceptanceUnmet {
+        AgpjError::TaskIsDone { id: 5 },
+        AgpjError::AcceptanceUnmet {
             id: 5,
             unmet: vec!["AC-2".into()],
         },
-        AgboardError::TaskNotDraft { id: 5 },
-        AgboardError::InvalidStateForDraft {
+        AgpjError::TaskNotDraft { id: 5 },
+        AgpjError::InvalidStateForDraft {
             id: 6,
             state: RunState::Running,
         },
-        AgboardError::QuestionsUnanswered { id: 5 },
-        AgboardError::QuestionAnswered {
+        AgpjError::QuestionsUnanswered { id: 5 },
+        AgpjError::QuestionAnswered {
             ids: vec!["Q-1".into()],
         },
-        AgboardError::QuestionWithdrawn {
+        AgpjError::QuestionWithdrawn {
             ids: vec!["Q-2".into()],
         },
-        AgboardError::StartBlockedByQuestions {
+        AgpjError::StartBlockedByQuestions {
             ids: vec!["Q-2".into()],
         },
-        AgboardError::MessageNotFound { id: "Q-3".into() },
-        AgboardError::MessageClosed { id: "Q-3".into() },
-        AgboardError::MessageTypeMismatch {
+        AgpjError::MessageNotFound { id: "Q-3".into() },
+        AgpjError::MessageClosed { id: "Q-3".into() },
+        AgpjError::MessageTypeMismatch {
             id: "Q-3".into(),
             expected: "request".into(),
         },
-        AgboardError::RequestAccepted { id: "Q-4".into() },
-        AgboardError::AnswerAccepted { id: "Q-4".into() },
-        AgboardError::QuestionOpen { id: "Q-4".into() },
-        AgboardError::RequestWithdrawn { id: "Q-4".into() },
-        AgboardError::AiOnly {
+        AgpjError::RequestAccepted { id: "Q-4".into() },
+        AgpjError::AnswerAccepted { id: "Q-4".into() },
+        AgpjError::QuestionOpen { id: "Q-4".into() },
+        AgpjError::RequestWithdrawn { id: "Q-4".into() },
+        AgpjError::AiOnly {
             action: "withdrawing a question".into(),
         },
-        AgboardError::TaskStatusChanged {
+        AgpjError::TaskStatusChanged {
             id: 5,
             current: Column::Done,
         },
-        AgboardError::PlannedVersionChanged {
+        AgpjError::PlannedVersionChanged {
             id: 5,
             current: Some("v1".into()),
         },
-        AgboardError::ConfirmationRequired {
+        AgpjError::ConfirmationRequired {
             operation: "deleting a task".into(),
         },
-        AgboardError::FileError {
+        AgpjError::FileError {
             action: FileAction::Read,
             file: "a.json".into(),
             reason: "No such file or directory (os error 2)".into(),
         },
-        AgboardError::FileInvalid {
+        AgpjError::FileInvalid {
             file: "projects/p/tasks/1/task.json".into(),
             field: "title".into(),
             reason: "Titles must be 1 to 100 characters on one line.".into(),
         },
-        AgboardError::FileUnreadable {
+        AgpjError::FileUnreadable {
             file: "projects/p/project.json".into(),
             reason: "Permission denied (os error 13)".into(),
         },
-        AgboardError::FormatUnsupported {
+        AgpjError::FormatUnsupported {
             file: "workspace.json".into(),
             version: "2".into(),
             expected: 1,
         },
-        AgboardError::ChoiceUnknown {
+        AgpjError::ChoiceUnknown {
             question_id: "Q-1".into(),
             choice_id: "b".into(),
         },
-        AgboardError::DatabaseBusy,
-        AgboardError::DatabaseError {
+        AgpjError::DatabaseBusy,
+        AgpjError::DatabaseError {
             reason: "boom".into(),
         },
-        AgboardError::AlreadyServing {
+        AgpjError::AlreadyServing {
             port: 7420,
             auto: false,
         },
-        AgboardError::PortInUse {
+        AgpjError::PortInUse {
             port: 7420,
             holder: PortHolder::Unknown,
         },
-        AgboardError::LocalNetworkDenied,
-        AgboardError::BoardUnavailable {
+        AgpjError::LocalNetworkDenied,
+        AgpjError::BoardUnavailable {
             reason: "no running server".into(),
         },
-        AgboardError::CursorInvalid {
+        AgpjError::CursorInvalid {
             reason: "wrong project".into(),
         },
-        AgboardError::WaitTimeout,
-        AgboardError::DocsPathInvalid {
+        AgpjError::WaitTimeout,
+        AgpjError::DocsPathInvalid {
             reason: "Paths are relative and use /.".into(),
         },
-        AgboardError::DocsNotFound {
+        AgpjError::DocsNotFound {
             path: "a/b.md".into(),
         },
-        AgboardError::DocsNotMarkdown {
+        AgpjError::DocsNotMarkdown {
             path: "a.txt".into(),
         },
-        AgboardError::DocsTooLarge {
+        AgpjError::DocsTooLarge {
             path: "a.md".into(),
             limit: 2_097_152,
         },
-        AgboardError::DocsNotUtf8 {
+        AgpjError::DocsNotUtf8 {
             path: "a.md".into(),
         },
-        AgboardError::DocsAssetType {
+        AgpjError::DocsAssetType {
             path: "a.svg".into(),
         },
-        AgboardError::DocsNotImplemented,
-        AgboardError::DocsOpenFailed {
+        AgpjError::DocsNotImplemented,
+        AgpjError::DocsOpenFailed {
             reason: "xdg-open is not installed".into(),
         },
-        AgboardError::ReleaseDocRefused {
+        AgpjError::ReleaseDocRefused {
             file: "docs/release/v1.8.0.md".into(),
             reason: "The file changed while it was generated.".into(),
         },
-        AgboardError::RemoteUnavailable {
+        AgpjError::RemoteUnavailable {
             reason: "No server is running.".into(),
         },
-        AgboardError::InvalidDomain,
-        AgboardError::KeychainUnavailable {
+        AgpjError::InvalidDomain,
+        AgpjError::KeychainUnavailable {
             reason: "The keychain is not available.".into(),
         },
-        AgboardError::BrowserOpenFailed {
+        AgpjError::BrowserOpenFailed {
             url: "http://127.0.0.1:7420/?project=0123456789abcdef0123456789abcdef".into(),
             reason: "Cannot start xdg-open: No such file or directory (os error 2).".into(),
         },
-        AgboardError::AgentCliMissing {
+        AgpjError::AgentCliMissing {
             tool: "claude".into(),
         },
-        AgboardError::AgentCliLoggedOut {
+        AgpjError::AgentCliLoggedOut {
             tool: "codex".into(),
         },
-        AgboardError::SessionLaunchRefused {
+        AgpjError::SessionLaunchRefused {
             reason: "A board-launched claude-code session already exists.".into(),
         },
-        AgboardError::SessionLaunchFailed {
+        AgpjError::SessionLaunchFailed {
             reason: "claude could not be started.".into(),
         },
-        AgboardError::ProjectHasNoFolder {
+        AgpjError::ProjectHasNoFolder {
             project: "demo".into(),
         },
     ]
@@ -261,16 +261,16 @@ fn codes_and_exit_codes_follow_the_design_table() {
 
 #[test]
 fn invalid_argument_without_command_points_to_top_level_help() {
-    let e = AgboardError::InvalidArgument {
+    let e = AgpjError::InvalidArgument {
         message: "bad".into(),
         command: None,
     };
-    assert_eq!(e.reason(), "Run \"agboard --help\" for usage.");
+    assert_eq!(e.reason(), "Run \"agpj --help\" for usage.");
 }
 
 #[test]
 fn write_file_error_says_cannot_write() {
-    let e = AgboardError::FileError {
+    let e = AgpjError::FileError {
         action: FileAction::Write,
         file: "out.json".into(),
         reason: "denied".into(),
@@ -280,5 +280,5 @@ fn write_file_error_says_cannot_write() {
 
 #[test]
 fn display_is_the_message() {
-    assert_eq!(AgboardError::DatabaseBusy.to_string(), "the board is busy.");
+    assert_eq!(AgpjError::DatabaseBusy.to_string(), "the board is busy.");
 }

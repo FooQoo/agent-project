@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "agent-board"
+name = "agent-project"
 version = "1.7.0"
 dependencies = [
  "assert_cmd",

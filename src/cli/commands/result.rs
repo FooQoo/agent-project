@@ -6,18 +6,18 @@ use std::fs;
 use crate::cli::args::{ResultAddArgs, ResultArgs, ResultCommand, ResultLsArgs};
 use crate::cli::{Context, Outcome};
 use crate::domain::{AttachmentInput, ResultKind};
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 use crate::file_store::{ResultInput, layout};
 use serde_json::json;
 
-pub fn run(ctx: &mut Context, args: &ResultArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &ResultArgs) -> Result<Outcome, AgpjError> {
     match &args.command {
         ResultCommand::Ls(args) => list(ctx, args),
         ResultCommand::Add(args) => add(ctx, args),
     }
 }
 
-fn list(ctx: &mut Context, args: &ResultLsArgs) -> Result<Outcome, AgboardError> {
+fn list(ctx: &mut Context, args: &ResultLsArgs) -> Result<Outcome, AgpjError> {
     let results = ctx.files.task(ctx.project_id()?, args.task_id)?.results;
     let human = if results.is_empty() {
         format!("#{} has no results.\n", args.task_id)
@@ -42,16 +42,16 @@ fn list(ctx: &mut Context, args: &ResultLsArgs) -> Result<Outcome, AgboardError>
     })
 }
 
-fn add(ctx: &mut Context, args: &ResultAddArgs) -> Result<Outcome, AgboardError> {
+fn add(ctx: &mut Context, args: &ResultAddArgs) -> Result<Outcome, AgpjError> {
     let mut images = Vec::new();
     for path in &args.file {
-        let bytes = fs::read(path).map_err(|e| AgboardError::FileError {
+        let bytes = fs::read(path).map_err(|e| AgpjError::FileError {
             action: FileAction::Read,
             file: path.display().to_string(),
             reason: e.to_string(),
         })?;
         images.push(AttachmentInput {
-            id: crate::file_store::io::random_hex(16).map_err(|e| AgboardError::FileError {
+            id: crate::file_store::io::random_hex(16).map_err(|e| AgpjError::FileError {
                 action: FileAction::Write,
                 file: "attachment".into(),
                 reason: e.to_string(),

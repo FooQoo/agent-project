@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { mainProject, resetBoard } from '../helpers/agboard';
+import { mainProject, resetBoard } from '../helpers/agpj';
 import { stubArchivePages } from '../helpers/archive-pages';
 import { resetPreferences } from '../helpers/preferences';
 

@@ -1,4 +1,4 @@
-import { agboardOk, listTasks, mainProject, resetBoard } from '../helpers/agboard';
+import { agpjOk, listTasks, mainProject, resetBoard } from '../helpers/agpj';
 import { listRow, messagesItem, openMessageList } from '../helpers/answer';
 import { expect, test } from '../helpers/fixtures';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
@@ -54,7 +54,7 @@ test.beforeEach(async ({ page }) => {
     };
   });
   const id = listTasks(mainProject).find((task) => task.taskStatus === 'doing' && task.assignee === 'ai')!.id;
-  agboardOk(mainProject, [
+  agpjOk(mainProject, [
     'message', 'ask', '--actor', 'ai', '--no-wait', '--task', String(id), '--questions-json',
     JSON.stringify({
       questions: [{ body: question, choices: [{ id: 'mail', label: 'メールとパスワードだけ' }, { id: 'sso', label: '外部アカウントも足す' }] }],

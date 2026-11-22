@@ -6,7 +6,7 @@ use chrono::{DateTime, Utc};
 use super::super::{ensure_ai_task_not_done, lock_project, stamp};
 use super::{broken_file_error, message_change};
 use crate::domain::{Actor, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::frontmatter::compose_questions;
 use crate::file_store::history::{ParseMode, parse_task};
@@ -26,9 +26,9 @@ impl FileStore {
         link: bool,
         actor: Actor,
         now: DateTime<Utc>,
-    ) -> Result<TaskView, AgboardError> {
+    ) -> Result<TaskView, AgpjError> {
         if ids.is_empty() {
-            return Err(AgboardError::InvalidValue {
+            return Err(AgpjError::InvalidValue {
                 field: "questions".into(),
                 reason: "Name at least one question.".into(),
             });
@@ -37,10 +37,10 @@ impl FileStore {
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, task_id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id: task_id });
+            return Err(AgpjError::TaskArchived { id: task_id });
         }
         if actor == Actor::Ai && task.draft == Some(crate::domain::Draft::Human) {
-            return Err(AgboardError::TaskIsDraft { id: task_id });
+            return Err(AgpjError::TaskIsDraft { id: task_id });
         }
         ensure_ai_task_not_done(&task, actor)?;
         let index = QaIndex::load(shared, &project_dir)?;
@@ -49,14 +49,14 @@ impl FileStore {
                 match index.find(id) {
                     Some(Message::Question(_)) => {}
                     Some(Message::Request(_)) => {
-                        return Err(AgboardError::MessageTypeMismatch {
+                        return Err(AgpjError::MessageTypeMismatch {
                             id: id.clone(),
                             expected: "question".into(),
                         });
                     }
                     None => {
                         return Err(broken_file_error(&index)
-                            .unwrap_or(AgboardError::MessageNotFound { id: id.clone() }));
+                            .unwrap_or(AgpjError::MessageNotFound { id: id.clone() }));
                     }
                 }
             }
@@ -68,7 +68,7 @@ impl FileStore {
         );
         let parsed = parse_task(&text, ParseMode::Stored);
         if let Some(d) = parsed.questions_defects.first() {
-            return Err(AgboardError::FileInvalid {
+            return Err(AgpjError::FileInvalid {
                 file: label,
                 field: d.field.clone(),
                 reason: d.reason.clone(),
@@ -125,7 +125,7 @@ impl FileStore {
         if changed {
             task.updated_at = at;
             let composed =
-                compose_questions(&text, &current).map_err(|d| AgboardError::FileInvalid {
+                compose_questions(&text, &current).map_err(|d| AgpjError::FileInvalid {
                     file: label,
                     field: d.field,
                     reason: d.reason,

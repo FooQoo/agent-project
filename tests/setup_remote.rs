@@ -1,7 +1,7 @@
-//! `agboard setup remote`: save the ngrok connection settings.
+//! `agpj setup remote`: save the ngrok connection settings.
 //!
-//! Runs the real `agboard` binary with `AGBOARD_HOME` in a temporary directory and
-//! `AGBOARD_KEYCHAIN=none`, so the real keychain is never touched. No server is
+//! Runs the real `agpj` binary with `AGPJ_HOME` in a temporary directory and
+//! `AGPJ_KEYCHAIN=none`, so the real keychain is never touched. No server is
 //! started and port 7420 is never used.
 
 use std::path::Path;
@@ -12,12 +12,12 @@ use serde_json::Value;
 const TOKEN: &str = "tok_secret_value_123";
 const FILE: &str = ".internal/monitor-connection.json";
 
-fn agboard(home: &Path) -> Command {
-    let mut cmd = Command::cargo_bin("agboard").unwrap();
-    cmd.env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_KEYCHAIN", "none")
-        .env("AGBOARD_HOME", home)
+fn agpj(home: &Path) -> Command {
+    let mut cmd = Command::cargo_bin("agpj").unwrap();
+    cmd.env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_KEYCHAIN", "none")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .env_remove("NGROK_AUTHTOKEN")
         .current_dir(home);
@@ -35,7 +35,7 @@ fn text(out: &std::process::Output) -> String {
 #[test]
 fn saving_a_domain_and_enabled_uses_the_boards_file_and_says_when_it_applies() {
     let home = tempfile::tempdir().unwrap();
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args([
             "setup",
             "remote",
@@ -63,7 +63,7 @@ fn saving_a_domain_and_enabled_uses_the_boards_file_and_says_when_it_applies() {
     assert_eq!(file["revision"], 1);
     assert_eq!(file["domain"], "example.ngrok-free.dev");
 
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args(["setup", "remote", "--clear-domain"])
         .output()
         .unwrap();
@@ -84,7 +84,7 @@ fn saving_a_domain_and_enabled_uses_the_boards_file_and_says_when_it_applies() {
 #[test]
 fn a_bad_domain_exits_2_with_invalid_domain_and_saves_nothing() {
     let home = tempfile::tempdir().unwrap();
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args([
             "setup",
             "remote",
@@ -104,7 +104,7 @@ fn a_bad_domain_exits_2_with_invalid_domain_and_saves_nothing() {
 fn the_token_is_read_only_from_stdin_and_never_appears_anywhere() {
     let home = tempfile::tempdir().unwrap();
     // No argument takes the token.
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args(["setup", "remote", "--token", TOKEN])
         .output()
         .unwrap();
@@ -112,7 +112,7 @@ fn the_token_is_read_only_from_stdin_and_never_appears_anywhere() {
     assert!(!text(&out).contains(TOKEN), "{}", text(&out));
 
     // With no keychain here the save is refused, changes nothing, and echoes nothing.
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args([
             "setup",
             "remote",
@@ -135,7 +135,7 @@ fn the_token_is_read_only_from_stdin_and_never_appears_anywhere() {
 
     // An empty or malformed token is refused without echoing it.
     for input in ["", "two words"] {
-        let out = agboard(home.path())
+        let out = agpj(home.path())
             .args(["setup", "remote", "--token-stdin"])
             .write_stdin(input)
             .output()
@@ -155,7 +155,7 @@ fn the_token_is_read_only_from_stdin_and_never_appears_anywhere() {
 #[test]
 fn without_a_terminal_and_without_options_nothing_is_asked() {
     let home = tempfile::tempdir().unwrap();
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args(["setup", "remote"])
         .timeout(std::time::Duration::from_secs(20))
         .output()
@@ -178,7 +178,7 @@ fn it_does_not_take_a_project_or_mix_with_the_agent_options() {
             "--clear-domain",
         ],
     ] {
-        let out = agboard(home.path()).args(&args).output().unwrap();
+        let out = agpj(home.path()).args(&args).output().unwrap();
         assert_eq!(out.status.code(), Some(2), "{args:?}: {}", text(&out));
     }
     assert!(!home.path().join(FILE).exists());
@@ -200,7 +200,7 @@ fn walk(dir: &Path) -> Vec<std::path::PathBuf> {
 #[test]
 fn show_remote_reads_what_was_saved_and_show_still_takes_a_task_id() {
     let home = tempfile::tempdir().unwrap();
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args([
             "setup",
             "remote",
@@ -212,7 +212,7 @@ fn show_remote_reads_what_was_saved_and_show_still_takes_a_task_id() {
         .output()
         .unwrap();
     assert_eq!(out.status.code(), Some(0), "{}", text(&out));
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args(["--json", "show", "remote"])
         .output()
         .unwrap();
@@ -222,15 +222,15 @@ fn show_remote_reads_what_was_saved_and_show_still_takes_a_task_id() {
     assert_eq!(json["enabled"], true);
     assert_eq!(json["tokenSaved"], false);
     // `show <id>` is a task and needs a project; `show` alone says what to give.
-    let out = agboard(home.path()).args(["show", "12"]).output().unwrap();
+    let out = agpj(home.path()).args(["show", "12"]).output().unwrap();
     assert_eq!(out.status.code(), Some(2), "{}", text(&out));
     assert!(text(&out).contains("--project"), "{}", text(&out));
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args(["--project", "x", "show"])
         .output()
         .unwrap();
     assert_eq!(out.status.code(), Some(2), "{}", text(&out));
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args(["--project", "x", "show", "abc"])
         .output()
         .unwrap();
@@ -240,7 +240,7 @@ fn show_remote_reads_what_was_saved_and_show_still_takes_a_task_id() {
 #[test]
 fn the_provider_is_saved_and_a_name_other_than_ngrok_or_tailscale_is_refused() {
     let home = tempfile::tempdir().unwrap();
-    let out = agboard(home.path())
+    let out = agpj(home.path())
         .args([
             "--json",
             "setup",
@@ -260,7 +260,7 @@ fn the_provider_is_saved_and_a_name_other_than_ngrok_or_tailscale_is_refused() {
     assert_eq!(file["provider"], "tailscale");
     assert_eq!(file["enabled"], true);
 
-    let bad = agboard(home.path())
+    let bad = agpj(home.path())
         .args(["setup", "remote", "--provider", "zerotier"])
         .output()
         .unwrap();
@@ -284,7 +284,7 @@ fn fake_tailscale(status: &str) -> tempfile::TempDir {
 /// Save the Tailscale provider with `path` as the `PATH`, and return the JSON and the text.
 fn save_tailscale(home: &Path, path: &Path) -> (Value, String) {
     let run = |json: bool| {
-        let mut cmd = agboard(home);
+        let mut cmd = agpj(home);
         cmd.env("PATH", path)
             .args(["setup", "remote", "--provider", "tailscale"]);
         if json {

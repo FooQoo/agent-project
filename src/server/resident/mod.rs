@@ -7,7 +7,7 @@
 //! tool and project. [`cli`] is the only place that knows the CLIs' names and flags.
 //!
 //! A child lives in its own process group, so stopping it also stops the commands it started (for
-//! example its `agboard wait`). A thread reaps each child when it exits, whoever ends it, and
+//! example its `agpj wait`). A thread reaps each child when it exits, whoever ends it, and
 //! takes its entry out of the session registry so that a launch is possible again at once instead
 //! of after the registry's grace period.
 
@@ -35,7 +35,7 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::sessions::{SessionRegistry, Tool};
 pub use autostart::{AutoStart, AutoStartStore};
 pub use cli::{Executables, ModelList, ModelOption};
@@ -204,12 +204,12 @@ impl Launcher {
     }
 
     /// The tail of the log of `tool`: at most 64 KiB, starting at a line boundary.
-    pub fn read_log(&self, tool: Tool) -> Result<LogTail, AgboardError> {
+    pub fn read_log(&self, tool: Tool) -> Result<LogTail, AgpjError> {
         log_tail::read_tail(tool.as_str(), &self.log_path(tool))
     }
 
     /// The models to offer for `tool`; see [`Executables::models`].
-    pub fn models(&self, tool: Tool) -> Result<ModelList, AgboardError> {
+    pub fn models(&self, tool: Tool) -> Result<ModelList, AgpjError> {
         self.executables.models(tool)
     }
 
@@ -241,7 +241,7 @@ impl Launcher {
         folder: &Path,
         tool: Tool,
         model: Option<&str>,
-    ) -> Result<Launched, AgboardError> {
+    ) -> Result<Launched, AgpjError> {
         self.spawn_child(project, project_name, folder, tool, model, Spawn::User)
     }
 
@@ -259,13 +259,13 @@ impl Launcher {
     /// Returns whether a session was running. When it returns, a new launch is possible.
     /// A stop clears what the supervisor keeps, so the session is not restarted and
     /// a restart that was waiting or a failure that was shown is cleared too.
-    pub fn stop(&self) -> Result<bool, AgboardError> {
+    pub fn stop(&self) -> Result<bool, AgpjError> {
         self.stop_because(
             "a person asked to stop it (also what a restart or a model change does first)",
         )
     }
 
-    fn stop_because(&self, reason: &str) -> Result<bool, AgboardError> {
+    fn stop_because(&self, reason: &str) -> Result<bool, AgpjError> {
         // The gate keeps a launch that is already running from adding its plan after the clear.
         let _gate = self.gate();
         self.reset_plans();

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { agboard, agboardOk, mainProject, nextTaskId, resetBoard, taskBody, workspace } from '../helpers/agboard';
+import { agpj, agpjOk, mainProject, nextTaskId, resetBoard, taskBody, workspace } from '../helpers/agpj';
 import { archiveTask, putDraft } from '../helpers/drafts';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
 
@@ -30,7 +30,7 @@ interface ShownTask {
 }
 
 function show(id: number): ShownTask {
-  return JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  return JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 }
 
 function taskFile(id: number): string {
@@ -39,7 +39,7 @@ function taskFile(id: number): string {
 
 function addTask(title: string): number {
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', title, `--desc=${BODY}`, '--assignee', 'ai', '--actor', 'human']);
+  agpjOk(mainProject, ['add', title, `--desc=${BODY}`, '--assignee', 'ai', '--actor', 'human']);
   return id;
 }
 
@@ -118,10 +118,10 @@ test('PM-2 the first change makes a draft the CLI refuses, and saving gives the 
   await expect.poll(() => show(id).draft).toBe('human');
 
   // The agent's CLI is refused, in text and in the machine-readable error.
-  const refused = agboard(mainProject, ['edit', String(id), '--title', 'By an agent']);
+  const refused = agpj(mainProject, ['edit', String(id), '--title', 'By an agent']);
   expect(refused.code).toBe(1);
   expect(refused.stderr).toContain(`task #${id} is a draft and read-only for agents.`);
-  const json = agboard(mainProject, ['edit', String(id), '--title', 'By an agent', '--json']);
+  const json = agpj(mainProject, ['edit', String(id), '--title', 'By an agent', '--json']);
   expect(JSON.parse(json.stderr || json.stdout).error.code).toBe('task_is_draft');
   expect(show(id).title).toBe('Changed in the preview');
 
@@ -130,7 +130,7 @@ test('PM-2 the first change makes a draft the CLI refuses, and saving gives the 
   await expect(dialog).toHaveCount(0);
   await expect.poll(() => show(id).draft).toBeNull();
   expect(show(id).title).toBe('Changed in the preview, again');
-  expect(agboard(mainProject, ['edit', String(id), '--title', 'By an agent after']).code).toBe(0);
+  expect(agpj(mainProject, ['edit', String(id), '--title', 'By an agent after']).code).toBe(0);
 });
 
 test('PM-2 Cmd+S and Ctrl+S save like the Save button, from the title and from the body', async ({ page }) => {
@@ -193,7 +193,7 @@ test('PM-3 discarding takes the draft back, with the discard in the history and 
   await expect.poll(() => show(id).draft).toBeNull();
 
   // A task that was a draft before stays a draft after a discard.
-  agboardOk(mainProject, ['edit', String(id), '--title', 'Draft from before']);
+  agpjOk(mainProject, ['edit', String(id), '--title', 'Draft from before']);
   await putDraft(id);
   await openBoard(page);
   dialog = await openPreview(page, id);
@@ -206,8 +206,8 @@ test('PM-3 discarding takes the draft back, with the discard in the history and 
 
 test('PM-4 a running task opens read-only, and a task that starts running turns the preview read-only', async ({ page }) => {
   const running = addTask('Already running');
-  agboardOk(mainProject, ['mv', String(running), 'doing', '--actor', 'ai', '--reason', 'Start']);
-  agboardOk(mainProject, ['state', String(running), 'running', '--actor', 'ai', '--reason', 'Working']);
+  agpjOk(mainProject, ['mv', String(running), 'doing', '--actor', 'ai', '--reason', 'Start']);
+  agpjOk(mainProject, ['state', String(running), 'running', '--actor', 'ai', '--reason', 'Working']);
   const idle = addTask('Starts running later');
   await openBoard(page);
 
@@ -226,11 +226,11 @@ test('PM-4 a running task opens read-only, and a task that starts running turns 
 
   // Followed while open: the agent starts, the preview turns read-only; the run ends, it turns back.
   dialog = await openPreview(page, idle);
-  agboardOk(mainProject, ['mv', String(idle), 'doing', '--actor', 'ai', '--reason', 'Start']);
-  agboardOk(mainProject, ['state', String(idle), 'running', '--actor', 'ai', '--reason', 'Working']);
+  agpjOk(mainProject, ['mv', String(idle), 'doing', '--actor', 'ai', '--reason', 'Start']);
+  agpjOk(mainProject, ['state', String(idle), 'running', '--actor', 'ai', '--reason', 'Working']);
   await expect(dialog).toHaveAttribute('data-read-only', '', { timeout: 15_000 });
   await expect(titleField(dialog)).toBeDisabled();
-  agboardOk(mainProject, ['state', String(idle), 'paused', '--actor', 'ai', '--reason', 'Done working']);
+  agpjOk(mainProject, ['state', String(idle), 'paused', '--actor', 'ai', '--reason', 'Done working']);
   await expect(titleField(dialog)).toBeEnabled({ timeout: 15_000 });
   await dialog.getByRole('button', { name: 'Close', exact: true }).first().click();
   await expect(dialog).toHaveCount(0);
@@ -243,8 +243,8 @@ test('PM-4 a run that began before the first change stops the save and keeps the
 
   // The page does not see the change for a while, so the dialog still shows an idle task.
   await slowReads(page, 4_000);
-  agboardOk(mainProject, ['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Start']);
-  agboardOk(mainProject, ['state', String(id), 'running', '--actor', 'ai', '--reason', 'Working']);
+  agpjOk(mainProject, ['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Start']);
+  agpjOk(mainProject, ['state', String(id), 'running', '--actor', 'ai', '--reason', 'Working']);
   await titleField(dialog).fill('Typed while it runs');
 
   // The server refuses the draft; the input stays; the footer says why and that the change is not saved.
@@ -265,7 +265,7 @@ test('PM-5 an untouched preview follows the latest and shows when; a change that
 
   // Followed: with no difference the preview takes what the agent wrote and says when.
   let dialog = await openPreview(page, followed);
-  agboardOk(mainProject, ['edit', String(followed), '--title', 'Followed, as the agent wrote it']);
+  agpjOk(mainProject, ['edit', String(followed), '--title', 'Followed, as the agent wrote it']);
   await expect(titleField(dialog)).toHaveValue('Followed, as the agent wrote it', { timeout: 15_000 });
   await expect(dialog.getByText(/^Updated at /)).toBeVisible();
   await dialog.getByRole('button', { name: 'Close', exact: true }).first().click();
@@ -274,7 +274,7 @@ test('PM-5 an untouched preview follows the latest and shows when; a change that
   // Crossed: the agent wrote after the dialog read, and before the first change was typed.
   dialog = await openPreview(page, crossed);
   await slowReads(page, 4_000);
-  agboardOk(mainProject, ['edit', String(crossed), '--title', 'Crossed, by the agent']);
+  agpjOk(mainProject, ['edit', String(crossed), '--title', 'Crossed, by the agent']);
   await titleField(dialog).fill('Crossed, by the person');
   await expect(dialog.getByText("An agent changed this task while it was open, so it can't be saved.")).toBeVisible();
   await expect(dialog.getByText('You have unsaved changes.')).toBeVisible();
@@ -292,7 +292,7 @@ test('PM-5 an untouched preview follows the latest and shows when; a change that
   // Only the state and the history changed: that is not a crossing, and the change can be saved.
   dialog = await openPreview(page, statusOnly);
   await slowReads(page, 4_000);
-  agboardOk(mainProject, ['mv', String(statusOnly), 'doing', '--actor', 'ai', '--reason', 'Start']);
+  agpjOk(mainProject, ['mv', String(statusOnly), 'doing', '--actor', 'ai', '--reason', 'Start']);
   await titleField(dialog).fill('Status only, saved');
   await expect(dialog.getByText(LOCKED)).toBeVisible();
   await expect(dialog.getByText("An agent changed this task while it was open, so it can't be saved.")).toHaveCount(0);
@@ -308,11 +308,11 @@ test('PM-5 an untouched preview follows the latest and shows when; a change that
 test('PM-6 the epic tab and the epic details open the epic preview; a draft epic is refused by the CLI, discarded and saved on the server', async ({
   page,
 }) => {
-  agboardOk(mainProject, ['epic', 'add', 'PREVIEWEP', '--name', 'Preview epic', '--color', '#7C3AED', '--actor', 'human']);
+  agpjOk(mainProject, ['epic', 'add', 'PREVIEWEP', '--name', 'Preview epic', '--color', '#7C3AED', '--actor', 'human']);
   const id = nextTaskId(mainProject);
-  agboardOk(mainProject, ['add', 'In the preview epic', `--desc=${BODY}`, '--assignee', 'ai', '--actor', 'human', '--epic', 'PREVIEWEP']);
+  agpjOk(mainProject, ['add', 'In the preview epic', `--desc=${BODY}`, '--assignee', 'ai', '--actor', 'human', '--epic', 'PREVIEWEP']);
   await openBoard(page);
-  const epic = () => JSON.parse(agboardOk(mainProject, ['epic', 'show', 'PREVIEWEP', '--json']).stdout).epic as {
+  const epic = () => JSON.parse(agpjOk(mainProject, ['epic', 'show', 'PREVIEWEP', '--json']).stdout).epic as {
     name: string;
     draft: 'human' | 'ai' | null;
   };
@@ -341,7 +341,7 @@ test('PM-6 the epic tab and the epic details open the epic preview; a draft epic
   // The first change makes a draft, and the CLI is refused.
   await name.fill('Preview epic, changed');
   await expect.poll(() => epic().draft).toBe('human');
-  const refused = agboard(mainProject, ['epic', 'edit', 'PREVIEWEP', '--name', 'By an agent', '--json']);
+  const refused = agpj(mainProject, ['epic', 'edit', 'PREVIEWEP', '--name', 'By an agent', '--json']);
   expect(refused.code).toBe(1);
   expect(JSON.parse(refused.stderr || refused.stdout).error.code).toBe('epic_is_draft');
   expect(epic().name).toBe('Preview epic');
@@ -359,7 +359,7 @@ test('PM-6 the epic tab and the epic details open the epic preview; a draft epic
   await expect(epicDialog).toHaveCount(0);
   await expect.poll(() => epic().draft).toBeNull();
   expect(epic().name).toBe('Preview epic');
-  expect(agboard(mainProject, ['epic', 'edit', 'PREVIEWEP', '--name', 'Preview epic']).code).toBe(0);
+  expect(agpj(mainProject, ['epic', 'edit', 'PREVIEWEP', '--name', 'Preview epic']).code).toBe(0);
 
   // Saving on the real server stores the change and gives the epic back.
   await page.getByRole('button', { name: 'Edit epic' }).click();

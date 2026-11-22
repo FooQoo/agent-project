@@ -4,10 +4,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
 import {
-  agboard,
-  agboardBinary,
-  agboardCatalogOk,
-  agboardOk,
+  agpj,
+  agpjBinary,
+  agpjCatalogOk,
+  agpjOk,
   mainHome,
   mainOrigin,
   mainProject,
@@ -19,7 +19,7 @@ import {
   resetBoard,
   taskBody,
   workspace,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
 
 // The shared folder as the product keeps it: created by the CLI, read by two working directories, and edited
@@ -39,9 +39,9 @@ async function openBoard(page: Page, project = mainProject): Promise<void> {
 
 /** Run the CLI from `cwd`, the way a working directory of an agent would, against the test data area. */
 function cliFrom(cwd: string, args: string[]): { code: number; stdout: string; stderr: string } {
-  const result = spawnSync(agboardBinary(), args, {
+  const result = spawnSync(agpjBinary(), args, {
     cwd,
-    env: { ...process.env, AGBOARD_HOME: mainHome(), TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' },
     encoding: 'utf8',
   });
   return { code: result.status ?? -1, stdout: result.stdout, stderr: result.stderr };
@@ -50,7 +50,7 @@ function cliFrom(cwd: string, args: string[]): { code: number; stdout: string; s
 let work: string;
 
 test.beforeAll(() => {
-  work = mkdtempSync(path.join(os.tmpdir(), 'agent-board-e2e-shared-'));
+  work = mkdtempSync(path.join(os.tmpdir(), 'agent-project-e2e-shared-'));
 });
 test.afterAll(() => {
   rmSync(work, { recursive: true, force: true });
@@ -62,23 +62,23 @@ test.beforeEach(() => {
 test('a shared folder and an epic are created by the CLI, and the epic label shows on the task in its colour', async ({ page }) => {
   // A new data area gets the shared folder, a project folder with its ID, and the README.
   const name = `Shared demo ${Date.now()}`;
-  agboardCatalogOk(['project', 'create', name]);
-  const id = JSON.parse(agboard(name, ['workspace', '--json']).stdout).projectId as string;
+  agpjCatalogOk(['project', 'create', name]);
+  const id = JSON.parse(agpj(name, ['workspace', '--json']).stdout).projectId as string;
   const shared = path.join(mainHome(), 'shared');
   expect(JSON.parse(readFileSync(path.join(shared, 'workspace.json'), 'utf8'))).toEqual({
     format: 'agboard-files',
     formatVersion: 1,
   });
-  const folder = JSON.parse(agboard(name, ['workspace', '--json']).stdout).folder as string;
+  const folder = JSON.parse(agpj(name, ['workspace', '--json']).stdout).folder as string;
   expect(folder.startsWith(shared)).toBe(true);
   expect(JSON.parse(readFileSync(path.join(folder, 'project.json'), 'utf8'))).toMatchObject({ id, name, nextTaskId: 1 });
   expect(readFileSync(path.join(folder, 'README.md'), 'utf8')).toContain('TASK.md');
 
   // An epic with an empty document and a colour; a card in it.
-  agboardOk(name, ['epic', 'add', 'FILE-SHARE', '--name', 'File share', '--color', '#7C3AED', '--actor', 'human']);
+  agpjOk(name, ['epic', 'add', 'FILE-SHARE', '--name', 'File share', '--color', '#7C3AED', '--actor', 'human']);
   expect(readFileSync(path.join(folder, 'epics', 'FILE-SHARE', 'EPIC.md'), 'utf8')).toBe('');
-  const taskId = JSON.parse(agboardOk(name, ['add', 'Upload a picture', '--epic', 'FILE-SHARE', '--json']).stdout).task.id as number;
-  expect(JSON.parse(agboardOk(name, ['ls', '--json']).stdout).tasks.find((c: { id: number }) => c.id === taskId)).toMatchObject({
+  const taskId = JSON.parse(agpjOk(name, ['add', 'Upload a picture', '--epic', 'FILE-SHARE', '--json']).stdout).task.id as number;
+  expect(JSON.parse(agpjOk(name, ['ls', '--json']).stdout).tasks.find((c: { id: number }) => c.id === taskId)).toMatchObject({
     epic: { id: 'FILE-SHARE', name: 'File share', color: '#7C3AED' },
   });
 
@@ -106,9 +106,9 @@ test('two working directories read and write one shared TASK.md; the page and wa
 
   // Worktree B waits for a change; its command is started first.
   const cursor = JSON.parse(cliFrom(worktreeB, ['--project', mainProject, 'snapshot', '--json']).stdout).cursor as string;
-  const waiter = spawn(agboardBinary(), ['--project', mainProject, '--json', 'wait', '--after', cursor, '--timeout', '30'], {
+  const waiter = spawn(agpjBinary(), ['--project', mainProject, '--json', 'wait', '--after', cursor, '--timeout', '30'], {
     cwd: worktreeB,
-    env: { ...process.env, AGBOARD_HOME: mainHome(), TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let waited = '';
@@ -131,9 +131,9 @@ test('two working directories read and write one shared TASK.md; the page and wa
   // A save with the same content is no change: a new wait stays open, and reports nothing when it times out.
   const cursor2 = JSON.parse(cliFrom(worktreeB, ['--project', mainProject, 'snapshot', '--json']).stdout).cursor as string;
   let quietOut = '';
-  const quiet = spawn(agboardBinary(), ['--project', mainProject, '--json', 'wait', '--after', cursor2, '--timeout', '6'], {
+  const quiet = spawn(agpjBinary(), ['--project', mainProject, '--json', 'wait', '--after', cursor2, '--timeout', '6'], {
     cwd: worktreeB,
-    env: { ...process.env, AGBOARD_HOME: mainHome(), TZ: 'UTC' },
+    env: { ...process.env, AGPJ_HOME: mainHome(), TZ: 'UTC' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   quiet.stdout.on('data', (chunk) => (quietOut += chunk));
@@ -158,7 +158,7 @@ test('an image reference that points at another owner or outside the folder is n
   // Card 14 owns a picture; card 13 refers to it, with a path that is not its own, and to paths outside the folder.
   const owned = path.join(work, 'owned.png');
   writeFileSync(owned, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgaPj/HwAEggJ/59habAAAAABJRU5ErkJggg==', 'base64'));
-  const added = JSON.parse(agboardOk(mainProject, ['attachment', 'add', '14', '--file', owned, '--actor', 'ai', '--json']).stdout);
+  const added = JSON.parse(agpjOk(mainProject, ['attachment', 'add', '14', '--file', owned, '--actor', 'ai', '--json']).stdout);
   const otherId = (added.attachment?.id ?? added.id) as string;
   const folder = folderOf(mainProject);
   const body = taskBody(

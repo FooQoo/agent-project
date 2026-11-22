@@ -66,7 +66,7 @@ describe('DetailPanel', () => {
     expect(container.querySelector('.detail__meta .status-label--done')?.textContent).toBe('Done');
     expect(screen.getByRole('tab', { name: 'Description', selected: true })).toBeTruthy();
     expect(
-      await screen.findByText('Create the storage for the board with agboard init.'),
+      await screen.findByText('Create the storage for the board with agpj init.'),
     ).toBeTruthy();
     // The whole task is read when the drawer opens, so the count is known before the tab is opened.
     expect(await screen.findByRole('tab', { name: /^History 3$/ })).toBeTruthy();

@@ -1,7 +1,7 @@
 import type { Locale } from '@/shared/i18n';
 
 /** The scheme is joined here so the source keeps no literal remote address (see test/styles.test.ts). */
-const SITE = `${'https'}://fooqoo.github.io/agent-board`;
+const SITE = `${'https'}://fooqoo.github.io/agent-project`;
 
 /** The user guide page on resident agents, with its warning about unattended automatic approval. */
 export const residentGuideUrl = (locale: Locale): string =>

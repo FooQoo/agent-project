@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
-import { agboard, agboardCatalogOk, projectId, skipGuide, taskBody } from '../helpers/agboard';
+import { agpj, agpjCatalogOk, projectId, skipGuide, taskBody } from '../helpers/agpj';
 import { stubArchivePages } from '../helpers/archive-pages';
 import { startPhoneEntrance, type PhoneEntrance } from '../helpers/monitor';
 
@@ -16,10 +16,10 @@ let entrance: PhoneEntrance;
 
 test.beforeAll(async () => {
   test.setTimeout(120_000);
-  home = mkdtempSync(path.join(os.tmpdir(), 'agent-board-archive-pages-'));
+  home = mkdtempSync(path.join(os.tmpdir(), 'agent-project-archive-pages-'));
   skipGuide(home);
-  agboardCatalogOk(['project', 'create', 'Pages'], home);
-  const added = agboard('Pages', ['add', 'Template task', `--desc=${taskBody('Template.')}`, '--assignee', 'ai', '--actor', 'human'], home);
+  agpjCatalogOk(['project', 'create', 'Pages'], home);
+  const added = agpj('Pages', ['add', 'Template task', `--desc=${taskBody('Template.')}`, '--assignee', 'ai', '--actor', 'human'], home);
   if (added.code !== 0) throw new Error(added.stderr);
   entrance = await startPhoneEntrance(home);
 });

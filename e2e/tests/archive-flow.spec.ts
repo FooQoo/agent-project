@@ -1,6 +1,6 @@
 import { expect, test } from '../helpers/fixtures';
 import { writeFileSync } from 'node:fs';
-import { agboardOk, listTasks, mainProject, nextTaskId, resetBoard } from '../helpers/agboard';
+import { agpjOk, listTasks, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
 import { waitForSync } from '../helpers/ui';
 
@@ -19,7 +19,7 @@ test('real archive detail preserves content, restores the lane, and permanently 
 	const keepId = nextTaskId(mainProject);
 	const keepTitle = 'Archive flow keep with attachment';
 	const keepDescription = 'Preserve this **Markdown** description through archive and restore.';
-	agboardOk(mainProject, [
+	agpjOk(mainProject, [
 		'add',
 		keepTitle,
 		`--desc=${keepDescription}`,
@@ -30,12 +30,12 @@ test('real archive detail preserves content, restores the lane, and permanently 
 	]);
 	const imagePath = testInfo.outputPath('archive-attachment.png');
 	writeFileSync(imagePath, png);
-	agboardOk(mainProject, ['attachment', 'add', String(keepId), '--file', imagePath, '--actor', 'ai']);
-	agboardOk(mainProject, ['mv', String(keepId), 'done', '--actor', 'ai', '--reason', 'Prepare archive E2E']);
+	agpjOk(mainProject, ['attachment', 'add', String(keepId), '--file', imagePath, '--actor', 'ai']);
+	agpjOk(mainProject, ['mv', String(keepId), 'done', '--actor', 'ai', '--reason', 'Prepare archive E2E']);
 
 	const deleteId = nextTaskId(mainProject);
 	const deleteTitle = 'Archive flow permanent delete';
-	agboardOk(mainProject, [
+	agpjOk(mainProject, [
 		'add',
 		deleteTitle,
 		'--assignee',
@@ -43,7 +43,7 @@ test('real archive detail preserves content, restores the lane, and permanently 
 		'--actor',
 		'human',
 	]);
-	agboardOk(mainProject, ['mv', String(deleteId), 'done', '--actor', 'ai', '--reason', 'Prepare delete E2E']);
+	agpjOk(mainProject, ['mv', String(deleteId), 'done', '--actor', 'ai', '--reason', 'Prepare delete E2E']);
 
 	await page.setViewportSize({ width: 1280, height: 900 });
 	await setPreferences({ locale: 'ja', theme: { mode: 'light', accent: 'blue' } });

@@ -2,7 +2,7 @@
 // `PUT /api/preferences` on the PC entrance, with the page's token and same-origin headers.
 export async function setPreferences(origin, patch) {
   const html = await (await fetch(`${origin}/`)).text();
-  const token = html.match(/<meta name="agboard-token" content="([^"]*)"/)?.[1];
+  const token = html.match(/<meta name="agpj-token" content="([^"]*)"/)?.[1];
   if (!token) throw new Error(`no write token in the page at ${origin}`);
   const response = await fetch(`${origin}/api/preferences`, {
     method: 'PUT',
@@ -10,7 +10,7 @@ export async function setPreferences(origin, patch) {
       'Content-Type': 'application/json',
       Origin: origin,
       'Sec-Fetch-Site': 'same-origin',
-      'X-Agboard-Token': token,
+      'X-Agpj-Token': token,
     },
     body: JSON.stringify(patch),
   });

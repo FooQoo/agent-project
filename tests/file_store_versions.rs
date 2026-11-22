@@ -4,10 +4,10 @@
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::file_store::model::{NewEpic, TaskView};
-use agent_board::file_store::validate::EpicId;
-use agent_board::file_store::{FileStore, VersionChoice};
+use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+use agent_project::file_store::model::{NewEpic, TaskView};
+use agent_project::file_store::validate::EpicId;
+use agent_project::file_store::{FileStore, VersionChoice};
 use chrono::{DateTime, TimeZone, Utc};
 use serde_json::Value;
 

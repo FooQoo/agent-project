@@ -4,10 +4,10 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from '../helpers/fixtures';
-import { agboardBinary, replaceFileAtomically } from '../helpers/agboard';
+import { agpjBinary, replaceFileAtomically } from '../helpers/agpj';
 import { fakeAgents } from '../helpers/fake-agents';
 
-// `agboard setup` and a CLI project that uses the shared folder it prepares, run with the real binary.
+// `agpj setup` and a CLI project that uses the shared folder it prepares, run with the real binary.
 // Every run has a cleared environment (only HOME, TZ, and a PATH that holds only fake `codex` and `claude`
 // commands), a temporary HOME, and no server or port.
 
@@ -80,23 +80,23 @@ let claudeSettings: string;
 let fakeBin: string;
 
 test.beforeEach(() => {
-	root = mkdtempSync(path.join(os.tmpdir(), 'agent-board-e2e-home-setup-'));
+	root = mkdtempSync(path.join(os.tmpdir(), 'agent-project-e2e-home-setup-'));
 	home = path.join(root, 'home');
-	dataRoot = path.join(home, '.agent-board');
+	dataRoot = path.join(home, '.agent-project');
 	codexConfig = path.join(home, '.codex', 'config.toml');
 	claudeSettings = path.join(home, '.claude', 'settings.json');
 	mkdirSync(path.dirname(codexConfig), { recursive: true });
 	mkdirSync(path.dirname(claudeSettings), { recursive: true });
 	writeFileSync(codexConfig, CODEX_SENTINEL);
 	writeFileSync(claudeSettings, CLAUDE_SENTINEL);
-	fakeBin = fakeAgents(root, agboardVersion());
+	fakeBin = fakeAgents(root, agpjVersion());
 });
 
 /** The version of the binary, which the fake agents report as the installed plugin version. */
-function agboardVersion(): string {
-	const result = spawnSync(agboardBinary(), ['--version'], { env: {}, encoding: 'utf8' });
+function agpjVersion(): string {
+	const result = spawnSync(agpjBinary(), ['--version'], { env: {}, encoding: 'utf8' });
 	const version = /\d+\.\d+\.\d+\S*/.exec(result.stdout)?.[0];
-	if (!version) throw new Error(`agboard --version printed no version: ${result.stdout}${result.stderr}`);
+	if (!version) throw new Error(`agpj --version printed no version: ${result.stdout}${result.stderr}`);
 	return version;
 }
 
@@ -106,13 +106,13 @@ test.afterEach(() => {
 
 /**
  * Run the binary with a cleared environment: HOME, TZ, a PATH with only the fake agents, and no automatic
- * server, plus `env`. Nothing from the developer's shell (AGBOARD_HOME, CODEX_HOME, CLAUDE_CONFIG_DIR) reaches
+ * server, plus `env`. Nothing from the developer's shell (AGPJ_HOME, CODEX_HOME, CLAUDE_CONFIG_DIR) reaches
  * the run unless the test passes it.
  */
 function cli(args: string[], options: { cwd?: string; env?: Record<string, string> } = {}): CliResult {
-	const result = spawnSync(agboardBinary(), args, {
+	const result = spawnSync(agpjBinary(), args, {
 		cwd: options.cwd ?? home,
-		env: { HOME: home, TZ: 'UTC', PATH: fakeBin, AGBOARD_AUTOSTART: '0', AGBOARD_OPEN_BROWSER: '0', ...options.env },
+		env: { HOME: home, TZ: 'UTC', PATH: fakeBin, AGPJ_AUTOSTART: '0', AGPJ_OPEN_BROWSER: '0', ...options.env },
 		encoding: 'utf8',
 		input: '',
 	});
@@ -122,11 +122,11 @@ function cli(args: string[], options: { cwd?: string; env?: Record<string, strin
 
 function cliOk(args: string[], options: { cwd?: string; env?: Record<string, string> } = {}): CliResult {
 	const result = cli(args, options);
-	if (result.code !== 0) throw new Error(`agboard ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
+	if (result.code !== 0) throw new Error(`agpj ${args.join(' ')} exited ${result.code}: ${result.stderr}`);
 	return result;
 }
 
-/** `agboard --json setup --agent all`, with `--yes` unless it is a dry run; it must succeed. `env` adds variables. */
+/** `agpj --json setup --agent all`, with `--yes` unless it is a dry run; it must succeed. `env` adds variables. */
 function setup(args: string[] = [], env?: Record<string, string>): SetupJson {
 	const confirm = args.includes('--dry-run') ? [] : ['--yes'];
 	return JSON.parse(cliOk(['--json', 'setup', '--agent', 'all', ...confirm, ...args], { env }).stdout) as SetupJson;
@@ -150,7 +150,7 @@ function hashes(dir: string): Record<string, string> {
 /** The backup files setup wrote next to `file`. */
 function backupsOf(file: string): string[] {
 	const name = path.basename(file);
-	return readdirSync(path.dirname(file)).filter((entry) => entry.startsWith(`${name}.agboard-backup`));
+	return readdirSync(path.dirname(file)).filter((entry) => entry.startsWith(`${name}.agpj-backup`));
 }
 
 /** Parse a TOML file with Python's tomllib, so the checks read keys instead of matching text. */
@@ -168,15 +168,15 @@ function createProject(name: string): void {
 	cliOk(['project', 'create', name], { cwd: folder });
 }
 
-test('the default root is <HOME>/.agent-board, AGBOARD_HOME overrides it, and an empty AGBOARD_HOME is ignored', () => {
+test('the default root is <HOME>/.agent-project, AGPJ_HOME overrides it, and an empty AGPJ_HOME is ignored', () => {
 	const custom = path.join(root, 'custom-data');
 
 	expect(setup(['--dry-run']).dataDir).toBe(dataRoot);
-	expect(setup(['--dry-run'], { AGBOARD_HOME: custom }).dataDir).toBe(custom);
-	expect(setup(['--dry-run'], { AGBOARD_HOME: '' }).dataDir).toBe(dataRoot);
+	expect(setup(['--dry-run'], { AGPJ_HOME: custom }).dataDir).toBe(custom);
+	expect(setup(['--dry-run'], { AGPJ_HOME: '' }).dataDir).toBe(dataRoot);
 
 	// An override is also where the real run creates the data root and its shared folder.
-	const applied = setup([], { AGBOARD_HOME: custom });
+	const applied = setup([], { AGPJ_HOME: custom });
 	expect(applied.sharedDir).toBe(path.join(custom, 'shared'));
 	expect(existsSync(path.join(custom, 'shared'))).toBe(true);
 	expect(existsSync(dataRoot)).toBe(false);
@@ -302,7 +302,7 @@ test('after setup, a CLI project hands out a shared folder whose TASK.md can be 
 test('the old OS application-support folder is never created or read by the setup and project run', () => {
 	const oldArea = path.join(home, 'Library', 'Application Support', 'agboard');
 	mkdirSync(oldArea, { recursive: true });
-	writeFileSync(path.join(oldArea, 'marker.txt'), 'Not agboard data.\n');
+	writeFileSync(path.join(oldArea, 'marker.txt'), 'Not agpj data.\n');
 	const libraryBefore = hashes(path.join(home, 'Library'));
 
 	setup();

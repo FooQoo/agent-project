@@ -1,4 +1,4 @@
-import { mainProject, resetBoard } from '../helpers/agboard';
+import { mainProject, resetBoard } from '../helpers/agpj';
 import { expect, test } from '../helpers/fixtures';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
 

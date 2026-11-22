@@ -7,7 +7,7 @@ use crate::cli::args::{
 use crate::cli::{Context, Env, Outcome, Target, commands};
 use crate::clock::SystemClock;
 use crate::domain::validate_project_name;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 
 /// How a command uses the projects, which decides how its target is resolved.
@@ -86,14 +86,14 @@ fn access(command: &Command) -> Access {
 pub(super) fn prepare_and_run(
     cli: &Cli,
     env: &mut Env,
-) -> Result<(Option<Context>, Outcome), AgboardError> {
+) -> Result<(Option<Context>, Outcome), AgpjError> {
     let mut ctx = prepare(cli, env)?;
     let outcome = dispatch(&mut ctx, &cli.command)?;
     Ok((Some(ctx), outcome))
 }
 
 /// Resolve the command's project and build its context.
-pub(crate) fn prepare(cli: &Cli, env: &mut Env) -> Result<Context, AgboardError> {
+pub(crate) fn prepare(cli: &Cli, env: &mut Env) -> Result<Context, AgpjError> {
     // The name is normalized once. `--project` is absent only for commands
     // that work on the catalog; nothing is chosen for a command that lacks it.
     let name = match cli.project() {
@@ -106,7 +106,7 @@ pub(crate) fn prepare(cli: &Cli, env: &mut Env) -> Result<Context, AgboardError>
         Some(name) => match files.project_by_name(&name) {
             Ok(meta) => Target::Existing(meta),
             // `init` creates a project that does not exist yet.
-            Err(AgboardError::ProjectNotFound { .. })
+            Err(AgpjError::ProjectNotFound { .. })
                 if matches!(access, Access::ChangeOrCreateProject) =>
             {
                 Target::Missing { name }
@@ -115,7 +115,7 @@ pub(crate) fn prepare(cli: &Cli, env: &mut Env) -> Result<Context, AgboardError>
         },
         None if matches!(access, Access::ReadBoundProject) => {
             let cwd = std::env::current_dir()
-                .map_err(|_| AgboardError::FolderUnbound { folder: ".".into() })?;
+                .map_err(|_| AgpjError::FolderUnbound { folder: ".".into() })?;
             Target::Existing(files.project_for_folder(&cwd)?)
         }
         None => Target::Catalog,
@@ -131,7 +131,7 @@ pub(crate) fn prepare(cli: &Cli, env: &mut Env) -> Result<Context, AgboardError>
     })
 }
 
-fn dispatch(ctx: &mut Context, command: &Command) -> Result<Outcome, AgboardError> {
+fn dispatch(ctx: &mut Context, command: &Command) -> Result<Outcome, AgpjError> {
     match command {
         Command::Project(args) => commands::project::run(ctx, args),
         Command::Init(args) => commands::init::run(ctx, args),

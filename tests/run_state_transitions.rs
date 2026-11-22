@@ -2,12 +2,12 @@
 //! makes of the state, that a task that has run never goes back to idle, and that a person's
 //! task stays idle.
 
-use agent_board::domain::{
+use agent_project::domain::{
     Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState, check_state_change,
     state_after_move,
 };
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
+use agent_project::error::AgpjError;
+use agent_project::file_store::FileStore;
 use chrono::{TimeZone, Utc};
 
 fn now() -> chrono::DateTime<Utc> {
@@ -64,7 +64,7 @@ impl Fx {
             .agent_status
     }
 
-    fn state(&self, id: i64, state: RunState) -> Result<RunState, AgboardError> {
+    fn state(&self, id: i64, state: RunState) -> Result<RunState, AgpjError> {
         self.store
             .set_agent_status(&self.project, id, state, ctx(Actor::Ai), now())
             .map(|c| c.value.agent_status)
@@ -122,26 +122,26 @@ fn refused_changes_leave_the_state_as_it_was() {
     // idle -> paused is not a change an agent may ask for.
     let err = fx.state(id, RunState::Paused).unwrap_err();
     assert!(
-        matches!(err, AgboardError::InvalidStateChange { .. }),
+        matches!(err, AgpjError::InvalidStateChange { .. }),
         "{err:?}"
     );
     fx.state(id, RunState::Running).unwrap();
     // running -> idle: a task that has run never goes back to idle.
     let err = fx.state(id, RunState::Idle).unwrap_err();
     assert!(
-        matches!(err, AgboardError::InvalidStateChange { .. }),
+        matches!(err, AgpjError::InvalidStateChange { .. }),
         "{err:?}"
     );
     fx.state(id, RunState::Paused).unwrap();
     let err = fx.state(id, RunState::Idle).unwrap_err();
     assert!(
-        matches!(err, AgboardError::InvalidStateChange { .. }),
+        matches!(err, AgpjError::InvalidStateChange { .. }),
         "{err:?}"
     );
     // `ran` and `awaiting_answer` are never set directly.
     for state in [RunState::Ran, RunState::AwaitingAnswer] {
         let err = fx.state(id, state).unwrap_err();
-        assert!(matches!(err, AgboardError::InvalidValue { .. }), "{err:?}");
+        assert!(matches!(err, AgpjError::InvalidValue { .. }), "{err:?}");
     }
     assert_eq!(fx.state(id, RunState::Paused).unwrap(), RunState::Paused);
 }
@@ -189,10 +189,7 @@ fn a_person_task_stays_idle() {
     assert_eq!(fx.mv(id, Column::Doing), RunState::Idle);
     for state in [RunState::Running, RunState::Paused] {
         let err = fx.state(id, state).unwrap_err();
-        assert!(
-            matches!(err, AgboardError::InvalidStateForAssignee),
-            "{err:?}"
-        );
+        assert!(matches!(err, AgpjError::InvalidStateForAssignee), "{err:?}");
     }
     assert_eq!(fx.mv(id, Column::Done), RunState::Idle);
 }

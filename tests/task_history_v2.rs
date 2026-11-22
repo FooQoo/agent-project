@@ -4,9 +4,9 @@ mod qa;
 use std::fs;
 use std::path::Path;
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
+use agent_project::error::AgpjError;
+use agent_project::file_store::FileStore;
 use chrono::{TimeZone, Utc};
 
 struct Fixture {
@@ -117,7 +117,7 @@ fn task_format_versions_other_than_one_are_reported_and_left_byte_for_byte_uncha
         }));
         assert!(matches!(
             fx.store.task(&fx.project, id),
-            Err(AgboardError::FormatUnsupported { .. })
+            Err(AgpjError::FormatUnsupported { .. })
         ));
         assert_eq!(fs::read(&json_path).unwrap(), bytes);
         assert_eq!(file_tree(&fx.task_dir(id)), files_before);
@@ -149,8 +149,8 @@ fn malformed_history_keeps_body_and_acceptance_but_blocks_updates() {
     );
     let before_json = fs::read(fx.task_dir(id).join("task.json")).unwrap();
     assert!(matches!(
-        fx.store.set_draft(&fx.project, id, Some(agent_board::domain::Draft::Human), false, Utc::now()),
-        Err(AgboardError::FileInvalid { field, .. }) if field == "history"
+        fx.store.set_draft(&fx.project, id, Some(agent_project::domain::Draft::Human), false, Utc::now()),
+        Err(AgpjError::FileInvalid { field, .. }) if field == "history"
     ));
     assert_eq!(
         fs::read(fx.task_dir(id).join("task.json")).unwrap(),
@@ -200,9 +200,9 @@ fn state_history_and_questions_survive_reopen() {
         json.get("requestAnswers")
             .is_none_or(|answers| answers == &serde_json::json!([]))
     );
-    let history = agent_board::file_store::history::parse_task(
+    let history = agent_project::file_store::history::parse_task(
         &fs::read_to_string(fx.task_dir(id).join("TASK.md")).unwrap(),
-        agent_board::file_store::history::ParseMode::Stored,
+        agent_project::file_store::history::ParseMode::Stored,
     );
     assert_eq!(history.history.len(), 4);
     assert_eq!(history.history[1].reason, "Start");

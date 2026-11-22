@@ -1,5 +1,5 @@
 //! The saved language rides in the progress table as `locale`: in the hook
-//! context and in `agboard progress --json`. It is left out for English and
+//! context and in `agpj progress --json`. It is left out for English and
 //! when no usable language is saved, and a broken file never fails either command.
 
 use std::io::Cursor;
@@ -15,7 +15,7 @@ const PREFS: &str =
 fn board() -> (TempDir, std::path::PathBuf) {
     let home = tempdir().unwrap();
     let shared = home.path().join("shared");
-    agent_board::file_store::FileStore::open(&shared)
+    agent_project::file_store::FileStore::open(&shared)
         .create_project("Agent Board", chrono::Utc::now())
         .unwrap();
     (home, shared)
@@ -29,7 +29,7 @@ fn save_prefs(home: &Path, text: &str) {
 
 fn hook_table(shared: &Path) -> Value {
     let input = r#"{"hook_event_name":"SessionStart"}"#;
-    let output = agent_board::agent::hook::run(
+    let output = agent_project::agent::hook::run(
         "claude",
         &mut Cursor::new(input.as_bytes().to_vec()),
         shared,
@@ -40,15 +40,15 @@ fn hook_table(shared: &Path) -> Value {
     let context = parsed["hookSpecificOutput"]["additionalContext"]
         .as_str()
         .unwrap();
-    serde_json::from_str(context.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap()
+    serde_json::from_str(context.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap()
 }
 
 fn cli_table(home: &Path) -> Value {
-    let out = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+    let out = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .args(["--project", "Agent Board", "progress", "--json"])
         .output()
         .unwrap();

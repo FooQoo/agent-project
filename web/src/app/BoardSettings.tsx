@@ -18,7 +18,7 @@ const boardPreferences: PreferencesEndpoint | undefined =
     ? undefined
     : { url: '/api/preferences', token: readToken, headers: csrfHeaders };
 /**
- * A phone connects to an `agboard serve` on this computer; the demo on a static site has none. A
+ * A phone connects to an `agpj serve` on this computer; the demo on a static site has none. A
  * page that itself came through the ngrok entrance does not show the connection either: it is
  * started and stopped on the computer, and its address and passcode stay off the remote screen.
  */

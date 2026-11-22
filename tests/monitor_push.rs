@@ -10,7 +10,7 @@ mod support;
 
 use std::path::Path;
 
-use agent_board::file_store::FileStore;
+use agent_project::file_store::FileStore;
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD as B64;
 use serde_json::{Value, json};
@@ -20,8 +20,8 @@ use support::home;
 mod harness;
 use harness::*;
 
-const SESSION: &str = "agboard_remote_session";
-const DEVICE: &str = "agboard_remote_device";
+const SESSION: &str = "agpj_remote_session";
+const DEVICE: &str = "agpj_remote_device";
 const ENDPOINT: &str = "https://web.push.apple.com/QGexample";
 
 fn up(home: &Path) -> Server {
@@ -155,7 +155,7 @@ fn write(s: &Server, p: &Phone, method: &str, body: &Value, csrf: bool) -> Reply
         ("Content-Type", "application/json"),
     ];
     if csrf {
-        extra.push(("X-Agboard-Csrf", &p.csrf));
+        extra.push(("X-Agpj-Csrf", &p.csrf));
     }
     call(
         s,

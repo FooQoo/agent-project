@@ -1,4 +1,4 @@
-//! `agboard message ask` and `message wait`: the events of a wait and how it ends, and that
+//! `agpj message ask` and `message wait`: the events of a wait and how it ends, and that
 //! asking without waiting needs no server.
 
 mod common;
@@ -10,7 +10,7 @@ use std::process::{Child, Command, Stdio};
 use serde_json::Value;
 use tempfile::tempdir;
 
-use common::{Running, agboard, decision_json, demo_project, json_error, json_ok};
+use common::{Running, agpj, decision_json, demo_project, json_error, json_ok};
 
 fn demo(args: &[&str]) -> Vec<String> {
     let mut all = vec!["--project".to_string(), "Demo".to_string()];
@@ -21,7 +21,7 @@ fn demo(args: &[&str]) -> Vec<String> {
 fn run(home: &Path, args: &[&str]) -> (i32, String, String) {
     let all = demo(args);
     let refs: Vec<&str> = all.iter().map(String::as_str).collect();
-    agboard(home, &refs)
+    agpj(home, &refs)
 }
 
 fn lines(out: &str) -> Vec<Value> {
@@ -38,11 +38,11 @@ struct Waiter {
 
 impl Waiter {
     fn spawn(home: &Path, args: &[&str]) -> Waiter {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
-            .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home)
+        let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
+            .env("AGPJ_WATCH", "poll")
+            .env("AGPJ_HOME", home)
             .env("TZ", "UTC")
             .current_dir(home)
             .args(demo(args))
@@ -331,7 +331,7 @@ fn edit_with_desc_file_keeps_question_refs_and_the_task_stays_pending() {
     let file = home.path().join("desc.md");
     std::fs::write(&file, "---\nquestions: [Q-9]\n---\nReplaced body\n").unwrap();
     let path = file.to_str().unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--desc-file", path],
     );
@@ -343,7 +343,7 @@ fn edit_with_desc_file_keeps_question_refs_and_the_task_stays_pending() {
 
     // The same holds for a plain file without frontmatter.
     std::fs::write(&file, "Second body\n").unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--desc-file", path],
     );

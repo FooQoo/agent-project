@@ -7,13 +7,13 @@ use std::path::Path;
 use serde_json::{Value, json};
 
 use super::plan::{Planned, invalid_file};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 pub(crate) fn plan(
     settings: &Path,
     original: Option<&str>,
     root: &str,
-) -> Result<Planned, AgboardError> {
+) -> Result<Planned, AgpjError> {
     let mut value: Value = match original {
         None => json!({}),
         Some(text) => serde_json::from_str(text).map_err(|error| {
@@ -79,7 +79,7 @@ pub(crate) fn plan(
 mod tests {
     use super::*;
 
-    const ROOT: &str = "/srv/example/.agent-board";
+    const ROOT: &str = "/srv/example/.agent-project";
 
     #[test]
     fn keeps_permissions_hooks_and_unknown_keys() {

@@ -17,7 +17,7 @@ use super::layout::FORMAT_VERSION;
 use super::lock::WriteLock;
 use super::reader;
 use crate::domain::{Changed, ProjectId, ProjectMeta};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The file that holds the bindings, beside the `shared` folder.
 pub const BINDINGS_FILE: &str = "bindings.json";
@@ -54,8 +54,8 @@ struct BindingEntry {
 
 /// The folder as an absolute path with no symbolic links, which is how
 /// bindings store it. A missing path or a file is refused.
-pub fn canonical_folder(path: &Path) -> Result<PathBuf, AgboardError> {
-    let refused = || AgboardError::InvalidValue {
+pub fn canonical_folder(path: &Path) -> Result<PathBuf, AgpjError> {
+    let refused = || AgpjError::InvalidValue {
         field: "--folder".to_string(),
         reason: "Use an existing folder.".to_string(),
     };
@@ -83,20 +83,20 @@ impl FileStore {
 
     /// Every binding. A missing file has none. A file that does not follow
     /// the format is an error, never silently taken as empty.
-    pub fn bindings(&self) -> Result<Vec<Binding>, AgboardError> {
+    pub fn bindings(&self) -> Result<Vec<Binding>, AgpjError> {
         let path = self.bindings_path();
         if !path.exists() {
             return Ok(Vec::new());
         }
         let text = io::read_text(&path, BINDINGS_FILE)?;
         let file: BindingsFile =
-            serde_json::from_str(&text).map_err(|e| AgboardError::FileInvalid {
+            serde_json::from_str(&text).map_err(|e| AgpjError::FileInvalid {
                 file: BINDINGS_FILE.to_string(),
                 field: String::new(),
                 reason: e.to_string(),
             })?;
         if file.format_version != FORMAT_VERSION {
-            return Err(AgboardError::FormatUnsupported {
+            return Err(AgpjError::FormatUnsupported {
                 file: BINDINGS_FILE.to_string(),
                 version: file.format_version.to_string(),
                 expected: FORMAT_VERSION,
@@ -105,13 +105,15 @@ impl FileStore {
         file.bindings
             .into_iter()
             .map(|entry| {
-                let project_id = entry.project_id.parse::<ProjectId>().map_err(|_| {
-                    AgboardError::FileInvalid {
-                        file: BINDINGS_FILE.to_string(),
-                        field: entry.project_id.clone(),
-                        reason: "The project ID is not valid.".to_string(),
-                    }
-                })?;
+                let project_id =
+                    entry
+                        .project_id
+                        .parse::<ProjectId>()
+                        .map_err(|_| AgpjError::FileInvalid {
+                            file: BINDINGS_FILE.to_string(),
+                            field: entry.project_id.clone(),
+                            reason: "The project ID is not valid.".to_string(),
+                        })?;
                 Ok(Binding {
                     project_id,
                     folder: entry.folder,
@@ -120,7 +122,7 @@ impl FileStore {
             .collect()
     }
 
-    fn write_bindings(&self, bindings: &[Binding]) -> Result<(), AgboardError> {
+    fn write_bindings(&self, bindings: &[Binding]) -> Result<(), AgpjError> {
         let file = BindingsFile {
             format_version: FORMAT_VERSION,
             bindings: bindings
@@ -136,7 +138,7 @@ impl FileStore {
 
     /// The binding of this folder, if its project still exists. A binding
     /// whose project was deleted no longer holds the folder.
-    pub fn live_binding_for_folder(&self, folder: &Path) -> Result<Option<Binding>, AgboardError> {
+    pub fn live_binding_for_folder(&self, folder: &Path) -> Result<Option<Binding>, AgpjError> {
         let projects = reader::list_projects(self.shared_dir())?;
         Ok(self
             .bindings()?
@@ -152,7 +154,7 @@ impl FileStore {
         &self,
         id: &ProjectId,
         folder: &Path,
-    ) -> Result<Changed<Binding>, AgboardError> {
+    ) -> Result<Changed<Binding>, AgpjError> {
         let _lock = WriteLock::acquire(&self.bindings_lock_path())?;
         let mut bindings = self.bindings()?;
         let projects = reader::list_projects(self.shared_dir())?;
@@ -164,7 +166,7 @@ impl FileStore {
                 });
             }
             if projects.iter().any(|p| p.id == existing.project_id) {
-                return Err(AgboardError::FolderBoundElsewhere {
+                return Err(AgpjError::FolderBoundElsewhere {
                     folder: folder.display().to_string(),
                 });
             }
@@ -184,7 +186,7 @@ impl FileStore {
 
     /// The nearest binding whose folder contains `start`, which must already be
     /// canonical. The project is not looked up here.
-    fn nearest_binding(&self, start: &Path) -> Result<Option<Binding>, AgboardError> {
+    fn nearest_binding(&self, start: &Path) -> Result<Option<Binding>, AgpjError> {
         Ok(self
             .bindings()?
             .into_iter()
@@ -198,10 +200,10 @@ impl FileStore {
     /// exists the result is `BoundProjectMissing`, and a binding of a parent
     /// folder is never used instead. A `start` that cannot be resolved is
     /// `FolderUnbound`. Only a match reads the project registry.
-    pub fn resolve_binding(&self, start: &Path) -> Result<Option<ResolvedBinding>, AgboardError> {
+    pub fn resolve_binding(&self, start: &Path) -> Result<Option<ResolvedBinding>, AgpjError> {
         let shown = start.display().to_string();
         let Ok(canonical) = fs::canonicalize(start) else {
-            return Err(AgboardError::FolderUnbound { folder: shown });
+            return Err(AgpjError::FolderUnbound { folder: shown });
         };
         let Some(nearest) = self.nearest_binding(&canonical)? else {
             return Ok(None);
@@ -215,16 +217,16 @@ impl FileStore {
                     bound_root: nearest.folder,
                 })
             })
-            .ok_or(AgboardError::BoundProjectMissing { folder: shown })
+            .ok_or(AgpjError::BoundProjectMissing { folder: shown })
     }
 
     /// The project a folder works on: the binding of the nearest bound folder
     /// that contains `start`. Nothing is guessed. No binding, an unreadable
     /// folder, or a bound project that no longer exists is an error.
-    pub fn project_for_folder(&self, start: &Path) -> Result<ProjectMeta, AgboardError> {
+    pub fn project_for_folder(&self, start: &Path) -> Result<ProjectMeta, AgpjError> {
         match self.resolve_binding(start)? {
             Some(resolved) => Ok(resolved.project),
-            None => Err(AgboardError::FolderUnbound {
+            None => Err(AgpjError::FolderUnbound {
                 folder: start.display().to_string(),
             }),
         }

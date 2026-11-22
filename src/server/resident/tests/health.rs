@@ -17,8 +17,8 @@ pub(super) fn fast() -> Timing {
     }
 }
 
-pub(super) fn no_projects(_: &ProjectId) -> Result<(String, std::path::PathBuf), AgboardError> {
-    Err(AgboardError::ProjectNotFound {
+pub(super) fn no_projects(_: &ProjectId) -> Result<(String, std::path::PathBuf), AgpjError> {
+    Err(AgpjError::ProjectNotFound {
         project: "none".into(),
     })
 }
@@ -249,10 +249,7 @@ fn a_stop_by_a_person_is_written_to_the_server_log_with_its_reason_and_time() {
     assert!(fx.launcher.stop().unwrap());
     wait_until("the exit line", || has_event(&events, "ended after a stop"));
     let lines = events.lock().unwrap().clone();
-    assert!(
-        lines.iter().all(|l| l.starts_with("agboard: 20")),
-        "{lines:?}"
-    );
+    assert!(lines.iter().all(|l| l.starts_with("agpj: 20")), "{lines:?}");
     assert!(lines.iter().any(|l| l.contains("started: pid")
         && l.contains("claude-code")
         && l.contains("model sonnet")));

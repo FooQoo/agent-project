@@ -1,4 +1,4 @@
-use agent_board::domain::{Assignee, Column, RunState, check_work_state, validate_work_reason};
+use agent_project::domain::{Assignee, Column, RunState, check_work_state, validate_work_reason};
 
 #[test]
 fn run_states_follow_the_table_for_each_owner_and_column() {

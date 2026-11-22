@@ -1,4 +1,4 @@
-//! `agboard setup` and `agboard update`: installing the Agent Board plugin with
+//! `agpj setup` and `agpj update`: installing the Agent Project plugin with
 //! the agents' own commands, trusting the Codex hooks, and what happens when
 //! an agent is missing or a command fails. The agents are the fakes of
 //! `support/fake_agents.rs`, the only commands on PATH, so nothing reaches a
@@ -16,7 +16,7 @@ use serde_json::Value;
 use fake_agents::{FakeAgents, PLUGIN};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-const REPOSITORY: &str = "https://github.com/FooQoo/agent-board.git";
+const REPOSITORY: &str = "https://github.com/FooQoo/agent-project.git";
 
 struct Fixture {
     _tmp: tempfile::TempDir,
@@ -44,13 +44,13 @@ fn fixture(agents: &[&str]) -> Fixture {
 
 impl Fixture {
     fn run(&self, extra: &[(&str, &str)], args: &[&str]) -> (i32, String, String) {
-        let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
+        let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
             .env_clear()
             .env("HOME", &self.home)
             .env("PATH", &self.fakes.bin)
             .env("TZ", "UTC")
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
             .current_dir(&self.home)
             .args(args)
             .envs(extra.iter().copied())
@@ -116,7 +116,7 @@ fn setup_installs_the_plugin_from_the_release_tag_with_each_agents_commands() {
 }
 
 #[test]
-fn setup_trusts_only_the_agent_board_hooks_in_codex() {
+fn setup_trusts_only_the_agent_project_hooks_in_codex() {
     let fx = fixture(&["codex"]);
     let (code, json) = fx.json(&[], &["setup", "--agent", "codex", "--yes"]);
     assert_eq!(code, 0, "{json}");
@@ -130,7 +130,7 @@ fn setup_trusts_only_the_agent_board_hooks_in_codex() {
     let value = params["value"].as_object().unwrap();
     assert_eq!(value.len(), 2, "{value:?}");
     for (key, state) in value {
-        assert!(key.starts_with("agent-board@agent-board:"), "{key}");
+        assert!(key.starts_with("agent-project@agent-project:"), "{key}");
         assert!(
             state["trusted_hash"]
                 .as_str()
@@ -162,7 +162,7 @@ fn the_marketplace_override_installs_from_another_place_without_a_tag() {
     let fx = fixture(&["claude"]);
     let local = fx.home.parent().unwrap().join("checkout");
     let (code, _json) = fx.json(
-        &[("AGBOARD_PLUGIN_MARKETPLACE", local.to_str().unwrap())],
+        &[("AGPJ_PLUGIN_MARKETPLACE", local.to_str().unwrap())],
         &["setup", "--agent", "claude", "--yes"],
     );
     assert_eq!(code, 0);
@@ -221,7 +221,7 @@ fn a_failing_agent_command_fails_that_agent_with_its_message() {
     assert!(
         fs::read_to_string(fx.home.join(".claude/settings.json"))
             .unwrap()
-            .contains(".agent-board")
+            .contains(".agent-project")
     );
 }
 
@@ -239,7 +239,7 @@ fn without_a_terminal_setup_needs_an_agent_and_a_yes_or_a_dry_run() {
         assert!(err.contains("terminal"), "{err}");
     }
     assert!(fx.fakes.log("codex").is_empty(), "nothing may run");
-    assert!(!fx.home.join(".agent-board").exists());
+    assert!(!fx.home.join(".agent-project").exists());
 }
 
 #[test]
@@ -261,7 +261,7 @@ fn dry_run_runs_only_the_read_only_plugin_list() {
         before
     );
     assert!(!fx.home.join(".codex/rules").exists());
-    assert!(!fx.home.join(".agent-board").exists());
+    assert!(!fx.home.join(".agent-project").exists());
 }
 
 fn old_install(fx: &Fixture) {
@@ -287,7 +287,7 @@ fn update_moves_the_marketplace_to_this_tag_and_trusts_the_hooks_again() {
         [
             "plugin list --json".to_string(),
             format!("plugin marketplace add {REPOSITORY} --ref {tag} --json"),
-            "plugin marketplace remove agent-board --json".to_string(),
+            "plugin marketplace remove agent-project --json".to_string(),
             format!("plugin marketplace add {REPOSITORY} --ref {tag} --json"),
             format!("plugin add {PLUGIN} --json"),
             "app-server".to_string(),
@@ -296,7 +296,7 @@ fn update_moves_the_marketplace_to_this_tag_and_trusts_the_hooks_again() {
     assert_eq!(
         fx.fakes.log("claude")[2..4],
         [
-            "plugin marketplace remove agent-board --json".to_string(),
+            "plugin marketplace remove agent-project --json".to_string(),
             format!("plugin marketplace add {REPOSITORY}#{tag} --json"),
         ]
     );
@@ -321,7 +321,7 @@ fn update_skips_an_agent_without_the_plugin() {
     assert_eq!(code, 0, "{json}");
     let codex = fx.agent(&json, "codex");
     assert_eq!(codex["status"], "skipped");
-    assert!(codex["reason"].as_str().unwrap().contains("agboard setup"));
+    assert!(codex["reason"].as_str().unwrap().contains("agpj setup"));
     assert_eq!(fx.fakes.log("codex"), ["plugin list --json"]);
     assert_eq!(fx.agent(&json, "claude")["status"], "updated");
 }
@@ -356,7 +356,7 @@ fn the_plan_and_the_report_name_the_hook_trust() {
     let (code, out, err) = fx.run(&[], &["setup", "--agent", "codex", "--yes"]);
     assert_eq!(code, 0, "{err}");
     assert!(out.contains("hooks: trusted 2"), "{out}");
-    assert!(out.contains("rules/agboard.rules"), "{out}");
+    assert!(out.contains("rules/agpj.rules"), "{out}");
 }
 
 #[test]
@@ -379,7 +379,7 @@ fn setup_needs_no_project_and_writes_inside_the_given_homes_only() {
         &["setup", "--agent", "all", "--yes"],
     );
     assert_eq!(code, 0, "{json}");
-    assert!(codex_home.join("rules/agboard.rules").is_file());
+    assert!(codex_home.join("rules/agpj.rules").is_file());
     assert!(claude_dir.join("settings.json").is_file());
     assert!(!fx.home.join(".claude").exists());
     assert!(!fx.home.join(".codex/rules").exists());
@@ -402,7 +402,7 @@ fn plugin_copy(into: &Path, extra: Option<&str>) -> PathBuf {
     }
     let root = into.join("installed-plugin");
     copy(
-        &Path::new(env!("CARGO_MANIFEST_DIR")).join("plugins/agent-board"),
+        &Path::new(env!("CARGO_MANIFEST_DIR")).join("plugins/agent-project"),
         &root,
     );
     if let Some(extra) = extra {

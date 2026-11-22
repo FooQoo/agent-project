@@ -1,4 +1,4 @@
-//! What to do next after `agboard setup remote` saves the Tailscale provider.
+//! What to do next after `agpj setup remote` saves the Tailscale provider.
 //!
 //! The check is advice only: it never blocks or fails the save, and it changes nothing in
 //! Tailscale. It reuses the probe that the connection itself runs before it opens the entrance.

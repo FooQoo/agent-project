@@ -9,12 +9,12 @@ mod support;
 use std::collections::BTreeSet;
 use std::sync::Mutex;
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId};
-use agent_board::file_store::frontmatter::AcceptanceItem;
-use agent_board::file_store::model::NewEpic;
-use agent_board::file_store::validate::EpicId;
-use agent_board::file_store::{FileStore, TaskTextParts};
-use agent_board::server::contracts::Summary;
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId};
+use agent_project::file_store::frontmatter::AcceptanceItem;
+use agent_project::file_store::model::NewEpic;
+use agent_project::file_store::validate::EpicId;
+use agent_project::file_store::{FileStore, TaskTextParts};
+use agent_project::server::contracts::Summary;
 use chrono::{TimeZone, Utc};
 use serde_json::Value;
 

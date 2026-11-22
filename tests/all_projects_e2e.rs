@@ -1,7 +1,7 @@
-//! End-to-end stories for `agboard ls --all-projects`.
+//! End-to-end stories for `agpj ls --all-projects`.
 //!
-//! Everything here runs the real `agboard` binary against the shared files in a temporary data area:
-//! the CLI, a real `agboard serve` on port 0 for the web answer and the change notifications, and a
+//! Everything here runs the real `agpj` binary against the shared files in a temporary data area:
+//! the CLI, a real `agpj serve` on port 0 for the web answer and the change notifications, and a
 //! pseudo-terminal for the commands that need a person. The projects are built the way a user builds them
 //! (create, add, move, report, answer, delete, create again), not by writing to the store directly.
 //! `tests/all_projects_list.rs` covers the store and the argument rules in detail; these stories check the
@@ -22,17 +22,17 @@ use tempfile::tempdir;
 // ---------------------------------------------------------------- harness
 
 fn bin() -> Command {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
     command
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0");
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0");
     command
 }
 
 fn run(home: &Path, args: &[&str]) -> Output {
     bin()
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(folder_args(home, args))
         .stdin(Stdio::null())
@@ -40,7 +40,7 @@ fn run(home: &Path, args: &[&str]) -> Output {
         .unwrap()
 }
 
-fn agboard(home: &Path, project: &str, args: &[&str]) -> Output {
+fn agpj(home: &Path, project: &str, args: &[&str]) -> Output {
     let mut full = vec!["--project", project];
     full.extend(args);
     run(home, &full)
@@ -107,13 +107,13 @@ fn all_text(home: &Path, extra: &[&str]) -> String {
 
 /// One project's snapshot without the time it was fetched.
 fn content(home: &Path, project: &str) -> Value {
-    let mut snapshot = stdout_json(&agboard(home, project, &["snapshot", "--json"]));
+    let mut snapshot = stdout_json(&agpj(home, project, &["snapshot", "--json"]));
     snapshot.as_object_mut().unwrap().remove("fetchedAt");
     snapshot
 }
 
 fn snapshot_of(home: &Path, project: &str) -> Value {
-    stdout_json(&agboard(home, project, &["snapshot", "--json"]))
+    stdout_json(&agpj(home, project, &["snapshot", "--json"]))
 }
 
 fn project_id(home: &Path, name: &str) -> String {
@@ -159,7 +159,7 @@ fn names_of(list: &Value) -> Vec<String> {
 }
 
 fn add(home: &Path, project: &str, title: &str, assignee: &str) {
-    ok(&agboard(
+    ok(&agpj(
         home,
         project,
         &[
@@ -176,7 +176,7 @@ fn add(home: &Path, project: &str, title: &str, assignee: &str) {
 }
 
 fn mv(home: &Path, project: &str, id: &str, column: &str, actor: &str, reason: &str) {
-    ok(&agboard(
+    ok(&agpj(
         home,
         project,
         &["mv", id, column, "--actor", actor, "--reason", reason],
@@ -185,7 +185,7 @@ fn mv(home: &Path, project: &str, id: &str, column: &str, actor: &str, reason: &
 
 fn state(home: &Path, project: &str, id: &str, run_state: &str, reason: &str) {
     if run_state == "pending" {
-        ok(&agboard(
+        ok(&agpj(
             home,
             project,
             &[
@@ -201,7 +201,7 @@ fn state(home: &Path, project: &str, id: &str, run_state: &str, reason: &str) {
             ],
         ));
     } else {
-        ok(&agboard(
+        ok(&agpj(
             home,
             project,
             &["state", id, run_state, "--actor", "ai", "--reason", reason],
@@ -245,8 +245,8 @@ impl Drop for Serve {
 
 fn serve(home: &Path) -> Serve {
     let mut child = bin()
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -302,7 +302,7 @@ impl Serve {
 
     fn token(&self) -> String {
         let page = self.request("GET", "/", None, &[]).1;
-        let marker = "name=\"agboard-token\" content=\"";
+        let marker = "name=\"agpj-token\" content=\"";
         let start = page.find(marker).expect("token meta tag") + marker.len();
         page[start..start + 64].to_string()
     }
@@ -312,7 +312,7 @@ impl Serve {
         let headers = vec![
             ("Origin".to_string(), format!("http://{}", self.addr)),
             ("Sec-Fetch-Site".to_string(), "same-origin".to_string()),
-            ("X-Agboard-Token".to_string(), self.token()),
+            ("X-Agpj-Token".to_string(), self.token()),
         ];
         self.request("POST", path, Some(body), &headers)
     }
@@ -378,8 +378,8 @@ fn on_terminal(home: &Path, project: &str, answer: &str, args: &[&str]) -> i32 {
 
     let mut command = bin();
     command
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["--project", project])
         .args(args);
@@ -595,7 +595,7 @@ fn filters_apply_to_every_project_and_keep_the_projects_with_no_match() {
             // Each project agrees with its own filtered `ls`.
             let mut own_args = vec!["ls", "--json"];
             own_args.extend(&args);
-            let own = stdout_json(&agboard(home.path(), name, &own_args));
+            let own = stdout_json(&agpj(home.path(), name, &own_args));
             assert_eq!(got["tasks"], own["tasks"], "{name} {args:?} own ls");
         }
     }
@@ -746,7 +746,7 @@ fn a_missing_data_area_lists_nothing_and_is_not_created_and_an_old_database_is_i
     assert_eq!(list["catalogVersion"], "e3b0c44298fc1c149afbf4c8996fb924");
     assert!(list["fetchedAt"].is_string());
     let text = all_text(&home, &[]);
-    assert!(text.contains("agboard project create"), "{text}");
+    assert!(text.contains("agpj project create"), "{text}");
     assert!(!home.exists(), "listing created the data area");
 
     // An existing, empty directory stays empty.
@@ -877,7 +877,7 @@ fn only_a_list_may_ask_for_every_project_and_never_together_with_a_project() {
     // Every refusal left the data alone.
     assert_eq!(area(home.path()), before);
     // And the plain way of listing one project still works.
-    let own = stdout_json(&agboard(home.path(), "Apple", &["ls", "--json"]));
+    let own = stdout_json(&agpj(home.path(), "Apple", &["ls", "--json"]));
     assert_eq!(own["tasks"].as_array().unwrap().len(), 2);
 }
 
@@ -904,7 +904,7 @@ fn the_text_listing_shows_each_project_under_its_name_with_the_columns_of_ls() {
     // Under each heading is what `--project NAME ls` prints for that project.
     let mut expected = Vec::new();
     for name in ["Apple", "Kiwi", "Mango", "Zebra"] {
-        let own = stdout_text(&agboard(home.path(), name, &["ls"]));
+        let own = stdout_text(&agpj(home.path(), name, &["ls"]));
         expected.push(format!("Project: {name}\n{own}"));
     }
     assert_eq!(text.trim_end(), expected.join("\n").trim_end());
@@ -923,15 +923,15 @@ fn the_text_listing_shows_each_project_under_its_name_with_the_columns_of_ls() {
     let none = tempdir().unwrap();
     let guide = all_text(none.path(), &[]);
     assert!(guide.contains("No projects."), "{guide}");
-    assert!(guide.contains("agboard project create NAME"), "{guide}");
+    assert!(guide.contains("agpj project create NAME"), "{guide}");
     assert!(!guide.contains("Project:"), "{guide}");
 
     // The help shows how to ask for it.
     let help = stdout_text(&run(home.path(), &["ls", "--help"]));
     assert!(help.contains("--all-projects"), "{help}");
-    assert!(help.contains("agboard ls --all-projects"), "{help}");
+    assert!(help.contains("agpj ls --all-projects"), "{help}");
     let top = stdout_text(&run(home.path(), &["--help"]));
-    assert!(top.contains("agboard ls --all-projects --json"), "{top}");
+    assert!(top.contains("agpj ls --all-projects --json"), "{top}");
 }
 
 /// `project create` binds the folder it runs in, and one folder belongs to one

@@ -15,17 +15,17 @@ pub enum FileAction {
 pub enum PortHolder {
     /// Nothing answered the question.
     Unknown,
-    /// An Agent Board server of another data directory, with its process ID.
+    /// An Agent Project server of another data directory, with its process ID.
     AgentBoard { pid: u32 },
-    /// Something that is not an Agent Board server.
+    /// Something that is not an Agent Project server.
     OtherProgram,
 }
 
-/// Every error `agboard` can report. Each variant maps to one error code in the
+/// Every error `agpj` can report. Each variant maps to one error code in the
 /// design's error table.
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 #[error("{}", self.message())]
-pub enum AgboardError {
+pub enum AgpjError {
     /// `project` is the name or ID the caller used to look the project up.
     ProjectNotFound {
         project: String,
@@ -238,7 +238,7 @@ pub enum AgboardError {
     },
     /// The OS or a sandbox does not allow listening on or connecting to 127.0.0.1.
     LocalNetworkDenied,
-    /// `agboard wait` could not read the board or reach the server.
+    /// `agpj wait` could not read the board or reach the server.
     BoardUnavailable {
         reason: String,
     },
@@ -246,7 +246,7 @@ pub enum AgboardError {
     CursorInvalid {
         reason: String,
     },
-    /// `agboard wait` reached its `--timeout` with no change.
+    /// `agpj wait` reached its `--timeout` with no change.
     WaitTimeout,
     /// A Docs path that cannot name a file under the Docs root.
     DocsPathInvalid {
@@ -281,7 +281,7 @@ pub enum AgboardError {
     DocsOpenFailed {
         reason: String,
     },
-    /// `agboard show remote` with a project has no ready ngrok connection to report.
+    /// `agpj show remote` with a project has no ready ngrok connection to report.
     RemoteUnavailable {
         reason: String,
     },
@@ -291,7 +291,7 @@ pub enum AgboardError {
     KeychainUnavailable {
         reason: String,
     },
-    /// `agboard open` could not start the program that opens the browser.
+    /// `agpj open` could not start the program that opens the browser.
     BrowserOpenFailed {
         url: String,
         reason: String,

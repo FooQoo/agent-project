@@ -175,7 +175,7 @@ function createTask(
     agentStatusChangedAt: at,
     draft: input.draft === 'human' ? 'human' : null,
     archivedAt: null,
-    // The page's language, as `agboard serve` writes the history of the cards it creates.
+    // The page's language, as `agpj serve` writes the history of the cards it creates.
     history: [
       { at, reason: language === 'ja' ? 'タスクをTodoに作成しました。' : 'Created task in Todo.' },
     ],

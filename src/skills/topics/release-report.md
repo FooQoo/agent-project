@@ -4,16 +4,16 @@ Use this when the user asks what a version delivered, what is left, or how a the
 
 ## Per-version report
 
-1. Generate the base: `agboard --project "<name>" release doc --version <V>` (or `--current-version`). It writes `docs/release/<V>.md`; the block between the `agboard:generated` markers is the evidence. Write your own text outside the markers: the summary, the reasons for moves, the unconfirmed list. Regenerating keeps it.
+1. Generate the base: `agpj --project "<name>" release doc --version <V>` (or `--current-version`). It writes `docs/release/<V>.md`; the block between the `agpj:generated` markers is the evidence. Write your own text outside the markers: the summary, the reasons for moves, the unconfirmed list. Regenerating keeps it.
 2. The block already covers what a hand search misses: cards moved off the version are found from their history, each once, with where they went; archived cards count; Verified means the card has acceptance conditions and every one is done; a Done card with no acceptance conditions is listed apart as done without acceptance conditions (report it as unconfirmed, not as verified), and the section of cards moved to another version covers moves to earlier versions too, each line naming where it went.
-3. Open `agboard --project "<name>" show <id>` for any card you describe in more than a line. The report names it in `Source:`.
+3. Open `agpj --project "<name>" show <id>` for any card you describe in more than a line. The report names it in `Source:`.
 4. Publication is separate from Done. A card counts as published only when one of its results has a line `Published: <V>` in its summary and a link to what was published (release page, package, merged pull request). Without a link the claim is unconfirmed. Done alone is never publication.
 5. Say partly confirmed outcomes plainly: "3 of 5 planned cards have a publication record; #12 is Done but has none; #15 claims it without a link."
 
 To record the publication of a card, after the release is really out:
 
 ```sh
-agboard --project "<name>" result add <id> --actor ai --final --title "Released in <V>" \
+agpj --project "<name>" result add <id> --actor ai --final --title "Released in <V>" \
   --summary "Released.
 Published: <V>" --link https://example.com/releases/<V>
 ```
@@ -21,7 +21,7 @@ Published: <V>" --link https://example.com/releases/<V>
 Prefer the explicit form, which checks the version and requires the link:
 
 ```sh
-agboard --project "<name>" result add <id> --actor ai --published <V> \
+agpj --project "<name>" result add <id> --actor ai --published <V> \
   --link https://example.com/releases/<V> --summary "Released."
 ```
 

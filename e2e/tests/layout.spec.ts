@@ -1,12 +1,12 @@
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { resetBoard, agboardOk, mainProject, projectId } from '../helpers/agboard';
+import { resetBoard, agpjOk, mainProject, projectId } from '../helpers/agpj';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
 
 // Headless Chromium hides scrollbars by default; the scroll cue needs the real ones.
 test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } });
 
-const STORAGE_KEY = 'agboard.detailWidth';
+const STORAGE_KEY = 'agpj.detailWidth';
 
 test.beforeEach(async () => {
   resetBoard(mainProject);
@@ -64,9 +64,9 @@ const computed = (page: Page, selector: string, props: string[]) =>
   );
 
 function fillDone(extra = 14): void {
-  for (let i = 0; i < extra; i += 1) agboardOk(mainProject, ['add', `Extra done task ${i + 1}`]);
-  const tasks = JSON.parse(agboardOk(mainProject, ['ls', '--json']).stdout).tasks as { id: number; title: string }[];
-  for (const c of tasks.filter((x) => x.title.startsWith('Extra done task'))) agboardOk(mainProject, ['mv', String(c.id), 'done']);
+  for (let i = 0; i < extra; i += 1) agpjOk(mainProject, ['add', `Extra done task ${i + 1}`]);
+  const tasks = JSON.parse(agpjOk(mainProject, ['ls', '--json']).stdout).tasks as { id: number; title: string }[];
+  for (const c of tasks.filter((x) => x.title.startsWith('Extra done task'))) agpjOk(mainProject, ['mv', String(c.id), 'done']);
 }
 
 // ---------------------------------------------------------------- Desktop layout
@@ -76,7 +76,7 @@ for (const locale of ['en', 'ja']) {
     test(`${locale}: tabs and draft actions fit a ${detailWidth}px detail column`, async ({ page }, testInfo) => {
       await setPreferences({ locale: locale as 'en' | 'ja' });
       await page.addInitScript((detailWidth) => {
-        localStorage.setItem('agboard.detailWidth', String(detailWidth));
+        localStorage.setItem('agpj.detailWidth', String(detailWidth));
       }, detailWidth);
       await page.setViewportSize({ width: 1920, height: 900 });
       await page.goto(`/?project=${projectId(mainProject)}`);

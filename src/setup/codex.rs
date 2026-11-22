@@ -9,7 +9,7 @@ use std::path::Path;
 use toml_edit::{Array, DocumentMut, Item, Table, Value};
 
 use super::plan::{Planned, invalid_file};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 const SUPPORTED_MODE: &str = "workspace-write";
 
@@ -25,7 +25,7 @@ pub(crate) fn plan(
     config: &Path,
     original: Option<&str>,
     root: &str,
-) -> Result<Planned, AgboardError> {
+) -> Result<Planned, AgpjError> {
     let text = original.unwrap_or("");
     let mut doc: DocumentMut = text.parse().map_err(|error: toml_edit::TomlError| {
         invalid_file(
@@ -48,7 +48,7 @@ pub(crate) fn plan(
     match doc.get("sandbox_mode") {
         None => {
             return Ok(Planned::manual(format!(
-                "sandbox_mode is not set in {}, so writable_roots would have no effect and it was not changed. To let Codex edit the shared files, set sandbox_mode = \"{SUPPORTED_MODE}\" there and run agboard setup again.",
+                "sandbox_mode is not set in {}, so writable_roots would have no effect and it was not changed. To let Codex edit the shared files, set sandbox_mode = \"{SUPPORTED_MODE}\" there and run agpj setup again.",
                 config.display()
             )));
         }
@@ -57,7 +57,7 @@ pub(crate) fn plan(
             Some(FULL_ACCESS) => return Ok(Planned::full_access()),
             Some(other) => {
                 return Ok(Planned::manual(format!(
-                    "sandbox_mode is \"{other}\" in {}, which does not let writable_roots take effect, so it was not changed. To let Codex edit the shared files, set sandbox_mode = \"{SUPPORTED_MODE}\" yourself and run agboard setup again.",
+                    "sandbox_mode is \"{other}\" in {}, which does not let writable_roots take effect, so it was not changed. To let Codex edit the shared files, set sandbox_mode = \"{SUPPORTED_MODE}\" yourself and run agpj setup again.",
                     config.display()
                 )));
             }
@@ -124,7 +124,7 @@ pub(crate) fn plan(
 mod tests {
     use super::*;
 
-    const ROOT: &str = "/srv/example/.agent-board";
+    const ROOT: &str = "/srv/example/.agent-project";
 
     fn planned(text: &str) -> Option<String> {
         plan(Path::new("/c/config.toml"), Some(text), ROOT)

@@ -10,7 +10,7 @@ use super::process::{Exit, terminate};
 use super::spawn::Spawn;
 use super::{Launched, Launcher};
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::sessions::Tool;
 
 impl Launcher {
@@ -63,7 +63,7 @@ impl Launcher {
         folder: &Path,
         tool: Tool,
         model: Option<&str>,
-    ) -> Result<Launched, AgboardError> {
+    ) -> Result<Launched, AgpjError> {
         self.spawn_child(
             project,
             project_name,

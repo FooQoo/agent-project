@@ -17,7 +17,7 @@ async function openDemo(page: Page): Promise<string[]> {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('./');
-  await expect(page.getByText('Try Agent Board')).toBeVisible();
+  await expect(page.getByText('Try Agent Project')).toBeVisible();
   return errors;
 }
 
@@ -92,7 +92,7 @@ test.describe('in an English browser', () => {
     await expect(task(page, 12)).not.toContainText('Pending');
     await expect(page.locator('main [data-decision-answer]')).toHaveCount(0);
 
-    // Checking its last two conditions moves the AI card to Done, as `agboard serve` does.
+    // Checking its last two conditions moves the AI card to Done, as `agpj serve` does.
     await task(page, 11).click();
     const panel = details(page);
     await expect(panel.getByRole('heading', { level: 2 })).toHaveText('Implement task moves');
@@ -137,7 +137,7 @@ test.describe('in an English browser', () => {
   }) => {
     const errors = await openDemo(page);
     await page.getByRole('button', { name: 'Skip' }).click();
-    await expect(page.getByText('Try Agent Board')).toBeHidden();
+    await expect(page.getByText('Try Agent Project')).toBeHidden();
     await expect(task(lane(page, 'Todo'), 15)).toBeVisible();
 
     // No project Docs: the demo has no files on a computer to open.
@@ -145,7 +145,7 @@ test.describe('in an English browser', () => {
     await expect(header.getByRole('button', { name: 'Settings' })).toBeVisible();
     await expect(header.getByRole('button', { name: 'Docs' })).toHaveCount(0);
 
-    // No remote connection: there is no `agboard serve` for a phone to reach.
+    // No remote connection: there is no `agpj serve` for a phone to reach.
     await header.getByRole('button', { name: 'Settings' }).click();
     const settings = page.getByRole('dialog', { name: 'Settings' });
     await expect(settings.getByRole('region', { name: 'Tutorial' })).toBeVisible();
@@ -156,7 +156,7 @@ test.describe('in an English browser', () => {
     await dragTaskTo(page, 15, 'Doing');
     await expect(task(lane(page, 'Doing'), 15)).toBeVisible();
     await page.reload();
-    await expect(page.getByText('Try Agent Board')).toBeVisible();
+    await expect(page.getByText('Try Agent Project')).toBeVisible();
     await page.getByRole('button', { name: 'Skip' }).click();
     await expect(task(lane(page, 'Todo'), 15)).toBeVisible();
     expect(errors).toEqual([]);
@@ -171,7 +171,7 @@ test.describe('in a Japanese browser', () => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('./');
-    const welcome = page.getByRole('dialog', { name: 'Agent Boardを体験しましょう' });
+    const welcome = page.getByRole('dialog', { name: 'Agent Project を体験しましょう' });
     await expect(welcome).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
 
@@ -219,7 +219,7 @@ test.describe('in a Japanese browser', () => {
 
     // A reload starts afresh in the browser's language, with the guide in Japanese again.
     await page.reload();
-    await expect(page.getByRole('dialog', { name: 'Agent Boardを体験しましょう' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Agent Project を体験しましょう' })).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
     await page.getByRole('button', { name: 'スキップ' }).click();
     await expect(page.getByRole('region', { name: '未着手' })).toBeVisible();

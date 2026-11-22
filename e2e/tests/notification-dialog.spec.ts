@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { mainProject, resetBoard } from '../helpers/agboard';
+import { mainProject, resetBoard } from '../helpers/agpj';
 import { readBoardAfterReset } from '../helpers/ui';
 
 // The "Notifications" row of the settings dialog opens a dialog of its own. The choices are

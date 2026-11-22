@@ -1,6 +1,6 @@
 # Code map
 
-Where things live in the repository. For how the parts work together, read [How Agent Board works](../concepts/overview.md).
+Where things live in the repository. For how the parts work together, read [How Agent Project works](../concepts/overview.md).
 
 ## Where the code lives
 
@@ -14,16 +14,16 @@ Where things live in the repository. For how the parts work together, read [How 
 | `server` | The axum app, API, SSE, write guards, embedded web assets, and the ngrok entrance. |
 | `agent` | The hook and `wait`. |
 | `autostart` | Starting the shared server when a command needs it: the check, `autostart.lock`, the detached `serve --auto` child (`spawn`), and the `autostart.paused` marker. |
-| `progress` | Builds the progress table shared by `agboard progress` and the hook. |
+| `progress` | Builds the progress table shared by `agpj progress` and the hook. |
 | `interact` | Human confirmation (terminal detection, y/N), the notify client, and opening a board page in the browser (`browser`: the board address, when no browser is opened, and the platform's opener). |
-| `setup` | Installs and updates the Agent Board plugin and prepares agent access to the data area. |
-| `paths`<br>`lifecycle`<br>`clock`<br>`error` | Data area resolution, the `serve` lock, UTC time, and `AgboardError` (code, exit code, message, reason). |
+| `setup` | Installs and updates the Agent Project plugin and prepares agent access to the data area. |
+| `paths`<br>`lifecycle`<br>`clock`<br>`error` | Data area resolution, the `serve` lock, UTC time, and `AgpjError` (code, exit code, message, reason). |
 
 Dependencies point one way.
 
 `cli` uses `agent`, `autostart`, `interact`, `server`, `setup`, and `progress`. `agent` and `cli` use `autostart`, which uses `server` and `file_store`. `agent` uses `progress`; `agent`, `progress`, and `server` use `file_store`, which uses `domain`. `server` uses `docs`, which uses `file_store`'s `layout` and `io` for its paths and read errors; `file_store` takes only `DocsLocale` from `docs`, to choose the README of a new `docs/` folder. 
 
-`interact` and `setup` use only `paths`, `error`, and `domain`; `interact::browser` also asks `autostart` whether it runs in the `agboard` command line. `server` uses `interact::browser` for the platform's opener of the Docs route. Nothing depends on `cli`, and `server` does not depend on `cli`, `agent`, or `progress`. 
+`interact` and `setup` use only `paths`, `error`, and `domain`; `interact::browser` also asks `autostart` whether it runs in the `agpj` command line. `server` uses `interact::browser` for the platform's opener of the Docs route. Nothing depends on `cli`, and `server` does not depend on `cli`, `agent`, or `progress`. 
 
 `domain` performs no I/O; its one reference to `file_store` is the `HistoryRecord` type alias.
 
@@ -55,7 +55,7 @@ Inside `server`, routers depend on shared modules rather than on each other:
 | `preferences/` | The saved language and color theme: `preferences.json` in the internal area (`PreferencesStore`), the `GET` and `PUT` handling of `/api/preferences`, and the change notice. |
 | `monitor_auth/` | The entrance's application sessions and CSRF tokens (`session`), the 4-digit passcode and its limit on wrong guesses (`passcode`), their header checks (`guard`), and constants such as the cookie name and 12-hour limit (`contracts`). |
 | `guard` | Host, Origin, Sec-Fetch-Site and token checks for local writes. |
-| `response`<br>`request` | The JSON error body, `AgboardError` to HTTP status mapping, and other shared responses; JSON bodies whose failures use that error body. |
+| `response`<br>`request` | The JSON error body, `AgpjError` to HTTP status mapping, and other shared responses; JSON bodies whose failures use that error body. |
 | `store`<br>`qa`<br>`acceptance` | Blocking file access, the index, and URL IDs for every router; reading messages, saving answers, and sending and withdrawing requests (`messages.rs`; `api/messages.rs` holds the board's handlers), and setting one acceptance condition as a person. |
 | `web_assets` | The embedded scripts and stylesheets of the board, its build ID, and the cacheable gzip or plain response. |
 | `contracts/` | The data layer's wire types: the Summary, the Detail NDJSON lines, and the `changed` event. The golden examples in `tests/fixtures/data-layer/` pin their shapes. |
@@ -79,20 +79,20 @@ The main files and directories outside `src/` are:
 - `tests/`: Rust integration and CLI tests.
 - `e2e/`: Playwright tests and the screenshot and video scripts.
 - `docs/`: this documentation site.
-- `plugins/agent-board/`: the Agent Board plugin: the manifests, the thin entry of the `agent-board` skill in `skills/agent-board/`, the `remote` skill in `skills/remote/`, the `wait` skill in `skills/wait/`, and the Hook of each agent in `hooks/`.
+- `plugins/agent-project/`: the Agent Project plugin: the manifests, the thin entry of the `agent-project` skill in `skills/agent-project/`, the `remote` skill in `skills/remote/`, the `wait` skill in `skills/wait/`, and the Hook of each agent in `hooks/`.
 - `.agents/plugins/marketplace.json` and `.claude-plugin/marketplace.json`: the marketplace catalogs of Codex and Claude Code.
 
 ### Plugin setup and update
 
 - `src/setup/`: `mod.rs` (the agents and options), `prepare.rs` (the read-only plan), `execute.rs` (carrying it out), and `report.rs` (the text and JSON result and the exit code). `plan.rs`, `codex.rs`, and `claude.rs` compute the settings changes, and `apply.rs` with `apply/files.rs` writes them with backups. `env.rs` resolves the paths, `agent_cli.rs` runs the agents' commands, `plugin.rs` installs the plugin from the marketplace, and `trust.rs` trusts the Codex hooks through `codex app-server`.
-- `src/cli/commands/version.rs` and `src/cli/args/version.rs`: `agboard version ls|add|current`, and the version options shared by the other commands: `PlanArgs` (`--planned-version`, `--current-version`, `--unplanned` of `add`, `edit`, and `epic plan`) and `VersionFilterArgs` (`--version`, `--current-version`, `--unplanned` of `ls` and `progress`). The store operations are in `src/file_store/ops/version.rs`; `progress::build_filtered` applies the filter after readiness is decided.
-- `src/file_store/release_doc.rs` (with `release_doc/render.rs`) and `src/file_store/ops/release_doc.rs`: the release document of a version (`agboard release doc`, `POST …/release-doc`). The first is pure: it groups the tasks (planned, verified, done without acceptance conditions, remaining, moved, read from the planned-version history entries in either language), writes the block between the `agboard:generated` markers, and splices it into a file. The second holds the project lock, reads the snapshot with archived tasks, and saves the file atomically after checking it did not change. `src/cli/commands/release.rs`, `src/cli/args/release.rs`, and `src/server/api/versions.rs` are the entrances.
-- `src/cli/commands/setup.rs`: `agboard setup` and `agboard update`: the options, the agent choice, and the confirmation question. `setup_remote.rs` is `agboard setup remote` and the optional remote access step of `setup`; `remote.rs` is `agboard show remote`; `src/cli/run/remote.rs` runs both when no project store is needed. `src/remote_settings.rs` is the shared validation and storage of the saved ngrok settings.
+- `src/cli/commands/version.rs` and `src/cli/args/version.rs`: `agpj version ls|add|current`, and the version options shared by the other commands: `PlanArgs` (`--planned-version`, `--current-version`, `--unplanned` of `add`, `edit`, and `epic plan`) and `VersionFilterArgs` (`--version`, `--current-version`, `--unplanned` of `ls` and `progress`). The store operations are in `src/file_store/ops/version.rs`; `progress::build_filtered` applies the filter after readiness is decided.
+- `src/file_store/release_doc.rs` (with `release_doc/render.rs`) and `src/file_store/ops/release_doc.rs`: the release document of a version (`agpj release doc`, `POST …/release-doc`). The first is pure: it groups the tasks (planned, verified, done without acceptance conditions, remaining, moved, read from the planned-version history entries in either language), writes the block between the `agpj:generated` markers, and splices it into a file. The second holds the project lock, reads the snapshot with archived tasks, and saves the file atomically after checking it did not change. `src/cli/commands/release.rs`, `src/cli/args/release.rs`, and `src/server/api/versions.rs` are the entrances.
+- `src/cli/commands/setup.rs`: `agpj setup` and `agpj update`: the options, the agent choice, and the confirmation question. `setup_remote.rs` is `agpj setup remote` and the optional remote access step of `setup`; `remote.rs` is `agpj show remote`; `src/cli/run/remote.rs` runs both when no project store is needed. `src/remote_settings.rs` is the shared validation and storage of the saved ngrok settings.
 - `src/nudge/`: the reminders of what agents forget. `mod.rs` has the rule registry types and the two ways to run it (`state_reminders` for the progress table, `turn_end_reminders` for the Stop hook), `rules.rs` the `RULES` list, `turn.rs` the transcript reader for Claude Code and Codex, `cases.rs` the test cases of every rule, and `coverage.rs` the table that maps every command and progress field to its rules. The Stop hook itself is `src/agent/stop/`. See [Nudge rules](../concepts/agents.md#nudge-rules).
-- `src/skills/`: the text of the `agent-board` skill (`agent-board.md`, `topics/`) that `agboard skills` prints.
+- `src/skills/`: the text of the `agent-project` skill (`agent-project.md`, `topics/`) that `agpj skills` prints.
 - `src/plugin_hash.rs`, `src/setup/auto_update.rs`, and `src/setup/auto_update/`: the content hash of the plugin (computed by `build.rs`), and the hook's automatic update with its lock and record. `tests/plugin_auto_update.rs` and `tests/skills_command.rs` test them.
 - `tests/setup.rs` and `tests/setup_plugin.rs`: setup and update against fake agent commands (`tests/support/fake_agents.rs`). `tests/plugin_layout.rs` checks the marketplace and plugin files and their versions.
-- `src/cli/commands/message/` and `src/cli/args/message.rs`: the `agboard message` commands, their JSON input (`input.rs`), and the JSON Lines events of `message ask` and `message wait` (`stream.rs`). The wait itself is `src/agent/message_wait.rs`, built on the shared wait engine.
+- `src/cli/commands/message/` and `src/cli/args/message.rs`: the `agpj message` commands, their JSON input (`input.rs`), and the JSON Lines events of `message ask` and `message wait` (`stream.rs`). The wait itself is `src/agent/message_wait.rs`, built on the shared wait engine.
 - `web/src/features/tasks/messages/`: the list of messages. `model/messages.ts` holds the tabs, the counts, and `canSendAnswer`, `api.ts` reads a message and sends answers and withdrawals, `MessageBand.tsx` is the band with the counts (shared by the PC board and the phone screen), `MessageCenter.tsx` joins the band and the list, `MessageRows.tsx` draws the rows, and `MessagesSurface.tsx` is the list, the question, and the request in a modal or a bottom sheet. `web/src/features/tasks/answer/` draws the question and the answer fields (`DecisionQuestion`, `DecisionAnswerFields`), and `web/src/app/model/useMessagesController.ts` wires the list to the PC board.
 - `web/src/features/messages/ask/`: the **Ask AI** composer (`AskAiDialog.tsx`, `AskAiToolbar.tsx`) and `sendRequest.ts`, which builds the multipart request.
 - The board (`pages/board/ui/Lane.tsx`) and the phone monitor (`pages/monitor/components/MonitorLanes.tsx`) draw the Backlog as their first lane, with the selection mode and the send to Todo from `web/src/features/backlog/`.

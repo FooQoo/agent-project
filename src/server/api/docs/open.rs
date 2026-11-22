@@ -15,7 +15,7 @@ use axum::response::{IntoResponse, Response};
 
 use super::{PathQuery, failure};
 use crate::docs::{DocsPath, DocsRoot};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::interact::browser::Platform;
 use crate::server::AppState;
 use crate::server::store::{indexed_view, parse_project_id};
@@ -44,8 +44,8 @@ pub(crate) async fn open_docs_path(
     let started = tokio::task::spawn_blocking(move || start_opener(&target)).await;
     match started {
         Ok(Ok(())) => StatusCode::NO_CONTENT.into_response(),
-        Ok(Err(reason)) => *failure(AgboardError::DocsOpenFailed { reason }),
-        Err(error) => *failure(AgboardError::DocsOpenFailed {
+        Ok(Err(reason)) => *failure(AgpjError::DocsOpenFailed { reason }),
+        Err(error) => *failure(AgpjError::DocsOpenFailed {
             reason: error.to_string(),
         }),
     }
@@ -53,7 +53,7 @@ pub(crate) async fn open_docs_path(
 
 /// The file at `raw`, checked as a read checks it: a valid path inside the
 /// Docs, no links on the way, and an existing file.
-fn checked_file(root: &DocsRoot, raw: &str) -> Result<std::path::PathBuf, AgboardError> {
+fn checked_file(root: &DocsRoot, raw: &str) -> Result<std::path::PathBuf, AgpjError> {
     let path = DocsPath::parse(raw)?;
     root.open_file(&path)?;
     Ok(path
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn a_missing_folder_is_not_started() {
-        let result = start_opener(FsPath::new("/nonexistent/agboard-docs"));
+        let result = start_opener(FsPath::new("/nonexistent/agpj-docs"));
         assert!(result.is_err());
     }
 }

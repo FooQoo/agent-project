@@ -1,4 +1,4 @@
-//! `agboard setup` run as the real binary: the data directory and the agent
+//! `agpj setup` run as the real binary: the data directory and the agent
 //! settings files. Every run gets a cleared environment, a temporary HOME, and
 //! fake `codex` and `claude` commands as the only ones on PATH, so neither the
 //! real home, the real agents, nor the network is reachable. Sentinel contents
@@ -29,15 +29,15 @@ fn fakes(home: &Path) -> FakeAgents {
     FakeAgents::new(home.parent().unwrap(), &["codex", "claude"])
 }
 
-/// Runs `agboard` with a cleared environment: HOME is `home`, PATH holds only
+/// Runs `agpj` with a cleared environment: HOME is `home`, PATH holds only
 /// the fake agents, and only `extra` variables are added. Returns exit code,
 /// stdout, and stderr.
 fn setup(home: &Path, extra: &[(&str, &str)], args: &[&str]) -> (i32, String, String) {
     let fakes = fakes(home);
-    let output = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env_clear()
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
         .env("HOME", home)
         .env("PATH", &fakes.bin)
         .env("TZ", "UTC")
@@ -54,7 +54,7 @@ fn setup(home: &Path, extra: &[(&str, &str)], args: &[&str]) -> (i32, String, St
     )
 }
 
-/// `agboard --json setup` with `--agent all` and `--yes` unless `args` name an
+/// `agpj --json setup` with `--agent all` and `--yes` unless `args` name an
 /// agent or a dry run.
 fn setup_json(home: &Path, extra: &[(&str, &str)], args: &[&str]) -> Value {
     let mut all = vec!["--json", "setup"];
@@ -94,7 +94,7 @@ fn backups_in(dir: &Path) -> Vec<String> {
     fs::read_dir(dir)
         .unwrap()
         .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
-        .filter(|name| name.contains("agboard-backup"))
+        .filter(|name| name.contains("agpj-backup"))
         .collect()
 }
 
@@ -110,7 +110,7 @@ fn home_with_settings(name: &str) -> (tempfile::TempDir, PathBuf) {
 }
 
 fn data_root(home: &Path) -> PathBuf {
-    home.join(".agent-board")
+    home.join(".agent-project")
 }
 
 #[test]
@@ -140,7 +140,7 @@ fn default_root_is_directly_under_home_and_setup_creates_it() {
         assert_eq!(files[0]["status"], "updated");
         assert_eq!(files[0]["changes"].as_array().unwrap().len(), 1);
     }
-    // Codex also gets the rule that allows the agboard command.
+    // Codex also gets the rule that allows the agpj command.
     assert_eq!(agents[0]["files"].as_array().unwrap().len(), 2);
     assert_eq!(agents[1]["files"].as_array().unwrap().len(), 1);
 }
@@ -199,7 +199,7 @@ fn json_output_has_the_documented_keys() {
         files[1]["path"]
             .as_str()
             .unwrap()
-            .ends_with(".codex/rules/agboard.rules")
+            .ends_with(".codex/rules/agpj.rules")
     );
     assert_eq!(agent["plugin"]["version"], env!("CARGO_PKG_VERSION"));
 }
@@ -216,12 +216,12 @@ fn human_output_is_english_and_names_the_next_step() {
 }
 
 #[test]
-fn agboard_home_overrides_the_default_and_an_empty_value_does_not() {
+fn agpj_home_overrides_the_default_and_an_empty_value_does_not() {
     let (tmp, home) = home_with_settings("home");
     let custom = tmp.path().join("custom data");
     let json = setup_json(
         &home,
-        &[("AGBOARD_HOME", custom.to_str().unwrap())],
+        &[("AGPJ_HOME", custom.to_str().unwrap())],
         &["--agent", "claude"],
     );
     assert_eq!(json["dataDir"], custom.display().to_string());
@@ -230,18 +230,18 @@ fn agboard_home_overrides_the_default_and_an_empty_value_does_not() {
 
     let json = setup_json(
         &home,
-        &[("AGBOARD_HOME", "")],
+        &[("AGPJ_HOME", "")],
         &["--agent", "claude", "--dry-run"],
     );
     assert_eq!(json["dataDir"], data_root(&home).display().to_string());
 }
 
 #[test]
-fn a_relative_agboard_home_is_resolved_to_an_absolute_path_once() {
+fn a_relative_agpj_home_is_resolved_to_an_absolute_path_once() {
     let (_tmp, home) = home_with_settings("home");
     let json = setup_json(
         &home,
-        &[("AGBOARD_HOME", "relative-data")],
+        &[("AGPJ_HOME", "relative-data")],
         &["--agent", "claude", "--dry-run"],
     );
     let data = json["dataDir"].as_str().unwrap();
@@ -432,14 +432,14 @@ fn codex_home_and_claude_config_dir_overrides_are_honored() {
     assert!(
         fs::read_to_string(codex_home.join("config.toml"))
             .unwrap()
-            .contains(".agent-board")
+            .contains(".agent-project")
     );
-    assert!(codex_home.join("rules/agboard.rules").is_file());
+    assert!(codex_home.join("rules/agpj.rules").is_file());
     assert!(!home.join(".codex/rules").exists());
     assert!(
         fs::read_to_string(claude_dir.join("settings.json"))
             .unwrap()
-            .contains(".agent-board")
+            .contains(".agent-project")
     );
     assert_eq!(
         fs::read(home.join(".codex/config.toml")).unwrap(),
@@ -519,7 +519,7 @@ fn a_codex_config_without_workspace_write_is_left_alone_with_a_manual_step() {
             text,
             "the sandbox settings are never changed"
         );
-        assert!(home.join(".codex/rules/agboard.rules").is_file());
+        assert!(home.join(".codex/rules/agpj.rules").is_file());
         assert!(backups_in(&home.join(".codex")).is_empty());
     }
 }
@@ -547,23 +547,23 @@ fn full_access_codex_needs_no_permission_and_no_rule() {
 fn an_existing_rule_file_is_kept_as_it_is() {
     let (_tmp, home) = home_with_settings("home");
     fs::create_dir_all(home.join(".codex/rules")).unwrap();
-    let mine = "# my own rules\nprefix_rule(pattern=[\"agboard\"], decision=\"prompt\")\n";
-    fs::write(home.join(".codex/rules/agboard.rules"), mine).unwrap();
+    let mine = "# my own rules\nprefix_rule(pattern=[\"agpj\"], decision=\"prompt\")\n";
+    fs::write(home.join(".codex/rules/agpj.rules"), mine).unwrap();
     let json = setup_json(&home, &[], &["--agent", "codex"]);
     assert_eq!(json["agents"][0]["files"][1]["status"], "unchanged");
     assert_eq!(
-        fs::read_to_string(home.join(".codex/rules/agboard.rules")).unwrap(),
+        fs::read_to_string(home.join(".codex/rules/agpj.rules")).unwrap(),
         mine
     );
 }
 
 #[test]
-fn the_written_rule_allows_the_agboard_command() {
+fn the_written_rule_allows_the_agpj_command() {
     let (_tmp, home) = home_with_settings("home");
     setup_json(&home, &[], &["--agent", "codex"]);
-    let rules = fs::read_to_string(home.join(".codex/rules/agboard.rules")).unwrap();
+    let rules = fs::read_to_string(home.join(".codex/rules/agpj.rules")).unwrap();
     assert!(
-        rules.contains("prefix_rule(pattern=[\"agboard\"], decision=\"allow\")"),
+        rules.contains("prefix_rule(pattern=[\"agpj\"], decision=\"allow\")"),
         "{rules}"
     );
 }
@@ -650,7 +650,7 @@ fn a_symbolic_link_is_followed_and_kept_as_a_link() {
         "link must stay a link"
     );
     let target = fs::read_to_string(dotfiles.join("settings.json")).unwrap();
-    assert!(target.contains(".agent-board"));
+    assert!(target.contains(".agent-project"));
     // the backup sits next to the real file
     assert_eq!(backups_in(&dotfiles).len(), 1);
     assert!(backups_in(&home.join(".claude")).is_empty());
@@ -689,7 +689,7 @@ fn a_dangling_symbolic_link_is_refused() {
 #[test]
 fn the_old_os_application_folder_is_neither_read_nor_changed() {
     let (_tmp, home) = home_with_settings("home");
-    let old = home.join("Library/Application Support/agboard");
+    let old = home.join("Library/Application Support/agpj");
     fs::create_dir_all(old.join("shared/projects")).unwrap();
     fs::write(old.join("shared/projects/sentinel.txt"), "old data").unwrap();
     fs::write(old.join("bindings.json"), "{\"sentinel\":true}").unwrap();
@@ -727,10 +727,10 @@ fn serve_and_the_cli_share_the_default_root_created_by_setup() {
     use std::io::{BufRead, BufReader};
     let (_tmp, home) = home_with_settings("home");
     setup_json(&home, &[], &[]);
-    let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env_clear()
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
         .env("HOME", &home)
         .env("TZ", "UTC")
         .current_dir(&home)

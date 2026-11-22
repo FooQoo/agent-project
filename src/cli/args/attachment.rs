@@ -1,4 +1,4 @@
-//! Arguments of `agboard attachment`.
+//! Arguments of `agpj attachment`.
 
 use std::path::PathBuf;
 
@@ -8,7 +8,7 @@ use super::enums::ActorArg;
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo attachment ls 12\n  agboard --project demo attachment add 12 --file image.png --actor ai\n  agboard --project demo attachment get 12 <attachment-id> --output image.png"
+    after_help = "Examples:\n  agpj --project demo attachment ls 12\n  agpj --project demo attachment add 12 --file image.png --actor ai\n  agpj --project demo attachment get 12 <attachment-id> --output image.png"
 )]
 pub struct AttachmentArgs {
     #[command(subcommand)]

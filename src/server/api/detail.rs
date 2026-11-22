@@ -17,14 +17,14 @@ use futures_util::stream;
 
 use super::parse_task_id;
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::detail::DetailSnapshot;
 use crate::file_store::index::ProjectIndex;
 use crate::file_store::validate::EpicId;
 use crate::server::AppState;
 use crate::server::contracts::NDJSON_CONTENT_TYPE;
 use crate::server::contracts::detail::{DetailEvent, Section, parse_sections};
-use crate::server::response::{agboard_error_response, invalid_sections};
+use crate::server::response::{agpj_error_response, invalid_sections};
 use crate::server::store::{indexed_view_in, parse_project_id};
 
 /// About how many bytes one piece of the response holds.
@@ -72,7 +72,7 @@ pub(crate) async fn detail_response(
     }
     let project_id: ProjectId = match parse_project_id(raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let target = match target {
         Target::Task(raw) => match parse_task_id(&raw) {
@@ -81,13 +81,13 @@ pub(crate) async fn detail_response(
         },
         Target::Epic(raw) => match raw.parse::<EpicId>() {
             Ok(id) => Resolved::Epic(id),
-            Err(_) => return agboard_error_response(&AgboardError::EpicNotFound { id: raw }),
+            Err(_) => return agpj_error_response(&AgpjError::EpicNotFound { id: raw }),
         },
     };
     // The index is only read here, and only long enough to take the snapshot's `Arc`.
     let snapshot = match indexed_view_in(shared, index, &project_id) {
         Ok(snapshot) => snapshot,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let shared = shared.to_path_buf();
     let built = tokio::task::spawn_blocking(move || {
@@ -95,13 +95,13 @@ pub(crate) async fn detail_response(
             Resolved::Task(id) => DetailSnapshot::task(&shared, &snapshot, *id, &sections),
             Resolved::Epic(id) => DetailSnapshot::epic(&shared, &snapshot, id, &sections),
         }?;
-        Ok::<_, AgboardError>(detail.events())
+        Ok::<_, AgpjError>(detail.events())
     })
     .await;
     match built {
         Ok(Ok(events)) => ndjson_response(&events),
-        Ok(Err(error)) => agboard_error_response(&error),
-        Err(error) => agboard_error_response(&AgboardError::DatabaseError {
+        Ok(Err(error)) => agpj_error_response(&error),
+        Err(error) => agpj_error_response(&AgpjError::DatabaseError {
             reason: format!("The detail task failed: {error}"),
         }),
     }

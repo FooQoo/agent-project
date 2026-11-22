@@ -40,13 +40,13 @@ fn fixture_root(manifest_version: &str, lock_version: &str) -> tempfile::TempDir
     let dir = tempfile::tempdir().unwrap();
     fs::write(
         dir.path().join("Cargo.toml"),
-        format!("[package]\nname = \"agent-board\"\nversion = \"{manifest_version}\"\n"),
+        format!("[package]\nname = \"agent-project\"\nversion = \"{manifest_version}\"\n"),
     )
     .unwrap();
     fs::write(
         dir.path().join("Cargo.lock"),
         format!(
-            "version = 4\n\n[[package]]\nname = \"agent-board\"\nversion = \"{lock_version}\"\n"
+            "version = 4\n\n[[package]]\nname = \"agent-project\"\nversion = \"{lock_version}\"\n"
         ),
     )
     .unwrap();
@@ -56,19 +56,19 @@ fn fixture_root(manifest_version: &str, lock_version: &str) -> tempfile::TempDir
 
 /// The plugin files that check-version.py compares with the crate version.
 fn write_plugin(root: &Path, version: &str) {
-    let plugin = root.join("plugins/agent-board");
+    let plugin = root.join("plugins/agent-project");
     for (path, text) in [
         (
             plugin.join(".codex-plugin/plugin.json"),
-            format!(r#"{{"name":"agent-board","version":"{version}"}}"#),
+            format!(r#"{{"name":"agent-project","version":"{version}"}}"#),
         ),
         (
             plugin.join(".claude-plugin/plugin.json"),
-            format!(r#"{{"name":"agent-board","version":"{version}"}}"#),
+            format!(r#"{{"name":"agent-project","version":"{version}"}}"#),
         ),
         (
             root.join(".claude-plugin/marketplace.json"),
-            format!(r#"{{"plugins":[{{"name":"agent-board","version":"{version}"}}]}}"#),
+            format!(r#"{{"plugins":[{{"name":"agent-project","version":"{version}"}}]}}"#),
         ),
     ] {
         fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -79,7 +79,7 @@ fn write_plugin(root: &Path, version: &str) {
         fs::write(
             plugin.join(format!("hooks/{agent}.json")),
             format!(
-                r#"{{"hooks":{{"SessionStart":[{{"hooks":[{{"type":"command","command":"agboard hook --agent {agent}"}}]}}]}}}}"#
+                r#"{{"hooks":{{"SessionStart":[{{"hooks":[{{"type":"command","command":"agpj hook --agent {agent}"}}]}}]}}}}"#
             ),
         )
         .unwrap();
@@ -97,7 +97,9 @@ fn package_metadata_is_mit_and_the_lockfile_names_the_same_version() {
     assert!(manifest.contains("license = \"MIT\""), "{manifest}");
     let lock = read("Cargo.lock");
     assert!(
-        lock.contains(&format!("name = \"agent-board\"\nversion = \"{version}\"")),
+        lock.contains(&format!(
+            "name = \"agent-project\"\nversion = \"{version}\""
+        )),
         "the lockfile names another version"
     );
 }
@@ -105,7 +107,7 @@ fn package_metadata_is_mit_and_the_lockfile_names_the_same_version() {
 /// The archive name the verifier expects for this build and an Apple Silicon Mac.
 fn arm_archive_name() -> String {
     format!(
-        "agboard-{}-aarch64-apple-darwin.tar.gz",
+        "agpj-{}-aarch64-apple-darwin.tar.gz",
         env!("CARGO_PKG_VERSION")
     )
 }
@@ -181,8 +183,8 @@ fn check_version_rejects_a_plugin_of_another_version() {
     let fixture = fixture_root("1.2.3", "1.2.3");
     let root = fixture.path();
     fs::write(
-        root.join("plugins/agent-board/.claude-plugin/plugin.json"),
-        r#"{"name":"agent-board","version":"1.2.2"}"#,
+        root.join("plugins/agent-project/.claude-plugin/plugin.json"),
+        r#"{"name":"agent-project","version":"1.2.2"}"#,
     )
     .unwrap();
     let out = python(
@@ -200,8 +202,8 @@ fn check_version_rejects_a_plugin_of_another_version() {
     let root = fixture.path();
     write_plugin(root, "1.2.3");
     fs::write(
-        root.join("plugins/agent-board/hooks/codex.json"),
-        r#"{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"agboard hook --agent codex --plugin-version 1.2.3"}]}]}}"#,
+        root.join("plugins/agent-project/hooks/codex.json"),
+        r#"{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"agpj hook --agent codex --plugin-version 1.2.3"}]}]}}"#,
     )
     .unwrap();
     let out = python(
@@ -262,7 +264,7 @@ fn notices_keep_plain_and_composite_licenses_headers_and_sources() {
     let out = render(&notices_fixture(dir.path()));
     assert!(out.status.success(), "{}", text(&out));
     let notices = String::from_utf8(out.stdout).unwrap();
-    assert!(notices.starts_with("Agent Board - Third-Party Notices\n"));
+    assert!(notices.starts_with("Agent Project - Third-Party Notices\n"));
     assert!(notices.contains("COMPONENT INDEX"));
     assert!(notices.contains("Copyright (c) 2020 Plain Author"));
     assert!(notices.contains("Applicable license: Apache-2.0 AND ISC"));
@@ -307,7 +309,7 @@ fn notices_generation_fails_when_a_license_text_is_missing() {
 #[test]
 fn committed_notices_are_complete() {
     let notices = read("THIRD_PARTY_NOTICES.txt");
-    assert!(notices.starts_with("Agent Board - Third-Party Notices\n"));
+    assert!(notices.starts_with("Agent Project - Third-Party Notices\n"));
     for section in [
         "COMPONENT INDEX",
         "COMPONENT NOTICES",
@@ -338,7 +340,7 @@ fn archive(dir: &Path, name: &str, files: &[(&str, &[u8])]) -> PathBuf {
     fs::create_dir_all(&stage).unwrap();
     for (file, content) in files {
         fs::write(stage.join(file), content).unwrap();
-        if *file == "agboard" {
+        if *file == "agpj" {
             use std::os::unix::fs::PermissionsExt;
             fs::set_permissions(stage.join(file), fs::Permissions::from_mode(0o755)).unwrap();
         }
@@ -369,7 +371,7 @@ fn verify(archive: &Path, target: &str) -> Output {
 
 #[test]
 fn verifier_accepts_the_three_files_in_a_case_insensitive_locale() {
-    // A UTF-8 locale, as on the GitHub runners, sorts `agboard` before
+    // A UTF-8 locale, as on the GitHub runners, sorts `agpj` before
     // `LICENSE`; the check must not depend on that order.
     let dir = tempfile::tempdir().unwrap();
     let license = read("LICENSE");
@@ -378,7 +380,7 @@ fn verifier_accepts_the_three_files_in_a_case_insensitive_locale() {
         dir.path(),
         &arm_archive_name(),
         &[
-            ("agboard", b"binary"),
+            ("agpj", b"binary"),
             ("LICENSE", license.as_bytes()),
             ("THIRD_PARTY_NOTICES.txt", notices.as_bytes()),
         ],
@@ -403,7 +405,7 @@ fn verifier_rejects_an_archive_without_the_license() {
         dir.path(),
         &arm_archive_name(),
         &[
-            ("agboard", b"binary"),
+            ("agpj", b"binary"),
             ("THIRD_PARTY_NOTICES.txt", notices.as_bytes()),
         ],
     );
@@ -419,7 +421,7 @@ fn verifier_rejects_an_archive_without_the_notices() {
     let path = archive(
         dir.path(),
         &arm_archive_name(),
-        &[("agboard", b"binary"), ("LICENSE", license.as_bytes())],
+        &[("agpj", b"binary"), ("LICENSE", license.as_bytes())],
     );
     let out = verify(&path, "aarch64-apple-darwin");
     assert!(!out.status.success());
@@ -438,7 +440,7 @@ fn verifier_rejects_a_license_that_differs_from_the_repository_file() {
         dir.path(),
         &arm_archive_name(),
         &[
-            ("agboard", b"binary"),
+            ("agpj", b"binary"),
             ("LICENSE", b"changed"),
             ("THIRD_PARTY_NOTICES.txt", notices.as_bytes()),
         ],
@@ -454,15 +456,11 @@ fn verifier_rejects_an_archive_named_for_another_version_or_target() {
     let license = read("LICENSE");
     let notices = read("THIRD_PARTY_NOTICES.txt");
     let files: [(&str, &[u8]); 3] = [
-        ("agboard", b"binary"),
+        ("agpj", b"binary"),
         ("LICENSE", license.as_bytes()),
         ("THIRD_PARTY_NOTICES.txt", notices.as_bytes()),
     ];
-    let wrong_version = archive(
-        dir.path(),
-        "agboard-0.9.0-aarch64-apple-darwin.tar.gz",
-        &files,
-    );
+    let wrong_version = archive(dir.path(), "agpj-0.9.0-aarch64-apple-darwin.tar.gz", &files);
     let out = verify(&wrong_version, "aarch64-apple-darwin");
     assert!(!out.status.success(), "{}", text(&out));
     let wrong_target = verify(&wrong_version, "x86_64-apple-darwin");
@@ -481,7 +479,7 @@ fn verifier_rejects_a_binary_that_is_not_a_macho_for_the_target() {
         dir.path(),
         &arm_archive_name(),
         &[
-            ("agboard", b"#!/bin/sh\necho agboard 1.0.0\n"),
+            ("agpj", b"#!/bin/sh\necho agpj 1.0.0\n"),
             ("LICENSE", license.as_bytes()),
             ("THIRD_PARTY_NOTICES.txt", notices.as_bytes()),
         ],
@@ -532,9 +530,7 @@ fn check_version_requires_both_cpu_archives_and_nothing_else() {
         )
     };
     fs::write(
-        assets
-            .path()
-            .join("agboard-1.0.0-aarch64-apple-darwin.tar.gz"),
+        assets.path().join("agpj-1.0.0-aarch64-apple-darwin.tar.gz"),
         "a",
     )
     .unwrap();
@@ -546,17 +542,13 @@ fn check_version_requires_both_cpu_archives_and_nothing_else() {
         text(&one_cpu)
     );
     fs::write(
-        assets
-            .path()
-            .join("agboard-1.0.0-x86_64-apple-darwin.tar.gz"),
+        assets.path().join("agpj-1.0.0-x86_64-apple-darwin.tar.gz"),
         "b",
     )
     .unwrap();
     assert!(run().status.success());
     fs::write(
-        assets
-            .path()
-            .join("agboard-0.9.0-x86_64-apple-darwin.tar.gz"),
+        assets.path().join("agpj-0.9.0-x86_64-apple-darwin.tar.gz"),
         "c",
     )
     .unwrap();

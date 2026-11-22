@@ -14,13 +14,13 @@ use futures_util::StreamExt;
 use super::session_identity::SessionIdentity;
 use super::wait_connect::{Connected, connect};
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// A source that keeps reading exactly one project after its name is resolved.
 pub(crate) trait WaitReader {
     type Snapshot;
 
-    fn read(&self) -> Result<Self::Snapshot, AgboardError>;
+    fn read(&self) -> Result<Self::Snapshot, AgpjError>;
 
     /// The project followed, whose board a server started for the wait opens.
     fn project(&self) -> &ProjectId;
@@ -48,7 +48,7 @@ const SETTLE: Duration = Duration::from_millis(250);
 async fn read_settled<R: WaitReader>(
     reader: &R,
     deadline: Option<tokio::time::Instant>,
-) -> Result<R::Snapshot, AgboardError> {
+) -> Result<R::Snapshot, AgpjError> {
     let snapshot = reader.read()?;
     if !reader.needs_settle(&snapshot) {
         return Ok(snapshot);
@@ -71,8 +71,8 @@ pub(crate) enum WaitResult<T, S> {
     DeadlineReached(S),
 }
 
-fn unavailable(reason: impl Into<String>) -> AgboardError {
-    AgboardError::BoardUnavailable {
+fn unavailable(reason: impl Into<String>) -> AgpjError {
+    AgpjError::BoardUnavailable {
         reason: reason.into(),
     }
 }
@@ -84,10 +84,10 @@ fn remaining(deadline: Option<tokio::time::Instant>) -> Option<Duration> {
 async fn final_read<R, T, F>(
     reader: &R,
     evaluate: &mut F,
-) -> Result<WaitResult<T, R::Snapshot>, AgboardError>
+) -> Result<WaitResult<T, R::Snapshot>, AgpjError>
 where
     R: WaitReader,
-    F: FnMut(&R::Snapshot) -> Result<Evaluation<T>, AgboardError>,
+    F: FnMut(&R::Snapshot) -> Result<Evaluation<T>, AgpjError>,
 {
     let snapshot = reader.read()?;
     match evaluate(&snapshot)? {
@@ -108,10 +108,10 @@ pub(crate) async fn wait_until<R, T, F>(
     reader: &R,
     deadline: Option<tokio::time::Instant>,
     mut evaluate: F,
-) -> Result<WaitResult<T, R::Snapshot>, AgboardError>
+) -> Result<WaitResult<T, R::Snapshot>, AgpjError>
 where
     R: WaitReader,
-    F: FnMut(&R::Snapshot) -> Result<Evaluation<T>, AgboardError>,
+    F: FnMut(&R::Snapshot) -> Result<Evaluation<T>, AgpjError>,
 {
     let first = read_settled(reader, deadline).await?;
     if let Evaluation::Ready(value) = evaluate(&first)? {
@@ -143,9 +143,7 @@ where
         {
             Ok(Connected::Stream(response)) => break response,
             Ok(Connected::DeadlineReached) => return final_read(reader, &mut evaluate).await,
-            Err(AgboardError::BoardUnavailable { .. })
-                if !retried && crate::autostart::enabled() =>
-            {
+            Err(AgpjError::BoardUnavailable { .. }) if !retried && crate::autostart::enabled() => {
                 retried = true;
             }
             Err(error) => return Err(error),
@@ -197,7 +195,7 @@ mod tests {
     impl WaitReader for SequenceReader {
         type Snapshot = usize;
 
-        fn read(&self) -> Result<Self::Snapshot, AgboardError> {
+        fn read(&self) -> Result<Self::Snapshot, AgpjError> {
             Ok(self.0.fetch_add(1, Ordering::SeqCst))
         }
 
@@ -244,7 +242,7 @@ mod tests {
     impl WaitReader for TornReader {
         type Snapshot = usize;
 
-        fn read(&self) -> Result<Self::Snapshot, AgboardError> {
+        fn read(&self) -> Result<Self::Snapshot, AgpjError> {
             Ok(usize::from(self.0.fetch_add(1, Ordering::SeqCst) == 0))
         }
 

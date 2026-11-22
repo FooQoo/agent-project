@@ -1,7 +1,7 @@
 //! The agent sessions attached to the board: registering on connect, the attributes, leaving the
 //! count after the grace period, a reconnect counted once, and the real `wait --until task`
 //! command naming itself. Servers listen on port 0 in a temporary data directory, and the grace
-//! period is shortened with `AGBOARD_SESSION_GRACE_MS`.
+//! period is shortened with `AGPJ_SESSION_GRACE_MS`.
 
 mod common;
 #[path = "support/serve_process.rs"]
@@ -30,7 +30,7 @@ fn start(home: &std::path::Path) -> Running {
     GRACE.call_once(|| {
         // SAFETY: set once, before any server of this test binary starts; tests of this file
         // are serialized and none reads the environment concurrently.
-        unsafe { std::env::set_var("AGBOARD_SESSION_GRACE_MS", GRACE_MS.to_string()) };
+        unsafe { std::env::set_var("AGPJ_SESSION_GRACE_MS", GRACE_MS.to_string()) };
     });
     Running::start(home)
 }
@@ -41,8 +41,8 @@ fn attach(server: &Running, key: &str, tool: &str, origin: &str) -> TcpStream {
     write!(
         stream,
         "GET /api/events HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nAccept: text/event-stream\r\n\
-         x-agboard-wait: 1\r\nx-agboard-session: {key}\r\nx-agboard-session-tool: {tool}\r\n\
-         x-agboard-session-origin: {origin}\r\nx-agboard-session-project: {PROJECT}\r\n\r\n",
+         x-agpj-wait: 1\r\nx-agpj-session: {key}\r\nx-agpj-session-tool: {tool}\r\n\
+         x-agpj-session-origin: {origin}\r\nx-agpj-session-project: {PROJECT}\r\n\r\n",
         server.port()
     )
     .unwrap();
@@ -182,14 +182,14 @@ fn a_stream_without_valid_session_headers_is_not_counted() {
     assert_eq!(refused.status, 422, "{}", refused.body);
 }
 
-/// `agboard serve` as its own process, with the short grace period.
+/// `agpj serve` as its own process, with the short grace period.
 fn serve(home: &std::path::Path) -> (ServeProcess, u16) {
-    let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
-        .env("AGBOARD_SESSION_GRACE_MS", GRACE_MS.to_string())
+    let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
+        .env("AGPJ_SESSION_GRACE_MS", GRACE_MS.to_string())
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -234,11 +234,11 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
     let _serial = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let home = tempdir().unwrap();
     let run = |args: &[&str]| {
-        Command::new(env!("CARGO_BIN_EXE_agboard"))
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
-            .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home.path())
+        Command::new(env!("CARGO_BIN_EXE_agpj"))
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
+            .env("AGPJ_WATCH", "poll")
+            .env("AGPJ_HOME", home.path())
             .env("TZ", "UTC")
             .args(["--project", "Agent Board"])
             .args(args)
@@ -250,14 +250,14 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
     let project = snapshot["project"]["id"].as_str().unwrap().to_string();
     let (_server, port) = serve(home.path());
 
-    let waiter = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+    let waiter = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home.path())
         .env("CLAUDECODE", "1")
         .env("CLAUDE_CODE_SESSION_ID", "session-under-test")
-        .env_remove("AGBOARD_RESIDENT_ID")
+        .env_remove("AGPJ_RESIDENT_ID")
         .args([
             "--project",
             "Agent Board",
@@ -306,16 +306,16 @@ fn wait_until_task_names_its_session_and_leaves_the_count_when_it_ends() {
     }
 }
 
-/// One `agboard` command with the board's test settings and an agent session's variables.
-fn agboard_in_session(home: &std::path::Path, session: Option<&str>, args: &[&str]) -> Vec<u8> {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+/// One `agpj` command with the board's test settings and an agent session's variables.
+fn agpj_in_session(home: &std::path::Path, session: Option<&str>, args: &[&str]) -> Vec<u8> {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
     command
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
-        .env_remove("AGBOARD_RESIDENT_ID")
+        .env_remove("AGPJ_RESIDENT_ID")
         .env_remove("CLAUDECODE")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
@@ -337,23 +337,20 @@ fn agboard_in_session(home: &std::path::Path, session: Option<&str>, args: &[&st
 fn a_command_run_in_an_agent_session_counts_it_as_an_external_session() {
     let _serial = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let home = tempdir().unwrap();
-    agboard_in_session(home.path(), None, &["init"]);
-    let snapshot: Value = serde_json::from_slice(&agboard_in_session(
-        home.path(),
-        None,
-        &["snapshot", "--json"],
-    ))
-    .unwrap();
+    agpj_in_session(home.path(), None, &["init"]);
+    let snapshot: Value =
+        serde_json::from_slice(&agpj_in_session(home.path(), None, &["snapshot", "--json"]))
+            .unwrap();
     let project = snapshot["project"]["id"].as_str().unwrap().to_string();
     let (_server, port) = serve(home.path());
     let path = format!("/api/projects/{project}/sessions");
 
     // A command outside any agent session (the parent process names it) is not counted.
-    agboard_in_session(home.path(), None, &["ls"]);
+    agpj_in_session(home.path(), None, &["ls"]);
     assert_eq!(get_json(port, &path)["counts"]["total"], 0);
 
     // An ordinary command of an agent session that does not wait is.
-    agboard_in_session(home.path(), Some("session-under-test"), &["ls"]);
+    agpj_in_session(home.path(), Some("session-under-test"), &["ls"]);
     let list = get_json(port, &path);
     assert_eq!(list["counts"]["total"], 1, "{list}");
     assert_eq!(list["counts"]["connected"], 0);
@@ -364,7 +361,7 @@ fn a_command_run_in_an_agent_session_counts_it_as_an_external_session() {
     assert_eq!(list["sessions"][0]["state"], "grace");
 
     // A second command of the same session is the same session.
-    agboard_in_session(home.path(), Some("session-under-test"), &["ls"]);
+    agpj_in_session(home.path(), Some("session-under-test"), &["ls"]);
     assert_eq!(get_json(port, &path)["counts"]["total"], 1);
 }
 
@@ -379,13 +376,10 @@ fn a_touch_that_names_a_board_session_or_another_project_is_ignored() {
             &format!("/api/projects/{path_project}/sessions/touch"),
             None,
             &[
-                ("x-agboard-session".to_string(), "claude:aaaa".to_string()),
-                (
-                    "x-agboard-session-tool".to_string(),
-                    "claude-code".to_string(),
-                ),
-                ("x-agboard-session-origin".to_string(), origin.to_string()),
-                ("x-agboard-session-project".to_string(), PROJECT.to_string()),
+                ("x-agpj-session".to_string(), "claude:aaaa".to_string()),
+                ("x-agpj-session-tool".to_string(), "claude-code".to_string()),
+                ("x-agpj-session-origin".to_string(), origin.to_string()),
+                ("x-agpj-session-project".to_string(), PROJECT.to_string()),
             ],
             None,
         )
@@ -404,10 +398,10 @@ fn a_touch_that_names_a_board_session_or_another_project_is_ignored() {
 fn commands_succeed_quickly_when_no_server_runs() {
     let _serial = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let home = tempdir().unwrap();
-    agboard_in_session(home.path(), None, &["init"]);
+    agpj_in_session(home.path(), None, &["init"]);
     // No serve.json at all.
     let start = Instant::now();
-    agboard_in_session(home.path(), Some("session-under-test"), &["ls"]);
+    agpj_in_session(home.path(), Some("session-under-test"), &["ls"]);
     // A serve.json that names a port nothing listens on.
     let port = {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
@@ -418,6 +412,6 @@ fn commands_succeed_quickly_when_no_server_runs() {
         format!(r#"{{"pid":1,"port":{port},"started_at":"2026-01-01T00:00:00Z"}}"#),
     )
     .unwrap();
-    agboard_in_session(home.path(), Some("session-under-test"), &["ls"]);
+    agpj_in_session(home.path(), Some("session-under-test"), &["ls"]);
     assert!(start.elapsed() < Duration::from_secs(5));
 }

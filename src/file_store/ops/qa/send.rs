@@ -9,7 +9,7 @@ use super::super::{lock_project, save_project, stamp};
 use crate::domain::{
     MAX_TASK_ATTACHMENT_BYTES, MAX_TASK_ATTACHMENTS, ProjectId, validate_attachment,
 };
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::qa::{
     self, MAX_REQUEST_CHARS, Message, Request, RequestView, check_message, render_message,
@@ -30,15 +30,15 @@ pub struct SendRequestInput {
     pub images: Vec<RequestImage>,
 }
 
-fn invalid(field: &str, reason: &str) -> AgboardError {
-    AgboardError::InvalidValue {
+fn invalid(field: &str, reason: &str) -> AgpjError {
+    AgpjError::InvalidValue {
         field: field.into(),
         reason: reason.into(),
     }
 }
 
 /// The stored name of an image: its base name, plain ASCII, with the extension of its type.
-fn stored_name(name: &str, extension: &str) -> Result<String, AgboardError> {
+fn stored_name(name: &str, extension: &str) -> Result<String, AgpjError> {
     let base = name.rsplit(['/', '\\']).next().unwrap_or(name);
     let plain = !base.is_empty()
         && base.len() <= 100
@@ -66,9 +66,9 @@ fn stored_name(name: &str, extension: &str) -> Result<String, AgboardError> {
 /// WebP, or GIF, at most 20 images and 50 MiB in all, with unique names.
 pub(super) fn checked_images(
     images: &[RequestImage],
-) -> Result<Vec<(String, &Vec<u8>)>, AgboardError> {
+) -> Result<Vec<(String, &Vec<u8>)>, AgpjError> {
     if images.len() > MAX_TASK_ATTACHMENTS {
-        return Err(AgboardError::AttachmentLimitExceeded);
+        return Err(AgpjError::AttachmentLimitExceeded);
     }
     let mut total = 0usize;
     let mut names = HashSet::new();
@@ -77,7 +77,7 @@ pub(super) fn checked_images(
         let media = validate_attachment(&"0".repeat(32), &image.name, &image.bytes)?;
         total = total.saturating_add(image.bytes.len());
         if total > MAX_TASK_ATTACHMENT_BYTES {
-            return Err(AgboardError::AttachmentLimitExceeded);
+            return Err(AgpjError::AttachmentLimitExceeded);
         }
         let extension = layout::asset_extension(media).ok_or_else(|| {
             invalid(
@@ -103,7 +103,7 @@ pub(super) fn checked_images(
 pub(super) fn stage_images(
     project_dir: &std::path::Path,
     images: &[Vec<(String, &Vec<u8>)>],
-) -> Result<Option<std::path::PathBuf>, AgboardError> {
+) -> Result<Option<std::path::PathBuf>, AgpjError> {
     if images.iter().all(Vec::is_empty) {
         return Ok(None);
     }
@@ -119,7 +119,7 @@ pub(super) fn stage_images(
     fs::create_dir_all(&root).map_err(|e| io::write_error("request-staging", e))?;
     let staging = root.join(io::random_hex(16).map_err(|e| io::write_error("request-staging", e))?);
     fs::create_dir(&staging).map_err(|e| io::write_error("request-staging", e))?;
-    let written = (|| -> Result<(), AgboardError> {
+    let written = (|| -> Result<(), AgpjError> {
         for (index, files) in images.iter().enumerate() {
             if files.is_empty() {
                 continue;
@@ -147,7 +147,7 @@ impl FileStore {
         project: &ProjectId,
         input: SendRequestInput,
         now: DateTime<Utc>,
-    ) -> Result<RequestView, AgboardError> {
+    ) -> Result<RequestView, AgpjError> {
         let text = input.text.replace("\r\n", "\n");
         let text = text.trim();
         if text.is_empty() || text.chars().count() > MAX_REQUEST_CHARS {
@@ -196,7 +196,7 @@ impl FileStore {
         let staging = staging_root
             .join(io::random_hex(16).map_err(|e| io::write_error("request-staging", e))?);
         fs::create_dir(&staging).map_err(|e| io::write_error("request-staging", e))?;
-        let result = (|| -> Result<(), AgboardError> {
+        let result = (|| -> Result<(), AgpjError> {
             io::write_atomic(&qa::message_file(&staging), markdown.as_bytes(), "QA.md")?;
             if !files.is_empty() {
                 let dir = qa::attachments_dir(&staging);

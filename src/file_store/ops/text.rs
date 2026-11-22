@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::frontmatter::{AcceptanceItem, compose_questions, questions_of};
 use crate::file_store::history::{ParseMode, compose_task, parse_task};
 use crate::file_store::io;
@@ -21,7 +21,7 @@ pub(super) fn write_text(
     task: &mut TaskFile,
     title: Option<String>,
     description: Option<String>,
-) -> Result<(bool, Option<String>), AgboardError> {
+) -> Result<(bool, Option<String>), AgpjError> {
     let current_body = reader::read_body(shared, project, task.id)?;
     let next_title = title.unwrap_or_else(|| task.title.clone());
     let next_body = description.unwrap_or_else(|| current_body.clone());
@@ -38,7 +38,7 @@ pub(super) fn write_text(
         );
         crate::file_store::validate::ensure_task_body(&next_body, &label)?;
         let parts = crate::file_store::frontmatter::parse(&next_body);
-        let invalid = |defect: crate::file_store::validate::Defect| AgboardError::FileInvalid {
+        let invalid = |defect: crate::file_store::validate::Defect| AgpjError::FileInvalid {
             file: label.clone(),
             field: defect.field,
             reason: defect.reason,
@@ -69,7 +69,7 @@ pub(super) fn write_parts(
     task: &mut TaskFile,
     body: Option<&str>,
     acceptance: Option<&[AcceptanceItem]>,
-) -> Result<Option<String>, AgboardError> {
+) -> Result<Option<String>, AgpjError> {
     if body.is_none() && acceptance.is_none() {
         return Ok(None);
     }
@@ -78,7 +78,7 @@ pub(super) fn write_parts(
     let original = io::read_text(&md_path, &label)?;
     let parsed = parse_task(&original, ParseMode::Stored);
     if let Some(defect) = parsed.history_defects.first() {
-        return Err(AgboardError::FileInvalid {
+        return Err(AgpjError::FileInvalid {
             file: label,
             field: defect.field.clone(),
             reason: defect.reason.clone(),
@@ -88,7 +88,7 @@ pub(super) fn write_parts(
     crate::domain::normalize_and_validate_description(&next_body)?;
     let composed =
         compose_task(&original, &next_body, acceptance, &task.history).map_err(|defect| {
-            AgboardError::FileInvalid {
+            AgpjError::FileInvalid {
                 file: label.clone(),
                 field: defect.field,
                 reason: defect.reason,

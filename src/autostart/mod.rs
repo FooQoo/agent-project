@@ -6,7 +6,7 @@
 //! alone and starts nothing. A server started this way stops by itself after it
 //! has gone unused (see `server::idle`).
 //!
-//! `AGBOARD_AUTOSTART=0` turns all of this off. Only the real command line
+//! `AGPJ_AUTOSTART=0` turns all of this off. Only the real command line
 //! allows it at all: the library embedded in a test never starts a server.
 
 mod spawn;
@@ -16,7 +16,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::lock::AutostartLock;
 use crate::lifecycle::LifecycleGuard;
 use crate::paths::{self, ServeInfo};
@@ -37,39 +37,38 @@ const READY_TIMEOUT: Duration = Duration::from_secs(30);
 /// in case it is starting or shutting down.
 const SETTLE_WAIT: Duration = Duration::from_secs(10);
 
-/// The marker `agboard stop` leaves so that the hook does not start the server again.
+/// The marker `agpj stop` leaves so that the hook does not start the server again.
 const PAUSED: &str = "autostart.paused";
 
 static ALLOWED: AtomicBool = AtomicBool::new(false);
 
-/// Let this process start servers. Called once by the `agboard` command line.
+/// Let this process start servers. Called once by the `agpj` command line.
 pub fn allow_in_this_process() {
     ALLOWED.store(true, Ordering::SeqCst);
 }
 
-/// Whether this process is the `agboard` command line, not the library
+/// Whether this process is the `agpj` command line, not the library
 /// embedded in a test.
 pub fn in_command_line() -> bool {
     ALLOWED.load(Ordering::SeqCst)
 }
 
-/// Whether a command may start a server: only in the `agboard` command line,
-/// and not with `AGBOARD_AUTOSTART=0`.
+/// Whether a command may start a server: only in the `agpj` command line,
+/// and not with `AGPJ_AUTOSTART=0`.
 pub fn enabled() -> bool {
-    in_command_line()
-        && std::env::var("AGBOARD_AUTOSTART").map_or(true, |value| value.trim() != "0")
+    in_command_line() && std::env::var("AGPJ_AUTOSTART").map_or(true, |value| value.trim() != "0")
 }
 
-/// The port an automatic server tries first: `AGBOARD_AUTOSTART_PORT`, or 7420.
+/// The port an automatic server tries first: `AGPJ_AUTOSTART_PORT`, or 7420.
 /// Port 0 lets the OS choose, which is what the tests use.
 pub fn preferred_port(env: &dyn Fn(&str) -> Option<String>) -> u16 {
-    env("AGBOARD_AUTOSTART_PORT")
+    env("AGPJ_AUTOSTART_PORT")
         .and_then(|value| value.trim().parse::<u16>().ok())
         .unwrap_or(DEFAULT_PORT)
 }
 
 /// Keep the hook from starting a server until a command that waits, `serve`
-/// or `serve -d` starts one. Called by `agboard stop`.
+/// or `serve -d` starts one. Called by `agpj stop`.
 pub fn pause(data_dir: &Path) {
     let _ = std::fs::create_dir_all(data_dir);
     let _ = std::fs::write(data_dir.join(PAUSED), b"");
@@ -88,10 +87,7 @@ pub fn is_paused(data_dir: &Path) -> bool {
 /// once it accepts connections. One line on standard error says when a server
 /// was started; standard output stays the command's own. A server started now
 /// opens the board of `open` in the browser, unless a board page connects.
-pub fn ensure_serving(
-    data_dir: &Path,
-    open: Option<&ProjectId>,
-) -> Result<ServeInfo, AgboardError> {
+pub fn ensure_serving(data_dir: &Path, open: Option<&ProjectId>) -> Result<ServeInfo, AgpjError> {
     if let Some(info) = running(data_dir)? {
         return Ok(info);
     }
@@ -121,7 +117,7 @@ pub fn ensure_serving(
                 eprintln!("{notice}");
             }
             eprintln!(
-                "Started the Agent Board server at http://127.0.0.1:{}/ in the background. It stops by itself after {minutes} without use.",
+                "Started the Agent Project server at http://127.0.0.1:{}/ in the background. It stops by itself after {minutes} without use.",
                 info.port
             );
             Ok(info)
@@ -141,7 +137,7 @@ pub fn ensure_serving(
 }
 
 /// Start the server in the background without waiting, for the agent hook.
-/// Nothing happens when a server process is alive, after `agboard stop`, or
+/// Nothing happens when a server process is alive, after `agpj stop`, or
 /// while another command is starting one. Failures are left in `serve.log`.
 /// The server opens the board of `open` as [`ensure_serving`] does.
 pub fn start_in_background(data_dir: &Path, open: Option<&ProjectId>) {
@@ -168,7 +164,7 @@ fn process_named(data_dir: &Path) -> bool {
 /// holds the data directory but does not answer is never replaced by a second
 /// server: it is reported, after a short wait in case it is starting or
 /// stopping.
-fn running(data_dir: &Path) -> Result<Option<ServeInfo>, AgboardError> {
+fn running(data_dir: &Path) -> Result<Option<ServeInfo>, AgpjError> {
     let Some(info) = paths::read_serve_info_in(data_dir) else {
         return Ok(None);
     };
@@ -176,7 +172,7 @@ fn running(data_dir: &Path) -> Result<Option<ServeInfo>, AgboardError> {
         return Ok(Some(info));
     }
     if connection_denied(info.port) {
-        return Err(AgboardError::LocalNetworkDenied);
+        return Err(AgpjError::LocalNetworkDenied);
     }
     let deadline = Instant::now() + SETTLE_WAIT;
     loop {
@@ -191,7 +187,7 @@ fn running(data_dir: &Path) -> Result<Option<ServeInfo>, AgboardError> {
         }
         if Instant::now() >= deadline {
             return Err(unavailable(format!(
-                "The server (pid {}) is not answering. Stop it with \"agboard stop\" and try again.",
+                "The server (pid {}) is not answering. Stop it with \"agpj stop\" and try again.",
                 info.pid
             )));
         }
@@ -226,8 +222,8 @@ pub(crate) fn connection_denied(port: u16) -> bool {
         .is_some_and(|error| bind::is_denied(&error))
 }
 
-fn unavailable(reason: String) -> AgboardError {
-    AgboardError::BoardUnavailable { reason }
+fn unavailable(reason: String) -> AgpjError {
+    AgpjError::BoardUnavailable { reason }
 }
 
 #[cfg(test)]
@@ -238,7 +234,7 @@ mod tests {
     fn the_preferred_port_comes_from_the_environment() {
         assert_eq!(preferred_port(&|_| None), 7420);
         let with = |value: &'static str| {
-            preferred_port(&move |name| (name == "AGBOARD_AUTOSTART_PORT").then(|| value.into()))
+            preferred_port(&move |name| (name == "AGPJ_AUTOSTART_PORT").then(|| value.into()))
         };
         assert_eq!(with("0"), 0);
         assert_eq!(with("7661"), 7661);

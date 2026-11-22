@@ -9,7 +9,7 @@ export interface MockRequest {
   url: string;
   /** The query of the page that sent the request (`?empty=1` and so on). */
   page?: string;
-  /** Request headers with lowercase names. `x-agboard-token` and `x-agboard-language` are read. */
+  /** Request headers with lowercase names. `x-agpj-token` and `x-agpj-language` are read. */
   headers?: Record<string, string | undefined>;
   /** The request body as text. For a multipart form, the text of its `metadata` field: images are not read. */
   body?: string;

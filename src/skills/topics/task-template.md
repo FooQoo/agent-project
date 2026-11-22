@@ -1,6 +1,6 @@
 # New task template
 
-Start the `TASK.md` of a new task from this template. The frontmatter is input: Agent Board generates the first history entry.
+Start the `TASK.md` of a new task from this template. The frontmatter is input: Agent Project generates the first history entry.
 
 ```markdown
 ---
@@ -8,7 +8,7 @@ acceptance:
   - id: AC-1
     text: (Describe a condition that can be verified.)
     done: false
-# Creation input: Agent Board generates the initial history entry.
+# Creation input: Agent Project generates the initial history entry.
 # Stored entries have exactly at (UTC YYYY-MM-DDTHH:MM:SSZ) and reason (content).
 # at uses whole seconds only; timezone offsets and fractional seconds are rejected.
 history: []

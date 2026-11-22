@@ -20,7 +20,7 @@ fn settings(model: Option<&str>) -> Settings {
 fn running() -> Session {
     let mut session = Session::new(settings(None), "first");
     session.hello();
-    session.on_line(r#"{"id":1,"result":{"userAgent":"agboard/0.170.0 (Mac)"}}"#);
+    session.on_line(r#"{"id":1,"result":{"userAgent":"agpj/0.170.0 (Mac)"}}"#);
     session.on_line(r#"{"id":2,"result":{"thread":{"id":"thread-1"}}}"#);
     session.on_line(r#"{"id":3,"result":{"turn":{"id":"turn-1"}}}"#);
     session.on_line(r#"{"method":"turn/started","params":{"turn":{"id":"turn-1"}}}"#);
@@ -36,11 +36,11 @@ fn the_handshake_starts_a_thread_and_the_first_turn_and_reports_the_version() {
     let mut session = Session::new(settings(None), "do it");
     let hello = session.hello();
     assert_eq!(hello["method"], "initialize");
-    assert_eq!(hello["params"]["clientInfo"]["name"], "agboard");
+    assert_eq!(hello["params"]["clientInfo"]["name"], "agpj");
     assert_eq!(hello["params"]["capabilities"]["experimentalApi"], false);
     assert!(hello.get("jsonrpc").is_none());
 
-    let step = session.on_line(r#"{"id":1,"result":{"userAgent":"agboard/0.170.0 (Mac OS)"}}"#);
+    let step = session.on_line(r#"{"id":1,"result":{"userAgent":"agpj/0.170.0 (Mac OS)"}}"#);
     assert_eq!(step.sends.len(), 2);
     assert_eq!(step.sends[0], json!({"method": "initialized"}));
     assert_eq!(method_of(&step, 1), "thread/start");

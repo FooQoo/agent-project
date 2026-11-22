@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { mainHome, mainProject, projectId, resetBoard } from '../helpers/agboard';
+import { mainHome, mainProject, projectId, resetBoard } from '../helpers/agpj';
 import { messageList, openMessageList } from '../helpers/answer';
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from '../helpers/fixtures';

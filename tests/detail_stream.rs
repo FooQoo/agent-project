@@ -9,11 +9,11 @@ use std::io::Read;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use agent_board::domain::ProjectId;
-use agent_board::file_store::detail::{epic_version, task_versions};
-use agent_board::file_store::model::NewEpic;
-use agent_board::file_store::{FileStore, TaskTextParts};
-use agent_board::server::contracts::{
+use agent_project::domain::ProjectId;
+use agent_project::file_store::detail::{epic_version, task_versions};
+use agent_project::file_store::model::NewEpic;
+use agent_project::file_store::{FileStore, TaskTextParts};
+use agent_project::server::contracts::{
     DetailEvent, ResourceId, Section, StreamValidator, detail::DetailResource,
 };
 use serde_json::Value;
@@ -180,7 +180,7 @@ fn pc_epic_detail_streams_the_document() {
     assert!(events.iter().any(|e| matches!(
         e,
         DetailEvent::Block {
-            kind: agent_board::server::contracts::BlockKind::Mermaid,
+            kind: agent_project::server::contracts::BlockKind::Mermaid,
             ..
         }
     )));

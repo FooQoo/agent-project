@@ -4,10 +4,10 @@ mod common;
 
 use std::str::FromStr;
 
-use agent_board::domain::{Actor, ChangeContext, Column, ProjectId};
-use agent_board::file_store::{FileStore, TaskTextParts, frontmatter::AcceptanceItem};
+use agent_project::domain::{Actor, ChangeContext, Column, ProjectId};
+use agent_project::file_store::{FileStore, TaskTextParts, frontmatter::AcceptanceItem};
 use chrono::{TimeZone, Utc};
-use common::{agboard, demo_project, json_ok};
+use common::{agpj, demo_project, json_ok};
 
 fn project_id(home: &std::path::Path) -> ProjectId {
     ProjectId::from_str(
@@ -46,7 +46,7 @@ fn body_only_draft_edit_uses_latest_markdown_acceptance_and_history() {
         .set_draft(
             &project,
             1,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             now,
         )
@@ -93,7 +93,7 @@ fn cli_file_replacement_without_history_keeps_current_history() {
     let replacement = home.path().join("replacement.md");
     std::fs::write(&replacement, "Edited by CLI\n").unwrap();
 
-    let (_, _, err) = agboard(
+    let (_, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -111,7 +111,7 @@ fn cli_file_replacement_without_history_keeps_current_history() {
     let before_edit = json_ok(home.path(), &["--project", "Demo", "show", "1", "--json"]);
     let history = before_edit["task"]["history"].clone();
     let path = replacement.to_str().unwrap();
-    let (code, _, error) = agboard(
+    let (code, _, error) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--desc-file", path],
     );
@@ -121,7 +121,7 @@ fn cli_file_replacement_without_history_keeps_current_history() {
     assert_eq!(after["task"]["history"], history);
     assert_eq!(after["task"]["body"], "Edited by CLI");
 
-    let (_, _, err) = agboard(
+    let (_, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -141,7 +141,7 @@ fn cli_file_replacement_without_history_keeps_current_history() {
     let stale_file = home.path().join("stale.md");
     std::fs::write(&stale_file, original).unwrap();
     let stale_path = stale_file.to_str().unwrap();
-    let (code, _, error) = agboard(
+    let (code, _, error) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--desc-file", stale_path],
     );
@@ -163,7 +163,7 @@ fn cli_edit_refuses_invalid_history_without_rewriting_task_markdown() {
     );
     assert_ne!(invalid, original, "fixture must contain a creation reason");
     std::fs::write(&md, &invalid).unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--json",
@@ -191,7 +191,7 @@ fn rejected_finalize_keeps_the_draft_body_and_history_unchanged() {
         .set_draft(
             &project,
             1,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             now,
         )
@@ -224,7 +224,7 @@ fn rejected_finalize_keeps_the_draft_body_and_history_unchanged() {
         )
         .unwrap_err();
     assert!(
-        matches!(error, agent_board::error::AgboardError::FileInvalid { .. }),
+        matches!(error, agent_project::error::AgpjError::FileInvalid { .. }),
         "{error:?}"
     );
     let after = files.task(&project, 1).unwrap();

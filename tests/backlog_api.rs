@@ -5,7 +5,7 @@ mod common;
 
 use std::path::Path;
 
-use common::{Running, agboard, json_error, json_ok};
+use common::{Running, agpj, json_error, json_ok};
 use serde_json::{Value, json};
 
 fn project_id(home: &Path) -> String {
@@ -25,7 +25,7 @@ fn run(home: &Path, args: &[&str]) -> Value {
 #[test]
 fn creating_in_the_backlog_and_sending_to_todo_are_different_operations() {
     let home = tempfile::tempdir().unwrap();
-    let (code, _, err) = agboard(home.path(), &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home.path(), &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
 
     // A plan-only request: the agent creates in the Backlog. An execute request: in Todo.
@@ -78,7 +78,7 @@ fn creating_in_the_backlog_and_sending_to_todo_are_different_operations() {
 #[test]
 fn mv_to_todo_warns_about_an_open_question_until_the_person_forces_it() {
     let home = tempfile::tempdir().unwrap();
-    let (code, _, err) = agboard(home.path(), &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home.path(), &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
     run(
         home.path(),
@@ -92,7 +92,7 @@ fn mv_to_todo_warns_about_an_open_question_until_the_person_forces_it() {
             "--backlog",
         ],
     );
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -152,7 +152,7 @@ fn mv_to_todo_warns_about_an_open_question_until_the_person_forces_it() {
 #[test]
 fn the_api_sends_a_card_and_the_cards_of_an_epic_with_the_warning_for_open_questions() {
     let home = tempfile::tempdir().unwrap();
-    let (code, _, err) = agboard(home.path(), &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home.path(), &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
     run(
         home.path(),
@@ -174,7 +174,7 @@ fn the_api_sends_a_card_and_the_cards_of_an_epic_with_the_warning_for_open_quest
             ],
         );
     }
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",

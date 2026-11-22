@@ -10,11 +10,11 @@ use axum::response::Response;
 use serde::{Deserialize, Serialize};
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::AppState;
 use crate::server::request::ApiJson;
 use crate::server::resident::{AutoStart, Health, Launched, resolve_project};
-use crate::server::response::{agboard_error_response, json_response};
+use crate::server::response::{agpj_error_response, json_response};
 use crate::server::sessions::{Attributes, SessionList, Tool};
 use crate::server::store::{parse_project_id, with_files};
 
@@ -55,12 +55,12 @@ pub(super) async fn list_sessions(
                 },
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
-/// An `agboard` command or hook of an agent session reached the board: count the session for the
-/// access window. The session names itself in the `X-Agboard-Session*` headers; the project is
+/// An `agpj` command or hook of an agent session reached the board: count the session for the
+/// access window. The session names itself in the `X-Agpj-Session*` headers; the project is
 /// the one in the headers, which must match the path. A request that names no valid session, or a
 /// board-launched one, changes nothing. Always 204, so a command never has a reason to fail.
 pub(super) async fn touch_session(
@@ -89,13 +89,13 @@ pub(super) async fn session_models(
     Query(query): Query<ModelsQuery>,
 ) -> Response {
     if let Err(error) = parse_project_id(&raw_project) {
-        return agboard_error_response(&error);
+        return agpj_error_response(&error);
     }
     let launcher = state.resident.clone();
     let result = blocking(move || launcher.models(query.tool)).await;
     match result {
         Ok(list) => json_response(StatusCode::OK, &list),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -112,13 +112,13 @@ pub(super) async fn session_log(
     Query(query): Query<LogQuery>,
 ) -> Response {
     if let Err(error) = parse_project_id(&raw_project) {
-        return agboard_error_response(&error);
+        return agpj_error_response(&error);
     }
     let tool = match query.tool.as_str() {
         "claude-code" => Tool::ClaudeCode,
         "codex" => Tool::Codex,
         _ => {
-            return agboard_error_response(&AgboardError::InvalidValue {
+            return agpj_error_response(&AgpjError::InvalidValue {
                 field: "tool".to_string(),
                 reason: "tool must be claude-code or codex.".to_string(),
             });
@@ -127,7 +127,7 @@ pub(super) async fn session_log(
     let launcher = state.resident.clone();
     match blocking(move || launcher.read_log(tool)).await {
         Ok(tail) => json_response(StatusCode::OK, &tail),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -146,7 +146,7 @@ pub(super) async fn launch_session(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let result = async {
         let (name, folder) = project_folder(&state, project_id.clone()).await?;
@@ -168,7 +168,7 @@ pub(super) async fn launch_session(
     .await;
     match result {
         Ok(launched) => json_response(StatusCode::OK, &serde_json::json!({ "launched": launched })),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -187,12 +187,12 @@ pub(super) async fn stop_session(
     ApiJson(_body): ApiJson<StopBody>,
 ) -> Response {
     if let Err(error) = parse_project_id(&raw_project) {
-        return agboard_error_response(&error);
+        return agpj_error_response(&error);
     }
     let launcher = state.resident.clone();
     match blocking(move || launcher.stop()).await {
         Ok(stopped) => json_response(StatusCode::OK, &serde_json::json!({ "stopped": stopped })),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -200,7 +200,7 @@ pub(super) async fn stop_session(
 async fn project_folder(
     state: &AppState,
     project: ProjectId,
-) -> Result<(String, std::path::PathBuf), AgboardError> {
+) -> Result<(String, std::path::PathBuf), AgpjError> {
     with_files(state, move |files| resolve_project(&files, &project)).await
 }
 
@@ -224,7 +224,7 @@ pub(super) async fn set_autostart(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let result = async {
         let model = body
@@ -233,7 +233,7 @@ pub(super) async fn set_autostart(
             .filter(|model| !model.is_empty() && *model != "default");
         let choice = if body.enabled {
             let tool = crate::server::resident::cli::launchable(body.tool.ok_or_else(|| {
-                AgboardError::InvalidValue {
+                AgpjError::InvalidValue {
                     field: "tool".to_string(),
                     reason: "tool is required to turn auto-start on.".to_string(),
                 }
@@ -241,7 +241,7 @@ pub(super) async fn set_autostart(
             if let Some(model) =
                 model.filter(|model| !crate::server::resident::cli::valid_model(model))
             {
-                return Err(AgboardError::InvalidValue {
+                return Err(AgpjError::InvalidValue {
                     field: "model".to_string(),
                     reason: format!("\"{model}\" is not a model name."),
                 });
@@ -263,17 +263,17 @@ pub(super) async fn set_autostart(
     .await;
     match result {
         Ok(choice) => json_response(StatusCode::OK, &serde_json::json!({ "autoStart": choice })),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
 /// Run blocking launcher work (it starts and waits for processes) off the async threads.
 async fn blocking<T: Send + 'static>(
-    work: impl FnOnce() -> Result<T, AgboardError> + Send + 'static,
-) -> Result<T, AgboardError> {
+    work: impl FnOnce() -> Result<T, AgpjError> + Send + 'static,
+) -> Result<T, AgpjError> {
     tokio::task::spawn_blocking(work)
         .await
-        .map_err(|e| AgboardError::SessionLaunchFailed {
+        .map_err(|e| AgpjError::SessionLaunchFailed {
             reason: format!("The launcher task failed: {e}"),
         })?
 }

@@ -169,7 +169,7 @@ fn the_board_works_through_the_entrance_with_a_session_and_the_csrf_token() {
             ("Cookie", &session.cookie),
             ("Origin", ORIGIN),
             ("Sec-Fetch-Site", "same-origin"),
-            ("X-Agboard-Csrf", &session.csrf),
+            ("X-Agpj-Csrf", &session.csrf),
             ("Content-Type", "multipart/form-data; boundary=x"),
         ],
         "--x\r\nContent-Disposition: form-data; name=\"metadata\"\r\n\r\n{}\r\n--x--\r\n",
@@ -214,7 +214,7 @@ fn a_write_needs_the_session_the_origin_the_fetch_metadata_and_the_csrf_token() 
             ("Cookie", session.cookie.as_str()),
             ("Origin", ORIGIN),
             ("Sec-Fetch-Site", "same-origin"),
-            ("X-Agboard-Csrf", session.csrf.as_str()),
+            ("X-Agpj-Csrf", session.csrf.as_str()),
             ("Content-Type", "application/json"),
         ];
         headers.retain(|(name, _)| !extra.iter().any(|(n, _)| n == name));
@@ -222,14 +222,11 @@ fn a_write_needs_the_session_the_origin_the_fetch_metadata_and_the_csrf_token() 
         server.request("POST", &path, &headers, &body)
     };
     // Each condition removed or spoiled on its own.
-    assert_eq!(good(&[("X-Agboard-Csrf", "wrong")]).status, 403);
-    assert_eq!(good(&[("X-Agboard-Csrf", "")]).status, 403);
+    assert_eq!(good(&[("X-Agpj-Csrf", "wrong")]).status, 403);
+    assert_eq!(good(&[("X-Agpj-Csrf", "")]).status, 403);
     assert_eq!(good(&[("Origin", "https://evil.ngrok.app")]).status, 403);
     assert_eq!(good(&[("Sec-Fetch-Site", "cross-site")]).status, 403);
-    assert_eq!(
-        good(&[("Cookie", "agboard_remote_session=nope")]).status,
-        401
-    );
+    assert_eq!(good(&[("Cookie", "agpj_remote_session=nope")]).status, 401);
     // The local page's token header is not a credential here.
     let guessed = server.request(
         "POST",
@@ -238,7 +235,7 @@ fn a_write_needs_the_session_the_origin_the_fetch_metadata_and_the_csrf_token() 
             ("Cookie", &session.cookie),
             ("Origin", ORIGIN),
             ("Sec-Fetch-Site", "same-origin"),
-            ("X-Agboard-Token", "0000"),
+            ("X-Agpj-Token", "0000"),
             ("Content-Type", "application/json"),
         ],
         &body,
@@ -327,7 +324,7 @@ fn without_a_session_every_api_and_the_event_stream_are_401() {
     let (status, _, _) = open_events(&server, None);
     assert_eq!(status, 401);
     // A cookie from nowhere and one the connection never issued are no session either.
-    for cookie in ["agboard_remote_session=0123456789", "other=1"] {
+    for cookie in ["agpj_remote_session=0123456789", "other=1"] {
         let reply = server.request("GET", "/api/projects", &[("Cookie", cookie)], "");
         assert_eq!(reply.status, 401, "{cookie}");
     }
@@ -368,7 +365,7 @@ fn the_cookie_is_issued_only_when_the_passcode_passes() {
     assert_eq!(granted.status, 200, "{}", granted.body);
     let cookie = granted.header("set-cookie").expect("a cookie");
     for part in [
-        "agboard_remote_session=",
+        "agpj_remote_session=",
         "; Secure",
         "; HttpOnly",
         "; SameSite=Lax",
@@ -427,9 +424,9 @@ fn the_page_and_its_static_files_carry_no_token_and_need_no_session() {
     let page = server.request("GET", "/", &[], "");
     assert_eq!(page.status, 200, "{}", page.body);
     assert_eq!(page.header("cache-control"), Some("no-store"));
-    assert!(page.body.contains("name=\"agboard-token\" content=\"\""));
+    assert!(page.body.contains("name=\"agpj-token\" content=\"\""));
     assert!(!page.body.contains(&board_token));
-    assert!(!page.body.contains("{{AGBOARD"));
+    assert!(!page.body.contains("{{AGPJ"));
     let csp = page.header("content-security-policy").unwrap();
     assert!(csp.contains("frame-ancestors 'none'") && csp.contains("default-src 'none'"));
     assert_eq!(page.header("referrer-policy"), Some("no-referrer"));
@@ -482,7 +479,7 @@ fn the_page_and_its_static_files_carry_no_token_and_need_no_session() {
     let session = server.session();
     let again = server.get(&session, "/");
     assert!(!again.body.contains(&board_token));
-    assert!(again.body.contains("name=\"agboard-token\" content=\"\""));
+    assert!(again.body.contains("name=\"agpj-token\" content=\"\""));
 }
 
 // -------------------------------------------------------------------- AC-4
@@ -534,10 +531,10 @@ fn the_local_entrance_keeps_its_token_page_and_checks_with_the_tunnel_up() {
             ("Content-Type", "application/json".to_string()),
         ];
         if let Some(token) = token {
-            h.push(("X-Agboard-Token", token.to_string()));
+            h.push(("X-Agpj-Token", token.to_string()));
         }
         if csrf {
-            h.push(("X-Agboard-Csrf", "x".repeat(64)));
+            h.push(("X-Agpj-Csrf", "x".repeat(64)));
         }
         h
     };
@@ -602,7 +599,7 @@ fn the_old_monitor_addresses_are_not_found_through_the_entrance_with_or_without_
     }
     // The bodies do not point anywhere: no page, no redirect, no token.
     let page = server.get(&session, "/monitor/");
-    assert!(!page.body.contains("agboard-monitor-token"));
+    assert!(!page.body.contains("agpj-monitor-token"));
     assert!(!page.body.contains("<html"));
 }
 
@@ -622,7 +619,7 @@ fn the_old_monitor_addresses_are_not_found_on_the_local_entrance_too() {
 #[test]
 fn projects_are_listed_and_switched_through_the_entrance_as_on_the_pc() {
     let home = home();
-    let store = agent_board::file_store::FileStore::open(&home.path().join("shared"));
+    let store = agent_project::file_store::FileStore::open(&home.path().join("shared"));
     let second = store
         .create_project("second", chrono::Utc::now())
         .unwrap()
@@ -630,11 +627,11 @@ fn projects_are_listed_and_switched_through_the_entrance_as_on_the_pc() {
     store
         .create_task(
             &second,
-            agent_board::domain::NewTask {
+            agent_project::domain::NewTask {
                 title: "Only in the second project".into(),
                 description: String::new(),
-                assignee: agent_board::domain::Assignee::Human,
-                actor: agent_board::domain::Actor::Human,
+                assignee: agent_project::domain::Assignee::Human,
+                actor: agent_project::domain::Actor::Human,
                 draft: None,
             },
             chrono::Utc::now(),
@@ -682,7 +679,7 @@ fn projects_are_listed_and_switched_through_the_entrance_as_on_the_pc() {
     for id in [first.as_str(), second.as_str()] {
         let page = server.request("GET", &format!("/?project={id}"), &[], "");
         assert_eq!(page.status, 200, "{id}");
-        assert!(page.body.contains("name=\"agboard-token\" content=\"\""));
+        assert!(page.body.contains("name=\"agpj-token\" content=\"\""));
         assert!(!page.body.contains("Only in the second project"));
     }
 
@@ -696,7 +693,7 @@ fn projects_are_listed_and_switched_through_the_entrance_as_on_the_pc() {
         "",
     );
     assert_eq!(link.status, 200);
-    assert!(link.body.contains("name=\"agboard-token\" content=\"\""));
+    assert!(link.body.contains("name=\"agpj-token\" content=\"\""));
     assert!(!link.body.contains("Only in the second project"));
 
     // Without a session neither the list nor a project is readable.

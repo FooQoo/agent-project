@@ -2,7 +2,7 @@
 
 The [work model](../../guide/work-model.md) is the set of rules that tell an agent what to do next, when it is finished, and when to stop and ask. This page shows where each rule is enforced in the code and which tests cover it, and where the model leaves a gap that relies on the agent instead. Read it before you change a rule, so that you know which code and which tests move with it.
 
-Every path is relative to the repository root. The rules are enforced in `FileStore` operations that run under the project's write lock, so the CLI, the web server, and the watcher all pass through the same checks. For the rules in the user's words, see [What Agent Board guarantees](../../guide/work-model.md#what-agent-board-guarantees). For the surrounding mechanics, see [Tasks and states](./tasks-and-states.md), [History and decisions](./history-and-decisions.md), [Saving and recovery](./saving-and-recovery.md), and [Agent integration](./agents.md).
+Every path is relative to the repository root. The rules are enforced in `FileStore` operations that run under the project's write lock, so the CLI, the web server, and the watcher all pass through the same checks. For the rules in the user's words, see [What Agent Project guarantees](../../guide/work-model.md#what-agent-project-guarantees). For the surrounding mechanics, see [Tasks and states](./tasks-and-states.md), [History and decisions](./history-and-decisions.md), [Saving and recovery](./saving-and-recovery.md), and [Agent integration](./agents.md).
 
 ## How a rule is enforced
 
@@ -10,7 +10,7 @@ A write goes through one path. The operation takes the project lock (`lock_proje
 
 Whether a task waits for you is not stored. `QaIndex::is_waiting` in `src/file_store/qa/store.rs` derives it from the questions the task refers to: a question without a reply, or a message file that cannot be read. `task_waits` in `src/file_store/ops/qa/mod.rs` reads the latest files for it under the lock. The Awaiting answer state, the refusal to run, and the refusal to finish all come from that one derivation.
 
-## What Agent Board guarantees
+## What Agent Project guarantees
 
 Each row is one rule from the guide. The tests named are the ones that exercise the rule directly. A rule with no direct test says so.
 

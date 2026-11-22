@@ -1,6 +1,6 @@
 # Saving and recovery
 
-Several agents, the CLI, the web server, and text editors may touch the same files at once. This page explains how Agent Board keeps the files consistent and what happens when something goes wrong. If you are debugging a failure, also read [Troubleshooting](../troubleshooting.md).
+Several agents, the CLI, the web server, and text editors may touch the same files at once. This page explains how Agent Project keeps the files consistent and what happens when something goes wrong. If you are debugging a failure, also read [Troubleshooting](../troubleshooting.md).
 
 ## Locks
 
@@ -41,13 +41,13 @@ Everything that changes a task goes through this path: state changes, answers, d
 
 Asking, answering, accepting, withdrawing, and linking messages can change several `QA.md` files and several task pairs at once. These are committed as one change through a journal in `.internal/batches/` that lists every target file with its old and new contents (none for a file that does not exist before or after). The phases and recovery match the task journal: `prepared` rolls back to the old files, `committed` keeps the new ones, and bytes that no longer match block recovery rather than overwrite a direct edit. A request sent from the board is published with one rename of `qa/Q-<n>/`, so it is never seen without its images. The message numbers are reserved in `project.json` before the files are written, so a failed ask can leave numbers unused. An answer writes its images before the batch and removes them only when the batch fails before its commit point; once `committed` is written, recovery keeps the replies, so the images they name stay.
 
-The first time a project is read or written, under its lock, Agent Board converts data left by an earlier format once. Questions that were still open become `qa/Q-<n>/QA.md` with the same number, and answered and withdrawn ones are dropped. A start approval is not carried over: the AI tasks that waited on it move to the Backlog, and a person sends them to Todo again. References to dropped questions leave the tasks. A `qa/` folder that cannot be read is moved to `.internal/legacy-qa/`. After that only the current format is read.
+The first time a project is read or written, under its lock, Agent Project converts data left by an earlier format once. Questions that were still open become `qa/Q-<n>/QA.md` with the same number, and answered and withdrawn ones are dropped. A start approval is not carried over: the AI tasks that waited on it move to the Backlog, and a person sends them to Todo again. References to dropped questions leave the tasks. A `qa/` folder that cannot be read is moved to `.internal/legacy-qa/`. After that only the current format is read.
 
 Only the `TASK.md`/`task.json` pair, and a message change with the task pairs it touches, are atomic. Images, `EPIC.md`, and `epic.json` are saved separately; if a task save fails after its images were saved, the response states what was saved and the UI keeps the input. A web save of a task composes the whole `TASK.md` from frontmatter and body, validates it, and writes it once; if validation fails nothing is written. Unknown keys are preserved, key order follows the YAML writer, and comments are not preserved.
 
 ## Format versions and the draft mark
 
-A `task.json` or `epic.json` that uses the Backlog has `formatVersion: 2`; the files of ordinary cards stay at `formatVersion: 1`, and both are read. Any other version is `format_unsupported`, and the message says "Only formatVersion 2 is supported". An earlier version of `agboard` cannot read a version-2 file.
+A `task.json` or `epic.json` that uses the Backlog has `formatVersion: 2`; the files of ordinary cards stay at `formatVersion: 1`, and both are read. Any other version is `format_unsupported`, and the message says "Only formatVersion 2 is supported". An earlier version of `agpj` cannot read a version-2 file.
 
 `draft` is `null` or `"human"`. A `draft: "ai"` is not a valid value: that `task.json` or `epic.json` fails to parse like any other invalid file, so it is reported in `problems`, left out of the board, and never rewritten. Nothing else in the project is affected.
 
@@ -66,7 +66,7 @@ The task metadata and body are written into a private staging directory, followe
 
 ## Project docs
 
-Agent Board never writes the files in `shared/projects/<project-id>/docs/`, apart from the `README.md` it puts there when it creates the folder. The Docs dialog only reads them, and the user edits them in their own editor (**Open in editor** starts it, see [Web API](../reference/web-api.md#project-docs)). So the docs have no lock, journal, revision check, or recovery of their own; the editor that writes a file is responsible for it.
+Agent Project never writes the files in `shared/projects/<project-id>/docs/`, apart from the `README.md` it puts there when it creates the folder. The Docs dialog only reads them, and the user edits them in their own editor (**Open in editor** starts it, see [Web API](../reference/web-api.md#project-docs)). So the docs have no lock, journal, revision check, or recovery of their own; the editor that writes a file is responsible for it.
 
 The board's data is not affected by the docs either: the watcher reports a change in `docs/` as an SSE `docs` event, without reloading the board, changing the project's `version`, or sending `changed` (see [Change notifications](./notifications.md#the-docs)).
 
@@ -101,7 +101,7 @@ Releases before this format kept a whole run in the file, with sample cards on t
 | --- | --- |
 | `serve` is not running, `serve.json` is stale, or a notification is lost | The CLI still succeeds and keeps the save. Changes are picked up from OS events, or when the server starts. |
 | `serve` crashed and left `serve.json` | CLI notifications fail to connect and are ignored; the next `serve` overwrites the file. A command that needs the server starts a new one, because the pid is gone or `lifecycle.lock` is free. |
-| The pid in `serve.json` is alive and holds `lifecycle.lock` but does not answer | A command that needs the server waits up to 10 seconds, then fails with `board_unavailable` naming the pid and `agboard stop`. It does not start a second server. |
+| The pid in `serve.json` is alive and holds `lifecycle.lock` but does not answer | A command that needs the server waits up to 10 seconds, then fails with `board_unavailable` naming the pid and `agpj stop`. It does not start a second server. |
 | An automatic server could not start | The command fails with `board_unavailable` that names `serve.log`, or with `local_network_denied` or `port_in_use`. Nothing was saved. |
 | The watcher cannot be registered | `serve` exits with an error. |
 | The watcher reports an error while running | Every project is reloaded and the error is logged. |

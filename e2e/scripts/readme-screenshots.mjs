@@ -6,14 +6,14 @@ import { setPreferences } from '../helpers/preferences.mjs';
 import { cli, copy, project, repo, seed, seedProposal, settle, startServer, stop } from './lib/sample-board.mjs';
 
 // Build web/ and the CLI first. Only disposable sample data is used.
-// AGBOARD_MEDIA_OUT points the images at another folder, so a check run does not touch the repository's files.
-const output = process.env.AGBOARD_MEDIA_OUT ? path.resolve(process.env.AGBOARD_MEDIA_OUT, 'readme') : path.join(repo, 'docs/images');
+// AGPJ_MEDIA_OUT points the images at another folder, so a check run does not touch the repository's files.
+const output = process.env.AGPJ_MEDIA_OUT ? path.resolve(process.env.AGPJ_MEDIA_OUT, 'readme') : path.join(repo, 'docs/images');
 mkdirSync(output, { recursive: true });
 
 const browser = await chromium.launch();
 try {
   for (const locale of ['en', 'ja']) {
-    const home = mkdtempSync(path.join(os.tmpdir(), 'agboard-readme-'));
+    const home = mkdtempSync(path.join(os.tmpdir(), 'agpj-readme-'));
     let server;
     let context;
     let phoneContext;

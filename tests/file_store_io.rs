@@ -4,8 +4,8 @@
 use std::fs;
 use std::path::Path;
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::io::{write_atomic, write_json};
+use agent_project::error::AgpjError;
+use agent_project::file_store::io::{write_atomic, write_json};
 
 fn names(dir: &Path) -> Vec<String> {
     let mut names: Vec<String> = fs::read_dir(dir)
@@ -37,7 +37,7 @@ fn a_failed_atomic_save_keeps_the_original_and_removes_its_temporary_file() {
 
     let err = write_atomic(&target, b"new", "task.json").unwrap_err();
 
-    assert!(matches!(err, AgboardError::FileError { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::FileError { .. }), "{err:?}");
     assert_eq!(fs::read(target.join("keep.txt")).unwrap(), b"keep");
     assert_eq!(names(dir.path()), vec!["task.json"]);
 }

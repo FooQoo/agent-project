@@ -10,19 +10,19 @@ use super::{Defect, defect, is_hex32};
 use crate::domain::{
     RunState, check_work_state, validate_project_name, validate_title, validate_version_name,
 };
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::layout::FORMAT_NAME;
 use crate::file_store::model::{Choice, HistoryRecord, ProjectFile, TaskFile, WorkspaceFile};
 
 /// Accept the requested format version. A missing version is `file_invalid`;
 /// any other version is `format_unsupported`. Nothing is converted.
-pub fn check_format_version(value: &Value, file: &str) -> Result<(), AgboardError> {
+pub fn check_format_version(value: &Value, file: &str) -> Result<(), AgpjError> {
     check_format_version_expected(value, file, 1)
 }
 
 /// Accept the versions of `task.json` and `epic.json`: 1, and 2 for a file that
 /// uses the Backlog. Anything else is `format_unsupported`.
-pub fn check_entity_format_version(value: &Value, file: &str) -> Result<(), AgboardError> {
+pub fn check_entity_format_version(value: &Value, file: &str) -> Result<(), AgpjError> {
     match value.get("formatVersion").and_then(Value::as_u64) {
         Some(1) | Some(2) => Ok(()),
         _ => check_format_version_expected(value, file, 2),
@@ -33,15 +33,15 @@ pub fn check_format_version_expected(
     value: &Value,
     file: &str,
     expected: u32,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     match value.get("formatVersion") {
-        None => Err(AgboardError::FileInvalid {
+        None => Err(AgpjError::FileInvalid {
             file: file.to_string(),
             field: "formatVersion".into(),
             reason: "formatVersion is required.".into(),
         }),
         Some(version) if version.as_u64() == Some(u64::from(expected)) => Ok(()),
-        Some(version) => Err(AgboardError::FormatUnsupported {
+        Some(version) => Err(AgpjError::FormatUnsupported {
             file: file.to_string(),
             version: version.to_string(),
             expected,

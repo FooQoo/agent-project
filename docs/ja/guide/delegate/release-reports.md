@@ -4,13 +4,13 @@ title: 版別レポートとテーマ別の振り返り
 
 # 版別レポートとテーマ別の振り返り
 
-ある版で何を届けたか、何が残っているか、複数の版にまたがる目標がどこまで進んだかをエージェントに尋ねるときの手順です。エージェントはどちらのレポートもボードから組み立て、各記述を元のカード、成果、履歴までたどれるようにします。エージェントが従うスキルは`agboard skills release-report`で表示されます。
+ある版で何を届けたか、何が残っているか、複数の版にまたがる目標がどこまで進んだかをエージェントに尋ねるときの手順です。エージェントはどちらのレポートもボードから組み立て、各記述を元のカード、成果、履歴までたどれるようにします。エージェントが従うスキルは`agpj skills release-report`で表示されます。
 
 ## 一つの版のレポート
 
 版のレポートを頼むと、エージェントはその版に[`release doc`](../reference/cli#generate-a-release-document)を実行して`docs/release/VERSION.md`を書き、生成ブロックの周りに要約を書きます。
 
-生成ブロックには、その版に予定したカード、検証済み、受入条件なしで完了したカード、残作業、別の版へ移したカードを、カード番号と`agboard show <id>`への案内付きで載せます。次の3点で記述の根拠を保ちます。
+生成ブロックには、その版に予定したカード、検証済み、受入条件なしで完了したカード、残作業、別の版へ移したカードを、カード番号と`agpj show <id>`への案内付きで載せます。次の3点で記述の根拠を保ちます。
 
 - 版から外れたカードは履歴から拾い、移動先とともに一度だけ載せます。アーカイブ済みのカードも数えます。
 - 検証済みは、受入条件があり、そのすべてを満たしたカードです。受入条件がないDoneのカードは検証済みではなく、残作業にも残しません。目的を満たしたかを示すものがないため、「受入条件なしで完了」として別に載せます。
@@ -19,10 +19,10 @@ title: 版別レポートとテーマ別の振り返り
 
 ### 公開済みと数える条件
 
-カードがDoneでも、公開済みとは限りません。Agent Boardは、成果の本文に`Published: 版名`の行があり、公開物（リリースページやパッケージなど）へのリンクが付いている場合だけ、その版で公開済みと数えます。
+カードがDoneでも、公開済みとは限りません。Agent Projectは、成果の本文に`Published: 版名`の行があり、公開物（リリースページやパッケージなど）へのリンクが付いている場合だけ、その版で公開済みと数えます。
 
 ```sh
-agboard --project "My project" result add 12 --actor ai --final --title "Released in v1.0.0" \
+agpj --project "My project" result add 12 --actor ai --final --title "Released in v1.0.0" \
   --summary "Released.
 Published: v1.0.0" --link https://example.com/releases/v1.0.0
 ```
@@ -32,7 +32,7 @@ Published: v1.0.0" --link https://example.com/releases/v1.0.0
 明示的な形式なら、版名を検証し、リンクを必須にし、`Published:`の行も自動で付けます。
 
 ```sh
-agboard --project "My project" result add 12 --actor ai --published v1.0.0 \
+agpj --project "My project" result add 12 --actor ai --published v1.0.0 \
   --link https://example.com/releases/v1.0.0 --summary "Released."
 ```
 
@@ -60,10 +60,10 @@ agboard --project "My project" result add 12 --actor ai --published v1.0.0 \
 ### Verified
 
 - #3 Queue edits while offline (done; acceptance 1/1)
-  - Source: `agboard show 3`, results 1, history entries 6
+  - Source: `agpj show 3`, results 1, history entries 6
   - Result: Offline queue released [final] (https://example.com/releases/v1.0.0)
 - #5 Open the last board without network (done, archived; acceptance 1/1)
-  - Source: `agboard show 5`, results 1, history entries 6
+  - Source: `agpj show 5`, results 1, history entries 6
   - Result: Offline board cache done [final]
 
 ### Done without acceptance conditions
@@ -77,7 +77,7 @@ Nothing remains.
 ### Moved to another version
 
 - #4 Merge conflicting edits on reconnect (todo; acceptance 1/2)
-  - Source: `agboard show 4`, results 0, history entries 4
+  - Source: `agpj show 4`, results 0, history entries 4
   - Moved to: v1.1.0
 
 ### Publication
@@ -87,7 +87,7 @@ A task counts as published only when one of its results states `Published: VERSI
 ### Published
 
 - #3 Queue edits while offline (done; acceptance 1/1)
-  - Record: `agboard show 3`, result 1 (https://example.com/releases/v1.0.0)
+  - Record: `agpj show 3`, result 1 (https://example.com/releases/v1.0.0)
 
 ### Not confirmed as published
 
@@ -101,7 +101,7 @@ A task counts as published only when one of its results states `Published: VERSI
 
 テーマは、ボードに専用の項目がない目標（例：「オフライン対応」）です。エージェントにテーマ名を伝えると、エージェントはそれに属するエピックとカードを探し、取り込んだものを示したうえで、次を照合します。
 
-1. 各エピックの達成条件（`agboard epic show ID`）。
+1. 各エピックの達成条件（`agpj epic show ID`）。
 2. 各条件に関わるカードの受入条件、検証記録、成果、履歴。版をまたぎ、アーカイブ済みのカードや版を移ったカードも含めます。
 
 各条件は、検証済み、進んだが未達、未着手、未確認のいずれかとし、判定ごとにカードと成果を示します。振り返りには、版ごとに進んだ点と、未確認事項とそれを確かめる方法を載せます。カードや条件の件数から達成率や進捗の割合を推測せず、`EPIC.md`の条件に自分でチェックも付けません。付けるのは条件を持つ人です。
@@ -113,7 +113,7 @@ A task counts as published only when one of its results states `Published: VERSI
 ```markdown
 # 振り返り：オフライン対応（v1.0.0からv1.1.0）
 
-対象：テーマ「オフライン対応」。ボードでは2つのエピック、`SYNC`（オフライン同期）と`CACHE`（ローカルキャッシュ）に分かれ、版v1.0.0とv1.1.0にまたがります。根拠：`agboard epic show SYNC`、`agboard epic show CACHE`、#3から#7の`agboard show <id>`、生成したレポート`docs/release/v1.0.0.md`と`docs/release/v1.1.0.md`。以下の各行は、元のカード、成果、履歴を示します。達成率は出しません。テーマの達成条件は4つあり、それぞれを自分の根拠だけで判定します。
+対象：テーマ「オフライン対応」。ボードでは2つのエピック、`SYNC`（オフライン同期）と`CACHE`（ローカルキャッシュ）に分かれ、版v1.0.0とv1.1.0にまたがります。根拠：`agpj epic show SYNC`、`agpj epic show CACHE`、#3から#7の`agpj show <id>`、生成したレポート`docs/release/v1.0.0.md`と`docs/release/v1.1.0.md`。以下の各行は、元のカード、成果、履歴を示します。達成率は出しません。テーマの達成条件は4つあり、それぞれを自分の根拠だけで判定します。
 
 ## エピックSYNC：オフライン同期
 

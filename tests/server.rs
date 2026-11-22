@@ -40,8 +40,8 @@ fn run_build_script(manifest_dir: &Path) -> std::process::Output {
 fn fake_manifest(files: &[&str]) -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
     // The build script also hashes the plugin folder.
-    std::fs::create_dir_all(dir.path().join("plugins/agent-board")).unwrap();
-    std::fs::write(dir.path().join("plugins/agent-board/plugin.json"), "{}").unwrap();
+    std::fs::create_dir_all(dir.path().join("plugins/agent-project")).unwrap();
+    std::fs::write(dir.path().join("plugins/agent-project/plugin.json"), "{}").unwrap();
     for rel in files {
         let path = dir.path().join("web/dist").join(rel);
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -127,24 +127,24 @@ use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::{ServeConfig, run_until_in};
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
+use agent_project::error::AgpjError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::{ServeConfig, run_until_in};
 use chrono::{DateTime, TimeZone, Utc};
 
-// AGBOARD_HOME is process-global. It is only needed while a server starts (the
+// AGPJ_HOME is process-global. It is only needed while a server starts (the
 // server captures its paths then), so the lock is released once it is ready.
 static ENV_LOCK: Mutex<()> = Mutex::new(());
 
 fn with_home<T>(home: &Path, f: impl FnOnce() -> T) -> T {
     let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     // SAFETY: access to the environment is serialized by ENV_LOCK.
-    unsafe { std::env::set_var("AGBOARD_HOME", home) };
+    unsafe { std::env::set_var("AGPJ_HOME", home) };
     let result = f();
     // SAFETY: as above.
-    unsafe { std::env::remove_var("AGBOARD_HOME") };
+    unsafe { std::env::remove_var("AGPJ_HOME") };
     result
 }
 
@@ -231,15 +231,15 @@ struct Running {
     /// `/api/projects/<id of "main">`, or empty when the data has no such project.
     base: String,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 impl Running {
     /// Start a server for the data directory `home` on `port` (0 = any) and
     /// wait until it is ready, or return the error it stopped with.
-    fn start(home: &Path, port: u16) -> Result<Running, AgboardError> {
+    fn start(home: &Path, port: u16) -> Result<Running, AgpjError> {
         // The data area is passed in, so servers start in parallel without
-        // touching AGBOARD_HOME, and the poll watch starts without FSEvents.
+        // touching AGPJ_HOME, and the poll watch starts without FSEvents.
         let data_dir = home.to_path_buf();
         let (ready_tx, ready_rx) = mpsc::channel();
         let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
@@ -288,14 +288,14 @@ impl Running {
         vec![
             ("Origin".into(), format!("http://127.0.0.1:{}", self.port())),
             ("Sec-Fetch-Site".into(), "same-origin".into()),
-            ("X-Agboard-Token".into(), token.into()),
+            ("X-Agpj-Token".into(), token.into()),
         ]
     }
 
     /// Fetch the session token the way a browser would, from `GET /`.
     fn token(&self) -> String {
         let page = self.get("/");
-        let marker = "name=\"agboard-token\" content=\"";
+        let marker = "name=\"agpj-token\" content=\"";
         let start = page.body.find(marker).expect("token meta tag") + marker.len();
         page.body[start..start + 64].to_string()
     }
@@ -401,11 +401,11 @@ impl Running {
         events
     }
 
-    fn stop(mut self) -> Result<(), AgboardError> {
+    fn stop(mut self) -> Result<(), AgpjError> {
         self.shutdown()
     }
 
-    fn shutdown(&mut self) -> Result<(), AgboardError> {
+    fn shutdown(&mut self) -> Result<(), AgpjError> {
         match self.handle.take() {
             Some(handle) => match server_thread::finish(self.stop.take(), handle) {
                 Some(result) => result.expect("server thread panicked"),
@@ -484,14 +484,15 @@ fn index_is_html_with_a_fresh_64_hex_token() {
         Some("text/html; charset=utf-8")
     );
     assert_eq!(page.cache_control.as_deref(), Some("no-store"));
-    assert!(!page.body.contains("{{AGBOARD_TOKEN}}"));
+    assert!(!page.body.contains("{{AGPJ_TOKEN}}"));
     let token = server.token();
     assert_eq!(token.len(), 64);
     assert!(token.chars().all(|c| matches!(c, '0'..='9' | 'a'..='f')));
-    assert!(page.body.contains(&format!(
-        "<meta name=\"agboard-token\" content=\"{token}\" />"
-    )));
-    let script = agent_board::server::web_assets::APP_ASSETS
+    assert!(
+        page.body
+            .contains(&format!("<meta name=\"agpj-token\" content=\"{token}\" />"))
+    );
+    let script = agent_project::server::web_assets::APP_ASSETS
         .iter()
         .find(|asset| asset.name.starts_with("app-") && asset.name.ends_with(".js"))
         .unwrap();
@@ -500,8 +501,8 @@ fn index_is_html_with_a_fresh_64_hex_token() {
             .contains(&format!("src=\"/assets/{}\"", script.name))
     );
     assert!(page.body.contains(&format!(
-        "<meta name=\"agboard-build\" content=\"{}\" />",
-        agent_board::server::web_assets::APP_BUILD_ID
+        "<meta name=\"agpj-build\" content=\"{}\" />",
+        agent_project::server::web_assets::APP_BUILD_ID
     )));
 }
 
@@ -694,7 +695,7 @@ fn protected_api_creates_moves_and_answers_questions_with_full_history() {
         .withdraw_message(
             &main_id(home.path()),
             &open.id,
-            agent_board::domain::Actor::Ai,
+            agent_project::domain::Actor::Ai,
             chrono::Utc::now(),
         )
         .unwrap();
@@ -787,8 +788,8 @@ fn archive_api_lists_newest_archived_first_with_ties_by_higher_id() {
 
 #[test]
 fn archive_api_resolves_the_epics_of_archived_tasks_in_the_same_response() {
-    use agent_board::file_store::model::NewEpic;
-    use agent_board::file_store::validate::EpicId;
+    use agent_project::file_store::model::NewEpic;
+    use agent_project::file_store::validate::EpicId;
     let home = board_home();
     let project = main_id(home.path());
     let store = store_in(home.path());
@@ -1163,7 +1164,7 @@ fn localhost_origin_and_host_also_delete() {
             ("Host", host.as_str()),
             ("Origin", origin.as_str()),
             ("Sec-Fetch-Site", "same-origin"),
-            ("X-Agboard-Token", token.as_str()),
+            ("X-Agpj-Token", token.as_str()),
         ],
     );
     assert_eq!(reply.status, 204);
@@ -1224,7 +1225,7 @@ fn a_delete_missing_any_one_condition_is_403_and_the_task_remains() {
             headers.push(("Sec-Fetch-Site", v));
         }
         if let Some(v) = token {
-            headers.push(("X-Agboard-Token", v));
+            headers.push(("X-Agpj-Token", v));
         }
         let reply = server.send("DELETE", &server.api("/tasks/1"), &headers);
         assert_eq!(reply.status, 403, "{name}");
@@ -1271,7 +1272,7 @@ fn deleting_a_missing_task_is_404_with_the_error_body() {
         serde_json::json!({"error": {
             "code": "task_not_found",
             "message": "task #99 not found.",
-            "reason": "No task has ID 99. Run \"agboard ls\" to see the tasks.",
+            "reason": "No task has ID 99. Run \"agpj ls\" to see the tasks.",
         }})
     );
     for bad_id in ["abc", "0", "-1", "1.5"] {
@@ -1312,7 +1313,7 @@ fn events_start_with_ready_and_the_right_headers() {
     );
     let ready = format!(
         "event: ready\ndata: {{\"build\":\"{}\"}}\n\n",
-        agent_board::server::web_assets::APP_BUILD_ID
+        agent_project::server::web_assets::APP_BUILD_ID
     );
     assert!(events.received.contains(&ready), "{}", events.received);
 }
@@ -1414,7 +1415,7 @@ fn a_keep_alive_comment_arrives_within_sixteen_seconds() {
 
 // ---------------------------------------------------------------- serve.json and startup
 
-use agent_board::paths::ServeInfo;
+use agent_project::paths::ServeInfo;
 
 fn serve_json(home: &Path) -> Option<ServeInfo> {
     let text = std::fs::read_to_string(home.join("serve.json")).ok()?;
@@ -1481,7 +1482,7 @@ fn serve_json_is_written_while_running_and_removed_when_the_server_stops() {
     assert_eq!(written.pid, std::process::id());
     assert_eq!(written.port, server.port());
     assert!(
-        agent_board::clock::parse_utc(&written.started_at).is_ok(),
+        agent_project::clock::parse_utc(&written.started_at).is_ok(),
         "{}",
         written.started_at
     );
@@ -1521,7 +1522,7 @@ fn a_second_server_for_the_same_data_directory_is_already_serving() {
     let error = Running::start(home.path(), 0).err().unwrap();
     assert_eq!(
         error,
-        AgboardError::AlreadyServing {
+        AgpjError::AlreadyServing {
             port: first.port(),
             auto: false
         }
@@ -1533,7 +1534,7 @@ fn a_second_server_for_the_same_data_directory_is_already_serving() {
     let error = Running::start(home.path(), first.port()).err().unwrap();
     assert_eq!(
         error,
-        AgboardError::AlreadyServing {
+        AgpjError::AlreadyServing {
             port: first.port(),
             auto: false
         }
@@ -1549,9 +1550,9 @@ fn a_port_in_use_by_something_else_is_port_in_use() {
     let error = Running::start(home.path(), port).err().unwrap();
     assert_eq!(
         error,
-        AgboardError::PortInUse {
+        AgpjError::PortInUse {
             port,
-            holder: agent_board::error::PortHolder::OtherProgram
+            holder: agent_project::error::PortHolder::OtherProgram
         }
     );
     assert_eq!(error.code(), "port_in_use");
@@ -1584,7 +1585,7 @@ fn a_serve_json_whose_port_answers_with_the_same_pid_means_already_serving() {
     let (port, fake) = fake_health_server(2);
     write_serve_json(home.path(), &info(2, port));
     let error = Running::start(home.path(), 0).err().unwrap();
-    assert_eq!(error, AgboardError::AlreadyServing { port, auto: false });
+    assert_eq!(error, AgpjError::AlreadyServing { port, auto: false });
     fake.join().unwrap();
 }
 
@@ -1625,7 +1626,7 @@ fn notify_serve_from_the_cli_side_reaches_connected_browsers() {
             t(12),
         )
         .unwrap();
-    let notified = with_home(home.path(), agent_board::interact::notify::notify_serve);
+    let notified = with_home(home.path(), agent_project::interact::notify::notify_serve);
     assert!(notified);
     events.wait_for(
         "event: changed\ndata: {\"instanceId\":",
@@ -1642,12 +1643,12 @@ fn notify_serve_is_false_after_the_server_stopped() {
     // serve.json is gone, and a leftover one pointing at the closed port fails too.
     assert!(!with_home(
         home.path(),
-        agent_board::interact::notify::notify_serve
+        agent_project::interact::notify::notify_serve
     ));
     write_serve_json(home.path(), &info(std::process::id(), port));
     assert!(!with_home(
         home.path(),
-        agent_board::interact::notify::notify_serve
+        agent_project::interact::notify::notify_serve
     ));
 }
 
@@ -1656,15 +1657,15 @@ fn notify_serve_is_false_after_the_server_stopped() {
 use serve_process::ServeProcess;
 use std::process::{Child, Stdio};
 
-/// Start `agboard serve` with `args`, serving the data area in `home`.
+/// Start `agpj serve` with `args`, serving the data area in `home`.
 fn spawn_serve(home: &Path, args: &[&str]) -> ServeProcess {
-    let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
+    let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
         .arg("serve")
         .args(args)
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
@@ -1697,7 +1698,7 @@ fn wait_for_exit(child: &mut Child, within: Duration) -> Option<std::process::Ex
     child.try_wait().unwrap()
 }
 
-/// Start `agboard serve` on a port the OS picks, check it serves, send `signal`,
+/// Start `agpj serve` on a port the OS picks, check it serves, send `signal`,
 /// and check it exits cleanly and removes serve.json.
 fn serve_stops_on(signal: &str) {
     let home = board_home();
@@ -1840,15 +1841,15 @@ fn a_task_md_with_a_missing_heading_is_reported_in_problems_until_it_is_fixed() 
     assert_eq!(detail_lines::document(&detail.body), "Some details\n");
     assert_eq!(std::fs::read_to_string(&md).unwrap(), defective);
 
-    let parsed = agent_board::file_store::history::parse_task(
+    let parsed = agent_project::file_store::history::parse_task(
         &original,
-        agent_board::file_store::history::ParseMode::Stored,
+        agent_project::file_store::history::ParseMode::Stored,
     );
-    let input = agent_board::file_store::history::parse_task(
+    let input = agent_project::file_store::history::parse_task(
         BODY,
-        agent_board::file_store::history::ParseMode::NewInput,
+        agent_project::file_store::history::ParseMode::NewInput,
     );
-    let fixed = agent_board::file_store::history::compose_task(
+    let fixed = agent_project::file_store::history::compose_task(
         BODY,
         &input.body,
         Some(&input.acceptance),
@@ -1862,7 +1863,7 @@ fn a_task_md_with_a_missing_heading_is_reported_in_problems_until_it_is_fixed() 
 
 #[test]
 fn the_summary_lists_each_epic_and_its_detail_has_the_document() {
-    use agent_board::file_store::model::NewEpic;
+    use agent_project::file_store::model::NewEpic;
     let home = board_home();
     let project = main_id(home.path());
     store_in(home.path())
@@ -1916,7 +1917,7 @@ fn the_summary_lists_each_epic_and_its_detail_has_the_document() {
     assert_eq!(detail.status, 200, "{}", detail.body);
     assert_eq!(
         detail_lines::document(&detail.body),
-        agent_board::file_store::validate::document_template()
+        agent_project::file_store::validate::document_template()
     );
     let attachments = detail_lines::lines(&detail.body)
         .into_iter()
@@ -2000,13 +2001,13 @@ fn archive_done_refuses_empty_and_repeated_lists_and_changed_targets_and_resends
     assert!(body["tasks"][0]["archivedAt"].is_string());
 }
 
-fn two_choices() -> Vec<agent_board::file_store::model::Choice> {
+fn two_choices() -> Vec<agent_project::file_store::model::Choice> {
     vec![
-        agent_board::file_store::model::Choice {
+        agent_project::file_store::model::Choice {
             id: "a".into(),
             label: "Plan A".into(),
         },
-        agent_board::file_store::model::Choice {
+        agent_project::file_store::model::Choice {
             id: "b".into(),
             label: "Plan B".into(),
         },
@@ -2046,8 +2047,8 @@ fn a_write_with_a_token_from_an_earlier_server_asks_for_a_reload() {
 
 #[test]
 fn the_summary_counts_each_epic_tasks_by_lane_with_archived_counted_once() {
-    use agent_board::file_store::model::NewEpic;
-    use agent_board::file_store::validate::EpicId;
+    use agent_project::file_store::model::NewEpic;
+    use agent_project::file_store::validate::EpicId;
     let home = board_home();
     let project = main_id(home.path());
     let store = store_in(home.path());
@@ -2242,8 +2243,8 @@ fn archive_api_cursor_survives_an_archive_and_a_restore_between_pages() {
 
 #[test]
 fn archive_api_returns_only_the_epics_of_the_rows_on_the_page() {
-    use agent_board::file_store::model::NewEpic;
-    use agent_board::file_store::validate::EpicId;
+    use agent_project::file_store::model::NewEpic;
+    use agent_project::file_store::validate::EpicId;
     let home = board_home();
     let project = main_id(home.path());
     let store = store_in(home.path());

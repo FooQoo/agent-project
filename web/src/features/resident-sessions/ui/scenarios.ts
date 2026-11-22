@@ -186,24 +186,23 @@ export const scenarios: Record<ScenarioId, ResidentPanelProps> = {
     ...base(stopped),
     launchProblem: {
       code: 'project_has_no_folder',
-      reason:
-        'The project has no bound folder that still exists. Bind one with agboard project bind.',
+      reason: 'The project has no bound folder that still exists. Bind one with agpj project bind.',
       unreachable: false,
     },
   },
 };
 
 const LOG_LINES = [
-  '[agboard] resident session started (claude-code)',
-  '> agboard wait',
+  '[agpj] resident session started (claude-code)',
+  '> agpj wait',
   'Request R-12 received: "Add a retry to the upload step"',
   'Reading src/upload/client.ts',
   'Editing src/upload/client.ts: wrap send() in a three-attempt retry with backoff',
   'Running: cargo test upload::',
   'test upload::retries_on_timeout ... ok',
   'test upload::gives_up_after_three ... ok',
-  'agboard task note 14 "Retry added; tests pass"',
-  '> agboard wait',
+  'agpj task note 14 "Retry added; tests pass"',
+  '> agpj wait',
 ];
 
 /** The log pane's fixed reads for the stories: a running log, none yet, and one cut at its start. */

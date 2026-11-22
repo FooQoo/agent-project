@@ -1,6 +1,6 @@
 # Set up and run
 
-Prepare your machine, build Agent Board (users install it with Homebrew; building from source is for development), run it against a temporary board, and install your build so that agents use it. Run every command from the repository root.
+Prepare your machine, build Agent Project (users install it with Homebrew; building from source is for development), run it against a temporary board, and install your build so that agents use it. Run every command from the repository root.
 
 ## Before you start
 
@@ -13,9 +13,9 @@ You need:
 
 Two habits keep your own board safe while you work:
 
-- **Use a temporary data area.** The default data area (`~/.agent-board/` on macOS, `%USERPROFILE%\.agent-board\` on Windows) is your real board. For experiments and tests, set `AGBOARD_HOME` to a temporary directory. The variable applies to the current shell only.
+- **Use a temporary data area.** The default data area (`~/.agent-project/` on macOS, `%USERPROFILE%\.agent-project\` on Windows) is your real board. For experiments and tests, set `AGPJ_HOME` to a temporary directory. The variable applies to the current shell only.
 - **Leave port 7420 free.** It is the default port for normal use. Use another port, or port 0 in tests.
-- **Know that commands start a server.** `wait`, a question that waits, and the hook start a background server for the data area when none runs. Such a server also opens the board in your browser. Set `AGBOARD_AUTOSTART=0` while you experiment if you do not want a server, or `AGBOARD_OPEN_BROWSER=0` if you only do not want the browser, and `agboard stop` ends one.
+- **Know that commands start a server.** `wait`, a question that waits, and the hook start a background server for the data area when none runs. Such a server also opens the board in your browser. Set `AGPJ_AUTOSTART=0` while you experiment if you do not want a server, or `AGPJ_OPEN_BROWSER=0` if you only do not want the browser, and `agpj stop` ends one.
 
 ## Build
 
@@ -27,7 +27,7 @@ pnpm --dir web build
 cargo build
 ```
 
-The binary is `target/debug/agboard`. If `cargo build` stops with `Run "pnpm --dir web build" first.`, the UI build is missing.
+The binary is `target/debug/agpj`. If `cargo build` stops with `Run "pnpm --dir web build" first.`, the UI build is missing.
 
 Development builds keep only line tables as debug info (`[profile.dev]` in `Cargo.toml`), so panics and backtraces still name files and lines while `target/` stays smaller. `target/` still grows with every dependency or branch change, and each worktree has its own; remove it with `cargo clean` when disk space runs low.
 
@@ -44,9 +44,9 @@ just serve        # saved board with Vite HMR and Rust watch (port 7420)
 ```
 
 - `just dev` serves sample data and updates the browser through HMR when web files change.
-- `just docs` serves the documentation site at `http://127.0.0.1:8662/agent-board/`. Pass another port as an argument when needed, for example `just docs 8663`.
+- `just docs` serves the documentation site at `http://127.0.0.1:8662/agent-project/`. Pass another port as an argument when needed, for example `just docs 8663`.
 - `just storybook` serves the component and page Stories at `http://127.0.0.1:8610/`.
-- `just serve` uses the real API. It restarts the Rust server when Rust files change and serves the UI through Vite with HMR. Open `http://127.0.0.1:7420/`; the Rust API uses port 7421. The board comes from the normal location, or from `AGBOARD_HOME` if set. A Rust restart reloads the page to refresh its write token.
+- `just serve` uses the real API. It restarts the Rust server when Rust files change and serves the UI through Vite with HMR. Open `http://127.0.0.1:7420/`; the Rust API uses port 7421. The board comes from the normal location, or from `AGPJ_HOME` if set. A Rust restart reloads the page to refresh its write token.
 - Pass other ports as arguments, for example `just dev 5174` or `just serve 7500 7501` (web port, then Rust API port).
 
 To work on the web UI alone with sample data:
@@ -60,7 +60,7 @@ The sample data starts like a new data area: the [first-run guide](../../guide/q
 For manual CLI experiments, use a temporary data area:
 
 ```sh
-export AGBOARD_HOME="$(mktemp -d)"
+export AGPJ_HOME="$(mktemp -d)"
 cargo run -- project create dev
 cargo run -- --project dev add "Try it" --assignee ai --actor ai
 cargo run -- serve --port <port>
@@ -70,16 +70,16 @@ The data area holds `shared/` (the projects as plain files), `serve.json` while 
 
 ## Demo build
 
-The demo build runs the board with the same sample data on a static site, with no server. It is the version published on the documentation site, at `/agent-board/demo/`:
+The demo build runs the board with the same sample data on a static site, with no server. It is the version published on the documentation site, at `/agent-project/demo/`:
 
 ```sh
 pnpm --dir web build:demo     # writes web/dist-demo/
-pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-board/demo/
+pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-project/demo/
 ```
 
 How it differs from the product build:
 
-- The pages are served from `/agent-board/demo/`. Set `AGBOARD_DEMO_BASE` (for example `AGBOARD_DEMO_BASE=/demo/`) when building to use another folder.
+- The pages are served from `/agent-project/demo/`. Set `AGPJ_DEMO_BASE` (for example `AGPJ_DEMO_BASE=/demo/`) when building to use another folder.
 - The sample-data server runs in the page, behind a Service Worker (MSW) that answers `/api/` requests, the live stream, and attachment images. The worker script is emitted next to `index.html`. A browser with no Service Worker support shows a notice instead of the board.
 - The page has a fixed token and an empty build ID, so it never reloads for a new build. Reloading the page restores the sample data and opens the first-run guide again.
 - Features that need a computer are hidden: project Docs (with its buttons that open files and folders), the remote access connection, and saving pasted or dropped images.
@@ -127,13 +127,13 @@ A folder's `story-coverage.json` lists its source exports, the Stories that show
 
 ## Build release
 
-Users install Agent Board with Homebrew (see [Install and start](../../guide/getting-started.md)). This section is for the people who build and publish a release. The workflow is `.github/workflows/release.yml` and the scripts are in `scripts/release/`.
+Users install Agent Project with Homebrew (see [Install and start](../../guide/getting-started.md)). This section is for the people who build and publish a release. The workflow is `.github/workflows/release.yml` and the scripts are in `scripts/release/`.
 
 ### Archive and checks
 
 - **Version.** `Cargo.toml` and `Cargo.lock` hold the version, and the tag is `v` plus that version. `scripts/release/check-version.py --tag vX.Y.Z` fails on any mismatch. The version on `main` is a development version; only a published GitHub Release is a released version.
 - **Build.** Each CPU builds on its own macOS runner (`macos-15` for Apple Silicon, `macos-15-intel` for Intel), web UI first, then `cargo build --release --locked`, with `MACOSX_DEPLOYMENT_TARGET=15.0`. The minimum supported macOS is 15 on both CPUs. Strip, if any, runs before signing.
-- **Archive.** `package.sh` writes `agboard-<version>-<target>.tar.gz` holding exactly `agboard`, `LICENSE`, and `THIRD_PARTY_NOTICES.txt`; the web UI, Skill, and Hook templates are inside the binary. `verify-artifact.sh` checks the names, the two license files, the CPU, the deployment target, that only system libraries are linked, and, where it can run, `--version` and the embedded web UI.
+- **Archive.** `package.sh` writes `agpj-<version>-<target>.tar.gz` holding exactly `agpj`, `LICENSE`, and `THIRD_PARTY_NOTICES.txt`; the web UI, Skill, and Hook templates are inside the binary. `verify-artifact.sh` checks the names, the two license files, the CPU, the deployment target, that only system libraries are linked, and, where it can run, `--version` and the embedded web UI.
 - **Notices.** `generate-notices.py` builds `THIRD_PARTY_NOTICES.txt`; `--check` fails when it is out of date. The MIT text is in `LICENSE`; its copyright line must hold the real holder and year before a release.
 - **Actions.** Every `uses:` in `release.yml` is pinned to a full 40-character commit SHA with the version as a trailing comment (`actions/checkout@<sha> # v7.0.1`). When you update one, resolve the tag to its commit (the peeled commit for an annotated tag) and change the SHA and the comment together.
 - **Candidate or release.** Pull requests and manual runs produce only an unsigned candidate (`candidate.json` says `signed: false`). A candidate is never a release file.
@@ -143,7 +143,7 @@ Users install Agent Board with Homebrew (see [Install and start](../../guide/get
 The formal path runs only for a pushed or re-run `v*` tag, in the protected `release-signing` environment, the only place the signing secrets exist.
 
 1. **Prepare once, by a person.** Enroll in the Apple Developer Program, create a Developer ID Application certificate with its private key, export it as a `.p12`, and create an App Store Connect API key (a `.p8` file with its Key ID and Issuer ID). Store these six secrets in the `release-signing` environment (not as repository secrets): `MACOS_CERT_P12`, `MACOS_CERT_PASSWORD`, `APPLE_TEAM_ID`, `APP_STORE_CONNECT_API_KEY` (the contents of the `.p8` file), `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`. Never write their values in the repository, an issue, or a log. Limit the environment to the trusted tags.
-2. **Sign.** `sign-macos.sh` creates a temporary keychain under the job's temporary directory, imports the certificate, resolves exactly one Developer ID Application identity of the expected Team, and signs with `--options runtime --timestamp` and the fixed identifier `io.github.FooQoo.agent-board.agboard`. The certificate password never appears on a command line: `openssl` reads `MACOS_CERT_PASSWORD` from the environment, re-wraps the key and certificate into a temporary `.p12` protected by a random one-time passphrase, and only that passphrase is given to `security import -P`. The decrypted PEM is a 0600 file that is deleted right after re-wrapping. The first real run must confirm that macOS accepts the re-wrapped `.p12`. `verify-signature.sh` checks the Team ID, identifier, Hardened Runtime, secure timestamp, and that the designated requirement is the default one.
+2. **Sign.** `sign-macos.sh` creates a temporary keychain under the job's temporary directory, imports the certificate, resolves exactly one Developer ID Application identity of the expected Team, and signs with `--options runtime --timestamp` and the fixed identifier `io.github.FooQoo.agent-project.agpj`. The certificate password never appears on a command line: `openssl` reads `MACOS_CERT_PASSWORD` from the environment, re-wraps the key and certificate into a temporary `.p12` protected by a random one-time passphrase, and only that passphrase is given to `security import -P`. The decrypted PEM is a 0600 file that is deleted right after re-wrapping. The first real run must confirm that macOS accepts the re-wrapped `.p12`. `verify-signature.sh` checks the Team ID, identifier, Hardened Runtime, secure timestamp, and that the designated requirement is the default one.
 3. **Notarize.** `notarize-macos.sh` zips the signed binary (notarytool does not take a tar.gz), submits it with the App Store Connect API key, waits, and passes only on status `Accepted`. The key is written to a 0600 file in a temporary folder and passed to `notarytool` as `--key <path> --key-id <id> --issuer <uuid>`; the file is removed on every exit, and no secret value is on a command line. Invalid, rejected, timed out, or in progress is a failure. A timed-out submission can be continued by its ID instead of submitting again.
 4. **Pack the same bytes.** The accepted binary goes into the tar.gz, and `release-gate.py` checks that the signed, notarized, and packed binaries are identical, that both CPUs share one Team ID, and then writes the archives and `SHA256SUMS`. The temporary keychain and key material are deleted in a step that always runs.
 5. **Draft.** Only when both CPUs pass does a job create a draft GitHub Release and render the Formula candidate. A missing certificate, a rejected notarization, or one failing CPU stops the run; an unsigned archive is never a fallback.
@@ -152,13 +152,13 @@ A single command-line binary cannot carry a stapled ticket, so macOS checks the 
 
 ### Publish to Homebrew
 
-After the Release is published, `.github/workflows/homebrew-tap.yml` publishes the Formula by itself. `scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agboard.rb` renders the Formula from the published files and refuses a missing CPU, a wrong version, or a hash mismatch. The Formula selects the archive by CPU in `on_macos`, requires macOS 15 (`depends_on macos: :sequoia`), declares MIT, installs `agboard` into `bin` and the two license files into `pkgshare`, and has a `test do` block that checks `--version` and uses a temporary `AGBOARD_HOME`.
+After the Release is published, `.github/workflows/homebrew-tap.yml` publishes the Formula by itself. `scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agpj.rb` renders the Formula from the published files and refuses a missing CPU, a wrong version, or a hash mismatch. The Formula selects the archive by CPU in `on_macos`, requires macOS 15 (`depends_on macos: :sequoia`), declares MIT, installs `agpj` into `bin` and the two license files into `pkgshare`, and has a `test do` block that checks `--version` and uses a temporary `AGPJ_HOME`.
 
 The workflow runs when a Release is published, and skips drafts and prereleases. It does these steps in order:
 
 1. Downloads the two archives and `SHA256SUMS` of the tag with `gh release download`.
 2. Renders the Formula, then runs `scripts/release/test-formula.sh` and `ruby -c` on macOS 15.
-3. Clones `FooQoo/homebrew-tap` over SSH, copies `Formula/agboard.rb`, and, only when the file changed, commits `agboard X.Y.Z` as `github-actions[bot]` and pushes it directly to the default branch.
+3. Clones `FooQoo/homebrew-tap` over SSH, copies `Formula/agpj.rb`, and, only when the file changed, commits `agpj X.Y.Z` as `github-actions[bot]` and pushes it directly to the default branch.
 
 The job runs in the `homebrew-tap` Environment, which accepts only `v*` tags and holds the secret `HOMEBREW_TAP_DEPLOY_KEY`. The secret is a read-write deploy key of the tap repository; it is written to a temporary file with mode 0600 for the push and removed at the end of the job. SSH accepts only the pinned GitHub host key. The job has `contents: read` only, and no secret appears on a command line. `release.yml` does not take part.
 
@@ -174,18 +174,18 @@ To rotate the key, generate a new pair with `ssh-keygen -t ed25519 -N "" -C home
 
 ## Install from source
 
-Agents and hooks run `agboard` from your `PATH`, so to try a change through an agent, install your build:
+Agents and hooks run `agpj` from your `PATH`, so to try a change through an agent, install your build:
 
 ```sh
 pnpm --dir web install
 pnpm --dir web build
 cargo install --path . --locked --force
-command -v agboard
+command -v agpj
 ```
 
-`cargo install` writes to `~/.cargo/bin` (or `$CARGO_HOME/bin`), which must be on your `PATH`. If `command -v agboard` prints nothing, add it, for example `export PATH="$HOME/.cargo/bin:$PATH"`, and open a new shell.
+`cargo install` writes to `~/.cargo/bin` (or `$CARGO_HOME/bin`), which must be on your `PATH`. If `command -v agpj` prints nothing, add it, for example `export PATH="$HOME/.cargo/bin:$PATH"`, and open a new shell.
 
-The installed `agboard` and your development build are separate files. Hooks call the installed one, while `cargo build`, `cargo run`, and `target/debug/agboard` use the working tree. Reinstall before checking a change through a hook.
+The installed `agpj` and your development build are separate files. Hooks call the installed one, while `cargo build`, `cargo run`, and `target/debug/agpj` use the working tree. Reinstall before checking a change through a hook.
 
 ### Keep the Keychain grant on macOS
 
@@ -193,11 +193,11 @@ On macOS, the remote access token lives in the Keychain, and the "Always Allow" 
 
 ```sh
 security find-identity -v -p codesigning   # list your signing identities
-export AGBOARD_CODESIGN_IDENTITY="<identity name or SHA-1>"
+export AGPJ_CODESIGN_IDENTITY="<identity name or SHA-1>"
 scripts/dev/install-local.sh
 ```
 
-`just install` builds the web UI and then runs this script, so it signs the same way when `AGBOARD_CODESIGN_IDENTITY` is set. Without `AGBOARD_CODESIGN_IDENTITY`, or on another OS, the script installs without signing and prints a note.
+`just install` builds the web UI and then runs this script, so it signs the same way when `AGPJ_CODESIGN_IDENTITY` is set. Without `AGPJ_CODESIGN_IDENTITY`, or on another OS, the script installs without signing and prints a note.
 
 - The first run after signing still asks once. Choose **Always Allow**.
 - `codesign` may ask once for permission to use the signing key. Enter your login password and choose **Always Allow**. Run the script from a terminal app: from a non-GUI context, `codesign` can fail with `errSecInternalComponent`.
@@ -209,8 +209,8 @@ To try an installation without touching `~/.cargo/bin` or your board:
 ```sh
 root="$(mktemp -d)"
 cargo install --path . --locked --root "$root"
-export AGBOARD_HOME="$(mktemp -d)"
-"$root/bin/agboard" --help
-"$root/bin/agboard" project create demo
-"$root/bin/agboard" --project demo ls
+export AGPJ_HOME="$(mktemp -d)"
+"$root/bin/agpj" --help
+"$root/bin/agpj" project create demo
+"$root/bin/agpj" --project demo ls
 ```

@@ -10,20 +10,20 @@ use std::process::{Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::file_store::FileStore;
+use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+use agent_project::file_store::FileStore;
 use assert_cmd::Command as AssertCommand;
 use serde_json::Value;
 use tempfile::{TempDir, tempdir};
 
 use serve_process::ServeProcess;
 
-fn agboard(home: &Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+fn agpj(home: &Path, args: &[&str]) -> std::process::Output {
+    Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(args)
         .output()
@@ -31,7 +31,7 @@ fn agboard(home: &Path, args: &[&str]) -> std::process::Output {
 }
 
 fn success(home: &Path, args: &[&str]) -> String {
-    let output = agboard(home, args);
+    let output = agpj(home, args);
     assert!(
         output.status.success(),
         "{}
@@ -87,11 +87,11 @@ fn add(home: &Path, project: &str, title: &str, assignee: &str, epic: Option<&st
 }
 
 fn serve(home: &Path) -> ServeProcess {
-    let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+    let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
@@ -108,11 +108,11 @@ fn serve(home: &Path) -> ServeProcess {
 }
 
 fn wait(home: &Path, project: &str, timeout: &str) -> std::process::Child {
-    Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+    Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args([
             "--project",
@@ -299,7 +299,7 @@ fn task_mode_selects_the_first_eligible_task_in_progress_order_without_writing()
                 description: "draft body".into(),
                 assignee: Assignee::Ai,
                 actor: Actor::Human,
-                draft: Some(agent_board::domain::Draft::Human),
+                draft: Some(agent_project::domain::Draft::Human),
             },
             chrono::Utc::now(),
         )
@@ -645,7 +645,7 @@ fn a_dropped_event_stream_is_an_error_not_an_idle_timeout() {
 #[test]
 fn errors_and_invalid_cli_inputs_are_not_idle_completions() {
     let (home, _) = demo();
-    let no_server = agboard(
+    let no_server = agpj(
         home.path(),
         &[
             "--project",
@@ -687,12 +687,12 @@ fn errors_and_invalid_cli_inputs_are_not_idle_completions() {
         ],
         vec!["--project", "Demo", "wait", "--timeout", "1"],
     ] {
-        let output = AssertCommand::cargo_bin("agboard")
+        let output = AssertCommand::cargo_bin("agpj")
             .unwrap()
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
-            .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home.path())
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
+            .env("AGPJ_WATCH", "poll")
+            .env("AGPJ_HOME", home.path())
             .env("TZ", "UTC")
             .args(args)
             .assert()
@@ -716,7 +716,7 @@ fn malformed_project_data_fails_instead_of_becoming_an_idle_timeout() {
         .join("task.json");
     fs::write(task_json, "{").unwrap();
 
-    let result = agboard(
+    let result = agpj(
         home.path(),
         &[
             "--project",

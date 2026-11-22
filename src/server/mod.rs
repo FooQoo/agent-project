@@ -44,7 +44,7 @@ use std::sync::{Arc, RwLock};
 use tokio::sync::broadcast;
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::index::ProjectIndex;
 use crate::file_store::watch::{Reloader, WatchMode};
 use crate::paths;
@@ -103,21 +103,21 @@ pub fn run_until<F: Future<Output = ()>>(
     config: ServeConfig,
     shutdown: F,
     on_ready: impl FnOnce(SocketAddr),
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     let data_dir = paths::data_dir()?;
     run_until_in(&data_dir, WatchMode::from_env(), config, shutdown, on_ready)
 }
 
 /// [`run_until`] with the data area and the watch mode given, not read from the
 /// environment. Embedded servers in the tests use it so that they need not set
-/// `AGBOARD_HOME` for the whole process.
+/// `AGPJ_HOME` for the whole process.
 pub fn run_until_in<F: Future<Output = ()>>(
     data_dir: &Path,
     watch: WatchMode,
     config: ServeConfig,
     shutdown: F,
     on_ready: impl FnOnce(SocketAddr),
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     run_until_with_monitor_in(
         data_dir,
         watch,
@@ -135,9 +135,9 @@ pub fn run_until_with_monitor<F: Future<Output = ()>>(
     monitor: MonitorOptions,
     shutdown: F,
     on_ready: impl FnOnce(SocketAddr, Option<MonitorReady>),
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     // Resolve the process environment once. Another embedded caller can change
-    // AGBOARD_HOME while startup is awaiting file locks or filesystem watches.
+    // AGPJ_HOME while startup is awaiting file locks or filesystem watches.
     let data_dir = paths::data_dir()?;
     run_until_with_monitor_in(
         &data_dir,
@@ -157,7 +157,7 @@ pub fn run_until_with_monitor_in<F: Future<Output = ()>>(
     monitor: MonitorOptions,
     shutdown: F,
     on_ready: impl FnOnce(SocketAddr, Option<MonitorReady>),
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     let launch = launch::Launch {
         data_dir,
         watch,
@@ -179,7 +179,7 @@ pub fn run_auto_until<F: Future<Output = ()>>(
     monitor: MonitorOptions,
     shutdown: F,
     on_ready: impl FnOnce(Ready),
-) -> Result<Ended, AgboardError> {
+) -> Result<Ended, AgpjError> {
     let data_dir = paths::data_dir()?;
     run_auto_until_in(
         &data_dir,
@@ -201,7 +201,7 @@ pub fn run_auto_until_in<F: Future<Output = ()>>(
     monitor: MonitorOptions,
     shutdown: F,
     on_ready: impl FnOnce(Ready),
-) -> Result<Ended, AgboardError> {
+) -> Result<Ended, AgpjError> {
     let launch = launch::Launch {
         data_dir,
         watch,

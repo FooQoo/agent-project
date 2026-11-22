@@ -7,7 +7,7 @@ use std::io::Write;
 use crate::cli::args::{AttachmentAddArgs, AttachmentCommand, AttachmentGetArgs, AttachmentLsArgs};
 use crate::cli::{Context, Outcome};
 use crate::domain::AttachmentInput;
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 use crate::file_store::layout;
 use crate::file_store::model::AttachmentOwner;
 use serde_json::json;
@@ -15,7 +15,7 @@ use serde_json::json;
 pub fn run(
     ctx: &mut Context,
     args: &crate::cli::args::AttachmentArgs,
-) -> Result<Outcome, AgboardError> {
+) -> Result<Outcome, AgpjError> {
     match &args.command {
         AttachmentCommand::Ls(args) => list(ctx, args),
         AttachmentCommand::Add(args) => add(ctx, args),
@@ -23,7 +23,7 @@ pub fn run(
     }
 }
 
-fn list(ctx: &mut Context, args: &AttachmentLsArgs) -> Result<Outcome, AgboardError> {
+fn list(ctx: &mut Context, args: &AttachmentLsArgs) -> Result<Outcome, AgpjError> {
     let attachments = ctx.files.task(ctx.project_id()?, args.task_id)?.attachments;
     let human = if attachments.is_empty() {
         format!("#{} has no attachments.\n", args.task_id)
@@ -40,7 +40,7 @@ fn list(ctx: &mut Context, args: &AttachmentLsArgs) -> Result<Outcome, AgboardEr
     })
 }
 
-fn add(ctx: &mut Context, args: &AttachmentAddArgs) -> Result<Outcome, AgboardError> {
+fn add(ctx: &mut Context, args: &AttachmentAddArgs) -> Result<Outcome, AgpjError> {
     let bytes = fs::read(&args.file).map_err(|e| file_error(&args.file, FileAction::Read, e))?;
     let id = random_id()?;
     let attachment = ctx.files.add_attachment(
@@ -70,7 +70,7 @@ fn add(ctx: &mut Context, args: &AttachmentAddArgs) -> Result<Outcome, AgboardEr
     })
 }
 
-fn get(ctx: &mut Context, args: &AttachmentGetArgs) -> Result<Outcome, AgboardError> {
+fn get(ctx: &mut Context, args: &AttachmentGetArgs) -> Result<Outcome, AgpjError> {
     let stored = ctx.files.attachment_path(
         ctx.project_id()?,
         &AttachmentOwner::Task(args.task_id),
@@ -95,16 +95,16 @@ fn get(ctx: &mut Context, args: &AttachmentGetArgs) -> Result<Outcome, AgboardEr
     })
 }
 
-fn random_id() -> Result<String, AgboardError> {
-    crate::file_store::io::random_hex(16).map_err(|e| AgboardError::FileError {
+fn random_id() -> Result<String, AgpjError> {
+    crate::file_store::io::random_hex(16).map_err(|e| AgpjError::FileError {
         action: FileAction::Write,
         file: "attachment".into(),
         reason: e.to_string(),
     })
 }
 
-fn file_error(path: &std::path::Path, action: FileAction, error: std::io::Error) -> AgboardError {
-    AgboardError::FileError {
+fn file_error(path: &std::path::Path, action: FileAction, error: std::io::Error) -> AgpjError {
+    AgpjError::FileError {
         action,
         file: path.display().to_string(),
         reason: error.to_string(),

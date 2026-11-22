@@ -4,7 +4,7 @@
 use chrono::{DateTime, Utc};
 
 use crate::domain::{Changed, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::history::{ParseMode, parse_task};
 use crate::file_store::io;
@@ -33,18 +33,18 @@ impl FileStore {
         condition: &str,
         done: bool,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         let md_path = layout::task_md(&layout::task_dir(&project_dir, id));
         let label = layout::shared_label(shared, &md_path);
         let parsed = parse_task(&io::read_text(&md_path, &label)?, ParseMode::Stored);
         if let Some(defect) = parsed.acceptance_defects.first() {
-            return Err(AgboardError::FileInvalid {
+            return Err(AgpjError::FileInvalid {
                 file: label,
                 field: defect.field.clone(),
                 reason: defect.reason.clone(),
@@ -52,7 +52,7 @@ impl FileStore {
         }
         let mut items = parsed.acceptance;
         let Some(item) = items.iter_mut().find(|item| item.id == condition) else {
-            return Err(AgboardError::InvalidArgument {
+            return Err(AgpjError::InvalidArgument {
                 message: format!("Task #{id} has no acceptance condition {condition}."),
                 command: None,
             });

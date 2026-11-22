@@ -129,7 +129,7 @@ async function write<T>(method: 'POST' | 'PUT', path: string, body: unknown): Pr
         Accept: 'application/json',
         'Content-Type': 'application/json',
         ...authHeaders(),
-        'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+        'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
       },
       body: JSON.stringify(body),
     });

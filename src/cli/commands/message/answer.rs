@@ -6,7 +6,7 @@ use super::{Printed, answer_text, finish};
 use crate::cli::args::{AnswerViaArg, MessageAnswerArgs, read_reason};
 use crate::cli::run::write_text;
 use crate::cli::{Context, Env, errors, output};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::AnswerItem;
 use crate::file_store::qa::{AnswerVia, QuestionStatus};
 
@@ -17,7 +17,7 @@ pub(super) fn run(ctx: &mut Context, env: &mut Env, args: &MessageAnswerArgs) ->
     };
     let prepared = (|| {
         let text = read_reason(args.text.as_deref(), args.text_file.as_deref())?;
-        Ok::<_, AgboardError>((text, ctx.project_id()?.clone()))
+        Ok::<_, AgpjError>((text, ctx.project_id()?.clone()))
     })();
     let (text, project) = match prepared {
         Ok(found) => found,
@@ -60,12 +60,12 @@ pub(super) fn run(ctx: &mut Context, env: &mut Env, args: &MessageAnswerArgs) ->
 fn refused(
     ctx: &Context,
     env: &mut Env,
-    error: &AgboardError,
+    error: &AgpjError,
     context: Option<(crate::domain::ProjectId, String)>,
 ) -> i32 {
     let recorded = match (error, &context) {
         (
-            AgboardError::QuestionAnswered { .. } | AgboardError::QuestionWithdrawn { .. },
+            AgpjError::QuestionAnswered { .. } | AgpjError::QuestionWithdrawn { .. },
             Some((project, id)),
         ) => ctx.files.question(project, id).ok(),
         _ => None,

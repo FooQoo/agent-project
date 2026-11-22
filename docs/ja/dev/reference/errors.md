@@ -79,23 +79,23 @@
 
 | コード | 発生条件 | 終了コード | HTTP |
 | --- | --- | --- | --- |
-| `already_serving` | このデータ領域で、すでに別の`serve`が動いている。自動で起動したサーバーなら、理由には動かし続けるための`agboard serve -d`を示す。 | 1 | なし |
-| `port_in_use` | `serve`に指定したポートが使われている。理由には使っているものを示す。データ領域の違う別のAgent Boardのサーバー（pidつき）か、別のプログラム。自動のサーバーは代わりに別のポートを使う。 | 1 | なし |
-| `local_network_denied` | OSやサンドボックスが、`agboard`が`127.0.0.1`で待ち受けることや接続することを拒んだ（`EACCES`か`EPERM`）。Codexでは`agboard setup`で`agboard`をサンドボックスの外で動かせるようにする。 | 1 | なし |
-| `board_unavailable` | 回答を待つ`message ask`、`message wait`、`wait`、`open`、Hookがサーバーに届かない。自動起動が無効（`AGBOARD_AUTOSTART=0`）、サーバーを起動できない（理由に`serve.log`を示す）、`serve.json`のサーバーが応えない、接続に失敗した、のどれか。回答を待つ`message ask`は保存前にサーバーを確認するため、利用できない場合は質問を保存しない。`--no-wait`ならサーバーは不要。 | 1 | なし |
+| `already_serving` | このデータ領域で、すでに別の`serve`が動いている。自動で起動したサーバーなら、理由には動かし続けるための`agpj serve -d`を示す。 | 1 | なし |
+| `port_in_use` | `serve`に指定したポートが使われている。理由には使っているものを示す。データ領域の違う別のAgent Projectのサーバー（pidつき）か、別のプログラム。自動のサーバーは代わりに別のポートを使う。 | 1 | なし |
+| `local_network_denied` | OSやサンドボックスが、`agpj`が`127.0.0.1`で待ち受けることや接続することを拒んだ（`EACCES`か`EPERM`）。Codexでは`agpj setup`で`agpj`をサンドボックスの外で動かせるようにする。 | 1 | なし |
+| `board_unavailable` | 回答を待つ`message ask`、`message wait`、`wait`、`open`、Hookがサーバーに届かない。自動起動が無効（`AGPJ_AUTOSTART=0`）、サーバーを起動できない（理由に`serve.log`を示す）、`serve.json`のサーバーが応えない、接続に失敗した、のどれか。回答を待つ`message ask`は保存前にサーバーを確認するため、利用できない場合は質問を保存しない。`--no-wait`ならサーバーは不要。 | 1 | なし |
 | `remote_unavailable` | `--project`を付けた`show remote`が報告できる、準備のできたngrok接続がない。サーバーが動いていないか、接続が`ready`ではない（無効、開始中、再接続中、失敗など）。理由にどちらかを示し、接続が失敗したときは失敗コードも示す。何も起動せず、アドレスと合言葉は出力しない。 | 1 | なし |
 | `invalid_domain` | `setup remote --domain`の値がホスト名だけではない（スキーム、パス、ポート、ワイルドカード、空白を含む）。ボードの設定APIも同じコードをHTTP 422で返す。何も保存しない。 | 2 | 422 |
 | `keychain_unavailable` | `setup remote --token-stdin`（または`setup`のトークンの質問）がOSのキーチェーンを使えない。同じコマンドのほかのオプションも含めて、何も保存しない。ボードのAPIも同じコードをHTTP 409で返す。 | 1 | 409 |
-| `browser_open_failed` | `open`が、ブラウザーを開くプログラム（`open`、`xdg-open`、`AGBOARD_BROWSER_OPENER`）を起動できなかった。理由に、手で開くアドレスを示す。ブラウザーを開いてはいけないとき（`AGBOARD_OPEN_BROWSER=0`、SSH、画面がない）はエラーではない。 | 1 | なし |
-| `agent_cli_missing` | `claude`または`codex`がサーバーの`PATH`にない（または`AGBOARD_CLAUDE_BIN`・`AGBOARD_CODEX_BIN`がファイルを指していない）ため、ボードがセッションを起動できない。 | 1 | 409 |
+| `browser_open_failed` | `open`が、ブラウザーを開くプログラム（`open`、`xdg-open`、`AGPJ_BROWSER_OPENER`）を起動できなかった。理由に、手で開くアドレスを示す。ブラウザーを開いてはいけないとき（`AGPJ_OPEN_BROWSER=0`、SSH、画面がない）はエラーではない。 | 1 | なし |
+| `agent_cli_missing` | `claude`または`codex`がサーバーの`PATH`にない（または`AGPJ_CLAUDE_BIN`・`AGPJ_CODEX_BIN`がファイルを指していない）ため、ボードがセッションを起動できない。 | 1 | 409 |
 | `agent_cli_logged_out` | エージェントのCLIはあるが、ログインしていない（`claude auth status`の`loggedIn`がfalse、または`codex login status`が失敗）。理由に、ターミナルでログインするよう示す。 | 1 | 409 |
 | `session_launch_refused` | どちらかのツールのセッションをボードがすでに起動していて、動いている、再起動を待っている、または張り付いている。ボードが起動するセッションは、2つのツールと全プロジェクトを通して全体で1つまで。理由に、そのツールを示し、先に止めるよう示す。 | 1 | 409 |
 | `session_launch_failed` | エージェントのCLIを起動できなかった、ログファイルに書けなかった、またはログインの確認が20秒以内に終わらなかった。 | 1 | 500 |
-| `project_has_no_folder` | プロジェクトに、存在する結び付いたフォルダがないため、セッションを起動できない。`agboard project bind`で結び付ける。 | 1 | 409 |
+| `project_has_no_folder` | プロジェクトに、存在する結び付いたフォルダがないため、セッションを起動できない。`agpj project bind`で結び付ける。 | 1 | 409 |
 | `cursor_invalid` | cursorの形式が誤っている、または別のプロジェクトのもの。 | 1 | なし |
 | `wait_timeout` | 変更待ち（`wait --after`）が、変更のないまま任意の`--timeout`に達した。`message ask`や`message wait`が`--timeout`に達するのはエラーではなく、`timeout`イベントを出して終了コード5で終わる。 | 1 | なし |
-| `hook_cwd_unavailable` | Hookの入力の`cwd`が、存在しない、または読めない絶対パス。`AGBOARD_ERROR`として返す。確認できないフォルダを未登録とは扱わない。 | なし（Hookの出力） | なし |
-| `invalid_hook_input` | Hookの入力がJSONでない、大きすぎる、または`cwd`が文字列でない、絶対パスでない。`AGBOARD_ERROR`として返す。 | なし（Hookの出力） | なし |
+| `hook_cwd_unavailable` | Hookの入力の`cwd`が、存在しない、または読めない絶対パス。`AGPJ_ERROR`として返す。確認できないフォルダを未登録とは扱わない。 | なし（Hookの出力） | なし |
+| `invalid_hook_input` | Hookの入力がJSONでない、大きすぎる、または`cwd`が文字列でない、絶対パスでない。`AGPJ_ERROR`として返す。 | なし（Hookの出力） | なし |
 | `forbidden` | Webの書き込みが保護に失敗した（Host・Origin・`Sec-Fetch-Site`・トークン）。 | なし | 403 |
 | `invalid_sections` | Detail経路の`sections`クエリが`document`・`history`・`document,history`のいずれでもない。[Web API](./web-api.md#summaryとdetail)を参照。 | なし | 400 |
 | `not_implemented` | SummaryまたはDetailの経路はあるが、ハンドラーがまだ書かれていない。 | なし | 501 |
@@ -132,7 +132,7 @@ ngrokの入口では、Hostの確認に失敗した要求は理由`not available
 | `docs_not_markdown` | ファイルのルートに、`.md`または`.mdx`で終わらない名前を渡した。 | なし | 415 |
 | `docs_asset_type` | 画像のルートに、PNG・JPEG・WebP・GIF・AVIF・SVG以外を渡した。 | なし | 415 |
 | `docs_open_failed` | 開くルートが`docs/`またはファイルを開けなかった。フォルダがない、またはプログラムを起動できない。どちらかは`reason`に出る。 | なし | 500 |
-| `release_doc_refused` | `release doc`がリリースドキュメントを書かなかった。`agboard:generated`のマーカー行が、開始行1つとそれに続く終了行1つになっていない、パスが通常のファイルでない、または生成中にファイルが変わった。ファイルは元のまま残ります。マーカーを直すか、コマンドをもう一度実行します。 | 1 | 409 |
+| `release_doc_refused` | `release doc`がリリースドキュメントを書かなかった。`agpj:generated`のマーカー行が、開始行1つとそれに続く終了行1つになっていない、パスが通常のファイルでない、または生成中にファイルが変わった。ファイルは元のまま残ります。マーカーを直すか、コマンドをもう一度実行します。 | 1 | 409 |
 | `docs_too_large` | 2 MiBを超えるファイル、または10 MiBを超える画像。 | なし | 413 |
 | `docs_not_utf8` | ファイルが正しいUTF-8のテキストでない。ファイルは変更しない。 | なし | 422 |
 

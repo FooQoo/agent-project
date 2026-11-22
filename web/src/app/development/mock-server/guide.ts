@@ -1,7 +1,7 @@
 import type { MockResponse, Routes } from './types.ts';
 import { error, forbidden, invalidJson, json, parseBody } from './wire.ts';
 
-// The first-run guide's routes, as `agboard serve` answers them (`src/server/api/onboarding.rs`):
+// The first-run guide's routes, as `agpj serve` answers them (`src/server/api/onboarding.rs`):
 // the guide runs in the browser, so the server only keeps whether it has been seen. The state
 // lives in memory, so every new page (and every reset) offers the guide again.
 

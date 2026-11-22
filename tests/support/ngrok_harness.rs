@@ -9,15 +9,15 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::monitor_connection::contracts::PublicOrigin;
-use agent_board::server::monitor_connection::keychain::{TokenVault, VaultError};
-use agent_board::server::monitor_connection::lifecycle::{
+use agent_project::error::AgpjError;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::monitor_connection::contracts::PublicOrigin;
+use agent_project::server::monitor_connection::keychain::{TokenVault, VaultError};
+use agent_project::server::monitor_connection::lifecycle::{
     Connector, FailureCode, MonitorEnv, OpenFailure, OpenFuture, OpenRequest, OpenedTunnel, Secret,
 };
-use agent_board::server::push_delivery::{Outcome, PushTransport, Request, SendFuture};
-use agent_board::server::{MonitorOptions, MonitorReady, ServeConfig, run_until_with_monitor_in};
+use agent_project::server::push_delivery::{Outcome, PushTransport, Request, SendFuture};
+use agent_project::server::{MonitorOptions, MonitorReady, ServeConfig, run_until_with_monitor_in};
 use serde_json::{Value, json};
 
 use super::support::server_thread;
@@ -161,7 +161,7 @@ pub struct Server {
     pub push: Arc<RecordingPush>,
     pub ready: Option<MonitorReady>,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 /// A keychain in memory: saved tokens, a switch to make it unusable, and a count
@@ -243,7 +243,7 @@ impl TokenVault for MockVault {
 pub struct Opts {
     pub vault: Arc<MockVault>,
     pub env_token: bool,
-    /// `AGBOARD_NGROK_DOMAIN`.
+    /// `AGPJ_NGROK_DOMAIN`.
     pub env_domain: Option<String>,
     pub explicit: bool,
     pub mock: Arc<MockConnector>,
@@ -281,7 +281,7 @@ impl Default for Opts {
 }
 
 impl Server {
-    pub fn try_start(home: &Path, opts: Opts) -> Result<Self, AgboardError> {
+    pub fn try_start(home: &Path, opts: Opts) -> Result<Self, AgpjError> {
         let data_dir = home.to_path_buf();
         let (tx, rx) = mpsc::channel();
         let (stop_tx, stop_rx) = tokio::sync::oneshot::channel();
@@ -340,7 +340,7 @@ impl Server {
             &[
                 ("Origin", &origin),
                 ("Sec-Fetch-Site", "same-origin"),
-                ("X-Agboard-Token", &self.token),
+                ("X-Agpj-Token", &self.token),
                 ("Content-Type", "application/json"),
             ],
             &body.to_string(),

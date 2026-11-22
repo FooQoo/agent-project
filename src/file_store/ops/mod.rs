@@ -52,13 +52,13 @@ use super::reader;
 use super::transaction;
 use crate::clock::{format_utc, parse_utc};
 use crate::domain::{Actor, Column, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// A Done task is immutable to agent-facing FileStore operations. User
 /// operations keep their existing reopen/edit paths.
-pub(super) fn ensure_ai_task_not_done(task: &TaskFile, actor: Actor) -> Result<(), AgboardError> {
+pub(super) fn ensure_ai_task_not_done(task: &TaskFile, actor: Actor) -> Result<(), AgpjError> {
     if actor == Actor::Ai && task.task_status == Column::Done {
-        Err(AgboardError::TaskIsDone { id: task.id })
+        Err(AgpjError::TaskIsDone { id: task.id })
     } else {
         Ok(())
     }
@@ -74,7 +74,7 @@ pub(super) fn stamp(now: DateTime<Utc>) -> DateTime<Utc> {
 pub(crate) fn lock_project(
     shared: &Path,
     project: &ProjectId,
-) -> Result<(PathBuf, WriteLock), AgboardError> {
+) -> Result<(PathBuf, WriteLock), AgpjError> {
     let dir = reader::project_dir_checked(shared, project)?;
     let lock = WriteLock::acquire(&layout::write_lock(&dir))?;
     transaction::recover_locked(&dir)?;
@@ -86,18 +86,14 @@ pub(super) fn save_project(
     shared: &Path,
     project_dir: &Path,
     file: &ProjectFile,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     let path = layout::project_file(project_dir);
     io::write_json(&path, file, &layout::shared_label(shared, &path))
 }
 
 /// The position after the last unarchived task of a lane, read from the files.
 /// Tasks whose `task.json` is broken are not counted.
-pub(super) fn lane_end(
-    shared: &Path,
-    project: &ProjectId,
-    lane: Column,
-) -> Result<i64, AgboardError> {
+pub(super) fn lane_end(shared: &Path, project: &ProjectId, lane: Column) -> Result<i64, AgpjError> {
     let project_dir = layout::project_dir(shared, project);
     let mut last = 0;
     for task_id in reader::task_ids(&project_dir)? {

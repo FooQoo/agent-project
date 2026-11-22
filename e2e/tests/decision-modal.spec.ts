@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
-import { agboardOk, askArgs, decisionJson, mainProject, questionJson, resetBoard, type TaskJson } from '../helpers/agboard';
+import { agpjOk, askArgs, decisionJson, mainProject, questionJson, resetBoard, type TaskJson } from '../helpers/agpj';
 import {
   answerButton,
   answerDialog,
@@ -34,17 +34,17 @@ interface Shown extends TaskJson {
 const lane = (page: Page, name: string) => page.getByRole('region', { name });
 
 function show(id: number): Shown {
-  return JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  return JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 }
 
 /** The agent asks on card #13 (Doing, idle on a fresh board) and does not wait; returns the question id. */
 function ask(question: string): string {
-  return JSON.parse(agboardOk(mainProject, ['--json', ...askArgs('13', decisionJson(question))]).stdout.split('\n')[0]).questions[0].id as string;
+  return JSON.parse(agpjOk(mainProject, ['--json', ...askArgs('13', decisionJson(question))]).stdout.split('\n')[0]).questions[0].id as string;
 }
 
 /** Like `ask`, for a question without options, which is answered with a note alone. */
 function askNote(question: string): string {
-  return JSON.parse(agboardOk(mainProject, ['--json', ...askArgs('13', questionJson(question, []))]).stdout.split('\n')[0]).questions[0].id as string;
+  return JSON.parse(agpjOk(mainProject, ['--json', ...askArgs('13', questionJson(question, []))]).stdout.split('\n')[0]).questions[0].id as string;
 }
 
 const png = Buffer.from(
@@ -57,7 +57,7 @@ let work: string;
 
 test.beforeAll(async () => {
   images = await startImageServer();
-  work = mkdtempSync(path.join(os.tmpdir(), 'agent-board-e2e-dm-'));
+  work = mkdtempSync(path.join(os.tmpdir(), 'agent-project-e2e-dm-'));
 });
 
 test.afterAll(async () => {
@@ -123,7 +123,7 @@ test('Later closes the dialog without answering, and the board keeps updating', 
   await expect(answerButton(page, 13)).toHaveText('Answer the question');
 
   // A change made through the CLI shows up, and nothing was sent.
-  agboardOk(mainProject, ['add', 'Added while a question was open']);
+  agpjOk(mainProject, ['add', 'Added while a question was open']);
   await expect(lane(page, 'Todo').getByText('Added while a question was open')).toBeVisible({ timeout: 15_000 });
   expect(show(13).agentStatus).toBe('awaiting_answer');
 
@@ -145,7 +145,7 @@ test('a withdrawn question leaves the open dialog and cannot be answered', async
   await answerNote(page).fill('Typed before it was withdrawn.');
 
   // The agent withdraws the question while the dialog is open: the dialog shows the list, without the question.
-  agboardOk(mainProject, ['message', 'withdraw', request, '--actor', 'ai']);
+  agpjOk(mainProject, ['message', 'withdraw', request, '--actor', 'ai']);
   await expect(dialog.getByRole('region', { name: 'Your answer' })).toHaveCount(0);
   await expect(dialog.getByRole('button', { name: 'Send answer' })).toHaveCount(0);
   await expect(dialog).not.toContainText('Will this stay?');
@@ -160,7 +160,7 @@ test('a withdrawn question leaves the open dialog and cannot be answered', async
 test('the question shows a table, code, a link, an attached picture and an external picture', async ({ page }) => {
   const picture = path.join(work, 'attached.png');
   writeFileSync(picture, png);
-  const added = JSON.parse(agboardOk(mainProject, ['attachment', 'add', '13', '--file', picture, '--actor', 'ai', '--json']).stdout);
+  const added = JSON.parse(agpjOk(mainProject, ['attachment', 'add', '13', '--file', picture, '--actor', 'ai', '--json']).stdout);
   const id = (added.attachment?.id ?? added.id) as string;
   const question = [
     '## Plan',
@@ -169,7 +169,7 @@ test('the question shows a table, code, a link, an attached picture and an exter
     '| --- | --- |',
     '| Replace | low |',
     '',
-    'Run `agboard setup` and read [the notes](' + images.origin + '/page.html).',
+    'Run `agpj setup` and read [the notes](' + images.origin + '/page.html).',
     '',
     '```ts',
     'const answer = 42;',

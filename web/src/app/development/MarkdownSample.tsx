@@ -3,7 +3,7 @@ import { MarkdownView } from '../../shared/markdown/MarkdownView';
 
 const DETAIL = `## 目的・責務
 
-agboard initでボードの保存領域を作る。保存先が既にあれば、変更しない。
+agpj initでボードの保存領域を作る。保存先が既にあれば、変更しない。
 
 ## 完了条件
 

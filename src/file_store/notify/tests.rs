@@ -236,7 +236,7 @@ fn dismissing_sets_the_flag_on_that_line_only_and_keeps_every_line() {
     assert_eq!(f.store.latest_summary_end(&f.project), Some(at(2, 12, 0)));
     assert!(matches!(
         f.store.dismiss_summary(&f.project, "nope"),
-        Err(AgboardError::MessageNotFound { .. })
+        Err(AgpjError::MessageNotFound { .. })
     ));
 }
 
@@ -286,7 +286,7 @@ fn a_project_that_does_not_exist_is_not_found() {
     let other: ProjectId = "0123456789abcdef0123456789abcdef".parse().unwrap();
     assert!(matches!(
         f.store.summaries(&other),
-        Err(AgboardError::ProjectNotFound { .. })
+        Err(AgpjError::ProjectNotFound { .. })
     ));
 }
 

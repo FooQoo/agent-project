@@ -1,6 +1,6 @@
 //! A resident agent end to end, with a fake `claude` or `codex` that behaves as the resident skill
 //! tells a session the board launched to: it never runs `wait`, takes the message the board pushes
-//! when it is idle, acts on it with the real `agboard` commands, and ends the turn. The server runs on port 0
+//! when it is idle, acts on it with the real `agpj` commands, and ends the turn. The server runs on port 0
 //! in a temporary data directory; nothing here needs a real agent CLI.
 #![cfg(unix)]
 
@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 use serde_json::Value;
 use tempfile::tempdir;
 
-use common::{Running, agboard};
+use common::{Running, agpj};
 
 /// Poll `check` until it returns a value, or fail at the deadline.
 fn until<T>(what: &str, mut check: impl FnMut() -> Option<T>) -> T {
@@ -46,7 +46,7 @@ fn fake_session(tool: &str, bin: &str, home: &Path, log: &Path) -> String {
             r#"while IFS= read -r line; do
   id=$(printf '%s' "$line" | sed -n 's/^{"id":\([0-9][0-9]*\),.*/\1/p')
   case "$line" in
-    *'"method":"initialize"'*) printf '{"id":%s,"result":{"userAgent":"agboard/9.9.9 (fake)"}}\n' "$id" ;;
+    *'"method":"initialize"'*) printf '{"id":%s,"result":{"userAgent":"agpj/9.9.9 (fake)"}}\n' "$id" ;;
     *'"method":"thread/start"'*) printf '{"id":%s,"result":{"thread":{"id":"e2e-fake"}}}\n' "$id" ;;
     *'"method":"turn/start"'*)
       turn=$((turn+1))
@@ -74,10 +74,10 @@ done
 case "$1" in
   auth|login) echo '{{"loggedIn":true}}'; exit 0 ;;
 esac
-export AGBOARD_HOME='{home}' AGBOARD_AUTOSTART=0 AGBOARD_OPEN_BROWSER=0 AGBOARD_WATCH=poll TZ=UTC
+export AGPJ_HOME='{home}' AGPJ_AUTOSTART=0 AGPJ_OPEN_BROWSER=0 AGPJ_WATCH=poll TZ=UTC
 LOG='{log}'
 echo $$ >> '{log}/starts'
-echo "$AGBOARD_SESSION_ORIGIN $AGBOARD_SESSION_TOOL" >> '{log}/env'
+echo "$AGPJ_SESSION_ORIGIN $AGPJ_SESSION_TOOL" >> '{log}/env'
 {setup}
 handle() {{
   printf '%s\n' "$1" >> "$LOG/pushed"
@@ -113,8 +113,8 @@ fn sessions(server: &Running, base: &str) -> Value {
 /// process environment before its server starts.
 #[test]
 fn a_launched_session_is_pushed_work_is_restarted_and_stops() {
-    scenario("claude-code", "claude", "AGBOARD_CLAUDE_BIN");
-    scenario("codex", "codex", "AGBOARD_CODEX_BIN");
+    scenario("claude-code", "claude", "AGPJ_CLAUDE_BIN");
+    scenario("codex", "codex", "AGPJ_CODEX_BIN");
 }
 
 fn scenario(tool: &str, program: &str, bin_var: &str) {
@@ -124,23 +124,18 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
     let fake = tools.path().join(program);
     std::fs::write(
         &fake,
-        fake_session(
-            program,
-            env!("CARGO_BIN_EXE_agboard"),
-            home.path(),
-            log.path(),
-        ),
+        fake_session(program, env!("CARGO_BIN_EXE_agpj"), home.path(), log.path()),
     )
     .unwrap();
     std::fs::set_permissions(&fake, std::fs::Permissions::from_mode(0o755)).unwrap();
     // SAFETY: set before the server of this run starts, and runs of this test binary are serial.
     unsafe {
         std::env::set_var(bin_var, &fake);
-        std::env::set_var("AGBOARD_SESSION_GRACE_MS", "5000");
+        std::env::set_var("AGPJ_SESSION_GRACE_MS", "5000");
     }
 
     // A project with no task, so the only work the session meets is the request below.
-    let (code, _, err) = agboard(home.path(), &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home.path(), &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
     let server = Running::start(home.path());
     let id = server.get("/api/projects").json()["projects"][0]["id"]
@@ -180,11 +175,11 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
         &first["message"]["content"]
     };
     let text = text.as_str().unwrap();
-    assert!(text.contains("agboard skills resident"));
-    assert!(text.contains("Do not run `agboard wait`"), "{text}");
+    assert!(text.contains("agpj skills resident"));
+    assert!(text.contains("Do not run `agpj wait`"), "{text}");
 
     // An external session still attaches with `wait` and is counted next to the board's own.
-    let mut external = std::process::Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let mut external = std::process::Command::new(env!("CARGO_BIN_EXE_agpj"))
         .args([
             "--project",
             "Demo",
@@ -194,12 +189,12 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
             "--idle-timeout",
             "60",
         ])
-        .env("AGBOARD_HOME", home.path())
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_WATCH", "poll")
+        .env("AGPJ_HOME", home.path())
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_WATCH", "poll")
         .env("TZ", "UTC")
-        .env_remove("AGBOARD_RESIDENT_ID")
-        .env_remove("AGBOARD_SESSION_ORIGIN")
+        .env_remove("AGPJ_RESIDENT_ID")
+        .env_remove("AGPJ_SESSION_ORIGIN")
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()
@@ -219,7 +214,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
 
     // A request made on the board is pushed to the idle session, which accepts it with no
     // human action.
-    let (code, out, err) = agboard(
+    let (code, out, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -252,7 +247,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
 
     // A question the session asks carries its launch ID, and the person's answer is pushed back
     // to it.
-    let (code, out, err) = agboard(
+    let (code, out, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -272,7 +267,7 @@ fn scenario(tool: &str, program: &str, bin_var: &str) {
     until("the session to be idle again", || {
         (sessions(&server, &base)["health"]["waiting"] == true).then_some(())
     });
-    let (code, out, err) = agboard(
+    let (code, out, err) = agpj(
         home.path(),
         &[
             "--project",

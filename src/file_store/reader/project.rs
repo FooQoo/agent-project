@@ -6,26 +6,26 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use crate::domain::{ProjectId, ProjectMeta};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::io;
 use crate::file_store::layout;
 use crate::file_store::model::{ProjectFile, WorkspaceFile};
 use crate::file_store::validate;
 
 /// The project folder, or `project_not_found` when it does not exist.
-pub fn project_dir_checked(shared: &Path, id: &ProjectId) -> Result<PathBuf, AgboardError> {
+pub fn project_dir_checked(shared: &Path, id: &ProjectId) -> Result<PathBuf, AgpjError> {
     let dir = layout::project_dir(shared, id);
     if dir.is_dir() {
         Ok(dir)
     } else {
-        Err(AgboardError::ProjectNotFound {
+        Err(AgpjError::ProjectNotFound {
             project: id.to_string(),
         })
     }
 }
 
 /// Whether `workspace.json` exists. A present file must pass every check.
-pub fn workspace_present(shared: &Path) -> Result<bool, AgboardError> {
+pub fn workspace_present(shared: &Path) -> Result<bool, AgpjError> {
     let path = layout::workspace_file(shared);
     if !path.is_file() {
         return Ok(false);
@@ -35,7 +35,7 @@ pub fn workspace_present(shared: &Path) -> Result<bool, AgboardError> {
     let file: WorkspaceFile = parse_file(&bytes, &label)?;
     match validate::check_workspace(&file).into_iter().next() {
         None => Ok(true),
-        Some(d) => Err(AgboardError::FileInvalid {
+        Some(d) => Err(AgpjError::FileInvalid {
             file: label,
             field: d.field,
             reason: d.reason,
@@ -45,7 +45,7 @@ pub fn workspace_present(shared: &Path) -> Result<bool, AgboardError> {
 
 /// Every project, sorted by name (binary order). A project whose file is
 /// defective fails the whole list.
-pub fn list_projects(shared: &Path) -> Result<Vec<ProjectMeta>, AgboardError> {
+pub fn list_projects(shared: &Path) -> Result<Vec<ProjectMeta>, AgpjError> {
     if !workspace_present(shared)? {
         return Ok(Vec::new());
     }
@@ -89,7 +89,7 @@ pub(crate) fn meta_of(file: ProjectFile) -> ProjectMeta {
 }
 
 /// Read and check `project.json` of a project.
-pub fn read_project_file(shared: &Path, id: &ProjectId) -> Result<ProjectFile, AgboardError> {
+pub fn read_project_file(shared: &Path, id: &ProjectId) -> Result<ProjectFile, AgpjError> {
     let dir = project_dir_checked(shared, id)?;
     let path = layout::project_file(&dir);
     let label = layout::shared_label(shared, &path);
@@ -100,7 +100,7 @@ pub fn read_project_file(shared: &Path, id: &ProjectId) -> Result<ProjectFile, A
         .next()
     {
         None => Ok(file),
-        Some(d) => Err(AgboardError::FileInvalid {
+        Some(d) => Err(AgpjError::FileInvalid {
             file: label,
             field: d.field,
             reason: d.reason,

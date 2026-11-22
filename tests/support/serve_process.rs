@@ -1,9 +1,9 @@
-//! A child `agboard serve` that a failed test cannot leave behind.
+//! A child `agpj serve` that a failed test cannot leave behind.
 
 use std::ops::{Deref, DerefMut};
 use std::process::Child;
 
-/// An `agboard serve` process that stops when this value is dropped, even if the
+/// An `agpj serve` process that stops when this value is dropped, even if the
 /// test panics first. Wrap the child as soon as it is spawned, so a failed
 /// startup check is covered too.
 pub struct ServeProcess(pub Child);

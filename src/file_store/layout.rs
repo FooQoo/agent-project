@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use super::validate::{self, EpicId};
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The `format` value written to `workspace.json`.
 pub const FORMAT_NAME: &str = "agboard-files";
@@ -149,7 +149,7 @@ pub fn task_asset_path(
     task_id: i64,
     attachment_id: &str,
     ext: &str,
-) -> Result<PathBuf, AgboardError> {
+) -> Result<PathBuf, AgpjError> {
     check_task_id(task_id)?;
     asset_file(&task_dir(project_dir, task_id), attachment_id, ext)
 }
@@ -160,14 +160,14 @@ pub fn epic_asset_path(
     epic: &EpicId,
     attachment_id: &str,
     ext: &str,
-) -> Result<PathBuf, AgboardError> {
+) -> Result<PathBuf, AgpjError> {
     asset_file(&epic_dir(project_dir, epic), attachment_id, ext)
 }
 
-fn asset_file(owner_dir: &Path, attachment_id: &str, ext: &str) -> Result<PathBuf, AgboardError> {
+fn asset_file(owner_dir: &Path, attachment_id: &str, ext: &str) -> Result<PathBuf, AgpjError> {
     validate::check_object_id(attachment_id, "attachmentId")?;
     if !matches!(ext, "png" | "jpg" | "webp" | "gif") {
-        return Err(AgboardError::InvalidValue {
+        return Err(AgpjError::InvalidValue {
             field: "attachment".into(),
             reason: "Only PNG, JPEG, WebP, and GIF images are accepted.".into(),
         });
@@ -175,9 +175,9 @@ fn asset_file(owner_dir: &Path, attachment_id: &str, ext: &str) -> Result<PathBu
     Ok(assets_dir(owner_dir).join(format!("{attachment_id}.{ext}")))
 }
 
-fn check_task_id(task_id: i64) -> Result<(), AgboardError> {
+fn check_task_id(task_id: i64) -> Result<(), AgpjError> {
     if task_id < 1 {
-        return Err(AgboardError::InvalidValue {
+        return Err(AgpjError::InvalidValue {
             field: "taskId".into(),
             reason: "Task IDs start at 1.".into(),
         });

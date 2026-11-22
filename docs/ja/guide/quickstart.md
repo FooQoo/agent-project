@@ -6,7 +6,7 @@ title: クイックスタート
 
 約10分で、最初の仕事を任せます。**AI に依頼**で頼みたいことを伝えると、エージェントが計画をボードに置きます。計画の質問に答えると、エージェントが計画を開始し、作業が進んでタスクが完了に届くまでを見届けます。
 
-インストールとエージェントの設定が済んでいることが前提です。`agboard`をインストールしていなければ、[インストールと起動](./getting-started)と[エージェントを設定する](./delegate/agents#set-up-your-agents)から始めてください。
+インストールとエージェントの設定が済んでいることが前提です。`agpj`をインストールしていなければ、[インストールと起動](./getting-started)と[エージェントを設定する](./delegate/agents#set-up-your-agents)から始めてください。
 
 ## 1. プロジェクトを作ってボードを開く
 
@@ -14,8 +14,8 @@ title: クイックスタート
 
 ```sh
 cd path/to/your/project
-agboard project create "My project"
-agboard serve
+agpj project create "My project"
+agpj serve
 ```
 
 [http://127.0.0.1:7420/](http://127.0.0.1:7420/)を開き、ヘッダーで**My project**を選びます。ボードはまだ空です。計画はエージェントが書くので、タスクを自分で用意する必要はありません。
@@ -28,7 +28,7 @@ agboard serve
 
 > 設定ページにダークモードを追加して、ドキュメントも更新して。
 
-**依頼する**を選ぶと、エージェントが受け取るまで、依頼は**メッセージ**の帯の**あなたの依頼**に数えられます。ボードで待っているセッションがあれば、すぐに受け取ります。`/agent-board:wait`でボードに張り付かせたセッションか、**設定**から起動した常駐エージェントです（[エージェントとの連携](./delegate/agents)を参照）。エージェントのチャットで頼んでもかまいません。
+**依頼する**を選ぶと、エージェントが受け取るまで、依頼は**メッセージ**の帯の**あなたの依頼**に数えられます。ボードで待っているセッションがあれば、すぐに受け取ります。`/agent-project:wait`でボードに張り付かせたセッションか、**設定**から起動した常駐エージェントです（[エージェントとの連携](./delegate/agents)を参照）。エージェントのチャットで頼んでもかまいません。
 
 タスクや条件を自分で用意する必要はありません。エージェントはボードを読み、この規模の依頼なら、すぐに計画を登録します。目的と範囲を書いたエピックと、作業する順に並べたタスク（それぞれに完了条件つき）です。計画だけを頼んだ場合、カードはバックログで待ちます。バックログは「始めない」という意味なので、まだどれも始まりません。ボードでは、いまのところ**下書き**バッジの付いた未着手の通常のカードとして表示されます。エージェントが質問しているあいだ、開いて計画を読めます。
 
@@ -40,7 +40,7 @@ agboard serve
 
 ## 4. エージェントが計画を開始する
 
-質問への回答がそろい、計画に納得したら、あなた自身が`agboard epic send <EPIC-ID> --actor human`で計画を未着手へ送ります。エージェントは送れません。質問が未回答のままだと、`--force`で確認するまで送信は断られます。履歴には、人がタスクを未着手へ送ったことが記録されます。先に変えたいことがあれば、**AIに依頼**で依頼を送るか、チャットで伝えてください。
+質問への回答がそろい、計画に納得したら、あなた自身が`agpj epic send <EPIC-ID> --actor human`で計画を未着手へ送ります。エージェントは送れません。質問が未回答のままだと、`--force`で確認するまで送信は断られます。履歴には、人がタスクを未着手へ送ったことが記録されます。先に変えたいことがあれば、**AIに依頼**で依頼を送るか、チャットで伝えてください。
 
 ## 5. 作業を見守る
 
@@ -54,11 +54,11 @@ agboard serve
 
 ## 手でループを試す
 
-エージェントなしでループを見たいときは、`agboard`コマンドで、エージェントの役を自分で演じられます。普段のやり方ではなく、仕組みを知るための方法です。自分のボードに触れずに試すには、一時的なデータフォルダを1つだけ作ります。最初のターミナルで`export AGBOARD_HOME="$(mktemp -d)"`と`echo "$AGBOARD_HOME"`を実行し、以下で使うほかのターミナルでは、表示されたパスを使って`export AGBOARD_HOME="<表示されたパス>"`を実行します。こうすると、すべてのターミナルが同じフォルダを使います。普段のボードで試す場合、この設定は不要です。
+エージェントなしでループを見たいときは、`agpj`コマンドで、エージェントの役を自分で演じられます。普段のやり方ではなく、仕組みを知るための方法です。自分のボードに触れずに試すには、一時的なデータフォルダを1つだけ作ります。最初のターミナルで`export AGPJ_HOME="$(mktemp -d)"`と`echo "$AGPJ_HOME"`を実行し、以下で使うほかのターミナルでは、表示されたパスを使って`export AGPJ_HOME="<表示されたパス>"`を実行します。こうすると、すべてのターミナルが同じフォルダを使います。普段のボードで試す場合、この設定は不要です。
 
 ### 初回の案内 {#before-you-start-the-first-run-guide}
 
-このデータ領域でボードを初めて開くと、Agent Boardは短い案内を表示します。**ガイドを始める**を選ぶと、「AI に依頼」で依頼を送り、エージェントが計画を立て、質問をし、作業を進めるまでの流れを確かめられます。案内はブラウザの中で動き、エージェントの動きを再現して、計画をボードの上に描きます。ボードやデータが変わることはありません。AIエージェントやAPIキーは要りません。用意されたサンプルの依頼を、本物の「AI に依頼」の画面（**タスクを添付**でサンプルのカードを添付することもできます）から送り、エージェントの質問には、実際の質問と同じ回答フォームで答えます。そこで送った内容や選んだ内容がどこかに送られることはありません。
+このデータ領域でボードを初めて開くと、Agent Projectは短い案内を表示します。**ガイドを始める**を選ぶと、「AI に依頼」で依頼を送り、エージェントが計画を立て、質問をし、作業を進めるまでの流れを確かめられます。案内はブラウザの中で動き、エージェントの動きを再現して、計画をボードの上に描きます。ボードやデータが変わることはありません。AIエージェントやAPIキーは要りません。用意されたサンプルの依頼を、本物の「AI に依頼」の画面（**タスクを添付**でサンプルのカードを添付することもできます）から送り、エージェントの質問には、実際の質問と同じ回答フォームで答えます。そこで送った内容や選んだ内容がどこかに送られることはありません。
 
 - **スキップ**は、案内を閉じます。このデータ領域では、案内は再び表示されません。
 - **ガイドを終了**を選ぶか、Escapeを押すと、案内を途中で終えます。ただし、回答欄に入力している間はEscapeを押しても終わりません。**スキップ**と同じく、案内は閉じたままになります。最後の手順の**完了して始める**でも、案内は閉じたままになります。
@@ -68,8 +68,8 @@ agboard serve
 ### 1. ボードを手で起動する
 
 ```sh
-agboard project create "Quickstart"
-agboard serve --port 7420
+agpj project create "Quickstart"
+agpj serve --port 7420
 ```
 
 サーバーを起動したまま、[http://127.0.0.1:7420/](http://127.0.0.1:7420/)を開きます。ヘッダーで**Quickstart**を選びます。作成直後のボードにはタスクがありません。ここからのコマンドは、別のターミナルで実行します。
@@ -83,8 +83,8 @@ agboard serve --port 7420
 2つ目のターミナルでメッセージの一覧を見て、エージェントが依頼を受け取るときと同じように承認します。
 
 ```sh
-agboard --project "Quickstart" message ls
-agboard --project "Quickstart" message accept Q-1 --actor ai
+agpj --project "Quickstart" message ls
+agpj --project "Quickstart" message accept Q-1 --actor ai
 ```
 
 依頼は**あなたの依頼**から消えます。次に、作業をタスクにします。完了条件を一つ持つファイル`task.md`を作ります。
@@ -104,7 +104,7 @@ Walk through the install steps and note anything that is unclear.
 エージェントと同じように、AI担当のタスクとして追加します。
 
 ```sh
-agboard --project "Quickstart" add "Check the install steps" --assignee ai --actor ai --desc-file task.md
+agpj --project "Quickstart" add "Check the install steps" --assignee ai --actor ai --desc-file task.md
 ```
 
 コマンドが新しいタスクのIDを表示します。ここではタスクIDを`#1`として説明します。未着手の列に、AIのアイコンと**下書き**バッジ、完了条件の達成数`0/1`が付いたタスクが追加されます。
@@ -114,9 +114,9 @@ agboard --project "Quickstart" add "Check the install steps" --assignee ai --act
 エージェントは、タスクを進行中に移して、稼働中だと報告して作業を始めます。
 
 ```sh
-agboard --project "Quickstart" mv 1 doing --actor ai --reason "Start checking the install steps"
-agboard --project "Quickstart" state 1 running --actor ai --reason "Following the install page"
-agboard --project "Quickstart" history add 1 --reason "Built the web UI and installed agboard without errors"
+agpj --project "Quickstart" mv 1 doing --actor ai --reason "Start checking the install steps"
+agpj --project "Quickstart" state 1 running --actor ai --reason "Following the install page"
+agpj --project "Quickstart" history add 1 --reason "Built the web UI and installed agpj without errors"
 ```
 
 ブラウザでは、タスク#1が進行中に移り、**稼働中**と表示されます。選んで**履歴**タブを開くと、各操作が日時と理由とともに並んでいます。
@@ -126,7 +126,7 @@ agboard --project "Quickstart" history add 1 --reason "Built the web UI and inst
 エージェントは、判断が必要になると、選択肢つきで質問します。
 
 ```sh
-agboard --project "Quickstart" message ask --actor ai --task 1 --questions-json '{"questions":[{"body":"Should the guide also cover Windows?","choices":[{"id":"yes","label":"Yes, include Windows"},{"id":"no","label":"No, macOS only"}]}]}'
+agpj --project "Quickstart" message ask --actor ai --task 1 --questions-json '{"questions":[{"body":"Should the guide also cover Windows?","choices":[{"id":"yes","label":"Yes, include Windows"},{"id":"no","label":"No, macOS only"}]}]}'
 ```
 
 このコマンドは、起動したサーバーを通して回答まで待ちます（既定では最長10分。サーバーがなければ、裏で起動します）。タスク#1が**回答待**になり、質問と2つの選択肢が表示されます。ブラウザで選択肢を選び、必要ならメモを書いて、回答を送ります。コマンドは回答を表示して終わり、タスクは**未稼働**に戻ります。
@@ -134,8 +134,8 @@ agboard --project "Quickstart" message ask --actor ai --task 1 --questions-json 
 エージェントは、タスクの履歴で回答を読んで、作業を再開します。
 
 ```sh
-agboard --project "Quickstart" show 1
-agboard --project "Quickstart" state 1 running --actor ai --reason "Windows is not needed; continuing with macOS"
+agpj --project "Quickstart" show 1
+agpj --project "Quickstart" state 1 running --actor ai --reason "Windows is not needed; continuing with macOS"
 ```
 
 ### 6. 完了条件を満たして完了する
@@ -143,19 +143,19 @@ agboard --project "Quickstart" state 1 running --actor ai --reason "Windows is n
 エージェントは完了条件を検証し、結果を記録してから達成済みにします。ここでは、元のファイルをコピーして`done: true`に書き換え、タスクへ反映します。
 
 ```sh
-agboard --project "Quickstart" history add 1 --reason "Verified the install steps on a clean machine"
+agpj --project "Quickstart" history add 1 --reason "Verified the install steps on a clean machine"
 sed 's/done: false/done: true/' task.md > task-done.md
-agboard --project "Quickstart" edit 1 --desc-file task-done.md
+agpj --project "Quickstart" edit 1 --desc-file task-done.md
 ```
 
 サーバーが動いていれば、タスク#1は自動で完了に移ります。完了の列へ手動で移す必要はありません。自動完了は、下書きではないAI担当のタスクが対象です。
 
 ### 7. 片付ける
 
-サーバーのターミナルでCtrl+Cを押します。一時的な`AGBOARD_HOME`を使ったなら、ほかにすることはありません。そうでなければ、練習用のプロジェクトを削除します（あなたの確認を求め、エージェントは実行できません）。
+サーバーのターミナルでCtrl+Cを押します。一時的な`AGPJ_HOME`を使ったなら、ほかにすることはありません。そうでなければ、練習用のプロジェクトを削除します（あなたの確認を求め、エージェントは実行できません）。
 
 ```sh
-agboard --project "Quickstart" project rm
+agpj --project "Quickstart" project rm
 ```
 
 ## ここで確認したこと

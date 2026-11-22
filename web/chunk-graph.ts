@@ -18,7 +18,7 @@ export interface ChunkGraph {
  */
 export function chunkGraph(): Plugin {
   return {
-    name: 'agboard-chunk-graph',
+    name: 'agpj-chunk-graph',
     apply: 'build',
     generateBundle(_options, bundle) {
       const graph: ChunkGraph = { chunks: {} };

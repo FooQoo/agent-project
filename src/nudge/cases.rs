@@ -26,7 +26,7 @@ pub(super) fn case(
     }
 }
 
-pub(super) const ASK: &str = "agboard message ask --actor ai --questions-json '{}'";
+pub(super) const ASK: &str = "agpj message ask --actor ai --questions-json '{}'";
 const PR: &str = "gh pr create --title x --body y";
 
 fn running(message: &'static str, calls: Vec<super::Call>) -> Scenario {
@@ -94,10 +94,7 @@ pub fn all() -> Vec<Case> {
             false,
             running(
                 "Done.",
-                vec![
-                    call(PR),
-                    call("agboard result add 5 --summary s --actor ai"),
-                ],
+                vec![call(PR), call("agpj result add 5 --summary s --actor ai")],
             ),
         ),
         case(

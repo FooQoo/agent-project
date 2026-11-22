@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
 
-use agent_board::file_store::FileStore;
+use agent_project::file_store::FileStore;
 use serde_json::{Value, json};
 use support::home;
 
@@ -27,7 +27,7 @@ use support::home;
 mod harness;
 use harness::*;
 
-const COOKIE: &str = "agboard_remote_session";
+const COOKIE: &str = "agpj_remote_session";
 const OTHER_PUBLIC: &str = "https://other-xyz.ngrok.app";
 
 fn fixture() -> tempfile::TempDir {
@@ -199,7 +199,7 @@ impl Tunnel {
                 ("Cookie", &session.cookie),
                 ("Origin", origin),
                 ("Sec-Fetch-Site", "same-origin"),
-                ("X-Agboard-Csrf", &session.csrf),
+                ("X-Agpj-Csrf", &session.csrf),
                 ("Content-Type", "application/json"),
             ],
             &json!({"answers": [{"questionId": request_id, "choiceId": "keep", "text": "ok"}]})
@@ -437,7 +437,7 @@ fn asking_for_the_settings_while_the_keychain_waits_for_the_user_holds_up_nothin
             &[
                 ("Origin", &origin),
                 ("Sec-Fetch-Site", "same-origin"),
-                ("X-Agboard-Token", &token),
+                ("X-Agpj-Token", &token),
                 ("Content-Type", "application/json"),
             ],
             "{}",
@@ -527,7 +527,7 @@ fn every_kind_of_request_needs_the_entrance_and_then_a_session() {
                 ("Cookie", live.cookie.as_str()),
                 ("Origin", t.public.as_str()),
                 ("Sec-Fetch-Site", "same-origin"),
-                ("X-Agboard-Csrf", live.csrf.as_str()),
+                ("X-Agpj-Csrf", live.csrf.as_str()),
                 ("Content-Type", "application/json"),
             ]);
             let r = request(t.backend, method, path, &headers, &body_of(path));
@@ -837,8 +837,8 @@ fn the_entrance_does_not_serve_what_acts_on_the_pc_and_the_pc_entrance_is_unchan
                 ("Cookie", &session.cookie),
                 ("Origin", &t.public),
                 ("Sec-Fetch-Site", "same-origin"),
-                ("X-Agboard-Csrf", &session.csrf),
-                ("X-Agboard-Token", "guess"),
+                ("X-Agpj-Csrf", &session.csrf),
+                ("X-Agpj-Token", "guess"),
                 ("Content-Type", "application/json"),
             ],
             &json!({"title": "From the phone"}).to_string(),

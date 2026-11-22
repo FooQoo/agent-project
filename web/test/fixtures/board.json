@@ -9,7 +9,7 @@
     {
       "id": 8,
       "title": "Initialize the board",
-      "description": "Create the storage for the board with agboard init.",
+      "description": "Create the storage for the board with agpj init.",
       "position": 1,
       "assignee": "ai",
       "taskStatus": "done",
@@ -36,7 +36,7 @@
       ],
       "pendingChoices": [],
       "epic": null,
-      "body": "Create the storage for the board with agboard init.",
+      "body": "Create the storage for the board with agpj init.",
       "acceptance": [],
       "acceptanceError": false,
       "taskStatusChangedAt": "2026-10-02T09:48:00Z"
@@ -189,7 +189,7 @@
     {
       "id": 14,
       "title": "Prepare the Windows build",
-      "description": "Build Agent Board for Windows x64.",
+      "description": "Build Agent Project for Windows x64.",
       "position": 1,
       "assignee": "human",
       "taskStatus": "todo",
@@ -208,7 +208,7 @@
       ],
       "pendingChoices": [],
       "epic": null,
-      "body": "Build Agent Board for Windows x64.",
+      "body": "Build Agent Project for Windows x64.",
       "acceptance": [],
       "acceptanceError": false,
       "taskStatusChangedAt": "2026-10-02T03:00:00Z"

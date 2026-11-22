@@ -1,6 +1,6 @@
 # Shared files
 
-Every file Agent Board stores, with its fields and an example. For how the files are used, see [Tasks and states](../concepts/tasks-and-states.md) and [Saving and recovery](../concepts/saving-and-recovery.md).
+Every file Agent Project stores, with its fields and an example. For how the files are used, see [Tasks and states](../concepts/tasks-and-states.md) and [Saving and recovery](../concepts/saving-and-recovery.md).
 
 ## Tasks
 
@@ -21,7 +21,7 @@ A task is one unit of work on the board. A task's state lives in `task.json`; it
 | `draft` | `null` or `"human"`. `human` is a draft a person is writing in the browser, an edit lock. Files of earlier versions hold `isDraft`: `true` reads as `human` and `false` as `null`; writing uses `draft` only. For an epic, the CLI `epic edit` refuses a `human` draft with `epic_is_draft`. |
 | `questions` | In `TASK.md` frontmatter: the IDs of the project questions the task refers to, such as `[Q-12, Q-15]`. Omitted, `null`, and empty all mean none; duplicates are rejected. |
 | `plannedVersion` | In `TASK.md` frontmatter: the version the task is planned for, such as `v1.8.0`. Absent means unplanned. See [Planned versions](#planned-versions). |
-| `requestAnswers` | Answers recorded by earlier versions of Agent Board, kept as a record. Nothing adds to it. |
+| `requestAnswers` | Answers recorded by earlier versions of Agent Project, kept as a record. Nothing adds to it. |
 | `archivedAt` | `null`, or the archive time. |
 | `attachments` | ID, name, size, MIME type, and creation time of each image. |
 | `results` | The results delivered to the requester, oldest first (`[]` when none). See [Results](#results). |
@@ -34,7 +34,7 @@ Lengths are counted in Unicode scalar values. The `assignee` (who owns the task)
 
 ## Files on disk
 
-The data area is `.agent-board/` in the home directory on every OS, or a non-empty `AGBOARD_HOME`. If the home directory cannot be resolved, the command fails instead of using the working folder.
+The data area is `.agent-project/` in the home directory on every OS, or a non-empty `AGPJ_HOME`. If the home directory cannot be resolved, the command fails instead of using the working folder.
 
 ```text
 <data-root>/
@@ -68,10 +68,10 @@ The data area is `.agent-board/` in the home directory on every OS, or a non-emp
 ```
 
 - JSON is UTF-8, camelCase, two-space indented, with one trailing newline. Unknown fields are rejected.
-- `workspace.json` is `{"format":"agboard-files","formatVersion":1}`. `project.json` has `formatVersion: 1`. A `task.json` or `epic.json` that uses the Backlog has `formatVersion: 2`; the files of ordinary cards stay at `formatVersion: 1`, and both are read. Any other version is rejected with `format_unsupported`, reported, and left untouched. An earlier version of `agboard` cannot read a version-2 file. Old AI drafts are converted once, automatically (see [Saving and recovery](../concepts/saving-and-recovery.md#format-versions-and-the-draft-mark)).
+- `workspace.json` is `{"format":"agboard-files","formatVersion":1}`. `project.json` has `formatVersion: 1`. A `task.json` or `epic.json` that uses the Backlog has `formatVersion: 2`; the files of ordinary cards stay at `formatVersion: 1`, and both are read. Any other version is rejected with `format_unsupported`, reported, and left untouched. An earlier version of `agpj` cannot read a version-2 file. Old AI drafts are converted once, automatically (see [Saving and recovery](../concepts/saving-and-recovery.md#format-versions-and-the-draft-mark)).
 - Names starting with `.` are not source files. `README.md` describes the folder and its editing rules; the product writes it at creation.
 - Images live in the owner's `assets/`. Bodies reference images as `assets/<attachment-id>.<ext>` (or the older `attachment:<id>`). Images are PNG, JPEG, WebP, or GIF; at most 10 MiB each, 20 per owner, and 50 MiB in total.
-- `bindings.json` and `serve.json` are machine-local. `serve.json` tells the CLI where to notify and `wait` where to connect; it never holds a token. `agboard stop` finds the server through it.
+- `bindings.json` and `serve.json` are machine-local. `serve.json` tells the CLI where to notify and `wait` where to connect; it never holds a token. `agpj stop` finds the server through it.
 
   ```json
   {"pid":41235,"port":7420,"started_at":"2026-11-14T03:00:00Z","mode":"auto","idleTimeoutSeconds":1800}
@@ -80,7 +80,7 @@ The data area is `.agent-board/` in the home directory on every OS, or a non-emp
   `mode` is `auto` for a server a command started and `manual` for `serve` and `serve -d`; a file without it is read as `manual`. `idleTimeoutSeconds` is present only for an automatic server.
 - `serve.log` is the output of a server started in the background, by `serve -d` or by a command (owner-only, replaced at every start). An automatic server writes there why it took another port and when it stopped. Every server also writes one line, with the time in UTC, to its standard error each time a resident agent starts, is asked to stop, or exits. A background server (`serve -d`) sends its standard error to `serve.log`; a foreground server prints it to its terminal (see [Launching resident agents](../concepts/agents.md#launching-resident-agents)).
 - `resident/<tool>.log` (`claude-code.log` or `codex.log`) is the output of the session the board launched for that tool: its standard output and error (owner-only). Each launch starts a new file and keeps the four before it as `<tool>.1.log` (the previous launch) to `<tool>.4.log`. It can hold what the agent printed, so treat it like any other output of an agent running with your account. See [Launching resident agents](../concepts/agents.md#launching-resident-agents).
-- `autostart.lock` orders commands that start the server at the same time. `autostart.paused` is left by `agboard stop` so that the hook does not start the server again; a command that waits, `serve`, or `serve -d` removes it. See [Server and web UI](../concepts/server-and-ui.md#starting-and-stopping-serve).
+- `autostart.lock` orders commands that start the server at the same time. `autostart.paused` is left by `agpj stop` so that the hook does not start the server again; a command that waits, `serve`, or `serve -d` removes it. See [Server and web UI](../concepts/server-and-ui.md#starting-and-stopping-serve).
 
 `docs/` holds the project's own Markdown documents, which the Docs dialog reads (see [Project docs](#project-docs)).
 
@@ -142,7 +142,7 @@ The versions of a project are files, and the version of a task is a key of its `
 
 - **The list.** A project's versions are the file stems of the `*.md` files directly inside `docs/release/` of its Docs folder: `docs/release/v1.8.0.md` lists `v1.8.0`. Subfolders, files with another extension, hidden files, and files whose stem is not a valid version name are ignored (`TEMPLATE.md`, the release template, never lists a version, and `TEMPLATE` cannot be used as a version name), and so are `*.md` files elsewhere in the Docs. The list is sorted naturally, newest first: digit runs compare as numbers, so `v1.10.0` comes before `v1.9.0`, and the CLI, the web API, and the Summary all return that order. Each project's list is its own, and a project lists at most 200 versions.
 - **The template.** `docs/release/TEMPLATE.md` is the release-note template. When it is missing, adding a version first writes a standard one: an opening sentence to replace, then `## Changes`, `## Fixes`, `## Breaking changes`, and `## Required update steps`, each holding `None.`. An existing template is read as it is and never rewritten, so a project can edit it.
-- **The generated document.** `release doc` and `POST …/release-doc` write the generated block of a version into `docs/release/<version>.md`, between the lines `<!-- agboard:generated:start -->` and `<!-- agboard:generated:end -->`, and keep every other byte of the file. A file without markers gets the block appended; a file with damaged markers is refused (`release_doc_refused`). A new project has an empty `docs/release/` folder, and an existing project gets it when a version is first added or generated. See [Generate a release document](../../guide/reference/cli.md#generate-a-release-document).
+- **The generated document.** `release doc` and `POST …/release-doc` write the generated block of a version into `docs/release/<version>.md`, between the lines `<!-- agpj:generated:start -->` and `<!-- agpj:generated:end -->`, and keep every other byte of the file. A file without markers gets the block appended; a file with damaged markers is refused (`release_doc_refused`). A new project has an empty `docs/release/` folder, and an existing project gets it when a version is first added or generated. See [Generate a release document](../../guide/reference/cli.md#generate-a-release-document).
 - **Adding.** `version add`, `POST …/versions`, and setting a current version that is not listed yet create `docs/release/<version>.md` as a copy of the template, and `docs/release/` when it is missing. Each file is written whole to a hidden temporary file and linked into place, so it appears complete or not at all and never overwrites an existing one: a version that already has its file is already listed and the call answers `changed: false`. The file's content is not board data, so the same file holds the release document. Adding a version does not change the current version.
 - **The release-notes card.** The same operation issues one Backlog card, assigned to the AI, titled `Write the release notes for <version>` (`<version> のリリースノートを作成する` when the board language is Japanese). Its `plannedVersion` is that same version, so the card is planned for the release it documents (the creation history entry records the card as created; no separate planned-version entry is added). Its body names `docs/release/<version>.md` and the template and says that the work starts only after a person sends it to Todo. The card carries `releaseNotesVersion: "<version>"` in `task.json`. Before it creates a card, the operation looks for any card, archived ones included, with that key, so adding the same version again, or retrying after a failure, issues no second card. The file is created first and the card second, both under the project's write lock: if the card cannot be created, the version stays listed and adding it again issues the card. Setting a current version issues the card only when it also creates the file. A card whose `task.json` cannot be read is skipped, so it never blocks adding a version.
 - **The current version.** `project.json` may hold `currentVersion`, a version name, `null`, or nothing. There is no `versions` list in `project.json`; a leftover `versions` field of an earlier build is read and ignored, and it is not written again. A current version must name a listed version when it is set through the CLI or the API. If its file is removed later, the project keeps the stored name but reads as having no current version: `version ls`, the web API, and the Summary report `currentVersion: null`, `--current-version` fails with `no_current_version`, and the `current` choice is refused. Nothing is cleared, so adding the file again brings the current version back.
@@ -166,7 +166,7 @@ history:
 
 ### Results {#results}
 
-A result is something the requester can look at, delivered by an agent with `agboard result add` (see [Deliver a result](../../guide/reference/cli.md#deliver-a-result)). Results are stored in `task.json` rather than in `TASK.md`, because they are structured data a client reads by version; history stays the only time-ordered text in `TASK.md`. Each entry of `results` has:
+A result is something the requester can look at, delivered by an agent with `agpj result add` (see [Deliver a result](../../guide/reference/cli.md#deliver-a-result)). Results are stored in `task.json` rather than in `TASK.md`, because they are structured data a client reads by version; history stays the only time-ordered text in `TASK.md`. Each entry of `results` has:
 
 | Field | Meaning |
 | --- | --- |
@@ -177,7 +177,7 @@ A result is something the requester can look at, delivered by an agent with `agb
 | `summary` | 1 to 2,000 characters of text. A publication record (`result add --published V`) has no field of its own: its first line is `Published: V` and its `link` is required, which is what `release doc` reads. |
 | `attachmentId` | Optional. The ID of the image of a result that has exactly one image, in the task's `attachments`; the file is read from the attachment route. A result with one image is written with this field so that older versions still read the file. |
 | `attachmentIds` | Optional. The IDs of the images of a result that has two or more, in the order the agent gave them, up to 20. Readers take the images from `attachmentIds` when it is present and otherwise from `attachmentId`, so data written with one image keeps working. An image a result uses by either field cannot be deleted. |
-| `link` | Optional. A URL or a storage location of the main artifact, 1 to 2,000 characters on one line. It is stored as given; Agent Board never opens it. |
+| `link` | Optional. A URL or a storage location of the main artifact, 1 to 2,000 characters on one line. It is stored as given; Agent Project never opens it. |
 | `at` | UTC time the result was recorded. Together with `title` it lets the server list the results recorded in a period without reading `summary`. |
 
 Recording a result changes neither `taskStatus` nor `agentStatus`. Under one project lock it writes the images (if any, in order), then saves `task.json` and `TASK.md` together with one history entry. If an image is refused or the save fails, the image files written so far are removed and no entry exists, so a failed save is never something to deliver. If the key already exists with the same content, nothing is written and the existing entry is returned. A task holds at most 100 results.
@@ -238,7 +238,7 @@ Fields of a question:
 | `tasks` | Optional. The task numbers the question was asked for. It is kept in step with those tasks' `questions` by `message link` and `message unlink`. |
 | `choices` | Optional. 2 to 10 items with an ID unique in the question (1 to 64 characters of `[A-Za-z0-9_-]`) and a label of 1 to 200 characters. Without choices, the question is answered with text. |
 | `recommended` | Optional. One choice ID. |
-| `askedBy` | Optional. The launch ID (`AGBOARD_RESIDENT_ID`) of the board-launched session that asked the question; `message ask` writes it when the variable is set. The board uses it to push the answer back to that session. A question an external session asks has none. |
+| `askedBy` | Optional. The launch ID (`AGPJ_RESIDENT_ID`) of the board-launched session that asked the question; `message ask` writes it when the variable is set. The board uses it to push the answer back to that session. A question an external session asks has none. |
 | `reply` | `null` until answered. `choice` is never set when the question has no choices, and with choices at least one of `choice` and `text` is set; `text` is 1 to 2,000 characters and required when there are no choices; `images` is optional (omitted when empty): up to 20 plain file names of the pictures the person attached, stored in the question's `attachments/` next to the pictures of the question itself; `via` is `ui`, `chat`, or `cli`; `at` is when it was recorded. `acceptedAt` is optional: absent or `null` until an agent takes the answer in, then when it did. |
 
 Fields of a request:
@@ -257,7 +257,7 @@ Back up a project by copying `shared/projects/<project-id>/`; restore it by stop
 
 ## Monitor connection settings
 
-The ngrok remote connection keeps its non-secret settings in `<data-root>/.internal/monitor-connection.json`. The file belongs to the application: it is written by the PC settings screen, by `serve`, and by [`agboard setup remote`](../../guide/reference/cli.md#save-the-remote-access-settings), not by hand, and it is not part of the shared area, so it is not backed up with a project. It is replaced atomically with owner-only permissions (`0600` where the OS has them).
+The ngrok remote connection keeps its non-secret settings in `<data-root>/.internal/monitor-connection.json`. The file belongs to the application: it is written by the PC settings screen, by `serve`, and by [`agpj setup remote`](../../guide/reference/cli.md#save-the-remote-access-settings), not by hand, and it is not part of the shared area, so it is not backed up with a project. It is replaced atomically with owner-only permissions (`0600` where the OS has them).
 
 ```json
 {
@@ -275,9 +275,9 @@ The ngrok remote connection keeps its non-secret settings in `<data-root>/.inter
 | `revision` | Increases with each save, including a save from the command line that only changes the token. The settings API uses it to detect a change made on another screen, and a running server uses it to notice a change made by the command line. |
 | `enabled` | Whether the connection starts again with the next `serve`. A stop saves `false`. |
 | `provider` | Optional. `ngrok` (the default when left out) or `tailscale`: how the phone reaches the board. Any other value makes the file unreadable. |
-| `domain` | Optional. The ngrok domain the endpoint is requested on, a bare lower-case host name, so the public address is the same at every start. Left out when none is saved. A saved value that is not a bare host name is ignored when read. `AGBOARD_NGROK_DOMAIN`, when set, is used instead of it and is never written to the file. |
+| `domain` | Optional. The ngrok domain the endpoint is requested on, a bare lower-case host name, so the public address is the same at every start. Left out when none is saved. A saved value that is not a bare host name is ignored when read. `AGPJ_NGROK_DOMAIN`, when set, is used instead of it and is never written to the file. |
 
-The file never holds the ngrok token, the phone passcode, a session, or a CSRF token. A token the user chooses to save lives in the PC's secure storage (the OS credential store) instead (service `agent-board`, account `ngrok-authtoken`). There is no `monitor/config.json`.
+The file never holds the ngrok token, the phone passcode, a session, or a CSRF token. A token the user chooses to save lives in the PC's secure storage (the OS credential store) instead (service `agent-project`, account `ngrok-authtoken`). There is no `monitor/config.json`.
 
 
 ## Registered devices
@@ -421,7 +421,7 @@ The saved language and color theme live in `<data-root>/.internal/preferences.js
 | `theme.mode` | `light` or `dark`. The default is `light`. |
 | `theme.accent` | One of the 12 accents: `blue`, `sky`, `cyan`, `teal`, `green`, `lime`, `yellow`, `orange`, `red`, `pink`, `purple`, `gray`. The default is `blue`. |
 
-The progress table reads the file too: `agboard progress --json` and the hook add `locale` to the table when the saved language is not English, so an agent keeps replying in the user's language (see [Hook, progress, and wait output](./agent-output.md#progress-table)). Like the README language, this is a read of the file alone; the server need not run, and a missing or invalid file simply leaves the field out.
+The progress table reads the file too: `agpj progress --json` and the hook add `locale` to the table when the saved language is not English, so an agent keeps replying in the user's language (see [Hook, progress, and wait output](./agent-output.md#progress-table)). Like the README language, this is a read of the file alone; the server need not run, and a missing or invalid file simply leaves the field out.
 
 A save changes only the fields it sends; the others keep their saved values. The last save wins, and there is no conflict check. The preferences hold no secret, and the file never holds a token, a passcode, or a session.
 
@@ -464,26 +464,26 @@ The CLI, web API, and hook share one camelCase task representation: the `task.js
 
 ## Files that setup writes {#agent-settings}
 
-`agboard setup` keeps no record of its own. Each agent's plugin list says what is installed, and these files outside the data area are the only ones it changes:
+`agpj setup` keeps no record of its own. Each agent's plugin list says what is installed, and these files outside the data area are the only ones it changes:
 
 | File | Change |
 | --- | --- |
 | `$CODEX_HOME/config.toml` (normally `~/.codex/config.toml`) | The data folder is added to `sandbox_workspace_write.writable_roots`, only with `workspace-write` and no permission profile. |
-| `$CODEX_HOME/rules/agboard.rules` | Created with `prefix_rule(pattern=["agboard"], decision="allow")` when it does not exist. Not written under full access. |
+| `$CODEX_HOME/rules/agpj.rules` | Created with `prefix_rule(pattern=["agpj"], decision="allow")` when it does not exist. Not written under full access. |
 | `$CLAUDE_CONFIG_DIR/settings.json` (normally `~/.claude/settings.json`) | The data folder is added to `permissions.additionalDirectories`. |
 
-- Each changed file is first backed up next to itself as `<file>.agboard-backup…`, with the original file's access rights. A new file is created owner-only.
+- Each changed file is first backed up next to itself as `<file>.agpj-backup…`, with the original file's access rights. A new file is created owner-only.
 - Codex's hook trust is stored by Codex itself, under `hooks.state` in its configuration, through `codex app-server`.
-- The installed plugin lives where each agent keeps its plugins; agboard does not write there.
-- `agboard update` changes none of these files.
+- The installed plugin lives where each agent keeps its plugins; agpj does not write there.
+- `agpj update` changes none of these files.
 
 ## Folder bindings
 
-A folder binding maps a real folder to a ProjectId so the hook and `agboard progress` know which project a working folder belongs to. It is stored only in the machine-local data area, never in the shared area or tracked files. Because it stores the ProjectId, it follows renames and never moves to a re-created project with the same name. The nearest bound ancestor folder wins. Missing folders, broken bindings, and deleted ProjectIds are explained errors.
+A folder binding maps a real folder to a ProjectId so the hook and `agpj progress` know which project a working folder belongs to. It is stored only in the machine-local data area, never in the shared area or tracked files. Because it stores the ProjectId, it follows renames and never moves to a re-created project with the same name. The nearest bound ancestor folder wins. Missing folders, broken bindings, and deleted ProjectIds are explained errors.
 
 ## Project docs
 
-`shared/projects/<project-id>/docs/` is the project's document folder. It belongs to the user, not to the board: its files have no format, no `formatVersion`, and no fields, and Agent Board never validates them.
+`shared/projects/<project-id>/docs/` is the project's document folder. It belongs to the user, not to the board: its files have no format, no `formatVersion`, and no fields, and Agent Project never validates them.
 
 - **Created with the project.** `project create`, and `init` when it creates the project, build `docs/` inside the new project's temporary folder, with a `README.md`, before the folder is renamed into place. The README is English or Japanese, following the app's language in `.internal/preferences.json` (`ja` gives Japanese; anything else, English). Its text is in `src/docs/templates/`.
 - **Filled in at startup.** `serve` creates `docs/` and its README for every project that has no `docs/` folder. A folder that exists is left alone, so a README the user deleted stays deleted. A failure here is skipped, because a missing folder reads as an empty tree.

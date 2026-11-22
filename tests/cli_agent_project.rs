@@ -4,22 +4,22 @@ mod common;
 use serde_json::Value;
 use tempfile::tempdir;
 
-/// Run `agboard --project "Agent Board" <args>`.
+/// Run `agpj --project "Agent Board" <args>`.
 fn invoke(home: &std::path::Path, args: &[&str]) -> assert_cmd::assert::Assert {
     invoke_for(home, "Agent Board", args)
 }
 
 fn invoke_for(home: &std::path::Path, project: &str, args: &[&str]) -> assert_cmd::assert::Assert {
-    let mut command = Command::cargo_bin("agboard").unwrap();
+    let mut command = Command::cargo_bin("agpj").unwrap();
     command
-        .env("AGBOARD_AUTOSTART", "0")
+        .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
-        .env_remove("AGBOARD_RESIDENT_ID")
-        .env("AGBOARD_OPEN_BROWSER", "0");
+        .env_remove("AGPJ_RESIDENT_ID")
+        .env("AGPJ_OPEN_BROWSER", "0");
     command
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["--project", project])
         .args(args)
@@ -31,7 +31,7 @@ fn json_of(assert: assert_cmd::assert::Assert) -> Value {
 }
 
 #[test]
-fn agboard_requires_assignee_actor_and_reason_and_records_the_exchange() {
+fn agpj_requires_assignee_actor_and_reason_and_records_the_exchange() {
     let home = tempdir().unwrap();
     invoke(home.path(), &["init"]).success();
     invoke(home.path(), &["add", "Work"]).failure();
@@ -220,15 +220,15 @@ fn a_command_needs_a_project_that_exists_and_never_guesses_one() {
     let home = tempdir().unwrap();
     invoke_for(home.path(), "Only", &["init"]).success();
     // No --project: refused even though exactly one project exists.
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
+        .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
-        .env_remove("AGBOARD_RESIDENT_ID")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env_remove("AGPJ_RESIDENT_ID")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home.path())
         .args(["ls"])
         .assert()
         .failure()
@@ -250,13 +250,13 @@ fn a_command_needs_a_project_that_exists_and_never_guesses_one() {
 
 /// Mark a task as a draft the way the Web does, through the file store.
 fn make_draft(home: &std::path::Path, project: &str, id: i64) {
-    let files = agent_board::file_store::FileStore::open(&home.join("shared"));
+    let files = agent_project::file_store::FileStore::open(&home.join("shared"));
     let meta = files.project_by_name(project).unwrap();
     files
         .set_draft(
             &meta.id,
             id,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             chrono::Utc::now(),
         )
@@ -264,15 +264,15 @@ fn make_draft(home: &std::path::Path, project: &str, id: i64) {
 }
 
 fn invoke_none(home: &std::path::Path, args: &[&str]) -> assert_cmd::assert::Assert {
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
+        .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
-        .env_remove("AGBOARD_RESIDENT_ID")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env_remove("AGPJ_RESIDENT_ID")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(args)
         .assert()
@@ -431,15 +431,15 @@ fn descriptions_up_to_the_limit_pass_through_every_input() {
             .unwrap()
             .contains("history:")
     );
-    let piped = Command::cargo_bin("agboard")
+    let piped = Command::cargo_bin("agpj")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
+        .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
-        .env_remove("AGBOARD_RESIDENT_ID")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env_remove("AGPJ_RESIDENT_ID")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home.path())
         .args([
             "--project",
             "Agent Board",
@@ -478,13 +478,13 @@ fn descriptions_up_to_the_limit_pass_through_every_input() {
 #[test]
 fn help_describes_markdown_limits_and_drafts() {
     let help = |args: &[&str]| {
-        let out = Command::cargo_bin("agboard")
+        let out = Command::cargo_bin("agpj")
             .unwrap()
-            .env("AGBOARD_AUTOSTART", "0")
+            .env("AGPJ_AUTOSTART", "0")
             .env_remove("CLAUDE_CODE_SESSION_ID")
             .env_remove("CODEX_THREAD_ID")
-            .env_remove("AGBOARD_RESIDENT_ID")
-            .env("AGBOARD_OPEN_BROWSER", "0")
+            .env_remove("AGPJ_RESIDENT_ID")
+            .env("AGPJ_OPEN_BROWSER", "0")
             .args(args)
             .assert()
             .success();

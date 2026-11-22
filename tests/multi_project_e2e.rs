@@ -1,7 +1,7 @@
 //! End-to-end stories for a data area that holds several projects.
 //!
-//! Everything here runs the real `agboard` binary against the shared files in a temporary data area:
-//! the CLI, a real `agboard serve` on port 0 with HTTP and server-sent events, the agent hook and `wait`,
+//! Everything here runs the real `agpj` binary against the shared files in a temporary data area:
+//! the CLI, a real `agpj serve` on port 0 with HTTP and server-sent events, the agent hook and `wait`,
 //! and a pseudo-terminal for the commands that need a person. The projects come from the backup fixtures
 //! the browser specs use (`e2e/fixtures/multi-project-*.json`), which hold a task #1 each with different
 //! content.
@@ -21,10 +21,10 @@ use tempfile::tempdir;
 // ---------------------------------------------------------------- harness
 
 fn bin() -> Command {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
     command
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0");
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0");
     command
 }
 
@@ -35,12 +35,12 @@ fn fixture(name: &str) -> PathBuf {
         .join(name)
 }
 
-/// `agboard [--project NAME] ARGS...` with no terminal and nothing on stdin.
+/// `agpj [--project NAME] ARGS...` with no terminal and nothing on stdin.
 fn run(home: &Path, project: Option<&str>, args: &[&str]) -> Output {
     let mut command = bin();
     command
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC");
     if let Some(project) = project {
         command.args(["--project", project]);
@@ -52,7 +52,7 @@ fn run(home: &Path, project: Option<&str>, args: &[&str]) -> Output {
         .unwrap()
 }
 
-fn agboard(home: &Path, project: &str, args: &[&str]) -> Output {
+fn agpj(home: &Path, project: &str, args: &[&str]) -> Output {
     run(home, Some(project), args)
 }
 
@@ -101,7 +101,7 @@ fn import_fixture(home: &Path, project: &str, file: &str) {
     for task in backup["tasks"].as_array().unwrap() {
         let body = valid_body(task["description"].as_str().unwrap());
         let assignee = task["assignee"].as_str().unwrap();
-        ok(&agboard(
+        ok(&agpj(
             home,
             project,
             &[
@@ -118,7 +118,7 @@ fn import_fixture(home: &Path, project: &str, file: &str) {
         let id = task["id"].as_i64().unwrap().to_string();
         let lane = task["taskStatus"].as_str().unwrap();
         if lane != "todo" {
-            ok(&agboard(
+            ok(&agpj(
                 home,
                 project,
                 &["mv", &id, lane, "--actor", "human", "--reason", "fixture"],
@@ -143,7 +143,7 @@ fn import_fixture(home: &Path, project: &str, file: &str) {
             } else {
                 vec!["state", &id, state, "--actor", "ai", "--reason", reason]
             };
-            ok(&agboard(home, project, &args));
+            ok(&agpj(home, project, &args));
         }
     }
 }
@@ -175,7 +175,7 @@ fn pending_request(home: &Path, project: &str, id: i64) -> String {
 }
 
 fn snapshot(home: &Path, project: &str) -> Value {
-    stdout_json(&agboard(home, project, &["snapshot", "--json"]))
+    stdout_json(&agpj(home, project, &["snapshot", "--json"]))
 }
 
 /// The snapshot without the time it was fetched, for comparing contents.
@@ -214,7 +214,7 @@ fn task(snapshot: &Value, id: i64) -> &Value {
         .unwrap_or_else(|| panic!("no task #{id}"))
 }
 
-/// A running `agboard serve --port 0`, stopped when dropped so that a failing test leaves nothing behind.
+/// A running `agpj serve --port 0`, stopped when dropped so that a failing test leaves nothing behind.
 struct Serve {
     child: Child,
     addr: SocketAddr,
@@ -229,8 +229,8 @@ impl Drop for Serve {
 
 fn serve(home: &Path) -> Serve {
     let mut child = bin()
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -323,7 +323,7 @@ impl Serve {
 
     fn token(&self) -> String {
         let page = self.get("/").body;
-        let marker = "name=\"agboard-token\" content=\"";
+        let marker = "name=\"agpj-token\" content=\"";
         let start = page.find(marker).expect("token meta tag") + marker.len();
         page[start..start + 64].to_string()
     }
@@ -333,7 +333,7 @@ impl Serve {
         let headers = vec![
             ("Origin".to_string(), format!("http://{}", self.addr)),
             ("Sec-Fetch-Site".to_string(), "same-origin".to_string()),
-            ("X-Agboard-Token".to_string(), self.token()),
+            ("X-Agpj-Token".to_string(), self.token()),
         ];
         self.request(method, path, body, &headers)
     }
@@ -430,8 +430,8 @@ fn finish(mut child: Child, limit: Duration) -> Output {
 fn spawn_wait(home: &Path, project: &str, after: &str, timeout: Option<&str>) -> Child {
     let mut command = bin();
     command
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .args(["--project", project, "--json", "wait", "--after", after]);
     if let Some(timeout) = timeout {
         command.args(["--timeout", timeout]);
@@ -451,8 +451,8 @@ fn still_running(child: &mut Child, for_how_long: Duration) -> bool {
 
 fn hook(home: &Path, project: &str, agent: &str) -> String {
     let mut child = bin()
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .args(["--project", project, "hook", "--agent", agent])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -494,8 +494,8 @@ fn on_terminal(home: &Path, project: &str, answer: &str, args: &[&str]) -> (i32,
 
     let mut command = bin();
     command
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["--project", project])
         .args(args);
@@ -554,7 +554,7 @@ fn a_new_data_area_starts_with_no_projects_and_projects_are_managed_by_name() {
         2,
     );
     assert_error(
-        &agboard(
+        &agpj(
             home.path(),
             "Beta",
             &["--json", "project", "rename", "Alpha"],
@@ -566,14 +566,10 @@ fn a_new_data_area_starts_with_no_projects_and_projects_are_managed_by_name() {
 
     // A rename keeps the ID; the old name no longer finds the project.
     let beta_id = project_id(home.path(), "Beta");
-    ok(&agboard(
-        home.path(),
-        "Beta",
-        &["project", "rename", "Gamma"],
-    ));
+    ok(&agpj(home.path(), "Beta", &["project", "rename", "Gamma"]));
     assert_eq!(project_id(home.path(), "Gamma"), beta_id);
     assert_error(
-        &agboard(home.path(), "Beta", &["--json", "snapshot"]),
+        &agpj(home.path(), "Beta", &["--json", "snapshot"]),
         "project_not_found",
         4,
     );
@@ -612,9 +608,9 @@ fn every_command_that_works_on_a_project_refuses_to_guess_one() {
         // Not the environment, not a project the server shows, not the current directory.
         let mut command = bin();
         command
-            .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home.path())
-            .env("AGBOARD_PROJECT", "Alpha")
+            .env("AGPJ_WATCH", "poll")
+            .env("AGPJ_HOME", home.path())
+            .env("AGPJ_PROJECT", "Alpha")
             .current_dir(home.path())
             .arg("--json")
             .args(&args)
@@ -624,8 +620,8 @@ fn every_command_that_works_on_a_project_refuses_to_guess_one() {
             // A hook never fails the agent's turn: it reports the error in its output and hands over no board.
             ok(&output);
             let text = String::from_utf8_lossy(&output.stdout).into_owned();
-            assert!(text.contains("AGBOARD_ERROR"), "{text}");
-            assert!(!text.contains("AGBOARD_SNAPSHOT"), "{text}");
+            assert!(text.contains("AGPJ_ERROR"), "{text}");
+            assert!(!text.contains("AGPJ_SNAPSHOT"), "{text}");
             continue;
         }
         if args.first() == Some(&"wait") {
@@ -644,23 +640,23 @@ fn every_command_that_works_on_a_project_refuses_to_guess_one() {
     }
     // The commands that are for the whole data area do not take a project.
     assert_error(
-        &agboard(home.path(), "Alpha", &["--json", "project", "ls"]),
+        &agpj(home.path(), "Alpha", &["--json", "project", "ls"]),
         "invalid_argument",
         2,
     );
     assert_error(
-        &agboard(home.path(), "Alpha", &["--json", "project", "create", "Z"]),
+        &agpj(home.path(), "Alpha", &["--json", "project", "create", "Z"]),
         "invalid_argument",
         2,
     );
     assert_error(
-        &agboard(home.path(), "Alpha", &["--json", "serve", "--port", "0"]),
+        &agpj(home.path(), "Alpha", &["--json", "serve", "--port", "0"]),
         "invalid_argument",
         2,
     );
     // An unknown name is not found either.
     assert_error(
-        &agboard(home.path(), "Nope", &["--json", "snapshot"]),
+        &agpj(home.path(), "Nope", &["--json", "snapshot"]),
         "project_not_found",
         4,
     );
@@ -699,7 +695,7 @@ fn the_server_writes_only_where_the_url_points_and_tells_browsers_what_changed()
 
     // The browser's connection hears about changes by the CLI, in either project.
     let mut events = server.events();
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Beta",
         &["edit", "1", "--title", "Beta: renamed task"],
@@ -760,7 +756,7 @@ fn the_server_writes_only_where_the_url_points_and_tells_browsers_what_changed()
     );
 
     // A renamed project keeps its ID, so a page that holds the ID keeps working.
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Alpha",
         &["project", "rename", "Alpha Renamed"],
@@ -825,7 +821,7 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
     // The hook hands over only Alpha's active progress metadata, for both agents.
     for agent in ["claude", "codex"] {
         let context = hook(home.path(), "Alpha", agent);
-        assert!(context.starts_with("AGBOARD_PROGRESS\n"), "{agent}");
+        assert!(context.starts_with("AGPJ_PROGRESS\n"), "{agent}");
         assert!(
             context.contains("Alpha: draft the release notes"),
             "{agent}"
@@ -851,12 +847,12 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
         .to_string();
     let mut waiter = spawn_wait(home.path(), "Alpha", &after, None);
     std::thread::sleep(Duration::from_millis(500));
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Beta",
         &["edit", "1", "--title", "Beta changes meanwhile"],
     ));
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Beta",
         &[
@@ -897,7 +893,7 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
     assert!(!String::from_utf8_lossy(&output.stdout).contains("Beta"));
 
     // The agent resumes from the answer it was given, and the next hook shows active metadata only.
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Alpha",
         &[
@@ -911,7 +907,7 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
         ],
     ));
     let context = hook(home.path(), "Alpha", "claude");
-    assert!(context.starts_with("AGBOARD_PROGRESS\n"));
+    assert!(context.starts_with("AGPJ_PROGRESS\n"));
     let progress: Value = serde_json::from_str(context.split_once('\n').unwrap().1).unwrap();
     let resumed = progress["unassigned"]
         .as_array()
@@ -930,12 +926,12 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
         .to_string();
     let waiter = spawn_wait(home.path(), "Alpha", &after, None);
     std::thread::sleep(Duration::from_millis(500));
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Alpha",
         &["project", "rename", "Alpha Two"],
     ));
-    ok(&agboard(
+    ok(&agpj(
         home.path(),
         "Alpha Two",
         &[
@@ -973,7 +969,7 @@ fn hook_and_wait_follow_one_project_from_a_web_answer_to_the_resumed_agent() {
         assert!(output.stdout.is_empty());
 
         ok(&run(home.path(), None, &["project", "create", "Alpha Two"]));
-        ok(&agboard(
+        ok(&agpj(
             home.path(),
             "Alpha Two",
             &["add", "New project", "--assignee", "ai", "--actor", "human"],

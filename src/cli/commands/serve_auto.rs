@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 use serde_json::json;
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::interact::browser;
 use crate::paths::{ServeInfo, ServeMode};
 use crate::server::monitor_connection::lifecycle::MonitorEnv;
@@ -21,12 +21,12 @@ const SWITCH_TIMEOUT: Duration = Duration::from_secs(5);
 /// open to reconnect before it opens one.
 const OPEN_GRACE: Duration = Duration::from_secs(3);
 
-/// Serve as a server another command started: prefer `AGBOARD_AUTOSTART_PORT`
-/// (7420), and stop after `AGBOARD_IDLE_TIMEOUT` without use. The startup line
+/// Serve as a server another command started: prefer `AGPJ_AUTOSTART_PORT`
+/// (7420), and stop after `AGPJ_IDLE_TIMEOUT` without use. The startup line
 /// is JSON, for the command that waits for it; the command's lock is let go of
 /// once the server is ready. With `open`, the project's board is opened in the
 /// browser once, unless a board page connects within a short time.
-pub fn run(open: Option<ProjectId>) -> Result<(), AgboardError> {
+pub fn run(open: Option<ProjectId>) -> Result<(), AgpjError> {
     let lock = crate::autostart::inherited_lock();
     let env = |name: &str| std::env::var(name).ok();
     let port = crate::autostart::preferred_port(&env);
@@ -62,10 +62,10 @@ pub fn run(open: Option<ProjectId>) -> Result<(), AgboardError> {
     Ok(())
 }
 
-/// The wait before opening: `AGBOARD_OPEN_GRACE_MS` for the tests, up to a
+/// The wait before opening: `AGPJ_OPEN_GRACE_MS` for the tests, up to a
 /// minute, or three seconds.
 fn open_grace(env: &dyn Fn(&str) -> Option<String>) -> Duration {
-    env("AGBOARD_OPEN_GRACE_MS")
+    env("AGPJ_OPEN_GRACE_MS")
         .and_then(|value| value.trim().parse::<u64>().ok())
         .filter(|ms| *ms <= 60_000)
         .map_or(OPEN_GRACE, Duration::from_millis)
@@ -96,8 +96,8 @@ pub fn conflicts(port: Option<u16>, monitor: Option<&str>, info: &ServeInfo) -> 
 /// Turn the running automatic server into a manual one, which no longer stops
 /// by itself, and print the line `serve -d` prints. The server keeps running,
 /// so the commands waiting on it stay connected.
-pub fn switch_to_manual(data_dir: &Path, info: &ServeInfo, json: bool) -> Result<(), AgboardError> {
-    let unavailable = |reason: String| AgboardError::BoardUnavailable { reason };
+pub fn switch_to_manual(data_dir: &Path, info: &ServeInfo, json: bool) -> Result<(), AgpjError> {
+    let unavailable = |reason: String| AgpjError::BoardUnavailable { reason };
     let pid = libc::pid_t::try_from(info.pid)
         .map_err(|_| unavailable("serve.json has an invalid pid.".into()))?;
     // SAFETY: SIGUSR1 only tells the server to stop counting idle time.
@@ -147,7 +147,7 @@ mod tests {
     #[test]
     fn the_wait_before_opening_comes_from_the_environment() {
         let with = |value: &'static str| {
-            open_grace(&move |name| (name == "AGBOARD_OPEN_GRACE_MS").then(|| value.into()))
+            open_grace(&move |name| (name == "AGPJ_OPEN_GRACE_MS").then(|| value.into()))
         };
         assert_eq!(open_grace(&|_| None), Duration::from_secs(3));
         assert_eq!(with("200"), Duration::from_millis(200));

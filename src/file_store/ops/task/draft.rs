@@ -3,7 +3,7 @@
 use chrono::{DateTime, Utc};
 
 use crate::domain::{Changed, Draft, ProjectId, RunState};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::history_language::HistoryLanguage;
 use crate::file_store::model::{HistoryRecord, TaskFile, TaskView};
@@ -27,9 +27,9 @@ impl FileStore {
         draft: Option<Draft>,
         discard: bool,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         if draft == Some(Draft::Human) && discard {
-            return Err(AgboardError::InvalidArgument {
+            return Err(AgpjError::InvalidArgument {
                 message: "discard cannot be combined with draft: \"human\".".to_string(),
                 command: None,
             });
@@ -38,7 +38,7 @@ impl FileStore {
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         if task.draft == draft {
             return Ok(Changed {
@@ -47,7 +47,7 @@ impl FileStore {
             });
         }
         if draft == Some(Draft::Human) && task.agent_status == RunState::Running {
-            return Err(AgboardError::InvalidStateForDraft {
+            return Err(AgpjError::InvalidStateForDraft {
                 id,
                 state: task.agent_status,
             });
@@ -75,7 +75,7 @@ pub(super) fn draft_event(
     discard: bool,
     at: DateTime<Utc>,
     language: HistoryLanguage,
-) -> Result<HistoryRecord, AgboardError> {
+) -> Result<HistoryRecord, AgpjError> {
     let event = transition_event(Transition {
         language,
         kind: HistoryKind::Draft,

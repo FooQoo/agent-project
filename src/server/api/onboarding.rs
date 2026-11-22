@@ -11,7 +11,7 @@ use serde::Deserialize;
 
 use super::super::AppState;
 use super::super::request::ApiJson;
-use super::super::response::{agboard_error_response, json_response};
+use super::super::response::{agpj_error_response, json_response};
 use super::super::store::with_files;
 use crate::file_store::onboarding_state::GuideOutcome;
 
@@ -24,7 +24,7 @@ pub(super) struct SeenInput {
 pub(super) async fn get_onboarding(State(state): State<Arc<AppState>>) -> Response {
     match with_files(&state, |store| store.guide(chrono::Utc::now())).await {
         Ok(file) => json_response(StatusCode::OK, &file),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -38,6 +38,6 @@ pub(super) async fn mark_onboarding_seen(
     .await
     {
         Ok(file) => json_response(StatusCode::OK, &file),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

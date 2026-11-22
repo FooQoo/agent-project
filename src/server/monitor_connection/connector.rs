@@ -18,7 +18,7 @@ impl Connector for SdkConnector {
             .await
             .map_err(|e| {
                 // Diagnostic only: the reason ngrok gave. The error text never holds the token.
-                eprintln!("agboard: ngrok did not open the tunnel: {e}");
+                eprintln!("agpj: ngrok did not open the tunnel: {e}");
                 OpenFailure {
                     code: match e {
                         EndpointError::Connect(_) => FailureCode::ConnectFailed,

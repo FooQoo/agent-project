@@ -27,7 +27,7 @@ function local(id: string, name: string, type = 'image/png'): EditorAttachment {
 
 beforeEach(() => {
   selectLocale('en');
-  document.head.innerHTML = '<meta name="agboard-token" content="test-token">';
+  document.head.innerHTML = '<meta name="agpj-token" content="test-token">';
 });
 afterEach(() => {
   cleanup();
@@ -86,7 +86,7 @@ describe('the request body', () => {
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe(`/api/projects/${PROJECT}/messages/requests`);
     expect(init.method).toBe('POST');
-    expect(init.headers).toMatchObject({ 'X-Agboard-Token': 'test-token' });
+    expect(init.headers).toMatchObject({ 'X-Agpj-Token': 'test-token' });
     expect(init.body).toBeInstanceOf(FormData);
   });
 });

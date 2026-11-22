@@ -9,7 +9,7 @@ use clap::Args;
 use super::enums::{ActorArg, AssigneeArg, ColumnArg, ReportStateArg, RunStateArg};
 use super::history::ChangeArgs;
 use super::version::{PlanArgs, VersionFilterArgs};
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 
 /// The three mutually exclusive ways to give a description. On edit, the
 /// current TASK.md history is retained regardless of history in this input.
@@ -25,12 +25,12 @@ pub struct DescriptionArgs {
 }
 
 #[derive(Args, Debug)]
-#[command(after_help = "Examples:\n  agboard --project \"My project\" init")]
+#[command(after_help = "Examples:\n  agpj --project \"My project\" init")]
 pub struct InitArgs {}
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo add \"Write the setup guide\" --assignee ai --actor ai\n  agboard --project demo add \"Fix the login bug\" --assignee ai --actor ai --current-version\n  agboard --project demo add \"Fix the login bug\" --desc \"Users cannot sign in on Safari\" --assignee ai --actor ai\n  agboard --project demo add \"Plan the release\" --desc-file notes.txt --assignee ai --actor ai\n  echo \"Details\" | agboard --project demo add \"Write the docs\" --desc - --assignee ai --actor ai"
+    after_help = "Examples:\n  agpj --project demo add \"Write the setup guide\" --assignee ai --actor ai\n  agpj --project demo add \"Fix the login bug\" --assignee ai --actor ai --current-version\n  agpj --project demo add \"Fix the login bug\" --desc \"Users cannot sign in on Safari\" --assignee ai --actor ai\n  agpj --project demo add \"Plan the release\" --desc-file notes.txt --assignee ai --actor ai\n  echo \"Details\" | agpj --project demo add \"Write the docs\" --desc - --assignee ai --actor ai"
 )]
 pub struct AddArgs {
     /// Title of the task (1 to 100 characters, one line)
@@ -55,7 +55,7 @@ pub struct AddArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "A task a person is drafting (draft: human) is read-only for agents: edit fails with task_is_draft (exit code 1) and changes nothing. Wait for the user to finalize it, then try again. A task you created with --backlog waits in the Backlog: you can edit it, and only a person sends it to Todo.\n\nExamples:\n  agboard --project demo edit 15 --planned-version v1.9.0\n  agboard --project demo edit 15 --current-version\n  agboard --project demo edit 15 --unplanned\n  agboard --project demo edit 15 --title \"Write the install guide\"\n  agboard --project demo edit 15 --desc \"Steps for macOS and Linux\"\n  agboard --project demo edit 15 --desc \"\""
+    after_help = "A task a person is drafting (draft: human) is read-only for agents: edit fails with task_is_draft (exit code 1) and changes nothing. Wait for the user to finalize it, then try again. A task you created with --backlog waits in the Backlog: you can edit it, and only a person sends it to Todo.\n\nExamples:\n  agpj --project demo edit 15 --planned-version v1.9.0\n  agpj --project demo edit 15 --current-version\n  agpj --project demo edit 15 --unplanned\n  agpj --project demo edit 15 --title \"Write the install guide\"\n  agpj --project demo edit 15 --desc \"Steps for macOS and Linux\"\n  agpj --project demo edit 15 --desc \"\""
 )]
 pub struct EditArgs {
     /// ID of the task
@@ -77,7 +77,7 @@ pub struct EditArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "A task a person is editing (draft: human) is read-only here: mv fails with task_is_draft (exit code 1). Wait for the user to finalize it.\n\nMoving a Backlog task to todo is how a plan is handed over to be worked on; saving, answering, and checking conditions never do. Only a person does it: an agent is refused with human_only. When a question about the task is still open, it is refused with send_with_open_questions until the person confirms with --force. A task that is not in the Backlog is moved like any other.\n\nExamples:\n  agboard --project demo mv 12 doing --actor ai --reason \"Starting\"\n  agboard --project demo mv 12 done --actor ai --reason \"Finished\"\n  agboard --project demo mv 12 todo --actor human\n  agboard --project demo mv 12 todo --actor human --force"
+    after_help = "A task a person is editing (draft: human) is read-only here: mv fails with task_is_draft (exit code 1). Wait for the user to finalize it.\n\nMoving a Backlog task to todo is how a plan is handed over to be worked on; saving, answering, and checking conditions never do. Only a person does it: an agent is refused with human_only. When a question about the task is still open, it is refused with send_with_open_questions until the person confirms with --force. A task that is not in the Backlog is moved like any other.\n\nExamples:\n  agpj --project demo mv 12 doing --actor ai --reason \"Starting\"\n  agpj --project demo mv 12 done --actor ai --reason \"Finished\"\n  agpj --project demo mv 12 todo --actor human\n  agpj --project demo mv 12 todo --actor human --force"
 )]
 pub struct MvArgs {
     /// ID of the task
@@ -93,7 +93,7 @@ pub struct MvArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "A draft task (draft: human or ai) is read-only for agents here: state fails with task_is_draft (exit code 1). Wait for the user to finalize or start it.\n\nRun states:\n  idle     not working on it\n  running  you are working on it now\n\nTo ask the user, use message ask. While a task waits for answers, state running by an agent fails with questions_unanswered (exit code 1).\n\nExamples:\n  agboard --project demo state 12 running --actor ai --reason \"Working\"\n  agboard --project demo state 12 idle --actor ai --reason \"Ready for review\""
+    after_help = "A draft task (draft: human or ai) is read-only for agents here: state fails with task_is_draft (exit code 1). Wait for the user to finalize or start it.\n\nRun states:\n  idle     not working on it\n  running  you are working on it now\n\nTo ask the user, use message ask. While a task waits for answers, state running by an agent fails with questions_unanswered (exit code 1).\n\nExamples:\n  agpj --project demo state 12 running --actor ai --reason \"Working\"\n  agpj --project demo state 12 idle --actor ai --reason \"Ready for review\""
 )]
 pub struct StateArgs {
     /// ID of the task
@@ -112,7 +112,7 @@ pub struct StateArgs {
 }
 
 #[derive(Args, Debug)]
-#[command(after_help = "Examples:\n  agboard --project demo rm 11")]
+#[command(after_help = "Examples:\n  agpj --project demo rm 11")]
 pub struct RmArgs {
     /// ID of the task
     pub id: i64,
@@ -120,7 +120,7 @@ pub struct RmArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo ls\n  agboard --project demo ls --column doing\n  agboard --project demo ls --state awaiting_answer --json\n  agboard --project demo ls --current-version\n  agboard --project demo ls --version v1.8.0 --epic FILE-SHARE --json\n  agboard --project demo ls --unplanned\n  agboard ls --all-projects\n  agboard ls --all-projects --state awaiting_answer --json"
+    after_help = "Examples:\n  agpj --project demo ls\n  agpj --project demo ls --column doing\n  agpj --project demo ls --state awaiting_answer --json\n  agpj --project demo ls --current-version\n  agpj --project demo ls --version v1.8.0 --epic FILE-SHARE --json\n  agpj --project demo ls --unplanned\n  agpj ls --all-projects\n  agpj ls --all-projects --state awaiting_answer --json"
 )]
 pub struct LsArgs {
     /// List the tasks of every project, read-only; do not give --project
@@ -142,7 +142,7 @@ pub struct LsArgs {
 #[derive(Args, Debug)]
 #[command(
     args_conflicts_with_subcommands = true,
-    after_help = "Examples:\n  agboard --project demo show 12\n  agboard --project demo show 12 --json\n  agboard show remote\n  agboard --project demo show remote --json"
+    after_help = "Examples:\n  agpj --project demo show 12\n  agpj --project demo show 12 --json\n  agpj show remote\n  agpj --project demo show remote --json"
 )]
 pub struct ShowArgs {
     /// ID of the task
@@ -156,24 +156,24 @@ pub struct ShowArgs {
 pub enum ShowCommand {
     /// Show the saved ngrok settings and the connection state; with --project and a ready connection, also the phone URL and passcode
     #[command(
-        after_help = "Without --project it prints the saved settings (enabled, fixed domain, whether a token is saved in the keychain, whether the keychain is available) and the connection state of the running server. The token is never shown.\nWith --project NAME it is what you give a person who wants to open that project on a phone: the URL and the 4-digit passcode of the ready connection. Nothing is started: without a ready connection it prints the reason and exits 1 as remote_unavailable.\nThe passcode is printed only here, on this computer. Anyone who gets it can open the board while the connection is up.\nChange the settings with \"agboard setup remote\".\n\nExamples:\n  agboard show remote\n  agboard show remote --json\n  agboard --project \"My project\" show remote\n  agboard --project \"My project\" show remote --json"
+        after_help = "Without --project it prints the saved settings (enabled, fixed domain, whether a token is saved in the keychain, whether the keychain is available) and the connection state of the running server. The token is never shown.\nWith --project NAME it is what you give a person who wants to open that project on a phone: the URL and the 4-digit passcode of the ready connection. Nothing is started: without a ready connection it prints the reason and exits 1 as remote_unavailable.\nThe passcode is printed only here, on this computer. Anyone who gets it can open the board while the connection is up.\nChange the settings with \"agpj setup remote\".\n\nExamples:\n  agpj show remote\n  agpj show remote --json\n  agpj --project \"My project\" show remote\n  agpj --project \"My project\" show remote --json"
     )]
     Remote,
 }
 
 #[derive(Args, Debug)]
-#[command(after_help = "Examples:\n  agboard --project demo snapshot --json")]
+#[command(after_help = "Examples:\n  agpj --project demo snapshot --json")]
 pub struct SnapshotArgs {}
 
 #[derive(Args, Debug)]
-#[command(after_help = "Examples:\n  agboard --project demo workspace --json")]
+#[command(after_help = "Examples:\n  agpj --project demo workspace --json")]
 pub struct WorkspaceArgs {}
 
 impl DescriptionArgs {
     /// The description the user asked for: `None` when no option was given.
     /// `--desc -` reads `stdin` to the end. One trailing newline from a file
     /// or from standard input is dropped, since editors and `echo` add it.
-    pub fn resolve(&self, stdin: &mut dyn Read) -> Result<Option<String>, AgboardError> {
+    pub fn resolve(&self, stdin: &mut dyn Read) -> Result<Option<String>, AgpjError> {
         if let Some(text) = &self.desc {
             if text != "-" {
                 return Ok(Some(text.clone()));
@@ -181,7 +181,7 @@ impl DescriptionArgs {
             let mut buffer = String::new();
             stdin
                 .read_to_string(&mut buffer)
-                .map_err(|e| AgboardError::FileError {
+                .map_err(|e| AgpjError::FileError {
                     action: FileAction::Read,
                     file: "standard input".to_string(),
                     reason: e.to_string(),
@@ -189,7 +189,7 @@ impl DescriptionArgs {
             return Ok(Some(strip_final_newline(buffer)));
         }
         if let Some(path) = &self.desc_file {
-            let text = std::fs::read_to_string(path).map_err(|e| AgboardError::FileError {
+            let text = std::fs::read_to_string(path).map_err(|e| AgpjError::FileError {
                 action: FileAction::Read,
                 file: path.display().to_string(),
                 reason: e.to_string(),

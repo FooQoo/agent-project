@@ -3,11 +3,11 @@
 
 mod common;
 
-use agent_board::domain::{Actor, Assignee, Draft, NewTask, ProjectId};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::model::NewEpic;
-use agent_board::file_store::validate::EpicId;
+use agent_project::domain::{Actor, Assignee, Draft, NewTask, ProjectId};
+use agent_project::error::AgpjError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::model::NewEpic;
+use agent_project::file_store::validate::EpicId;
 use chrono::{TimeZone, Utc};
 use serde_json::{Value, json};
 use std::fs;
@@ -122,10 +122,10 @@ fn a_persons_draft_still_refuses_an_agent_edit() {
     let id = f.task(Actor::Human, Assignee::Ai, Some(Draft::Human));
     assert!(matches!(
         f.store.edit_task(&f.project, id, Some("x"), None, now()),
-        Err(AgboardError::TaskIsDraft { .. })
+        Err(AgpjError::TaskIsDraft { .. })
     ));
     assert!(matches!(
         f.store.add_history(&f.project, id, Some("note"), now()),
-        Err(AgboardError::TaskIsDraft { .. })
+        Err(AgpjError::TaskIsDraft { .. })
     ));
 }

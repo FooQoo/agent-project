@@ -1,4 +1,4 @@
-//! Everything Agent Board knows about the external agent CLIs: their names, how to find them,
+//! Everything Agent Project knows about the external agent CLIs: their names, how to find them,
 //! how to check a login, how to list models, and the exact arguments of a headless launch.
 //! Nothing outside this module names `claude` or `codex`.
 
@@ -8,14 +8,14 @@ use std::time::Duration;
 
 use serde::Serialize;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::sessions::Tool;
 use crate::setup::agent_cli;
 
 /// Overrides the `claude` executable (tests point it at a fake script).
-pub const CLAUDE_BIN_ENV: &str = "AGBOARD_CLAUDE_BIN";
+pub const CLAUDE_BIN_ENV: &str = "AGPJ_CLAUDE_BIN";
 /// Overrides the `codex` executable.
-pub const CODEX_BIN_ENV: &str = "AGBOARD_CODEX_BIN";
+pub const CODEX_BIN_ENV: &str = "AGPJ_CODEX_BIN";
 
 /// The model aliases `claude` accepts; it has no command that lists them.
 const CLAUDE_MODELS: [&str; 4] = ["opus", "sonnet", "haiku", "fable"];
@@ -23,9 +23,9 @@ const CLAUDE_MODELS: [&str; 4] = ["opus", "sonnet", "haiku", "fable"];
 /// The first instruction of a launched session. The detailed procedure lives in the skill.
 pub fn prompt(project_name: &str) -> String {
     format!(
-        "You were launched by Agent Board as a resident agent for project \"{project_name}\". \
-         Run `agboard skills resident` and read the part for a session the board launched. Do \
-         not run `agboard wait`: the board sends you each piece of work as a message, one at a \
+        "You were launched by Agent Project as a resident agent for project \"{project_name}\". \
+         Run `agpj skills resident` and read the part for a session the board launched. Do \
+         not run `agpj wait`: the board sends you each piece of work as a message, one at a \
          time, when you are idle. Once you have read the skill, end your turn and wait for \
          the next message. Ask a person only on the board with `message ask`, never in the \
          chat. Stop only when the board stops you."
@@ -33,10 +33,10 @@ pub fn prompt(project_name: &str) -> String {
 }
 
 /// The tool the launcher can start; `unknown` cannot be launched.
-pub fn launchable(tool: Tool) -> Result<Tool, AgboardError> {
+pub fn launchable(tool: Tool) -> Result<Tool, AgpjError> {
     match tool {
         Tool::ClaudeCode | Tool::Codex => Ok(tool),
-        Tool::Unknown => Err(AgboardError::InvalidValue {
+        Tool::Unknown => Err(AgpjError::InvalidValue {
             field: "tool".to_string(),
             reason: "tool must be claude-code or codex.".to_string(),
         }),
@@ -63,7 +63,7 @@ pub struct Executables {
 const CHECK_TIMEOUT: Duration = Duration::from_secs(20);
 
 impl Executables {
-    /// `AGBOARD_CLAUDE_BIN` and `AGBOARD_CODEX_BIN` when set, else the server's `PATH`.
+    /// `AGPJ_CLAUDE_BIN` and `AGPJ_CODEX_BIN` when set, else the server's `PATH`.
     pub fn from_env() -> Executables {
         let var = |name: &str| {
             std::env::var_os(name)
@@ -95,7 +95,7 @@ impl Executables {
     }
 
     /// The executable of `tool`, or `agent_cli_missing`.
-    pub fn find(&self, tool: Tool) -> Result<PathBuf, AgboardError> {
+    pub fn find(&self, tool: Tool) -> Result<PathBuf, AgpjError> {
         let name = command_name(tool);
         let overridden = match tool {
             Tool::Codex => &self.codex,
@@ -105,16 +105,16 @@ impl Executables {
             Some(path) => Some(path.clone()).filter(|path| path.is_file()),
             None => agent_cli::find_on_path(name, self.path.as_deref()),
         };
-        found.ok_or_else(|| AgboardError::AgentCliMissing {
+        found.ok_or_else(|| AgpjError::AgentCliMissing {
             tool: name.to_string(),
         })
     }
 
     /// The tool is installed and logged in, or the error that says which is not.
-    pub fn check(&self, tool: Tool) -> Result<PathBuf, AgboardError> {
+    pub fn check(&self, tool: Tool) -> Result<PathBuf, AgpjError> {
         let tool = launchable(tool)?;
         let program = self.find(tool)?;
-        let logged_out = || AgboardError::AgentCliLoggedOut {
+        let logged_out = || AgpjError::AgentCliLoggedOut {
             tool: command_name(tool).to_string(),
         };
         let run = |args: &[&str]| agent_cli::run_with_timeout(&program, args, None, self.timeout);
@@ -130,7 +130,7 @@ impl Executables {
         let logged_in = match answered {
             Ok(logged_in) => logged_in,
             Err(reason) if reason.contains("did not finish") => {
-                return Err(AgboardError::SessionLaunchFailed {
+                return Err(AgpjError::SessionLaunchFailed {
                     reason: format!("The login check of {}: {reason}.", command_name(tool)),
                 });
             }
@@ -145,7 +145,7 @@ impl Executables {
 
     /// The models to offer for `tool`. When the list cannot be read the list is empty and
     /// `reason` says why; the tool then launches with its own default model.
-    pub fn models(&self, tool: Tool) -> Result<ModelList, AgboardError> {
+    pub fn models(&self, tool: Tool) -> Result<ModelList, AgpjError> {
         let tool = launchable(tool)?;
         let program = self.find(tool)?;
         if tool == Tool::ClaudeCode {
@@ -265,7 +265,7 @@ pub fn codex_args() -> Vec<OsString> {
 }
 
 /// Whether the environment variable of the server's own agent session must not reach a child.
-/// These would make the child's `agboard wait` take it for another tool. Variables that only
+/// These would make the child's `agpj wait` take it for another tool. Variables that only
 /// configure the CLI (its home folder and keys) are kept.
 pub fn scrubbed(name: &str) -> bool {
     const KEPT: [&str; 3] = ["CODEX_HOME", "CODEX_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN"];
@@ -273,7 +273,7 @@ pub fn scrubbed(name: &str) -> bool {
         return false;
     }
     name == "CLAUDECODE"
-        || name == "AGBOARD_RESIDENT_ID"
+        || name == "AGPJ_RESIDENT_ID"
         || name.starts_with("CLAUDE_CODE_")
         || name.starts_with("CODEX_")
 }
@@ -310,8 +310,8 @@ mod tests {
     fn the_prompt_tells_the_session_not_to_wait_because_the_board_sends_work() {
         let text = prompt("demo");
         assert!(text.contains("\"demo\""));
-        assert!(text.contains("agboard skills resident"));
-        assert!(text.contains("Do not run `agboard wait`"));
+        assert!(text.contains("agpj skills resident"));
+        assert!(text.contains("Do not run `agpj wait`"));
         assert!(text.contains("end your turn"));
         assert!(text.contains("`message ask`"));
         assert!(text.contains("Stop only when the board stops you"));

@@ -79,23 +79,23 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 
 | Code | When | Exit | HTTP |
 | --- | --- | --- | --- |
-| `already_serving` | Another `serve` already runs on this data area. When it was started automatically, the reason says to run `agboard serve -d` to keep it. | 1 | n/a |
-| `port_in_use` | The port given to `serve` is taken. The reason names what holds it: another Agent Board server with a different data area (with its pid), or another program. An automatic server takes another port instead. | 1 | n/a |
-| `local_network_denied` | The OS or a sandbox refused to let `agboard` listen on or connect to `127.0.0.1` (`EACCES` or `EPERM`). In Codex, `agboard setup` allows `agboard` to run outside the sandbox. | 1 | n/a |
-| `board_unavailable` | A waiting `message ask`, `message wait`, `wait`, `open`, or the hook cannot reach the server: autostart is off (`AGBOARD_AUTOSTART=0`), the server could not start (the reason names `serve.log`), the server named in `serve.json` does not answer, or the connection failed. A waiting `message ask` checks the server before saving, so an unavailable server leaves no question; `--no-wait` needs no server. | 1 | n/a |
+| `already_serving` | Another `serve` already runs on this data area. When it was started automatically, the reason says to run `agpj serve -d` to keep it. | 1 | n/a |
+| `port_in_use` | The port given to `serve` is taken. The reason names what holds it: another Agent Project server with a different data area (with its pid), or another program. An automatic server takes another port instead. | 1 | n/a |
+| `local_network_denied` | The OS or a sandbox refused to let `agpj` listen on or connect to `127.0.0.1` (`EACCES` or `EPERM`). In Codex, `agpj setup` allows `agpj` to run outside the sandbox. | 1 | n/a |
+| `board_unavailable` | A waiting `message ask`, `message wait`, `wait`, `open`, or the hook cannot reach the server: autostart is off (`AGPJ_AUTOSTART=0`), the server could not start (the reason names `serve.log`), the server named in `serve.json` does not answer, or the connection failed. A waiting `message ask` checks the server before saving, so an unavailable server leaves no question; `--no-wait` needs no server. | 1 | n/a |
 | `remote_unavailable` | `show remote` with `--project` has no ready ngrok connection to report: no server is running, or the connection is not `ready` (disabled, starting, reconnecting, failed, and so on). The reason says which; when the connection failed, it names the failure code. Nothing is started, and no address or passcode is printed. | 1 | n/a |
 | `invalid_domain` | `setup remote --domain` is not a bare host name: it has a scheme, a path, a port, a wildcard, or spaces. The board's settings API returns the same code with HTTP 422. Nothing is saved. | 2 | 422 |
 | `keychain_unavailable` | `setup remote --token-stdin` (or the token question of `setup`) cannot use the OS keychain. Nothing is saved, including the other options of the same command. The board's API returns the same code with HTTP 409. | 1 | 409 |
-| `browser_open_failed` | `open` could not start the program that opens the browser (`open`, `xdg-open`, or `AGBOARD_BROWSER_OPENER`). The reason names the address to open by hand. A browser that may not be opened (`AGBOARD_OPEN_BROWSER=0`, SSH, no display) is not an error. | 1 | n/a |
-| `agent_cli_missing` | The board cannot launch a session because `claude` or `codex` is not installed on the server's `PATH` (or `AGBOARD_CLAUDE_BIN` / `AGBOARD_CODEX_BIN` does not name a file). | 1 | 409 |
+| `browser_open_failed` | `open` could not start the program that opens the browser (`open`, `xdg-open`, or `AGPJ_BROWSER_OPENER`). The reason names the address to open by hand. A browser that may not be opened (`AGPJ_OPEN_BROWSER=0`, SSH, no display) is not an error. | 1 | n/a |
+| `agent_cli_missing` | The board cannot launch a session because `claude` or `codex` is not installed on the server's `PATH` (or `AGPJ_CLAUDE_BIN` / `AGPJ_CODEX_BIN` does not name a file). | 1 | 409 |
 | `agent_cli_logged_out` | The agent CLI is installed but not logged in (`claude auth status` reports `loggedIn` false, or `codex login status` fails). The reason says to log in in a terminal. | 1 | 409 |
 | `session_launch_refused` | The board already keeps a launched session, of either tool, and it is running, restarting, or attached. Board-launched sessions are limited to one in total over both tools and all projects. The reason names the tool and says to stop it first. | 1 | 409 |
 | `session_launch_failed` | The agent CLI could not be started, its log file could not be written, or its login check did not finish within 20 seconds. | 1 | 500 |
-| `project_has_no_folder` | A session cannot be launched because the project has no bound folder that still exists. Bind one with `agboard project bind`. | 1 | 409 |
+| `project_has_no_folder` | A session cannot be launched because the project has no bound folder that still exists. Bind one with `agpj project bind`. | 1 | 409 |
 | `cursor_invalid` | The cursor is malformed or belongs to another project. | 1 | n/a |
 | `wait_timeout` | Change mode (`wait --after`) reached its optional `--timeout` with no change, with no change. A `message ask` or `message wait` that reaches its `--timeout` is not an error: it prints a `timeout` event and exits 5. | 1 | n/a |
-| `hook_cwd_unavailable` | The hook's input `cwd` is an absolute path that does not exist or cannot be read. It is reported as `AGBOARD_ERROR`; a folder that cannot be checked is never treated as unbound. | n/a (hook output) | n/a |
-| `invalid_hook_input` | The hook input is not valid JSON, is too large, or has a `cwd` that is not a string or not an absolute path. Reported as `AGBOARD_ERROR`. | n/a (hook output) | n/a |
+| `hook_cwd_unavailable` | The hook's input `cwd` is an absolute path that does not exist or cannot be read. It is reported as `AGPJ_ERROR`; a folder that cannot be checked is never treated as unbound. | n/a (hook output) | n/a |
+| `invalid_hook_input` | The hook input is not valid JSON, is too large, or has a `cwd` that is not a string or not an absolute path. Reported as `AGPJ_ERROR`. | n/a (hook output) | n/a |
 | `forbidden` | A web write failed the guard (Host, Origin, `Sec-Fetch-Site`, or token). | n/a | 403 |
 | `invalid_sections` | The `sections` query of a Detail route is not `document`, `history`, or `document,history`. See [Web API](./web-api.md#summary-and-detail). | n/a | 400 |
 | `not_implemented` | The Summary or Detail route exists but its handler is not written yet. | n/a | 501 |
@@ -132,7 +132,7 @@ These are returned by the `/api/projects/{projectId}/docs/…` routes (see [Web 
 | `docs_not_markdown` | The file routes were given a name that does not end in `.md` or `.mdx`. | n/a | 415 |
 | `docs_asset_type` | The image route was given a file that is not PNG, JPEG, WebP, GIF, AVIF, or SVG. | n/a | 415 |
 | `docs_open_failed` | The open route could not open `docs/` or the file: the folder does not exist, or the program could not be started. The `reason` says which. | n/a | 500 |
-| `release_doc_refused` | `release doc` did not write the release document: its `agboard:generated` marker lines are not exactly one start line followed by one end line, the path is not a regular file, or the file changed while it was generated. The file is left as it was. Fix the markers or run the command again. | 1 | 409 |
+| `release_doc_refused` | `release doc` did not write the release document: its `agpj:generated` marker lines are not exactly one start line followed by one end line, the path is not a regular file, or the file changed while it was generated. The file is left as it was. Fix the markers or run the command again. | 1 | 409 |
 | `docs_too_large` | A file over 2 MiB, or an image over 10 MiB. | n/a | 413 |
 | `docs_not_utf8` | The file is not valid UTF-8 text. It is not changed. | n/a | 422 |
 

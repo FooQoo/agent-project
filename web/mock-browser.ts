@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 
-const SEED_ID = 'virtual:agboard-mock-seed';
+const SEED_ID = 'virtual:agpj-mock-seed';
 const RESOLVED_SEED_ID = `\0${SEED_ID}`;
 const FIXTURE_PATH = resolve(import.meta.dirname, 'test/fixtures/board.json');
 const LONG_MARKDOWN_PATH = resolve(import.meta.dirname, 'test/fixtures/long-markdown.md');
@@ -25,13 +25,13 @@ export interface MockBrowserOptions {
 /**
  * The sample-data server runs in the page, behind a Service Worker, in the dev sample-data mode
  * (`vite --mode mock`) and in the demo build (`vite build --mode demo`). This plugin gives the page
- * the sample data as `virtual:agboard-mock-seed`, serves the MSW worker script beside the page
+ * the sample data as `virtual:agpj-mock-seed`, serves the MSW worker script beside the page
  * (the dev server) or emits it into the build (the demo, next to `index.html`, so its scope is the
  * demo folder), and fills the page's server placeholders. Only registered in those two modes.
  */
 export function mockBrowser(options: MockBrowserOptions): Plugin {
   return {
-    name: 'agboard-mock-browser',
+    name: 'agpj-mock-browser',
     resolveId: (id) => (id === SEED_ID ? RESOLVED_SEED_ID : null),
     load(id) {
       if (id !== RESOLVED_SEED_ID) return null;
@@ -50,8 +50,8 @@ export function mockBrowser(options: MockBrowserOptions): Plugin {
       this.emitFile({ type: 'asset', fileName: WORKER_FILE, source: workerSource() });
     },
     transformIndexHtml(html) {
-      const page = html.replace('{{AGBOARD_TOKEN}}', options.token);
-      return options.noBuildId ? page.replace('{{AGBOARD_BUILD_ID}}', '') : page;
+      const page = html.replace('{{AGPJ_TOKEN}}', options.token);
+      return options.noBuildId ? page.replace('{{AGPJ_BUILD_ID}}', '') : page;
     },
   };
 }

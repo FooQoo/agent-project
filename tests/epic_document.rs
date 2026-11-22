@@ -8,7 +8,7 @@ use std::fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
-use common::{agboard, demo_project, json_ok};
+use common::{agpj, demo_project, json_ok};
 use serde_json::Value;
 
 const DOCUMENT: &str = "---\nwaves:\n  - 3\n  - 1\nextra: kept\n---\n\n# Goal\r\n\nKeep ![shot](assets/0123456789abcdef0123456789abcdef.png) as is.\n\n日本語の本文。\n";
@@ -28,7 +28,7 @@ fn epic_dir(home: &Path, id: &str) -> PathBuf {
 }
 
 fn add_epic(home: &Path, id: &str) {
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home,
         &[
             "--project",
@@ -88,7 +88,7 @@ fn a_missing_epic_document_is_reported_and_nothing_is_made_up() {
 fn the_epic_edit_options_are_document_and_document_file() {
     let home = home_with_project();
     add_epic(home.path(), "ALPHA");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -107,7 +107,7 @@ fn the_epic_edit_options_are_document_and_document_file() {
     );
     let file = home.path().join("details.md");
     fs::write(&file, "# Details\n\nBy file.\n").unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -136,7 +136,7 @@ fn the_epic_edit_options_are_document_and_document_file() {
 fn json_outputs_use_document_and_document_path() {
     let home = home_with_project();
     add_epic(home.path(), "ALPHA");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--epic", "ALPHA"],
     );
@@ -189,14 +189,14 @@ fn json_outputs_use_document_and_document_path() {
 fn the_hook_snapshot_uses_document_path() {
     let home = home_with_project();
     add_epic(home.path(), "ALPHA");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--epic", "ALPHA"],
     );
     assert_eq!(code, 0, "{err}");
     write_document(home.path(), "ALPHA", DOCUMENT.as_bytes());
     let input = br#"{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"x"}}"#;
-    let out = agent_board::agent::hook::run(
+    let out = agent_project::agent::hook::run(
         "claude",
         &mut Cursor::new(input),
         &home.path().join("shared"),

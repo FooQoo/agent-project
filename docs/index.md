@@ -1,6 +1,6 @@
 ---
 layout: home
-title: Agent Board
+title: Agent Project
 markdownStyles: false
 
 landing:
@@ -10,10 +10,10 @@ landing:
     done: Copied
   hero:
     title: "Delegate big work.\nStop babysitting it."
-    lead: Agent Board is a shared workspace where your AI agent plans and reports, and you answer. It turns your request into a plan with acceptance conditions, starts it once your questions are answered, and stops for you only when it must. Watch and answer from your PC, your phone, or the chat.
-    install: brew install fooqoo/tap/agboard
+    lead: Agent Project is a shared workspace where your AI agent plans and reports, and you answer. It turns your request into a plan with acceptance conditions, starts it once your questions are answered, and stops for you only when it must. Watch and answer from your PC, your phone, or the chat.
+    install: brew install fooqoo/tap/agpj
     primary: { text: Get started, link: /guide/getting-started }
-    secondary: { text: GitHub, link: https://github.com/FooQoo/agent-board }
+    secondary: { text: GitHub, link: https://github.com/FooQoo/agent-project }
     meta: macOS · Claude Code / Codex · MIT License
     videoLabel: "Demo: you send a request with Ask AI, the agent turns it into tasks and asks a question, you answer, and the agent works until the task is done"
   problem:
@@ -95,20 +95,20 @@ landing:
   agents:
     eyebrow: Integrations
     title: Works with the agents you already use.
-    lead: agboard setup installs the Agent Board plugin, with the Skill and the Hook, for Claude Code and Codex. The same work model works across both. Your agent reads the progress table, plans the work, asks questions, and waits for your answer.
+    lead: agpj setup installs the Agent Project plugin, with the Skill and the Hook, for Claude Code and Codex. The same work model works across both. Your agent reads the progress table, plans the work, asks questions, and waits for your answer.
     supportedLabel: Supported agents
     supported:
       - { text: Claude Code, link: https://www.claude.com/product/claude-code }
       - { text: Codex, link: https://developers.openai.com/codex }
-    trademark: Claude Code is a product of Anthropic and Codex is a product of OpenAI; their names are trademarks of their respective owners. Agent Board is an independent project and is not affiliated with or endorsed by either company.
-    command: agboard setup
+    trademark: Claude Code is a product of Anthropic and Codex is a product of OpenAI; their names are trademarks of their respective owners. Agent Project is an independent project and is not affiliated with or endorsed by either company.
+    command: agpj setup
     terminal:
       label: In your terminal
       caption: Choose your agents and confirm, and the plugin is in place.
       lines:
-        - { kind: command, text: $ agboard setup }
-        - { kind: frame, text: "┌  agboard setup" }
-        - { kind: question, text: "◇  Which agent do you use with Agent Board?" }
+        - { kind: command, text: $ agpj setup }
+        - { kind: frame, text: "┌  agpj setup" }
+        - { kind: question, text: "◇  Which agent do you use with Agent Project?" }
         - { kind: answer, text: "│  Both" }
         - { kind: question, text: "◇  Apply these changes? …" }
         - { kind: answer, text: "│  Yes" }
@@ -127,16 +127,16 @@ landing:
     title: Three steps to an open board.
     lead: You need macOS 15 or later, Homebrew, and Claude Code or Codex.
     steps:
-      - { title: Install, commands: [brew install fooqoo/tap/agboard] }
-      - { title: Set up your agent and a project, commands: [agboard setup, 'agboard project create "My project"'] }
-      - { title: Open the board, commands: [agboard serve] }
+      - { title: Install, commands: [brew install fooqoo/tap/agpj] }
+      - { title: Set up your agent and a project, commands: [agpj setup, 'agpj project create "My project"'] }
+      - { title: Open the board, commands: [agpj serve] }
     note: "Some features, such as Docs and resident agents, are in public preview. See "
     noteLinks:
       - { text: Feature stages, link: /guide/feature-stages }
     noteJoin: " and "
     noteEnd: .
     primary: { text: Read Install and start, link: /guide/getting-started }
-    secondary: { text: GitHub, link: https://github.com/FooQoo/agent-board }
+    secondary: { text: GitHub, link: https://github.com/FooQoo/agent-project }
 ---
 
 <LandingPage />

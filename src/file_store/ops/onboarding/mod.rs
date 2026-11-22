@@ -8,12 +8,12 @@ use super::super::FileStore;
 use super::super::onboarding_state::{self as state, GuideOutcome, Loaded, OnboardingFile};
 use super::super::reader;
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 impl FileStore {
     /// The guide's state. A version 1 file is upgraded first, so a read never shows
     /// sample cards from an older release.
-    pub fn guide(&self, now: DateTime<Utc>) -> Result<OnboardingFile, AgboardError> {
+    pub fn guide(&self, now: DateTime<Utc>) -> Result<OnboardingFile, AgpjError> {
         let shared = self.shared_dir();
         if !state::state_file(shared).exists() {
             return Ok(OnboardingFile::fresh());
@@ -26,7 +26,7 @@ impl FileStore {
         &self,
         outcome: GuideOutcome,
         now: DateTime<Utc>,
-    ) -> Result<OnboardingFile, AgboardError> {
+    ) -> Result<OnboardingFile, AgpjError> {
         let shared = self.shared_dir();
         state::with_lock(shared, || {
             self.load_guide_locked(now)?;
@@ -37,14 +37,14 @@ impl FileStore {
     }
 
     /// Upgrade a version 1 file when the server starts.
-    pub fn guide_upgrade(&self, now: DateTime<Utc>) -> Result<(), AgboardError> {
+    pub fn guide_upgrade(&self, now: DateTime<Utc>) -> Result<(), AgpjError> {
         self.guide(now).map(|_| ())
     }
 
     /// Read the file; for a version 1 file, archive the sample cards of its open
     /// run and rewrite it as version 2. A failure while archiving leaves the old
     /// file in place, so the next read finishes the same cleanup.
-    fn load_guide_locked(&self, now: DateTime<Utc>) -> Result<OnboardingFile, AgboardError> {
+    fn load_guide_locked(&self, now: DateTime<Utc>) -> Result<OnboardingFile, AgpjError> {
         let shared = self.shared_dir();
         let Loaded {
             file,
@@ -67,7 +67,7 @@ impl FileStore {
     }
 
     /// Every card that an older release created for this run, wherever it is.
-    fn legacy_samples(&self, project: &ProjectId, run_id: &str) -> Result<Vec<i64>, AgboardError> {
+    fn legacy_samples(&self, project: &ProjectId, run_id: &str) -> Result<Vec<i64>, AgpjError> {
         let shared = self.shared_dir();
         let project_dir = reader::project_dir_checked(shared, project)?;
         let mut ids = Vec::new();

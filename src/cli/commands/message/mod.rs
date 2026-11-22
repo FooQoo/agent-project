@@ -16,7 +16,7 @@ use serde_json::Value;
 use crate::cli::args::{Cli, MessageArgs, MessageCommand};
 use crate::cli::run::{fail, write_text};
 use crate::cli::{Context, Env, output};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::qa::ReplyView;
 
 /// What a finished subcommand prints, and whether it changed the board.
@@ -100,8 +100,8 @@ fn head(text: &str, limit: usize) -> String {
     }
 }
 
-fn invalid(command: &str, message: impl Into<String>) -> AgboardError {
-    AgboardError::InvalidArgument {
+fn invalid(command: &str, message: impl Into<String>) -> AgpjError {
+    AgpjError::InvalidArgument {
         message: message.into(),
         command: Some(format!("message {command}")),
     }

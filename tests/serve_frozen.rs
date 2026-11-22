@@ -12,13 +12,13 @@ use std::time::{Duration, Instant};
 use serve_process::ServeProcess;
 
 fn bin(home: &Path) -> Command {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
     command
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0");
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0");
     command
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC");
     command
 }
@@ -110,7 +110,7 @@ fn a_saved_change_says_when_the_recorded_server_is_gone() {
     );
     let stderr = String::from_utf8_lossy(&added.stderr);
     assert!(
-        stderr.contains("serve.json") && stderr.contains("agboard serve"),
+        stderr.contains("serve.json") && stderr.contains("agpj serve"),
         "{stderr}"
     );
     let listed = bin(home.path())

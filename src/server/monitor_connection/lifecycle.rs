@@ -183,7 +183,7 @@ impl MonitorConnections {
         Ok(self.snapshot_now(&inner))
     }
 
-    /// Start the connection. The domain a run uses is `AGBOARD_NGROK_DOMAIN` when set, else the
+    /// Start the connection. The domain a run uses is `AGPJ_NGROK_DOMAIN` when set, else the
     /// saved one. `token`, if given, replaces the one held in memory.
     /// With `save`, that token is also put in the OS keychain; if the keychain
     /// cannot take it nothing is started and nothing is changed. A start is an

@@ -5,8 +5,8 @@ import { defineConfig } from '@playwright/test';
 // Documentation site tests. They run against the built VitePress site served by
 // `vitepress preview`, so build it first: `pnpm --dir docs build`. This config
 // is independent of the app suite: no global setup, no Rust or web build, no
-// AGBOARD_HOME. Runners can override the default documentation test port with their assigned port.
-const port = Number(process.env.AGBOARD_DOCS_E2E_PORT ?? 8445);
+// AGPJ_HOME. Runners can override the default documentation test port with their assigned port.
+const port = Number(process.env.AGPJ_DOCS_E2E_PORT ?? 8445);
 
 export default defineConfig({
   testDir: './docs',
@@ -15,16 +15,16 @@ export default defineConfig({
   retries: 0,
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  outputDir: path.join(os.tmpdir(), 'agent-board-docs-e2e-results'),
+  outputDir: path.join(os.tmpdir(), 'agent-project-docs-e2e-results'),
   reporter: [['list']],
   webServer: {
     command: `pnpm --dir ../docs preview --port ${port} --strictPort --host 127.0.0.1`,
-    url: `http://127.0.0.1:${port}/agent-board/`,
+    url: `http://127.0.0.1:${port}/agent-project/`,
     reuseExistingServer: false,
     timeout: 60_000,
   },
   use: {
-    baseURL: `http://127.0.0.1:${port}/agent-board/`,
+    baseURL: `http://127.0.0.1:${port}/agent-project/`,
     timezoneId: 'UTC',
     locale: 'en-US',
     viewport: { width: 1280, height: 900 },

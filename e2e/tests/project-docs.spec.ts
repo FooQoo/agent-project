@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
-import { mainHome, mainProject, projectId, resetBoard } from '../helpers/agboard';
+import { mainHome, mainProject, projectId, resetBoard } from '../helpers/agpj';
 import { waitForSync } from '../helpers/ui';
 
 // The project docs on the real page: open the dialog and choose a file, which is only shown; the
@@ -68,7 +68,7 @@ test('E2E-2: the dialog follows the files on disk: an edit, a new file, and a de
 });
 
 test('E2E-3: the file API refuses traversal, absolute paths, links and other extensions, and nothing writes', async ({ page, request }) => {
-  const outside = path.join(os.tmpdir(), `agboard-docs-outside-${process.pid}`);
+  const outside = path.join(os.tmpdir(), `agpj-docs-outside-${process.pid}`);
   mkdirSync(outside, { recursive: true });
   writeFileSync(path.join(outside, 'secret.md'), 'secret');
   symlinkSync(outside, path.join(docsDir(), 'linkdir'));
@@ -77,9 +77,9 @@ test('E2E-3: the file API refuses traversal, absolute paths, links and other ext
   mkdirSync(path.join(docsDir(), 'dir.md'), { recursive: true });
 
   await page.goto('/');
-  const token = (await page.locator('meta[name="agboard-token"]').getAttribute('content'))!;
+  const token = (await page.locator('meta[name="agpj-token"]').getAttribute('content'))!;
   const base = `/api/projects/${projectId(mainProject)}/docs`;
-  const guard = { Origin: new URL(page.url()).origin, 'Sec-Fetch-Site': 'same-origin', 'X-Agboard-Token': token };
+  const guard = { Origin: new URL(page.url()).origin, 'Sec-Fetch-Site': 'same-origin', 'X-Agpj-Token': token };
   const bad = ['../secret.md', '../../etc/passwd', '/etc/passwd', 'product/../../x.md', 'linkdir/secret.md', 'link.md', 'note.txt', 'dir.md'];
 
   try {
@@ -102,7 +102,7 @@ test('E2E-3: the file API refuses traversal, absolute paths, links and other ext
 
     const good = { path: 'product/tasks.md', content: 'x', expectedRevision: 'x' };
     expect((await request.put(`${base}/file`, { headers: guard, data: good })).status()).toBe(405);
-    for (const headers of [{} as Record<string, string>, { 'X-Agboard-Token': token }, { Origin: guard.Origin, 'Sec-Fetch-Site': 'same-origin' }]) {
+    for (const headers of [{} as Record<string, string>, { 'X-Agpj-Token': token }, { Origin: guard.Origin, 'Sec-Fetch-Site': 'same-origin' }]) {
       const response = await request.post(`${base}/open`, { headers, params: { path: 'product/tasks.md' } });
       expect(response.status(), JSON.stringify(Object.keys(headers))).toBe(403);
     }

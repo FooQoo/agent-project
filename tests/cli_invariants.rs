@@ -4,7 +4,7 @@
 //! and the argument; fix the definition, or add an entry to the matching allowlist with a
 //! reason a reviewer can weigh.
 
-use agent_board::cli::args::Cli;
+use agent_project::cli::args::Cli;
 use clap::error::ErrorKind;
 use clap::{Arg, Command, CommandFactory};
 
@@ -81,7 +81,7 @@ fn check(rule: &str, list: &[Allow], fix: &str, broken: impl Fn(&Arg) -> bool) -
             let id = arg.get_id().as_str();
             if broken(arg) && !allowed(list, &path, id) {
                 failures.push(format!(
-                    "command `agboard {path}`, argument `{id}`: {rule}. {fix} Or add (\"{path}\", \"{id}\", \"<reason>\") to the allowlist in tests/cli_invariants.rs."
+                    "command `agpj {path}`, argument `{id}`: {rule}. {fix} Or add (\"{path}\", \"{id}\", \"<reason>\") to the allowlist in tests/cli_invariants.rs."
                 ));
             }
         }
@@ -184,7 +184,7 @@ fn options_reject_the_next_flag_as_their_value() {
             if !arg.get_action().takes_values() || long == "json" {
                 continue;
             }
-            let mut argv = vec!["agboard".to_string()];
+            let mut argv = vec!["agpj".to_string()];
             argv.extend(path.iter().cloned());
             argv.push(format!("--{long}"));
             argv.push("--json".into());

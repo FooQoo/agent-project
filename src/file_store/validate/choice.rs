@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use super::{Defect, defect};
 use crate::domain::{MAX_CHOICE_ID_CHARS, MAX_CHOICE_LABEL_CHARS, MAX_CHOICES, MIN_CHOICES};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::model::Choice;
 
 /// The first defect of a decision request's choices, if any. Field names are
@@ -50,7 +50,7 @@ pub(super) fn choice_items_defect(choices: &[Choice]) -> Option<Defect> {
 }
 
 /// Trim the labels of `choices` and check them. A violation is `InvalidValue`.
-pub fn normalize_choices(choices: Vec<Choice>) -> Result<Vec<Choice>, AgboardError> {
+pub fn normalize_choices(choices: Vec<Choice>) -> Result<Vec<Choice>, AgpjError> {
     let normalized: Vec<Choice> = choices
         .into_iter()
         .map(|c| Choice {
@@ -60,7 +60,7 @@ pub fn normalize_choices(choices: Vec<Choice>) -> Result<Vec<Choice>, AgboardErr
         .collect();
     match choice_defect(&normalized) {
         None => Ok(normalized),
-        Some(d) => Err(AgboardError::InvalidValue {
+        Some(d) => Err(AgpjError::InvalidValue {
             field: d.field,
             reason: d.reason,
         }),

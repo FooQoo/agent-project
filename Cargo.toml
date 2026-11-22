@@ -1,15 +1,15 @@
 [package]
-name = "agent-board"
+name = "agent-project"
 version = "1.7.0"
 license = "MIT"
 description = "A local, history-backed work board for users and AI agents."
-repository = "https://github.com/FooQoo/agent-board"
-homepage = "https://github.com/FooQoo/agent-board"
+repository = "https://github.com/FooQoo/agent-project"
+homepage = "https://github.com/FooQoo/agent-project"
 edition = "2024"
 autobins = false
 
 [[bin]]
-name = "agboard"
+name = "agpj"
 path = "src/main.rs"
 
 [dependencies]

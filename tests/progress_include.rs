@@ -10,15 +10,15 @@ use assert_cmd::Command;
 use serde_json::Value;
 use tempfile::{TempDir, tempdir};
 
-fn agboard(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
+fn agpj(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
     let mut full = vec!["--project", "Demo"];
     full.extend(args);
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)
         .args(full)
@@ -46,7 +46,7 @@ fn add(home: &Path, title: &str, epic: Option<&str>) -> i64 {
     if let Some(epic) = epic {
         args.extend(["--epic", epic]);
     }
-    json(agboard(home, &args))["task"]["id"].as_i64().unwrap()
+    json(agpj(home, &args))["task"]["id"].as_i64().unwrap()
 }
 
 fn ids(list: &Value) -> Vec<i64> {
@@ -70,17 +70,17 @@ fn board() -> Board {
     let folder = home.path().join("work");
     fs::create_dir_all(&folder).unwrap();
     let folder = folder.display().to_string();
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home.path())
         .args(["project", "create", "Demo", "--folder", &folder])
         .assert()
         .success();
     for epic in ["ALPHA", "CLOSED"] {
-        out(agboard(
+        out(agpj(
             home.path(),
             &["epic", "add", epic, "--name", epic, "--actor", "ai"],
         ));
@@ -94,11 +94,11 @@ fn board() -> Board {
     let closed = add(home.path(), "closed epic done", Some("CLOSED"));
     let stray = add(home.path(), "no epic done", None);
     let w = waiting.to_string();
-    out(agboard(
+    out(agpj(
         home.path(),
         &["mv", &w, "doing", "--actor", "ai", "--reason", "start"],
     ));
-    out(agboard(
+    out(agpj(
         home.path(),
         &[
             "message",
@@ -113,7 +113,7 @@ fn board() -> Board {
         ],
     ));
     for id in [first, second, closed, stray] {
-        out(agboard(
+        out(agpj(
             home.path(),
             &[
                 "mv",
@@ -140,11 +140,11 @@ fn board() -> Board {
 #[test]
 fn the_default_table_has_no_pending_or_done_sections() {
     let b = board();
-    let table = json(agboard(b.home.path(), &["progress", "--json"]));
+    let table = json(agpj(b.home.path(), &["progress", "--json"]));
     assert!(table.get("awaitingAnswer").is_none());
     assert!(table.get("done").is_none());
     assert_eq!(ids(&table["epics"][0]["tasks"]), vec![b.open]);
-    let text = out(agboard(b.home.path(), &["progress"]));
+    let text = out(agpj(b.home.path(), &["progress"]));
     assert!(!text.contains("Waiting for a decision"));
     assert!(!text.contains("Recently done"));
 }
@@ -152,7 +152,7 @@ fn the_default_table_has_no_pending_or_done_sections() {
 #[test]
 fn include_flags_add_the_waiting_question_and_the_newest_done_tasks() {
     let b = board();
-    let table = json(agboard(
+    let table = json(agpj(
         b.home.path(),
         &[
             "progress",
@@ -167,7 +167,7 @@ fn include_flags_add_the_waiting_question_and_the_newest_done_tasks() {
     assert_eq!(ids(&table["done"]), vec![b.second]);
     assert_eq!(ids(&table["epics"][0]["tasks"]), vec![b.open]);
 
-    let text = out(agboard(
+    let text = out(agpj(
         b.home.path(),
         &[
             "progress",
@@ -191,7 +191,7 @@ fn include_flags_add_the_waiting_question_and_the_newest_done_tasks() {
 fn the_hook_passes_the_flags_through() {
     let b = board();
     let input = br#"{"hook_event_name":"SessionStart"}"#;
-    let default = agent_board::agent::hook::run(
+    let default = agent_project::agent::hook::run(
         "claude",
         &mut Cursor::new(input),
         &b.home.path().join("shared"),
@@ -199,12 +199,12 @@ fn the_hook_passes_the_flags_through() {
     )
     .unwrap();
     assert!(!default.contains("Proceed?"));
-    let with = agent_board::agent::hook::run_with(
+    let with = agent_project::agent::hook::run_with(
         "claude",
         &mut Cursor::new(input),
         &b.home.path().join("shared"),
         Some("Demo"),
-        agent_board::progress::Include {
+        agent_project::progress::Include {
             awaiting_answer: true,
             done: 1,
         },

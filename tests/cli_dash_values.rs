@@ -7,7 +7,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use common::{agboard, demo_project};
+use common::{agpj, demo_project};
 
 /// The text of every `TASK.md` under `home`, joined.
 fn all_task_text(home: &Path) -> String {
@@ -26,13 +26,13 @@ fn all_task_text(home: &Path) -> String {
     out
 }
 
-/// Run `agboard` with `input` on standard input.
-fn agboard_stdin(home: &Path, args: &[&str], input: &str) -> (i32, String, String) {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+/// Run `agpj` with `input` on standard input.
+fn agpj_stdin(home: &Path, args: &[&str], input: &str) -> (i32, String, String) {
+    let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)
         .args(args)
@@ -116,7 +116,7 @@ fn a_text_option_without_its_value_fails_instead_of_taking_the_next_flag() {
     for case in cases {
         let mut args = vec!["--project", "Demo"];
         args.extend_from_slice(case);
-        let (code, out, err) = agboard(home.path(), &args);
+        let (code, out, err) = agpj(home.path(), &args);
         assert_eq!(code, 2, "{case:?} should be refused: {out}{err}");
         assert!(out.is_empty(), "{case:?} printed {out}");
         assert!(err.contains("invalid_argument"), "{case:?}: {err}");
@@ -130,7 +130,7 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
 
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -145,7 +145,7 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
 
     let file = home.path().join("reason.txt");
     std::fs::write(&file, "- file form\n").unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -159,7 +159,7 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
     );
     assert_eq!(code, 0, "{err}");
 
-    let (code, _, err) = agboard_stdin(
+    let (code, _, err) = agpj_stdin(
         home.path(),
         &[
             "--project",
@@ -186,7 +186,7 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
 fn a_spaced_dash_value_is_refused_with_a_hint_to_use_equals() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -207,7 +207,7 @@ fn a_spaced_dash_value_is_refused_with_a_hint_to_use_equals() {
 fn a_lone_dash_still_reads_the_description_from_standard_input() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
-    let (code, _, err) = agboard_stdin(
+    let (code, _, err) = agpj_stdin(
         home.path(),
         &[
             "--project",

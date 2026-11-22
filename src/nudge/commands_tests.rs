@@ -14,17 +14,17 @@ fn detects_a_final_question() {
 }
 
 #[test]
-fn agboard_commands_are_recognized_by_tokens() {
+fn agpj_commands_are_recognized_by_tokens() {
     let ask: &[&[&str]] = &[&["message", "ask"], &["message", "answer"]];
-    assert!(runs_agboard(
-        "agboard --project \"x\" message ask --actor ai",
+    assert!(runs_agpj(
+        "agpj --project \"x\" message ask --actor ai",
         ask
     ));
-    assert!(runs_agboard("/usr/bin/agboard message answer Q-1", ask));
-    assert!(runs_agboard(
-        r#"tools.exec_command({cmd: "agboard message ask"})"#,
+    assert!(runs_agpj("/usr/bin/agpj message answer Q-1", ask));
+    assert!(runs_agpj(
+        r#"tools.exec_command({cmd: "agpj message ask"})"#,
         ask
     ));
-    assert!(!runs_agboard("agboard message show Q-1", ask));
-    assert!(!runs_agboard("echo message ask", ask));
+    assert!(!runs_agpj("agpj message show Q-1", ask));
+    assert!(!runs_agpj("echo message ask", ask));
 }

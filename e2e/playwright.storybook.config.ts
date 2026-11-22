@@ -5,7 +5,7 @@ import { defineConfig } from '@playwright/test';
 
 const e2eDir = path.dirname(fileURLToPath(import.meta.url));
 const webDir = path.resolve(e2eDir, '../web');
-const port = Number(process.env.AGBOARD_STORYBOOK_E2E_PORT ?? 8670);
+const port = Number(process.env.AGPJ_STORYBOOK_E2E_PORT ?? 8670);
 const origin = `http://127.0.0.1:${port}`;
 
 export default defineConfig({
@@ -15,7 +15,7 @@ export default defineConfig({
   retries: 0,
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  outputDir: path.join(os.tmpdir(), 'agent-board-storybook-e2e-results'),
+  outputDir: path.join(os.tmpdir(), 'agent-project-storybook-e2e-results'),
   reporter: [['list']],
   webServer: {
     command: `pnpm exec vite preview --host 127.0.0.1 --port ${port} --strictPort --outDir storybook-static`,

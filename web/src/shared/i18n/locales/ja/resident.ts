@@ -38,7 +38,7 @@ export const residentJa = {
     modelUnreadableWhy:
       'モデルの一覧を読み取れませんでした({{reason}})。既定のモデルで起動します。',
     toolLabel: 'ツール',
-    autoStart: 'Agent Board の起動時に自動で起動する',
+    autoStart: 'Agent Project の起動時に自動で起動する',
     nextStart: '次回の起動: {{tool}} · {{model}}',
     otherProject: 'このセッションは別のプロジェクトに張り付いています。',
     start: '起動',

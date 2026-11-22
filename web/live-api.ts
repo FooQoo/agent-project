@@ -1,14 +1,14 @@
 import type { Plugin, ProxyOptions } from 'vite';
 
-const TOKEN_PLACEHOLDER = '{{AGBOARD_TOKEN}}';
-const TOKEN_PATTERN = /<meta name="agboard-token" content="([0-9a-f]{64})"/;
+const TOKEN_PLACEHOLDER = '{{AGPJ_TOKEN}}';
+const TOKEN_PATTERN = /<meta name="agpj-token" content="([0-9a-f]{64})"/;
 
 /** Get the current delete token from the Rust server's rendered index. */
 async function fetchToken(backendOrigin: string): Promise<string> {
   const response = await fetch(backendOrigin, { signal: AbortSignal.timeout(2_000) });
-  if (!response.ok) throw new Error(`agboard serve returned ${response.status}`);
+  if (!response.ok) throw new Error(`agpj serve returned ${response.status}`);
   const token = (await response.text()).match(TOKEN_PATTERN)?.[1];
-  if (!token) throw new Error('agboard serve did not return a delete token');
+  if (!token) throw new Error('agpj serve did not return a delete token');
   return token;
 }
 
@@ -17,7 +17,7 @@ export function liveApi(backendOrigin: string): Plugin {
   let currentToken: string | undefined;
 
   return {
-    name: 'agboard-live-api',
+    name: 'agpj-live-api',
     apply: 'serve',
     async transformIndexHtml(html) {
       const token = await fetchToken(backendOrigin);

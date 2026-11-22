@@ -2,8 +2,8 @@ mod common;
 #[path = "support/qa.rs"]
 mod qa;
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, RunState};
-use agent_board::file_store::{FileStore, history_language::HistoryLanguage};
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, RunState};
+use agent_project::file_store::{FileStore, history_language::HistoryLanguage};
 use chrono::Utc;
 
 fn new_task(body: &str) -> NewTask {
@@ -93,7 +93,7 @@ fn japanese_body_localizes_generated_operations_and_preserves_authored_reasons()
         .set_draft(
             &project,
             id,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             Utc::now(),
         )
@@ -115,7 +115,7 @@ fn japanese_body_localizes_generated_operations_and_preserves_authored_reasons()
         .set_draft(
             &project,
             id,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             Utc::now(),
         )
@@ -128,8 +128,8 @@ fn japanese_body_localizes_generated_operations_and_preserves_authored_reasons()
         discarded.history.last().unwrap().reason,
         "下書きの変更を破棄しました。"
     );
-    use agent_board::file_store::model::NewEpic;
-    use agent_board::file_store::validate::EpicId;
+    use agent_project::file_store::model::NewEpic;
+    use agent_project::file_store::validate::EpicId;
     store
         .create_epic(
             &project,
@@ -239,7 +239,7 @@ fn browser_language_reaches_saved_history_and_invalid_headers_fall_back_to_body(
         ("unknown", "Created task"),
     ] {
         let mut headers = running.page_headers(&running.token());
-        headers.push(("X-Agboard-Language".into(), setting.into()));
+        headers.push(("X-Agpj-Language".into(), setting.into()));
         let reply = running.request(
             "POST",
             &path,

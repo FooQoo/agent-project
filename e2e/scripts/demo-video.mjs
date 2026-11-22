@@ -10,9 +10,9 @@ import { setPreferences } from '../helpers/preferences.mjs';
 // Records the English and Japanese demo videos from the real UI.
 // Build web/ and the CLI first. Needs ffmpeg and ffprobe. Only disposable data is used.
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const binary = process.env.AGBOARD_E2E_BINARY ?? path.join(repo, 'target/debug/agboard');
-// AGBOARD_MEDIA_OUT points the videos at another folder, so a check run does not touch the repository's files.
-const output = process.env.AGBOARD_MEDIA_OUT ? path.resolve(process.env.AGBOARD_MEDIA_OUT, 'videos') : path.join(repo, 'docs/public/videos');
+const binary = process.env.AGPJ_E2E_BINARY ?? path.join(repo, 'target/debug/agpj');
+// AGPJ_MEDIA_OUT points the videos at another folder, so a check run does not touch the repository's files.
+const output = process.env.AGPJ_MEDIA_OUT ? path.resolve(process.env.AGPJ_MEDIA_OUT, 'videos') : path.join(repo, 'docs/public/videos');
 const project = 'release-demo';
 // The board has three earlier cards; the agent's plan adds tasks 4 to 6, and the first is followed.
 const heroId = 4;
@@ -66,7 +66,7 @@ function markdown(text, completed) {
 
 function cli(home, args) {
   const result = spawnSync(binary, [...args, '--json'], {
-    cwd: home, env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' }, encoding: 'utf8',
+    cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' }, encoding: 'utf8',
   });
   if (result.status !== 0) throw new Error(`${args.join(' ')} failed: ${result.stderr || result.stdout}`);
   return JSON.parse(result.stdout);
@@ -166,11 +166,11 @@ async function record(browser, locale, tmp) {
   let context;
   try {
     const projectId = seed(home, text);
-    const port = await freePort(Number(process.env.AGBOARD_MEDIA_PORT ?? 0));
+    const port = await freePort(Number(process.env.AGPJ_MEDIA_PORT ?? 0));
     const origin = `http://127.0.0.1:${port}`;
     let stderr = '';
     server = spawn(binary, ['serve', '--port', String(port)], {
-      cwd: home, env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC', AGBOARD_WATCH: 'poll' }, stdio: ['ignore', 'ignore', 'pipe'],
+      cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC', AGPJ_WATCH: 'poll' }, stdio: ['ignore', 'ignore', 'pipe'],
     });
     server.stderr.on('data', (chunk) => { stderr += chunk; });
     await expect.poll(async () => {
@@ -330,7 +330,7 @@ function encode(source, start, end, suffix) {
   return { mp4, duration };
 }
 
-const tmp = mkdtempSync(path.join(os.tmpdir(), 'agboard-demo-'));
+const tmp = mkdtempSync(path.join(os.tmpdir(), 'agpj-demo-'));
 let browser;
 try {
   mkdirSync(output, { recursive: true });

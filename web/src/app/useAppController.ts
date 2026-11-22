@@ -117,7 +117,7 @@ export function useAppController(initial: AppInitial | undefined): AppController
   }, [archive.data, archive.status, session.archiveSelectedId, dispatch]);
 
   useLayoutEffect(() => {
-    document.title = activeName !== null ? `${activeName} - Agent Board` : 'Agent Board';
+    document.title = activeName !== null ? `${activeName} - Agent Project` : 'Agent Project';
   }, [activeName]);
 
   const activeRef = useRef(activeId);

@@ -1,14 +1,14 @@
 //! Checking version names against a project's list.
 
 use crate::domain::{ProjectId, validate_version_name};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::releases::{effective_current, listed_versions};
 use crate::file_store::{layout, reader};
 
 use super::version::VersionChoice;
 
-fn invalid(message: impl Into<String>) -> AgboardError {
-    AgboardError::InvalidArgument {
+fn invalid(message: impl Into<String>) -> AgpjError {
+    AgpjError::InvalidArgument {
         message: message.into(),
         command: None,
     }
@@ -20,14 +20,14 @@ pub(super) fn resolve(
     shared: &std::path::Path,
     project: &ProjectId,
     choice: &VersionChoice,
-) -> Result<Option<String>, AgboardError> {
+) -> Result<Option<String>, AgpjError> {
     let file = reader::read_project_file(shared, project)?;
     let listed = listed_versions(&layout::project_dir(shared, project));
     match choice {
         VersionChoice::Unset => Ok(None),
         VersionChoice::Current => effective_current(&listed, file.current_version.as_deref())
             .map(Some)
-            .ok_or(AgboardError::NoCurrentVersion),
+            .ok_or(AgpjError::NoCurrentVersion),
         VersionChoice::Named(name) => {
             let name = validate_version_name(name)?;
             if listed.contains(&name) {

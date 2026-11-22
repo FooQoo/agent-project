@@ -1,11 +1,11 @@
 import { existsSync, readdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { mainHome, mainOrigin, mainProject, projectId, workspace } from './agboard';
+import { mainHome, mainOrigin, mainProject, projectId, workspace } from './agpj';
 
 /** The write token the server puts in the page it serves. */
 async function pageToken(origin: string): Promise<string> {
 	const html = await (await fetch(`${origin}/`)).text();
-	const token = html.match(/<meta name="agboard-token" content="([^"]*)"/)?.[1];
+	const token = html.match(/<meta name="agpj-token" content="([^"]*)"/)?.[1];
 	if (!token) throw new Error(`no write token in the page at ${origin}`);
 	return token;
 }
@@ -18,7 +18,7 @@ async function send(method: 'POST' | 'PUT', path: string, body: unknown): Promis
 			'Content-Type': 'application/json',
 			Origin: origin,
 			'Sec-Fetch-Site': 'same-origin',
-			'X-Agboard-Token': await pageToken(origin),
+			'X-Agpj-Token': await pageToken(origin),
 		},
 		body: JSON.stringify(body),
 	});

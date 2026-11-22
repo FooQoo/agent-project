@@ -113,7 +113,7 @@ impl Connector for TailscaleConnector {
         Box::pin(async move {
             let fail = |code| OpenFailure { code };
             let cli = cli.ok_or_else(|| {
-                eprintln!("agboard: the tailscale command was not found");
+                eprintln!("agpj: the tailscale command was not found");
                 fail(FailureCode::TailscaleNotInstalled)
             })?;
             let port = request.backend.port().ok_or(fail(FailureCode::Internal))?;
@@ -132,7 +132,7 @@ impl Connector for TailscaleConnector {
 pub fn probe(cli: Option<&Path>) -> Result<String, FailureCode> {
     let cli = cli.ok_or(FailureCode::TailscaleNotInstalled)?;
     let status = run(cli, &["status", "--json"]).map_err(|e| {
-        eprintln!("agboard: tailscale status failed: {e}");
+        eprintln!("agpj: tailscale status failed: {e}");
         match e {
             RunError::Missing => FailureCode::TailscaleNotInstalled,
             RunError::Failed(_) => FailureCode::TailscaleNotLoggedIn,
@@ -153,15 +153,15 @@ fn start(cli: PathBuf, port: u16, cancelled: &AtomicBool) -> Result<OpenedTunnel
         return Err(FailureCode::Internal);
     }
     let existing = run(&cli, &["serve", "status", "--json"]).map_err(|e| {
-        eprintln!("agboard: tailscale serve status failed: {e}");
+        eprintln!("agpj: tailscale serve status failed: {e}");
         FailureCode::TailscaleServeFailed
     })?;
     if serve_is_busy(&existing) {
-        eprintln!("agboard: tailscale serve already has a handler on port 443; not replacing it");
+        eprintln!("agpj: tailscale serve already has a handler on port 443; not replacing it");
         return Err(FailureCode::TailscaleServeBusy);
     }
     run(&cli, &["serve", "--bg", "--https=443", &target]).map_err(|e| {
-        eprintln!("agboard: tailscale serve failed: {e}");
+        eprintln!("agpj: tailscale serve failed: {e}");
         FailureCode::TailscaleServeFailed
     })?;
     let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);

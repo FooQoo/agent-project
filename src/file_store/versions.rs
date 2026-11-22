@@ -10,7 +10,7 @@ use sha2::{Digest, Sha256};
 use super::io;
 use super::layout;
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The catalog version of a list of `(project, version)` pairs, in the order
 /// given (callers pass them in ID order).
@@ -28,7 +28,7 @@ pub fn catalog_version_of<'a>(
 }
 
 /// The IDs of the project folders, in order. Only canonical folder names count.
-pub fn scan_ids(shared: &Path) -> Result<Vec<ProjectId>, AgboardError> {
+pub fn scan_ids(shared: &Path) -> Result<Vec<ProjectId>, AgpjError> {
     let dir = layout::projects_dir(shared);
     if !dir.is_dir() {
         return Ok(Vec::new());

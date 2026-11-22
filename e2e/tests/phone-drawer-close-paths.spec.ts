@@ -1,4 +1,4 @@
-import { agboardOk, listTasks, mainProject, resetBoard } from '../helpers/agboard';
+import { agpjOk, listTasks, mainProject, resetBoard } from '../helpers/agpj';
 import { expect, type Page, test } from '../helpers/fixtures';
 
 // Every way the phone's task drawer closes must release the hold on automatic updates: the card
@@ -39,7 +39,7 @@ for (const [name, close] of Object.entries(closers)) {
     await expect(drawer).toBeVisible();
     await close(page);
     await expect(drawer).toBeHidden();
-    agboardOk(mainProject, ['edit', String(task.id), '--title', `After ${name}`]);
+    agpjOk(mainProject, ['edit', String(task.id), '--title', `After ${name}`]);
     await expect(card(`After ${name}`)).toBeVisible({ timeout: 9_000 });
   });
 }

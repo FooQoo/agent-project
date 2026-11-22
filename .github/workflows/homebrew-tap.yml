@@ -1,7 +1,7 @@
 name: Publish to Homebrew tap
 
 # Runs when a GitHub Release is published (never for a draft or a prerelease).
-# It renders Formula/agboard.rb from the PUBLISHED assets, checks it, and pushes
+# It renders Formula/agpj.rb from the PUBLISHED assets, checks it, and pushes
 # it straight to the default branch of FooQoo/homebrew-tap.
 #
 # The Environment `homebrew-tap` only accepts `v*` tags, and holds the only copy
@@ -53,17 +53,17 @@ jobs:
         run: |
           mkdir -p "${RUNNER_TEMP}/assets"
           gh release download "${TAG}" --repo "${GITHUB_REPOSITORY}" --dir "${RUNNER_TEMP}/assets" \
-            --pattern 'agboard-*.tar.gz' --pattern SHA256SUMS
+            --pattern 'agpj-*.tar.gz' --pattern SHA256SUMS
       - name: Render the Formula
         run: |
           mkdir -p "${RUNNER_TEMP}/formula"
           python3 -I scripts/release/render-formula.py --tag "${TAG}" \
             --sums "${RUNNER_TEMP}/assets/SHA256SUMS" --assets "${RUNNER_TEMP}/assets" \
-            --out "${RUNNER_TEMP}/formula/agboard.rb"
+            --out "${RUNNER_TEMP}/formula/agpj.rb"
       - name: Check the generator and the Formula
         run: |
           bash scripts/release/test-formula.sh
-          /usr/bin/ruby -c "${RUNNER_TEMP}/formula/agboard.rb"
+          /usr/bin/ruby -c "${RUNNER_TEMP}/formula/agpj.rb"
       - name: Push the Formula to the tap
         env:
           HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
@@ -77,14 +77,20 @@ jobs:
           git clone --depth 1 "git@github.com:${TAP_REPO}.git" "${RUNNER_TEMP}/tap"
           cd "${RUNNER_TEMP}/tap"
           mkdir -p Formula
-          cp "${RUNNER_TEMP}/formula/agboard.rb" Formula/agboard.rb
-          git add Formula/agboard.rb
+          cp "${RUNNER_TEMP}/formula/agpj.rb" Formula/agpj.rb
+          git add Formula/agpj.rb
+          # Formula/agboard.rb stays pinned to the preserved v1.1.1; only agpj.rb may change.
+          changed=$(git status --porcelain | awk '{print $2}')
+          case "${changed}" in
+            ""|"Formula/agpj.rb") ;;
+            *) echo "unexpected tap changes: ${changed}" >&2; exit 1 ;;
+          esac
           if git diff --cached --quiet; then
             echo "The tap already has the Formula for ${TAG}; nothing to push."
             exit 0
           fi
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
-            commit -m "agboard ${TAG#v}"
+            commit -m "agpj ${TAG#v}"
           git push origin HEAD
       - name: Remove the deploy key
         if: always()

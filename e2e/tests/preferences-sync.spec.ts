@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '../helpers/fixtures';
-import { mainOrigin } from '../helpers/agboard';
+import { mainOrigin } from '../helpers/agpj';
 import {
   createMonitorHome,
   monitorProjectId,

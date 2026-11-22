@@ -1,5 +1,5 @@
 {
-  "name": "agent-board-e2e",
+  "name": "agent-project-e2e",
   "private": true,
   "type": "module",
   "scripts": {

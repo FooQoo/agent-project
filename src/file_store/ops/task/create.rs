@@ -6,7 +6,7 @@ use std::path::Path;
 use chrono::{DateTime, Utc};
 
 use crate::domain::{Column, NewTask, ProjectId, RunState, validate_title};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::frontmatter;
 use crate::file_store::history::{ParseMode, compose_task, parse_task};
@@ -29,7 +29,7 @@ fn write_new_task(
     project_dir: &Path,
     task: &TaskFile,
     body: &str,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     let tasks = layout::tasks_dir(project_dir);
     let target = layout::task_dir(project_dir, task.id);
     let label = layout::shared_label(shared, &target);
@@ -41,17 +41,17 @@ fn write_new_task(
         io::random_hex(16).map_err(|e| io::write_error(&label, e))?
     ));
     fs::create_dir(&temp).map_err(|e| io::write_error(&label, e))?;
-    let result = (|| -> Result<(), AgboardError> {
+    let result = (|| -> Result<(), AgpjError> {
         let parsed = parse_task(body, ParseMode::NewInput);
         if let Some(defect) = parsed.history_defects.first() {
-            return Err(AgboardError::FileInvalid {
+            return Err(AgpjError::FileInvalid {
                 file: format!("{label}/TASK.md"),
                 field: defect.field.clone(),
                 reason: defect.reason.clone(),
             });
         }
         let body = compose_task(body, &parsed.body, None, &task.history).map_err(|defect| {
-            AgboardError::FileInvalid {
+            AgpjError::FileInvalid {
                 file: format!("{label}/TASK.md"),
                 field: defect.field,
                 reason: defect.reason,
@@ -61,7 +61,7 @@ fn write_new_task(
         let body =
             match task.planned_version.as_deref() {
                 Some(version) => frontmatter::compose_planned_version(&body, Some(version))
-                    .map_err(|defect| AgboardError::FileInvalid {
+                    .map_err(|defect| AgpjError::FileInvalid {
                         file: format!("{label}/TASK.md"),
                         field: defect.field,
                         reason: defect.reason,
@@ -98,7 +98,7 @@ impl FileStore {
         project: &ProjectId,
         new: NewTask,
         now: DateTime<Utc>,
-    ) -> Result<TaskView, AgboardError> {
+    ) -> Result<TaskView, AgpjError> {
         self.create_task_in(project, new, Column::Todo, now)
     }
 
@@ -109,7 +109,7 @@ impl FileStore {
         project: &ProjectId,
         new: NewTask,
         now: DateTime<Utc>,
-    ) -> Result<TaskView, AgboardError> {
+    ) -> Result<TaskView, AgpjError> {
         self.create_task_in(project, new, Column::Backlog, now)
     }
 
@@ -119,7 +119,7 @@ impl FileStore {
         new: NewTask,
         lane: Column,
         now: DateTime<Utc>,
-    ) -> Result<TaskView, AgboardError> {
+    ) -> Result<TaskView, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         self.create_task_locked(&project_dir, project, new, lane, None, now)
@@ -135,7 +135,7 @@ impl FileStore {
         lane: Column,
         release_notes_version: Option<String>,
         now: DateTime<Utc>,
-    ) -> Result<TaskView, AgboardError> {
+    ) -> Result<TaskView, AgpjError> {
         let title = validate_title(&new.title)?;
         let description = normalize_description(&new.description)?;
         let shared = self.shared_dir();

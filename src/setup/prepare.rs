@@ -9,7 +9,7 @@ use super::agent_cli;
 use super::plan::{self, Target};
 use super::plugin::{self, Source};
 use super::{Agent, Mode, SetupEnv, SetupOptions, VERSION, env};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// Everything a run would do, before anything is done.
 #[derive(Debug)]
@@ -74,13 +74,12 @@ pub fn available(env: &SetupEnv) -> Vec<(Agent, Option<PathBuf>)> {
 
 /// Plans a run. Fails only when the data directory cannot be resolved or a
 /// settings file cannot be used, before anything is written.
-pub fn prepare(env: &SetupEnv, options: &SetupOptions) -> Result<Prepared, AgboardError> {
+pub fn prepare(env: &SetupEnv, options: &SetupOptions) -> Result<Prepared, AgpjError> {
     let data_dir = env.data_dir()?;
     let root = data_dir
         .to_str()
-        .ok_or_else(|| AgboardError::BoardUnavailable {
-            reason: "The data directory path is not UTF-8. Set AGBOARD_HOME to a UTF-8 path."
-                .into(),
+        .ok_or_else(|| AgpjError::BoardUnavailable {
+            reason: "The data directory path is not UTF-8. Set AGPJ_HOME to a UTF-8 path.".into(),
         })?
         .to_string();
     let shared_dir = data_dir.join("shared");
@@ -105,7 +104,7 @@ fn plan_agent(
     mode: Mode,
     agent: Agent,
     root: &str,
-) -> Result<AgentPlan, AgboardError> {
+) -> Result<AgentPlan, AgpjError> {
     let override_location = env.marketplace_override();
     let forced = override_location.is_some();
     let mut planned = AgentPlan {
@@ -122,7 +121,7 @@ fn plan_agent(
     };
     let Some(program) = planned.program.clone() else {
         planned.skipped = Some(format!(
-            "The {} command was not found on PATH. Install {}, then run agboard {} again.",
+            "The {} command was not found on PATH. Install {}, then run agpj {} again.",
             agent.key(),
             agent.label(),
             mode.command()
@@ -145,7 +144,7 @@ fn plan_agent(
     match mode {
         Mode::Update if planned.installed.is_none() => {
             planned.skipped = Some(format!(
-                "The Agent Board plugin is not installed in {}. Run agboard setup to install it.",
+                "The Agent Project plugin is not installed in {}. Run agpj setup to install it.",
                 agent.label()
             ));
             return Ok(planned);
@@ -165,7 +164,7 @@ fn plan_files(
     agent: Agent,
     root: &str,
     planned: &mut AgentPlan,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     let config = match agent {
         Agent::Codex => env.codex_config()?,
         Agent::Claude => env.claude_settings()?,
@@ -197,7 +196,9 @@ impl Prepared {
                 }
             }
             if plan.trust {
-                text.push_str("  hooks: mark the Agent Board plugin's hooks as trusted in Codex\n");
+                text.push_str(
+                    "  hooks: mark the Agent Project plugin's hooks as trusted in Codex\n",
+                );
             }
             for step in &plan.manual {
                 text.push_str(&format!("  manual step: {step}\n"));

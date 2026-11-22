@@ -1,11 +1,11 @@
 use crate::cli::args::AddArgs;
 use crate::cli::{Context, Outcome};
 use crate::domain::{Actor, NewTask};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::validate::EpicId;
 use serde_json::json;
 
-pub fn run(ctx: &mut Context, args: &AddArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &AddArgs) -> Result<Outcome, AgpjError> {
     let mut stdin = std::io::stdin();
     let description = args.description.resolve(&mut stdin)?.unwrap_or_default();
     // The epic is checked before the task is written, so a wrong EPIC-ID creates nothing.

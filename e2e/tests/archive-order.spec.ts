@@ -1,5 +1,5 @@
 import { expect, test } from "../helpers/fixtures";
-import { mainProject, resetBoard } from "../helpers/agboard";
+import { mainProject, resetBoard } from "../helpers/agpj";
 import { resetPreferences } from "../helpers/preferences";
 
 // #660: the archive list is ordered by archive time, newest first, on the PC screen. The phone's list is covered in monitor-lanes.spec.ts.

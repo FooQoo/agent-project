@@ -4,10 +4,10 @@ import { onMonitorAuthLoss } from '../../pages/monitor/session';
 import { openRemoteSession, unlockRemote, usesRemoteSession, watchSessionLoss } from './session';
 
 function setToken(content: string | null) {
-  document.querySelector('meta[name="agboard-token"]')?.remove();
+  document.querySelector('meta[name="agpj-token"]')?.remove();
   if (content === null) return;
   const meta = document.createElement('meta');
-  meta.name = 'agboard-token';
+  meta.name = 'agpj-token';
   meta.content = content;
   document.head.append(meta);
 }
@@ -25,20 +25,20 @@ describe('the credential a write sends', () => {
   it('is the board token on the local page, whatever session state there is', () => {
     setToken('t'.repeat(64));
     setCsrfToken('c'.repeat(64));
-    expect(authHeaders()).toEqual({ 'X-Agboard-Token': 't'.repeat(64) });
+    expect(authHeaders()).toEqual({ 'X-Agpj-Token': 't'.repeat(64) });
     expect(csrfHeaders()).toEqual({});
   });
 
   it('is the session CSRF token on a page without a token, and never the token header', () => {
     setToken('');
     setCsrfToken('c'.repeat(64));
-    expect(authHeaders()).toEqual({ 'X-Agboard-Csrf': 'c'.repeat(64) });
-    expect(csrfHeaders()).toEqual({ 'X-Agboard-Csrf': 'c'.repeat(64) });
+    expect(authHeaders()).toEqual({ 'X-Agpj-Csrf': 'c'.repeat(64) });
+    expect(csrfHeaders()).toEqual({ 'X-Agpj-Csrf': 'c'.repeat(64) });
   });
 
   it('keeps the empty token header before a session exists', () => {
     setToken('');
-    expect(authHeaders()).toEqual({ 'X-Agboard-Token': '' });
+    expect(authHeaders()).toEqual({ 'X-Agpj-Token': '' });
   });
 });
 
@@ -62,11 +62,11 @@ describe('the passcode session', () => {
     });
     await unlockRemote('1234');
     expect(calls).toEqual(['/api/remote/unlock']);
-    expect(authHeaders()).toEqual({ 'X-Agboard-Csrf': 'k'.repeat(64) });
+    expect(authHeaders()).toEqual({ 'X-Agpj-Csrf': 'k'.repeat(64) });
     setCsrfToken('');
     await openRemoteSession();
     expect(calls).toEqual(['/api/remote/unlock', '/api/remote/session']);
-    expect(authHeaders()).toEqual({ 'X-Agboard-Csrf': 'k'.repeat(64) });
+    expect(authHeaders()).toEqual({ 'X-Agpj-Csrf': 'k'.repeat(64) });
   });
 
   it('keeps no CSRF token for a refused passcode', async () => {
@@ -79,7 +79,7 @@ describe('the passcode session', () => {
         }),
     );
     await expect(unlockRemote('0000')).rejects.toMatchObject({ code: 'unlock_failed' });
-    expect(authHeaders()).toEqual({ 'X-Agboard-Token': '' });
+    expect(authHeaders()).toEqual({ 'X-Agpj-Token': '' });
   });
 
   it('forgets the session and tells the gate when a board request is answered 401', async () => {
@@ -92,6 +92,6 @@ describe('the passcode session', () => {
     await window.fetch('/api/projects');
     stop();
     expect(losses).toEqual(['session_required']);
-    expect(authHeaders()).toEqual({ 'X-Agboard-Token': '' });
+    expect(authHeaders()).toEqual({ 'X-Agpj-Token': '' });
   });
 });

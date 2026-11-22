@@ -10,10 +10,10 @@ use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use chrono::{DateTime, Utc};
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::reader::sort_archived_newest_first;
 use crate::server::AppState;
-use crate::server::response::{agboard_error_response, json_response};
+use crate::server::response::{agpj_error_response, json_response};
 use crate::server::store::{indexed_view, parse_project_id};
 
 const DEFAULT_LIMIT: usize = 50;
@@ -53,14 +53,14 @@ impl PageCursor {
     }
 }
 
-fn bad(field: &str, reason: &str) -> AgboardError {
-    AgboardError::InvalidValue {
+fn bad(field: &str, reason: &str) -> AgpjError {
+    AgpjError::InvalidValue {
         field: field.to_string(),
         reason: reason.to_string(),
     }
 }
 
-fn parse_limit(query: &HashMap<String, String>) -> Result<usize, AgboardError> {
+fn parse_limit(query: &HashMap<String, String>) -> Result<usize, AgpjError> {
     let Some(raw) = query.get("limit") else {
         return Ok(DEFAULT_LIMIT);
     };
@@ -80,24 +80,24 @@ pub(super) async fn archive(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let limit = match parse_limit(&query) {
         Ok(limit) => limit,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let after = match query.get("cursor") {
         None => None,
         Some(text) => match PageCursor::decode(text) {
             Some(cursor) => Some(cursor),
             None => {
-                return agboard_error_response(&bad("cursor", "is not a cursor from this list"));
+                return agpj_error_response(&bad("cursor", "is not a cursor from this list"));
             }
         },
     };
     let view = match indexed_view(&state, &project_id) {
         Ok(view) => view,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let mut tasks: Vec<_> = view
         .tasks

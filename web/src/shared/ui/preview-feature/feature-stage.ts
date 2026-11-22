@@ -16,7 +16,7 @@ export const PREVIEW_FEATURES = {
 export type PreviewFeature = keyof typeof PREVIEW_FEATURES;
 
 /** The scheme is joined here so the source keeps no literal remote address (see test/styles.test.ts). */
-const SITE = `${'https'}://fooqoo.github.io/agent-board`;
+const SITE = `${'https'}://fooqoo.github.io/agent-project`;
 
 /** The feature-stages page of the documentation site, per language. */
 export const FEATURE_STAGES_URL: Record<Locale, string> = {

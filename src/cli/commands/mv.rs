@@ -1,20 +1,20 @@
 use crate::cli::args::MvArgs;
 use crate::cli::{Context, Outcome};
 use crate::domain::Actor;
-use crate::{domain::ChangeContext, error::AgboardError};
+use crate::{domain::ChangeContext, error::AgpjError};
 use serde_json::json;
 
 /// Only a person can confirm a warning; `--force` from an agent is refused.
-pub(super) fn ack_of(actor: Actor, force: bool) -> Result<bool, AgboardError> {
+pub(super) fn ack_of(actor: Actor, force: bool) -> Result<bool, AgpjError> {
     if force && actor == Actor::Ai {
-        return Err(AgboardError::HumanOnly {
+        return Err(AgpjError::HumanOnly {
             action: "confirming a send with open questions (--force)".into(),
         });
     }
     Ok(force)
 }
 
-pub fn run(ctx: &mut Context, args: &MvArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &MvArgs) -> Result<Outcome, AgpjError> {
     let reason = args.change.resolve_reason()?;
     let actor = args.change.actor.actor();
     let ack = ack_of(actor, args.force)?;

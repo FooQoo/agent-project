@@ -1,6 +1,6 @@
 ---
 layout: home
-title: Agent Board
+title: Agent Project
 markdownStyles: false
 
 landing:
@@ -10,10 +10,10 @@ landing:
     done: コピーしました
   hero:
     title: "頼むだけで、\n計画から完了まで\nAIが進めてくれる。"
-    lead: Agent Boardは、AIエージェントが計画し報告し、あなたが答える共有の作業場です。依頼を完了条件つきの計画に直し、質問への回答がそろったら自分で始め、止まってあなたに聞くのは必要なときだけ。見守るのも答えるのも、PCでもスマホでもチャットでもできます。
-    install: brew install fooqoo/tap/agboard
+    lead: Agent Projectは、AIエージェントが計画し報告し、あなたが答える共有の作業場です。依頼を完了条件つきの計画に直し、質問への回答がそろったら自分で始め、止まってあなたに聞くのは必要なときだけ。見守るのも答えるのも、PCでもスマホでもチャットでもできます。
+    install: brew install fooqoo/tap/agpj
     primary: { text: はじめる, link: /ja/guide/getting-started }
-    secondary: { text: GitHub, link: https://github.com/FooQoo/agent-board }
+    secondary: { text: GitHub, link: https://github.com/FooQoo/agent-project }
     meta: macOS · Claude Code / Codex · MIT License
     videoLabel: デモ動画。AI に依頼で頼むと、エージェントがタスクに分けて質問し、回答すると作業を進めて、完了まで進む
   problem:
@@ -95,20 +95,20 @@ landing:
   agents:
     eyebrow: 連携
     title: いつものエージェントから、そのまま。
-    lead: agboard setupが、Claude CodeとCodexにSkillとHookを含むAgent Boardプラグインを導入します。同じ仕事のモデルを、どちらでも使えます。エージェントは進行表を読み、仕事を計画し、質問して回答を待ちます。
+    lead: agpj setupが、Claude CodeとCodexにSkillとHookを含むAgent Projectプラグインを導入します。同じ仕事のモデルを、どちらでも使えます。エージェントは進行表を読み、仕事を計画し、質問して回答を待ちます。
     supportedLabel: 対応エージェント
     supported:
       - { text: Claude Code, link: https://www.claude.com/product/claude-code }
       - { text: Codex, link: https://developers.openai.com/codex }
-    trademark: Claude CodeはAnthropic、CodexはOpenAIの製品で、各名称は各社の商標です。Agent Boardは独立したプロジェクトで、両社と提携しておらず、推奨も受けていません。
-    command: agboard setup
+    trademark: Claude CodeはAnthropic、CodexはOpenAIの製品で、各名称は各社の商標です。Agent Projectは独立したプロジェクトで、両社と提携しておらず、推奨も受けていません。
+    command: agpj setup
     terminal:
       label: ターミナルで
       caption: エージェントを選んで確認するだけで、プラグインが入ります。
       lines:
-        - { kind: command, text: $ agboard setup }
-        - { kind: frame, text: "┌  agboard setup" }
-        - { kind: question, text: "◇  Which agent do you use with Agent Board?" }
+        - { kind: command, text: $ agpj setup }
+        - { kind: frame, text: "┌  agpj setup" }
+        - { kind: question, text: "◇  Which agent do you use with Agent Project?" }
         - { kind: answer, text: "│  Both" }
         - { kind: question, text: "◇  Apply these changes? …" }
         - { kind: answer, text: "│  Yes" }
@@ -127,16 +127,16 @@ landing:
     title: 3つの手順で、ボードが開きます。
     lead: macOS 15以降とHomebrew、Claude CodeかCodexがあれば始められます。
     steps:
-      - { title: インストールする, commands: [brew install fooqoo/tap/agboard] }
-      - { title: エージェントとプロジェクトを設定する, commands: [agboard setup, 'agboard project create "My project"'] }
-      - { title: ボードを開く, commands: [agboard serve] }
+      - { title: インストールする, commands: [brew install fooqoo/tap/agpj] }
+      - { title: エージェントとプロジェクトを設定する, commands: [agpj setup, 'agpj project create "My project"'] }
+      - { title: ボードを開く, commands: [agpj serve] }
     note: "ドキュメントや常駐エージェントなど、一部の機能はパブリックプレビューです。詳しくは"
     noteLinks:
       - { text: 機能の提供段階, link: /ja/guide/feature-stages }
     noteJoin: と
     noteEnd: を参照してください。
     primary: { text: インストールと起動を読む, link: /ja/guide/getting-started }
-    secondary: { text: GitHub, link: https://github.com/FooQoo/agent-board }
+    secondary: { text: GitHub, link: https://github.com/FooQoo/agent-project }
 ---
 
 <LandingPage />

@@ -67,8 +67,8 @@ fn a_permission_request_is_answered_allow_and_a_turn_end_does_not_end_the_sessio
     let Call::Start { prompt, env } = start else {
         panic!("the first call is the start");
     };
-    assert!(prompt.starts_with("You were launched by Agent Board"));
-    assert!(env.contains(&("AGBOARD_SESSION_ORIGIN".to_string(), "board".to_string())));
+    assert!(prompt.starts_with("You were launched by Agent Project"));
+    assert!(env.contains(&("AGPJ_SESSION_ORIGIN".to_string(), "board".to_string())));
 
     assert!(fx.launcher.stop().unwrap());
     assert!(calls_of(&calls).contains(&Call::Stop));
@@ -139,7 +139,7 @@ fn the_real_driver_answers_a_can_use_tool_request_with_an_allow_that_echoes_the_
     // The session logged its tool version from system/init.
     let log = std::fs::read_to_string(fx.launcher.log_path(Tool::ClaudeCode)).unwrap();
     assert!(
-        log.contains("agboard: claude-code 9.9.9 session fake-1"),
+        log.contains("agpj: claude-code 9.9.9 session fake-1"),
         "{log}"
     );
     assert!(fx.launcher.status().len() == 1);
@@ -156,12 +156,12 @@ fn a_working_session_reports_the_subagents_it_waits_on_and_logs_their_start_and_
     let log_path = fx.launcher.log_path(Tool::ClaudeCode);
     let log = || std::fs::read_to_string(&log_path).unwrap_or_default();
     wait_until("both task events are logged", || {
-        log().contains("agboard: background task completed: t2 pnpm test")
+        log().contains("agpj: background task completed: t2 pnpm test")
     });
     assert_eq!(fx.launcher.health().background_tasks, ["Review the diff"]);
     assert!(!fx.launcher.health().waiting);
     assert!(
-        log().contains("agboard: background task started: t1 Review the diff"),
+        log().contains("agpj: background task started: t1 Review the diff"),
         "{}",
         log()
     );

@@ -49,7 +49,7 @@ describe('story environment', () => {
         <span>content</span>
       </StoryEnvironment>,
     );
-    const stored = Object.keys(window.localStorage).filter((key) => key.startsWith('agboard.'));
+    const stored = Object.keys(window.localStorage).filter((key) => key.startsWith('agpj.'));
     expect(stored).toEqual([]);
   });
 
@@ -115,7 +115,7 @@ describe('product requests through MSW', () => {
 
   it('answers the API and the event stream from the sample-data server', async () => {
     useMockServer();
-    const response = await fetch('/api/projects', { headers: { 'X-Agboard-Token': 'mock-token' } });
+    const response = await fetch('/api/projects', { headers: { 'X-Agpj-Token': 'mock-token' } });
     expect(response.status).toBe(200);
     const source = new EventSource('/api/events');
     await new Promise((resolve) => source.addEventListener('ready', resolve, { once: true }));

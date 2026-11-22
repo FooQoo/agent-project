@@ -21,10 +21,10 @@ name: Release build
 #    archive is never a fallback for a formal release.
 #
 # Candidate artifact contract (one artifact per target, same SHA and run):
-#   candidate-<target>/agboard-<version>-<target>.tar.gz   unsigned, already stripped
+#   candidate-<target>/agpj-<version>-<target>.tar.gz   unsigned, already stripped
 #   candidate-<target>/candidate.json                       {version, target, sha, run_id, signed: false}
 # Signed artifact contract (one per target, formal path only):
-#   signed-<target>/agboard-<version>-<target>.tar.gz   signed, notarized bytes
+#   signed-<target>/agpj-<version>-<target>.tar.gz   signed, notarized bytes
 #   signed-<target>/signature.json, notary.json          public facts only
 #   signed-<target>/notary-log.json                      redacted, failures only
 
@@ -105,13 +105,13 @@ jobs:
       - name: Build the binary
         run: cargo build --release --locked --target "${{ matrix.target }}"
       - name: Strip before any signing
-        run: strip -x "target/${{ matrix.target }}/release/agboard"
+        run: strip -x "target/${{ matrix.target }}/release/agpj"
       - name: Package
-        run: scripts/release/package.sh "${{ matrix.target }}" "target/${{ matrix.target }}/release/agboard" dist
+        run: scripts/release/package.sh "${{ matrix.target }}" "target/${{ matrix.target }}/release/agpj" dist
       - name: Verify the archive
         env:
           VERIFY_PORT: "9040"
-        run: scripts/release/verify-artifact.sh "dist/agboard-${{ needs.version.outputs.version }}-${{ matrix.target }}.tar.gz" "${{ matrix.target }}"
+        run: scripts/release/verify-artifact.sh "dist/agpj-${{ needs.version.outputs.version }}-${{ matrix.target }}.tar.gz" "${{ matrix.target }}"
       - name: Write the candidate record
         run: |
           printf '{"version":"%s","target":"%s","sha":"%s","run_id":"%s","signed":false}\n' \
@@ -136,7 +136,7 @@ jobs:
         run: |
           mkdir assets
           for target in aarch64-apple-darwin x86_64-apple-darwin; do
-            cp "candidates/candidate-${target}/agboard-${{ needs.version.outputs.version }}-${target}.tar.gz" assets/
+            cp "candidates/candidate-${target}/agpj-${{ needs.version.outputs.version }}-${target}.tar.gz" assets/
             python3 - "candidates/candidate-${target}/candidate.json" "${target}" "${{ needs.version.outputs.version }}" <<'PY'
           import json, os, sys
           record = json.load(open(sys.argv[1]))
@@ -179,9 +179,9 @@ jobs:
           bad = {k: record.get(k) for k, v in want.items() if record.get(k) != v}
           sys.exit(f"candidate record differs: {bad}") if bad else None
           PY
-          scripts/release/verify-artifact.sh "candidate/agboard-${{ needs.version.outputs.version }}-${{ matrix.target }}.tar.gz" "${{ matrix.target }}"
+          scripts/release/verify-artifact.sh "candidate/agpj-${{ needs.version.outputs.version }}-${{ matrix.target }}.tar.gz" "${{ matrix.target }}"
           mkdir -p work evidence
-          tar -xzf "candidate/agboard-${{ needs.version.outputs.version }}-${{ matrix.target }}.tar.gz" -C work agboard
+          tar -xzf "candidate/agpj-${{ needs.version.outputs.version }}-${{ matrix.target }}.tar.gz" -C work agpj
       - name: Create the temporary signing keychain
         env:
           MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
@@ -189,28 +189,28 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: scripts/release/sign-macos.sh prepare
       - name: Sign
-        run: scripts/release/sign-macos.sh sign work/agboard
+        run: scripts/release/sign-macos.sh sign work/agpj
       - name: Verify the signature
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: scripts/release/verify-signature.sh work/agboard "${{ matrix.target }}" --json evidence/signature.json
+        run: scripts/release/verify-signature.sh work/agpj "${{ matrix.target }}" --json evidence/signature.json
       - name: Notarize and wait for Accepted
         env:
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-        run: scripts/release/notarize-macos.sh work/agboard "${{ matrix.target }}" evidence
+        run: scripts/release/notarize-macos.sh work/agpj "${{ matrix.target }}" evidence
       - name: Pack the same bytes and check the archive
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           VERIFY_PORT: "9040"
         run: |
-          scripts/release/package.sh "${{ matrix.target }}" work/agboard evidence
-          archive="evidence/agboard-${{ needs.version.outputs.version }}-${{ matrix.target }}.tar.gz"
+          scripts/release/package.sh "${{ matrix.target }}" work/agpj evidence
+          archive="evidence/agpj-${{ needs.version.outputs.version }}-${{ matrix.target }}.tar.gz"
           scripts/release/verify-artifact.sh "$archive" "${{ matrix.target }}"
           mkdir unpacked
-          tar -xzf "$archive" -C unpacked agboard
-          scripts/release/verify-signature.sh unpacked/agboard "${{ matrix.target }}"
+          tar -xzf "$archive" -C unpacked agpj
+          scripts/release/verify-signature.sh unpacked/agpj "${{ matrix.target }}"
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: signed-${{ matrix.target }}
@@ -251,7 +251,7 @@ jobs:
         run: |
           mkdir -p release/formula
           python3 scripts/release/render-formula.py --tag "v${{ needs.version.outputs.version }}" \
-            --sums release/assets/SHA256SUMS --assets release/assets --out release/formula/agboard.rb
+            --sums release/assets/SHA256SUMS --assets release/assets --out release/formula/agpj.rb
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: release-assets

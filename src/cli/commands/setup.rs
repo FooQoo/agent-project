@@ -1,4 +1,4 @@
-//! `agboard setup` and `agboard update` on the command line.
+//! `agpj setup` and `agpj update` on the command line.
 //!
 //! On a terminal the agents are chosen with a cliclack prompt (for setup,
 //! when `--agent` is not given), the plan is shown, and nothing happens until
@@ -13,7 +13,7 @@
 use std::io::IsTerminal;
 
 use crate::cli::args::SetupAgentArg;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::setup::{self, Agent, Mode, SetupEnv, SetupOptions, SetupReport};
 
 /// What the command line asked for; the same for both commands.
@@ -33,7 +33,7 @@ pub enum Finished {
     Cancelled,
 }
 
-pub fn run(request: &Request) -> Result<Finished, AgboardError> {
+pub fn run(request: &Request) -> Result<Finished, AgpjError> {
     if request.background {
         let agent = match request.agent {
             Some(SetupAgentArg::Codex) => Agent::Codex,
@@ -59,7 +59,7 @@ pub fn run(request: &Request) -> Result<Finished, AgboardError> {
             return Err(invalid(
                 command,
                 &format!(
-                    "{command} asks for a confirmation and needs a terminal for it; it never reads a pipe. Add --yes to agree in advance (this includes trusting the Agent Board plugin's hooks in Codex), or --dry-run to see the plan."
+                    "{command} asks for a confirmation and needs a terminal for it; it never reads a pipe. Add --yes to agree in advance (this includes trusting the Agent Project plugin's hooks in Codex), or --dry-run to see the plan."
                 ),
             ));
         }
@@ -82,9 +82,9 @@ pub fn run(request: &Request) -> Result<Finished, AgboardError> {
     };
     let prepared = setup::prepare(&env, &options)?;
     if interactive && !request.dry_run && !request.yes && prepared.has_work() {
-        let _ = cliclack::note(format!("agboard {command}"), prepared.describe());
+        let _ = cliclack::note(format!("agpj {command}"), prepared.describe());
         let question = if prepared.trusts_hooks() {
-            "Apply these changes? This also marks the Agent Board plugin's hooks as trusted in Codex, so Codex runs them without asking."
+            "Apply these changes? This also marks the Agent Project plugin's hooks as trusted in Codex, so Codex runs them without asking."
         } else {
             "Apply these changes?"
         };
@@ -112,7 +112,7 @@ pub fn run(request: &Request) -> Result<Finished, AgboardError> {
 /// Asks which agents to set up, among those whose command is on `PATH`.
 /// `None` when the user cancels.
 fn choose_agents(env: &SetupEnv) -> Option<Vec<Agent>> {
-    let _ = cliclack::intro("agboard setup");
+    let _ = cliclack::intro("agpj setup");
     let found: Vec<Agent> = setup::available(env)
         .into_iter()
         .filter_map(|(agent, program)| {
@@ -135,7 +135,7 @@ fn choose_agents(env: &SetupEnv) -> Option<Vec<Agent>> {
         }
         _ => {
             let both = "both";
-            let picked = cliclack::select("Which agent do you use with Agent Board?")
+            let picked = cliclack::select("Which agent do you use with Agent Project?")
                 .item("codex", "Codex", "")
                 .item("claude", "Claude Code", "")
                 .item(both, "Both", "Codex and Claude Code")
@@ -151,8 +151,8 @@ fn choose_agents(env: &SetupEnv) -> Option<Vec<Agent>> {
     }
 }
 
-fn invalid(command: &str, message: &str) -> AgboardError {
-    AgboardError::InvalidArgument {
+fn invalid(command: &str, message: &str) -> AgpjError {
+    AgpjError::InvalidArgument {
         message: message.to_string(),
         command: Some(command.to_string()),
     }

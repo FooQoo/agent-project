@@ -82,7 +82,7 @@ export function shouldPromptForPush(
   return support.standalone && permission === 'default' && view === 'off' && !dismissed;
 }
 
-const PROMPT_DISMISSED_KEY = 'agboard.pushPromptDismissed';
+const PROMPT_DISMISSED_KEY = 'agpj.pushPromptDismissed';
 
 /** Whether this device already saw the prompt. Blocked storage reads as seen, so it never nags. */
 export function readPromptDismissed(): boolean {

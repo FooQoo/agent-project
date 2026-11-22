@@ -7,10 +7,10 @@ use std::path::PathBuf;
 use std::sync::{Arc, Barrier, mpsc};
 use std::time::Duration;
 
-use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::lock::WriteLock;
+use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+use agent_project::error::AgpjError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::lock::WriteLock;
 use chrono::{TimeZone, Utc};
 
 fn now() -> chrono::DateTime<Utc> {
@@ -98,7 +98,7 @@ fn renaming_to_a_taken_name_is_refused_and_changes_nothing() {
 
     let err = fx.store.rename_project(&beta, "Alpha").unwrap_err();
     assert!(
-        matches!(err, AgboardError::ProjectNameExists { .. }),
+        matches!(err, AgpjError::ProjectNameExists { .. }),
         "{err:?}"
     );
     assert_eq!(
@@ -130,7 +130,7 @@ fn renaming_a_missing_project_is_project_not_found() {
     let missing: ProjectId = "0123456789abcdef0123456789abcdef".parse().unwrap();
     assert!(matches!(
         fx.store.rename_project(&missing, "X"),
-        Err(AgboardError::ProjectNotFound { .. })
+        Err(AgpjError::ProjectNotFound { .. })
     ));
 }
 
@@ -157,7 +157,7 @@ fn two_concurrent_renames_to_one_name_leave_exactly_one_success() {
     let succeeded = results.iter().filter(|r| r.is_ok()).count();
     let refused = results
         .iter()
-        .filter(|r| matches!(r, Err(AgboardError::ProjectNameExists { .. })))
+        .filter(|r| matches!(r, Err(AgpjError::ProjectNameExists { .. })))
         .count();
     assert_eq!(succeeded, 1, "{results:?}");
     assert_eq!(refused, 1, "{results:?}");
@@ -212,7 +212,7 @@ fn deleting_a_missing_project_is_project_not_found() {
     let missing: ProjectId = "0123456789abcdef0123456789abcdef".parse().unwrap();
     assert!(matches!(
         fx.store.delete_project(&missing),
-        Err(AgboardError::ProjectNotFound { .. })
+        Err(AgpjError::ProjectNotFound { .. })
     ));
 }
 

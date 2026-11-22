@@ -10,13 +10,13 @@ use serde::{Deserialize, Deserializer};
 use super::epics::whole_or_parts;
 use super::{changed_task_response, parse_task_id};
 use crate::domain::{Actor, Draft};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::frontmatter::AcceptanceItem;
 use crate::file_store::validate::EpicId;
 use crate::file_store::{DraftSave, TaskTextParts};
 use crate::server::AppState;
 use crate::server::request::StrictJson;
-use crate::server::response::{agboard_error_response, error_response};
+use crate::server::response::{agpj_error_response, error_response};
 use crate::server::store::{parse_project_id, with_request_files};
 
 #[derive(Deserialize)]
@@ -54,7 +54,7 @@ pub(super) async fn edit_task(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -67,7 +67,7 @@ pub(super) async fn edit_task(
         && !input.finalize
         && input.draft.is_none()
     {
-        return agboard_error_response(&AgboardError::InvalidArgument {
+        return agpj_error_response(&AgpjError::InvalidArgument {
             message: "Nothing to change.".to_string(),
             command: None,
         });
@@ -115,7 +115,7 @@ pub(super) async fn set_draft(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -161,7 +161,7 @@ pub(super) async fn set_task_epic(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let id = match parse_task_id(&raw_id) {
         Ok(id) => id,
@@ -179,7 +179,7 @@ pub(super) async fn set_task_epic(
         Some(None) => None,
         Some(Some(raw)) => match raw.parse::<EpicId>() {
             Ok(id) => Some(id),
-            Err(error) => return agboard_error_response(&error),
+            Err(error) => return agpj_error_response(&error),
         },
     };
     let result = with_request_files(&state, &headers, move |store| {

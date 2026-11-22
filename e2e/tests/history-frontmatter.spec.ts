@@ -4,14 +4,14 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
 import {
-	agboardBinary,
-	agboardOk,
+	agpjBinary,
+	agpjOk,
 	askArgs,
 	makeHome,
 	replaceFileAtomically,
 	replaceTaskBodyPreservingFrontmatter,
 	workspace,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 import { removeMonitorHome, startPhoneEntrance, type PhoneEntrance } from '../helpers/monitor';
 import { waitForSync } from '../helpers/ui';
 import { putDraft } from '../helpers/drafts';
@@ -45,9 +45,9 @@ interface TaskView {
 }
 
 function cli(args: string[]): { code: number; stdout: string; stderr: string } {
-	const result = spawnSync(agboardBinary(), ['--project', project, ...args], {
+	const result = spawnSync(agpjBinary(), ['--project', project, ...args], {
 		cwd: home,
-		env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
 		encoding: 'utf8',
 	});
 	if (result.error) throw result.error;
@@ -55,9 +55,9 @@ function cli(args: string[]): { code: number; stdout: string; stderr: string } {
 }
 
 function catalog(args: string[]): { code: number; stdout: string; stderr: string } {
-	const result = spawnSync(agboardBinary(), args, {
+	const result = spawnSync(agpjBinary(), args, {
 		cwd: home,
-		env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
 		encoding: 'utf8',
 	});
 	if (result.error) throw result.error;
@@ -66,7 +66,7 @@ function catalog(args: string[]): { code: number; stdout: string; stderr: string
 
 function cliOk(args: string[]): string {
 	const result = cli([...args, '--json']);
-	if (result.code !== 0) throw new Error(`agboard ${args.join(' ')} failed (${result.code}): ${result.stderr}`);
+	if (result.code !== 0) throw new Error(`agpj ${args.join(' ')} failed (${result.code}): ${result.stderr}`);
 	return result.stdout;
 }
 
@@ -102,9 +102,9 @@ async function openPc(page: Page): Promise<void> {
 }
 
 function beginWait(cursor: string): { child: ChildProcess; result: Promise<{ code: number | null; stdout: string; stderr: string }> } {
-	const child = spawn(agboardBinary(), ['--project', project, 'wait', '--after', cursor, '--timeout', '10', '--json'], {
+	const child = spawn(agpjBinary(), ['--project', project, 'wait', '--after', cursor, '--timeout', '10', '--json'], {
 		cwd: home,
-		env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
 		stdio: ['ignore', 'pipe', 'pipe'],
 	});
 	let stdout = '';
@@ -234,10 +234,10 @@ test('saving a body edit after a concurrent lane change keeps the newest event a
 	await page.keyboard.press('End');
 	await page.keyboard.type('\nSaved after status update.');
 	const moved = await page.evaluate(async ({ taskId, projectId }) => {
-		const token = document.querySelector('meta[name="agboard-token"]')?.getAttribute('content') ?? '';
+		const token = document.querySelector('meta[name="agpj-token"]')?.getAttribute('content') ?? '';
 		const response = await fetch(`/api/projects/${projectId}/tasks/${taskId}/move`, {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'X-Agboard-Token': token },
+			headers: { 'Content-Type': 'application/json', 'X-Agpj-Token': token },
 			body: JSON.stringify({ taskStatus: 'doing', reason: 'Concurrent lane update' }),
 		});
 		return response.status;

@@ -4,12 +4,12 @@
 # Usage: verify-artifact.sh <archive> <target>
 #
 # Fails unless: the file name matches the Cargo.toml version and the target;
-# the archive holds exactly agboard, LICENSE and THIRD_PARTY_NOTICES.txt; the
+# the archive holds exactly agpj, LICENSE and THIRD_PARTY_NOTICES.txt; the
 # two license files equal the repository files; the binary is a Mach-O for
 # only the target CPU, built for macOS 15.0, and links only system libraries;
 # and, when this machine can run it, the extracted binary reports its version
 # and serves the embedded web UI. The serve check listens on VERIFY_PORT
-# (default 9040) on 127.0.0.1 with a temporary AGBOARD_HOME.
+# (default 9040) on 127.0.0.1 with a temporary AGPJ_HOME.
 set -euo pipefail
 
 archive=${1:?usage: verify-artifact.sh <archive> <target>}
@@ -26,15 +26,15 @@ case "$target" in
 esac
 version=$(sed -n 's/^version = "\(.*\)"$/\1/p' "$root/Cargo.toml" | head -n 1)
 [ -f "$archive" ] || fail "no such archive: $archive"
-expected="agboard-$version-$target.tar.gz"
+expected="agpj-$version-$target.tar.gz"
 [ "$(basename "$archive")" = "$expected" ] || fail "archive is named $(basename "$archive"), expected $expected"
 
 # Byte order, so the expected list holds in every locale.
 listing=$(tar -tzf "$archive" | LC_ALL=C sort | tr '\n' ' ')
-for member in LICENSE THIRD_PARTY_NOTICES.txt agboard; do
+for member in LICENSE THIRD_PARTY_NOTICES.txt agpj; do
   case " $listing" in *" $member "*) ;; *) fail "archive lacks $member" ;; esac
 done
-[ "$listing" = "LICENSE THIRD_PARTY_NOTICES.txt agboard " ] || fail "archive holds unexpected files: $listing"
+[ "$listing" = "LICENSE THIRD_PARTY_NOTICES.txt agpj " ] || fail "archive holds unexpected files: $listing"
 
 work=$(mktemp -d)
 server_pid=""
@@ -50,18 +50,18 @@ for file in LICENSE THIRD_PARTY_NOTICES.txt; do
   cmp -s "$work/x/$file" "$root/$file" || fail "$file differs from the repository file"
 done
 
-bin="$work/x/agboard"
-[ -x "$bin" ] || fail "agboard is not executable"
+bin="$work/x/agpj"
+[ -x "$bin" ] || fail "agpj is not executable"
 kind=$(file -b "$bin")
-case "$kind" in *Mach-O*) ;; *) fail "agboard is not a Mach-O executable: $kind" ;; esac
+case "$kind" in *Mach-O*) ;; *) fail "agpj is not a Mach-O executable: $kind" ;; esac
 command -v lipo >/dev/null && command -v otool >/dev/null || fail "lipo and otool are required (run on macOS)"
-[ "$(lipo -archs "$bin")" = "$arch" ] || fail "agboard holds '$(lipo -archs "$bin")', expected only '$arch'"
+[ "$(lipo -archs "$bin")" = "$arch" ] || fail "agpj holds '$(lipo -archs "$bin")', expected only '$arch'"
 
 minos=$(otool -l "$bin" | awk '/LC_BUILD_VERSION/{f=1} /LC_VERSION_MIN_MACOSX/{f=1} f && ($1=="minos"||$1=="version"){print $2; exit}')
 [ "$minos" = "15.0" ] || fail "deployment target is '$minos', expected 15.0"
 
 bad=$(otool -L "$bin" | tail -n +2 | awk '{print $1}' | grep -v -e '^/usr/lib/' -e '^/System/Library/' || true)
-[ -z "$bad" ] || fail "agboard links non-system libraries: $bad"
+[ -z "$bad" ] || fail "agpj links non-system libraries: $bad"
 
 host=$(uname -m)
 runner=()
@@ -72,12 +72,12 @@ if [ "$host" != "$arch" ]; then
   fi
 fi
 
-export AGBOARD_HOME="$work/home" HOME="$work/home" TZ=UTC
-mkdir -p "$AGBOARD_HOME"
-reported=$(cd "$work/x" && ${runner[@]+"${runner[@]}"} ./agboard --version)
+export AGPJ_HOME="$work/home" HOME="$work/home" TZ=UTC
+mkdir -p "$AGPJ_HOME"
+reported=$(cd "$work/x" && ${runner[@]+"${runner[@]}"} ./agpj --version)
 case "$reported" in *"$version"*) ;; *) fail "--version printed '$reported', expected $version" ;; esac
 
-(cd "$work/x" && exec ${runner[@]+"${runner[@]}"} ./agboard serve --port "$port") >"$work/serve.log" 2>&1 &
+(cd "$work/x" && exec ${runner[@]+"${runner[@]}"} ./agpj serve --port "$port") >"$work/serve.log" 2>&1 &
 server_pid=$!
 page=""
 for _ in $(seq 1 50); do

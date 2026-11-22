@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
-pub const PLUGIN: &str = "agent-board@agent-board";
+pub const PLUGIN: &str = "agent-project@agent-project";
 
 const SCRIPT: &str = r#"#!/bin/sh
 S='@STATE@'
@@ -30,9 +30,9 @@ case "$*" in
       ip=''
       if [ -f "$S/$A.path" ]; then ip=',"installPath":"'$(/bin/cat "$S/$A.path")'"'; fi
       if [ "$A" = codex ]; then
-        printf '{"installed":[{"pluginId":"agent-board@agent-board","name":"agent-board","marketplaceName":"agent-board","version":"%s","installed":true,"enabled":true,"source":{"source":"local","path":"/nonexistent/marketplaces/agent-board/plugins/agent-board"}}],"available":[]}\n' "$v"
+        printf '{"installed":[{"pluginId":"agent-project@agent-project","name":"agent-project","marketplaceName":"agent-project","version":"%s","installed":true,"enabled":true,"source":{"source":"local","path":"/nonexistent/marketplaces/agent-board/plugins/agent-project"}}],"available":[]}\n' "$v"
       else
-        printf '[{"id":"agent-board@agent-board","version":"%s"%s,"scope":"user","enabled":true}]\n' "$v" "$ip"
+        printf '[{"id":"agent-project@agent-project","version":"%s"%s,"scope":"user","enabled":true}]\n' "$v" "$ip"
       fi
     elif [ "$A" = codex ]; then
       echo '{"installed":[],"available":[]}'
@@ -44,7 +44,7 @@ case "$*" in
     src="${all#plugin marketplace add }"
     if [ -f "$S/$A.market" ] && [ "$(/bin/cat "$S/$A.market")" != "$src" ]; then
       if [ "$A" = codex ]; then
-        echo "Error: marketplace 'agent-board' is already added from a different source; remove it before adding this source" >&2
+        echo "Error: marketplace 'agent-project' is already added from a different source; remove it before adding this source" >&2
       else
         echo '{"outcome":"failed","failureCode":"declared","error":"source does not match"}'
       fi
@@ -52,15 +52,15 @@ case "$*" in
     fi
     printf '%s' "$src" > "$S/$A.market"
     echo '{"outcome":"ok"}' ;;
-  "plugin marketplace remove agent-board --json")
+  "plugin marketplace remove agent-project --json")
     /bin/rm -f "$S/$A.market" "$S/$A.installed"
     echo '{}' ;;
-  "plugin add agent-board@agent-board --json"|"plugin install agent-board@agent-board --json")
+  "plugin add agent-project@agent-project --json"|"plugin install agent-project@agent-project --json")
     if [ ! -f "$S/$A.market" ]; then echo "no marketplace" >&2; exit 1; fi
     printf '%s' '@VERSION@' > "$S/$A.installed"
     /bin/rm -f "$S/$A.trusted"
     echo '{}' ;;
-  "plugin update agent-board@agent-board --json")
+  "plugin update agent-project@agent-project --json")
     echo '{}' ;;
   "app-server")
     while IFS= read -r line; do
@@ -71,7 +71,7 @@ case "$*" in
         *'"method":"hooks/list"'*)
           if [ -f "$S/$A.trusted" ]; then t=trusted; else t=untrusted; fi
           printf '{"method":"note","params":{}}\n'
-          printf '{"id":%s,"result":{"data":[{"cwd":"x","hooks":[{"key":"agent-board@agent-board:hooks/codex.json:session_start:0:0","currentHash":"sha256:aaa","trustStatus":"%s","pluginId":"agent-board@agent-board"},{"key":"agent-board@agent-board:hooks/codex.json:post_tool_use:0:0","currentHash":"sha256:bbb","trustStatus":"%s","pluginId":"agent-board@agent-board"},{"key":"other@elsewhere:hooks.json:stop:0:0","currentHash":"sha256:ccc","trustStatus":"untrusted","pluginId":"other@elsewhere"}]}]}}\n' "$id" "$t" "$t" ;;
+          printf '{"id":%s,"result":{"data":[{"cwd":"x","hooks":[{"key":"agent-project@agent-project:hooks/codex.json:session_start:0:0","currentHash":"sha256:aaa","trustStatus":"%s","pluginId":"agent-project@agent-project"},{"key":"agent-project@agent-project:hooks/codex.json:post_tool_use:0:0","currentHash":"sha256:bbb","trustStatus":"%s","pluginId":"agent-project@agent-project"},{"key":"other@elsewhere:hooks.json:stop:0:0","currentHash":"sha256:ccc","trustStatus":"untrusted","pluginId":"other@elsewhere"}]}]}}\n' "$id" "$t" "$t" ;;
         *'"method":"config/value/write"'*)
           printf '%s\n' "$line" >> "$S/trust-writes.log"
           : > "$S/$A.trusted"

@@ -7,17 +7,14 @@ use chrono::{DateTime, Utc};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::model::{EpicFile, Problem, TaskMetadata};
 use crate::file_store::validate;
 
 /// Parse one shared JSON file. Syntax errors, the `formatVersion` gate, and
 /// the strict shape (unknown or missing fields) are all reported here.
-pub(crate) fn parse_file<T: DeserializeOwned>(
-    bytes: &[u8],
-    label: &str,
-) -> Result<T, AgboardError> {
-    let value: Value = serde_json::from_slice(bytes).map_err(|e| AgboardError::FileInvalid {
+pub(crate) fn parse_file<T: DeserializeOwned>(bytes: &[u8], label: &str) -> Result<T, AgpjError> {
+    let value: Value = serde_json::from_slice(bytes).map_err(|e| AgpjError::FileInvalid {
         file: label.to_string(),
         field: String::new(),
         reason: format!("The JSON is malformed: {e}."),
@@ -25,7 +22,7 @@ pub(crate) fn parse_file<T: DeserializeOwned>(
     validate::check_format_version(&value, label)?;
     serde_json::from_value(value).map_err(|e| {
         let message = e.to_string();
-        AgboardError::FileInvalid {
+        AgpjError::FileInvalid {
             file: label.to_string(),
             field: message.split('`').nth(1).unwrap_or("").to_string(),
             reason: message,
@@ -33,8 +30,8 @@ pub(crate) fn parse_file<T: DeserializeOwned>(
     })
 }
 
-fn parse_entity<T: DeserializeOwned>(bytes: &[u8], label: &str) -> Result<T, AgboardError> {
-    let value: Value = serde_json::from_slice(bytes).map_err(|e| AgboardError::FileInvalid {
+fn parse_entity<T: DeserializeOwned>(bytes: &[u8], label: &str) -> Result<T, AgpjError> {
+    let value: Value = serde_json::from_slice(bytes).map_err(|e| AgpjError::FileInvalid {
         file: label.to_string(),
         field: String::new(),
         reason: format!("The JSON is malformed: {e}."),
@@ -42,7 +39,7 @@ fn parse_entity<T: DeserializeOwned>(bytes: &[u8], label: &str) -> Result<T, Agb
     validate::check_entity_format_version(&value, label)?;
     serde_json::from_value(value).map_err(|e| {
         let message = e.to_string();
-        AgboardError::FileInvalid {
+        AgpjError::FileInvalid {
             file: label.to_string(),
             field: message.split('`').nth(1).unwrap_or("").to_string(),
             reason: message,
@@ -50,19 +47,19 @@ fn parse_entity<T: DeserializeOwned>(bytes: &[u8], label: &str) -> Result<T, Agb
     })
 }
 
-pub(super) fn parse_task_metadata(bytes: &[u8], label: &str) -> Result<TaskMetadata, AgboardError> {
+pub(super) fn parse_task_metadata(bytes: &[u8], label: &str) -> Result<TaskMetadata, AgpjError> {
     parse_entity(bytes, label)
 }
 
 /// Parse an `epic.json`: its format versions are handled here.
-pub(crate) fn parse_epic_file(bytes: &[u8], label: &str) -> Result<EpicFile, AgboardError> {
+pub(crate) fn parse_epic_file(bytes: &[u8], label: &str) -> Result<EpicFile, AgpjError> {
     parse_entity(bytes, label)
 }
 
 /// The problem a tolerated read error stands for, with the file label kept.
-pub(crate) fn problem_of(error: AgboardError) -> Problem {
+pub(crate) fn problem_of(error: AgpjError) -> Problem {
     match error {
-        AgboardError::FileInvalid {
+        AgpjError::FileInvalid {
             file,
             field,
             reason,
@@ -71,7 +68,7 @@ pub(crate) fn problem_of(error: AgboardError) -> Problem {
             field,
             reason,
         },
-        AgboardError::FormatUnsupported {
+        AgpjError::FormatUnsupported {
             file,
             version,
             expected,
@@ -80,7 +77,7 @@ pub(crate) fn problem_of(error: AgboardError) -> Problem {
             field: "formatVersion".into(),
             reason: format!("Only formatVersion {expected} is supported, found {version}."),
         },
-        AgboardError::FileUnreadable { file, reason } => Problem {
+        AgpjError::FileUnreadable { file, reason } => Problem {
             file,
             field: String::new(),
             reason,

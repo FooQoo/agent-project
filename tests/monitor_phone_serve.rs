@@ -7,7 +7,7 @@
 //! carries the passcode of the start, as the PC would show it.
 //!
 //! The Playwright specs stand in for the Edge with a small proxy. Those specs set
-//! `AGBOARD_PHONE_HOME` to serve a data area they filled through the CLI; the
+//! `AGPJ_PHONE_HOME` to serve a data area they filled through the CLI; the
 //! decision request below is then left to them. The data area may already hold
 //! the saved setting of an earlier run.
 
@@ -23,7 +23,7 @@ mod harness;
 
 use std::io::BufRead;
 
-use agent_board::file_store::FileStore;
+use agent_project::file_store::FileStore;
 use harness::*;
 use serde_json::json;
 use support::home;
@@ -49,7 +49,7 @@ fn announce(s: &Server) {
 #[test]
 #[ignore = "started by e2e/helpers/phone-entrance.mjs"]
 fn serve_the_phone_backend_until_told_to_quit() {
-    let external = std::env::var_os("AGBOARD_PHONE_HOME").map(std::path::PathBuf::from);
+    let external = std::env::var_os("AGPJ_PHONE_HOME").map(std::path::PathBuf::from);
     let temp = external.is_none().then(home);
     let path = external
         .clone()

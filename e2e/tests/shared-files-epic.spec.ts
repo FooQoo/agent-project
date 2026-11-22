@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { agboardOk, mainProject, projectId, resetBoard, type TaskJson } from '../helpers/agboard';
+import { agpjOk, mainProject, projectId, resetBoard, type TaskJson } from '../helpers/agpj';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
 import { pasteMarkdown, waitForSync } from '../helpers/ui';
 
@@ -13,11 +13,11 @@ const details = (page: Page) => page.getByRole('complementary', { name: 'Task de
 const task = (page: Page, id: number) => page.getByRole('button', { name: new RegExp(`^#${id}(?!\\d)`) });
 
 function epicOf(id: string): { id: string; name: string; color: string; document: string } {
-  return JSON.parse(agboardOk(mainProject, ['epic', 'show', id, '--json']).stdout).epic;
+  return JSON.parse(agpjOk(mainProject, ['epic', 'show', id, '--json']).stdout).epic;
 }
 
 function taskOf(id: number): TaskJson & { epicId: string | null } {
-  return JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  return JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 }
 
 /** The document body as a person pastes it into the body editor: free Markdown, no frontmatter. */
@@ -45,8 +45,8 @@ async function openEpic(page: Page, epicId: string): Promise<Locator> {
 
 test.beforeEach(() => {
   resetBoard(mainProject);
-  agboardOk(mainProject, ['epic', 'add', 'FILE-SHARE', '--name', 'File share', '--color', '#7C3AED', '--actor', 'human']);
-  agboardOk(mainProject, ['edit', '14', '--epic', 'FILE-SHARE']);
+  agpjOk(mainProject, ['epic', 'add', 'FILE-SHARE', '--name', 'File share', '--color', '#7C3AED', '--actor', 'human']);
+  agpjOk(mainProject, ['edit', '14', '--epic', 'FILE-SHARE']);
 });
 
 test('the epic dialog saves its name, colour, and document together, and its contents are read back by the CLI', async ({ page }) => {

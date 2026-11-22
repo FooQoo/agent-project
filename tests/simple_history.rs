@@ -1,8 +1,8 @@
 #[path = "support/qa.rs"]
 mod qa;
 
-use agent_board::domain::{Actor, Assignee, NewTask};
-use agent_board::file_store::{
+use agent_project::domain::{Actor, Assignee, NewTask};
+use agent_project::file_store::{
     FileStore,
     history::{ParseMode, parse_task},
 };
@@ -113,7 +113,7 @@ fn answers_survive_later_questions_restart_and_empty_history() {
 
 #[test]
 fn history_reason_limit_and_unknown_fields_are_strict() {
-    use agent_board::file_store::{history::compose_task, model::HistoryRecord};
+    use agent_project::file_store::{history::compose_task, model::HistoryRecord};
     let event = HistoryRecord {
         at: "2026-10-15T00:00:00Z".parse().unwrap(),
         reason: "x".repeat(10_000),
@@ -192,7 +192,7 @@ fn invalid_answer_records_are_rejected_and_legacy_requests_are_ignored() {
         let read = store.task(&project, task.id).unwrap();
         assert_eq!(
             read.agent_status,
-            agent_board::domain::RunState::Idle,
+            agent_project::domain::RunState::Idle,
             "{patch}"
         );
         assert!(read.pending_request_id.is_none(), "{patch}");
@@ -218,7 +218,7 @@ fn invalid_answer_records_are_rejected_and_legacy_requests_are_ignored() {
 
 #[test]
 fn only_lane_changes_update_task_status_changed_at() {
-    use agent_board::domain::{ChangeContext, Column, RunState};
+    use agent_project::domain::{ChangeContext, Column, RunState};
     let at = |day: u32| chrono::TimeZone::with_ymd_and_hms(&Utc, 2026, 10, day, 0, 0, 0).unwrap();
     let root = tempfile::tempdir().unwrap();
     let store = FileStore::open(&root.path().join("shared"));

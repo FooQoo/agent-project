@@ -8,7 +8,7 @@ use super::paths::{journal_dir, label, read_pair, validate_targets};
 use super::recover::recover_locked;
 use super::stage::{Fault, Stage, point, replace};
 use super::{PairBytes, PairTargets};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::io::{random_hex, sync_dir, write_atomic, write_error};
 
 /// Save an existing pair. `old` must still match the target files. This
@@ -18,7 +18,7 @@ pub fn save_pair_locked(
     targets: &PairTargets,
     old: &PairBytes,
     new: &PairBytes,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     save_pair_with_hook_locked(project, targets, old, new, |_| Ok(()))
 }
 
@@ -31,7 +31,7 @@ pub fn save_pair_with_hook_locked(
     old: &PairBytes,
     new: &PairBytes,
     mut hook: impl FnMut(Stage) -> Result<(), Fault>,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     recover_locked(project)?;
     validate_targets(project, targets)?;
     let observed = read_pair(project, targets)?;

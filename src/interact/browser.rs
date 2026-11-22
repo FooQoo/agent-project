@@ -1,9 +1,9 @@
 //! Opening a board page in the computer's web browser.
 //!
 //! An automatic server opens its project's board once after it starts, and
-//! `agboard open` opens one on request. Neither opens anything with
-//! `AGBOARD_OPEN_BROWSER=0`, or where no browser can be shown (an SSH session,
-//! or Linux without a display). `AGBOARD_BROWSER_OPENER` names a program that
+//! `agpj open` opens one on request. Neither opens anything with
+//! `AGPJ_OPEN_BROWSER=0`, or where no browser can be shown (an SSH session,
+//! or Linux without a display). `AGPJ_BROWSER_OPENER` names a program that
 //! is started instead of the system's, with the address as its only argument;
 //! the tests use it to record the address. Only the real command line opens
 //! anything: the library embedded in a test never does.
@@ -13,7 +13,7 @@ use std::process::{Command, Stdio};
 
 use crate::domain::ProjectId;
 
-/// The operating systems whose opener Agent Board can start.
+/// The operating systems whose opener Agent Project can start.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Platform {
     MacOs,
@@ -49,13 +49,13 @@ pub fn board_url(port: u16, project: &ProjectId) -> String {
 /// Why no browser is opened.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NotOpened {
-    /// `AGBOARD_OPEN_BROWSER=0`.
+    /// `AGPJ_OPEN_BROWSER=0`.
     TurnedOff,
     /// The command runs in an SSH session, whose browser is elsewhere.
     Ssh,
     /// Linux or another system without `DISPLAY` or `WAYLAND_DISPLAY`.
     NoDisplay,
-    /// The library embedded in a program other than `agboard`.
+    /// The library embedded in a program other than `agpj`.
     NotCommandLine,
 }
 
@@ -63,12 +63,12 @@ impl NotOpened {
     /// The reason as a sentence for people.
     pub fn reason(self) -> &'static str {
         match self {
-            NotOpened::TurnedOff => "AGBOARD_OPEN_BROWSER=0 turns opening the browser off.",
+            NotOpened::TurnedOff => "AGPJ_OPEN_BROWSER=0 turns opening the browser off.",
             NotOpened::Ssh => "This is an SSH session, so the browser is on another computer.",
             NotOpened::NoDisplay => {
                 "No display is available (DISPLAY and WAYLAND_DISPLAY are unset)."
             }
-            NotOpened::NotCommandLine => "Only the agboard command opens a browser.",
+            NotOpened::NotCommandLine => "Only the agpj command opens a browser.",
         }
     }
 }
@@ -92,11 +92,11 @@ fn opener_for(
     env: &dyn Fn(&str) -> Option<String>,
 ) -> Result<Opener, NotOpened> {
     let set = |name: &str| env(name).is_some_and(|value| !value.trim().is_empty());
-    if env("AGBOARD_OPEN_BROWSER").is_some_and(|value| value.trim() == "0") {
+    if env("AGPJ_OPEN_BROWSER").is_some_and(|value| value.trim() == "0") {
         return Err(NotOpened::TurnedOff);
     }
     // A program of the user's own decides for itself where it shows the page.
-    if let Some(program) = env("AGBOARD_BROWSER_OPENER").filter(|value| !value.trim().is_empty()) {
+    if let Some(program) = env("AGPJ_BROWSER_OPENER").filter(|value| !value.trim().is_empty()) {
         return Ok(Opener {
             program: program.into(),
         });
@@ -170,10 +170,7 @@ mod tests {
 
     #[test]
     fn nothing_opens_when_turned_off_over_ssh_or_without_a_display() {
-        let off = env_of(&[
-            ("AGBOARD_OPEN_BROWSER", "0"),
-            ("AGBOARD_BROWSER_OPENER", "x"),
-        ]);
+        let off = env_of(&[("AGPJ_OPEN_BROWSER", "0"), ("AGPJ_BROWSER_OPENER", "x")]);
         assert_eq!(opener_for(Platform::MacOs, &off), Err(NotOpened::TurnedOff));
         let ssh = env_of(&[("SSH_CONNECTION", "10.0.0.2 51000 10.0.0.1 22")]);
         assert_eq!(opener_for(Platform::MacOs, &ssh), Err(NotOpened::Ssh));
@@ -185,14 +182,14 @@ mod tests {
             Err(NotOpened::NoDisplay)
         );
         // Any other value leaves opening on.
-        let on = env_of(&[("AGBOARD_OPEN_BROWSER", "1")]);
+        let on = env_of(&[("AGPJ_OPEN_BROWSER", "1")]);
         assert!(opener_for(Platform::MacOs, &on).is_ok());
     }
 
     #[test]
     fn a_program_of_ones_own_replaces_the_system_opener() {
         let own = env_of(&[
-            ("AGBOARD_BROWSER_OPENER", "record-url"),
+            ("AGPJ_BROWSER_OPENER", "record-url"),
             ("SSH_TTY", "/dev/ttys001"),
         ]);
         assert_eq!(
@@ -218,11 +215,11 @@ mod tests {
     #[test]
     fn a_missing_program_is_reported() {
         let opener = Opener {
-            program: "agboard-no-such-opener".into(),
+            program: "agpj-no-such-opener".into(),
         };
         let error = opener.open("http://127.0.0.1:1/").unwrap_err();
         assert!(
-            error.starts_with("Cannot start agboard-no-such-opener:"),
+            error.starts_with("Cannot start agpj-no-such-opener:"),
             "{error}"
         );
     }

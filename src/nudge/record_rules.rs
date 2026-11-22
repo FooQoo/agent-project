@@ -1,7 +1,7 @@
 //! Turn rules about records and starting: history notes, acceptance
 //! conditions after a merge, and starting a task before editing.
 
-use super::commands::{contains_sequence, runs_agboard, tokens};
+use super::commands::{contains_sequence, runs_agpj, tokens};
 use super::rules::{has_running_ai_task, is_pr_create};
 use super::{Call, Facts, Finding};
 use crate::domain::{Assignee, Column};
@@ -15,13 +15,13 @@ const RECORDS: &[&[&str]] = &[&["history", "add"], &["state"], &["mv"], &["resul
 pub(super) fn history(facts: &Facts) -> Vec<Finding> {
     let calls = facts.calls();
     if !has_running_ai_task(facts)
-        || calls.iter().any(|c| runs_agboard(&c.command, RECORDS))
+        || calls.iter().any(|c| runs_agpj(&c.command, RECORDS))
         || !calls.iter().any(is_progress)
     {
         return Vec::new();
     }
     vec![Finding::new(
-        "Record a decision that matters later once: this turn made a commit, ran tests, pushed, or opened a pull request and recorded nothing. A decision that changes state belongs in the `--reason` of `mv` or `state`; one that does not, such as keeping a card in Todo, goes in `agboard history add` with the grounds, the decision, and when known the condition for reconsidering. Skip it when there is no such decision.",
+        "Record a decision that matters later once: this turn made a commit, ran tests, pushed, or opened a pull request and recorded nothing. A decision that changes state belongs in the `--reason` of `mv` or `state`; one that does not, such as keeping a card in Todo, goes in `agpj history add` with the grounds, the decision, and when known the condition for reconsidering. Skip it when there is no such decision.",
     )]
 }
 
@@ -55,7 +55,7 @@ pub(super) fn start_task(facts: &Facts) -> Vec<Finding> {
         return Vec::new();
     }
     vec![Finding::new(
-        "You edited files but no AI task is in Doing and Running: start the task on the board (`agboard mv <id> doing`, `agboard state <id> running`) or create one.",
+        "You edited files but no AI task is in Doing and Running: start the task on the board (`agpj mv <id> doing`, `agpj state <id> running`) or create one.",
     )]
 }
 
@@ -113,7 +113,7 @@ fn is_test_run(tokens: &[&str]) -> bool {
     })
 }
 
-/// A call that edits a file outside `/tmp` and the Agent Board data folder, or
+/// A call that edits a file outside `/tmp` and the Agent Project data folder, or
 /// commits.
 fn edits_files(call: &Call) -> bool {
     if contains_sequence(&tokens(&call.command), &["git", "commit"]) {
@@ -144,8 +144,8 @@ fn edits_files(call: &Call) -> bool {
 
 fn is_ignored_path(path: &str) -> bool {
     let tmp = path == "/tmp" || path.starts_with("/tmp/");
-    let data = path.contains("/.agent-board/") || path.ends_with("/.agent-board");
-    let home = std::env::var("AGBOARD_HOME")
+    let data = path.contains("/.agent-project/") || path.ends_with("/.agent-project");
+    let home = std::env::var("AGPJ_HOME")
         .ok()
         .filter(|h| !h.is_empty())
         .is_some_and(|h| path.starts_with(h.trim_end_matches('/')));

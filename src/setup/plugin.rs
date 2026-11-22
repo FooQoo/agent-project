@@ -1,6 +1,6 @@
-//! Installing and updating the Agent Board plugin with the agents' own
+//! Installing and updating the Agent Project plugin with the agents' own
 //! commands. The repository is the marketplace of both agents; it is added
-//! at the tag of this agboard's version, so the plugin matches the binary.
+//! at the tag of this agpj's version, so the plugin matches the binary.
 //! A marketplace added at another tag is removed and added again, which is how
 //! both agents move a marketplace to a new tag.
 
@@ -12,11 +12,11 @@ use super::Agent;
 use super::agent_cli::{self, CliOutput};
 
 /// The marketplace name in both catalogs.
-pub const MARKETPLACE: &str = "agent-board";
+pub const MARKETPLACE: &str = "agent-project";
 /// The plugin as both agents name it.
-pub const PLUGIN_ID: &str = "agent-board@agent-board";
+pub const PLUGIN_ID: &str = "agent-project@agent-project";
 /// The repository that holds the marketplace. HTTPS, so no SSH key is needed.
-pub const REPOSITORY: &str = "https://github.com/FooQoo/agent-board.git";
+pub const REPOSITORY: &str = "https://github.com/FooQoo/agent-project.git";
 
 /// Where the plugin comes from: a Git repository at a tag, or a folder.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,7 +27,7 @@ pub struct Source {
 }
 
 impl Source {
-    /// The release tag of `version` in the Agent Board repository, unless
+    /// The release tag of `version` in the Agent Project repository, unless
     /// `override_location` names another marketplace.
     pub fn for_version(version: &str, override_location: Option<String>) -> Source {
         match override_location {
@@ -61,7 +61,7 @@ pub struct Installed {
 }
 
 impl Installed {
-    /// Whether the installed plugin is the one this agboard ships: the same
+    /// Whether the installed plugin is the one this agpj ships: the same
     /// files when the folder is known, else the same version.
     pub fn is_current(&self) -> bool {
         match &self.path {
@@ -114,7 +114,7 @@ pub fn installed(
                 let dir = codex_dir?
                     .join("plugins/cache")
                     .join(text("marketplaceName").unwrap_or(MARKETPLACE))
-                    .join(text("name").unwrap_or("agent-board"))
+                    .join(text("name").unwrap_or("agent-project"))
                     .join(&version);
                 dir.is_dir().then_some(dir)
             };
@@ -223,11 +223,14 @@ mod tests {
     #[test]
     fn the_release_source_is_the_https_repository_at_the_version_tag() {
         let source = Source::for_version("1.2.3", None);
-        assert_eq!(source.location, "https://github.com/FooQoo/agent-board.git");
+        assert_eq!(
+            source.location,
+            "https://github.com/FooQoo/agent-project.git"
+        );
         assert_eq!(source.reference.as_deref(), Some("v1.2.3"));
-        let local = Source::for_version("1.2.3", Some("/src/agent-board".into()));
+        let local = Source::for_version("1.2.3", Some("/src/agent-project".into()));
         assert_eq!(local.reference, None);
-        assert_eq!(local.describe(), "/src/agent-board");
+        assert_eq!(local.describe(), "/src/agent-project");
     }
 
     #[test]
@@ -240,7 +243,7 @@ mod tests {
         assert!(added_elsewhere(
             Agent::Codex,
             &out(
-                "Error: marketplace 'agent-board' is already added from a different source; remove it"
+                "Error: marketplace 'agent-project' is already added from a different source; remove it"
             )
         ));
         assert!(!added_elsewhere(Agent::Codex, &out("network unreachable")));

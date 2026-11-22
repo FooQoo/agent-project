@@ -12,32 +12,31 @@ use std::sync::atomic::Ordering;
 use std::sync::{Arc, mpsc};
 use std::time::{Duration, Instant};
 
-use agent_board::cli::args::{Command as CliCommand, Parsed, parse, validate_monitor_args};
-use agent_board::server::monitor_connection::config::ConfigStore;
-use agent_board::server::monitor_connection::contracts::ConnectionConfig;
+use agent_project::cli::args::{Command as CliCommand, Parsed, parse, validate_monitor_args};
+use agent_project::server::monitor_connection::config::ConfigStore;
+use agent_project::server::monitor_connection::contracts::ConnectionConfig;
 use assert_cmd::Command;
 use serde_json::{Value, json};
 use support::home;
 
 // ------------------------------------------------------------- command line
 
-fn agboard(home: &Path) -> Command {
-    let mut cmd = Command::cargo_bin("agboard").unwrap();
-    cmd.env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0");
-    cmd.env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+fn agpj(home: &Path) -> Command {
+    let mut cmd = Command::cargo_bin("agpj").unwrap();
+    cmd.env("AGPJ_AUTOSTART", "0").env("AGPJ_OPEN_BROWSER", "0");
+    cmd.env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .env_remove("NGROK_AUTHTOKEN")
-        .env_remove("AGBOARD_GOOGLE_CLIENT_ID")
-        .env_remove("AGBOARD_GOOGLE_CLIENT_SECRET")
+        .env_remove("AGPJ_GOOGLE_CLIENT_ID")
+        .env_remove("AGPJ_GOOGLE_CLIENT_SECRET")
         .current_dir(home);
     cmd
 }
 
 fn exit_of(args: &[&str], envs: &[(&str, &str)]) -> (i32, String) {
     let home = tempfile::tempdir().unwrap();
-    let mut cmd = agboard(home.path());
+    let mut cmd = agpj(home.path());
     // The OS picks the port if parsing wrongly succeeds; never 7420.
     cmd.args(["serve", "--port", "0"]).args(args);
     for (k, v) in envs {
@@ -91,8 +90,8 @@ fn bad_command_lines_exit_with_2_and_never_print_the_token() {
     let (code, text) = exit_of(
         &["--monitor", "ngrok"],
         &[
-            ("AGBOARD_GOOGLE_CLIENT_ID", "gid"),
-            ("AGBOARD_GOOGLE_CLIENT_SECRET", "gsecret"),
+            ("AGPJ_GOOGLE_CLIENT_ID", "gid"),
+            ("AGPJ_GOOGLE_CLIENT_SECRET", "gsecret"),
         ],
     );
     assert_eq!(code, 2);
@@ -105,8 +104,7 @@ fn bad_command_lines_exit_with_2_and_never_print_the_token() {
 #[test]
 fn a_valid_ngrok_command_line_is_accepted() {
     let parse_serve = |extra: &[&str]| {
-        let mut argv: Vec<std::ffi::OsString> =
-            ["agboard", "serve"].iter().map(Into::into).collect();
+        let mut argv: Vec<std::ffi::OsString> = ["agpj", "serve"].iter().map(Into::into).collect();
         argv.extend(extra.iter().map(Into::into));
         let Ok(Parsed::Run(cli)) = parse(&argv) else {
             panic!("the command line must parse: {extra:?}");
@@ -695,8 +693,8 @@ fn an_unreadable_settings_file_keeps_the_pc_entrance_and_can_be_replaced() {
 
 #[test]
 fn settings_saved_from_the_command_line_show_in_a_running_board_without_a_reload() {
-    use agent_board::remote_settings::{Change, apply};
-    use agent_board::server::monitor_connection::keychain::NoKeychain;
+    use agent_project::remote_settings::{Change, apply};
+    use agent_project::server::monitor_connection::keychain::NoKeychain;
 
     let home = home();
     let s = Server::start(home.path(), Opts::default());
@@ -727,8 +725,8 @@ fn settings_saved_from_the_command_line_show_in_a_running_board_without_a_reload
 
 #[test]
 fn a_stop_keeps_a_domain_saved_from_the_command_line_meanwhile() {
-    use agent_board::remote_settings::{Change, apply};
-    use agent_board::server::monitor_connection::keychain::NoKeychain;
+    use agent_project::remote_settings::{Change, apply};
+    use agent_project::server::monitor_connection::keychain::NoKeychain;
 
     let home = home();
     let s = Server::start(home.path(), Opts::default());

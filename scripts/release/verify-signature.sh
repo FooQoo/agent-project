@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Verify the Developer ID signature of an agboard binary and describe it.
+# Verify the Developer ID signature of an agpj binary and describe it.
 #
 # Usage: verify-signature.sh <binary> <target> [--json FILE]
 #
 # Environment: APPLE_TEAM_ID (the expected Team ID, required);
-#   EXPECTED_IDENTIFIER (default io.github.FooQoo.agent-board.agboard).
+#   EXPECTED_IDENTIFIER (default io.github.FooQoo.agent-project.agpj).
 #
 # Fails unless codesign verifies the binary strictly and reports the fixed
 # identifier, the expected Team ID, a Developer ID Application authority,
@@ -20,7 +20,7 @@ binary=${1:?usage: verify-signature.sh <binary> <target> [--json FILE]}
 target=${2:?usage: verify-signature.sh <binary> <target> [--json FILE]}
 json_out=""
 if [ "${3:-}" = "--json" ]; then json_out=${4:?--json needs a file}; fi
-expected_id=${EXPECTED_IDENTIFIER:-io.github.FooQoo.agent-board.agboard}
+expected_id=${EXPECTED_IDENTIFIER:-io.github.FooQoo.agent-project.agpj}
 
 fail() { echo "verify-signature: $*" >&2; exit 1; }
 [ -n "${APPLE_TEAM_ID:-}" ] || { echo "verify-signature: APPLE_TEAM_ID (expected Team ID) is not set" >&2; exit 2; }

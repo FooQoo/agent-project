@@ -1,10 +1,10 @@
-//! The text printed by `agboard --help`.
+//! The text printed by `agpj --help`.
 
-/// `agboard --help`: the board workflow for agents.
+/// `agpj --help`: the board workflow for agents.
 pub(super) const TOP_HELP: &str = "\
-agboard - a shared local work board for users and agents
+agpj - a shared local work board for users and agents
 
-Usage: agboard [--project NAME] [--json] <COMMAND>
+Usage: agpj [--project NAME] [--json] <COMMAND>
 
 Most board commands name a project with --project NAME. `progress`, `open`,
 and `hook` resolve the nearest registered folder binding when omitted; an
@@ -31,26 +31,26 @@ Commands:
   release Generate the release document of a version in docs/release/
   version List the project's versions, or show, set, or clear the current one
   hook    Add the current progress table to an agent hook
-  skills  Print the instructions of the agent-board Skill
+  skills  Print the instructions of the agent-project Skill
   wait    Wait for a board change or the next task
   workspace Show the project's shared folder and where its files are
   serve   Show the board in your browser (-d runs it in the background)
   open    Open the project's board in your browser
   stop    Stop the running server
-  setup   Install the Agent Board plugin for Codex and Claude Code; set up remote access (setup remote)
-  update  Update the installed Agent Board plugin to this version
+  setup   Install the Agent Project plugin for Codex and Claude Code; set up remote access (setup remote)
+  update  Update the installed Agent Project plugin to this version
 
 Workflow for agents:
-  agboard project ls --json
-  agboard --project NAME workspace --json
-  agboard progress --json
-  agboard --project NAME progress --json
-  agboard --project NAME ls --json
-  agboard ls --all-projects --json
-  agboard --project NAME show remote --json
-  agboard --project NAME mv <id> doing --actor ai --reason \"Start\"
-  agboard --project NAME state <id> running --actor ai --reason \"Working\"
-  agboard --project NAME message ask --actor ai --task <id> --json --questions-json '{\"questions\":[{\"body\":\"Which plan?\",\"choices\":[{\"id\":\"a\",\"label\":\"Plan A\"},{\"id\":\"b\",\"label\":\"Plan B\"}]}]}'
+  agpj project ls --json
+  agpj --project NAME workspace --json
+  agpj progress --json
+  agpj --project NAME progress --json
+  agpj --project NAME ls --json
+  agpj ls --all-projects --json
+  agpj --project NAME show remote --json
+  agpj --project NAME mv <id> doing --actor ai --reason \"Start\"
+  agpj --project NAME state <id> running --actor ai --reason \"Working\"
+  agpj --project NAME message ask --actor ai --task <id> --json --questions-json '{\"questions\":[{\"body\":\"Which plan?\",\"choices\":[{\"id\":\"a\",\"label\":\"Plan A\"},{\"id\":\"b\",\"label\":\"Plan B\"}]}]}'
 
 Rules for agents:
   - Move a task to doing before you report running.
@@ -72,7 +72,7 @@ Descriptions and drafts:
   - `edit` replaces the body and acceptance conditions only. The stored history and
     question references stay; `history` and `questions` in the input are ignored.
   - Snapshots, `show`, and `wait` return descriptions in full. Progress and hooks
-    return metadata only. If the hook's progress table exceeds 256 KiB, it reports AGBOARD_ERROR
+    return metadata only. If the hook's progress table exceeds 256 KiB, it reports AGPJ_ERROR
     (context_too_large) instead; read only the needed EPIC.md and TASK.md files.
   - A task with \"draft\": \"human\" is a draft the user is still writing. It is
     read-only for you: `edit`, `mv`, `state`, and `history add` fail with

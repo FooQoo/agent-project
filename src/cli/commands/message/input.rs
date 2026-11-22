@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use serde::Deserialize;
 
 use crate::domain::Actor;
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 use crate::file_store::model::Choice;
 use crate::file_store::{AskInput, AskQuestion, RequestImage};
 
@@ -37,14 +37,14 @@ struct QuestionJson {
 }
 
 /// The value itself, or standard input when the value is `-`.
-pub(super) fn text_of(value: &str) -> Result<String, AgboardError> {
+pub(super) fn text_of(value: &str) -> Result<String, AgpjError> {
     if value != "-" {
         return Ok(value.to_string());
     }
     let mut text = String::new();
     std::io::stdin()
         .read_to_string(&mut text)
-        .map_err(|e| AgboardError::FileError {
+        .map_err(|e| AgpjError::FileError {
             action: FileAction::Read,
             file: "standard input".into(),
             reason: e.to_string(),
@@ -53,8 +53,8 @@ pub(super) fn text_of(value: &str) -> Result<String, AgboardError> {
 }
 
 /// An image file named in a question's `images`, stored under its own file name.
-fn read_image(path: &std::path::Path) -> Result<RequestImage, AgboardError> {
-    let bytes = std::fs::read(path).map_err(|e| AgboardError::FileError {
+fn read_image(path: &std::path::Path) -> Result<RequestImage, AgpjError> {
+    let bytes = std::fs::read(path).map_err(|e| AgpjError::FileError {
         action: FileAction::Read,
         file: path.display().to_string(),
         reason: e.to_string(),
@@ -62,7 +62,7 @@ fn read_image(path: &std::path::Path) -> Result<RequestImage, AgboardError> {
     let name = path
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
-        .ok_or_else(|| AgboardError::InvalidValue {
+        .ok_or_else(|| AgpjError::InvalidValue {
             field: "images".into(),
             reason: "Each image needs a file path.".into(),
         })?;
@@ -70,14 +70,10 @@ fn read_image(path: &std::path::Path) -> Result<RequestImage, AgboardError> {
 }
 
 /// The questions of `--questions-json` and the tasks of `--task`.
-pub(super) fn ask_input(
-    value: &str,
-    actor: Actor,
-    tasks: &[i64],
-) -> Result<AskInput, AgboardError> {
+pub(super) fn ask_input(value: &str, actor: Actor, tasks: &[i64]) -> Result<AskInput, AgpjError> {
     let text = text_of(value)?;
     let parsed: QuestionsJson =
-        serde_json::from_str(&text).map_err(|e| AgboardError::InvalidValue {
+        serde_json::from_str(&text).map_err(|e| AgpjError::InvalidValue {
             field: "questions-json".into(),
             reason: format!(
                 "The questions must be JSON with 1 to 20 questions, each with a body and, if it has choices, 2 to 10 of them: {e}."
@@ -86,7 +82,7 @@ pub(super) fn ask_input(
     Ok(AskInput {
         actor,
         // A board-launched session is told apart by the launch ID the launcher gave it.
-        asked_by: std::env::var("AGBOARD_RESIDENT_ID")
+        asked_by: std::env::var("AGPJ_RESIDENT_ID")
             .ok()
             .filter(|id| !id.is_empty()),
         tasks: tasks.to_vec(),
@@ -106,18 +102,18 @@ pub(super) fn ask_input(
                         .collect::<Result<Vec<_>, _>>()?,
                 })
             })
-            .collect::<Result<Vec<_>, AgboardError>>()?,
+            .collect::<Result<Vec<_>, AgpjError>>()?,
     })
 }
 
 /// `--timeout`: seconds from 1 to 86400, or `none` for no limit. The default is 600.
-pub(super) fn timeout(value: Option<&str>) -> Result<Option<u64>, AgboardError> {
+pub(super) fn timeout(value: Option<&str>) -> Result<Option<u64>, AgpjError> {
     match value {
         None => Ok(Some(DEFAULT_TIMEOUT)),
         Some("none") => Ok(None),
         Some(raw) => match raw.parse::<u64>() {
             Ok(seconds) if (1..=MAX_TIMEOUT).contains(&seconds) => Ok(Some(seconds)),
-            _ => Err(AgboardError::InvalidValue {
+            _ => Err(AgpjError::InvalidValue {
                 field: "timeout".into(),
                 reason: format!(
                     "--timeout is a number of seconds from 1 to {MAX_TIMEOUT}, or none."

@@ -1,11 +1,11 @@
-//! `agboard message ...`: asking, answering, withdrawing, sending and accepting, and the JSON
+//! `agpj message ...`: asking, answering, withdrawing, sending and accepting, and the JSON
 //! each command prints.
 
 mod common;
 
 use std::path::Path;
 
-use common::{agboard, demo_project, json_error, json_ok};
+use common::{agpj, demo_project, json_error, json_ok};
 use serde_json::{Value, json};
 
 const TWO: &str = r#"{"questions":[
@@ -25,7 +25,7 @@ const PNG: [u8; 70] = [
 fn msg(home: &Path, args: &[&str]) -> (i32, String, String) {
     let mut all = vec!["--project", "Demo", "message"];
     all.extend_from_slice(args);
-    agboard(home, &all)
+    agpj(home, &all)
 }
 
 fn msg_json(home: &Path, args: &[&str]) -> Value {
@@ -87,7 +87,7 @@ fn one_ask_makes_one_message_for_each_question() {
     assert_eq!(task["task"]["agentStatus"], "awaiting_answer");
 
     // The old command and its flags are gone.
-    let (code, _, _) = agboard(home.path(), &["--project", "Demo", "qa", "ls"]);
+    let (code, _, _) = agpj(home.path(), &["--project", "Demo", "qa", "ls"]);
     assert_ne!(code, 0);
     let (code, _, _) = msg(
         home.path(),

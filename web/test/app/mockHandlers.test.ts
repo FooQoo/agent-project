@@ -9,7 +9,7 @@ import {
 } from '../support/msw';
 import { boardOf, PROJECT, start, taskOf } from './mockServerCases';
 
-const TOKEN = { 'X-Agboard-Token': 'mock-token' };
+const TOKEN = { 'X-Agpj-Token': 'mock-token' };
 
 /** Reads the next `changed` event of a stream, or fails after a second. */
 function nextChanged(source: EventSource): Promise<ChangedEvent> {

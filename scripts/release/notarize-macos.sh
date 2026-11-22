@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Notarize a signed agboard binary and record the result.
+# Notarize a signed agpj binary and record the result.
 #
 # Usage: notarize-macos.sh <signed-binary> <target> <out-dir>
 #
@@ -46,9 +46,9 @@ printf '%s\n' "$APP_STORE_CONNECT_API_KEY" > "$keyfile"
 
 binary_sha=$(shasum -a 256 "$binary" | awk '{print $1}')
 mkdir "$work/zip"
-cp "$binary" "$work/zip/agboard"
-zip="$work/agboard-$target.zip"
-ditto -c -k "$work/zip/agboard" "$zip" || die 5 "could not create the submission zip"
+cp "$binary" "$work/zip/agpj"
+zip="$work/agpj-$target.zip"
+ditto -c -k "$work/zip/agpj" "$zip" || die 5 "could not create the submission zip"
 zip_sha=$(shasum -a 256 "$zip" | awk '{print $1}')
 
 creds=(--key "$keyfile" --key-id "$APP_STORE_CONNECT_KEY_ID" --issuer "$APP_STORE_CONNECT_ISSUER_ID")

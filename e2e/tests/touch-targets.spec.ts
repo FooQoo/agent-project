@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { mainProject, resetBoard } from '../helpers/agboard';
+import { mainProject, resetBoard } from '../helpers/agpj';
 import { readBoardAfterReset } from '../helpers/ui';
 import { answerButton, openListButton } from '../helpers/answer';
 import { openAskAi } from '../helpers/ask-ai';

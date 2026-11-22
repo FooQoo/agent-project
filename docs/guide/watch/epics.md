@@ -9,13 +9,13 @@ An epic is a management unit that groups tasks and gives them an order, so that 
 ## Group tasks in an epic
 
 ```sh
-agboard --project "My project" epic add launch --name "Website launch" --actor ai
-agboard --project "My project" epic ls --json
-agboard --project "My project" epic show LAUNCH --json
-agboard --project "My project" epic edit LAUNCH --document-file epic.md
-agboard --project "My project" edit 1 --epic LAUNCH
-agboard --project "My project" add "Prepare the preview" --assignee ai --actor ai --epic LAUNCH
-agboard --project "My project" edit 1 --clear-epic
+agpj --project "My project" epic add launch --name "Website launch" --actor ai
+agpj --project "My project" epic ls --json
+agpj --project "My project" epic show LAUNCH --json
+agpj --project "My project" epic edit LAUNCH --document-file epic.md
+agpj --project "My project" edit 1 --epic LAUNCH
+agpj --project "My project" add "Prepare the preview" --assignee ai --actor ai --epic LAUNCH
+agpj --project "My project" edit 1 --clear-epic
 ```
 
 - Epic IDs use letters, digits, and hyphens; lowercase input is turned into uppercase.
@@ -47,7 +47,7 @@ An epic orders its tasks in waves. The tasks of one wave can run in parallel, an
 Save the waves from the command line, one value per wave. A value is a task ID, or task IDs joined by commas:
 
 ```sh
-agboard --project "My project" epic edit LAUNCH --waves 3 1,2 4
+agpj --project "My project" epic edit LAUNCH --waves 3 1,2 4
 ```
 
 This writes the following in the epic's `EPIC.md`: task 3 first, then tasks 1 and 2 together, then task 4.
@@ -61,7 +61,7 @@ waves:
 
 The entries must be distinct positive task IDs across all waves, and only current members of the epic are kept. A wave that ends up empty is dropped. Unlisted members follow in ascending ID order, and a task that no wave lists is never held back. Pass `--waves ""` to clear the explicit order. The order is independent of where tasks sit on the board.
 
-The next-task list for agents, `agboard wait --until task`, and the tasks the board hands to a resident session hold back a Todo task while any task of an earlier wave is not Done. Archived tasks no longer count as unfinished. Stalled work in Doing is still offered to resume.
+The next-task list for agents, `agpj wait --until task`, and the tasks the board hands to a resident session hold back a Todo task while any task of an earlier wave is not Done. Archived tasks no longer count as unfinished. Stalled work in Doing is still offered to resume.
 
 ## Edit an epic in the browser
 
@@ -81,7 +81,7 @@ The epic editor shows the outline on the left, the name and the "Epic details (M
 - Tasks of the epic that no wave lists appear in a last group, **Not in a wave**, in ascending ID order. They are never held back. Drag one into a wave to order it, or leave it there.
 - **Save** applies the waves. Nothing is stored before then.
 - Selecting a task opens its details. Change membership in the task editor or on the command line, not in the epic dialog. The epic dialog has no Draft checkbox.
-- While a person has an epic in draft, `agboard epic edit` refuses changes to its details and task order with `epic_is_draft`. Attachments and a task's membership in the epic still change.
+- While a person has an epic in draft, `agpj epic edit` refuses changes to its details and task order with `epic_is_draft`. Attachments and a task's membership in the epic still change.
 - If a draft is left behind, choose **Finalize** in the epic's details to release it.
 
 ## Plan an epic at once {#plan-an-epic}
@@ -100,9 +100,9 @@ There is no list of tasks and no way to leave one out here. To give one task ano
 ## Read the progress table
 
 ```sh
-agboard progress
-agboard progress --json
-agboard --project "My project" progress --json
+agpj progress
+agpj progress --json
+agpj --project "My project" progress --json
 ```
 
 The progress table is what agents read to choose their next task. It groups Todo and Doing tasks under their epics, with a separate group for work without an epic. Done, archived, and Awaiting answer tasks are left out; an open question stays on the board until it is answered, and `show` or `snapshot` shows it. User-owned tasks and drafts stay in the table for context, but agents skip them when choosing work.
@@ -114,12 +114,12 @@ The table also has a `nextTasks` list (`Next tasks` in the text output) of up to
 By default the table leaves out tasks waiting for a decision and finished tasks. Add them when you need the whole picture:
 
 ```sh
-agboard progress --include-awaiting-answer --include-done 5
+agpj progress --include-awaiting-answer --include-done 5
 ```
 
 - `--include-awaiting-answer` adds a "Waiting for a decision" section. Each task shows the start of its question (`question` in JSON).
 - `--include-done COUNT` adds a "Recently done" section with the most recently completed tasks, newest first. Only tasks of epics that still have Todo or Doing work are included, so finished epics and tasks without an epic stay out. Archived tasks are never included.
-- Without these options the output is the same as before. To give agents these sections, add the same options to the hook command, for example `agboard hook --agent claude --include-awaiting-answer --include-done 5`.
+- Without these options the output is the same as before. To give agents these sections, add the same options to the hook command, for example `agpj hook --agent claude --include-awaiting-answer --include-done 5`.
 
 Epics appear in ID order. Within an epic, the `waves` list decides the order of its tasks, and tasks not listed follow in ascending ID order. Work without an epic is also sorted by ID. Epics with no listed tasks are left out.
 

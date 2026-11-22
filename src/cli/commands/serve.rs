@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 use serde_json::json;
 
 use crate::cli::args::{ServeArgs, validate_monitor_args};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::interact::confirm;
 use crate::server::monitor_connection::lifecycle::MonitorEnv;
 use crate::server::{self, MonitorOptions, MonitorReady, ServeConfig};
@@ -20,7 +20,7 @@ use crate::server::{self, MonitorOptions, MonitorReady, ServeConfig};
 /// appears only once the port is bound; `execute` prints nothing for `serve`
 /// afterwards. The command works on the whole data area, never on one project
 /// or task, and changes nothing that needs a notification.
-pub fn run(json: bool, args: &ServeArgs) -> Result<(), AgboardError> {
+pub fn run(json: bool, args: &ServeArgs) -> Result<(), AgpjError> {
     if args.auto {
         // A value that is not a project ID opens nothing.
         let open = args.open_board.as_deref().and_then(|id| id.parse().ok());
@@ -44,13 +44,13 @@ pub fn run(json: bool, args: &ServeArgs) -> Result<(), AgboardError> {
 /// An ngrok connection can take a while to open.
 const DAEMON_READY_TIMEOUT: Duration = Duration::from_secs(30);
 
-/// Start `agboard serve` again as a detached process and return once its
+/// Start `agpj serve` again as a detached process and return once its
 /// startup line is in the log, so the caller sees the same address and
 /// passcode a foreground `serve` prints.
 ///
 /// The log is truncated on every start and readable only by the user, because
 /// the startup line carries the phone passcode.
-fn daemonize(json: bool, args: &ServeArgs) -> Result<(), AgboardError> {
+fn daemonize(json: bool, args: &ServeArgs) -> Result<(), AgpjError> {
     // Fail on a bad `--monitor` here, with the usual message, not in the log.
     validate_monitor_args(args, &|name| std::env::var(name).ok())?;
     let data_dir = crate::paths::data_dir()?;
@@ -95,7 +95,7 @@ fn daemonize(json: bool, args: &ServeArgs) -> Result<(), AgboardError> {
         .try_clone()
         .map_err(|e| unavailable(format!("Cannot open serve.log: {e}")))?;
     let exe = std::env::current_exe()
-        .map_err(|e| unavailable(format!("Cannot find the agboard executable: {e}")))?;
+        .map_err(|e| unavailable(format!("Cannot find the agpj executable: {e}")))?;
 
     let mut command = process::Command::new(exe);
     // The startup line is the handshake, so the child always prints JSON.
@@ -164,9 +164,9 @@ fn confirm_replace(
     interactive: bool,
     input: &mut impl BufRead,
     output: &mut impl Write,
-) -> Result<bool, AgboardError> {
+) -> Result<bool, AgpjError> {
     if !interactive {
-        return Err(AgboardError::AlreadyServing { port, auto });
+        return Err(AgpjError::AlreadyServing { port, auto });
     }
     confirm::confirm(
         &format!("A server is already running on port {port}. Stop it and start a new one?"),
@@ -175,8 +175,8 @@ fn confirm_replace(
     )
 }
 
-fn unavailable(reason: String) -> AgboardError {
-    AgboardError::BoardUnavailable { reason }
+fn unavailable(reason: String) -> AgpjError {
+    AgpjError::BoardUnavailable { reason }
 }
 
 /// The line `serve -d` prints: the child's startup object with the process and
@@ -201,7 +201,7 @@ pub(super) fn daemon_line(
         ));
     }
     line.push_str(&format!(
-        " in the background (pid {pid}, log {}; stop with \"agboard stop\")",
+        " in the background (pid {pid}, log {}; stop with \"agpj stop\")",
         log.display()
     ));
     line
@@ -293,7 +293,7 @@ mod tests {
             confirm_replace(7971, false, false, &mut "y\n".as_bytes(), &mut printed).unwrap_err();
         assert!(matches!(
             err,
-            AgboardError::AlreadyServing {
+            AgpjError::AlreadyServing {
                 port: 7971,
                 auto: false
             }
@@ -321,7 +321,7 @@ mod tests {
         let log = Path::new("/data/serve.log");
         assert_eq!(
             daemon_line(startup.clone(), 42, log, false),
-            "Serving at http://127.0.0.1:7461/ in the background (pid 42, log /data/serve.log; stop with \"agboard stop\")"
+            "Serving at http://127.0.0.1:7461/ in the background (pid 42, log /data/serve.log; stop with \"agpj stop\")"
         );
         let value: serde_json::Value =
             serde_json::from_str(&daemon_line(startup, 42, log, true)).unwrap();

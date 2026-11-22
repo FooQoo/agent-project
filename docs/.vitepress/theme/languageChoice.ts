@@ -9,7 +9,7 @@
 //
 // Deep links never move: the script is only on the top page, and it checks the path again.
 
-export const languageStorageKey = 'agent-board-docs-lang'
+export const languageStorageKey = 'agent-project-docs-lang'
 
 export type DocsLang = 'en' | 'ja'
 

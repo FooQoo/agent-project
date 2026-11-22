@@ -44,7 +44,7 @@ beforeEach(() => {
   };
   FakeEventSource.reset(true);
   vi.stubGlobal('EventSource', FakeEventSource);
-  document.head.innerHTML = '<meta name="agboard-token" content="test-token">';
+  document.head.innerHTML = '<meta name="agpj-token" content="test-token">';
   fetchMock = stubBackend(backend);
 });
 
@@ -77,13 +77,13 @@ describe('App', () => {
 
     // The project name shows once the list is in; the board follows with its own request.
     await screen.findByText('agent-board');
-    expect(document.title).toBe('agent-board - Agent Board');
+    expect(document.title).toBe('agent-board - Agent Project');
     await screen.findByRole('region', { name: 'Todo' });
     expect(screen.getByRole('complementary', { name: 'Task details' })).toBeTruthy();
     expect(screen.getByRole('separator', { name: 'Resize task details' })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 1, name: 'Agent Board' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Agent Project' })).toBeTruthy();
     expect(screen.getByText('agent-board')).toBeTruthy();
-    expect(document.title).toBe('agent-board - Agent Board');
+    expect(document.title).toBe('agent-board - Agent Project');
     expect(screen.getByText('8 tasks')).toBeTruthy();
   });
 
@@ -172,7 +172,7 @@ describe('App', () => {
     expect(screen.getByText('7 tasks')).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledWith(`/api/projects/${PROJECT_A.id}/tasks/14/archive`, {
       method: 'POST',
-      headers: { 'X-Agboard-Token': 'test-token', 'X-Agboard-Language': 'en' },
+      headers: { 'X-Agpj-Token': 'test-token', 'X-Agpj-Language': 'en' },
     });
   });
 

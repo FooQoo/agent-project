@@ -39,7 +39,7 @@ pub struct SessionStore {
 
 /// The CSRF token that belongs to a session secret.
 pub fn csrf_for(secret: &str) -> String {
-    secret_hash(&format!("agboard-csrf:{secret}"))
+    secret_hash(&format!("agpj-csrf:{secret}"))
 }
 
 impl SessionStore {

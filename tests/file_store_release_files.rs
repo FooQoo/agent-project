@@ -4,8 +4,8 @@
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{Actor, Assignee, NewTask, ProjectId};
-use agent_board::file_store::{FileStore, VersionChoice};
+use agent_project::domain::{Actor, Assignee, NewTask, ProjectId};
+use agent_project::file_store::{FileStore, VersionChoice};
 use chrono::{DateTime, TimeZone, Utc};
 
 fn at(day: u32) -> DateTime<Utc> {
@@ -126,7 +126,7 @@ fn adding_creates_the_file_from_the_template_and_never_overwrites_one() {
     let file = f.release().join("v1.8.0.md");
     assert_eq!(
         fs::read_to_string(&file).unwrap(),
-        agent_board::file_store::releases::STANDARD_TEMPLATE
+        agent_project::file_store::releases::STANDARD_TEMPLATE
     );
 
     // Someone writes the release document; listing the version again keeps it.

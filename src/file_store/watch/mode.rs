@@ -8,7 +8,7 @@ pub const POLL_INTERVAL: Duration = Duration::from_millis(100);
 /// How the shared folder is watched.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum WatchMode {
-    /// The platform's file events (FSEvents on macOS). `agboard serve` uses this.
+    /// The platform's file events (FSEvents on macOS). `agpj serve` uses this.
     #[default]
     Native,
     /// Scan the folder every [`POLL_INTERVAL`]. It starts at once without the platform's
@@ -17,10 +17,10 @@ pub enum WatchMode {
 }
 
 impl WatchMode {
-    /// The mode named by `AGBOARD_WATCH`: `poll` selects [`WatchMode::Poll`]; anything else,
+    /// The mode named by `AGPJ_WATCH`: `poll` selects [`WatchMode::Poll`]; anything else,
     /// or no value, is [`WatchMode::Native`].
     pub fn from_env() -> WatchMode {
-        match std::env::var("AGBOARD_WATCH") {
+        match std::env::var("AGPJ_WATCH") {
             Ok(value) if value.eq_ignore_ascii_case("poll") => WatchMode::Poll,
             _ => WatchMode::Native,
         }

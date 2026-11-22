@@ -12,17 +12,17 @@ use serde_json::Value;
 use tempfile::tempdir;
 
 fn bin() -> Command {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
     command
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0");
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0");
     command
 }
 
-fn agboard(home: &Path, project: &str, args: &[&str]) -> Output {
+fn agpj(home: &Path, project: &str, args: &[&str]) -> Output {
     bin()
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["--project", project])
         .args(args)
@@ -30,10 +30,10 @@ fn agboard(home: &Path, project: &str, args: &[&str]) -> Output {
         .unwrap()
 }
 
-fn agboard_in(home: &Path, cwd: &Path, args: &[&str]) -> Output {
+fn agpj_in(home: &Path, cwd: &Path, args: &[&str]) -> Output {
     bin()
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(cwd)
         .args(args)
@@ -51,7 +51,7 @@ fn ok(output: &Output) {
 }
 
 fn add_task(home: &Path, project: &str, title: &str) {
-    ok(&agboard(
+    ok(&agpj(
         home,
         project,
         &["add", title, "--assignee", "ai", "--actor", "human"],
@@ -80,7 +80,7 @@ fn tree_of(dir: &Path) -> Vec<(std::path::PathBuf, Vec<u8>)> {
 }
 
 fn snapshot(home: &Path, project: &str) -> Value {
-    let output = agboard(home, project, &["snapshot", "--json"]);
+    let output = agpj(home, project, &["snapshot", "--json"]);
     ok(&output);
     serde_json::from_slice(&output.stdout).unwrap()
 }
@@ -91,7 +91,7 @@ fn content(mut snapshot: Value) -> Value {
     snapshot
 }
 
-/// Runs `agboard [--project NAME] hook --agent AGENT` with `input` on stdin.
+/// Runs `agpj [--project NAME] hook --agent AGENT` with `input` on stdin.
 fn hook(home: &Path, project: Option<&str>, agent: &str, input: &str) -> Output {
     hook_in(home, project, agent, input, None)
 }
@@ -104,9 +104,7 @@ fn hook_in(
     cwd: Option<&Path>,
 ) -> Output {
     let mut command = bin();
-    command
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home);
+    command.env("AGPJ_WATCH", "poll").env("AGPJ_HOME", home);
     command.env("TZ", "UTC");
     if let Some(cwd) = cwd {
         command.current_dir(cwd);
@@ -141,7 +139,7 @@ fn context(output: &Output) -> String {
 
 fn error_code(context: &str) -> String {
     let body = context
-        .strip_prefix("AGBOARD_ERROR\n")
+        .strip_prefix("AGPJ_ERROR\n")
         .unwrap_or_else(|| panic!("not a hook error: {context}"))
         .lines()
         .next()
@@ -152,7 +150,7 @@ fn error_code(context: &str) -> String {
 
 const SESSION_START: &str = r#"{"hook_event_name":"SessionStart"}"#;
 
-/// A running `agboard serve`, stopped when dropped, so that a failing test
+/// A running `agpj serve`, stopped when dropped, so that a failing test
 /// does not leave it behind.
 struct Server(Child);
 
@@ -165,8 +163,8 @@ impl Drop for Server {
 
 fn start_server(home: &Path) -> Server {
     let mut server = bin()
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -187,8 +185,8 @@ fn stop(server: Server) {
 fn spawn_wait(home: &Path, project: &str, after: &str, timeout: Option<&str>) -> Child {
     let mut command = bin();
     command
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .args(["--project", project, "--json", "wait", "--after", after]);
     if let Some(timeout) = timeout {
         command.args(["--timeout", timeout]);
@@ -248,14 +246,14 @@ fn error_of(output: &Output) -> Value {
 
 fn two_projects(home: &Path) {
     for (project, title) in [("Alpha", "Alpha secret"), ("Beta", "Beta secret")] {
-        ok(&agboard(home, project, &["init"]));
+        ok(&agpj(home, project, &["init"]));
         add_task(home, project, title);
-        ok(&agboard(
+        ok(&agpj(
             home,
             project,
             &["mv", "1", "doing", "--actor", "ai", "--reason", "Start"],
         ));
-        ok(&agboard(
+        ok(&agpj(
             home,
             project,
             &[
@@ -277,11 +275,11 @@ fn two_projects(home: &Path) {
 fn the_hook_passes_only_the_named_projects_progress_table() {
     let home = tempdir().unwrap();
     // Both projects have a task #1, so a mix-up would be visible.
-    ok(&agboard(home.path(), "Alpha", &["init"]));
-    ok(&agboard(home.path(), "Beta", &["init"]));
+    ok(&agpj(home.path(), "Alpha", &["init"]));
+    ok(&agpj(home.path(), "Beta", &["init"]));
     for (project, title) in [("Alpha", "Alpha secret"), ("Beta", "Beta secret")] {
         add_task(home.path(), project, title);
-        ok(&agboard(
+        ok(&agpj(
             home.path(),
             project,
             &[
@@ -294,7 +292,7 @@ fn the_hook_passes_only_the_named_projects_progress_table() {
                 &format!("{project} started"),
             ],
         ));
-        ok(&agboard(
+        ok(&agpj(
             home.path(),
             project,
             &[
@@ -315,7 +313,7 @@ fn the_hook_passes_only_the_named_projects_progress_table() {
         let output = hook(home.path(), Some(project), agent, SESSION_START);
         assert!(output.stderr.is_empty());
         let context = context(&output);
-        let body = context.strip_prefix("AGBOARD_PROGRESS\n").unwrap();
+        let body = context.strip_prefix("AGPJ_PROGRESS\n").unwrap();
         let passed: Value = serde_json::from_str(body).unwrap();
         assert_eq!(passed["project"]["name"], project);
         assert!(passed["unassigned"].as_array().unwrap().is_empty());
@@ -328,7 +326,7 @@ fn the_hook_passes_only_the_named_projects_progress_table() {
 }
 
 #[test]
-fn a_hook_without_a_usable_target_reports_agboard_error_and_changes_nothing() {
+fn a_hook_without_a_usable_target_reports_agpj_error_and_changes_nothing() {
     let home = tempdir().unwrap();
     two_projects(home.path());
     let shared = home.path().join("shared");
@@ -348,7 +346,7 @@ fn a_hook_without_a_usable_target_reports_agboard_error_and_changes_nothing() {
     // An error is data for the agent, never a snapshot.
     assert!(
         !context(&hook(home.path(), Some("Nowhere"), "codex", SESSION_START))
-            .contains("AGBOARD_PROGRESS")
+            .contains("AGPJ_PROGRESS")
     );
     let unbound = hook(home.path(), None, "codex", SESSION_START);
     assert!(unbound.stdout.is_empty());
@@ -376,11 +374,7 @@ fn a_renamed_project_needs_its_new_name_and_a_recreated_one_is_a_new_project() {
     let home = tempdir().unwrap();
     two_projects(home.path());
     let original = snapshot(home.path(), "Alpha");
-    ok(&agboard(
-        home.path(),
-        "Alpha",
-        &["project", "rename", "Gamma"],
-    ));
+    ok(&agpj(home.path(), "Alpha", &["project", "rename", "Gamma"]));
 
     // The old name no longer names anything, so the hook says so; it does not
     // fall back to another project.
@@ -388,15 +382,15 @@ fn a_renamed_project_needs_its_new_name_and_a_recreated_one_is_a_new_project() {
     assert_eq!(error_code(&context(&output)), "project_not_found");
     let body = context(&hook(home.path(), Some("Gamma"), "claude", SESSION_START));
     let renamed: Value =
-        serde_json::from_str(body.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(body.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(renamed["project"]["id"], original["project"]["id"]);
     assert_eq!(renamed["project"]["name"], "Gamma");
 
     // Creating the old name again gives another project, not the old one.
-    ok(&agboard(home.path(), "Alpha", &["init"]));
+    ok(&agpj(home.path(), "Alpha", &["init"]));
     let again = context(&hook(home.path(), Some("Alpha"), "claude", SESSION_START));
     let again: Value =
-        serde_json::from_str(again.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(again.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_ne!(again["project"]["id"], original["project"]["id"]);
     assert_eq!(again["unassigned"].as_array().unwrap().len(), 0);
 }
@@ -410,12 +404,12 @@ fn progress_uses_the_nearest_bound_ancestor_and_explicit_project_overrides_it() 
     let deeper = nested.join("deeper");
     std::fs::create_dir_all(&deeper).unwrap();
 
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &root,
         &["project", "create", "Alpha"],
     ));
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &nested,
         &["project", "create", "Beta"],
@@ -423,13 +417,13 @@ fn progress_uses_the_nearest_bound_ancestor_and_explicit_project_overrides_it() 
     add_task(home.path(), "Alpha", "Root task");
     add_task(home.path(), "Beta", "Nested task");
 
-    let nearest = agboard_in(home.path(), &deeper, &["progress", "--json"]);
+    let nearest = agpj_in(home.path(), &deeper, &["progress", "--json"]);
     ok(&nearest);
     let nearest: Value = serde_json::from_slice(&nearest.stdout).unwrap();
     assert_eq!(nearest["project"]["name"], "Beta");
     assert_eq!(nearest["unassigned"][0]["title"], "Nested task");
 
-    let explicit = agboard_in(
+    let explicit = agpj_in(
         home.path(),
         &deeper,
         &["--project", "Alpha", "progress", "--json"],
@@ -447,27 +441,27 @@ fn progress_does_not_guess_from_an_unbound_folder_or_fall_through_a_stale_neares
     let root = folders.path().join("root");
     let nested = root.join("nested");
     std::fs::create_dir_all(&nested).unwrap();
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &root,
         &["project", "create", "Alpha"],
     ));
 
-    let unbound = agboard_in(home.path(), folders.path(), &["progress"]);
+    let unbound = agpj_in(home.path(), folders.path(), &["progress"]);
     assert!(!unbound.status.success());
     assert!(String::from_utf8_lossy(&unbound.stderr).contains("this folder is not bound"));
 
     // Existing read commands still require an explicit project.
-    let still_explicit = agboard_in(home.path(), &root, &["show", "1", "--json"]);
+    let still_explicit = agpj_in(home.path(), &root, &["show", "1", "--json"]);
     assert!(!still_explicit.status.success());
     assert!(String::from_utf8_lossy(&still_explicit.stderr).contains("--project NAME is required"));
 
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &nested,
         &["project", "create", "Beta"],
     ));
-    let projects = agboard_in(home.path(), &root, &["project", "ls", "--json"]);
+    let projects = agpj_in(home.path(), &root, &["project", "ls", "--json"]);
     ok(&projects);
     let projects: Value = serde_json::from_slice(&projects.stdout).unwrap();
     let beta_id = projects["projects"]
@@ -480,7 +474,7 @@ fn progress_does_not_guess_from_an_unbound_folder_or_fall_through_a_stale_neares
         .unwrap();
     std::fs::remove_dir_all(home.path().join("shared/projects").join(beta_id)).unwrap();
 
-    let stale = agboard_in(home.path(), &nested, &["progress"]);
+    let stale = agpj_in(home.path(), &nested, &["progress"]);
     assert!(!stale.status.success());
     assert!(
         String::from_utf8_lossy(&stale.stderr)
@@ -509,12 +503,12 @@ fn hook_uses_cwd_binding_and_emits_the_same_read_only_progress_snapshot() {
     let nested = root.join("nested");
     let deeper = nested.join("deeper");
     std::fs::create_dir_all(&deeper).unwrap();
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &root,
         &["project", "create", "Alpha"],
     ));
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &nested,
         &["project", "create", "Beta"],
@@ -530,7 +524,7 @@ fn hook_uses_cwd_binding_and_emits_the_same_read_only_progress_snapshot() {
     let output = hook_in(home.path(), None, "codex", &input, Some(folders.path()));
     let passed_context = context(&output);
     let hook =
-        serde_json::from_str::<Value>(passed_context.strip_prefix("AGBOARD_PROGRESS\n").unwrap())
+        serde_json::from_str::<Value>(passed_context.strip_prefix("AGPJ_PROGRESS\n").unwrap())
             .unwrap();
     assert_eq!(hook["project"]["name"], "Beta");
     assert_eq!(hook["unassigned"][0]["title"], "Nested task");
@@ -540,10 +534,10 @@ fn hook_uses_cwd_binding_and_emits_the_same_read_only_progress_snapshot() {
     let fallback = hook_in(home.path(), None, "codex", SESSION_START, Some(&deeper));
     let fallback = context(&fallback);
     let fallback: Value =
-        serde_json::from_str(fallback.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(fallback.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(fallback["project"]["name"], "Beta");
 
-    let progress = agboard_in(home.path(), &deeper, &["progress", "--json"]);
+    let progress = agpj_in(home.path(), &deeper, &["progress", "--json"]);
     ok(&progress);
     let mut progress: Value = serde_json::from_slice(&progress.stdout).unwrap();
     progress.as_object_mut().unwrap().remove("fetchedAt");
@@ -564,13 +558,13 @@ fn hook_explicit_project_overrides_cwd_binding_and_missing_binding_is_an_error()
     let unbound = folders.path().join("unbound");
     std::fs::create_dir_all(&root).unwrap();
     std::fs::create_dir_all(&unbound).unwrap();
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &root,
         &["project", "create", "Alpha"],
     ));
     add_task(home.path(), "Alpha", "Bound task");
-    ok(&agboard(home.path(), "Beta", &["init"]));
+    ok(&agpj(home.path(), "Beta", &["init"]));
     // The unbound directory stays unregistered; Beta is used only as the
     // explicit override in the first request below.
     add_task(home.path(), "Beta", "Explicit task");
@@ -588,7 +582,7 @@ fn hook_explicit_project_overrides_cwd_binding_and_missing_binding_is_an_error()
         Some(&unbound),
     ));
     let progress: Value =
-        serde_json::from_str(body.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(body.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(progress["project"]["name"], "Beta");
     assert_eq!(progress["unassigned"][0]["title"], "Explicit task");
 
@@ -614,7 +608,7 @@ fn hook_treats_cwd_as_a_path_and_never_interpolates_it_as_shell_text() {
     let marker = folders.path().join("injected");
     let hostile = folders.path().join("repo-$(touch injected)");
     std::fs::create_dir_all(&hostile).unwrap();
-    ok(&agboard_in(
+    ok(&agpj_in(
         home.path(),
         &hostile,
         &["project", "create", "Literal path"],
@@ -627,7 +621,7 @@ fn hook_treats_cwd_as_a_path_and_never_interpolates_it_as_shell_text() {
     let output = hook_in(home.path(), None, "codex", &input, Some(folders.path()));
     let body = context(&output);
     let progress: Value =
-        serde_json::from_str(body.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(body.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(progress["project"]["name"], "Literal path");
     assert!(!marker.exists());
 }
@@ -749,11 +743,7 @@ fn a_rename_while_waiting_returns_the_latest_snapshot_of_the_same_project() {
 
     let waiter = spawn_wait(home.path(), "Alpha", &after, None);
     std::thread::sleep(Duration::from_millis(500));
-    ok(&agboard(
-        home.path(),
-        "Alpha",
-        &["project", "rename", "Gamma"],
-    ));
+    ok(&agpj(home.path(), "Alpha", &["project", "rename", "Gamma"]));
     let output = finish(waiter, Duration::from_secs(10));
     ok(&output);
     let result: Value = serde_json::from_slice(&output.stdout).unwrap();
@@ -765,11 +755,7 @@ fn a_rename_while_waiting_returns_the_latest_snapshot_of_the_same_project() {
     let after = result["cursor"].as_str().unwrap().to_string();
     let waiter = spawn_wait(home.path(), "Gamma", &after, None);
     std::thread::sleep(Duration::from_millis(500));
-    ok(&agboard(
-        home.path(),
-        "Gamma",
-        &["project", "rename", "Delta"],
-    ));
+    ok(&agpj(home.path(), "Gamma", &["project", "rename", "Delta"]));
     add_task(home.path(), "Delta", "After two renames");
     let output = finish(waiter, Duration::from_secs(10));
     ok(&output);
@@ -795,7 +781,7 @@ fn deleting_the_project_while_waiting_is_an_error_and_a_same_name_project_is_not
     // needs a human, so this goes through the library, as the server's own
     // administrator would.
     {
-        let store = agent_board::file_store::FileStore::open(&home.path().join("shared"));
+        let store = agent_project::file_store::FileStore::open(&home.path().join("shared"));
         let id = store.project_by_name("Alpha").unwrap().id;
         store.delete_project(&id).unwrap();
         let now = chrono::Utc::now();
@@ -803,11 +789,11 @@ fn deleting_the_project_while_waiting_is_an_error_and_a_same_name_project_is_not
         store
             .create_task(
                 &recreated.id,
-                agent_board::domain::NewTask {
+                agent_project::domain::NewTask {
                     title: "Belongs to the new Alpha".into(),
                     description: "## 作業内容\n\nNew.\n\n## 完了条件と確認結果\n\n- [ ] AC-1. Works\n  - 確認結果: 未確認\n  - 根拠: 未記入\n  - 調整役の確認: 未確認\n\n## 実行記録\n\n".into(),
-                    assignee: agent_board::domain::Assignee::Ai,
-                    actor: agent_board::domain::Actor::Human,
+                    assignee: agent_project::domain::Assignee::Ai,
+                    actor: agent_project::domain::Actor::Human,
                     draft: None,
                 },
                 now,
@@ -815,8 +801,8 @@ fn deleting_the_project_while_waiting_is_an_error_and_a_same_name_project_is_not
             .unwrap();
     }
     // The server is told, as it would be after a CLI change.
-    let info = agent_board::paths::read_serve_info_in(home.path()).unwrap();
-    assert!(agent_board::interact::notify::notify_port(
+    let info = agent_project::paths::read_serve_info_in(home.path()).unwrap();
+    assert!(agent_project::interact::notify::notify_port(
         info.port,
         Duration::from_secs(2)
     ));
@@ -843,14 +829,14 @@ fn a_notification_without_a_change_and_a_timeout_do_not_end_the_wait_as_a_succes
         .unwrap()
         .to_string();
     let server = start_server(home.path());
-    let info = agent_board::paths::read_serve_info_in(home.path()).unwrap();
+    let info = agent_project::paths::read_serve_info_in(home.path()).unwrap();
     let before = snapshot(home.path(), "Alpha");
 
     let began = Instant::now();
     let mut waiter = spawn_wait(home.path(), "Alpha", &after, Some("4"));
     std::thread::sleep(Duration::from_millis(500));
     // A `changed` event with nothing new in this project.
-    assert!(agent_board::interact::notify::notify_port(
+    assert!(agent_project::interact::notify::notify_port(
         info.port,
         Duration::from_secs(2)
     ));

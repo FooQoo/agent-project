@@ -1,8 +1,8 @@
-//! `agboard serve` and the automatic notification after a write.
+//! `agpj serve` and the automatic notification after a write.
 //!
-//! These tests run the real `agboard` binary with `AGBOARD_HOME` in a temporary
+//! These tests run the real `agpj` binary with `AGPJ_HOME` in a temporary
 //! directory and `TZ=UTC`. Every server listens on a port the OS picks (never
-//! 7420), and the tests run one at a time. Every `agboard serve` child is
+//! 7420), and the tests run one at a time. Every `agpj serve` child is
 //! stopped when its handle is dropped, and the port is checked to be free again.
 
 use std::io::{BufRead, BufReader, Read, Write};
@@ -29,15 +29,15 @@ fn serial() -> MutexGuard<'static, ()> {
     SERIAL.lock().unwrap_or_else(|e| e.into_inner())
 }
 
-fn agboard(home: &Path) -> Command {
-    let mut cmd = Command::cargo_bin("agboard").unwrap();
-    cmd.env("AGBOARD_AUTOSTART", "0")
+fn agpj(home: &Path) -> Command {
+    let mut cmd = Command::cargo_bin("agpj").unwrap();
+    cmd.env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .env_remove("CODEX_THREAD_ID")
-        .env_remove("AGBOARD_RESIDENT_ID")
-        .env("AGBOARD_OPEN_BROWSER", "0");
-    cmd.env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env_remove("AGPJ_RESIDENT_ID")
+        .env("AGPJ_OPEN_BROWSER", "0");
+    cmd.env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home);
     cmd
@@ -64,10 +64,7 @@ fn run(home: &Path, args: &[&str]) -> Output {
     if command != Some("serve") {
         args.splice(0..0, ["--project", "demo"]);
     }
-    let output = agboard(home)
-        .args(folder_args(home, &args))
-        .output()
-        .unwrap();
+    let output = agpj(home).args(folder_args(home, &args)).output().unwrap();
     Output {
         code: output.status.code().unwrap(),
         out: String::from_utf8(output.stdout).unwrap(),
@@ -78,7 +75,7 @@ fn run(home: &Path, args: &[&str]) -> Output {
 
 fn run_ok(home: &Path, args: &[&str]) -> Output {
     let o = run(home, args);
-    assert_eq!(o.code, 0, "agboard {args:?} failed: {}", o.err);
+    assert_eq!(o.code, 0, "agpj {args:?} failed: {}", o.err);
     o
 }
 
@@ -112,7 +109,7 @@ fn port_in(text: &str) -> u16 {
     rest.split('/').next().unwrap().parse().unwrap()
 }
 
-/// A stand-in for `agboard serve`: answers every request with 204 and reports the
+/// A stand-in for `agpj serve`: answers every request with 204 and reports the
 /// request line of each one.
 struct FakeServe {
     requests: Receiver<String>,
@@ -180,7 +177,7 @@ impl Drop for FakeServe {
     }
 }
 
-/// A running `agboard serve`. Dropping it stops the child (SIGTERM, then kill)
+/// A running `agpj serve`. Dropping it stops the child (SIGTERM, then kill)
 /// and checks that its port is free again.
 struct Serving {
     child: Child,
@@ -197,15 +194,15 @@ impl Serving {
     }
 
     fn spawn(home: &Path, args: &[&str]) -> Serving {
-        let mut child = StdCommand::new(assert_cmd::cargo::cargo_bin("agboard"))
-            .env("AGBOARD_AUTOSTART", "0")
+        let mut child = StdCommand::new(assert_cmd::cargo::cargo_bin("agpj"))
+            .env("AGPJ_AUTOSTART", "0")
             .env_remove("CLAUDE_CODE_SESSION_ID")
             .env_remove("CODEX_THREAD_ID")
-            .env_remove("AGBOARD_RESIDENT_ID")
-            .env("AGBOARD_OPEN_BROWSER", "0")
+            .env_remove("AGPJ_RESIDENT_ID")
+            .env("AGPJ_OPEN_BROWSER", "0")
             .args(args)
-            .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home)
+            .env("AGPJ_WATCH", "poll")
+            .env("AGPJ_HOME", home)
             .env("TZ", "UTC")
             .current_dir(home)
             .stdin(Stdio::null())
@@ -229,7 +226,7 @@ impl Serving {
         }
     }
 
-    /// `agboard serve --port 0`, waiting until it prints its first line.
+    /// `agpj serve --port 0`, waiting until it prints its first line.
     fn start(home: &Path) -> (Serving, String) {
         Serving::start_with(home, &["serve", "--port", "0"])
     }
@@ -237,7 +234,7 @@ impl Serving {
     fn first_line(&mut self) -> String {
         self.lines
             .recv_timeout(Duration::from_secs(10))
-            .expect("agboard serve printed nothing within 10 s")
+            .expect("agpj serve printed nothing within 10 s")
     }
 
     fn addr(&self) -> SocketAddr {
@@ -377,7 +374,7 @@ fn a_write_that_changes_the_board_notifies_the_running_serve() {
         assert_eq!(
             fake.next(QUICK).as_deref(),
             Some(NOTIFY_LINE),
-            "agboard {args:?} sent no notification"
+            "agpj {args:?} sent no notification"
         );
     }
     assert_eq!(fake.next(SILENCE), None, "more notifications than writes");
@@ -543,7 +540,7 @@ fn a_subscriber_receives_changed_after_add_mv_and_state() {
         run_ok(home.path(), args);
         assert!(
             events.wait_for_changed(i + 1, QUICK),
-            "no changed event within 2 s after agboard {args:?}; got {:?}",
+            "no changed event within 2 s after agpj {args:?}; got {:?}",
             events.received
         );
         assert!(start.elapsed() < QUICK + Duration::from_secs(1));
@@ -616,7 +613,7 @@ fn serve_takes_no_project_and_changes_made_through_two_projects_are_notified() {
     let _lock = serial();
     let home = tempfile::tempdir().unwrap();
     let port = free_port();
-    let o = agboard(home.path())
+    let o = agpj(home.path())
         .args(["--project", "x", "serve", "--port", &port.to_string()])
         .output()
         .unwrap();
@@ -626,7 +623,7 @@ fn serve_takes_no_project_and_changes_made_through_two_projects_are_notified() {
 
     let (serving, _) = Serving::start(home.path());
     for name in ["alpha", "beta"] {
-        let o = agboard(home.path())
+        let o = agpj(home.path())
             .args(folder_args(home.path(), &["project", "create", name]))
             .output()
             .unwrap();

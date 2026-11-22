@@ -34,7 +34,7 @@ export type {
 } from './types.ts';
 
 /**
- * The sample-data server: answers `/api/*` from boards held in memory, the way `agboard serve`
+ * The sample-data server: answers `/api/*` from boards held in memory, the way `agpj serve`
  * answers them, and reports each change as the SSE `changed` event would. It uses no Node API, so
  * MSW handlers (`../mocks/handlers.ts`) can carry requests to it in a page, in Storybook and in the
  * unit tests. Only those and the tests import it; the production build does not.
@@ -87,7 +87,7 @@ export function createMockServer(options: MockServerOptions): MockServer {
       const saved: MockBoard = { ...next, revision: board.revision + 1 };
       boards = { ...boards, [projectId]: saved };
       emit(projectId, changes);
-      // As `agboard serve` does after a write, move AI tasks whose conditions are all met to Done
+      // As `agpj serve` does after a write, move AI tasks whose conditions are all met to Done
       // as a change of its own. The completed tasks no longer qualify, so this stops after one round.
       const completed = completedTasks(saved, now());
       if (completed.tasks.length > 0)
@@ -166,12 +166,12 @@ export function createMockServer(options: MockServerOptions): MockServer {
         body: SAMPLE_IMAGE,
       };
     if (!url.pathname.startsWith('/api/')) return null;
-    const language = request.headers?.['x-agboard-language'];
+    const language = request.headers?.['x-agpj-language'];
     const routeRequest: RouteRequest = {
       method: request.method.toUpperCase(),
       url,
       page: new URLSearchParams(request.page ?? ''),
-      token: request.headers?.['x-agboard-token'],
+      token: request.headers?.['x-agpj-token'],
       language: language === 'ja' || language === 'en' ? language : undefined,
       body: request.body,
     };

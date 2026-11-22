@@ -5,16 +5,16 @@ use serde_json::json;
 use crate::cli::args::{StateArgs, read_reason};
 use crate::cli::{Context, Outcome};
 use crate::domain::{ChangeContext, validate_work_reason};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
-pub fn run(ctx: &mut Context, args: &StateArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &StateArgs) -> Result<Outcome, AgpjError> {
     let state = args.state.run_state();
     let actor = args.actor.actor();
     let reason = read_reason(args.reason.as_deref(), args.reason_file.as_deref())?
         .filter(|raw| !raw.trim().is_empty())
         .map(|raw| {
             validate_work_reason(&raw)?;
-            Ok::<_, AgboardError>(raw)
+            Ok::<_, AgpjError>(raw)
         })
         .transpose()?
         .unwrap_or_default();

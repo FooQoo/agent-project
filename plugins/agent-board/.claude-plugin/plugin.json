@@ -1,6 +1,0 @@
-{
-  "name": "agent-board",
-  "version": "1.7.0",
-  "description": "The Agent Board Skill and the Hook that shows the progress table.",
-  "hooks": "./hooks/claude.json"
-}

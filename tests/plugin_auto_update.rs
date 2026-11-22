@@ -1,5 +1,5 @@
 //! The automatic plugin update of the SessionStart hook: the hook compares the
-//! files of the plugin the agent runs with the ones this agboard ships and,
+//! files of the plugin the agent runs with the ones this agpj ships and,
 //! when they differ, reinstalls the plugin in a detached process. The agents
 //! are the fakes of `support/fake_agents.rs`, the only commands on PATH, and
 //! the marketplace override keeps the install off the network.
@@ -58,9 +58,9 @@ fn fixture(agent: &str, edited: bool) -> Fixture {
     fakes.preinstall(agent, "0.0.1", "elsewhere");
     let plugin_root = tmp
         .path()
-        .join("home/.agent/plugins/cache/agent-board/agent-board/0.0.1");
+        .join("home/.agent/plugins/cache/agent-project/agent-project/0.0.1");
     copy_dir(
-        &Path::new(env!("CARGO_MANIFEST_DIR")).join("plugins/agent-board"),
+        &Path::new(env!("CARGO_MANIFEST_DIR")).join("plugins/agent-project"),
         &plugin_root,
     );
     if edited {
@@ -88,18 +88,18 @@ impl Fixture {
         } else {
             "CLAUDE_PLUGIN_ROOT"
         };
-        let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+        let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
         command.env_clear();
         if self.use_override {
-            command.env("AGBOARD_PLUGIN_MARKETPLACE", &self.marketplace);
+            command.env("AGPJ_PLUGIN_MARKETPLACE", &self.marketplace);
         }
         let mut child = command
             .env("HOME", &self.home)
             .env("PATH", &self.fakes.bin)
             .env("TZ", "UTC")
-            .env("AGBOARD_HOME", &self.data)
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
+            .env("AGPJ_HOME", &self.data)
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
             .env(root_var, &self.plugin_root)
             .envs(env.iter().copied())
             .current_dir(&self.home)
@@ -126,7 +126,7 @@ impl Fixture {
     fn notice(output: &Value) -> Option<String> {
         output["hookSpecificOutput"]["additionalContext"]
             .as_str()
-            .filter(|text| text.contains("AGBOARD_NOTICE"))
+            .filter(|text| text.contains("AGPJ_NOTICE"))
             .map(str::to_string)
     }
 
@@ -182,9 +182,12 @@ fn a_plugin_that_differs_is_reinstalled_in_the_background_from_the_next_session(
     let notice = Fixture::notice(&out).expect("a notice at session start");
     assert!(notice.contains(&format!("version {VERSION}")), "{notice}");
     assert!(notice.contains("next session"), "{notice}");
-    assert!(!notice.contains("agboard update"), "{notice}");
+    assert!(!notice.contains("agpj update"), "{notice}");
     let state = fx.wait_finished("claude");
-    assert_eq!(state["hash"], agent_board::setup::auto_update::PLUGIN_HASH);
+    assert_eq!(
+        state["hash"],
+        agent_project::setup::auto_update::PLUGIN_HASH
+    );
     let log = fx.fakes.log("claude");
     assert!(
         log.iter().any(|l| l.starts_with("plugin install")),
@@ -200,7 +203,7 @@ fn codex_is_told_to_trust_hooks_only_when_the_hook_definition_changed() {
     let out = fx.hook("codex", "SessionStart", &[]);
     let notice = Fixture::notice(&out).expect("a notice at session start");
     assert!(notice.contains("next session"), "{notice}");
-    assert!(!notice.contains("agboard update"), "{notice}");
+    assert!(!notice.contains("agpj update"), "{notice}");
     fx.wait_finished("codex");
     let log = fx.fakes.log("codex");
     assert!(log.iter().any(|l| l.starts_with("plugin add")), "{log:?}");
@@ -217,7 +220,7 @@ fn codex_is_told_to_trust_hooks_only_when_the_hook_definition_changed() {
     fs::write(&hooks, old).unwrap();
     let out = fx.hook("codex", "SessionStart", &[]);
     let notice = Fixture::notice(&out).expect("a notice at session start");
-    assert!(notice.contains("`agboard update`"), "{notice}");
+    assert!(notice.contains("`agpj update`"), "{notice}");
     fx.wait_finished("codex");
     assert!(fx.fakes.trust_writes().is_empty());
 }
@@ -225,7 +228,7 @@ fn codex_is_told_to_trust_hooks_only_when_the_hook_definition_changed() {
 #[test]
 fn a_plugin_that_was_not_installed_from_a_marketplace_is_left_alone() {
     let fx = fixture("claude", true);
-    let checkout = fx._tmp.path().join("checkout/plugins/agent-board");
+    let checkout = fx._tmp.path().join("checkout/plugins/agent-project");
     copy_dir(&fx.plugin_root, &checkout);
     let mut fx = fx;
     fx.plugin_root = checkout;
@@ -240,13 +243,13 @@ fn codex_falls_back_to_the_claude_plugin_root_variable() {
     let fx = fixture("codex", true);
     let root = fx.plugin_root.to_str().unwrap().to_string();
     // PLUGIN_ROOT is unset in this run; only CLAUDE_PLUGIN_ROOT names it.
-    let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
         .env_clear()
         .env("HOME", &fx.home)
         .env("PATH", &fx.fakes.bin)
-        .env("AGBOARD_HOME", &fx.data)
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_PLUGIN_MARKETPLACE", &fx.marketplace)
+        .env("AGPJ_HOME", &fx.data)
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_PLUGIN_MARKETPLACE", &fx.marketplace)
         .env("CLAUDE_PLUGIN_ROOT", root)
         .args(["hook", "--agent", "codex"])
         .stdin(Stdio::piped())
@@ -261,7 +264,7 @@ fn codex_falls_back_to_the_claude_plugin_root_variable() {
         .write_all(br#"{"hook_event_name":"SessionStart"}"#)
         .unwrap();
     let output = child.wait_with_output().unwrap();
-    assert!(String::from_utf8_lossy(&output.stdout).contains("AGBOARD_NOTICE"));
+    assert!(String::from_utf8_lossy(&output.stdout).contains("AGPJ_NOTICE"));
     fx.wait_finished("codex");
 }
 
@@ -273,7 +276,7 @@ fn only_session_start_updates_and_the_opt_out_stops_it() {
     let opted_out = fx.hook(
         "claude",
         "SessionStart",
-        &[("AGBOARD_NO_PLUGIN_AUTO_UPDATE", "1")],
+        &[("AGPJ_NO_PLUGIN_AUTO_UPDATE", "1")],
     );
     assert_eq!(Fixture::notice(&opted_out), None);
     Fixture::settle();
@@ -313,7 +316,7 @@ fn a_live_lock_holds_other_sessions_back_and_a_stale_one_is_replaced() {
 }
 
 #[test]
-fn a_recent_failure_is_not_retried_and_points_at_agboard_update() {
+fn a_recent_failure_is_not_retried_and_points_at_agpj_update() {
     let fx = fixture("claude", true);
     fs::create_dir_all(fx.data.join("plugin-update")).unwrap();
     let now = std::time::SystemTime::now()
@@ -323,7 +326,7 @@ fn a_recent_failure_is_not_retried_and_points_at_agboard_update() {
     fs::write(
         fx.state_file("claude"),
         serde_json::json!({
-            "hash": agent_board::setup::auto_update::PLUGIN_HASH,
+            "hash": agent_project::setup::auto_update::PLUGIN_HASH,
             "ok": false,
             "at": now,
         })
@@ -332,7 +335,7 @@ fn a_recent_failure_is_not_retried_and_points_at_agboard_update() {
     .unwrap();
     let out = fx.hook("claude", "SessionStart", &[]);
     let notice = Fixture::notice(&out).expect("a notice about the failure");
-    assert!(notice.contains("`agboard update`"), "{notice}");
+    assert!(notice.contains("`agpj update`"), "{notice}");
     Fixture::settle();
     assert_eq!(fx.fakes.log("claude"), Vec::<String>::new());
 
@@ -340,7 +343,7 @@ fn a_recent_failure_is_not_retried_and_points_at_agboard_update() {
     fs::write(
         fx.state_file("claude"),
         serde_json::json!({
-            "hash": agent_board::setup::auto_update::PLUGIN_HASH,
+            "hash": agent_project::setup::auto_update::PLUGIN_HASH,
             "ok": false,
             "at": now - 7 * 3600,
         })
@@ -410,7 +413,7 @@ fn the_tag_is_checked_before_any_agent_command_and_a_missing_tag_stops_the_updat
         assert_eq!(
             git_log(&fx),
             [format!(
-                "ls-remote --exit-code --tags https://github.com/FooQoo/agent-board.git refs/tags/v{VERSION}"
+                "ls-remote --exit-code --tags https://github.com/FooQoo/agent-project.git refs/tags/v{VERSION}"
             )]
         );
         // Not even `plugin list` ran, and nothing was removed.
@@ -443,7 +446,7 @@ fn a_confirmed_tag_lets_the_update_run() {
 fn install_into_codex_cache(fx: &Fixture) {
     let cache = fx
         .home
-        .join(".codex/plugins/cache/agent-board/agent-board")
+        .join(".codex/plugins/cache/agent-project/agent-project")
         .join(VERSION);
     copy_dir(&fx.plugin_root, &cache);
 }

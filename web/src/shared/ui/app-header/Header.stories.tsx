@@ -97,7 +97,7 @@ type Story = StoryObj<typeof meta>;
 export const Board: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { name: 'Agent Board' })).toBeInTheDocument();
+    await expect(canvas.getByRole('heading', { name: 'Agent Project' })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: 'alpha' })).toBeEnabled();
     await expect(canvas.getByRole('button', { name: /ask ai/i })).toBeEnabled();
     await expect(canvas.getByRole('button', { name: /docs/i })).toBeEnabled();
@@ -159,7 +159,7 @@ export const NoProjectList: Story = {
   args: { projects: null, activeProjectId: null, canAdd: false },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { name: 'Agent Board' })).toBeInTheDocument();
+    await expect(canvas.getByRole('heading', { name: 'Agent Project' })).toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: 'alpha' })).toBeNull();
   },
 };
@@ -169,7 +169,7 @@ export const WithoutSettings: Story = {
   args: { projects: null, activeProjectId: null, canAdd: false, withSettings: false },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { name: 'Agent Board' })).toBeInTheDocument();
+    await expect(canvas.getByRole('heading', { name: 'Agent Project' })).toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: 'Settings' })).toBeNull();
   },
 };

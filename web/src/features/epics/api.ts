@@ -16,7 +16,7 @@ async function sendEpic(
     headers: {
       ...(isForm || body === undefined ? {} : { 'Content-Type': 'application/json' }),
       ...authHeaders(),
-      'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+      'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
     },
     body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
   });

@@ -3,11 +3,11 @@
 
 mod common;
 
-use common::{agboard, demo_project, json_error, json_ok};
+use common::{agpj, demo_project, json_error, json_ok};
 
 /// Run a command that must succeed; its text output is not parsed.
 fn run_ok(home: &std::path::Path, args: &[&str]) {
-    let (code, _, err) = agboard(home, args);
+    let (code, _, err) = agpj(home, args);
     assert_eq!(code, 0, "{args:?} failed: {err}");
 }
 
@@ -24,7 +24,7 @@ fn write(home: &std::path::Path, name: &str, text: &str) -> std::path::PathBuf {
 fn add_task(home: &std::path::Path, desc: &str) {
     let file = write(home, "desc.md", desc);
     let file = file.to_str().unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home,
         &[
             "--project",
@@ -83,7 +83,7 @@ fn the_refusal_names_the_unmet_conditions() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
     add_task(home.path(), UNMET);
-    let (_, _, err) = agboard(
+    let (_, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -207,7 +207,7 @@ fn an_agent_is_refused_when_the_frontmatter_has_a_defect() {
 #[test]
 fn the_edit_help_says_that_a_file_is_replaced_with_its_frontmatter() {
     let home = tempfile::tempdir().unwrap();
-    let (code, out, _) = agboard(home.path(), &["epic", "edit", "--help"]);
+    let (code, out, _) = agpj(home.path(), &["epic", "edit", "--help"]);
     assert_eq!(code, 0);
     assert!(out.contains("frontmatter"), "{out}");
 }

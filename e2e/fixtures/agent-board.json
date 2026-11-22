@@ -1,5 +1,5 @@
 {
-  "format": "agboard-board",
+  "format": "agpj-board",
   "version": 3,
   "board": {
     "name": "agent-board",
@@ -10,7 +10,7 @@
     {
       "id": 8,
       "title": "Initialize the board",
-      "description": "Create the storage for the board with agboard init.",
+      "description": "Create the storage for the board with agpj init.",
       "position": 1,
       "assignee": "ai",
       "taskStatus": "done",

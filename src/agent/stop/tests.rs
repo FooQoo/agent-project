@@ -20,7 +20,7 @@ fn the_checklist_separates_found_items_from_checks() {
         Some(progress_with(true, &[3])),
     );
     let reason = reason(&decide_for(&scenario).unwrap());
-    assert!(reason.starts_with("Agent Board turn-end checklist."));
+    assert!(reason.starts_with("Agent Project turn-end checklist."));
     let found = reason.find("\nFound:\n").unwrap();
     let check = reason.find("\nCheck:\n").unwrap();
     assert!(found < check);

@@ -85,7 +85,7 @@ pub fn all() -> Vec<Case> {
             false,
             running(vec![
                 call("git commit -m x"),
-                call("agboard history add 5 --message m --actor ai"),
+                call("agpj history add 5 --message m --actor ai"),
             ]),
         ),
         case(
@@ -94,7 +94,7 @@ pub fn all() -> Vec<Case> {
             false,
             running(vec![
                 call("git commit -m x"),
-                call("agboard state 5 idle --reason r --actor ai"),
+                call("agpj state 5 idle --reason r --actor ai"),
             ]),
         ),
         case(
@@ -103,7 +103,7 @@ pub fn all() -> Vec<Case> {
             false,
             running(vec![
                 call("git commit -m x"),
-                call("agboard result add 5 --summary s --actor ai"),
+                call("agpj result add 5 --summary s --actor ai"),
             ]),
         ),
         case(
@@ -180,7 +180,7 @@ pub fn all() -> Vec<Case> {
             "start-task",
             "a Codex patch of the data folder",
             false,
-            idle(vec![codex_patch("/Users/me/.agent-board/shared/x.md")]),
+            idle(vec![codex_patch("/Users/me/.agent-project/shared/x.md")]),
         ),
         case(
             "start-task",

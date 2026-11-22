@@ -23,12 +23,12 @@ const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 let executable;
 
 /*
- * Builds the backend test binary and returns its path. `cargo test` also links target/debug/agboard again, so
- * global-setup.ts builds it before any worker starts and passes the path on in AGBOARD_E2E_PHONE_BACKEND; a
+ * Builds the backend test binary and returns its path. `cargo test` also links target/debug/agpj again, so
+ * global-setup.ts builds it before any worker starts and passes the path on in AGPJ_E2E_PHONE_BACKEND; a
  * build while other workers run the CLI would remove that file under them.
  */
 export function buildPhoneBackend() {
-  executable ??= process.env.AGBOARD_E2E_PHONE_BACKEND;
+  executable ??= process.env.AGPJ_E2E_PHONE_BACKEND;
   if (executable) return executable;
   const result = spawnSync(
     'cargo',
@@ -174,7 +174,7 @@ export async function startPhoneEntrance(home, { timeoutMs = 120_000, warning = 
     waiters.length = 0;
     child = spawn(binary, ['--ignored', '--nocapture'], {
       cwd: repo,
-      env: { ...process.env, AGBOARD_PHONE_HOME: home, TZ: 'UTC', AGBOARD_WATCH: 'poll' },
+      env: { ...process.env, AGPJ_PHONE_HOME: home, TZ: 'UTC', AGPJ_WATCH: 'poll' },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     let partial = '';

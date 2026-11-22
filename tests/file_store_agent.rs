@@ -5,9 +5,9 @@
 use std::fs;
 use std::path::PathBuf;
 
-use agent_board::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
+use agent_project::error::AgpjError;
+use agent_project::file_store::FileStore;
 use chrono::{TimeZone, Utc};
 
 #[path = "support/qa.rs"]
@@ -62,9 +62,9 @@ impl Fixture {
 
     fn history(&self, id: i64) -> serde_json::Value {
         let markdown = fs::read_to_string(self.task_path(id).with_file_name("TASK.md")).unwrap();
-        let parsed = agent_board::file_store::history::parse_task(
+        let parsed = agent_project::file_store::history::parse_task(
             &markdown,
-            agent_board::file_store::history::ParseMode::Stored,
+            agent_project::file_store::history::ParseMode::Stored,
         );
         serde_json::to_value(parsed.history).unwrap()
     }
@@ -106,10 +106,7 @@ fn reporting_running_on_a_todo_task_is_refused_and_changes_nothing() {
             later(),
         )
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::InvalidStateForAssignee),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::InvalidStateForAssignee), "{err:?}");
     assert_eq!(fx.bytes(id), before);
 }
 
@@ -150,10 +147,7 @@ fn running_on_a_human_task_in_doing_is_refused() {
             later(),
         )
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::InvalidStateForAssignee),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::InvalidStateForAssignee), "{err:?}");
 }
 
 #[test]
@@ -244,7 +238,7 @@ fn a_lane_move_keeps_the_open_question_and_a_person_can_move_a_waiting_task() {
         )
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::QuestionsUnanswered { .. }),
+        matches!(err, AgpjError::QuestionsUnanswered { .. }),
         "{err:?}"
     );
 
@@ -262,7 +256,7 @@ fn a_lane_move_keeps_the_open_question_and_a_person_can_move_a_waiting_task() {
     let question = fx.store.question(&fx.project, "Q-1").unwrap();
     assert_eq!(
         question.status,
-        agent_board::file_store::qa::QuestionStatus::Open
+        agent_project::file_store::qa::QuestionStatus::Open
     );
     let last = fx.history(id).as_array().unwrap().last().unwrap().clone();
     assert_eq!(last["reason"], "Verified");
@@ -304,7 +298,7 @@ fn a_draft_task_refuses_agent_moves_and_accepts_user_moves() {
         .set_draft(
             &fx.project,
             id,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             now(),
         )
@@ -320,10 +314,7 @@ fn a_draft_task_refuses_agent_moves_and_accepts_user_moves() {
             later(),
         )
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::TaskIsDraft { id: 1 }),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::TaskIsDraft { id: 1 }), "{err:?}");
 
     let moved = fx
         .store
@@ -370,7 +361,7 @@ fn running_is_refused_while_a_referenced_question_is_open() {
         )
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::QuestionsUnanswered { .. }),
+        matches!(err, AgpjError::QuestionsUnanswered { .. }),
         "{err:?}"
     );
     assert_eq!(fx.bytes(id), before);
@@ -386,7 +377,7 @@ fn running_is_refused_while_a_referenced_question_is_open() {
         )
         .unwrap_err();
     assert!(
-        matches!(pending, AgboardError::InvalidValue { .. }),
+        matches!(pending, AgpjError::InvalidValue { .. }),
         "{pending:?}"
     );
 
@@ -500,7 +491,7 @@ fn done_tasks_reject_agent_edits_but_a_person_can_reopen_them() {
         .edit_task(&fx.project, id, Some("Renamed"), Some(VALID_BODY), later())
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::TaskIsDone { id: done } if done == id),
+        matches!(err, AgpjError::TaskIsDone { id: done } if done == id),
         "{err:?}"
     );
     assert_eq!(fx.bytes(id), before);
@@ -547,7 +538,7 @@ fn running_on_a_done_task_is_refused_by_the_state_table() {
         )
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::TaskIsDone { id: done } if done == id),
+        matches!(err, AgpjError::TaskIsDone { id: done } if done == id),
         "{err:?}"
     );
 }

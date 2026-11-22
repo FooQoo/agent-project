@@ -12,10 +12,10 @@ use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::web_assets::APP_ASSETS;
-use agent_board::server::{ServeConfig, run_until_in};
+use agent_project::error::AgpjError;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::web_assets::APP_ASSETS;
+use agent_project::server::{ServeConfig, run_until_in};
 
 const IMMUTABLE: &str = "public, max-age=31536000, immutable";
 
@@ -60,8 +60,8 @@ fn fake_build(extra: &[(&str, &[u8])]) -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     // The build script also hashes the plugin folder.
-    std::fs::create_dir_all(root.join("plugins/agent-board")).unwrap();
-    std::fs::write(root.join("plugins/agent-board/plugin.json"), "{}").unwrap();
+    std::fs::create_dir_all(root.join("plugins/agent-project")).unwrap();
+    std::fs::write(root.join("plugins/agent-project/plugin.json"), "{}").unwrap();
     write(
         root,
         "index.html",
@@ -188,7 +188,7 @@ fn the_build_id_follows_the_page() {
 struct Running {
     addr: SocketAddr,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 impl Running {

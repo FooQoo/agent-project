@@ -1,7 +1,7 @@
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page, type TestInfo } from '../helpers/fixtures';
-import { listTasks, mainHome, resetBoard, mainProject } from '../helpers/agboard';
+import { listTasks, mainHome, resetBoard, mainProject } from '../helpers/agpj';
 import { getPreferences, resetPreferences } from '../helpers/preferences';
 import { readBoardAfterReset } from '../helpers/ui';
 
@@ -27,13 +27,13 @@ test('starts in English in a Japanese browser, switches and persists without tra
   const home = mainHome();
   expect(path.isAbsolute(home)).toBe(true);
   expect(path.dirname(home)).toBe(os.tmpdir());
-  expect(home).toContain('agent-board-e2e-main-');
-  expect(home).not.toMatch(/Library\/Application Support\/agboard$/);
+  expect(home).toContain('agent-project-e2e-main-');
+  expect(home).not.toMatch(/Library\/Application Support\/agpj$/);
   expect(await page.evaluate(() => navigator.language)).toBe('ja-JP');
   // Nothing was saved, so the page is English whatever the browser's language is.
   expect((await getPreferences()).locale).toBe('en');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(page.getByRole('banner')).toContainText('Agent Board');
+  await expect(page.getByRole('banner')).toContainText('Agent Project');
   await expect(lane(page, 'Todo')).toBeVisible();
   await expect(lane(page, 'Doing')).toBeVisible();
 
@@ -95,7 +95,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   });
 
   expect((await getPreferences()).locale).toBe('ja');
-  await expect(page.evaluate(() => localStorage.getItem('agboard.locale'))).resolves.toBe('ja');
+  await expect(page.evaluate(() => localStorage.getItem('agpj.locale'))).resolves.toBe('ja');
   await page.reload();
   await expect(page.getByRole('contentinfo').getByRole('status')).toHaveText(/^同期済み/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'ja');

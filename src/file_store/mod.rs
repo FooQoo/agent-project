@@ -37,7 +37,7 @@ pub mod watch;
 use std::path::{Path, PathBuf};
 
 use crate::domain::{Draft, ProjectId, ProjectMeta};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use model::TaskView;
 pub use ops::{
     Accepted, AnswerItem, AskInput, AskQuestion, EpicSent, EpicVersionSet, ImageChanges,
@@ -99,7 +99,7 @@ impl FileStore {
         &self,
         project: &ProjectId,
         task: &model::TaskFile,
-    ) -> Result<history_language::HistoryLanguage, AgboardError> {
+    ) -> Result<history_language::HistoryLanguage, AgpjError> {
         if let Some(language) = self.history_language {
             return Ok(language);
         }
@@ -112,17 +112,17 @@ impl FileStore {
     }
 
     /// Every project, sorted by name.
-    pub fn projects(&self) -> Result<Vec<ProjectMeta>, AgboardError> {
+    pub fn projects(&self) -> Result<Vec<ProjectMeta>, AgpjError> {
         reader::list_projects(&self.shared)
     }
 
     /// One project with its tasks and the defects tolerated while reading.
-    pub fn snapshot(&self, id: &ProjectId) -> Result<ProjectSnapshot, AgboardError> {
+    pub fn snapshot(&self, id: &ProjectId) -> Result<ProjectSnapshot, AgpjError> {
         reader::read_snapshot(&self.shared, id)
     }
 
     /// One task, read strictly.
-    pub fn task(&self, id: &ProjectId, task_id: i64) -> Result<TaskView, AgboardError> {
+    pub fn task(&self, id: &ProjectId, task_id: i64) -> Result<TaskView, AgpjError> {
         reader::read_task(&self.shared, id, task_id)
     }
 }

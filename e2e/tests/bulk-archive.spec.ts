@@ -1,5 +1,5 @@
 import { expect, test } from "../helpers/fixtures";
-import { listTasks, mainProject, resetBoard } from "../helpers/agboard";
+import { listTasks, mainProject, resetBoard } from "../helpers/agpj";
 import { resetPreferences } from "../helpers/preferences";
 
 // #686: the Done lane's archive is a selection with every done card picked. These specs press it through to

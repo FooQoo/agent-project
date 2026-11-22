@@ -73,9 +73,9 @@ title: 編集と画像添付
 コマンドラインでは次のようにします。
 
 ```sh
-agboard --project "My project" attachment add 1 --file diagram.png --actor ai
-agboard --project "My project" attachment ls 1 --json
-agboard --project "My project" attachment get 1 "<attachment-id>" --output diagram-copy.png
+agpj --project "My project" attachment add 1 --file diagram.png --actor ai
+agpj --project "My project" attachment ls 1 --json
+agpj --project "My project" attachment get 1 "<attachment-id>" --output diagram-copy.png
 ```
 
 画像は、Markdownでは`attachment:<attachment-id>`として参照し、画像データはローカルのファイルに保存されます。スナップショットには画像のメタデータが含まれ、進行表とHookには含まれません。`attachment get`は、既存の出力ファイルを上書きしません。
@@ -101,7 +101,7 @@ PCのボードでは、タスクの予定版をそのプレビューダイアロ
 ユーザーもエージェントも、タスクの`TASK.md`とエピックの`EPIC.md`を直接編集できます。保存すると、ボードが変更を検知して表示に反映します。場所を推測せず、プロジェクトのフォルダを調べます。
 
 ```sh
-agboard --project "My project" workspace --json
+agpj --project "My project" workspace --json
 ```
 
 結果には、`folder`（プロジェクトの絶対パス）、`projectId`、`readme`、`tasks`、`epics`が含まれます。まずプロジェクトの`README.md`を読みます。ボードが書きかけのファイルを読まないよう、同じフォルダに一時ファイルを書いて、元のファイルへ名前を変更して置き換えます（rename）。メタデータや状態の変更にはCLIを使い、`task.json`・`epic.json`・`project.json`・ロックのファイルは編集せず、タスクやエピックのフォルダを手で削除しません。共有ファイルに個人の絶対パスを書かないでください。

@@ -10,14 +10,14 @@ const reload = vi.fn();
 beforeEach(() => {
   sessionStorage.clear();
   const meta = document.createElement('meta');
-  meta.name = 'agboard-build';
+  meta.name = 'agpj-build';
   meta.content = OWN;
   document.head.append(meta);
   vi.stubGlobal('location', { ...window.location, reload });
 });
 
 afterEach(() => {
-  document.head.querySelector('meta[name="agboard-build"]')?.remove();
+  document.head.querySelector('meta[name="agpj-build"]')?.remove();
   vi.unstubAllGlobals();
   reload.mockReset();
 });

@@ -24,7 +24,7 @@ use super::model::TaskView;
 use super::projection::{ChangeSet, Facet, Resource, ResourceChange, ResourceId};
 use super::reader::project_dir_checked;
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The folder inside a project that holds the summary files.
 pub const NOTIFY_DIR: &str = "notify";
@@ -141,7 +141,7 @@ fn files_in(dir: &Path) -> Vec<PathBuf> {
     files
 }
 
-fn read_lines(path: &Path, shared: &Path) -> Result<Vec<String>, AgboardError> {
+fn read_lines(path: &Path, shared: &Path) -> Result<Vec<String>, AgpjError> {
     let text = io::read_text(path, &layout::shared_label(shared, path))?;
     Ok(text
         .lines()
@@ -151,7 +151,7 @@ fn read_lines(path: &Path, shared: &Path) -> Result<Vec<String>, AgboardError> {
 }
 
 /// Replace the file with `lines`.
-fn write_lines(path: &Path, lines: &[String], shared: &Path) -> Result<(), AgboardError> {
+fn write_lines(path: &Path, lines: &[String], shared: &Path) -> Result<(), AgpjError> {
     let label = layout::shared_label(shared, path);
     let mut text = lines.join("\n");
     text.push('\n');
@@ -165,7 +165,7 @@ fn line_id(line: &str) -> Option<String> {
 impl FileStore {
     /// Every summary of a project, dismissed ones included, newest first (by the end of the
     /// window). A line that cannot be read, or repeats an id, is skipped.
-    pub fn summaries(&self, project: &ProjectId) -> Result<Vec<Summary>, AgboardError> {
+    pub fn summaries(&self, project: &ProjectId) -> Result<Vec<Summary>, AgpjError> {
         let dir = project_dir_checked(&self.shared, project)?.join(NOTIFY_DIR);
         let mut found: Vec<Summary> = Vec::new();
         for path in files_in(&dir) {
@@ -190,7 +190,7 @@ impl FileStore {
         &self,
         project: &ProjectId,
         summary: &Summary,
-    ) -> Result<bool, AgboardError> {
+    ) -> Result<bool, AgpjError> {
         let project_dir = project_dir_checked(&self.shared, project)?;
         let _lock = WriteLock::acquire(&layout::write_lock(&project_dir))?;
         let dir = project_dir.join(NOTIFY_DIR);
@@ -220,10 +220,10 @@ impl FileStore {
     /// Dismiss one summary: set `dismissed` on its line and nothing else, so other fields of the
     /// line, including ones this build does not know, stay as they are. Dismissing a summary that
     /// is already dismissed changes nothing.
-    pub fn dismiss_summary(&self, project: &ProjectId, id: &str) -> Result<Summary, AgboardError> {
+    pub fn dismiss_summary(&self, project: &ProjectId, id: &str) -> Result<Summary, AgpjError> {
         let project_dir = project_dir_checked(&self.shared, project)?;
         let _lock = WriteLock::acquire(&layout::write_lock(&project_dir))?;
-        let not_found = || AgboardError::MessageNotFound { id: id.to_string() };
+        let not_found = || AgpjError::MessageNotFound { id: id.to_string() };
         for path in files_in(&project_dir.join(NOTIFY_DIR)) {
             // An unreadable file cannot hold the summary; `summaries` skips it too.
             let Ok(mut lines) = read_lines(&path, &self.shared) else {

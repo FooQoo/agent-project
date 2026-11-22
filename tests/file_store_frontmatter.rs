@@ -1,7 +1,7 @@
 //! The frontmatter of TASK.md and EPIC.md: the acceptance conditions it holds,
 //! the body it leaves, and the defects that make the conditions unreadable.
 
-use agent_board::file_store::frontmatter::{AcceptanceItem, compose, parse};
+use agent_project::file_store::frontmatter::{AcceptanceItem, compose, parse};
 
 fn item(id: &str, text: &str, done: bool) -> AcceptanceItem {
     AcceptanceItem {

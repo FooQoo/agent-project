@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Pack a release binary into agboard-<version>-<target>.tar.gz.
+# Pack a release binary into agpj-<version>-<target>.tar.gz.
 #
 # Usage: package.sh <target> <binary> <out-dir>
 #
-# The archive holds exactly agboard, LICENSE and THIRD_PARTY_NOTICES.txt. The
+# The archive holds exactly agpj, LICENSE and THIRD_PARTY_NOTICES.txt. The
 # binary is packed as given: any strip step must run before this script, and
 # before signing. The script refuses a binary built for another CPU.
 set -euo pipefail
@@ -29,15 +29,15 @@ if [ "$actual" != "$arch" ]; then
   exit 1
 fi
 
-name="agboard-$version-$target.tar.gz"
+name="agpj-$version-$target.tar.gz"
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
-install -m 755 "$binary" "$stage/agboard"
+install -m 755 "$binary" "$stage/agpj"
 install -m 644 "$root/LICENSE" "$stage/LICENSE"
 install -m 644 "$root/THIRD_PARTY_NOTICES.txt" "$stage/THIRD_PARTY_NOTICES.txt"
 # Fixed timestamps and no gzip header time keep equal inputs byte-identical.
-touch -t 202601010000 "$stage/agboard" "$stage/LICENSE" "$stage/THIRD_PARTY_NOTICES.txt"
+touch -t 202601010000 "$stage/agpj" "$stage/LICENSE" "$stage/THIRD_PARTY_NOTICES.txt"
 
 mkdir -p "$out_dir"
-COPYFILE_DISABLE=1 tar -cf - -C "$stage" agboard LICENSE THIRD_PARTY_NOTICES.txt | gzip -n -9 > "$out_dir/$name"
+COPYFILE_DISABLE=1 tar -cf - -C "$stage" agpj LICENSE THIRD_PARTY_NOTICES.txt | gzip -n -9 > "$out_dir/$name"
 echo "$out_dir/$name"

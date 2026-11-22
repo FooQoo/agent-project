@@ -1,0 +1,13 @@
+{
+  "name": "agent-project",
+  "version": "1.7.0",
+  "description": "The Agent Project Skill and the Hook that shows the progress table.",
+  "skills": "./skills/",
+  "hooks": "./hooks/codex.json",
+  "interface": {
+    "displayName": "Agent Project",
+    "shortDescription": "Plan and track work on Agent Project",
+    "developerName": "FooQoo",
+    "category": "Productivity"
+  }
+}

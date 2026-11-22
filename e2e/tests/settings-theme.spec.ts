@@ -3,7 +3,7 @@ import { readBoardAfterReset, waitForDrop } from '../helpers/ui';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Locator, type Page, type TestInfo } from '../helpers/fixtures';
-import { agboardOk, listTasks, mainProject, nextTaskId, resetBoard, taskBody, askArgs, decisionJson } from '../helpers/agboard';
+import { agpjOk, listTasks, mainProject, nextTaskId, resetBoard, taskBody, askArgs, decisionJson } from '../helpers/agpj';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
 import { closeMessages } from '../helpers/answer-flow';
 import { messageList, answerButton, fillAnswer, openAnswer, pressSend, send, sendAnswer } from '../helpers/answer';
@@ -80,8 +80,8 @@ const JA_COLORS: Record<Accent, string> = {
   Gray: 'グレー',
 };
 
-const THEME_KEY = 'agboard.theme';
-const LOCALE_KEY = 'agboard.locale';
+const THEME_KEY = 'agpj.theme';
+const LOCALE_KEY = 'agpj.locale';
 
 let pageErrors: string[] = [];
 
@@ -329,7 +329,7 @@ test.describe('a storage that fails', () => {
     await openWith(page, () => {
       const read = Storage.prototype.getItem;
       Storage.prototype.getItem = function (key: string) {
-        if (key === 'agboard.theme') throw new DOMException('denied', 'SecurityError');
+        if (key === 'agpj.theme') throw new DOMException('denied', 'SecurityError');
         return read.call(this, key);
       };
     });
@@ -343,7 +343,7 @@ test.describe('a storage that fails', () => {
     await openWith(page, () => {
       const write = Storage.prototype.setItem;
       Storage.prototype.setItem = function (key: string, value: string) {
-        if (key === 'agboard.theme') throw new DOMException('full', 'QuotaExceededError');
+        if (key === 'agpj.theme') throw new DOMException('full', 'QuotaExceededError');
         return write.call(this, key, value);
       };
     });
@@ -530,7 +530,7 @@ test('the answer dialog takes the focus and gives it back', async ({ page }) => 
 test('changing the language does not translate or alter what was entered', async ({ page }) => {
   await openFresh(page);
   // Enter a card in English, move it, and answer a decision request.
-  agboardOk(mainProject, ['add', 'Draft the release note', '--assignee', 'human', '--actor', 'human', `--desc=${taskBody('Line one\n\nLine two')}`]);
+  agpjOk(mainProject, ['add', 'Draft the release note', '--assignee', 'human', '--actor', 'human', `--desc=${taskBody('Line one\n\nLine two')}`]);
   await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh} User Draft the release note `) })).toBeVisible();
   await dragTaskTo(page, fresh, 'Doing');
   await expect(lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${fresh} `) })).toBeVisible();
@@ -580,7 +580,7 @@ test('create, move with a reason, answer, archive, and live updates work with a 
   });
 
   // A task added from the CLI appears on the board.
-  agboardOk(mainProject, ['add', 'Review the themes', '--assignee', 'ai', '--actor', 'human', `--desc=${taskBody('Check all 24 themes.')}`]);
+  agpjOk(mainProject, ['add', 'Review the themes', '--assignee', 'ai', '--actor', 'human', `--desc=${taskBody('Check all 24 themes.')}`]);
   const created = lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh} AI Review the themes \\d\\d\\/\\d\\d \\d\\d:\\d\\d$`) });
   await expect(created).toBeVisible();
   await expect(lane(page, 'Todo').getByText('4', { exact: true })).toBeVisible();
@@ -624,13 +624,13 @@ test('create, move with a reason, answer, archive, and live updates work with a 
   expect(listTasks(mainProject).map(({ id }) => id)).not.toContain(fresh);
 
   // Changes made outside the page arrive without a reload (server-sent events).
-  agboardOk(mainProject, ['add', 'Added by the CLI', `--desc=Live`]);
+  agpjOk(mainProject, ['add', 'Added by the CLI', `--desc=Live`]);
   await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh + 1} AI Added by the CLI `) })).toBeVisible();
-  agboardOk(mainProject, ['mv', String(fresh + 1), 'doing']);
+  agpjOk(mainProject, ['mv', String(fresh + 1), 'doing']);
   await expect(lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${fresh + 1} AI Idle Added by the CLI `) })).toBeVisible();
-  agboardOk(mainProject, ['state', String(fresh + 1), 'running']);
+  agpjOk(mainProject, ['state', String(fresh + 1), 'running']);
   await expect(lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${fresh + 1} AI Running Added by the CLI `) })).toBeVisible();
-  agboardOk(mainProject, askArgs(String(fresh + 1), decisionJson('Waiting for a theme review')));
+  agpjOk(mainProject, askArgs(String(fresh + 1), decisionJson('Waiting for a theme review')));
   await expect(lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${fresh + 1} AI Awaiting answer Added by the CLI `) })).toBeVisible();
   // The card offers the answer button; the question is read in its dialog.
   await expect(await openAnswer(page, fresh + 1)).toContainText('Waiting for a theme review');
@@ -647,7 +647,7 @@ test('create, move with a reason, answer, archive, and live updates work with a 
 // ------------------------------------------------------------------ A failing request keeps the input
 
 const requestsText = (): string =>
-  agboardOk(mainProject, ['message', 'ls', '--type', 'request', '--status', 'all', '--json']).stdout;
+  agpjOk(mainProject, ['message', 'ls', '--type', 'request', '--status', 'all', '--json']).stdout;
 
 test('a request that fails keeps what was typed, shows the reason, and can be sent again', async ({ page }) => {
   await openFresh(page);
@@ -743,7 +743,7 @@ test('a request that fails keeps what was typed, shows the reason, and can be se
 });
 
 test('an archive that fails keeps the task, the selection, and the confirmation', async ({ page }) => {
-  agboardOk(mainProject, ['add', 'Disposable task']);
+  agpjOk(mainProject, ['add', 'Disposable task']);
   await openFresh(page);
   let fails = true;
   await page.route(`**/api/projects/*/tasks/${fresh}/archive`, async (route) => {
@@ -797,7 +797,7 @@ async function shot(page: Page, testInfo: TestInfo, name: string): Promise<void>
 test('screenshots of the settings, the light and dark boards, yellow and red, and the states', async ({
   page,
 }, testInfo) => {
-  agboardOk(mainProject, ['add', 'Disposable task']);
+  agpjOk(mainProject, ['add', 'Disposable task']);
   await openFresh(page);
   await shot(page, testInfo, '01-board-light-blue.png');
   await task(page, 12).click();

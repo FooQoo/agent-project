@@ -87,7 +87,7 @@ fn summaries_are_listed_newest_first_and_dismissed_without_losing_the_line() {
 
 #[test]
 fn a_change_to_the_folder_is_announced_as_a_change_of_the_messages() {
-    use agent_board::file_store::watch::{Target, classify};
+    use agent_project::file_store::watch::{Target, classify};
     let shared = std::path::Path::new("/data/shared");
     let id = "0123456789abcdef0123456789abcdef";
     let path = shared

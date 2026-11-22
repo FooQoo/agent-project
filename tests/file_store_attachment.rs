@@ -4,14 +4,14 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent_board::domain::{
+use agent_project::domain::{
     Actor, Assignee, AttachmentInput, ChangeContext, Column, NewTask, ProjectId,
 };
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::layout;
-use agent_board::file_store::model::AttachmentOwner;
-use agent_board::file_store::validate::EpicId;
+use agent_project::error::AgpjError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::layout;
+use agent_project::file_store::model::AttachmentOwner;
+use agent_project::file_store::validate::EpicId;
 use chrono::{TimeZone, Utc};
 
 const MIB: usize = 1024 * 1024;
@@ -94,10 +94,10 @@ fn agents_cannot_add_or_delete_task_images_after_a_task_is_done() {
         .unwrap();
 
     assert!(
-        matches!(f.store.add_attachment(&f.project, &owner, input(&id(2), "after.png", png()), at(7)), Err(AgboardError::TaskIsDone { id }) if id == task)
+        matches!(f.store.add_attachment(&f.project, &owner, input(&id(2), "after.png", png()), at(7)), Err(AgpjError::TaskIsDone { id }) if id == task)
     );
     assert!(
-        matches!(f.store.delete_attachment(&f.project, &owner, &saved.id, at(7)), Err(AgboardError::TaskIsDone { id }) if id == task)
+        matches!(f.store.delete_attachment(&f.project, &owner, &saved.id, at(7)), Err(AgpjError::TaskIsDone { id }) if id == task)
     );
     assert!(
         f.store
@@ -154,7 +154,7 @@ impl Fixture {
         self.store
             .create_epic(
                 &self.project,
-                agent_board::file_store::model::NewEpic {
+                agent_project::file_store::model::NewEpic {
                     id: text.into(),
                     name: "Epic".into(),
                     color: Some("#7C3AED".into()),
@@ -270,7 +270,7 @@ fn an_image_id_of_another_owner_is_refused_in_every_direction() {
         .attachment_path(&f.project, &other_task, &id(4))
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::AttachmentNotFound { .. }),
+        matches!(err, AgpjError::AttachmentNotFound { .. }),
         "{err:?}"
     );
     let err = f
@@ -278,7 +278,7 @@ fn an_image_id_of_another_owner_is_refused_in_every_direction() {
         .attachment_path(&f.project, &epic, &id(4))
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::AttachmentNotFound { .. }),
+        matches!(err, AgpjError::AttachmentNotFound { .. }),
         "{err:?}"
     );
 
@@ -287,7 +287,7 @@ fn an_image_id_of_another_owner_is_refused_in_every_direction() {
         .delete_attachment(&f.project, &other_task, &id(4), at(6))
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::AttachmentNotFound { .. }),
+        matches!(err, AgpjError::AttachmentNotFound { .. }),
         "{err:?}"
     );
     assert!(
@@ -313,7 +313,7 @@ fn path_like_attachment_ids_are_refused_and_nothing_is_written() {
             at(5),
         )
         .unwrap_err();
-    assert!(matches!(err, AgboardError::InvalidValue { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::InvalidValue { .. }), "{err:?}");
     assert!(!f.task_assets(task).exists());
 
     let err = f
@@ -321,16 +321,16 @@ fn path_like_attachment_ids_are_refused_and_nothing_is_written() {
         .attachment_path(&f.project, &owner, "../../task")
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::AttachmentNotFound { .. }),
+        matches!(err, AgpjError::AttachmentNotFound { .. }),
         "{err:?}"
     );
 
     let err = layout::task_asset_path(&f.project_dir, task, "../x", "png").unwrap_err();
-    assert!(matches!(err, AgboardError::InvalidValue { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::InvalidValue { .. }), "{err:?}");
     let err = layout::task_asset_path(&f.project_dir, task, &id(5), "../png").unwrap_err();
-    assert!(matches!(err, AgboardError::InvalidValue { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::InvalidValue { .. }), "{err:?}");
     let err = layout::task_asset_path(&f.project_dir, 0, &id(5), "png").unwrap_err();
-    assert!(matches!(err, AgboardError::InvalidValue { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::InvalidValue { .. }), "{err:?}");
     let err = layout::epic_asset_path(
         &f.project_dir,
         &EpicId::normalize("ALPHA").unwrap(),
@@ -338,7 +338,7 @@ fn path_like_attachment_ids_are_refused_and_nothing_is_written() {
         "png",
     )
     .unwrap_err();
-    assert!(matches!(err, AgboardError::InvalidValue { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::InvalidValue { .. }), "{err:?}");
 }
 
 #[test]
@@ -356,7 +356,7 @@ fn an_image_over_10_mib_is_refused_and_nothing_is_written() {
             at(5),
         )
         .unwrap_err();
-    assert!(matches!(err, AgboardError::InvalidValue { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::InvalidValue { .. }), "{err:?}");
     assert!(!f.task_assets(task).exists());
     assert!(
         f.task_json(task)["attachments"]
@@ -385,10 +385,7 @@ fn the_twenty_first_image_of_one_owner_is_refused() {
         .store
         .add_attachment(&f.project, &owner, input(&id(200), "a.png", png()), at(5))
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::AttachmentLimitExceeded),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::AttachmentLimitExceeded), "{err:?}");
     assert_eq!(
         f.task_json(task)["attachments"].as_array().unwrap().len(),
         20
@@ -426,10 +423,7 @@ fn the_total_of_fifty_mib_is_enforced_per_owner() {
             at(5),
         )
         .unwrap_err();
-    assert!(
-        matches!(err, AgboardError::AttachmentLimitExceeded),
-        "{err:?}"
-    );
+    assert!(matches!(err, AgpjError::AttachmentLimitExceeded), "{err:?}");
 }
 
 #[test]
@@ -445,7 +439,7 @@ fn a_file_that_is_not_png_jpeg_webp_or_gif_is_refused() {
             at(5),
         )
         .unwrap_err();
-    assert!(matches!(err, AgboardError::InvalidValue { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::InvalidValue { .. }), "{err:?}");
 }
 
 #[test]
@@ -467,7 +461,7 @@ fn a_symbolic_link_in_the_owner_folder_is_refused_for_reads_and_writes() {
         .attachment_path(&f.project, &owner, &id(8))
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::AttachmentNotFound { .. }),
+        matches!(err, AgpjError::AttachmentNotFound { .. }),
         "{err:?}"
     );
 
@@ -475,14 +469,14 @@ fn a_symbolic_link_in_the_owner_folder_is_refused_for_reads_and_writes() {
         .store
         .add_attachment(&f.project, &owner, input(&id(9), "b.png", png()), at(6))
         .unwrap_err();
-    assert!(matches!(err, AgboardError::FileError { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::FileError { .. }), "{err:?}");
     assert!(!moved.join(format!("{}.png", id(9))).exists());
 
     let err = f
         .store
         .delete_attachment(&f.project, &owner, &id(8), at(6))
         .unwrap_err();
-    assert!(matches!(err, AgboardError::FileError { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::FileError { .. }), "{err:?}");
     assert!(moved.join(format!("{}.png", id(8))).is_file());
 }
 
@@ -505,7 +499,7 @@ fn a_symbolic_link_in_place_of_an_image_file_is_refused_for_reads() {
         .attachment_path(&f.project, &owner, &id(10))
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::AttachmentNotFound { .. }),
+        matches!(err, AgpjError::AttachmentNotFound { .. }),
         "{err:?}"
     );
 }
@@ -524,14 +518,14 @@ fn archived_and_draft_tasks_refuse_image_changes() {
             at(6),
         )
         .unwrap_err();
-    assert!(matches!(err, AgboardError::TaskArchived { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::TaskArchived { .. }), "{err:?}");
 
     let draft = f.task();
     f.store
         .set_draft(
             &f.project,
             draft,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             at(5),
         )
@@ -545,7 +539,7 @@ fn archived_and_draft_tasks_refuse_image_changes() {
             at(6),
         )
         .unwrap_err();
-    assert!(matches!(err, AgboardError::TaskIsDraft { .. }), "{err:?}");
+    assert!(matches!(err, AgpjError::TaskIsDraft { .. }), "{err:?}");
 }
 
 #[test]
@@ -575,7 +569,7 @@ fn deleting_an_image_removes_its_record_and_its_file() {
         .attachment_path(&f.project, &owner, &id(13))
         .unwrap_err();
     assert!(
-        matches!(err, AgboardError::AttachmentNotFound { .. }),
+        matches!(err, AgpjError::AttachmentNotFound { .. }),
         "{err:?}"
     );
 }

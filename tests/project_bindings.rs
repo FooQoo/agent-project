@@ -6,8 +6,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
+use agent_project::error::AgpjError;
+use agent_project::file_store::FileStore;
 use assert_cmd::Command;
 use chrono::{TimeZone, Utc};
 use serde_json::Value;
@@ -127,7 +127,7 @@ fn a_bindings_file_that_does_not_follow_the_format_is_an_error_not_an_empty_list
     store.bind_folder(&alpha.id, &work.join("x")).unwrap();
     fs::write(root.path().join("bindings.json"), "{ not json").unwrap();
 
-    let error: AgboardError = store.bindings().unwrap_err();
+    let error: AgpjError = store.bindings().unwrap_err();
     assert_eq!(error.code(), "file_invalid");
     assert!(store.bind_folder(&alpha.id, &work.join("other")).is_err());
     assert_eq!(
@@ -142,13 +142,13 @@ fn an_unknown_folder_cannot_be_canonicalized_and_a_file_is_not_a_folder() {
     let file = work.join("note.txt");
     fs::write(&file, "x").unwrap();
     assert_eq!(
-        agent_board::file_store::bindings::canonical_folder(&root.path().join("missing"))
+        agent_project::file_store::bindings::canonical_folder(&root.path().join("missing"))
             .unwrap_err()
             .code(),
         "invalid_value"
     );
     assert_eq!(
-        agent_board::file_store::bindings::canonical_folder(&file)
+        agent_project::file_store::bindings::canonical_folder(&file)
             .unwrap_err()
             .code(),
         "invalid_value"
@@ -157,13 +157,13 @@ fn an_unknown_folder_cannot_be_canonicalized_and_a_file_is_not_a_folder() {
 
 // ---- the command line -----------------------------------------------------
 
-fn agboard(home: &Path, cwd: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
-    Command::cargo_bin("agboard")
+fn agpj(home: &Path, cwd: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
+    Command::cargo_bin("agpj")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(cwd)
         .args(args)
@@ -181,7 +181,7 @@ fn error_code(assert: assert_cmd::assert::Assert, exit: i32) -> String {
 }
 
 fn project_names(home: &Path, cwd: &Path) -> Vec<String> {
-    let catalog = json_ok(agboard(home, cwd, &["project", "ls", "--json"]));
+    let catalog = json_ok(agpj(home, cwd, &["project", "ls", "--json"]));
     catalog["projects"]
         .as_array()
         .unwrap()
@@ -196,11 +196,11 @@ fn project_create_binds_the_current_folder_by_default_and_refuses_a_bound_folder
     let work = tempdir().unwrap();
     let cwd = fs::canonicalize(work.path()).unwrap();
 
-    agboard(home.path(), &cwd, &["project", "create", "Alpha"]).success();
+    agpj(home.path(), &cwd, &["project", "create", "Alpha"]).success();
     assert_eq!(project_names(home.path(), &cwd), vec!["Alpha"]);
 
     let refused = error_code(
-        agboard(home.path(), &cwd, &["project", "create", "Beta", "--json"]),
+        agpj(home.path(), &cwd, &["project", "create", "Beta", "--json"]),
         2,
     );
     assert_eq!(refused, "folder_bound_elsewhere");
@@ -214,7 +214,7 @@ fn project_create_with_a_missing_folder_is_refused_and_creates_nothing() {
     let missing = cwd.join("does-not-exist");
 
     let code = error_code(
-        agboard(
+        agpj(
             home.path(),
             &cwd,
             &[
@@ -239,12 +239,12 @@ fn project_bind_reports_an_existing_binding_without_a_change_and_refuses_another
     let b = tempdir().unwrap();
     let a = fs::canonicalize(a.path()).unwrap();
     let b = fs::canonicalize(b.path()).unwrap();
-    agboard(home.path(), &a, &["project", "create", "Alpha"]).success();
-    agboard(home.path(), &b, &["project", "create", "Beta"]).success();
+    agpj(home.path(), &a, &["project", "create", "Alpha"]).success();
+    agpj(home.path(), &b, &["project", "create", "Beta"]).success();
 
     // Beta may not take the folder that Alpha already belongs to.
     let refused = error_code(
-        agboard(
+        agpj(
             home.path(),
             &b,
             &[
@@ -260,7 +260,7 @@ fn project_bind_reports_an_existing_binding_without_a_change_and_refuses_another
     );
     assert_eq!(refused, "folder_bound_elsewhere");
 
-    let twice = agboard(home.path(), &a, &["project", "bind", "Alpha"])
+    let twice = agpj(home.path(), &a, &["project", "bind", "Alpha"])
         .success()
         .get_output()
         .stdout
@@ -276,11 +276,11 @@ fn project_bind_reports_an_existing_binding_without_a_change_and_refuses_another
 fn project_bind_names_its_project_by_argument_and_rejects_the_global_project_option() {
     let home = tempdir().unwrap();
     let cwd = fs::canonicalize(home.path()).unwrap();
-    agboard(home.path(), &cwd, &["project", "create", "Alpha"]).success();
+    agpj(home.path(), &cwd, &["project", "create", "Alpha"]).success();
 
     assert_eq!(
         error_code(
-            agboard(
+            agpj(
                 home.path(),
                 &cwd,
                 &["--project", "Alpha", "project", "bind", "Alpha", "--json"]
@@ -291,7 +291,7 @@ fn project_bind_names_its_project_by_argument_and_rejects_the_global_project_opt
     );
     assert_eq!(
         error_code(
-            agboard(home.path(), &cwd, &["project", "bind", "Missing", "--json"]),
+            agpj(home.path(), &cwd, &["project", "bind", "Missing", "--json"]),
             4
         ),
         "project_not_found"
@@ -302,7 +302,7 @@ fn project_bind_names_its_project_by_argument_and_rejects_the_global_project_opt
 fn folder_paths_stay_out_of_the_shared_files() {
     let home = tempdir().unwrap();
     let cwd = fs::canonicalize(home.path()).unwrap();
-    agboard(home.path(), &cwd, &["project", "create", "Alpha"]).success();
+    agpj(home.path(), &cwd, &["project", "create", "Alpha"]).success();
 
     let folder = cwd.display().to_string();
     assert!(home.path().join("bindings.json").exists());
@@ -357,7 +357,7 @@ fn a_project_whose_binding_fails_after_creation_is_removed_again() {
     fs::create_dir_all(home.path().join(".bindings.lock")).unwrap();
 
     let code = error_code(
-        agboard(home.path(), &cwd, &["project", "create", "Alpha", "--json"]),
+        agpj(home.path(), &cwd, &["project", "create", "Alpha", "--json"]),
         1,
     );
     assert_eq!(code, "file_error");

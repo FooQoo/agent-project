@@ -8,15 +8,15 @@ use assert_cmd::Command;
 use serde_json::Value;
 use tempfile::{TempDir, tempdir};
 
-fn agboard(home: &Path, args: &[&str]) -> Value {
+fn agpj(home: &Path, args: &[&str]) -> Value {
     let mut full = vec!["--project", "Demo"];
     full.extend(args);
-    let assert = Command::cargo_bin("agboard")
+    let assert = Command::cargo_bin("agpj")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(home)
         .args(full)
@@ -30,12 +30,12 @@ fn board(epics: &[&str]) -> TempDir {
     let home = tempdir().unwrap();
     let folder = home.path().join("work");
     fs::create_dir_all(&folder).unwrap();
-    Command::cargo_bin("agboard")
+    Command::cargo_bin("agpj")
         .unwrap()
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home.path())
         .args([
             "project",
             "create",
@@ -46,7 +46,7 @@ fn board(epics: &[&str]) -> TempDir {
         .assert()
         .success();
     for epic in epics {
-        agboard(
+        agpj(
             home.path(),
             &["epic", "add", epic, "--name", epic, "--actor", "ai"],
         );
@@ -71,7 +71,7 @@ fn add(home: &Path, epic: Option<&str>, assignee: &str, actor: &str) -> i64 {
         // A plan an agent makes waits in the Backlog.
         args.push("--backlog");
     }
-    agboard(home, &args)["task"]["id"].as_i64().unwrap()
+    agpj(home, &args)["task"]["id"].as_i64().unwrap()
 }
 
 fn ready(home: &Path, epic: Option<&str>) -> i64 {
@@ -79,7 +79,7 @@ fn ready(home: &Path, epic: Option<&str>) -> i64 {
 }
 
 fn doing(home: &Path, id: i64) {
-    agboard(
+    agpj(
         home,
         &[
             "mv",
@@ -94,7 +94,7 @@ fn doing(home: &Path, id: i64) {
 }
 
 fn running(home: &Path, id: i64) {
-    agboard(
+    agpj(
         home,
         &[
             "state",
@@ -109,7 +109,7 @@ fn running(home: &Path, id: i64) {
 }
 
 fn next(home: &Path) -> Vec<(i64, String)> {
-    let table = agboard(home, &["progress", "--json"]);
+    let table = agpj(home, &["progress", "--json"]);
     table["nextTasks"]
         .as_array()
         .unwrap()
@@ -126,7 +126,7 @@ fn next(home: &Path) -> Vec<(i64, String)> {
 #[test]
 fn an_empty_board_has_an_empty_list() {
     let home = board(&[]);
-    let table = agboard(home.path(), &["progress", "--json"]);
+    let table = agpj(home.path(), &["progress", "--json"]);
     assert_eq!(table["nextTasks"], serde_json::json!([]));
 }
 
@@ -155,7 +155,7 @@ fn todo_follows_the_epic_waves_and_unassigned_comes_last() {
     let first = ready(home.path(), Some("ALPHA"));
     let second = ready(home.path(), Some("ALPHA"));
     let loose = ready(home.path(), None);
-    agboard(
+    agpj(
         home.path(),
         &[
             "epic",
@@ -167,7 +167,7 @@ fn todo_follows_the_epic_waves_and_unassigned_comes_last() {
     );
     let ids: Vec<i64> = next(home.path()).into_iter().map(|(id, _)| id).collect();
     assert_eq!(ids, vec![second, first, loose]);
-    let table = agboard(home.path(), &["progress", "--json"]);
+    let table = agpj(home.path(), &["progress", "--json"]);
     assert_eq!(table["nextTasks"][0]["epicId"], "ALPHA");
     assert_eq!(table["nextTasks"][2]["epicId"], Value::Null);
     assert!(
@@ -204,11 +204,11 @@ fn at_most_three_are_listed() {
 fn waves(home: &Path, values: &[&str]) {
     let mut args = vec!["epic", "edit", "ALPHA", "--waves"];
     args.extend(values);
-    agboard(home, &args);
+    agpj(home, &args);
 }
 
 fn done(home: &Path, id: i64) {
-    agboard(
+    agpj(
         home,
         &[
             "mv",
@@ -276,7 +276,7 @@ fn saving_waves_leaves_no_empty_wave_and_drops_tasks_that_are_not_members() {
     // A wave of non-members empties and goes away; so do blank values.
     let ghost = (outsider + 50).to_string();
     waves(home.path(), &[&o, &a, "", &format!("{b},{ghost}")]);
-    let table = agboard(home.path(), &["progress", "--json"]);
+    let table = agpj(home.path(), &["progress", "--json"]);
     let path = table["epics"][0]["documentPath"].as_str().unwrap();
     let stored = fs::read_to_string(path).unwrap();
     assert!(stored.contains(&format!("- {first}\n")), "{stored}");

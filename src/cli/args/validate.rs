@@ -4,12 +4,12 @@ use super::{
     AttachmentArgs, AttachmentCommand, Cli, Command, EpicArgs, EpicCommand, ProjectArgs,
     ProjectCommand, ServeArgs, ShowArgs, ShowCommand, WaitUntilArg,
 };
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 impl Cli {
     /// Checks that depend on the combination of arguments, done before any
     /// board access so that a wrong command line always exits with 2.
-    pub fn validate(&self) -> Result<(), AgboardError> {
+    pub fn validate(&self) -> Result<(), AgpjError> {
         let command = self.command.name();
         match (&self.command, self.project()) {
             // `show remote` works without a project (the saved settings) and with one
@@ -23,14 +23,14 @@ impl Cli {
             ) => {}
             // The read-only list of every project names no single project.
             (Command::Ls(args), Some(_)) if args.all_projects => {
-                return Err(AgboardError::InvalidArgument {
+                return Err(AgpjError::InvalidArgument {
                     message: "ls --all-projects does not take --project.".to_string(),
                     command: Some(command.to_string()),
                 });
             }
             // Each project has its own current version, so no one version stands for all.
             (Command::Ls(args), None) if args.all_projects && args.version.current_version => {
-                return Err(AgboardError::InvalidArgument {
+                return Err(AgpjError::InvalidArgument {
                     message: "ls --all-projects does not take --current-version.".to_string(),
                     command: Some(command.to_string()),
                 });
@@ -41,7 +41,7 @@ impl Cli {
                 Command::Serve(_) | Command::Stop(_) | Command::Setup(_) | Command::Update(_),
                 Some(_),
             ) => {
-                return Err(AgboardError::InvalidArgument {
+                return Err(AgpjError::InvalidArgument {
                     message: format!("{command} does not take --project."),
                     command: Some(command.to_string()),
                 });
@@ -56,7 +56,7 @@ impl Cli {
                 }),
                 Some(_),
             ) => {
-                return Err(AgboardError::InvalidArgument {
+                return Err(AgpjError::InvalidArgument {
                     message: format!(
                         "project {} does not take --project.",
                         self.project_subcommand_name()
@@ -83,7 +83,7 @@ impl Cli {
                 None,
             ) => {}
             (_, None) => {
-                return Err(AgboardError::InvalidArgument {
+                return Err(AgpjError::InvalidArgument {
                     message: "--project NAME is required.".to_string(),
                     command: Some(command.to_string()),
                 });
@@ -92,7 +92,7 @@ impl Cli {
         }
         match &self.command {
             Command::Show(args) if args.id.is_none() && args.command.is_none() => {
-                Err(AgboardError::InvalidArgument {
+                Err(AgpjError::InvalidArgument {
                     message: "give the ID of the task to show, or \"remote\" to show the remote access.".to_string(),
                     command: Some("show".to_string()),
                 })
@@ -105,7 +105,7 @@ impl Cli {
                     && !args.clear_epic
                     && args.plan.choice()?.is_none() =>
             {
-                Err(AgboardError::InvalidArgument {
+                Err(AgpjError::InvalidArgument {
                     message: "nothing to change; give --title, --desc, --desc-file, --epic, --clear-epic, --planned-version, --current-version, or --unplanned.".to_string(),
                     command: Some("edit".to_string()),
                 })
@@ -118,18 +118,18 @@ impl Cli {
                 && args.document.document.is_none()
                 && args.document.document_file.is_none() =>
             {
-                Err(AgboardError::InvalidArgument {
+                Err(AgpjError::InvalidArgument {
                     message: "nothing to change; give --name, --color, --waves, --document, or --document-file.".to_string(),
                     command: Some("epic edit".to_string()),
                 })
             }
-            Command::Snapshot(_) if !self.json => Err(AgboardError::InvalidArgument {
+            Command::Snapshot(_) if !self.json => Err(AgpjError::InvalidArgument {
                 message: "snapshot requires --json.".into(),
                 command: Some("snapshot".into()),
             }),
             Command::Attachment(AttachmentArgs {
                 command: AttachmentCommand::Get(args),
-            }) if args.output.as_os_str().is_empty() => Err(AgboardError::InvalidArgument {
+            }) if args.output.as_os_str().is_empty() => Err(AgpjError::InvalidArgument {
                 message: "--output PATH is required.".into(),
                 command: Some("attachment get".into()),
             }),
@@ -137,7 +137,7 @@ impl Cli {
                 validate_monitor_args(args, &|name| std::env::var(name).ok()).map(|_| ())
             }
             Command::Wait(args) if args.until.is_none() && args.after.is_none() => {
-                Err(AgboardError::InvalidArgument {
+                Err(AgpjError::InvalidArgument {
                     message: "wait requires --after CURSOR or --until task --idle-timeout SECONDS.".into(),
                     command: Some("wait".into()),
                 })
@@ -145,13 +145,13 @@ impl Cli {
             Command::Wait(args)
                 if args.until == Some(WaitUntilArg::Task) && args.idle_timeout.is_none() =>
             {
-                Err(AgboardError::InvalidArgument {
+                Err(AgpjError::InvalidArgument {
                     message: "wait --until task requires --idle-timeout SECONDS.".into(),
                     command: Some("wait".into()),
                 })
             }
             Command::Wait(args) if args.until.is_none() && args.idle_timeout.is_some() => {
-                Err(AgboardError::InvalidArgument {
+                Err(AgpjError::InvalidArgument {
                     message: "--idle-timeout is only valid with --until task.".into(),
                     command: Some("wait".into()),
                 })
@@ -168,8 +168,8 @@ impl Cli {
 pub fn validate_monitor_args(
     args: &ServeArgs,
     env: &dyn Fn(&str) -> Option<String>,
-) -> Result<bool, AgboardError> {
-    let invalid = |message: &str| AgboardError::InvalidArgument {
+) -> Result<bool, AgpjError> {
+    let invalid = |message: &str| AgpjError::InvalidArgument {
         message: message.to_string(),
         command: Some("serve".into()),
     };

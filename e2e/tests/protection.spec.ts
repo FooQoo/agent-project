@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { agboardOk, listTasks, mainOrigin, mainPort, mainProject, projectId, resetBoard, taskBody, type TaskJson } from '../helpers/agboard';
+import { agpjOk, listTasks, mainOrigin, mainPort, mainProject, projectId, resetBoard, taskBody, type TaskJson } from '../helpers/agpj';
 
 // Writes go to /api/projects/<ProjectId>/cards/<number>; the guard answers before it looks at the project.
 let task15: string;
@@ -21,12 +21,12 @@ test('a delete request without the token or an Origin is refused and the task st
 
 test('a token alone, a bad token, or a wrong Origin is not enough', async ({ page, request }) => {
   await page.goto('/');
-  const token = await page.locator('meta[name="agboard-token"]').getAttribute('content');
+  const token = await page.locator('meta[name="agpj-token"]').getAttribute('content');
   expect(token).toMatch(/^[0-9a-f]{64}$/);
   const before = listTasks(mainProject);
 
   // The right token, but the request does not come from the page.
-  const tokenOnly = await request.delete(task15, { headers: { 'X-Agboard-Token': token! } });
+  const tokenOnly = await request.delete(task15, { headers: { 'X-Agpj-Token': token! } });
   expect(tokenOnly.status()).toBe(403);
 
   // The page's origin, but no token.
@@ -40,7 +40,7 @@ test('a token alone, a bad token, or a wrong Origin is not enough', async ({ pag
     headers: {
       Origin: mainOrigin(),
       'Sec-Fetch-Site': 'same-origin',
-      'X-Agboard-Token': '0'.repeat(64),
+      'X-Agpj-Token': '0'.repeat(64),
     },
   });
   expect(wrongToken.status()).toBe(403);
@@ -50,7 +50,7 @@ test('a token alone, a bad token, or a wrong Origin is not enough', async ({ pag
     headers: {
       Origin: 'http://example.com',
       'Sec-Fetch-Site': 'cross-site',
-      'X-Agboard-Token': token!,
+      'X-Agpj-Token': token!,
     },
   });
   expect(otherOrigin.status()).toBe(403);
@@ -60,7 +60,7 @@ test('a token alone, a bad token, or a wrong Origin is not enough', async ({ pag
 
 test('the token appears only in the page, never in the API responses', async ({ page, request }) => {
   await page.goto('/');
-  const token = (await page.locator('meta[name="agboard-token"]').getAttribute('content'))!;
+  const token = (await page.locator('meta[name="agpj-token"]').getAttribute('content'))!;
   for (const path of [
     '/api/projects',
     `/api/projects/${projectId(mainProject)}/summary`,
@@ -78,7 +78,7 @@ interface Shown extends TaskJson {
   description: string;
   draft: 'human' | 'ai' | null;
 }
-const shown = (id: number): Shown => JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+const shown = (id: number): Shown => JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 
 /** The page's own request: its Origin, Sec-Fetch-Site, and token, as the screen sends them. */
 async function fromPage(
@@ -90,10 +90,10 @@ async function fromPage(
 ): Promise<{ status: number; body: { error?: { code: string }; task?: Shown } }> {
   return page.evaluate(
     async ({ method, path, body, token }) => {
-      const meta = document.querySelector('meta[name="agboard-token"]')?.getAttribute('content') ?? '';
+      const meta = document.querySelector('meta[name="agpj-token"]')?.getAttribute('content') ?? '';
       const response = await fetch(path, {
         method,
-        headers: { 'Content-Type': 'application/json', 'X-Agboard-Token': token ?? meta },
+        headers: { 'Content-Type': 'application/json', 'X-Agpj-Token': token ?? meta },
         body: JSON.stringify(body),
       });
       return { status: response.status, body: await response.json().catch(() => ({})) };
@@ -105,7 +105,7 @@ async function fromPage(
 test('the edit and the draft switch are refused without the guard, and nothing changes', async ({ page, request }) => {
   const task13 = `/api/projects/${projectId(mainProject)}/tasks/13`;
   await page.goto('/');
-  const token = (await page.locator('meta[name="agboard-token"]').getAttribute('content'))!;
+  const token = (await page.locator('meta[name="agpj-token"]').getAttribute('content'))!;
   const before = listTasks(mainProject);
   const draftBefore = shown(13).draft;
 
@@ -117,12 +117,12 @@ test('the edit and the draft switch are refused without the guard, and nothing c
     // Nothing at all, the token only, an Origin only, a wrong token, and a foreign Origin with the right token.
     const attempts: Record<string, string>[] = [
       {},
-      { 'X-Agboard-Token': token },
+      { 'X-Agpj-Token': token },
       { Origin: mainOrigin(), 'Sec-Fetch-Site': 'same-origin' },
-      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'same-origin', 'X-Agboard-Token': '0'.repeat(64) },
-      { Origin: 'http://example.com', 'Sec-Fetch-Site': 'cross-site', 'X-Agboard-Token': token },
-      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'cross-site', 'X-Agboard-Token': token },
-      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'same-origin', 'X-Agboard-Token': token, Host: `evil.example:${mainPort()}` },
+      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'same-origin', 'X-Agpj-Token': '0'.repeat(64) },
+      { Origin: 'http://example.com', 'Sec-Fetch-Site': 'cross-site', 'X-Agpj-Token': token },
+      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'cross-site', 'X-Agpj-Token': token },
+      { Origin: mainOrigin(), 'Sec-Fetch-Site': 'same-origin', 'X-Agpj-Token': token, Host: `evil.example:${mainPort()}` },
     ];
     for (const headers of attempts) {
       const response = await send(headers);

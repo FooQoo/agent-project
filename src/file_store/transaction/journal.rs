@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use super::{PairBytes, PairTargets};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::io::write_error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -43,6 +43,6 @@ pub(super) fn hashes(bytes: &PairBytes) -> PairHashes {
     }
 }
 
-pub(super) fn serialize(journal: &Journal) -> Result<Vec<u8>, AgboardError> {
+pub(super) fn serialize(journal: &Journal) -> Result<Vec<u8>, AgpjError> {
     serde_json::to_vec(journal).map_err(|e| write_error(".internal/transactions", e))
 }

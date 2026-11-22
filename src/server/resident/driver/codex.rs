@@ -1,6 +1,6 @@
 //! Codex over `codex app-server`: newline-delimited JSON-RPC on standard input and output. The
 //! session is one thread; the first instruction is the first `turn/start`, and the agent then
-//! works in that one long turn (`agboard wait` runs inside it). The conversation itself is the
+//! works in that one long turn (`agpj wait` runs inside it). The conversation itself is the
 //! state machine in [`super::codex_parse`].
 //!
 //! Permissions are as they were with the one-way `codex exec` launch: the workspace-write sandbox,
@@ -18,7 +18,7 @@ use super::codex_parse::{Session, Settings, Step};
 use super::lines::{Line, MAX_LINE, for_each_line};
 use super::proc::{Out, Proc, send_line};
 use super::{AgentDriver, DriverEvent, PermissionAnswer, StartSpec};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::server::resident::cli;
 
 pub struct CodexDriver {
@@ -36,23 +36,23 @@ impl CodexDriver {
         }
     }
 
-    fn session(&self) -> Result<Arc<Mutex<Session>>, AgboardError> {
+    fn session(&self) -> Result<Arc<Mutex<Session>>, AgpjError> {
         self.session
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .clone()
-            .ok_or_else(|| AgboardError::SessionLaunchFailed {
+            .ok_or_else(|| AgpjError::SessionLaunchFailed {
                 reason: "The session has not been started.".to_string(),
             })
     }
 
     /// Run `act` on the session and carry out what it asks.
-    fn apply(&self, act: impl FnOnce(&mut Session) -> Step) -> Result<(), AgboardError> {
+    fn apply(&self, act: impl FnOnce(&mut Session) -> Step) -> Result<(), AgpjError> {
         let session = self.session()?;
         let proc = self
             .proc
             .get()
-            .ok_or_else(|| AgboardError::SessionLaunchFailed {
+            .ok_or_else(|| AgpjError::SessionLaunchFailed {
                 reason: "The session has not been started.".to_string(),
             })?;
         let mut guard = session.lock().unwrap_or_else(|e| e.into_inner());
@@ -117,7 +117,7 @@ fn read(stdout: std::process::ChildStdout, out: Out, session: Arc<Mutex<Session>
 }
 
 impl AgentDriver for CodexDriver {
-    fn start(&self, spec: StartSpec) -> Result<(), AgboardError> {
+    fn start(&self, spec: StartSpec) -> Result<(), AgpjError> {
         let settings = Settings {
             cwd: spec.cwd.clone(),
             model: spec.model.clone(),
@@ -131,14 +131,14 @@ impl AgentDriver for CodexDriver {
         let reader: super::proc::Reader = Box::new(move |stdout, out| read(stdout, out, session));
         let proc = Proc::spawn(&self.program, cli::codex_args(), &spec, true, Some(reader))?;
         if self.proc.set(proc).is_err() {
-            return Err(AgboardError::SessionLaunchFailed {
+            return Err(AgpjError::SessionLaunchFailed {
                 reason: "The session was already started.".to_string(),
             });
         }
         let proc = self
             .proc
             .get()
-            .ok_or_else(|| AgboardError::SessionLaunchFailed {
+            .ok_or_else(|| AgpjError::SessionLaunchFailed {
                 reason: "The session has not been started.".to_string(),
             })?;
         send_line(&proc.stdin, &hello.to_string())
@@ -164,31 +164,31 @@ impl AgentDriver for CodexDriver {
         }
     }
 
-    fn send_user_message(&self, text: &str) -> Result<(), AgboardError> {
+    fn send_user_message(&self, text: &str) -> Result<(), AgpjError> {
         self.apply(|session| session.user_message(text))
     }
 
-    fn answer_permission(&self, id: &str, answer: PermissionAnswer) -> Result<(), AgboardError> {
+    fn answer_permission(&self, id: &str, answer: PermissionAnswer) -> Result<(), AgpjError> {
         let session = self.session()?;
         let reply = session
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .answer(id, &answer);
         let Some(reply) = reply else {
-            return Err(AgboardError::SessionLaunchFailed {
+            return Err(AgpjError::SessionLaunchFailed {
                 reason: format!("No permission request \"{id}\" is waiting."),
             });
         };
         let proc = self
             .proc
             .get()
-            .ok_or_else(|| AgboardError::SessionLaunchFailed {
+            .ok_or_else(|| AgpjError::SessionLaunchFailed {
                 reason: "The session has not been started.".to_string(),
             })?;
         send_line(&proc.stdin, &reply.to_string())
     }
 
-    fn interrupt(&self) -> Result<(), AgboardError> {
+    fn interrupt(&self) -> Result<(), AgpjError> {
         self.apply(Session::interrupt)
     }
 

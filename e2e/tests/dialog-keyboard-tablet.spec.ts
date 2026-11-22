@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures';
-import { mainProject, resetBoard } from '../helpers/agboard';
+import { mainProject, resetBoard } from '../helpers/agpj';
 import { resetPreferences } from '../helpers/preferences';
 import { openAskAi } from '../helpers/ask-ai';
 import { answerNote, openAnswer } from '../helpers/answer';

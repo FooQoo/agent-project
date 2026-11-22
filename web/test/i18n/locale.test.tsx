@@ -70,7 +70,7 @@ describe('locale selection', () => {
     expect(document.documentElement.lang).toBe('en');
   });
 
-  it('applies a selected locale immediately and persists it under agboard.locale', () => {
+  it('applies a selected locale immediately and persists it under agpj.locale', () => {
     const storage = memoryStorage(null);
 
     const result = selectLocale('ja', () => storage);

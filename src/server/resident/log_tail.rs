@@ -6,7 +6,7 @@ use std::path::Path;
 
 use serde::Serialize;
 
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 
 /// The most bytes of a log one read returns.
 pub const MAX_TAIL_BYTES: u64 = 64 * 1024;
@@ -26,7 +26,7 @@ pub struct LogTail {
 
 /// Read at most [`MAX_TAIL_BYTES`] from the end of `path`, starting at a line boundary when the
 /// start was cut. A missing file is `exists: false`. Only the tail is read, never the whole file.
-pub fn read_tail(tool: &'static str, path: &Path) -> Result<LogTail, AgboardError> {
+pub fn read_tail(tool: &'static str, path: &Path) -> Result<LogTail, AgpjError> {
     let missing = LogTail {
         tool,
         exists: false,
@@ -65,8 +65,8 @@ pub fn read_tail(tool: &'static str, path: &Path) -> Result<LogTail, AgboardErro
     })
 }
 
-fn io_error(tool: &str, error: &std::io::Error) -> AgboardError {
-    AgboardError::FileError {
+fn io_error(tool: &str, error: &std::io::Error) -> AgpjError {
+    AgpjError::FileError {
         action: FileAction::Read,
         file: format!("resident/{tool}.log"),
         reason: error.to_string(),

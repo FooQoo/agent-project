@@ -5,11 +5,11 @@ mod common;
 
 use std::io::Cursor;
 
-use common::{agboard, json_ok};
+use common::{agpj, json_ok};
 use serde_json::Value;
 
 fn project(home: &std::path::Path) {
-    let (code, _, err) = agboard(home, &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(home, &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
 }
 
@@ -103,7 +103,7 @@ fn the_hook_carries_the_open_requests() {
     project(home.path());
     let id = send(home.path(), "Fix the typo");
     let input = r#"{"hook_event_name":"SessionStart"}"#;
-    let out = agent_board::agent::hook::run(
+    let out = agent_project::agent::hook::run(
         "claude",
         &mut Cursor::new(input),
         &home.path().join("shared"),
@@ -115,7 +115,7 @@ fn the_hook_carries_the_open_requests() {
         .as_str()
         .unwrap();
     let table: Value =
-        serde_json::from_str(context.strip_prefix("AGBOARD_PROGRESS\n").unwrap()).unwrap();
+        serde_json::from_str(context.strip_prefix("AGPJ_PROGRESS\n").unwrap()).unwrap();
     assert_eq!(table["requests"][0]["id"], id.as_str());
     assert_eq!(table["requests"][0]["title"], "Fix the typo");
 }

@@ -7,7 +7,7 @@
 #   scripts/dev/install-local.sh [extra cargo install args]
 #
 # Environment:
-#   AGBOARD_CODESIGN_IDENTITY  signing identity (name or SHA-1) for codesign;
+#   AGPJ_CODESIGN_IDENTITY  signing identity (name or SHA-1) for codesign;
 #                              list candidates with
 #                              `security find-identity -v -p codesigning`.
 #                              Unset: the binary keeps cargo's ad-hoc signature.
@@ -38,16 +38,16 @@ for arg in "$@"; do
   if [ "$prev" = "--root" ]; then install_root="$arg"; fi
   prev="$arg"
 done
-binary="$install_root/bin/agboard"
+binary="$install_root/bin/agpj"
 if [ ! -x "$binary" ]; then
   echo "install-local: $binary not found after install" >&2
   exit 1
 fi
 
-if [ "$(uname -s)" = "Darwin" ] && [ -n "${AGBOARD_CODESIGN_IDENTITY:-}" ]; then
-  codesign --force --identifier "$identifier" --sign "$AGBOARD_CODESIGN_IDENTITY" "$binary"
+if [ "$(uname -s)" = "Darwin" ] && [ -n "${AGPJ_CODESIGN_IDENTITY:-}" ]; then
+  codesign --force --identifier "$identifier" --sign "$AGPJ_CODESIGN_IDENTITY" "$binary"
   codesign -dvv "$binary" 2>&1 | grep -E '^(Identifier|TeamIdentifier)=' || true
   echo "install-local: signed $binary as $identifier"
 else
-  echo "install-local: not signed, so the Keychain asks again after each reinstall. On macOS, set AGBOARD_CODESIGN_IDENTITY to a stable identity (see: security find-identity -v -p codesigning)."
+  echo "install-local: not signed, so the Keychain asks again after each reinstall. On macOS, set AGPJ_CODESIGN_IDENTITY to a stable identity (see: security find-identity -v -p codesigning)."
 fi

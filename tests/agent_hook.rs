@@ -8,11 +8,11 @@ use tempfile::tempdir;
 fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
     let home = tempdir().unwrap();
     for project in ["Agent Board", "Other"] {
-        let init = Command::new(env!("CARGO_BIN_EXE_agboard"))
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
-            .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home.path())
+        let init = Command::new(env!("CARGO_BIN_EXE_agpj"))
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
+            .env("AGPJ_WATCH", "poll")
+            .env("AGPJ_HOME", home.path())
             .args(["--project", project, "init"])
             .output()
             .unwrap();
@@ -22,11 +22,11 @@ fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
         } else {
             "Question"
         };
-        let add = Command::new(env!("CARGO_BIN_EXE_agboard"))
-            .env("AGBOARD_AUTOSTART", "0")
-            .env("AGBOARD_OPEN_BROWSER", "0")
-            .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", home.path())
+        let add = Command::new(env!("CARGO_BIN_EXE_agpj"))
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
+            .env("AGPJ_WATCH", "poll")
+            .env("AGPJ_HOME", home.path())
             .args([
                 "--project",
                 project,
@@ -46,7 +46,7 @@ fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
     let input = br#"{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"ignored"}}"#;
     let mut cursor = Cursor::new(input);
     let result =
-        agent_board::agent::hook::run("claude", &mut cursor, &db_path, Some("Agent Board"))
+        agent_project::agent::hook::run("claude", &mut cursor, &db_path, Some("Agent Board"))
             .unwrap();
     let parsed: Value = serde_json::from_str(&result).unwrap();
     assert_eq!(
@@ -56,7 +56,7 @@ fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
     let context = parsed["hookSpecificOutput"]["additionalContext"]
         .as_str()
         .unwrap();
-    assert!(context.starts_with("AGBOARD_PROGRESS\n"));
+    assert!(context.starts_with("AGPJ_PROGRESS\n"));
     let snapshot: Value = serde_json::from_str(context.split_once('\n').unwrap().1).unwrap();
     assert_eq!(snapshot["project"]["name"], "Agent Board");
     // Work metadata is included, while details/history are not sent to the hook.
@@ -67,7 +67,7 @@ fn hook_adds_the_progress_table_for_supported_events_without_mutating_data() {
     assert_eq!(snapshot["epics"].as_array().unwrap().len(), 0);
     assert_eq!(before, tree_of(&db_path));
     assert!(
-        agent_board::agent::hook::run(
+        agent_project::agent::hook::run(
             "codex",
             &mut Cursor::new(br#"{"hook_event_name":"PostToolUseFailure"}"#),
             &db_path,
@@ -83,19 +83,19 @@ fn hook_failure_is_bounded_and_does_not_create_a_missing_database() {
     let db_path = home.path().join("missing.db");
     let input = br#"{"hook_event_name":"SessionStart"}"#;
     let output =
-        agent_board::agent::hook::run("codex", &mut Cursor::new(input), &db_path, Some("demo"))
+        agent_project::agent::hook::run("codex", &mut Cursor::new(input), &db_path, Some("demo"))
             .unwrap();
-    assert!(output.contains("AGBOARD_ERROR"));
+    assert!(output.contains("AGPJ_ERROR"));
     assert!(!db_path.exists());
     // A readable, unbound hook folder says nothing and creates nothing.
     assert!(
-        agent_board::agent::hook::run("codex", &mut Cursor::new(input), &db_path, None).is_none()
+        agent_project::agent::hook::run("codex", &mut Cursor::new(input), &db_path, None).is_none()
     );
     assert!(!db_path.exists());
     // Input that is not JSON is reported, whatever its size.
     let broken = vec![b'x'; 200_000];
     let output =
-        agent_board::agent::hook::run("claude", &mut Cursor::new(broken), &db_path, Some("demo"))
+        agent_project::agent::hook::run("claude", &mut Cursor::new(broken), &db_path, Some("demo"))
             .unwrap();
     assert!(output.contains("invalid_hook_input"));
     assert!(!db_path.exists());
@@ -127,8 +127,8 @@ fn task_body(text: &str) -> String {
 }
 
 fn board_with_descriptions(descriptions: &[String]) -> (tempfile::TempDir, std::path::PathBuf) {
-    use agent_board::domain::{Actor, Assignee, NewTask};
-    use agent_board::file_store::FileStore;
+    use agent_project::domain::{Actor, Assignee, NewTask};
+    use agent_project::file_store::FileStore;
     let home = tempdir().unwrap();
     let db_path = home.path().join("shared");
     let store = FileStore::open(&db_path);
@@ -157,7 +157,7 @@ fn board_with_descriptions(descriptions: &[String]) -> (tempfile::TempDir, std::
 
 fn hook_context(agent: &str, event: &str, db_path: &std::path::Path) -> String {
     let input = format!(r#"{{"hook_event_name":"{event}"}}"#);
-    let output = agent_board::agent::hook::run(
+    let output = agent_project::agent::hook::run(
         agent,
         &mut Cursor::new(input.into_bytes()),
         db_path,
@@ -184,7 +184,7 @@ fn hook_omits_long_descriptions_from_the_progress_table() {
         ("codex", "SessionStart"),
     ] {
         let context = hook_context(agent, event, &db_path);
-        assert!(context.starts_with("AGBOARD_PROGRESS\n"), "{agent} {event}");
+        assert!(context.starts_with("AGPJ_PROGRESS\n"), "{agent} {event}");
         assert!(context.len() < 10 * 1024);
         let snapshot: Value = serde_json::from_str(context.split_once('\n').unwrap().1).unwrap();
         assert!(snapshot.get("tasks").is_none());
@@ -201,7 +201,7 @@ fn hook_progress_size_depends_on_work_metadata_not_markdown_bodies() {
     let (_home, db_path) = board_with_descriptions(&["あ".repeat(50_000), "あ".repeat(50_000)]);
     for (agent, event) in [("claude", "PostToolUse"), ("codex", "SessionStart")] {
         let context = hook_context(agent, event, &db_path);
-        assert!(context.starts_with("AGBOARD_PROGRESS\n"));
+        assert!(context.starts_with("AGPJ_PROGRESS\n"));
         assert!(context.len() < 10 * 1024);
         assert!(!context.contains("あ"));
     }
@@ -232,7 +232,7 @@ fn hook_adds_the_progress_table_after_a_large_tool_result() {
     ] {
         let input = large_tool_result_input(event, None, 4 * 1024 * 1024);
         assert!(input.len() > 4 * 1024 * 1024);
-        let output = agent_board::agent::hook::run(
+        let output = agent_project::agent::hook::run(
             agent,
             &mut Cursor::new(input.into_bytes()),
             &db_path,
@@ -243,7 +243,7 @@ fn hook_adds_the_progress_table_after_a_large_tool_result() {
         let context = parsed["hookSpecificOutput"]["additionalContext"]
             .as_str()
             .unwrap();
-        assert!(context.starts_with("AGBOARD_PROGRESS\n"), "{agent} {event}");
+        assert!(context.starts_with("AGPJ_PROGRESS\n"), "{agent} {event}");
         // The tool result is never passed on.
         assert!(context.len() < 10 * 1024);
     }
@@ -269,20 +269,20 @@ fn installed_binary_reads_a_large_hook_input_from_stdin_and_uses_its_cwd() {
 #[test]
 fn installed_binary_handles_hook_json_on_stdin() {
     let home = tempdir().unwrap();
-    let init = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+    let init = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home.path())
         .args(["--project", "Agent Board", "init"])
         .output()
         .unwrap();
     assert!(init.status.success());
-    let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home.path())
+    let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home.path())
         .args(["--project", "Agent Board", "hook", "--agent", "codex"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -300,7 +300,7 @@ fn installed_binary_handles_hook_json_on_stdin() {
     assert!(
         String::from_utf8(result.stdout)
             .unwrap()
-            .contains("AGBOARD_PROGRESS")
+            .contains("AGPJ_PROGRESS")
     );
 }
 
@@ -312,7 +312,7 @@ struct HookRun {
     stderr: String,
 }
 
-fn agboard_in(home: &std::path::Path, cwd: &std::path::Path, args: &[&str]) -> HookRun {
+fn agpj_in(home: &std::path::Path, cwd: &std::path::Path, args: &[&str]) -> HookRun {
     hook_process(home, cwd, args, None)
 }
 
@@ -323,11 +323,11 @@ fn hook_process(
     stdin: Option<&str>,
 ) -> HookRun {
     use std::io::Write;
-    let mut child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+    let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .current_dir(cwd)
         .args(args)
@@ -370,7 +370,7 @@ fn error_of(run: &HookRun) -> Value {
         .as_str()
         .unwrap();
     let body = context
-        .strip_prefix("AGBOARD_ERROR\n")
+        .strip_prefix("AGPJ_ERROR\n")
         .unwrap_or_else(|| panic!("not an error: {context}"));
     serde_json::from_str(body.lines().next().unwrap()).unwrap()
 }
@@ -381,14 +381,14 @@ fn project_of(run: &HookRun) -> String {
     let context = parsed["hookSpecificOutput"]["additionalContext"]
         .as_str()
         .unwrap();
-    let json = context.strip_prefix("AGBOARD_PROGRESS\n").unwrap();
+    let json = context.strip_prefix("AGPJ_PROGRESS\n").unwrap();
     let snapshot: Value = serde_json::from_str(json).unwrap();
     snapshot["project"]["name"].as_str().unwrap().to_string()
 }
 
 fn create_project(home: &std::path::Path, folder: &std::path::Path, name: &str) {
     std::fs::create_dir_all(folder).unwrap();
-    let run = agboard_in(home, folder, &["project", "create", name]);
+    let run = agpj_in(home, folder, &["project", "create", name]);
     assert_eq!(run.status, 0, "{}", run.stderr);
 }
 
@@ -481,9 +481,9 @@ fn hook_reports_a_missing_nearest_project_and_never_uses_the_parent_bind() {
     create_project(home.path(), &root, "Alpha");
     create_project(home.path(), &nested, "Beta");
     std::fs::create_dir_all(nested.join("deeper")).unwrap();
-    let store = agent_board::file_store::FileStore::open(&home.path().join("shared"));
+    let store = agent_project::file_store::FileStore::open(&home.path().join("shared"));
     let beta = store
-        .project_by_name(&agent_board::domain::validate_project_name("Beta").unwrap())
+        .project_by_name(&agent_project::domain::validate_project_name("Beta").unwrap())
         .unwrap();
     store.delete_project(&beta.id).unwrap();
 
@@ -625,7 +625,7 @@ fn hook_keeps_its_event_allow_list_and_json_errors_for_unbound_folders() {
 fn normal_progress_keeps_folder_unbound_for_an_unbound_folder() {
     let home = tempdir().unwrap();
     let work = tempdir().unwrap();
-    let run = agboard_in(home.path(), work.path(), &["progress", "--json"]);
+    let run = agpj_in(home.path(), work.path(), &["progress", "--json"]);
     assert_eq!(run.status, 4);
     assert_eq!(run.stdout, "");
     let err: Value = serde_json::from_str(&run.stderr).unwrap();
@@ -648,11 +648,11 @@ fn hook_takes_no_plugin_version_but_accepts_the_one_of_an_older_plugin() {
             .unwrap();
         // `fetchedAt` has second precision, so runs that straddle a second differ.
         let body = text
-            .strip_prefix("AGBOARD_PROGRESS\n")
+            .strip_prefix("AGPJ_PROGRESS\n")
             .expect("progress prefix");
         let mut snapshot: Value = serde_json::from_str(body).unwrap();
         snapshot.as_object_mut().unwrap().remove("fetchedAt");
-        format!("AGBOARD_PROGRESS\n{snapshot}")
+        format!("AGPJ_PROGRESS\n{snapshot}")
     };
     let plain = context(&[]);
     // Hook commands of an installed plugin that predates this release.

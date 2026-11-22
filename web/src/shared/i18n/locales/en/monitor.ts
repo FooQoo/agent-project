@@ -9,7 +9,7 @@ export const monitorEn = {
     cards: 'Tasks',
     readOnly: 'Read-only · Latest available snapshot',
     detailFooter: 'Read-only · Updated {{time}}',
-    drawerIdentity: 'Agent Board · #{{id}}',
+    drawerIdentity: 'Agent Project · #{{id}}',
     body: 'Body',
     epic: 'Epic',
     epicLoading: 'Loading epic…',
@@ -105,7 +105,7 @@ export const monitorEn = {
     domainHint:
       'Optional. Without it, the address changes every time the connection starts, so a bookmark or a home-screen icon on your phone stops working. Use a domain your ngrok account owns, such as the free static domain on the ngrok dashboard.',
     domainFromEnv:
-      'Using the AGBOARD_NGROK_DOMAIN environment variable. It is used instead of a saved domain.',
+      'Using the AGPJ_NGROK_DOMAIN environment variable. It is used instead of a saved domain.',
     save: 'Save and connect',
     connecting: 'Connecting…',
     startingTitle: 'Connecting to ngrok…',

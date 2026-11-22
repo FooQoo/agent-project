@@ -3,7 +3,7 @@
 use chrono::{DateTime, Utc};
 
 use crate::domain::{AttachmentInput, Changed, ProjectId, validate_title};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::model::TaskView;
 use crate::file_store::reader;
 use crate::file_store::{DraftSave, FileStore};
@@ -32,17 +32,17 @@ impl FileStore {
         finalize: DraftSave,
         images: ImageChanges,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let title = text.0.map(validate_title).transpose()?;
         let description = text.1.map(normalize_description).transpose()?;
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let task = reader::read_task_strict(shared, project, id)?;
         if task.archived_at.is_some() {
-            return Err(AgboardError::TaskArchived { id });
+            return Err(AgpjError::TaskArchived { id });
         }
         if task.draft.is_none() {
-            return Err(AgboardError::TaskNotDraft { id });
+            return Err(AgpjError::TaskNotDraft { id });
         }
         let touched = !images.removed.is_empty() || !images.added.is_empty();
         let staged = stage_images(

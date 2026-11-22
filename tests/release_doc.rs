@@ -6,11 +6,11 @@ mod common;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use common::{agboard, json_error, json_ok};
+use common::{agpj, json_error, json_ok};
 use serde_json::Value;
 
-const START: &str = "<!-- agboard:generated:start -->";
-const END: &str = "<!-- agboard:generated:end -->";
+const START: &str = "<!-- agpj:generated:start -->";
+const END: &str = "<!-- agpj:generated:end -->";
 
 fn run(home: &Path, args: &[&str]) -> Value {
     let mut all = vec!["--project", "Demo"];
@@ -22,7 +22,7 @@ fn run(home: &Path, args: &[&str]) -> Value {
 fn demo() -> (tempfile::TempDir, PathBuf) {
     let root = tempfile::tempdir().unwrap();
     let home = root.path().to_path_buf();
-    let (code, _, err) = agboard(&home, &["project", "create", "Demo"]);
+    let (code, _, err) = agpj(&home, &["project", "create", "Demo"]);
     assert_eq!(code, 0, "{err}");
     (root, home)
 }
@@ -238,7 +238,7 @@ fn archived_tasks_are_included_and_a_named_unlisted_version_is_listed() {
             "Done",
         ],
     );
-    let store = agent_board::file_store::FileStore::open(&home.join("shared"));
+    let store = agent_project::file_store::FileStore::open(&home.join("shared"));
     let project = store.project_by_name("Demo").unwrap().id;
     store
         .archive_task(&project, id, chrono::Utc::now())

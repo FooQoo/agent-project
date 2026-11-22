@@ -5,14 +5,14 @@ use super::{
     write_lines,
 };
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::lock::WriteLock;
 
 impl FileStore {
     /// The summaries the list shows: not dismissed, newest first, at most [`MAX_LISTED`], even
     /// when hand-written lines or older data hold more.
-    pub fn listed_summaries(&self, project: &ProjectId) -> Result<Vec<Summary>, AgboardError> {
+    pub fn listed_summaries(&self, project: &ProjectId) -> Result<Vec<Summary>, AgpjError> {
         let mut found = self.summaries(project)?;
         found.retain(|s| !s.dismissed);
         found.truncate(MAX_LISTED);
@@ -23,7 +23,7 @@ impl FileStore {
     /// Like [`Self::dismiss_summary`], it only sets `dismissed` on those lines, under the
     /// project's write lock, so no line is removed and lines that cannot be read stay as they
     /// are. Returns how many summaries it dismissed.
-    pub fn take_stock_of_summaries(&self, project: &ProjectId) -> Result<usize, AgboardError> {
+    pub fn take_stock_of_summaries(&self, project: &ProjectId) -> Result<usize, AgpjError> {
         let project_dir = project_dir_checked(&self.shared, project)?;
         let _lock = WriteLock::acquire(&layout::write_lock(&project_dir))?;
         let files = files_in(&project_dir.join(NOTIFY_DIR));

@@ -13,7 +13,7 @@ use std::net::{SocketAddr, TcpStream};
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use agent_board::file_store::FileStore;
+use agent_project::file_store::FileStore;
 use serde_json::json;
 use support::home;
 
@@ -21,8 +21,8 @@ use support::home;
 mod harness;
 use harness::*;
 
-const SESSION: &str = "agboard_remote_session";
-const DEVICE: &str = "agboard_remote_device";
+const SESSION: &str = "agpj_remote_session";
+const DEVICE: &str = "agpj_remote_device";
 const IPHONE: &str = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
 
 fn project_of(home: &Path) -> String {

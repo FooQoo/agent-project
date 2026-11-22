@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '../helpers/fixtures';
-import { agboardOk, askArgs, decisionJson, mainProject, projectId, resetBoard, type TaskJson } from '../helpers/agboard';
+import { agpjOk, askArgs, decisionJson, mainProject, projectId, resetBoard, type TaskJson } from '../helpers/agpj';
 import { answerButton, answerDialog, askItem, fillAnswer, messageBand, messageList, messagesItem, openAnswer, openListButton, openMessageList, openQuestionCount, phoneBar, send } from '../helpers/answer';
 import { closeMessages } from '../helpers/answer-flow';
 import { readBoardAfterReset, waitForSync } from '../helpers/ui';
@@ -14,7 +14,7 @@ const lane = (page: Page, name: string) => page.getByRole('region', { name });
 const phoneTabs = (page: Page) => page.getByRole('tablist', { name: 'Lanes' });
 
 function show(id: number): TaskJson {
-  return JSON.parse(agboardOk(mainProject, ['show', String(id), '--json']).stdout).task;
+  return JSON.parse(agpjOk(mainProject, ['show', String(id), '--json']).stdout).task;
 }
 
 test.beforeEach(async ({ page }) => {
@@ -26,7 +26,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('a phone-width window shows the phone screen, answers from it, and the lanes return at desktop width', async ({ page }) => {
-  agboardOk(mainProject, ['--json', ...askArgs('13', decisionJson('Which way?'))]);
+  agpjOk(mainProject, ['--json', ...askArgs('13', decisionJson('Which way?'))]);
   await expect(answerButton(page, 13)).toHaveText('Answer the question');
 
   await page.setViewportSize(PHONE);
@@ -67,10 +67,10 @@ const chip = (page: Page, name: RegExp) => band(page).getByRole('listitem').filt
 
 /** The open questions of the fixture board are withdrawn, so the project has none. */
 function withdrawOpenQuestions(): void {
-  const listed = JSON.parse(agboardOk(mainProject, ['message', 'ls', '--type', 'question', '--status', 'open', '--json']).stdout) as {
+  const listed = JSON.parse(agpjOk(mainProject, ['message', 'ls', '--type', 'question', '--status', 'open', '--json']).stdout) as {
     messages: { id: string }[];
   };
-  for (const { id } of listed.messages) agboardOk(mainProject, ['message', 'withdraw', id, '--actor', 'ai']);
+  for (const { id } of listed.messages) agpjOk(mainProject, ['message', 'withdraw', id, '--actor', 'ai']);
 }
 
 /** The top of the phone screen's task list, which the lane tabs point at. */
@@ -115,7 +115,7 @@ test('the band and the bar are always there: with no message the counts are 0 an
   await expect(messageList(page)).toBeHidden();
 
   // A question that arrives is counted at once, and nothing opens by itself.
-  agboardOk(mainProject, ['--json', ...askArgs('13', decisionJson('Which way?'))]);
+  agpjOk(mainProject, ['--json', ...askArgs('13', decisionJson('Which way?'))]);
   await expect.poll(() => openQuestionCount(page)).toBe(1);
   await expect(messageList(page)).toHaveCount(0);
   await page.setViewportSize(DESKTOP);
@@ -177,7 +177,7 @@ for (const [name, size] of [
     // The fixture's #12 already waits on a question: wait until the screen has read it.
     await expect.poll(() => openQuestionCount(page)).toBeGreaterThan(0);
     const before = await openQuestionCount(page);
-    agboardOk(mainProject, ['--json', ...askArgs('13', decisionJson('Which way?'))]);
+    agpjOk(mainProject, ['--json', ...askArgs('13', decisionJson('Which way?'))]);
     await expect.poll(() => openQuestionCount(page)).toBe(before + 1);
     const total = before + 1;
 

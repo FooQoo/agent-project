@@ -15,7 +15,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use agent_board::server::monitor_connection::tailscale::TailscaleConnector;
+use agent_project::server::monitor_connection::tailscale::TailscaleConnector;
 use harness::*;
 use serde_json::json;
 
@@ -47,7 +47,7 @@ fn calls(dir: &Path) -> Vec<String> {
 }
 
 fn server(home: &Path, cli: Option<PathBuf>) -> Server {
-    let connector: Arc<dyn agent_board::server::monitor_connection::lifecycle::Connector> =
+    let connector: Arc<dyn agent_project::server::monitor_connection::lifecycle::Connector> =
         Arc::new(match cli {
             Some(cli) => TailscaleConnector::with_cli(cli),
             None => TailscaleConnector::with_cli(PathBuf::from("/nonexistent/tailscale")),
@@ -141,7 +141,7 @@ fn it_serves_the_backend_on_the_tailnet_and_turns_serve_off_on_stop() {
     let ok = json_unlock(HOST, &origin, &passcode);
     assert_eq!(ok.status, 200, "{}", ok.body);
     let cookie = ok.header("set-cookie").unwrap();
-    assert!(cookie.starts_with("agboard_remote_session="), "{cookie}");
+    assert!(cookie.starts_with("agpj_remote_session="), "{cookie}");
     assert!(
         cookie.contains("Secure") && cookie.contains("HttpOnly"),
         "{cookie}"

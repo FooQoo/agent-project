@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "../helpers/fixtures";
-import { agboardOk, listTasks, mainProject, nextTaskId, resetBoard } from "../helpers/agboard";
+import { agpjOk, listTasks, mainProject, nextTaskId, resetBoard } from "../helpers/agpj";
 import { resetPreferences, setPreferences } from "../helpers/preferences";
 
 // #634: the Backlog lane and the send-to-Todo operation, from the PC board and from the phone screen.
@@ -15,10 +15,10 @@ function seedBacklog() {
 	const first = nextTaskId(mainProject);
 	const ids = [first, first + 1, first + 2];
 	for (const [index, id] of ids.entries()) {
-		agboardOk(mainProject, ["add", `Backlog plan ${index + 1}`, "--assignee", "ai", "--actor", "ai", "--backlog"]);
+		agpjOk(mainProject, ["add", `Backlog plan ${index + 1}`, "--assignee", "ai", "--actor", "ai", "--backlog"]);
 		expect(laneOf(id)).toBe("backlog");
 	}
-	agboardOk(mainProject, [
+	agpjOk(mainProject, [
 		"message", "ask", "--actor", "ai", "--no-wait", "--task", String(ids[1]), "--questions-json",
 		JSON.stringify({ questions: [{ body: "Which release name should the plan use?" }] }),
 	]);
@@ -210,7 +210,7 @@ async function dragTodoCardToBacklog(page: Page, name: RegExp) {
 test("a Todo card that has not been started is dropped back on the Backlog lane", async ({ page }) => {
 	resetBoard(mainProject);
 	const id = nextTaskId(mainProject);
-	agboardOk(mainProject, ["add", "Return me", "--assignee", "ai", "--actor", "human"]);
+	agpjOk(mainProject, ["add", "Return me", "--assignee", "ai", "--actor", "human"]);
 	expect(laneOf(id)).toBe("todo");
 	await page.setViewportSize({ width: 1280, height: 900 });
 	await page.goto("/");
@@ -222,8 +222,8 @@ test("a Todo card that has not been started is dropped back on the Backlog lane"
 test("a Todo card that has been started is refused with the server's reason and stays in Todo", async ({ page }) => {
 	resetBoard(mainProject);
 	const id = nextTaskId(mainProject);
-	agboardOk(mainProject, ["add", "Already started", "--assignee", "ai", "--actor", "human"]);
-	agboardOk(mainProject, ["result", "add", String(id), "--summary=Work began.", "--actor", "ai"]);
+	agpjOk(mainProject, ["add", "Already started", "--assignee", "ai", "--actor", "human"]);
+	agpjOk(mainProject, ["result", "add", String(id), "--summary=Work began.", "--actor", "ai"]);
 	await page.setViewportSize({ width: 1280, height: 900 });
 	await page.goto("/");
 	await dragTodoCardToBacklog(page, /Already started/);

@@ -59,8 +59,8 @@ describe('splitSections', () => {
   });
 
   it('uses the plain text of a heading with inline formatting as the title', () => {
-    const result = splitSections('## Use `agboard init` and **bold**\n\nx');
-    expect(result.sections[0]?.title).toBe('Use agboard init and bold');
+    const result = splitSections('## Use `agpj init` and **bold**\n\nx');
+    expect(result.sections[0]?.title).toBe('Use agpj init and bold');
   });
 
   it('handles CRLF line endings', () => {

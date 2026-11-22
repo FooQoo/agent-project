@@ -6,15 +6,15 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use agent_board::domain::{Actor, Assignee, NewTask};
-use agent_board::error::AgboardError;
-use agent_board::file_store::FileStore;
-use agent_board::file_store::watch::WatchMode;
-use agent_board::server::monitor_connection::contracts::PublicOrigin;
-use agent_board::server::monitor_connection::lifecycle::{
+use agent_project::domain::{Actor, Assignee, NewTask};
+use agent_project::error::AgpjError;
+use agent_project::file_store::FileStore;
+use agent_project::file_store::watch::WatchMode;
+use agent_project::server::monitor_connection::contracts::PublicOrigin;
+use agent_project::server::monitor_connection::lifecycle::{
     Connector, MonitorEnv, OpenFuture, OpenRequest, OpenedTunnel, Secret,
 };
-use agent_board::server::{MonitorOptions, ServeConfig, run_until_with_monitor_in};
+use agent_project::server::{MonitorOptions, ServeConfig, run_until_with_monitor_in};
 use serde_json::Value;
 
 #[path = "server_thread.rs"]
@@ -80,7 +80,7 @@ pub struct Running {
     /// The passcode the start announced, as the PC would show it.
     pub passcode: String,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    handle: Option<JoinHandle<Result<(), AgboardError>>>,
+    handle: Option<JoinHandle<Result<(), AgpjError>>>,
 }
 
 impl Running {
@@ -217,7 +217,7 @@ impl Running {
                 ("Cookie", &session.cookie),
                 ("Origin", ORIGIN),
                 ("Sec-Fetch-Site", "same-origin"),
-                ("X-Agboard-Csrf", &session.csrf),
+                ("X-Agpj-Csrf", &session.csrf),
                 ("Content-Type", "application/json"),
             ],
             body,
@@ -262,7 +262,7 @@ impl Reply {
 }
 
 pub fn token(html: &str) -> String {
-    let marker = "name=\"agboard-token\" content=\"";
+    let marker = "name=\"agpj-token\" content=\"";
     let start = html.find(marker).expect("remote PC token meta") + marker.len();
     html[start..start + 64].to_string()
 }

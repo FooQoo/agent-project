@@ -2,7 +2,7 @@
 export const onboardingEn = {
   onboarding: {
     welcome: {
-      title: 'Try Agent Board',
+      title: 'Try Agent Project',
       body: 'Send a request to the agent and watch it plan the work, ask you a question, and finish the cards.',
       stepRequest: 'Send a request with Ask AI',
       stepAnswer: "Answer the agent's question",

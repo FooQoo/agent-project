@@ -8,18 +8,18 @@ use std::sync::Mutex;
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
-use agent_board::interact::notify::{NOTIFY_TIMEOUT, notify_port, notify_serve};
+use agent_project::interact::notify::{NOTIFY_TIMEOUT, notify_port, notify_serve};
 
-// AGBOARD_HOME is process-global; tests that call `notify_serve` hold this lock.
+// AGPJ_HOME is process-global; tests that call `notify_serve` hold this lock.
 static ENV_LOCK: Mutex<()> = Mutex::new(());
 
 fn with_home<T>(home: &Path, f: impl FnOnce() -> T) -> T {
     let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     // SAFETY: access to the environment is serialized by ENV_LOCK.
-    unsafe { std::env::set_var("AGBOARD_HOME", home) };
+    unsafe { std::env::set_var("AGPJ_HOME", home) };
     let result = f();
     // SAFETY: as above.
-    unsafe { std::env::remove_var("AGBOARD_HOME") };
+    unsafe { std::env::remove_var("AGPJ_HOME") };
     result
 }
 

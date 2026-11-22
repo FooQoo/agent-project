@@ -29,9 +29,9 @@ LABELS = {"aarch64-apple-darwin": "macOS arm64", "x86_64-apple-darwin": "macOS x
 FILE_NAME = re.compile(r"^(LICEN[CS]E|COPYING|NOTICE|UNLICENSE|COPYRIGHT)", re.I)
 KEYWORDS = {"MIT": "MIT", "Apache-2.0": "APACHE", "ISC": "ISC", "Zlib": "ZLIB", "Unlicense": "UNLICENSE"}
 COPYLEFT = re.compile(r"MPL-|EPL-")
-HEADER = """Agent Board - Third-Party Notices
+HEADER = """Agent Project - Third-Party Notices
 
-Agent Board's original code is licensed under the MIT License (see LICENSE).
+Agent Project's original code is licensed under the MIT License (see LICENSE).
 Third-party components retain their own copyrights and licenses.
 This file covers components distributed with the macOS binaries, embedded
 web UI and monitor, and the documentation site. Distribution labels below
@@ -249,7 +249,7 @@ def render(components):
             sources.append("\n".join([
                 f"Component and version: {c['name']} {c['version']}", f"License: {c['license']}",
                 f"Source: {source['url']}", f"Additional patches: {source['patches']}",
-                f"Modifications by Agent Board: {source['modifications']}", f"Build information: {source['build']}",
+                f"Modifications by Agent Project: {source['modifications']}", f"Build information: {source['build']}",
                 f"Checksum: {source['checksum']}"] + [f"Related source: {u}" for u in source.get("also", [])]))
     parts = [HEADER, "COMPONENT INDEX\nName | Version | Distribution | Applicable license | License text ID",
              "\n".join(index), "\nCOMPONENT NOTICES", "\n\n".join(notices), "\nLICENSE TEXTS", RULE,

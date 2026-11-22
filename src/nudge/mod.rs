@@ -39,7 +39,7 @@ use serde::Serialize;
 
 use crate::progress::Progress;
 
-pub use commands::{ends_with_question, runs_agboard};
+pub use commands::{ends_with_question, runs_agpj};
 pub use rules::RULES;
 pub use turn::{Call, Turn, read_turn};
 

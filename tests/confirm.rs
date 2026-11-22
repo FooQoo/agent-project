@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use agent_board::interact::confirm::{confirm, is_interactive};
+use agent_project::interact::confirm::{confirm, is_interactive};
 
 /// Run `confirm` with the given input; return the answer and what was printed.
 fn ask(input: &[u8]) -> (bool, String) {

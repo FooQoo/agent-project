@@ -4,7 +4,7 @@
 
 mod common;
 
-use agent_board::file_store::{FileStore, RequestImage, SendRequestInput};
+use agent_project::file_store::{FileStore, RequestImage, SendRequestInput};
 use chrono::{TimeZone, Utc};
 use common::{Running, png};
 

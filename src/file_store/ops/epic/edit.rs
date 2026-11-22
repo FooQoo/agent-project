@@ -5,7 +5,7 @@ use std::fs;
 use chrono::{DateTime, Utc};
 
 use crate::domain::{Changed, Draft, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::frontmatter;
 use crate::file_store::io;
@@ -29,7 +29,7 @@ impl FileStore {
         project: &ProjectId,
         new: NewEpic,
         now: DateTime<Utc>,
-    ) -> Result<EpicView, AgboardError> {
+    ) -> Result<EpicView, AgpjError> {
         let id = EpicId::normalize(&new.id)?;
         let name = validate::validate_epic_name(&new.name)?;
         let document = document_to_store(new.document)?;
@@ -45,7 +45,7 @@ impl FileStore {
 
         let target = layout::epic_dir(&project_dir, &id);
         if fs::symlink_metadata(&target).is_ok() {
-            return Err(AgboardError::EpicIdTaken { id: id.to_string() });
+            return Err(AgpjError::EpicIdTaken { id: id.to_string() });
         }
         let label = layout::shared_label(shared, &target);
         let document_label = format!("{label}/EPIC.md");
@@ -68,7 +68,7 @@ impl FileStore {
             created_at: at,
             updated_at: at,
         };
-        let result = (|| -> Result<(), AgboardError> {
+        let result = (|| -> Result<(), AgpjError> {
             fs::create_dir(&temp).map_err(|e| io::write_error(&label, e))?;
             save_epic(shared, &temp, &file)?;
             io::write_atomic(
@@ -87,7 +87,7 @@ impl FileStore {
     }
 
     /// Read one epic with its document.
-    pub fn epic(&self, project: &ProjectId, id: &EpicId) -> Result<EpicView, AgboardError> {
+    pub fn epic(&self, project: &ProjectId, id: &EpicId) -> Result<EpicView, AgpjError> {
         // The lock also finishes the one-time move to EPIC.md before the read.
         let (_dir, _lock) = lock_project(self.shared_dir(), project)?;
         epic_view(self.shared_dir(), project, id)
@@ -102,7 +102,7 @@ impl FileStore {
         id: &EpicId,
         update: EpicUpdate,
         now: DateTime<Utc>,
-    ) -> Result<Changed<EpicView>, AgboardError> {
+    ) -> Result<Changed<EpicView>, AgpjError> {
         let name = update
             .name
             .as_deref()
@@ -122,7 +122,7 @@ impl FileStore {
         let (_project_dir, _lock) = lock_project(shared, project)?;
         let (dir, mut file) = read_epic_file(shared, project, id)?;
         if update.refuse_if_draft && file.draft == Some(Draft::Human) {
-            return Err(AgboardError::EpicIsDraft { id: id.to_string() });
+            return Err(AgpjError::EpicIsDraft { id: id.to_string() });
         }
 
         let mut changed = false;
@@ -184,8 +184,8 @@ impl FileStore {
         waves: &[Vec<i64>],
         refuse_if_draft: bool,
         now: DateTime<Utc>,
-    ) -> Result<Changed<EpicView>, AgboardError> {
-        frontmatter::validate_waves(waves).map_err(|d| AgboardError::InvalidValue {
+    ) -> Result<Changed<EpicView>, AgpjError> {
+        frontmatter::validate_waves(waves).map_err(|d| AgpjError::InvalidValue {
             field: d.field,
             reason: d.reason,
         })?;
@@ -193,7 +193,7 @@ impl FileStore {
         let (_project_dir, _lock) = lock_project(shared, project)?;
         let (dir, mut file) = read_epic_file(shared, project, id)?;
         if refuse_if_draft && file.draft == Some(Draft::Human) {
-            return Err(AgboardError::EpicIsDraft { id: id.to_string() });
+            return Err(AgpjError::EpicIsDraft { id: id.to_string() });
         }
         let members: Vec<i64> = reader::read_snapshot_locked(shared, project)?
             .tasks
@@ -215,7 +215,7 @@ impl FileStore {
         let current_document = read_document(shared, &dir)?;
         let document_label = layout::shared_label(shared, &layout::epic_document(&dir));
         let next_document = frontmatter::compose_waves(&current_document, &kept).map_err(|d| {
-            AgboardError::FileInvalid {
+            AgpjError::FileInvalid {
                 file: document_label.clone(),
                 field: d.field,
                 reason: d.reason,

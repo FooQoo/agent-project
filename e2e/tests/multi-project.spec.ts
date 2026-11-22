@@ -1,8 +1,8 @@
 import { expectHistoryNote } from '../helpers/history';
 import { expect, test, type Locator, type Page, type Route } from '../helpers/fixtures';
 import {
-  agboardCatalogOk,
-  agboardOk,
+  agpjCatalogOk,
+  agpjOk,
   listTasks,
   makeHome,
   nextTaskId,
@@ -12,9 +12,9 @@ import {
   resetAlphaBeta,
   startServe,
   stopServe,
-  agboardBinary,
+  agpjBinary,
   type Serve,
-} from '../helpers/agboard';
+} from '../helpers/agpj';
 import { spawn, spawnSync } from 'node:child_process';
 import { resetPreferences, setPreferences, type Accent, type Mode } from '../helpers/preferences';
 import { fillRequest, openAskAi, requestField, sendRequest } from '../helpers/ask-ai';
@@ -94,13 +94,13 @@ async function dragTaskTo(page: Page, id: number, laneName: string): Promise<voi
 
 /** The text of every request the project holds, as one string. */
 function requestsOf(project: string, home: string): string {
-  return agboardOk(project, ['message', 'ls', '--type', 'request', '--status', 'all', '--json'], home).stdout;
+  return agpjOk(project, ['message', 'ls', '--type', 'request', '--status', 'all', '--json'], home).stdout;
 }
 
 /** The project's snapshot from the CLI, without the time it was fetched. */
 function snapshotOf(project: string, home: string): unknown {
-  const result = spawnSync(agboardBinary(), ['--project', project, 'snapshot', '--json'], {
-    env: { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' },
+  const result = spawnSync(agpjBinary(), ['--project', project, 'snapshot', '--json'], {
+    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
     encoding: 'utf8',
   });
   if (result.status !== 0) throw new Error(`snapshot of ${project} failed: ${result.stderr}`);
@@ -145,24 +145,24 @@ test.describe('a new data area', () => {
     await expect(switcher(page)).toHaveText('No projects');
     await expect(switcher(page)).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Ask AI' })).toHaveCount(0);
-    await expect(page).toHaveTitle('Agent Board');
+    await expect(page).toHaveTitle('Agent Project');
     await expect.poll(() => projectParam(page)).toBeNull();
 
     await page.evaluate(() => {
       (window as unknown as { __opened: boolean }).__opened = true;
     });
-    agboardCatalogOk(['project', 'create', 'Alpha'], home);
+    agpjCatalogOk(['project', 'create', 'Alpha'], home);
 
     // The first project is shown, and the URL names it without adding a history entry.
     await expect(switcher(page)).toHaveText('Alpha');
-    await expect(page).toHaveTitle('Alpha - Agent Board');
+    await expect(page).toHaveTitle('Alpha - Agent Project');
     await expect(page.getByText('No tasks yet.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ask AI' })).toBeEnabled();
     await expect.poll(() => projectParam(page)).toBe(projectId('Alpha', home));
     expect(await page.evaluate(() => (window as unknown as { __opened?: boolean }).__opened)).toBe(true);
 
     // A project made later is listed, and does not take over the screen.
-    agboardCatalogOk(['project', 'create', 'Beta'], home);
+    agpjCatalogOk(['project', 'create', 'Beta'], home);
     await expect(switcher(page)).toHaveText('Alpha');
     await switcher(page).click();
     await expect(page.getByRole('menu').getByRole('menuitemradio')).toHaveText(['Alpha', 'Beta']);
@@ -172,10 +172,10 @@ test.describe('a new data area', () => {
   });
 
   test('a same-named project cannot be made', async ({ page }) => {
-    const refused = agboardCatalogOk(['project', 'ls', '--json'], home);
+    const refused = agpjCatalogOk(['project', 'ls', '--json'], home);
     expect(JSON.parse(refused.stdout).projects.map((p: { name: string }) => p.name)).toEqual(['Alpha', 'Beta']);
-    const again = spawnSync(agboardBinary(), ['project', 'create', 'Alpha'], {
-      env: { ...process.env, AGBOARD_HOME: home },
+    const again = spawnSync(agpjBinary(), ['project', 'create', 'Alpha'], {
+      env: { ...process.env, AGPJ_HOME: home },
       encoding: 'utf8',
     });
     expect(again.status).toBe(2);
@@ -208,7 +208,7 @@ test.describe('two projects with the same task numbers', () => {
     page,
   }) => {
     await open(page, alpha);
-    await expect(page).toHaveTitle('Alpha - Agent Board');
+    await expect(page).toHaveTitle('Alpha - Agent Project');
     await expect(task(page, 1)).toHaveText(/Alpha: draft the release notes/);
     await expect(task(page, 2)).toHaveText(/Alpha: choose the license/);
     // The card offers the button; the question is read in the dialog.
@@ -232,7 +232,7 @@ test.describe('two projects with the same task numbers', () => {
     expect(snapshotOf('Beta', home)).toEqual(betaBefore);
 
     // Create a card in Alpha from the CLI; it gets the next Alpha number and appears on the open board.
-    agboardOk('Alpha', ['add', 'Alpha: made on the page', '--assignee', 'ai', '--actor', 'human'], home);
+    agpjOk('Alpha', ['add', 'Alpha: made on the page', '--assignee', 'ai', '--actor', 'human'], home);
     await expect(task(page, fresh)).toContainText('Alpha: made on the page');
     expect(snapshotOf('Beta', home)).toEqual(betaBefore);
 
@@ -277,10 +277,10 @@ test.describe('two projects with the same task numbers', () => {
     await task(page, 2).click();
     await expect(task(page, 2)).toHaveAttribute('aria-current', 'true');
 
-    agboardOk('Beta', ['add', 'Beta: added behind the back'], home);
-    agboardOk('Beta', ['mv', '1', 'doing'], home);
-    agboardOk('Beta', ['edit', '1', '--title', 'Beta: renamed task'], home);
-    agboardCatalogOk(['project', 'create', 'Gamma'], home);
+    agpjOk('Beta', ['add', 'Beta: added behind the back'], home);
+    agpjOk('Beta', ['mv', '1', 'doing'], home);
+    agpjOk('Beta', ['edit', '1', '--title', 'Beta: renamed task'], home);
+    agpjCatalogOk(['project', 'create', 'Gamma'], home);
     // The menu hears about the new project, which proves the page received the notifications.
     await switcher(page).click();
     await expect(page.getByRole('menu').getByRole('menuitemradio')).toHaveText(['Alpha', 'Beta', 'Gamma']);
@@ -294,7 +294,7 @@ test.describe('two projects with the same task numbers', () => {
     await expect(page.getByText('Beta:')).toHaveCount(0);
 
     // A change to the shown project arrives live, also after the details are closed.
-    agboardOk('Alpha', ['edit', '1', '--title', 'Alpha: edited from the CLI'], home);
+    agpjOk('Alpha', ['edit', '1', '--title', 'Alpha: edited from the CLI'], home);
     await page.getByRole('button', { name: 'Close details' }).click();
     await expect(task(page, 1)).toContainText('Alpha: edited from the CLI', { timeout: 10_000 });
   });
@@ -325,7 +325,7 @@ test.describe('two projects with the same task numbers', () => {
     await menuItem(page, 'Beta').click();
     await expect(menu).toHaveCount(0);
     await expect(switcher(page)).toHaveText('Beta');
-    await expect(page).toHaveTitle('Beta - Agent Board');
+    await expect(page).toHaveTitle('Beta - Agent Project');
     await expect.poll(() => projectParam(page)).toBe(beta);
     await expect(details(page)).toContainText('Select a task to see its details.');
     await expect(details(page).getByRole('heading', { level: 2 })).toHaveCount(0);
@@ -454,7 +454,7 @@ test.describe('two projects with the same task numbers', () => {
     await sendRequest(create);
     // Done: the latest URL (Alpha) is shown now.
     await expect(switcher(page)).toHaveText('Alpha');
-    await expect(page).toHaveTitle('Alpha - Agent Board');
+    await expect(page).toHaveTitle('Alpha - Agent Project');
     await expect(task(page, 1)).toHaveText(/Alpha: draft the release notes/);
     expect(posts).toEqual([`/api/projects/${beta}/messages/requests`]);
     expect(requestsOf('Beta', home)).toContain('Typed in Beta');
@@ -636,13 +636,13 @@ test.describe('two projects with the same task numbers', () => {
   test('a person answers on the page; the waiting agent gets the answer, and its hook shows only that project progress', async ({
     page,
   }) => {
-    const env = { ...process.env, AGBOARD_HOME: home, TZ: 'UTC' };
+    const env = { ...process.env, AGPJ_HOME: home, TZ: 'UTC' };
     const snapshot = JSON.parse(
-      spawnSync(agboardBinary(), ['--project', 'Alpha', 'snapshot', '--json'], { env, encoding: 'utf8' }).stdout,
+      spawnSync(agpjBinary(), ['--project', 'Alpha', 'snapshot', '--json'], { env, encoding: 'utf8' }).stdout,
     ) as { cursor: string };
 
     // The agent waits on Alpha from the cursor it holds.
-    const waiter = spawn(agboardBinary(), ['--project', 'Alpha', '--json', 'wait', '--after', snapshot.cursor, '--timeout', '60'], {
+    const waiter = spawn(agpjBinary(), ['--project', 'Alpha', '--json', 'wait', '--after', snapshot.cursor, '--timeout', '60'], {
       env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -652,7 +652,7 @@ test.describe('two projects with the same task numbers', () => {
     try {
       await delay(500);
       // Another project changes: the wait goes on.
-      agboardOk('Beta', ['edit', '1', '--title', 'Beta: edited while Alpha waits'], home);
+      agpjOk('Beta', ['edit', '1', '--title', 'Beta: edited while Alpha waits'], home);
       await delay(1500);
       expect(waiter.exitCode).toBeNull();
 
@@ -678,9 +678,9 @@ test.describe('two projects with the same task numbers', () => {
 
     // The agent resumes; the hook hands over active progress for Alpha only. A plain wait does not take the answer
     // in, so the hook carries it until the agent accepts it.
-    agboardOk('Alpha', ['state', '2', 'running', '--actor', 'ai', '--reason', 'Resuming with the MIT license.'], home);
+    agpjOk('Alpha', ['state', '2', 'running', '--actor', 'ai', '--reason', 'Resuming with the MIT license.'], home);
     const hookContext = () => {
-      const hook = spawnSync(agboardBinary(), ['--project', 'Alpha', 'hook', '--agent', 'claude'], {
+      const hook = spawnSync(agpjBinary(), ['--project', 'Alpha', 'hook', '--agent', 'claude'], {
         env,
         encoding: 'utf8',
         input: JSON.stringify({ hook_event_name: 'PostToolUse' }),
@@ -690,16 +690,16 @@ test.describe('two projects with the same task numbers', () => {
         .additionalContext;
     };
     const context = hookContext();
-    expect(context.startsWith('AGBOARD_PROGRESS\n')).toBe(true);
+    expect(context.startsWith('AGPJ_PROGRESS\n')).toBe(true);
     expect(context).toContain('Alpha: choose the license');
     expect(context).not.toContain('Beta');
     expect(context).not.toContain('Resuming with the MIT license.');
-    const progress = JSON.parse(context.slice('AGBOARD_PROGRESS\n'.length).split('\n\n')[0]) as {
+    const progress = JSON.parse(context.slice('AGPJ_PROGRESS\n'.length).split('\n\n')[0]) as {
       answers?: { id: string; tasks: number[]; text: string | null }[];
     };
     const answer = progress.answers?.find(({ tasks }) => tasks.includes(2));
     expect(answer?.text).toBe('Use the MIT license, please.');
-    agboardOk('Alpha', ['message', 'accept', answer!.id, '--actor', 'ai'], home);
+    agpjOk('Alpha', ['message', 'accept', answer!.id, '--actor', 'ai'], home);
     expect(hookContext()).not.toContain('Use the MIT license, please.');
     // The change arrives live; closing the details does not hold it back either.
     await page.getByRole('button', { name: 'Close details' }).click();
@@ -757,9 +757,9 @@ test.describe('two projects with the same task numbers', () => {
     await expect.poll(() => projectParam(other)).toBe(beta);
 
     // A rename: the tab that shows Alpha by its ID keeps showing the same project under the new name.
-    agboardOk('Alpha', ['project', 'rename', 'Alpha Renamed'], home);
+    agpjOk('Alpha', ['project', 'rename', 'Alpha Renamed'], home);
     await expect(switcher(page)).toHaveText('Alpha Renamed');
-    await expect(page).toHaveTitle('Alpha Renamed - Agent Board');
+    await expect(page).toHaveTitle('Alpha Renamed - Agent Project');
     await expect(task(page, 1)).toHaveText(/Alpha: draft the release notes/);
     await expect.poll(() => projectParam(page)).toBe(alpha);
     await page.reload();
@@ -854,7 +854,7 @@ test.describe('two projects with the same task numbers', () => {
     await expect(switcher(page)).toBeDisabled();
     // A project made afterwards is offered, but the screen does not move to it by itself: the URL still
     // names the project that was deleted.
-    agboardCatalogOk(['project', 'create', 'Fresh'], home);
+    agpjCatalogOk(['project', 'create', 'Fresh'], home);
     await expect(page.getByText('Project not found')).toBeVisible();
     await expect(switcher(page)).toHaveText('Choose a project');
     await expect(switcher(page)).toBeEnabled();
@@ -946,10 +946,10 @@ test.describe('long names and many projects', () => {
   useGroupServe(() => {
     expect(longName).toHaveLength(50);
     home = makeHome('multi-many');
-    agboardCatalogOk(['project', 'create', longName], home);
-    for (const name of many) agboardCatalogOk(['project', 'create', name], home);
-    agboardOk(longName, ['add', 'A task in the long project', `--desc=x`], home);
-    agboardOk(many[41], ['add', 'A task in project 042'], home);
+    agpjCatalogOk(['project', 'create', longName], home);
+    for (const name of many) agpjCatalogOk(['project', 'create', name], home);
+    agpjOk(longName, ['add', 'A task in the long project', `--desc=x`], home);
+    agpjOk(many[41], ['add', 'A task in project 042'], home);
     return home;
   });
   test.beforeEach(() => resetPreferences(statesOrigin()));

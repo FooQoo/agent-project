@@ -1,7 +1,7 @@
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { agboardOk, makeHome, projectId, removeHome, resetAlphaBeta, startServe, stopServe, type Serve } from '../helpers/agboard';
+import { agpjOk, makeHome, projectId, removeHome, resetAlphaBeta, startServe, stopServe, type Serve } from '../helpers/agpj';
 import { expect, test } from '../helpers/fixtures';
 
 // A result link opens the phone task detail on the delivered result: `/?project=<id>&task=<n>&result=<version>`.
@@ -33,8 +33,8 @@ test.beforeAll(async () => {
     Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgaPj/HwAEggJ/59habAAAAABJRU5ErkJggg==', 'base64'),
   );
   // Task 1 of Alpha: a first text-only result, then a final one with a capture and a link that exists only on the PC.
-  agboardOk('Alpha', ['result', 'add', '1', `--summary=First draft of the notes is written.`, '--actor', 'ai'], home);
-  agboardOk(
+  agpjOk('Alpha', ['result', 'add', '1', `--summary=First draft of the notes is written.`, '--actor', 'ai'], home);
+  agpjOk(
     'Alpha',
     ['result', 'add', '1', `--summary=The notes are final; the full report is on the PC.`, '--file', image, '--link', 'outputs/release-notes/report.html', '--final', '--actor', 'ai'],
     home,
@@ -51,10 +51,10 @@ const linkTo = (project: string, task: number, version: number) => `/?project=${
 test('a link to a result with an image opens it directly, even from another project', async ({ page }) => {
   // The phone was showing another project.
   await page.goto(`/?project=${beta}`);
-  await expect(page).toHaveTitle('Beta - Agent Board');
+  await expect(page).toHaveTitle('Beta - Agent Project');
 
   await page.goto(linkTo(alpha, 1, 2));
-  await expect(page).toHaveTitle('Alpha - Agent Board');
+  await expect(page).toHaveTitle('Alpha - Agent Project');
   const drawer = page.getByRole('dialog');
   await expect(drawer).toBeVisible();
   await expect(drawer.getByRole('tab', { name: 'Results' })).toHaveAttribute('aria-selected', 'true');
@@ -93,7 +93,7 @@ test('closing the drawer takes the link out of the address, and a damaged link o
   expect(new URL(page.url()).searchParams.get('project')).toBe(alpha);
 
   await page.goto(`/?project=${alpha}&task=abc&result=2`);
-  await expect(page).toHaveTitle('Alpha - Agent Board');
+  await expect(page).toHaveTitle('Alpha - Agent Project');
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
@@ -109,7 +109,7 @@ test('a history link opens the card on its History tab', async ({ page }) => {
 });
 
 test('a question link opens that question, and a question that is gone opens the card', async ({ page }) => {
-  const asked = agboardOk(
+  const asked = agpjOk(
     'Alpha',
     ['message', 'ask', '--actor', 'ai', '--no-wait', '--task', '1', '--questions-json', JSON.stringify({ questions: [{ body: 'Which title should the notes use?' }] })],
     home,

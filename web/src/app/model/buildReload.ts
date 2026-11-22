@@ -7,7 +7,7 @@ import { pageBuildId } from '../../shared/lib/build/buildId';
  */
 
 /** The build this tab last reloaded for. A second reload for the same build is never tried. */
-const RELOADED_FOR = 'agboard-build-reload';
+const RELOADED_FOR = 'agpj-build-reload';
 
 function sessionStore(): Storage | null {
   try {

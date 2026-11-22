@@ -9,10 +9,10 @@ use axum::response::Response;
 use serde::Deserialize;
 
 use super::AppState;
-use super::response::{agboard_error_response, json_response};
+use super::response::{agpj_error_response, json_response};
 use super::store::{parse_project_id, refresh_index, with_request_files};
 use crate::domain::Actor;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::qa::{AnswerVia, MessageView, QuestionStatus, QuestionView};
 use crate::file_store::{AnswerItem, FileStore};
 
@@ -35,11 +35,11 @@ pub(crate) struct AnswersInput {
 /// Run blocking file work against the shared folder.
 async fn on_files<T: Send + 'static>(
     shared: PathBuf,
-    work: impl FnOnce(FileStore) -> Result<T, AgboardError> + Send + 'static,
-) -> Result<T, AgboardError> {
+    work: impl FnOnce(FileStore) -> Result<T, AgpjError> + Send + 'static,
+) -> Result<T, AgpjError> {
     tokio::task::spawn_blocking(move || work(FileStore::open(&shared)))
         .await
-        .map_err(|e| AgboardError::DatabaseError {
+        .map_err(|e| AgpjError::DatabaseError {
             reason: format!("The file task failed: {e}"),
         })?
 }
@@ -49,7 +49,7 @@ async fn on_files<T: Send + 'static>(
 pub(crate) async fn message_response(shared: PathBuf, raw_project: String, id: String) -> Response {
     let project = match parse_project_id(&raw_project) {
         Ok(project) => project,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     match on_files(shared, move |store| store.message(&project, &id)).await {
         Ok(MessageView::Question(question)) => {
@@ -58,7 +58,7 @@ pub(crate) async fn message_response(shared: PathBuf, raw_project: String, id: S
         Ok(MessageView::Request(request)) => {
             json_response(StatusCode::OK, &serde_json::json!({ "request": request }))
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -72,10 +72,10 @@ pub(crate) async fn list_response(
 ) -> Response {
     let project = match parse_project_id(&raw_project) {
         Ok(project) => project,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let invalid = |field: &str, reason: &str| {
-        agboard_error_response(&AgboardError::InvalidValue {
+        agpj_error_response(&AgpjError::InvalidValue {
             field: field.into(),
             reason: reason.into(),
         })
@@ -113,7 +113,7 @@ pub(crate) async fn list_response(
             picked.truncate(limit);
             json_response(StatusCode::OK, &serde_json::json!({ "messages": picked }))
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -123,7 +123,7 @@ fn conflict_response(
     store: &FileStore,
     project: &str,
     ids: &[String],
-    error: &AgboardError,
+    error: &AgpjError,
 ) -> Response {
     let questions: Vec<QuestionView> = project
         .parse()
@@ -187,7 +187,7 @@ pub(super) async fn record_answers(
 ) -> Response {
     let project = match parse_project_id(&raw_project) {
         Ok(project) => project,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let ids: Vec<String> = items.iter().map(|a| a.question_id.clone()).collect();
     let result = with_request_files(&state, &headers, move |store| {
@@ -195,8 +195,8 @@ pub(super) async fn record_answers(
             match store.answer_questions(&project, items, AnswerVia::Ui, chrono::Utc::now()) {
                 Ok(questions) => Ok(questions),
                 Err(
-                    error @ (AgboardError::QuestionAnswered { .. }
-                    | AgboardError::QuestionWithdrawn { .. }),
+                    error @ (AgpjError::QuestionAnswered { .. }
+                    | AgpjError::QuestionWithdrawn { .. }),
                 ) => Err(Ok(conflict_response(&store, &raw_project, &ids, &error))),
                 Err(error) => Err(Err(error)),
             },
@@ -212,7 +212,7 @@ pub(super) async fn record_answers(
             )
         }
         Ok(Err(Ok(conflict))) => conflict,
-        Ok(Err(Err(error))) | Err(error) => agboard_error_response(&error),
+        Ok(Err(Err(error))) | Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -225,7 +225,7 @@ pub(crate) async fn withdraw_message(
 ) -> Response {
     let project = match parse_project_id(&raw_project) {
         Ok(project) => project,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
         store.withdraw_message(&project, &id, Actor::Human, chrono::Utc::now())
@@ -240,6 +240,6 @@ pub(crate) async fn withdraw_message(
             };
             json_response(StatusCode::OK, &body)
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

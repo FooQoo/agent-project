@@ -129,7 +129,7 @@ An agent asks with `message ask`. Each question is saved as its own message with
 ```
 
 ```sh
-cat question.json | agboard --project "My project" message ask --actor ai --task 1 --questions-json - --json
+cat question.json | agpj --project "My project" message ask --actor ai --task 1 --questions-json - --json
 ```
 
 - `questions` takes 1 to 20 questions.
@@ -161,17 +161,17 @@ The command waits 600 seconds by default. `--timeout` takes 1 to 86,400 seconds,
 To wait again after a timeout or an error, pass the question IDs. The questions are not asked a second time:
 
 ```sh
-agboard --project "My project" message wait Q-12 Q-13 --json
+agpj --project "My project" message wait Q-12 Q-13 --json
 ```
 
 ### Read, withdraw, and link questions
 
 ```sh
-agboard --project "My project" message ls --json
-agboard --project "My project" message show Q-12 --json
-agboard --project "My project" message withdraw Q-12 --actor ai
-agboard --project "My project" message link Q-12 --task 3
-agboard --project "My project" message unlink Q-12 --task 3
+agpj --project "My project" message ls --json
+agpj --project "My project" message show Q-12 --json
+agpj --project "My project" message withdraw Q-12 --actor ai
+agpj --project "My project" message link Q-12 --task 3
+agpj --project "My project" message unlink Q-12 --task 3
 ```
 
 - `message ls` lists open messages, which are questions and requests. `--status closed` lists answered questions and accepted requests, `--status withdrawn` lists withdrawn ones, and `--status all` lists every one. `--type question` or `--type request` limits the list to one kind, and `--task` limits it to one task's questions.
@@ -184,7 +184,7 @@ agboard --project "My project" message unlink Q-12 --task 3
 A person can also answer from the CLI with the question ID, one question per command:
 
 ```sh
-agboard --project "My project" message answer Q-12 --actor human --via cli --choice preview --text "Get feedback before the public launch"
+agpj --project "My project" message answer Q-12 --actor human --via cli --choice preview --text "Get feedback before the public launch"
 ```
 
 A question with choices needs `--choice`, a note, or both (a note alone is an answer with no choice); a question without choices needs a note. Give a note with `--text` or `--text-file`. When the user answers in the chat, the agent records the user's words with `--via chat`. The first recorded answer is final: answering an answered question fails with `question_answered` and prints the recorded answer.
@@ -192,7 +192,7 @@ A question with choices needs `--choice`, a note, or both (a note alone is an an
 After reading the answers and history, the agent resumes:
 
 ```sh
-agboard --project "My project" state 1 running --actor ai --reason "Preparing the preview requested by the user"
+agpj --project "My project" state 1 running --actor ai --reason "Preparing the preview requested by the user"
 ```
 
 ## Requests
@@ -200,9 +200,9 @@ agboard --project "My project" state 1 running --actor ai --reason "Preparing th
 A request is a message in the other direction: a person writes it for the agents. It is saved like a question, with an ID such as `Q-13` from the same numbering, and `message ls --type request` lists requests.
 
 ```sh
-agboard --project "My project" message send --actor human --text "Add a Windows section to the guide" --image ./sketch.png
-agboard --project "My project" message accept Q-13 --actor ai
-agboard --project "My project" message withdraw Q-13 --actor human
+agpj --project "My project" message send --actor human --text "Add a Windows section to the guide" --image ./sketch.png
+agpj --project "My project" message accept Q-13 --actor ai
+agpj --project "My project" message withdraw Q-13 --actor human
 ```
 
 - `message send` records a request of 1 to 20,000 characters, from `--text` or `--text-file`. Repeat `--image` to attach pictures.

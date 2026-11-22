@@ -1,6 +1,6 @@
 //! The images of an answer: written next to the question's own images before the reply is saved.
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::qa::{self, Question};
 use crate::file_store::{io, layout};
 
@@ -48,7 +48,7 @@ pub(super) fn place_images(
     planned: &[(Question, Question)],
     staged: &[Vec<(String, &Vec<u8>)>],
     placed: &mut Vec<std::path::PathBuf>,
-) -> Result<(), AgboardError> {
+) -> Result<(), AgpjError> {
     for ((question, _), files) in planned.iter().zip(staged) {
         if files.is_empty() {
             continue;

@@ -5,15 +5,15 @@ use serde_json::json;
 use crate::cli::args::EpicPlanArgs;
 use crate::cli::{Context, Outcome};
 use crate::domain::Actor;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::EpicVersionScope;
 use crate::file_store::validate::EpicId;
 
 /// Plan every card of an epic for one version. The command always acts as an agent: it skips
 /// archived cards, cards a person is drafting, and Done cards, which shipped.
-pub fn run(ctx: &mut Context, args: &EpicPlanArgs) -> Result<Outcome, AgboardError> {
+pub fn run(ctx: &mut Context, args: &EpicPlanArgs) -> Result<Outcome, AgpjError> {
     let Some(choice) = args.plan.choice()? else {
-        return Err(AgboardError::InvalidArgument {
+        return Err(AgpjError::InvalidArgument {
             message: "epic plan needs one of --planned-version, --current-version, or --unplanned."
                 .to_string(),
             command: Some("epic".to_string()),

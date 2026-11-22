@@ -1,4 +1,4 @@
-//! Every `agboard ...` command example in the documentation, the skill pages, the README,
+//! Every `agpj ...` command example in the documentation, the skill pages, the README,
 //! and the `Examples:` sections of the help text parses with the real clap definition.
 //! Nothing is executed: the words go to `try_get_matches_from` only.
 //!
@@ -13,7 +13,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent_board::cli::args::Cli;
+use agent_project::cli::args::Cli;
 use clap::CommandFactory;
 use clap::error::ErrorKind;
 
@@ -88,10 +88,10 @@ fn split_words(line: &str) -> Option<Vec<String>> {
     Some(words)
 }
 
-/// The words of an `agboard` command in `text`, after any `| ` or leading `NAME=value `.
+/// The words of an `agpj` command in `text`, after any `| ` or leading `NAME=value `.
 fn command_words(text: &str) -> Option<Vec<String>> {
     let text = text.trim().trim_start_matches("$ ");
-    let text = match text.rfind("| agboard ") {
+    let text = match text.rfind("| agpj ") {
         Some(at) => &text[at + 2..],
         None => text,
     };
@@ -102,7 +102,7 @@ fn command_words(text: &str) -> Option<Vec<String>> {
     {
         words.remove(0);
     }
-    (words.first().map(String::as_str) == Some("agboard") && words.len() > 1).then_some(words)
+    (words.first().map(String::as_str) == Some("agpj") && words.len() > 1).then_some(words)
 }
 
 /// Skip rule: the words are a template, not a command. A word with `<` and `>` (`<id>`), a
@@ -127,7 +127,7 @@ fn placeholder(words: &[String]) -> bool {
 /// An example and whether it came from prose (an inline code span) instead of a full command.
 type Example = (String, bool);
 
-/// Prose names a command or an option without its arguments (`agboard start`, `agboard edit
+/// Prose names a command or an option without its arguments (`agpj start`, `agpj edit
 /// --title`). An inline span may therefore stop short of a complete command: a missing required
 /// argument or subcommand, or a trailing option without its value. Anything else in it, such as
 /// an unknown command or option, is still an error. Fenced blocks and help text are complete
@@ -141,8 +141,8 @@ fn fragment(error: &clap::Error, words: &[String]) -> bool {
     }
 }
 
-/// Examples in one Markdown page: lines of fenced blocks that start with `agboard` (with
-/// `\` continuations joined), and inline code spans that start with `agboard `.
+/// Examples in one Markdown page: lines of fenced blocks that start with `agpj` (with
+/// `\` continuations joined), and inline code spans that start with `agpj `.
 fn page_examples(text: &str) -> Vec<Example> {
     let mut out = Vec::new();
     let (mut fenced, mut pending) = (false, String::new());
@@ -154,7 +154,7 @@ fn page_examples(text: &str) -> Vec<Example> {
         }
         if fenced {
             let line = line.trim();
-            if !pending.is_empty() || command_words(line).is_some() || line.contains("| agboard ") {
+            if !pending.is_empty() || command_words(line).is_some() || line.contains("| agpj ") {
                 match line.strip_suffix('\\') {
                     Some(head) => {
                         pending.push_str(head);
@@ -168,7 +168,7 @@ fn page_examples(text: &str) -> Vec<Example> {
             }
         } else {
             for (i, span) in line.split('`').enumerate() {
-                if i % 2 == 1 && span.starts_with("agboard ") {
+                if i % 2 == 1 && span.starts_with("agpj ") {
                     out.push((span.to_string(), true));
                 }
             }

@@ -9,7 +9,7 @@ use serde::Serialize;
 
 use crate::docs::DocsRoot;
 use crate::server::AppState;
-use crate::server::response::{agboard_error_response, json_response};
+use crate::server::response::{agpj_error_response, json_response};
 use crate::server::store::with_files;
 
 /// The catalog: every project by name, without tasks. Read in one transaction.
@@ -47,7 +47,7 @@ pub(super) async fn projects(State(state): State<Arc<AppState>>) -> Response {
             };
             json_response(StatusCode::OK, &listed)
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 

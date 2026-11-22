@@ -36,7 +36,7 @@ export const noContent = (): MockResponse => ({
 export const projectNotFound = () =>
   error(404, 'project_not_found', 'project not found.', 'Unknown ID.');
 export const forbidden = () =>
-  error(403, 'forbidden', 'request refused.', 'Missing X-Agboard-Token header.');
+  error(403, 'forbidden', 'request refused.', 'Missing X-Agpj-Token header.');
 export const invalidJson = () =>
   error(400, 'invalid_json', 'invalid request.', 'The request body must be JSON.');
 

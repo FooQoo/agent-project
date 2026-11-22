@@ -6,9 +6,9 @@ mod common;
 
 use std::path::Path;
 
-use agent_board::domain::ProjectId;
-use agent_board::file_store::FileStore;
-use common::{agboard, demo_project, json_error, json_ok, png};
+use agent_project::domain::ProjectId;
+use agent_project::file_store::FileStore;
+use common::{agpj, demo_project, json_error, json_ok, png};
 use serde_json::Value;
 
 fn project_id(home: &Path) -> ProjectId {
@@ -34,7 +34,7 @@ fn epic_add(home: &Path, id: &str, name: &str, color: Option<&str>) {
     if let Some(color) = color {
         args.extend(["--color", color]);
     }
-    let (code, _, err) = agboard(home, &args);
+    let (code, _, err) = agpj(home, &args);
     assert_eq!(code, 0, "epic add failed: {err}");
 }
 
@@ -128,7 +128,7 @@ fn epic_edit_changes_the_name_the_color_and_the_document_from_a_file() {
         "---\nacceptance:\n  - id: AC-1\n    text: Works\n    done: false\n---\n\nShare files.\n\nThe board.\n\nStep one.\n",
     )
     .unwrap();
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -165,7 +165,7 @@ fn edit_sets_and_clears_the_epic_of_a_task_and_ls_filters_by_it() {
     demo_project(home.path());
     epic_add(home.path(), "FILE-SHARE", "File share", Some("#111111"));
 
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--epic", "FILE-SHARE"],
     );
@@ -185,7 +185,7 @@ fn edit_sets_and_clears_the_epic_of_a_task_and_ls_filters_by_it() {
     );
     assert_eq!(other["tasks"].as_array().unwrap().len(), 0);
 
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--clear-epic"],
     );
@@ -200,11 +200,11 @@ fn the_human_list_shows_the_epic_id_of_a_task() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
     epic_add(home.path(), "FILE-SHARE", "File share", Some("#111111"));
-    agboard(
+    agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--epic", "FILE-SHARE"],
     );
-    let (code, out, err) = agboard(home.path(), &["--project", "Demo", "ls"]);
+    let (code, out, err) = agpj(home.path(), &["--project", "Demo", "ls"]);
     assert_eq!(code, 0, "{err}");
     assert!(out.contains("FILE-SHARE"), "{out}");
 }
@@ -228,7 +228,7 @@ fn epic_ls_json_lists_each_epic_with_its_color_and_task_count() {
     demo_project(home.path());
     epic_add(home.path(), "FILE-SHARE", "File share", Some("#111111"));
     epic_add(home.path(), "ALPHA", "Alpha", Some("#222222"));
-    agboard(
+    agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--epic", "FILE-SHARE"],
     );
@@ -296,7 +296,7 @@ fn an_image_added_from_the_cli_returns_its_asset_path_and_can_be_read_back() {
     assert_eq!(listed["attachments"][0]["id"], id.as_str());
 
     let out = home.path().join("back.png");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",
@@ -320,13 +320,13 @@ fn a_draft_epic_refuses_cli_edit_but_reads_and_member_work_still_work() {
     epic_add(home.path(), "FILE-SHARE", "File share", Some("#111111"));
     let store = FileStore::open(&home.path().join("shared"));
     let project = project_id(home.path());
-    let epic = agent_board::file_store::validate::EpicId::normalize("FILE-SHARE").unwrap();
+    let epic = agent_project::file_store::validate::EpicId::normalize("FILE-SHARE").unwrap();
     store
         .update_epic(
             &project,
             &epic,
-            agent_board::file_store::model::EpicUpdate {
-                draft: Some(Some(agent_board::domain::Draft::Human)),
+            agent_project::file_store::model::EpicUpdate {
+                draft: Some(Some(agent_project::domain::Draft::Human)),
                 ..Default::default()
             },
             chrono::Utc::now(),
@@ -351,7 +351,7 @@ fn a_draft_epic_refuses_cli_edit_but_reads_and_member_work_still_work() {
     assert_eq!(shown["epic"]["name"], "File share");
 
     // A task of the draft epic keeps working.
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--epic", "FILE-SHARE"],
     );
@@ -372,7 +372,7 @@ fn a_draft_task_refuses_cli_image_and_epic_changes_but_reads_still_work() {
         .set_draft(
             &project_id(home.path()),
             1,
-            Some(agent_board::domain::Draft::Human),
+            Some(agent_project::domain::Draft::Human),
             false,
             chrono::Utc::now(),
         )
@@ -411,7 +411,7 @@ fn epic_document_accepts_100000_characters_and_refuses_one_more() {
     let document = home.path().join("document.md");
     let edit = |count: usize| {
         std::fs::write(&document, "あ".repeat(count)).unwrap();
-        agboard(
+        agpj(
             home.path(),
             &[
                 "--project",
@@ -435,7 +435,7 @@ fn epic_document_accepts_100000_characters_and_refuses_one_more() {
 fn epic_with_four_tasks(home: &Path) {
     epic_add(home, "FILE-SHARE", "File share", Some("#111111"));
     for title in ["Second", "Third", "Fourth"] {
-        let (code, _, err) = agboard(
+        let (code, _, err) = agpj(
             home,
             &[
                 "--project",
@@ -451,7 +451,7 @@ fn epic_with_four_tasks(home: &Path) {
         assert_eq!(code, 0, "{err}");
     }
     for id in ["1", "2", "3", "4"] {
-        let (code, _, err) = agboard(
+        let (code, _, err) = agpj(
             home,
             &["--project", "Demo", "edit", id, "--epic", "FILE-SHARE"],
         );
@@ -572,7 +572,7 @@ fn epic_edit_empty_waves_clears_the_order_with_or_without_later_flags() {
         "1",
         "2",
     ];
-    let (code, _, err) = agboard(home.path(), &set);
+    let (code, _, err) = agpj(home.path(), &set);
     assert_eq!(code, 0, "{err}");
     assert_eq!(waves_of(home.path()), serde_json::json!([[1], [2]]));
 
@@ -591,9 +591,9 @@ fn epic_edit_empty_waves_clears_the_order_with_or_without_later_flags() {
     );
     assert_eq!(cleared["epic"]["waves"], serde_json::json!([]));
 
-    let (code, _, err) = agboard(home.path(), &set);
+    let (code, _, err) = agpj(home.path(), &set);
     assert_eq!(code, 0, "{err}");
-    let (code, _, err) = agboard(
+    let (code, _, err) = agpj(
         home.path(),
         &[
             "--project",

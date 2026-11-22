@@ -32,7 +32,7 @@ pub fn answer(facts: &Facts) -> Vec<Finding> {
         .iter()
         .map(|a| {
             Finding::new(format!(
-                "Answer {id} (\"{title}\") is not taken in yet: read it with `agboard message show {id}`, act on it, then run `agboard message accept {id}`.",
+                "Answer {id} (\"{title}\") is not taken in yet: read it with `agpj message show {id}`, act on it, then run `agpj message accept {id}`.",
                 id = a.id,
                 title = a.title
             ))
@@ -51,7 +51,7 @@ pub fn request(facts: &Facts) -> Vec<Finding> {
         .iter()
         .map(|r| {
             Finding::new(format!(
-                "Request {id} (\"{title}\") is open: read it with `agboard message show {id}`, accept it with `agboard message accept {id}`, and plan it.",
+                "Request {id} (\"{title}\") is open: read it with `agpj message show {id}`, accept it with `agpj message accept {id}`, and plan it.",
                 id = r.id,
                 title = r.title
             ))
@@ -116,7 +116,7 @@ pub fn stale_running(facts: &Facts) -> Vec<Finding> {
             let idle = facts.now - t.last_activity_at?;
             (idle > limit).then(|| {
                 Finding::new(format!(
-                    "Task #{id} has been running for {minutes} minutes with no history entry: if the work stopped, set it to paused with `agboard state {id} paused --actor ai`; otherwise record only a decision that matters later with `agboard history add {id}`, and skip it when there is none.",
+                    "Task #{id} has been running for {minutes} minutes with no history entry: if the work stopped, set it to paused with `agpj state {id} paused --actor ai`; otherwise record only a decision that matters later with `agpj history add {id}`, and skip it when there is none.",
                     id = t.id,
                     minutes = idle.num_minutes()
                 ))

@@ -1,10 +1,10 @@
 //! Opening the board in the browser: once when a server starts automatically,
-//! and on request with `agboard open`.
+//! and on request with `agpj open`.
 //!
-//! These tests run the real binary with `AGBOARD_HOME` in a temporary
-//! directory. No real browser is opened: `AGBOARD_BROWSER_OPENER` names a
+//! These tests run the real binary with `AGPJ_HOME` in a temporary
+//! directory. No real browser is opened: `AGPJ_BROWSER_OPENER` names a
 //! script that appends the address it was given to `opened.txt`.
-//! `AGBOARD_AUTOSTART_PORT=0` makes every automatic server listen on a port
+//! `AGPJ_AUTOSTART_PORT=0` makes every automatic server listen on a port
 //! the OS picks, and a guard kills every server a test started.
 
 use std::io::{Read, Write};
@@ -27,10 +27,7 @@ struct Board {
 impl Board {
     /// A board whose automatic server opens the browser after `grace_ms`.
     fn opening(grace_ms: &str) -> Self {
-        Self::with_env(&[
-            ("AGBOARD_OPEN_BROWSER", "1"),
-            ("AGBOARD_OPEN_GRACE_MS", grace_ms),
-        ])
+        Self::with_env(&[("AGPJ_OPEN_BROWSER", "1"), ("AGPJ_OPEN_GRACE_MS", grace_ms)])
     }
 
     fn with_env(extra: &[(&'static str, &str)]) -> Self {
@@ -45,9 +42,9 @@ impl Board {
         .unwrap();
         std::fs::set_permissions(&opener, std::fs::Permissions::from_mode(0o755)).unwrap();
         let mut env = vec![
-            ("AGBOARD_AUTOSTART_PORT", "0".to_string()),
-            ("AGBOARD_OPEN_BROWSER", "0".to_string()),
-            ("AGBOARD_BROWSER_OPENER", opener.display().to_string()),
+            ("AGPJ_AUTOSTART_PORT", "0".to_string()),
+            ("AGPJ_OPEN_BROWSER", "0".to_string()),
+            ("AGPJ_BROWSER_OPENER", opener.display().to_string()),
         ];
         env.extend(extra.iter().map(|(k, v)| (*k, v.to_string())));
         let board = Self { home, folder, env };
@@ -67,12 +64,12 @@ impl Board {
     }
 
     fn command(&self) -> Command {
-        let mut command = Command::new(env!("CARGO_BIN_EXE_agboard"));
+        let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
         command
-            .env_remove("AGBOARD_AUTOSTART")
-            .env_remove("AGBOARD_IDLE_TIMEOUT")
-            .env("AGBOARD_WATCH", "poll")
-            .env("AGBOARD_HOME", self.dir())
+            .env_remove("AGPJ_AUTOSTART")
+            .env_remove("AGPJ_IDLE_TIMEOUT")
+            .env("AGPJ_WATCH", "poll")
+            .env("AGPJ_HOME", self.dir())
             .env("TZ", "UTC")
             .envs(self.env.iter().map(|(k, v)| (*k, v.as_str())))
             .current_dir(&self.folder)
@@ -304,12 +301,12 @@ fn a_manual_server_and_a_question_open_nothing() {
 
 #[test]
 fn opening_can_be_turned_off() {
-    let board = Board::with_env(&[("AGBOARD_OPEN_GRACE_MS", "200")]);
+    let board = Board::with_env(&[("AGPJ_OPEN_GRACE_MS", "200")]);
     board.start_by_waiting();
     assert!(
         until(Duration::from_secs(10), || board
             .log()
-            .contains("AGBOARD_OPEN_BROWSER=0")),
+            .contains("AGPJ_OPEN_BROWSER=0")),
         "{}",
         board.log()
     );
@@ -323,7 +320,7 @@ fn open_starts_the_server_and_opens_the_bound_projects_board() {
     let stdout = text(&output.stdout);
     assert!(output.status.success(), "{output:?}");
     assert!(
-        text(&output.stderr).starts_with("Started the Agent Board server at"),
+        text(&output.stderr).starts_with("Started the Agent Project server at"),
         "{output:?}"
     );
     let url = board.board_url();
@@ -372,7 +369,7 @@ fn open_says_why_the_browser_stayed_closed() {
     assert_eq!(
         text(&output.stdout),
         format!(
-            "{url}\nThe browser was not opened. AGBOARD_OPEN_BROWSER=0 turns opening the browser off. Open the address yourself.\n"
+            "{url}\nThe browser was not opened. AGPJ_OPEN_BROWSER=0 turns opening the browser off. Open the address yourself.\n"
         )
     );
     let json = board.run(&["--json", "open"]);
@@ -380,14 +377,14 @@ fn open_says_why_the_browser_stayed_closed() {
     assert_eq!(value["opened"], false);
     assert_eq!(
         value["notice"],
-        "AGBOARD_OPEN_BROWSER=0 turns opening the browser off."
+        "AGPJ_OPEN_BROWSER=0 turns opening the browser off."
     );
     assert!(board.opened().is_empty());
 }
 
 #[test]
 fn open_without_autostart_needs_a_running_server() {
-    let board = Board::with_env(&[("AGBOARD_AUTOSTART", "0"), ("AGBOARD_OPEN_BROWSER", "1")]);
+    let board = Board::with_env(&[("AGPJ_AUTOSTART", "0"), ("AGPJ_OPEN_BROWSER", "1")]);
     let output = board.run(&["--json", "open"]);
     assert_eq!(output.status.code(), Some(1), "{output:?}");
     let error: Value = serde_json::from_slice(&output.stderr).unwrap();
@@ -396,7 +393,7 @@ fn open_without_autostart_needs_a_running_server() {
         error["error"]["reason"]
             .as_str()
             .unwrap()
-            .contains("agboard serve -d"),
+            .contains("agpj serve -d"),
         "{error}"
     );
     assert!(board.serve_info().is_none());
@@ -406,8 +403,8 @@ fn open_without_autostart_needs_a_running_server() {
 #[test]
 fn an_opener_that_cannot_start_is_an_error_that_names_the_address() {
     let board = Board::with_env(&[
-        ("AGBOARD_OPEN_BROWSER", "1"),
-        ("AGBOARD_BROWSER_OPENER", "/nonexistent/agboard-opener"),
+        ("AGPJ_OPEN_BROWSER", "1"),
+        ("AGPJ_BROWSER_OPENER", "/nonexistent/agpj-opener"),
     ]);
     let output = board.run(&["--json", "open"]);
     assert_eq!(output.status.code(), Some(1), "{output:?}");

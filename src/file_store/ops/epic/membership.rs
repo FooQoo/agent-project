@@ -5,7 +5,7 @@ use std::fs;
 use chrono::{DateTime, Utc};
 
 use crate::domain::{Actor, Changed, ProjectId};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::io;
 use crate::file_store::layout;
@@ -23,17 +23,17 @@ impl FileStore {
     /// Delete an epic folder. Refused with `epic_in_use` while any task, archived
     /// ones included, names the epic. The folder is renamed out of the way first,
     /// then removed. A folder whose `epic.json` is broken can still be deleted.
-    pub fn delete_epic(&self, project: &ProjectId, id: &EpicId) -> Result<(), AgboardError> {
+    pub fn delete_epic(&self, project: &ProjectId, id: &EpicId) -> Result<(), AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let dir = layout::epic_dir(&project_dir, id);
         if !dir.is_dir() {
-            return Err(AgboardError::EpicNotFound { id: id.to_string() });
+            return Err(AgpjError::EpicNotFound { id: id.to_string() });
         }
         for task_id in reader::task_ids(&project_dir)? {
             let task = reader::read_task_strict(shared, project, task_id)?;
             if task.epic_id.as_deref() == Some(id.as_str()) {
-                return Err(AgboardError::EpicInUse { id: id.to_string() });
+                return Err(AgpjError::EpicInUse { id: id.to_string() });
             }
         }
         let epics = layout::epics_dir(&project_dir);
@@ -57,16 +57,16 @@ impl FileStore {
         epic: Option<&EpicId>,
         actor: Actor,
         now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgboardError> {
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, task_id)?;
         if matches!(actor, Actor::Ai) {
             if task.archived_at.is_some() {
-                return Err(AgboardError::TaskArchived { id: task_id });
+                return Err(AgpjError::TaskArchived { id: task_id });
             }
             if task.draft == Some(crate::domain::Draft::Human) {
-                return Err(AgboardError::TaskIsDraft { id: task_id });
+                return Err(AgpjError::TaskIsDraft { id: task_id });
             }
         }
         ensure_ai_task_not_done(&task, actor)?;

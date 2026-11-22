@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '../helpers/fixtures';
-import { agboardOk, mainProject, nextTaskId, resetBoard, taskBody, askArgs, decisionJson } from '../helpers/agboard';
+import { agpjOk, mainProject, nextTaskId, resetBoard, taskBody, askArgs, decisionJson } from '../helpers/agpj';
 import { readBoardAfterReset, waitForDrop } from '../helpers/ui';
 import { openAnswer, sendAnswer } from '../helpers/answer';
 import { closeMessages } from '../helpers/answer-flow';
@@ -47,8 +47,8 @@ async function notReloaded(page: Page): Promise<void> {
   ).toBe(true);
 }
 
-test('agboard add shows a new task without reloading', async ({ page }) => {
-  agboardOk(mainProject, ['add', 'Added while open', `--desc=From the CLI`]);
+test('agpj add shows a new task without reloading', async ({ page }) => {
+  agpjOk(mainProject, ['add', 'Added while open', `--desc=From the CLI`]);
   await expect(lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh} AI Added while open \\d\\d\\/\\d\\d \\d\\d:\\d\\d$`) })).toBeVisible();
   await expect(page.getByRole('contentinfo')).toContainText('9 tasks');
   await expect(lane(page, 'Todo').getByText('4', { exact: true })).toBeVisible();
@@ -57,14 +57,14 @@ test('agboard add shows a new task without reloading', async ({ page }) => {
   await notReloaded(page);
 });
 
-test('agboard mv moves a task without reloading', async ({ page }) => {
-  agboardOk(mainProject, ['mv', '16', 'doing']);
+test('agpj mv moves a task without reloading', async ({ page }) => {
+  agpjOk(mainProject, ['mv', '16', 'doing']);
   await expect(lane(page, 'Doing').getByRole('button', { name: /^#16 AI Idle Refine the empty board / })).toBeVisible();
   await expect(lane(page, 'Todo').locator('.lane__cards .card')).toHaveCount(2);
   await expect(lane(page, 'Doing').locator('.lane__cards .card')).toHaveCount(4);
 
   // A card finished just now goes to the top of Done.
-  agboardOk(mainProject, ['mv', '16', 'done']);
+  agpjOk(mainProject, ['mv', '16', 'done']);
   await expect(lane(page, 'Done').locator('.lane__cards').getByRole('button').first()).toHaveText(/^#16(?!\d)/);
   await expect(lane(page, 'Done').locator('.lane__cards .card')).toHaveCount(3);
   await notReloaded(page);
@@ -102,9 +102,9 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 1100, height: 900
     // The request is held, and the card is already in Doing.
     await expect(lane(page, 'Doing').getByRole('button', { name: /^#16 / })).toBeVisible();
     await expect(lane(page, 'Todo').getByRole('button', { name: /^#16 / })).toHaveCount(0);
-    expect(JSON.parse(agboardOk(mainProject, ['show', '16', '--json']).stdout).task.taskStatus).toBe('todo');
+    expect(JSON.parse(agpjOk(mainProject, ['show', '16', '--json']).stdout).task.taskStatus).toBe('todo');
     release();
-    await expect.poll(() => JSON.parse(agboardOk(mainProject, ['show', '16', '--json']).stdout).task.taskStatus).toBe('doing');
+    await expect.poll(() => JSON.parse(agpjOk(mainProject, ['show', '16', '--json']).stdout).task.taskStatus).toBe('doing');
     await expect(lane(page, 'Doing').getByRole('button', { name: /^#16 / })).toBeVisible();
     await expect(page.locator('.transient-notice')).toHaveCount(0);
 
@@ -119,9 +119,9 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 1100, height: 900
     await dragToLane(page, 16, 'Done', 'Doing');
     await expect(lane(page, 'Done').getByRole('button', { name: /^#16 / })).toBeVisible();
     await expect(lane(page, 'Doing').getByRole('button', { name: /^#16 / })).toHaveCount(0);
-    expect(JSON.parse(agboardOk(mainProject, ['show', '16', '--json']).stdout).task.taskStatus).toBe('doing');
+    expect(JSON.parse(agpjOk(mainProject, ['show', '16', '--json']).stdout).task.taskStatus).toBe('doing');
     releaseDone();
-    await expect.poll(() => JSON.parse(agboardOk(mainProject, ['show', '16', '--json']).stdout).task.taskStatus).toBe('done');
+    await expect.poll(() => JSON.parse(agpjOk(mainProject, ['show', '16', '--json']).stdout).task.taskStatus).toBe('done');
     await expect(lane(page, 'Done').getByRole('button', { name: /^#16 / })).toBeVisible();
     await notReloaded(page);
   });
@@ -135,16 +135,16 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 1100, height: 900
     await expect(page.locator('.transient-notice')).toHaveText('Could not move the task. It stays where it was.');
     await expect(lane(page, 'Todo').getByRole('button', { name: /^#16 / })).toBeVisible();
     await expect(lane(page, 'Doing').getByRole('button', { name: /^#16 / })).toHaveCount(0);
-    expect(JSON.parse(agboardOk(mainProject, ['show', '16', '--json']).stdout).task.taskStatus).toBe('todo');
+    expect(JSON.parse(agpjOk(mainProject, ['show', '16', '--json']).stdout).task.taskStatus).toBe('todo');
   });
 }
 
 test('a move after an external lane change is refused, the card returns to its lane, and a notice says so', async ({ page }) => {
-  const before = JSON.parse(agboardOk(mainProject, ['show', '16', '--json']).stdout).task.history.length;
+  const before = JSON.parse(agpjOk(mainProject, ['show', '16', '--json']).stdout).task.history.length;
   // The page still shows #16 in Todo when the CLI moves it to Done. The page's move starts from Todo, so
   // the server refuses it, writes nothing, and names where the task is now.
   await page.route('**/api/projects/*/tasks/16/move', async (route) => {
-    agboardOk(mainProject, ['mv', '16', 'done', '--actor', 'human']);
+    agpjOk(mainProject, ['mv', '16', 'done', '--actor', 'human']);
     await route.continue();
   });
   await dragToLane(page, 16, 'Doing');
@@ -152,16 +152,16 @@ test('a move after an external lane change is refused, the card returns to its l
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(lane(page, 'Done').getByRole('button', { name: /^#16 / })).toBeVisible();
   await expect(lane(page, 'Doing').getByRole('button', { name: /^#16 / })).toHaveCount(0);
-  expect(JSON.parse(agboardOk(mainProject, ['show', '16', '--json']).stdout).task.history).toHaveLength(before + 1);
+  expect(JSON.parse(agpjOk(mainProject, ['show', '16', '--json']).stdout).task.history).toHaveLength(before + 1);
   await notReloaded(page);
 });
 
-test('agboard state and the question it waits on update the run state without reloading', async ({ page }) => {
+test('agpj state and the question it waits on update the run state without reloading', async ({ page }) => {
   const doing = lane(page, 'Doing');
-  agboardOk(mainProject, ['state', '13', 'running']);
+  agpjOk(mainProject, ['state', '13', 'running']);
   await expect(doing.getByRole('button', { name: /^#13 AI Running Check the board display / })).toBeVisible();
 
-  const asked = JSON.parse(agboardOk(mainProject, ['--json', ...askArgs('13', decisionJson('Waiting for a review'))]).stdout.split('\n')[0]);
+  const asked = JSON.parse(agpjOk(mainProject, ['--json', ...askArgs('13', decisionJson('Waiting for a review'))]).stdout.split('\n')[0]);
   const pending = doing.getByRole('button', { name: /^#13 AI Awaiting answer Check the board display / });
   await expect(pending).toBeVisible();
   // The card offers the button only; the question is read in the dialog.
@@ -170,7 +170,7 @@ test('agboard state and the question it waits on update the run state without re
   await page.keyboard.press('Escape');
 
   // Pending comes from the open question, so the wait ends when the question is withdrawn.
-  agboardOk(mainProject, ['message', 'withdraw', asked.questions[0].id, '--actor', 'ai']);
+  agpjOk(mainProject, ['message', 'withdraw', asked.questions[0].id, '--actor', 'ai']);
   await expect(doing.getByRole('button', { name: /^#13 AI Paused Check the board display / })).toBeVisible();
   await expect(doing.getByText('Waiting for a review')).toHaveCount(0);
   await notReloaded(page);
@@ -183,7 +183,7 @@ test('an open task follows its move to another lane while its details stay open'
   await expect(panel).toContainText('Doing');
 
   // The details panel does not hold the stream's updates back: the card moves and stays selected.
-  agboardOk(mainProject, ['mv', '11', 'done']);
+  agpjOk(mainProject, ['mv', '11', 'done']);
   await expect(lane(page, 'Done').locator('.lane__cards').getByRole('button').first()).toHaveText(/^#11(?!\d)/, { timeout: 5_000 });
   await expect(task(page, 11)).toHaveAttribute('aria-current', 'true');
   await expect(panel.getByRole('heading', { level: 2 })).toHaveText('Implement task moves');
@@ -196,7 +196,7 @@ test('an open task follows its move to another lane while its details stay open'
 });
 
 test('a task for the user added from the CLI appears live and moves with a generated reason', async ({ page }) => {
-  agboardOk(mainProject, ['add', 'Review the release notes', '--assignee', 'human', '--actor', 'human', `--desc=${taskBody('Check the wording with the release owner.')}`]);
+  agpjOk(mainProject, ['add', 'Review the release notes', '--assignee', 'human', '--actor', 'human', `--desc=${taskBody('Check the wording with the release owner.')}`]);
 
   const userTask = lane(page, 'Todo').getByRole('button', { name: new RegExp(`^#${fresh} User Review the release notes `) });
   await expect(userTask).toBeVisible();

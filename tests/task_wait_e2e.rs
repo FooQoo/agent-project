@@ -16,15 +16,15 @@ use tempfile::TempDir;
 use serve_process::ServeProcess;
 
 fn run(home: &Path, args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+    Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(args)
         .output()
-        .expect("agboard should start")
+        .expect("agpj should start")
 }
 
 fn success(home: &Path, args: &[&str]) -> Output {
@@ -43,7 +43,7 @@ fn json(output: &Output) -> Value {
 }
 
 fn fixture() -> TempDir {
-    let home = tempfile::tempdir().expect("temporary AGBOARD_HOME");
+    let home = tempfile::tempdir().expect("temporary AGPJ_HOME");
     let folder = home.path().join("project-folder");
     fs::create_dir_all(&folder).unwrap();
     success(
@@ -60,11 +60,11 @@ fn fixture() -> TempDir {
 }
 
 fn serve(home: &Path) -> ServeProcess {
-    let child = Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+    let child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args(["serve", "--port", "0"])
         .stdout(Stdio::piped())
@@ -81,11 +81,11 @@ fn serve(home: &Path) -> ServeProcess {
 }
 
 fn wait(home: &Path, timeout: &str) -> Child {
-    Command::new(env!("CARGO_BIN_EXE_agboard"))
-        .env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0")
-        .env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+    Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_OPEN_BROWSER", "0")
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
         .args([
             "--project",

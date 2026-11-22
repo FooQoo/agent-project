@@ -1,29 +1,29 @@
-# How Agent Board works
+# How Agent Project works
 
-Start here. This page gives you the mental model: what Agent Board is for, what runs, where the data lives, and how one change travels from an agent to the browser. The other concept pages go deeper into each part.
+Start here. This page gives you the mental model: what Agent Project is for, what runs, where the data lives, and how one change travels from an agent to the browser. The other concept pages go deeper into each part.
 
 ## The agent's runtime and the shared workspace
 
 An AI agent such as Claude Code or Codex runs inside its own runtime: the tools it can call, the context it holds, and the loop that drives it. That runtime decides how the agent works inside one session. It does not decide what the work is, when it is finished, or when to ask a person, and it does not outlive the session.
 
-Agent Board is a **shared workspace** on top of it, where the agent plans and reports and a person answers. It keeps the plan, the acceptance conditions that say when a task is finished, the questions that stop the agent until a person answers, and the history that lets the next session continue. These live in files, outside any one agent, so a different agent or a new session can pick the work up where the last one stopped.
+Agent Project is a **shared workspace** on top of it, where the agent plans and reports and a person answers. It keeps the plan, the acceptance conditions that say when a task is finished, the questions that stop the agent until a person answers, and the history that lets the next session continue. These live in files, outside any one agent, so a different agent or a new session can pick the work up where the last one stopped.
 
 ```mermaid
 flowchart LR
-    Agent["Agent runtime<br/>tools, context, loop"] --> Work["Agent Board<br/>plan, conditions,<br/>questions, history"]
+    Agent["Agent runtime<br/>tools, context, loop"] --> Work["Agent Project<br/>plan, conditions,<br/>questions, history"]
     Work --> Monitors["Monitors<br/>board, phone, chat, CLI"]
     Person["Person"] --> Monitors
 ```
 
-The board, the phone, the chat, and the `agboard` command are monitors for the same work model, places to watch, answer, and step in, not separate features. Each one reads and writes the same files through the same operations, so a rule holds the same way whichever monitor you use. [The work model in code](./work-model.md) lists those rules, where the code enforces each one, and which parts still rely on the agent. The user's view of the model is in [The work model](../../guide/work-model.md).
+The board, the phone, the chat, and the `agpj` command are monitors for the same work model, places to watch, answer, and step in, not separate features. Each one reads and writes the same files through the same operations, so a rule holds the same way whichever monitor you use. [The work model in code](./work-model.md) lists those rules, where the code enforces each one, and which parts still rely on the agent. The user's view of the model is in [The work model](../../guide/work-model.md).
 
 The rest of this page describes the implementation that carries the model.
 
 ## The big picture
 
-Agent Board is a single Rust executable, `agboard`. The same binary is the CLI that agents and people run, and the web server (`agboard serve`) that shows the board in a browser.
+Agent Project is a single Rust executable, `agpj`. The same binary is the CLI that agents and people run, and the web server (`agpj serve`) that shows the board in a browser.
 
-There is no database. Every project lives as plain files in the shared area, `.agent-board/shared/` in the user's home directory (or under `AGBOARD_HOME`). Markdown holds what people and agents write: task bodies, acceptance conditions, history, and epic details. JSON holds the operational state: lanes, run states, and the project's questions and answers. Because the files are the source of truth, agents may also edit `TASK.md` and `EPIC.md` directly, and the server notices.
+There is no database. Every project lives as plain files in the shared area, `.agent-project/shared/` in the user's home directory (or under `AGPJ_HOME`). Markdown holds what people and agents write: task bodies, acceptance conditions, history, and epic details. JSON holds the operational state: lanes, run states, and the project's questions and answers. Because the files are the source of truth, agents may also edit `TASK.md` and `EPIC.md` directly, and the server notices.
 
 ### Reading and writing data
 
@@ -32,11 +32,11 @@ The CLI and browser read and write the same local files. Task state is stored in
 ```mermaid
 flowchart LR
     CLI["CLI"] --> Files[("Shared files")]
-    Files <--> Serve["agboard serve"]
+    Files <--> Serve["agpj serve"]
     Serve <--> Browser["Browser"]
 ```
 
-Agents use commands such as `agboard add`, `mv`, and `state`; users work in the browser. Users run `rm` and `init` in the CLI for deletion and resets. `TASK.md` and `EPIC.md` can also be edited directly, and the server detects the changes. CLI saves use locks and temporary-file renames.
+Agents use commands such as `agpj add`, `mv`, and `state`; users work in the browser. Users run `rm` and `init` in the CLI for deletion and resets. `TASK.md` and `EPIC.md` can also be edited directly, and the server detects the changes. CLI saves use locks and temporary-file renames.
 
 ### Change notifications
 
@@ -68,7 +68,7 @@ flowchart LR
 
 ### Remote access
 
-A phone browser reaches the read-mostly monitor through an ngrok tunnel that runs inside `serve`. You start it from **Settings** or with `agboard serve --monitor ngrok`; the exact public Host and a 4-digit passcode made for each start guard it. The tunnel forwards to a dedicated loopback entry. That entry uses the same FileStore, file watcher, and notifications as local access. See [Remote access](./remote-access.md).
+A phone browser reaches the read-mostly monitor through an ngrok tunnel that runs inside `serve`. You start it from **Settings** or with `agpj serve --monitor ngrok`; the exact public Host and a 4-digit passcode made for each start guard it. The tunnel forwards to a dedicated loopback entry. That entry uses the same FileStore, file watcher, and notifications as local access. See [Remote access](./remote-access.md).
 
 ```mermaid
 flowchart LR
@@ -100,7 +100,7 @@ Three ideas run through the whole design:
 
 ### An agent moves a task
 
-When an agent runs `agboard --project demo mv 12 doing --actor ai`:
+When an agent runs `agpj --project demo mv 12 doing --actor ai`:
 
 1. The CLI resolves the project by name to its ProjectId.
 2. It takes the project's write lock (`.internal/write.lock`), waiting up to 5 seconds.

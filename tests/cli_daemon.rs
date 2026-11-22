@@ -1,6 +1,6 @@
-//! `agboard serve -d` and `agboard stop`.
+//! `agpj serve -d` and `agpj stop`.
 //!
-//! These tests run the real binary with `AGBOARD_HOME` in a temporary
+//! These tests run the real binary with `AGPJ_HOME` in a temporary
 //! directory. Every server listens on a port the OS picks (never 7420), and
 //! the tests run one at a time.
 //! A guard stops any background server a test leaves behind.
@@ -17,12 +17,11 @@ fn serial() -> MutexGuard<'static, ()> {
     SERIAL.lock().unwrap_or_else(|e| e.into_inner())
 }
 
-fn agboard(home: &Path) -> Command {
-    let mut cmd = Command::cargo_bin("agboard").unwrap();
-    cmd.env("AGBOARD_AUTOSTART", "0")
-        .env("AGBOARD_OPEN_BROWSER", "0");
-    cmd.env("AGBOARD_WATCH", "poll")
-        .env("AGBOARD_HOME", home)
+fn agpj(home: &Path) -> Command {
+    let mut cmd = Command::cargo_bin("agpj").unwrap();
+    cmd.env("AGPJ_AUTOSTART", "0").env("AGPJ_OPEN_BROWSER", "0");
+    cmd.env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
         .env("TZ", "UTC");
     cmd
 }
@@ -32,7 +31,7 @@ struct Cleanup<'a>(&'a Path);
 
 impl Drop for Cleanup<'_> {
     fn drop(&mut self) {
-        let _ = agboard(self.0).arg("stop").output();
+        let _ = agpj(self.0).arg("stop").output();
     }
 }
 
@@ -58,7 +57,7 @@ fn serve_d_returns_while_the_server_runs_and_stop_ends_it() {
     let home = tempfile::tempdir().unwrap();
     let _cleanup = Cleanup(home.path());
 
-    let started = agboard(home.path())
+    let started = agpj(home.path())
         .args(["serve", "-d", "--port", "0"])
         .output()
         .unwrap();
@@ -71,7 +70,7 @@ fn serve_d_returns_while_the_server_runs_and_stop_ends_it() {
         )),
         "{line}"
     );
-    assert!(line.contains("agboard stop"), "{line}");
+    assert!(line.contains("agpj stop"), "{line}");
     assert!(!port_is_free(port), "the server should hold the port");
 
     let info: serde_json::Value =
@@ -79,7 +78,7 @@ fn serve_d_returns_while_the_server_runs_and_stop_ends_it() {
             .unwrap();
     assert_eq!(info["port"], port);
 
-    let again = agboard(home.path())
+    let again = agpj(home.path())
         .args(["serve", "-d", "--port", "0"])
         .output()
         .unwrap();
@@ -89,7 +88,7 @@ fn serve_d_returns_while_the_server_runs_and_stop_ends_it() {
         "{again:?}"
     );
 
-    let stopped = agboard(home.path()).arg("stop").output().unwrap();
+    let stopped = agpj(home.path()).arg("stop").output().unwrap();
     assert!(stopped.status.success(), "{stopped:?}");
     assert_eq!(
         stdout(&stopped),
@@ -100,7 +99,7 @@ fn serve_d_returns_while_the_server_runs_and_stop_ends_it() {
     assert!(port_is_free(port), "stop should release the port");
     assert!(!home.path().join("serve.json").exists());
     // The next `serve` can start at once: the old one has let go of its lock.
-    agent_board::lifecycle::LifecycleGuard::acquire(home.path())
+    agent_project::lifecycle::LifecycleGuard::acquire(home.path())
         .expect("stop should wait until the lifecycle lock is free");
 }
 
@@ -110,7 +109,7 @@ fn serve_d_with_json_adds_the_process_and_the_log() {
     let home = tempfile::tempdir().unwrap();
     let _cleanup = Cleanup(home.path());
 
-    let started = agboard(home.path())
+    let started = agpj(home.path())
         .args(["--json", "serve", "-d", "--port", "0"])
         .output()
         .unwrap();
@@ -124,10 +123,7 @@ fn serve_d_with_json_adds_the_process_and_the_log() {
         home.path().join("serve.log").display().to_string()
     );
 
-    let stopped = agboard(home.path())
-        .args(["--json", "stop"])
-        .output()
-        .unwrap();
+    let stopped = agpj(home.path()).args(["--json", "stop"]).output().unwrap();
     let value: serde_json::Value = serde_json::from_str(stdout(&stopped).trim()).unwrap();
     assert_eq!(value["stopped"], true);
     assert_eq!(value["port"], port);
@@ -141,7 +137,7 @@ fn a_port_in_use_fails_serve_d_with_the_reason() {
     let held = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
     let port = held.local_addr().unwrap().port().to_string();
 
-    let started = agboard(home.path())
+    let started = agpj(home.path())
         .args(["serve", "-d", "--port", &port])
         .output()
         .unwrap();
@@ -157,7 +153,7 @@ fn stop_without_a_server_reports_it_and_succeeds() {
     let _serial = serial();
     let home = tempfile::tempdir().unwrap();
 
-    let stopped = agboard(home.path()).arg("stop").output().unwrap();
+    let stopped = agpj(home.path()).arg("stop").output().unwrap();
     assert!(stopped.status.success(), "{stopped:?}");
     assert_eq!(stdout(&stopped), "No server is running.\n");
 
@@ -167,10 +163,7 @@ fn stop_without_a_server_reports_it_and_succeeds() {
         r#"{"pid":999999,"port":1,"started_at":"2026-01-01T00:00:00Z"}"#,
     )
     .unwrap();
-    let stopped = agboard(home.path())
-        .args(["--json", "stop"])
-        .output()
-        .unwrap();
+    let stopped = agpj(home.path()).args(["--json", "stop"]).output().unwrap();
     assert!(stopped.status.success(), "{stopped:?}");
     assert_eq!(stdout(&stopped), "{\"stopped\":false}\n");
 }
@@ -178,7 +171,7 @@ fn stop_without_a_server_reports_it_and_succeeds() {
 #[test]
 fn stop_takes_no_project() {
     let home = tempfile::tempdir().unwrap();
-    let output = agboard(home.path())
+    let output = agpj(home.path())
         .args(["--project", "demo", "stop"])
         .output()
         .unwrap();

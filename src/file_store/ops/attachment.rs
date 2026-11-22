@@ -25,7 +25,7 @@ use crate::domain::{
     Attachment, AttachmentInput, MAX_TASK_ATTACHMENT_BYTES, MAX_TASK_ATTACHMENTS, ProjectId,
     validate_attachment,
 };
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 use self::locked::{add_image_locked, delete_image_locked};
 use self::owner::load;
@@ -37,7 +37,7 @@ fn asset_file(
     owner: &AttachmentOwner,
     attachment_id: &str,
     media_type: &str,
-) -> Result<PathBuf, AgboardError> {
+) -> Result<PathBuf, AgpjError> {
     let ext = extension(media_type)?;
     match owner {
         AttachmentOwner::Task(id) => layout::task_asset_path(project_dir, *id, attachment_id, ext),
@@ -45,14 +45,14 @@ fn asset_file(
     }
 }
 
-fn extension(media_type: &str) -> Result<&'static str, AgboardError> {
-    layout::asset_extension(media_type).ok_or_else(|| AgboardError::InvalidValue {
+fn extension(media_type: &str) -> Result<&'static str, AgpjError> {
+    layout::asset_extension(media_type).ok_or_else(|| AgpjError::InvalidValue {
         field: "attachment".into(),
         reason: "Only PNG, JPEG, WebP, and GIF images are accepted.".into(),
     })
 }
 
-fn check_limits(existing: &[Attachment], added_bytes: usize) -> Result<(), AgboardError> {
+fn check_limits(existing: &[Attachment], added_bytes: usize) -> Result<(), AgpjError> {
     let total: usize = existing
         .iter()
         .map(|a| usize::try_from(a.size).unwrap_or(0))
@@ -60,7 +60,7 @@ fn check_limits(existing: &[Attachment], added_bytes: usize) -> Result<(), Agboa
     if existing.len() + 1 > MAX_TASK_ATTACHMENTS
         || total.saturating_add(added_bytes) > MAX_TASK_ATTACHMENT_BYTES
     {
-        return Err(AgboardError::AttachmentLimitExceeded);
+        return Err(AgpjError::AttachmentLimitExceeded);
     }
     Ok(())
 }
@@ -80,10 +80,10 @@ pub(super) fn write_image(
     existing: &[Attachment],
     input: &AttachmentInput,
     at: DateTime<Utc>,
-) -> Result<(Attachment, PathBuf), AgboardError> {
+) -> Result<(Attachment, PathBuf), AgpjError> {
     let media_type = validate_attachment(&input.id, &input.name, &input.bytes)?;
     if existing.iter().any(|a| a.id == input.id) {
-        return Err(AgboardError::InvalidValue {
+        return Err(AgpjError::InvalidValue {
             field: "attachmentId".into(),
             reason: "Attachment IDs must be unique.".into(),
         });
@@ -119,7 +119,7 @@ impl FileStore {
         owner: &AttachmentOwner,
         input: AttachmentInput,
         now: DateTime<Utc>,
-    ) -> Result<Attachment, AgboardError> {
+    ) -> Result<Attachment, AgpjError> {
         self.add_attachment_gated(project, owner, input, now, true)
     }
 
@@ -130,7 +130,7 @@ impl FileStore {
         owner: &AttachmentOwner,
         input: AttachmentInput,
         now: DateTime<Utc>,
-    ) -> Result<Attachment, AgboardError> {
+    ) -> Result<Attachment, AgpjError> {
         self.add_attachment_gated(project, owner, input, now, false)
     }
 
@@ -144,7 +144,7 @@ impl FileStore {
         input: AttachmentInput,
         now: DateTime<Utc>,
         block_drafts: bool,
-    ) -> Result<Attachment, AgboardError> {
+    ) -> Result<Attachment, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         add_image_locked(
@@ -165,7 +165,7 @@ impl FileStore {
         owner: &AttachmentOwner,
         attachment_id: &str,
         now: DateTime<Utc>,
-    ) -> Result<(), AgboardError> {
+    ) -> Result<(), AgpjError> {
         self.delete_attachment_gated(project, owner, attachment_id, now, true)
     }
 
@@ -176,7 +176,7 @@ impl FileStore {
         owner: &AttachmentOwner,
         attachment_id: &str,
         now: DateTime<Utc>,
-    ) -> Result<(), AgboardError> {
+    ) -> Result<(), AgpjError> {
         self.delete_attachment_gated(project, owner, attachment_id, now, false)
     }
 
@@ -189,7 +189,7 @@ impl FileStore {
         attachment_id: &str,
         now: DateTime<Utc>,
         block_drafts: bool,
-    ) -> Result<(), AgboardError> {
+    ) -> Result<(), AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         delete_image_locked(
@@ -211,7 +211,7 @@ impl FileStore {
         project: &ProjectId,
         owner: &AttachmentOwner,
         attachment_id: &str,
-    ) -> Result<StoredAttachment, AgboardError> {
+    ) -> Result<StoredAttachment, AgpjError> {
         let shared = self.shared_dir();
         let project_dir = reader::project_dir_checked(shared, project)?;
         let loaded = load(shared, project, owner)?;
@@ -220,7 +220,7 @@ impl FileStore {
             .iter()
             .find(|a| a.id == attachment_id)
             .cloned()
-            .ok_or_else(|| AgboardError::AttachmentNotFound {
+            .ok_or_else(|| AgpjError::AttachmentNotFound {
                 id: attachment_id.to_string(),
             })?;
         let path = asset_file(&project_dir, owner, &metadata.id, &metadata.media_type)?;
@@ -228,7 +228,7 @@ impl FileStore {
         let linked = layout::has_symlink_below(&project_dir, &path)
             .map_err(|e| io::read_error(&label, e))?;
         if linked || !path.is_file() {
-            return Err(AgboardError::AttachmentNotFound {
+            return Err(AgpjError::AttachmentNotFound {
                 id: attachment_id.to_string(),
             });
         }

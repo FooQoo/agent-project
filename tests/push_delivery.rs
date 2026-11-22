@@ -10,9 +10,9 @@ mod support;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use agent_board::domain::{Actor, ChangeContext, Column, ResultKind};
-use agent_board::file_store::{FileStore, ResultInput};
-use agent_board::server::push_delivery::Request;
+use agent_project::domain::{Actor, ChangeContext, Column, ResultKind};
+use agent_project::file_store::{FileStore, ResultInput};
+use agent_project::server::push_delivery::Request;
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD as B64;
 use ring::aead::{AES_128_GCM, Aad, LessSafeKey, Nonce, UnboundKey};
@@ -26,8 +26,8 @@ use support::home;
 mod harness;
 use harness::*;
 
-const SESSION: &str = "agboard_remote_session";
-const DEVICE: &str = "agboard_remote_device";
+const SESSION: &str = "agpj_remote_session";
+const DEVICE: &str = "agpj_remote_device";
 const ENDPOINT: &str = "https://web.push.apple.com/QGexample";
 
 struct Len(usize);
@@ -164,7 +164,7 @@ fn subscribed_phone(s: &Server) -> Phone {
             ("Origin", PUBLIC),
             ("Sec-Fetch-Site", "same-origin"),
             ("Content-Type", "application/json"),
-            ("X-Agboard-Csrf", &csrf),
+            ("X-Agpj-Csrf", &csrf),
         ],
         &body.to_string(),
     );

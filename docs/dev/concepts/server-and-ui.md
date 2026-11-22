@@ -1,13 +1,13 @@
 # Server and web UI
 
-`agboard serve` serves the board to browsers: a JSON API, live updates, and the React app embedded in the binary. This page covers how requests are handled, how the UI is built, and how the UI behaves when something fails. The endpoints are in [Web API](../reference/web-api.md).
+`agpj serve` serves the board to browsers: a JSON API, live updates, and the React app embedded in the binary. This page covers how requests are handled, how the UI is built, and how the UI behaves when something fails. The endpoints are in [Web API](../reference/web-api.md).
 
 ## Starting and stopping serve
 
 A data area has at most one server. It runs in one of two modes, recorded as `mode` in `serve.json`:
 
 - **Automatic.** A command that cannot work without a server starts one in the background: `wait --after`, `wait --until task`, `message ask` unless `--no-wait`, and `message wait` for an open question. The agent hook starts one too, without waiting. The server stops by itself after it has gone unused.
-- **Manual.** A person runs `agboard serve` (in the foreground) or `agboard serve -d` (in the background). It runs until Ctrl+C or `agboard stop`.
+- **Manual.** A person runs `agpj serve` (in the foreground) or `agpj serve -d` (in the background). It runs until Ctrl+C or `agpj stop`.
 
 Every other command works on the files alone and starts nothing.
 
@@ -15,7 +15,7 @@ Every other command works on the files alone and starts nothing.
 
 - `serve` listens only on `127.0.0.1` and works with zero projects; it may create `workspace.json` in an empty data area.
 - `lifecycle.lock` (a standard `try_lock`) is held from start to exit so that only one server runs per data area. The file existing does not mean a server is running; the lock is released when the process exits. An automatic server waits up to 10 seconds for a server that is still shutting down to release it.
-- At startup, if `serve.json` exists and `GET /api/health` on its port returns the same `pid`, `serve` exits with `already_serving`. Otherwise the file is stale and is overwritten. When the running server is automatic, the reason says to run `agboard serve -d` to keep it.
+- At startup, if `serve.json` exists and `GET /api/health` on its port returns the same `pid`, `serve` exits with `already_serving`. Otherwise the file is stale and is overwritten. When the running server is automatic, the reason says to run `agpj serve -d` to keep it.
 - `serve -d` makes the same check first. If the running server is automatic and the command gives no `--port` or `--monitor` that differs from it, `serve -d` sends it SIGUSR1: the same process records `mode: "manual"`, stops counting idle time, and keeps every connection. Otherwise, for a person at a terminal, it offers to stop the running server through the `stop` path and start a new one; with `--json` or without a terminal it exits with `already_serving`.
 - `serve` writes `serve.json` (`pid`, `port`, `started_at`, `mode`, and `idleTimeoutSeconds` for an automatic server) after it starts listening. On SIGINT or SIGTERM it removes `serve.json` only if the file holds its own pid.
 
@@ -24,32 +24,32 @@ Every other command works on the files alone and starts nothing.
 1. The command reads `serve.json`. If its server answers the health check, the command uses it.
 2. If the pid in `serve.json` is alive and still holds `lifecycle.lock` but does not answer, the command waits up to 10 seconds in case it is starting or stopping, then fails with `board_unavailable` naming the pid. It never starts a second server. A connection the OS or a sandbox refuses is `local_network_denied` instead.
 3. Otherwise the command takes `autostart.lock`, waiting up to 40 seconds for another command that is starting a server, and checks again.
-4. It runs `agboard --json serve --auto` as a new session (`setsid`), with the data area as its working directory and standard output and error in `serve.log` (truncated at each start, mode 0600). The child inherits the open `autostart.lock` and releases it once it is ready, so no other command starts a second server meanwhile.
+4. It runs `agpj --json serve --auto` as a new session (`setsid`), with the data area as its working directory and standard output and error in `serve.log` (truncated at each start, mode 0600). The child inherits the open `autostart.lock` and releases it once it is ready, so no other command starts a second server meanwhile.
 5. The command waits up to 30 seconds for the startup line in `serve.log`, then prints one line on standard error and continues. Standard output stays the command's own.
 
 ```text
-Started the Agent Board server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
+Started the Agent Project server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
 ```
 
-If the connection fails after a command has read `serve.json`, for example because the server stopped in between, the command starts a server once more. The hook starts the server without waiting: it only checks that the pid in `serve.json` is alive and that `autostart.lock` is free, and it starts nothing after `agboard stop` (see below). Failures are left in `serve.log`.
+If the connection fails after a command has read `serve.json`, for example because the server stopped in between, the command starts a server once more. The hook starts the server without waiting: it only checks that the pid in `serve.json` is alive and that `autostart.lock` is free, and it starts nothing after `agpj stop` (see below). Failures are left in `serve.log`.
 
-`AGBOARD_AUTOSTART=0` turns all of this off: commands report `board_unavailable` as before, and the hook starts nothing. The library never starts a server by itself; only the `agboard` command line does.
+`AGPJ_AUTOSTART=0` turns all of this off: commands report `board_unavailable` as before, and the hook starts nothing. The library never starts a server by itself; only the `agpj` command line does.
 
 ### Opening the board
 
 An automatic server opens the board of the project it was started for, once. The user-facing rules are in the [CLI reference](../../guide/reference/cli.md#open-the-board-in-the-browser).
 
-- The command that starts the server passes the project ID as the hidden `serve --auto --open-board=<projectId>`: a waiting command passes the project it follows, `message ask` and `message wait` the project of the questions, and the hook the project of the progress table it printed. `agboard open` passes none, because it opens the page itself.
-- Once the server is ready and has released `autostart.lock`, a thread waits 3 seconds (`AGBOARD_OPEN_GRACE_MS` changes it for the tests, up to 60,000 ms). Then it opens `http://127.0.0.1:<port>/?project=<projectId>` unless a board page has connected since the start. A tab that connected and closed again still counts, because it may reconnect.
-- A board page is a `GET /api/events` stream without the `X-Agboard-Wait` header. The waiting commands send that header, so their own stream, which opens right after the start, is not taken for a tab. A phone's page through the ngrok entrance is the same stream behind the session and counts the same way.
-- `src/interact/browser.rs` decides whether a browser can be opened, in this order: `AGBOARD_OPEN_BROWSER=0` opens nothing; `AGBOARD_BROWSER_OPENER` names a program that replaces the system's opener; `SSH_CONNECTION` or `SSH_TTY` opens nothing; on systems other than macOS and Windows, no `DISPLAY` and no `WAYLAND_DISPLAY` opens nothing. Otherwise it runs `open` (macOS), `explorer` (Windows), or `xdg-open`, with the address as its only argument and no shell, and does not wait for it.
+- The command that starts the server passes the project ID as the hidden `serve --auto --open-board=<projectId>`: a waiting command passes the project it follows, `message ask` and `message wait` the project of the questions, and the hook the project of the progress table it printed. `agpj open` passes none, because it opens the page itself.
+- Once the server is ready and has released `autostart.lock`, a thread waits 3 seconds (`AGPJ_OPEN_GRACE_MS` changes it for the tests, up to 60,000 ms). Then it opens `http://127.0.0.1:<port>/?project=<projectId>` unless a board page has connected since the start. A tab that connected and closed again still counts, because it may reconnect.
+- A board page is a `GET /api/events` stream without the `X-Agpj-Wait` header. The waiting commands send that header, so their own stream, which opens right after the start, is not taken for a tab. A phone's page through the ngrok entrance is the same stream behind the session and counts the same way.
+- `src/interact/browser.rs` decides whether a browser can be opened, in this order: `AGPJ_OPEN_BROWSER=0` opens nothing; `AGPJ_BROWSER_OPENER` names a program that replaces the system's opener; `SSH_CONNECTION` or `SSH_TTY` opens nothing; on systems other than macOS and Windows, no `DISPLAY` and no `WAYLAND_DISPLAY` opens nothing. Otherwise it runs `open` (macOS), `explorer` (Windows), or `xdg-open`, with the address as its only argument and no shell, and does not wait for it.
 - The outcome is one line in `serve.log`: `Opened … in the browser.`, `Did not open … in the browser.` with the reason, or `Could not open …` when the program could not be started.
-- Like starting a server, only the `agboard` command line opens a browser; the library embedded in a test never does. The tests set `AGBOARD_OPEN_BROWSER=0`, and the tests of opening point `AGBOARD_BROWSER_OPENER` at a script that records the address.
+- Like starting a server, only the `agpj` command line opens a browser; the library embedded in a test never does. The tests set `AGPJ_OPEN_BROWSER=0`, and the tests of opening point `AGPJ_BROWSER_OPENER` at a script that records the address.
 
 ### Ports
 
-- A manual server listens on `--port` (7420 by default) and nothing else. A taken port is `port_in_use`, and the reason names what holds it: another Agent Board server (with its pid) whose data area is different, or another program.
-- An automatic server tries 7420 first (`AGBOARD_AUTOSTART_PORT` changes it; tests use 0). When it is taken, the server listens on a port the OS chooses and prints why, for example `Port 7420 is used by another program, so this server uses port 52114.`
+- A manual server listens on `--port` (7420 by default) and nothing else. A taken port is `port_in_use`, and the reason names what holds it: another Agent Project server (with its pid) whose data area is different, or another program.
+- An automatic server tries 7420 first (`AGPJ_AUTOSTART_PORT` changes it; tests use 0). When it is taken, the server listens on a port the OS chooses and prints why, for example `Port 7420 is used by another program, so this server uses port 52114.`
 - A refusal by the OS or a sandbox (`EACCES` or `EPERM`) is `local_network_denied`. Any other failure to listen is `board_unavailable` with the OS message.
 
 ### Stopping by itself
@@ -57,11 +57,11 @@ An automatic server opens the board of the project it was started for, once. The
 An automatic server is in use while any of these is true:
 
 - a request other than `GET /api/health` arrived within the idle time;
-- an event stream (`GET /api/events`) is open: a browser tab, a `wait`, or a question that waits (the waiting commands mark theirs with the `X-Agboard-Wait` header, see [Opening the board](#opening-the-board));
+- an event stream (`GET /api/events`) is open: a browser tab, a `wait`, or a question that waits (the waiting commands mark theirs with the `X-Agpj-Wait` header, see [Opening the board](#opening-the-board));
 - the remote access connection is starting, ready, reconnecting, or stopping;
 - the file watcher saw a change to the board or the Docs within the idle time, so an agent that edits files keeps the server running for automatic Done.
 
-The idle time is 30 minutes; `AGBOARD_IDLE_TIMEOUT` sets it from 60 to 86400 seconds. The check runs every 30 seconds on a monotonic clock. When the server has been unused for the idle time, it removes `serve.json` first (so a new command starts a new server instead of connecting to this one), answers new requests with `503 board_unavailable`, ends the monitor connection, releases `lifecycle.lock`, and writes `Stopped after 30 minutes without use.` to `serve.log`.
+The idle time is 30 minutes; `AGPJ_IDLE_TIMEOUT` sets it from 60 to 86400 seconds. The check runs every 30 seconds on a monotonic clock. When the server has been unused for the idle time, it removes `serve.json` first (so a new command starts a new server instead of connecting to this one), answers new requests with `503 board_unavailable`, ends the monitor connection, releases `lifecycle.lock`, and writes `Stopped after 30 minutes without use.` to `serve.log`.
 
 ### stop
 
@@ -74,7 +74,7 @@ The idle time is 30 minutes; `AGBOARD_IDLE_TIMEOUT` sets it from 60 to 86400 sec
 Every request goes through the same steps:
 
 1. **Host check.** Only `127.0.0.1:<port>` or `localhost:<port>` is accepted.
-2. **Write guard** (writes only). `Origin`, `Sec-Fetch-Site: same-origin`, and `X-Agboard-Token` must all match (see [Security model](./security.md#writes-from-the-browser)). Guards run **before** the target is looked up, so a forged request learns nothing about what exists.
+2. **Write guard** (writes only). `Origin`, `Sec-Fetch-Site: same-origin`, and `X-Agpj-Token` must all match (see [Security model](./security.md#writes-from-the-browser)). Guards run **before** the target is looked up, so a forged request learns nothing about what exists.
 3. **The operation.** Reads come from the in-memory index. Writes take the project write lock, read the latest files, commit `task.json` and `TASK.md` as one pair, and trigger a reload and notification only when something changed (see [Storage and consistency](./saving-and-recovery.md#saving-a-task)).
 
 Writes always target the ProjectId in the URL. The web `actor` is always `human`; it is never taken from the request. There are no unscoped routes such as `/api/board`, no compatibility aliases, and no HTTP API for creating, renaming, or deleting projects.
@@ -97,7 +97,7 @@ JSON and HTML responses are `no-store`. Scripts and stylesheets are named by the
 - The first script holds only what the first screen needs. The card, epic and settings dialogs, the Markdown renderer of the detail panel, and the phone screen's detail drawer are split out with `preloadable` (`web/src/shared/lib/lazy/preloadable.ts`) and fetched right after the first screen is shown; a description shows its plain text until the renderer arrives. The editor's outline reads `##` headings with the viewer's Markdown parser, so CodeMirror loads only with the editor.
 - `web/test/build-contract.test.ts` keeps a budget for the board's first load (the entry and the chunks it imports statically) and requires every script over 500 kB to load on use only. Vite's `chunkSizeWarningLimit` is raised to 1500 kB for those on-use chunks: Mermaid's ELK layout, its grammar parser, and the rich editor.
 - Rust embeds both logos, the HTML templates, and the `.gz` files. `build.rs` lists the scripts and stylesheets of the board in tables in `OUT_DIR`, embedding files with the same bytes once, and only listed names are served. It also derives a build ID for the page from its HTML and file names. Missing files, a missing `.gz`, or HTML that loads an unlisted file stop the build with `Run "pnpm --dir web build" first.`, which is why the web build comes before `cargo build`. `web/dist/` is not committed.
-- Each HTML page carries its build ID in `<meta name="agboard-build">`, and the SSE `ready` event names the server's current one. When they differ, the page reloads once, waiting until no edit dialog, unsent answer, or other operation is open (`useBuildReload`). A tab that already reloaded for a build does not reload for it again, and a page without a build ID (the Vite dev server) never reloads.
+- Each HTML page carries its build ID in `<meta name="agpj-build">`, and the SSE `ready` event names the server's current one. When they differ, the page reloads once, waiting until no edit dialog, unsent answer, or other operation is open (`useBuildReload`). A tab that already reloaded for a build does not reload for it again, and a page without a build ID (the Vite dev server) never reloads.
 - Pure display functions (dates, sorting, counts) live in `web/src/features/*/model/` or `web/src/shared/lib/` with Vitest tests; components are tested with Testing Library.
 - shadcn Radix components (Dialog, Button, Badge, Input, Textarea, Label, RadioGroup, DropdownMenu) and the phone screen's bottom sheet (`drawer.tsx`, built on the Radix Dialog) live in `web/src/shared/ui/`, with `cn` in `web/src/shared/lib/classnames/utils.ts` and the `@/* → ./src/*` alias. Dialog focus is left to the library; features handle blocking close while saving, submission, and input retention. UI styles are in `shared/styles/ui.css`; theme and product styles in `shared/styles/theme.css`, `tokens.css`, and `app.css`.
 - No external CDN or fonts are loaded; fonts come from the `--font-sans` and `--font-mono` stacks.
@@ -111,7 +111,7 @@ JSON and HTML responses are `no-store`. Scripts and stylesheets are named by the
 
 **The editor.** `RichMarkdownEditor` (Milkdown Crepe) keeps the `MarkdownEditor` contract: `value`, `onChange`, `onCursorChange`, `disabled`, and a ref with `goTo`, `focus`, and `insert`. It loads lazily and shows `MarkdownView` meanwhile. Only CodeMirror, ListItem, ImageBlock, Cursor, Placeholder, LinkTooltip, Toolbar, and Table are enabled, without Crepe's theme. The initial value is passed once on mount; `onChange` fires only for user edits, and an untouched document is saved as the original string so unchanged Markdown is not reformatted. Uploads become pending attachments referenced as `assets/<id>.<ext>`. Mermaid previews and the viewer share `renderMermaid`. Inside `web/src/shared/rich-editor/`, `RichMarkdownEditor.impl.tsx` only keys a session by the external value; `useRichEditorSession.ts` owns the session (original, edited, pending commands, heading offsets, cleanup), `createEditor.ts` the feature set, `editorCommands.ts` the `goTo`, `focus`, `insert`, and `markdown` handle, and `MermaidPreviews.ts` the diagram previews, which take the page's translation for the error line. The handle's commands run from the first animation frame after Crepe finishes creating the editor, and commands sent earlier wait for it: in that frame Crepe's list items put back the selection they saw when they were drawn, which would otherwise undo a `goTo` or `insert`.
 
-**Themes.** `web/src/shared/theme/index.ts` owns theme types, the list, validation, and DOM attributes. A theme is a mode (light or dark) and one of 12 accents. It is applied before React renders by syncing `data-mode`, `data-accent`, the `dark` class, and `color-scheme`. The saved value is the PC's `preferences.json`, read and written by `web/src/shared/preferences/index.ts` through `GET` and `PUT /api/preferences` (see [Shared files](../reference/files.md#display-preferences)). The browser keeps a copy in `localStorage` (`agboard.theme` and `agboard.locale`) only for the first paint. Theme changes never reach the task history.
+**Themes.** `web/src/shared/theme/index.ts` owns theme types, the list, validation, and DOM attributes. A theme is a mode (light or dark) and one of 12 accents. It is applied before React renders by syncing `data-mode`, `data-accent`, the `dark` class, and `color-scheme`. The saved value is the PC's `preferences.json`, read and written by `web/src/shared/preferences/index.ts` through `GET` and `PUT /api/preferences` (see [Shared files](../reference/files.md#display-preferences)). The browser keeps a copy in `localStorage` (`agpj.theme` and `agpj.locale`) only for the first paint. Theme changes never reach the task history.
 
 The epic list reads the epics and their progress from the project's Summary. The server computes the progress from the same snapshot as the epics, so the list never mixes two reads. The phone screen of remote access has no epic list; at 768px or wider, remote access shows the PC board, epic list included. The list shares its frame with the archive through `ListPane`, and each state (loading, load failure, refresh failure, empty) comes from the project resource, so a failed refresh keeps the last good rows.
 
@@ -240,7 +240,7 @@ The user-facing behavior is in [Planned versions](../../guide/watch/board.md#pla
 - On startup the page paints from its browser copy, then loads `GET /api/preferences`. If the PC value differs, the page changes to it. The PC value is the one that counts; the browser copy only avoids a flash of the wrong theme.
 - A `preferences` event applies a change to every open page at once, without a reload. A page ignores an older response or event when it already shows a newer revision.
 - A failed save (`invalid_preferences`, `preferences_unavailable`, or no connection) still applies the choice to the current page, shows a save error in the settings dialog, and leaves the PC value unchanged. A missing Japanese translation key shows the English string. Preference failures never change board data.
-- The detail panel width is not a saved preference. It stays per browser under its own key (`agboard.detailWidth`), and a missing or invalid width falls back to the default.
+- The detail panel width is not a saved preference. It stays per browser under its own key (`agpj.detailWidth`), and a missing or invalid width falls back to the default.
 
 ### The docs dialog
 

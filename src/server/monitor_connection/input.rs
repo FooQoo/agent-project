@@ -21,7 +21,7 @@ pub fn parse_domain(raw: &str) -> Option<String> {
 const MAX_TOKEN: usize = 512;
 
 /// An ngrok token as typed: trimmed, not empty, not too long, with no space or control
-/// character. The board's connection dialog and `agboard setup remote` both use this.
+/// character. The board's connection dialog and `agpj setup remote` both use this.
 pub fn parse_token(raw: &str) -> Option<Secret> {
     let token = raw.trim();
     (!token.is_empty()

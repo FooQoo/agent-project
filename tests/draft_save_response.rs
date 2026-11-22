@@ -1,7 +1,7 @@
 //! A draft save answers with the TASK.md text it committed, finalization event included.
 
-use agent_board::domain::{Actor, Assignee, Draft, NewTask};
-use agent_board::file_store::FileStore;
+use agent_project::domain::{Actor, Assignee, Draft, NewTask};
+use agent_project::file_store::FileStore;
 use chrono::{TimeZone, Utc};
 
 fn now() -> chrono::DateTime<Utc> {

@@ -103,7 +103,7 @@ impl Files {
         })
     }
 
-    /// Records an attempt for the plugin hash this agboard ships.
+    /// Records an attempt for the plugin hash this agpj ships.
     pub fn record(&self, ok: bool) {
         let text = json!({
             "hash": PLUGIN_HASH,

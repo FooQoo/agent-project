@@ -21,7 +21,7 @@ fn error_code(body: &str) -> String {
 }
 
 fn project_id(home: &std::path::Path) -> String {
-    agent_board::file_store::FileStore::open(&home.join("shared"))
+    agent_project::file_store::FileStore::open(&home.join("shared"))
         .project_by_name("monitor")
         .unwrap()
         .id

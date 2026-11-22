@@ -7,11 +7,11 @@ use super::{Printed, invalid};
 use crate::cli::Context;
 use crate::cli::args::{MessageAcceptArgs, MessageSendArgs, read_reason};
 use crate::domain::Actor;
-use crate::error::{AgboardError, FileAction};
+use crate::error::{AgpjError, FileAction};
 use crate::file_store::{Accepted, RequestImage, SendRequestInput};
 
-fn read_image(path: &std::path::Path) -> Result<RequestImage, AgboardError> {
-    let bytes = std::fs::read(path).map_err(|e| AgboardError::FileError {
+fn read_image(path: &std::path::Path) -> Result<RequestImage, AgpjError> {
+    let bytes = std::fs::read(path).map_err(|e| AgpjError::FileError {
         action: FileAction::Read,
         file: path.display().to_string(),
         reason: e.to_string(),
@@ -23,7 +23,7 @@ fn read_image(path: &std::path::Path) -> Result<RequestImage, AgboardError> {
     Ok(RequestImage { name, bytes })
 }
 
-pub(super) fn send(ctx: &Context, args: &MessageSendArgs) -> Result<Printed, AgboardError> {
+pub(super) fn send(ctx: &Context, args: &MessageSendArgs) -> Result<Printed, AgpjError> {
     let text = read_reason(args.text.as_deref(), args.text_file.as_deref())?
         .ok_or_else(|| invalid("send", "Give the request with --text or --text-file."))?;
     let images = args
@@ -43,7 +43,7 @@ pub(super) fn send(ctx: &Context, args: &MessageSendArgs) -> Result<Printed, Agb
     })
 }
 
-pub(super) fn accept(ctx: &Context, args: &MessageAcceptArgs) -> Result<Printed, AgboardError> {
+pub(super) fn accept(ctx: &Context, args: &MessageAcceptArgs) -> Result<Printed, AgpjError> {
     let accepted =
         ctx.files
             .accept_message(ctx.project_id()?, &args.id, Actor::Ai, ctx.clock.now())?;

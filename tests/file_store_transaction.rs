@@ -1,4 +1,4 @@
-use agent_board::file_store::transaction::{
+use agent_project::file_store::transaction::{
     Fault, PairBytes, PairTargets, Stage, recover_locked, save_pair_locked,
     save_pair_with_hook_locked,
 };
@@ -163,7 +163,7 @@ fn symlinked_task_folder_cannot_escape_project() {
 
 #[test]
 fn recovery_can_itself_be_interrupted_and_retried() {
-    use agent_board::file_store::transaction::recover_with_hook_locked;
+    use agent_project::file_store::transaction::recover_with_hook_locked;
     for fault in [Fault::Fail, Fault::Interrupt] {
         for stage in [
             Stage::RecoveryMetadataWrite,

@@ -1,13 +1,13 @@
 # サーバーと画面
 
-`agboard serve`は、JSON APIと更新通知を提供し、バイナリに埋め込んだReactアプリでボードを表示します。このページでは、リクエストの処理、画面の構成、エラー発生時の動作を説明します。エンドポイントは[Web API](../reference/web-api.md)にあります。
+`agpj serve`は、JSON APIと更新通知を提供し、バイナリに埋め込んだReactアプリでボードを表示します。このページでは、リクエストの処理、画面の構成、エラー発生時の動作を説明します。エンドポイントは[Web API](../reference/web-api.md)にあります。
 
 ## serveの起動と停止
 
 データ領域ごとにサーバーは一つまでです。動き方は二通りあり、`serve.json`の`mode`に記録します。
 
 - **自動**　サーバーがないと動かないコマンドが、裏でサーバーを起動します。対象は`wait --after`、`wait --until task`、`--no-wait`を付けない`message ask`、未回答の質問を待つ`message wait`です。エージェントのHookも、待たずに起動します。使われなくなると、サーバーは自分で止まります。
-- **手動**　人が`agboard serve`（前面）か`agboard serve -d`（裏）で起動します。Ctrl+Cか`agboard stop`まで動き続けます。
+- **手動**　人が`agpj serve`（前面）か`agpj serve -d`（裏）で起動します。Ctrl+Cか`agpj stop`まで動き続けます。
 
 ほかのコマンドはファイルだけで動き、サーバーを起動しません。
 
@@ -15,7 +15,7 @@
 
 - `serve`は`127.0.0.1`だけで待ち受け、プロジェクトが0件でも動きます。空のデータ領域には`workspace.json`を作ることがあります。
 - データ領域ごとにサーバーが一つだけ動くよう、`lifecycle.lock`（標準の`try_lock`）を起動から終了まで保持します。ファイルがあるだけでサーバーが動いているとは判断しません。ロックはプロセスの終了で外れます。自動のサーバーは、終了処理中のサーバーがロックを外すのを最大10秒待ちます。
-- 起動時に`serve.json`があり、そのポートの`GET /api/health`が同じ`pid`を返すなら、`serve`は`already_serving`で終了します。そうでなければ古いファイルとして上書きします。動いているサーバーが自動なら、理由には動かし続けるための`agboard serve -d`を示します。
+- 起動時に`serve.json`があり、そのポートの`GET /api/health`が同じ`pid`を返すなら、`serve`は`already_serving`で終了します。そうでなければ古いファイルとして上書きします。動いているサーバーが自動なら、理由には動かし続けるための`agpj serve -d`を示します。
 - `serve -d`は先に同じ確認をします。動いているサーバーが自動で、それと食い違う`--port`や`--monitor`の指定がなければ、そのサーバーにSIGUSR1を送ります。同じプロセスが`mode: "manual"`を記録し、使われていない時間を数えるのをやめます。接続はどれも切れません。それ以外の場合、ターミナルで人が実行していれば、動いているサーバーを`stop`と同じ手順で止めて起動し直すかどうかを尋ね、`--json`を付けたときやターミナルの外では`already_serving`で終了します。
 - `serve`は待ち受けを始めた後に`serve.json`（`pid`・`port`・`started_at`・`mode`、自動のサーバーでは`idleTimeoutSeconds`も）を書きます。SIGINTかSIGTERMを受けると、自分のpidが書かれている場合だけ`serve.json`を消します。
 
@@ -24,32 +24,32 @@
 1. `serve.json`を読みます。そのサーバーがヘルスチェックに応えれば、それを使います。
 2. `serve.json`のpidが生きていて`lifecycle.lock`を持っているのに応えないときは、起動中か終了中の場合に備えて最大10秒待ち、そのpidを示した`board_unavailable`で失敗します。二つ目のサーバーは起動しません。OSやサンドボックスが接続を拒んだときは`local_network_denied`です。
 3. それ以外なら`autostart.lock`を取ります。ほかのコマンドが起動中なら最大40秒待ち、もう一度確かめます。
-4. `agboard --json serve --auto`を新しいセッション（`setsid`）として起動します。作業ディレクトリはデータ領域、標準出力と標準エラーは`serve.log`（起動のたびに空にし、権限は0600）です。子プロセスは開いたままの`autostart.lock`を受け継ぎ、準備ができてから外すので、その間にほかのコマンドが二つ目を起動することはありません。
+4. `agpj --json serve --auto`を新しいセッション（`setsid`）として起動します。作業ディレクトリはデータ領域、標準出力と標準エラーは`serve.log`（起動のたびに空にし、権限は0600）です。子プロセスは開いたままの`autostart.lock`を受け継ぎ、準備ができてから外すので、その間にほかのコマンドが二つ目を起動することはありません。
 5. `serve.log`に起動の行が出るまで最大30秒待ち、標準エラーに1行出して続けます。標準出力はコマンド本来の出力のままです。
 
 ```text
-Started the Agent Board server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
+Started the Agent Project server at http://127.0.0.1:7420/ in the background. It stops by itself after 30 minutes without use.
 ```
 
-`serve.json`を読んだ後に接続が失敗したとき（その間にサーバーが止まったときなど）は、もう一度だけ起動します。Hookは待たずに起動します。確かめるのは`serve.json`のpidが生きているかと`autostart.lock`が空いているかだけで、`agboard stop`の後は起動しません（後述）。失敗は`serve.log`に残ります。
+`serve.json`を読んだ後に接続が失敗したとき（その間にサーバーが止まったときなど）は、もう一度だけ起動します。Hookは待たずに起動します。確かめるのは`serve.json`のpidが生きているかと`autostart.lock`が空いているかだけで、`agpj stop`の後は起動しません（後述）。失敗は`serve.log`に残ります。
 
-`AGBOARD_AUTOSTART=0`にすると、これらはすべて止まります。コマンドはこれまでどおり`board_unavailable`を返し、Hookは何も起動しません。ライブラリが自分でサーバーを起動することはなく、起動するのは`agboard`のコマンドラインだけです。
+`AGPJ_AUTOSTART=0`にすると、これらはすべて止まります。コマンドはこれまでどおり`board_unavailable`を返し、Hookは何も起動しません。ライブラリが自分でサーバーを起動することはなく、起動するのは`agpj`のコマンドラインだけです。
 
 ### ボードを開く {#opening-the-board}
 
 自動のサーバーは、起動のきっかけになったプロジェクトのボードを一度だけ開きます。利用者から見た決まりは[CLIリファレンス](../../guide/reference/cli.md#open-the-board-in-the-browser)にあります。
 
-- サーバーを起動するコマンドは、隠しオプション`serve --auto --open-board=<projectId>`でプロジェクトIDを渡します。待つコマンドは待っているプロジェクト、`message ask`と`message wait`は質問のプロジェクト、Hookは出力した進行表のプロジェクトを渡します。`agboard open`は自分でページを開くので、何も渡しません。
-- サーバーの準備ができて`autostart.lock`を外した後、スレッドが3秒待ちます（試験では`AGBOARD_OPEN_GRACE_MS`で変えられ、上限は60,000ミリ秒）。起動してからボードのページが一度もつながっていなければ、`http://127.0.0.1:<port>/?project=<projectId>`を開きます。つながってから閉じたタブも、つながり直すかもしれないので数に入れます。
-- ボードのページとは、`X-Agboard-Wait`ヘッダーのない`GET /api/events`のストリームです。待つコマンドはこのヘッダーを付けるので、起動の直後に開く自分のストリームがタブと取り違えられることはありません。スマホのページがngrokの入口を通して開くのは、sessionの背後にある同じストリームで、同じように数えます。
-- ブラウザーを開けるかどうかは`src/interact/browser.rs`が次の順で決めます。`AGBOARD_OPEN_BROWSER=0`なら開きません。`AGBOARD_BROWSER_OPENER`があれば、そのプログラムをシステムのものの代わりに使います。`SSH_CONNECTION`か`SSH_TTY`があれば開きません。macOSとWindows以外では、`DISPLAY`も`WAYLAND_DISPLAY`もなければ開きません。それ以外なら`open`（macOS）、`explorer`（Windows）、`xdg-open`を、アドレスだけを引数にしてシェルを通さずに起動し、終わるのを待ちません。
+- サーバーを起動するコマンドは、隠しオプション`serve --auto --open-board=<projectId>`でプロジェクトIDを渡します。待つコマンドは待っているプロジェクト、`message ask`と`message wait`は質問のプロジェクト、Hookは出力した進行表のプロジェクトを渡します。`agpj open`は自分でページを開くので、何も渡しません。
+- サーバーの準備ができて`autostart.lock`を外した後、スレッドが3秒待ちます（試験では`AGPJ_OPEN_GRACE_MS`で変えられ、上限は60,000ミリ秒）。起動してからボードのページが一度もつながっていなければ、`http://127.0.0.1:<port>/?project=<projectId>`を開きます。つながってから閉じたタブも、つながり直すかもしれないので数に入れます。
+- ボードのページとは、`X-Agpj-Wait`ヘッダーのない`GET /api/events`のストリームです。待つコマンドはこのヘッダーを付けるので、起動の直後に開く自分のストリームがタブと取り違えられることはありません。スマホのページがngrokの入口を通して開くのは、sessionの背後にある同じストリームで、同じように数えます。
+- ブラウザーを開けるかどうかは`src/interact/browser.rs`が次の順で決めます。`AGPJ_OPEN_BROWSER=0`なら開きません。`AGPJ_BROWSER_OPENER`があれば、そのプログラムをシステムのものの代わりに使います。`SSH_CONNECTION`か`SSH_TTY`があれば開きません。macOSとWindows以外では、`DISPLAY`も`WAYLAND_DISPLAY`もなければ開きません。それ以外なら`open`（macOS）、`explorer`（Windows）、`xdg-open`を、アドレスだけを引数にしてシェルを通さずに起動し、終わるのを待ちません。
 - 結果は`serve.log`に1行残ります。`Opened … in the browser.`、理由つきの`Did not open … in the browser.`、プログラムを起動できなかったときの`Could not open …`のどれかです。
-- サーバーの起動と同じく、ブラウザーを開くのは`agboard`のコマンドラインだけで、試験に組み込んだライブラリは開きません。試験は`AGBOARD_OPEN_BROWSER=0`を設定し、開く処理の試験は`AGBOARD_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。
+- サーバーの起動と同じく、ブラウザーを開くのは`agpj`のコマンドラインだけで、試験に組み込んだライブラリは開きません。試験は`AGPJ_OPEN_BROWSER=0`を設定し、開く処理の試験は`AGPJ_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。
 
 ### ポート
 
-- 手動のサーバーは`--port`（既定は7420）だけで待ち受けます。使われているポートは`port_in_use`で、理由には使っているものを示します。データ領域の違う別のAgent Boardのサーバー（pidつき）か、別のプログラムです。
-- 自動のサーバーはまず7420を試します（`AGBOARD_AUTOSTART_PORT`で変えられ、試験では0を使います）。使われていれば、OSが選んだポートで待ち受け、その理由を出します。例：`Port 7420 is used by another program, so this server uses port 52114.`
+- 手動のサーバーは`--port`（既定は7420）だけで待ち受けます。使われているポートは`port_in_use`で、理由には使っているものを示します。データ領域の違う別のAgent Projectのサーバー（pidつき）か、別のプログラムです。
+- 自動のサーバーはまず7420を試します（`AGPJ_AUTOSTART_PORT`で変えられ、試験では0を使います）。使われていれば、OSが選んだポートで待ち受け、その理由を出します。例：`Port 7420 is used by another program, so this server uses port 52114.`
 - OSやサンドボックスによる拒否（`EACCES`か`EPERM`）は`local_network_denied`です。そのほかの待ち受けの失敗は、OSのメッセージつきの`board_unavailable`です。
 
 ### 自動での停止
@@ -57,11 +57,11 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 自動のサーバーは、次のどれかに当てはまる間は「使われている」とみなします。
 
 - `GET /api/health`以外のリクエストが、使われない時間の上限内に届いた。
-- イベントストリーム（`GET /api/events`）が開いている。ブラウザーのタブ、`wait`、答えを待つ質問がこれに当たります（待つコマンドは自分のストリームに`X-Agboard-Wait`ヘッダーを付けます。[ボードを開く](#opening-the-board)を参照）。
+- イベントストリーム（`GET /api/events`）が開いている。ブラウザーのタブ、`wait`、答えを待つ質問がこれに当たります（待つコマンドは自分のストリームに`X-Agpj-Wait`ヘッダーを付けます。[ボードを開く](#opening-the-board)を参照）。
 - 携帯モニターの接続が、開始中・接続済み・再接続中・停止中のどれかである。
 - ファイルの監視が、上限内にボードかDocsの変更を見つけた。ファイルを直接編集するエージェントのために、自動Doneが働くようサーバーを残します。
 
-上限は30分で、`AGBOARD_IDLE_TIMEOUT`で60〜86400秒に変えられます。確認は30秒ごとで、単調増加の時計を使います。上限の間使われなかったときは、まず`serve.json`を消します（新しいコマンドがこのサーバーにつながず、新しく起動するためです）。続けて新しいリクエストに`503 board_unavailable`を返し、モニターの接続を終え、`lifecycle.lock`を外し、`serve.log`に`Stopped after 30 minutes without use.`と書きます。
+上限は30分で、`AGPJ_IDLE_TIMEOUT`で60〜86400秒に変えられます。確認は30秒ごとで、単調増加の時計を使います。上限の間使われなかったときは、まず`serve.json`を消します（新しいコマンドがこのサーバーにつながず、新しく起動するためです）。続けて新しいリクエストに`503 board_unavailable`を返し、モニターの接続を終え、`lifecycle.lock`を外し、`serve.log`に`Stopped after 30 minutes without use.`と書きます。
 
 ### stop
 
@@ -74,7 +74,7 @@ Started the Agent Board server at http://127.0.0.1:7420/ in the background. It s
 リクエストは、次の順序で処理します。
 
 1. **Hostの確認。** `127.0.0.1:<port>`か`localhost:<port>`だけを受け付けます。
-2. **書き込みの保護**（書き込みのみ）。`Origin`・`Sec-Fetch-Site: same-origin`・`X-Agboard-Token`がすべて一致しなければなりません（[セキュリティモデル](./security.md#ブラウザからの書き込み)を参照）。これらの検証は対象データを検索する**前**に行うため、不正なリクエストからデータの存在を探ることもできません。
+2. **書き込みの保護**（書き込みのみ）。`Origin`・`Sec-Fetch-Site: same-origin`・`X-Agpj-Token`がすべて一致しなければなりません（[セキュリティモデル](./security.md#ブラウザからの書き込み)を参照）。これらの検証は対象データを検索する**前**に行うため、不正なリクエストからデータの存在を探ることもできません。
 3. **操作。** 読み込みはメモリ上の索引から返します。書き込みはプロジェクトの書き込みロックを取って最新のファイルを読み、`task.json`と`TASK.md`を一組で確定し、何かが変わったときだけ再読み込みと通知を起こします（[保存と復旧](./saving-and-recovery.md#タスクの保存)を参照）。
 
 書き込みの対象は、常にURLのProjectIdです。Webの`actor`は常に`human`で、要求から受け取ることはありません。`/api/board`のような対象のない経路、互換の別名、プロジェクトを作成・名前変更・削除するHTTP APIはありません。
@@ -97,7 +97,7 @@ JSONとHTMLの応答は`no-store`です。スクリプトとスタイルシー�
 - 最初のスクリプトには、最初の画面に必要なものだけを入れます。カード・エピック・設定のダイアログ、詳細パネルのMarkdown表示、スマホ画面の詳細ドロワーは`preloadable`（`web/src/shared/lib/lazy/preloadable.ts`）で分割し、最初の画面を表示した直後に取得します。表示部品が届くまで、本文はプレーンテキストで表示します。エディターのアウトラインは表示側のMarkdownパーサーで`##`見出しを読むため、CodeMirrorはエディターを開いたときにだけ読み込まれます。
 - `web/test/build-contract.test.ts`は、ボードの初回読み込み（入口と、そこから静的にimportされるチャンク）に上限を設け、500 kBを超えるスクリプトは使うときだけ読み込むことを確かめます。Viteの`chunkSizeWarningLimit`は、使うときだけ読み込む大きなチャンク（MermaidのELKレイアウト、文法パーサー、リッチエディター）に合わせて1500 kBにしています。
 - Rustは二つのロゴ、HTMLのテンプレート、`.gz`ファイルを埋め込みます。`build.rs`はボードのスクリプトとスタイルシートを`OUT_DIR`の表にまとめ、同じバイト列のファイルは一度だけ埋め込みます。配信するのは表にある名前だけです。ページのHTMLとファイル名から、ビルドIDも作ります。ファイルや`.gz`がない場合、またはHTMLが表にないファイルを読み込む場合は、`Run "pnpm --dir web build" first.`でビルドを止めます。画面のビルドを`cargo build`の前に行うのはこのためです。`web/dist/`はコミットしません。
-- 各HTMLは`<meta name="agboard-build">`に自分のビルドIDを持ち、SSEの`ready`はサーバーの現在のビルドIDを伝えます。両者が違うとページを一度だけ再読み込みします。編集ダイアログ、送信前の回答、そのほかの操作が開いている間は、終わるまで待ちます（`useBuildReload`）。同じビルドのために一度再読み込みしたタブは、もう再読み込みしません。ビルドIDを持たないページ（Viteの開発サーバー）は再読み込みしません。
+- 各HTMLは`<meta name="agpj-build">`に自分のビルドIDを持ち、SSEの`ready`はサーバーの現在のビルドIDを伝えます。両者が違うとページを一度だけ再読み込みします。編集ダイアログ、送信前の回答、そのほかの操作が開いている間は、終わるまで待ちます（`useBuildReload`）。同じビルドのために一度再読み込みしたタブは、もう再読み込みしません。ビルドIDを持たないページ（Viteの開発サーバー）は再読み込みしません。
 - 表示用の純粋関数（日時、並び替え、件数）は`web/src/features/*/model/`または`web/src/shared/lib/`に置いてVitestで試験し、コンポーネントはTesting Libraryで試験します。
 - shadcnのRadix版部品（Dialog・Button・Badge・Input・Textarea・Label・RadioGroup・DropdownMenu）と、モニターの下から出るシート（Radix Dialogを使う`drawer.tsx`）は`web/src/shared/ui/`に置き、`cn`は`web/src/shared/lib/classnames/utils.ts`、別名は`@/* → ./src/*`です。Dialogのフォーカスはライブラリに任せ、保存中に閉じさせない・送信・入力の保持は機能側で扱います。UIのスタイルは`shared/styles/ui.css`、テーマと製品のスタイルは`shared/styles/theme.css`・`tokens.css`・`app.css`です。
 - 外部のCDNやフォントは読み込みません。書体は`--font-sans`と`--font-mono`の指定だけです。
@@ -111,7 +111,7 @@ JSONとHTMLの応答は`no-store`です。スクリプトとスタイルシー�
 
 **エディター。** `RichMarkdownEditor`（Milkdown Crepe）は`MarkdownEditor`と同じ契約を保ちます。`value`・`onChange`・`onCursorChange`・`disabled`と、`goTo`・`focus`・`insert`を持つrefです。遅延読み込みで、その間は`MarkdownView`を表示します。有効にするのはCodeMirror・ListItem・ImageBlock・Cursor・Placeholder・LinkTooltip・Toolbar・Tableだけで、Crepeのテーマは使いません。初期値はマウント時に一度だけ渡し、`onChange`は利用者の編集でだけ呼びます。編集していない文書は元の文字列のまま保存するので、変えていないMarkdownの書式は崩れません。アップロードは保留中の添付になり、`assets/<id>.<ext>`で参照します。Mermaidのプレビューと閲覧は`renderMermaid`を共有します。`web/src/shared/rich-editor/`の中では、`RichMarkdownEditor.impl.tsx`は外部の値でセッションを作り直す境界だけを持ち、`useRichEditorSession.ts`がセッション（元の文章・編集済みかどうか・初期化前のコマンド・見出し位置・後始末）、`createEditor.ts`が機能の組み合わせ、`editorCommands.ts`が`goTo`・`focus`・`insert`・`markdown`のハンドル、`MermaidPreviews.ts`が図のプレビューを受け持ちます。図のエラー文は画面の翻訳を受け取って作ります。ハンドルのコマンドが動くのは、Crepeがエディターを作り終えた後の最初のアニメーションフレームからです。それより前のコマンドはそこまで待ちます。そのフレームでCrepeのリスト項目が描画時の選択位置を戻すため、先に実行すると`goTo`や`insert`の結果が打ち消されるからです。
 
-**テーマ。** `web/src/shared/theme/index.ts`が、テーマの型・一覧・検証・DOMの属性を受け持ちます。テーマはモード（lightかdark）と12色のアクセントの一つです。Reactの描画前に`data-mode`・`data-accent`・`dark`クラス・`color-scheme`を同期して適用します。保存した値はPCの`preferences.json`にあり、`web/src/shared/preferences/index.ts`が`GET`・`PUT /api/preferences`で読み書きします（[共有ファイル](../reference/files.md#表示設定)を参照）。ブラウザは最初の描画のためだけに、`localStorage`の`agboard.theme`と`agboard.locale`に控えを持ちます。テーマの変更がタスクの履歴に届くことはありません。
+**テーマ。** `web/src/shared/theme/index.ts`が、テーマの型・一覧・検証・DOMの属性を受け持ちます。テーマはモード（lightかdark）と12色のアクセントの一つです。Reactの描画前に`data-mode`・`data-accent`・`dark`クラス・`color-scheme`を同期して適用します。保存した値はPCの`preferences.json`にあり、`web/src/shared/preferences/index.ts`が`GET`・`PUT /api/preferences`で読み書きします（[共有ファイル](../reference/files.md#表示設定)を参照）。ブラウザは最初の描画のためだけに、`localStorage`の`agpj.theme`と`agpj.locale`に控えを持ちます。テーマの変更がタスクの履歴に届くことはありません。
 
 エピック一覧は、プロジェクトのSummaryから、エピックと進捗を読みます。進捗はサーバーが`epics`と同じスナップショットから計算するので、一覧が二つの読み込みを混ぜることはありません。リモートアクセスのスマホ向けの画面には、エピック一覧はありません。幅768px以上ではPCのボードになり、エピック一覧もあります。一覧はアーカイブと`ListPane`で外枠を共有し、読み込み中・読み込み失敗・再取得失敗・空の各状態はプロジェクトのresourceから決まります。再取得に失敗しても直前に読めた行を残します。
 
@@ -240,7 +240,7 @@ Detailは、表示する画面がなくなってから5分キャッシュに残�
 - 起動時、ページはブラウザの控えで描画してから、`GET /api/preferences`を読みます。PCの値と違えば、ページはPCの値に切り替えます。正しいのはPCの値で、ブラウザの控えは表示が一瞬ずれるのを防ぐためだけに使います。
 - `preferences`イベントは、開いているすべてのページに変更をすぐに反映します。再読み込みは要りません。ページは、すでに新しい版を表示していれば、遅れて届いた古い応答やイベントを無視します。
 - 保存に失敗した場合（`invalid_preferences`・`preferences_unavailable`、または接続できない場合）も、選んだ設定は今のページに反映します。設定のダイアログには保存の失敗を表示し、PCの値は変えません。日本語の翻訳キーがなければ英語の文言を表示します。設定の失敗でボードのデータが変わることはありません。
-- 詳細欄の幅は、保存する設定には含みません。`agboard.detailWidth`の別のキーでブラウザごとに保存し、値がない・不正なときは既定の幅に戻します。
+- 詳細欄の幅は、保存する設定には含みません。`agpj.detailWidth`の別のキーでブラウザごとに保存し、値がない・不正なときは既定の幅に戻します。
 
 ### ドキュメントのダイアログ
 

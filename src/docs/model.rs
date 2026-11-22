@@ -5,13 +5,13 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::layout;
 use crate::paths;
 
-/// Docs failures are ordinary [`AgboardError`]s with `docs_*` codes, so they
+/// Docs failures are ordinary [`AgpjError`]s with `docs_*` codes, so they
 /// reach HTTP through the same mapping as every other error.
-pub type DocsError = AgboardError;
+pub type DocsError = AgpjError;
 
 /// One project's Docs folder, `<data area>/shared/projects/<project-id>/docs/`. Making a
 /// `DocsRoot` creates nothing; a read of a missing folder is an empty tree.

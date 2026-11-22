@@ -42,7 +42,7 @@ beforeEach(() => {
   selectLocale('en');
   FakeEventSource.reset(true);
   vi.stubGlobal('EventSource', FakeEventSource);
-  document.head.innerHTML = '<meta name="agboard-token" content="test-token">';
+  document.head.innerHTML = '<meta name="agpj-token" content="test-token">';
   restart();
 });
 
@@ -92,7 +92,7 @@ describe('which project is shown', () => {
   it('puts the project name in the page title', async () => {
     renderApp(urlOf(PROJECT_B.id));
     await screen.findByText('Eight in knowledge');
-    expect(document.title).toBe('knowledge - Agent Board');
+    expect(document.title).toBe('knowledge - Agent Project');
   });
 
   it('switches from the menu with a pushed history entry and loads the new board', async () => {
@@ -165,7 +165,7 @@ describe('which project is shown', () => {
 
     await screen.findByRole('button', { name: 'renamed' });
     expect(screen.getByRole('heading', { level: 2, name: 'Eight in knowledge' })).toBeTruthy();
-    expect(document.title).toBe('renamed - Agent Board');
+    expect(document.title).toBe('renamed - Agent Project');
   });
 
   it('keeps the archive list and shared detail column in the app shell', async () => {
@@ -517,7 +517,7 @@ describe('states', () => {
     const app = renderApp(urlOf(PROJECT_A.id));
     expect(await screen.findByText('No projects yet')).toBeTruthy();
     expect(screen.getByText('Create a project using the CLI.')).toBeTruthy();
-    expect(screen.getByText('agboard project create NAME')).toBeTruthy();
+    expect(screen.getByText('agpj project create NAME')).toBeTruthy();
     expect(
       (screen.getByRole('button', { name: 'No projects' }) as HTMLButtonElement).disabled,
     ).toBe(true);

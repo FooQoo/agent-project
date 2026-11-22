@@ -9,13 +9,13 @@ use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 
 use crate::domain::{Changed, Draft};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::frontmatter::{self, AcceptanceItem};
 use crate::file_store::model::{EpicUpdate, NewEpic};
 use crate::file_store::validate::{self, EpicId};
 use crate::server::AppState;
 use crate::server::request::{ApiJson, StrictJson};
-use crate::server::response::{agboard_error_response, json_response};
+use crate::server::response::{agpj_error_response, json_response};
 use crate::server::store::{indexed_view, parse_project_id, refresh_index, with_files};
 
 #[derive(Deserialize)]
@@ -54,8 +54,8 @@ pub(super) struct EpicPatchInput {
 }
 
 /// The error for giving a whole file and its parts in one request.
-pub(super) fn whole_or_parts() -> AgboardError {
-    AgboardError::InvalidValue {
+pub(super) fn whole_or_parts() -> AgpjError {
+    AgpjError::InvalidValue {
         field: "body".into(),
         reason: "Give either the whole text or body fields, not both.".into(),
     }
@@ -68,10 +68,10 @@ pub(super) fn compose_text(
     current_body: &str,
     body: Option<String>,
     acceptance: Option<Vec<AcceptanceItem>>,
-) -> Result<String, AgboardError> {
+) -> Result<String, AgpjError> {
     let body = body.unwrap_or_else(|| current_body.to_string());
     frontmatter::compose(original, &body, acceptance.as_deref()).map_err(|defect| {
-        AgboardError::InvalidValue {
+        AgpjError::InvalidValue {
             field: defect.field,
             reason: defect.reason,
         }
@@ -85,7 +85,7 @@ pub(super) fn whole_text(
     body: Option<String>,
     acceptance: Option<Vec<AcceptanceItem>>,
     template: impl FnOnce() -> String,
-) -> Result<Option<String>, AgboardError> {
+) -> Result<Option<String>, AgpjError> {
     if body.is_none() && acceptance.is_none() {
         return Ok(given);
     }
@@ -95,7 +95,7 @@ pub(super) fn whole_text(
     compose_text(&template(), "", body, acceptance).map(Some)
 }
 
-pub(super) fn parse_epic_id(raw: &str) -> Result<EpicId, AgboardError> {
+pub(super) fn parse_epic_id(raw: &str) -> Result<EpicId, AgpjError> {
     raw.parse()
 }
 
@@ -105,11 +105,11 @@ pub(super) async fn list_epics(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     match indexed_view(&state, &project_id) {
         Ok(view) => json_response(StatusCode::OK, &serde_json::json!({"epics": view.epics})),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -119,15 +119,15 @@ pub(super) async fn get_epic(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let epic_id = match parse_epic_id(&raw_epic) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     match with_files(&state, move |store| store.epic(&project_id, &epic_id)).await {
         Ok(epic) => json_response(StatusCode::OK, &serde_json::json!({"epic": epic})),
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -138,7 +138,7 @@ pub(super) async fn create_epic(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let document = match whole_text(
         input.document,
@@ -147,7 +147,7 @@ pub(super) async fn create_epic(
         validate::document_template,
     ) {
         Ok(document) => document,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let new = NewEpic {
         id: input.id,
@@ -165,7 +165,7 @@ pub(super) async fn create_epic(
             refresh_index(&state);
             json_response(StatusCode::CREATED, &serde_json::json!({"epic": epic}))
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -177,11 +177,11 @@ pub(super) async fn delete_epic(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let epic_id = match parse_epic_id(&raw_epic) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     match with_files(&state, move |store| {
         store.delete_epic(&project_id, &epic_id)
@@ -192,7 +192,7 @@ pub(super) async fn delete_epic(
             refresh_index(&state);
             StatusCode::NO_CONTENT.into_response()
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }
 
@@ -203,17 +203,17 @@ pub(super) async fn update_epic(
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let epic_id = match parse_epic_id(&raw_epic) {
         Ok(id) => id,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     match with_files(&state, move |store| {
         let waves = input.waves;
         // Refuse bad waves before anything is written, so a rejected request changes nothing.
         if let Some(waves) = &waves {
-            frontmatter::validate_waves(waves).map_err(|d| AgboardError::InvalidValue {
+            frontmatter::validate_waves(waves).map_err(|d| AgpjError::InvalidValue {
                 field: d.field,
                 reason: d.reason,
             })?;
@@ -261,6 +261,6 @@ pub(super) async fn update_epic(
                 &serde_json::json!({"epic": value, "changed": changed}),
             )
         }
-        Err(error) => agboard_error_response(&error),
+        Err(error) => agpj_error_response(&error),
     }
 }

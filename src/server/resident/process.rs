@@ -7,7 +7,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
 use super::driver::AgentDriver;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// Marks a finished child; set by the reaper after it has cleaned up.
 pub(super) struct Exit {
@@ -141,9 +141,9 @@ pub(super) fn open_log(path: &Path) -> std::io::Result<std::fs::File> {
 }
 
 /// A random launch ID: `resident-` and 16 hex digits.
-pub(super) fn new_launch_id() -> Result<String, AgboardError> {
+pub(super) fn new_launch_id() -> Result<String, AgpjError> {
     let mut bytes = [0u8; 8];
-    getrandom::fill(&mut bytes).map_err(|e| AgboardError::SessionLaunchFailed {
+    getrandom::fill(&mut bytes).map_err(|e| AgpjError::SessionLaunchFailed {
         reason: format!("Cannot create a launch ID: {e}."),
     })?;
     let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();

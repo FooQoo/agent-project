@@ -37,7 +37,7 @@ export const residentEn = {
     modelUnreadable: 'The model list could not be read. The default model is used.',
     modelUnreadableWhy: 'The model list could not be read ({{reason}}). The default model is used.',
     toolLabel: 'Tool',
-    autoStart: 'Start automatically when Agent Board starts',
+    autoStart: 'Start automatically when Agent Project starts',
     nextStart: 'Next start: {{tool}} · {{model}}',
     otherProject: 'This session is attached to another project.',
     start: 'Start',

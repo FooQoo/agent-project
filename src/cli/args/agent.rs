@@ -31,10 +31,10 @@ pub struct ProgressCommandArgs {
     pub version: super::version::VersionFilterArgs,
 }
 
-/// `skills` prints the Agent Board Skill, or one of its topics.
+/// `skills` prints the Agent Project Skill, or one of its topics.
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Prints the instructions of the agent-board Skill as Markdown. The plugin's SKILL.md runs this command, so the instructions always match this agboard.\nNothing is read or written, and no server is started.\n\nExamples:\n  agboard skills\n  agboard skills file-format"
+    after_help = "Prints the instructions of the agent-project Skill as Markdown. The plugin's SKILL.md runs this command, so the instructions always match this agpj.\nNothing is read or written, and no server is started.\n\nExamples:\n  agpj skills\n  agpj skills file-format"
 )]
 pub struct SkillsArgs {
     /// A part of the Skill to print instead of the main text; an unknown topic lists the topics
@@ -44,7 +44,7 @@ pub struct SkillsArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard hook --agent claude\n  agboard hook --agent codex\n  agboard --project demo hook --agent claude"
+    after_help = "Examples:\n  agpj hook --agent claude\n  agpj hook --agent codex\n  agpj --project demo hook --agent claude"
 )]
 pub struct HookArgs {
     #[arg(long, value_enum)]
@@ -58,7 +58,7 @@ pub struct HookArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard --project demo wait --after f1:0123456789abcdef0123456789abcdef:0123456789abcdef0123456789abcdef --json\n  agboard --project demo wait --after f1:0123456789abcdef0123456789abcdef:0123456789abcdef0123456789abcdef --timeout 60 --json\n  agboard --project demo wait --until task --idle-timeout 300 --json"
+    after_help = "Examples:\n  agpj --project demo wait --after f1:0123456789abcdef0123456789abcdef:0123456789abcdef0123456789abcdef --json\n  agpj --project demo wait --after f1:0123456789abcdef0123456789abcdef:0123456789abcdef0123456789abcdef --timeout 60 --json\n  agpj --project demo wait --until task --idle-timeout 300 --json"
 )]
 pub struct WaitArgs {
     /// Cursor to wait after, as printed by snapshot: f1:<project-id>:<version>
@@ -94,7 +94,7 @@ pub enum SetupAgentArg {
 #[derive(Args, Debug)]
 #[command(
     args_conflicts_with_subcommands = true,
-    after_help = "On a terminal, setup also offers to set up the ngrok connection for the phone (a fixed domain and the token); you can skip it. The same questions are in \"agboard setup remote\".\n\nExamples:\n  agboard setup\n  agboard setup --agent codex --dry-run\n  agboard setup --agent claude --yes --json\n  agboard setup remote"
+    after_help = "On a terminal, setup also offers to set up the ngrok connection for the phone (a fixed domain and the token); you can skip it. The same questions are in \"agpj setup remote\".\n\nExamples:\n  agpj setup\n  agpj setup --agent codex --dry-run\n  agpj setup --agent claude --yes --json\n  agpj setup remote"
 )]
 pub struct SetupArgs {
     #[command(subcommand)]
@@ -118,7 +118,7 @@ pub enum SetupCommand {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "With no option on a terminal it shows the saved settings and asks which way the phone connects (ngrok or Tailscale), then only the settings of that way: for ngrok the domain and the token (typed hidden), for Tailscale nothing more. Each question can be skipped, and an existing value is changed only when you say so.\nWithout a terminal it asks nothing: add one of the saving options. To only look at the settings, use \"agboard show remote\".\nThe settings are shared by every project and are saved whether or not a server runs; a running board shows the change without a reload. Saving does not replace a running connection: the settings apply the next time the connection starts.\nThe token is read from standard input only, never from an argument, and goes to the OS keychain. It is never printed.\n\nExamples:\n  agboard setup remote\n  agboard setup remote --provider tailscale --enabled true\n  agboard setup remote --domain example.ngrok-free.dev --enabled true\n  agboard setup remote --clear-domain\n  printf '%s' \"$NGROK_AUTHTOKEN\" | agboard setup remote --token-stdin"
+    after_help = "With no option on a terminal it shows the saved settings and asks which way the phone connects (ngrok or Tailscale), then only the settings of that way: for ngrok the domain and the token (typed hidden), for Tailscale nothing more. Each question can be skipped, and an existing value is changed only when you say so.\nWithout a terminal it asks nothing: add one of the saving options. To only look at the settings, use \"agpj show remote\".\nThe settings are shared by every project and are saved whether or not a server runs; a running board shows the change without a reload. Saving does not replace a running connection: the settings apply the next time the connection starts.\nThe token is read from standard input only, never from an argument, and goes to the OS keychain. It is never printed.\n\nExamples:\n  agpj setup remote\n  agpj setup remote --provider tailscale --enabled true\n  agpj setup remote --domain example.ngrok-free.dev --enabled true\n  agpj setup remote --clear-domain\n  printf '%s' \"$NGROK_AUTHTOKEN\" | agpj setup remote --token-stdin"
 )]
 pub struct SetupRemoteArgs {
     /// Save how the phone connects: ngrok (the default) or tailscale. Tailscale needs no token or domain
@@ -152,7 +152,7 @@ impl SetupRemoteArgs {
 /// `update` moves the installed plugin to this version.
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard update\n  agboard update --dry-run\n  agboard update --agent codex --yes"
+    after_help = "Examples:\n  agpj update\n  agpj update --dry-run\n  agpj update --agent codex --yes"
 )]
 pub struct UpdateArgs {
     /// Agent whose plugin is updated; every agent with the plugin when omitted
@@ -172,7 +172,7 @@ pub struct UpdateArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agboard serve\n  agboard serve --port 7500\n  agboard serve -d\n  agboard stop\n  NGROK_AUTHTOKEN=... agboard serve --monitor ngrok"
+    after_help = "Examples:\n  agpj serve\n  agpj serve --port 7500\n  agpj serve -d\n  agpj stop\n  NGROK_AUTHTOKEN=... agpj serve --monitor ngrok"
 )]
 pub struct ServeArgs {
     /// Port to listen on (127.0.0.1 only) [default: 7420]
@@ -181,7 +181,7 @@ pub struct ServeArgs {
     /// Built-in remote access connection; ngrok is the only mode (a 4-digit passcode is printed at startup)
     #[arg(long, value_name = "MODE")]
     pub monitor: Option<String>,
-    /// Run in the background and return once the server is ready; stop it with `agboard stop`. Output goes to serve.log in the data directory
+    /// Run in the background and return once the server is ready; stop it with `agpj stop`. Output goes to serve.log in the data directory
     #[arg(short = 'd', long)]
     pub daemon: bool,
     /// Started by another command that needed a server: prefer the default
@@ -206,7 +206,7 @@ pub struct StopArgs {}
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "The project is the one bound to the current folder unless --project names one.\nThe server is started in the background when none runs.\n\nExamples:\n  agboard open\n  agboard --project \"My project\" open\n  agboard open --print\n  agboard open --json"
+    after_help = "The project is the one bound to the current folder unless --project names one.\nThe server is started in the background when none runs.\n\nExamples:\n  agpj open\n  agpj --project \"My project\" open\n  agpj open --print\n  agpj open --json"
 )]
 pub struct OpenArgs {
     /// Print the board's address without opening the browser

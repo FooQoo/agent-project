@@ -62,7 +62,7 @@ fn local_read(headers: &HeaderMap, port: u16) -> Result<(), Box<Response>> {
         Ok(())
     } else {
         Err(Box::new(forbidden(
-            "Open the board at http://127.0.0.1:<port>/ as printed by agboard serve.",
+            "Open the board at http://127.0.0.1:<port>/ as printed by agpj serve.",
         )))
     }
 }

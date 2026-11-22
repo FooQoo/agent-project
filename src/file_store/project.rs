@@ -17,34 +17,34 @@ use super::reader;
 use crate::clock::{format_utc, parse_utc};
 use crate::domain::BoardMeta;
 use crate::domain::{Changed, ProjectId, ProjectMeta, validate_project_name};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The README written into each new project folder: the entry point for
 /// people and agents who edit the shared files directly.
 pub fn readme_text() -> String {
     "# Project files\n\
 \n\
-This folder is one Agent Board project. Its state is kept in these files.\n\
+This folder is one Agent Project project. Its state is kept in these files.\n\
 \n\
-- `project.json`: the project ID, name, creation time, and the next task number. Do not edit it; use the `agboard` CLI.\n\
-- `tasks/<task-id>/task.json`: a task's metadata such as its current status and assignee. Do not edit it; use the `agboard` CLI.\n\
+- `project.json`: the project ID, name, creation time, and the next task number. Do not edit it; use the `agpj` CLI.\n\
+- `tasks/<task-id>/task.json`: a task's metadata such as its current status and assignee. Do not edit it; use the `agpj` CLI.\n\
 - `tasks/<task-id>/TASK.md`: a task's body, acceptance conditions, and operation history. TASK.md history is the source of truth for task operation history.\n\
-- `epics/<epic-id>/epic.json`: an epic's fields. Do not edit it; use the `agboard` CLI.\n\
+- `epics/<epic-id>/epic.json`: an epic's fields. Do not edit it; use the `agpj` CLI.\n\
 - `epics/<epic-id>/EPIC.md`: an epic's document. Write a temporary file in the same folder and rename it over EPIC.md.\n\
 - `.internal/`: lock files. Do not edit or delete them.\n\
 \n\
-TASK.md frontmatter holds its `acceptance` completion conditions and `history` entries containing only `at` and a nonempty `reason`; new tasks accept an empty list and Agent Board adds a creation note.\n\
+TASK.md frontmatter holds its `acceptance` completion conditions and `history` entries containing only `at` and a nonempty `reason`; new tasks accept an empty list and Agent Project adds a creation note.\n\
 Each condition is an item with `id` (AC-n), `text`, and `done` (true or false), for example:\n\
 `---`, `acceptance:`, `  - id: AC-1`, `    text: The list is returned as JSON`, `    done: false`, `---`.\n\
-The body after the frontmatter is free Markdown. EPIC.md uses only `waves` (a list of lists of task IDs) for managed metadata; write epic reference conditions directly in its body. Other keys in the frontmatter are kept. For tasks, the `history` list is written by Agent Board when operations occur; ordinary body and acceptance edits preserve it.\n\
-Every JSON file uses `formatVersion: 1`. Files with any other version or with unknown fields are reported and are not migrated or read; Agent Board never converts or deletes them automatically.\n\
+The body after the frontmatter is free Markdown. EPIC.md uses only `waves` (a list of lists of task IDs) for managed metadata; write epic reference conditions directly in its body. Other keys in the frontmatter are kept. For tasks, the `history` list is written by Agent Project when operations occur; ordinary body and acceptance edits preserve it.\n\
+Every JSON file uses `formatVersion: 1`. Files with any other version or with unknown fields are reported and are not migrated or read; Agent Project never converts or deletes them automatically.\n\
 Do not edit TASK.md of a task that is a draft.\n\
-Do not delete a task folder or an epic folder. Ask a person to delete a task or an epic with the `agboard` CLI.\n"
+Do not delete a task folder or an epic folder. Ask a person to delete a task or an epic with the `agpj` CLI.\n"
         .to_string()
 }
 
 /// Write `workspace.json` if it does not exist yet. A file that exists must pass.
-pub(crate) fn ensure_workspace(shared: &std::path::Path) -> Result<(), AgboardError> {
+pub(crate) fn ensure_workspace(shared: &std::path::Path) -> Result<(), AgpjError> {
     if reader::workspace_present(shared)? {
         return Ok(());
     }
@@ -58,11 +58,7 @@ pub(crate) fn ensure_workspace(shared: &std::path::Path) -> Result<(), AgboardEr
 impl FileStore {
     /// Create an empty project with a new ID and the next task number at 1.
     /// The name is trimmed and must be unique (case-sensitive) among projects.
-    pub fn create_project(
-        &self,
-        name: &str,
-        now: DateTime<Utc>,
-    ) -> Result<ProjectMeta, AgboardError> {
+    pub fn create_project(&self, name: &str, now: DateTime<Utc>) -> Result<ProjectMeta, AgpjError> {
         self.create_project_with_docs(name, now, DocsLocale::default())
     }
 
@@ -73,7 +69,7 @@ impl FileStore {
         name: &str,
         now: DateTime<Utc>,
         docs_locale: DocsLocale,
-    ) -> Result<ProjectMeta, AgboardError> {
+    ) -> Result<ProjectMeta, AgpjError> {
         let name = validate_project_name(name)?;
         let id = ProjectId::generate()?;
         let created_at = parse_utc(&format_utc(now)).unwrap_or(now);
@@ -85,7 +81,7 @@ impl FileStore {
             .iter()
             .any(|project| project.name == name)
         {
-            return Err(AgboardError::ProjectNameExists { name });
+            return Err(AgpjError::ProjectNameExists { name });
         }
         ensure_workspace(shared)?;
 
@@ -97,7 +93,7 @@ impl FileStore {
         ));
         let target = layout::project_dir(shared, &id);
         let label = format!("projects/{}", id.as_str());
-        let result = (|| -> Result<(), AgboardError> {
+        let result = (|| -> Result<(), AgpjError> {
             fs::create_dir(&temp).map_err(|e| io::write_error(&label, e))?;
             fs::create_dir(layout::tasks_dir(&temp)).map_err(|e| io::write_error(&label, e))?;
             fs::create_dir(layout::epics_dir(&temp)).map_err(|e| io::write_error(&label, e))?;
@@ -174,7 +170,7 @@ impl FileStore {
         &self,
         id: &ProjectId,
         new_name: &str,
-    ) -> Result<Changed<ProjectMeta>, AgboardError> {
+    ) -> Result<Changed<ProjectMeta>, AgpjError> {
         let new_name = validate_project_name(new_name)?;
         let shared = self.shared_dir();
         let _catalog = WriteLock::acquire(&layout::catalog_lock(shared))?;
@@ -191,7 +187,7 @@ impl FileStore {
             .iter()
             .any(|project| project.id != *id && project.name == new_name);
         if taken {
-            return Err(AgboardError::ProjectNameExists { name: new_name });
+            return Err(AgpjError::ProjectNameExists { name: new_name });
         }
         file.name = new_name;
         let path = layout::project_file(&dir);
@@ -205,7 +201,7 @@ impl FileStore {
     /// Delete a project and all its tasks. The folder is first renamed out of
     /// the projects folder, so it disappears from the list in one step, then
     /// removed. Other projects are not touched.
-    pub fn delete_project(&self, id: &ProjectId) -> Result<(), AgboardError> {
+    pub fn delete_project(&self, id: &ProjectId) -> Result<(), AgpjError> {
         let shared = self.shared_dir();
         let _catalog = WriteLock::acquire(&layout::catalog_lock(shared))?;
         let dir = reader::project_dir_checked(shared, id)?;
@@ -227,7 +223,7 @@ impl FileStore {
     /// and question numbers stay, so numbers are never reused. The tasks, epics
     /// and qa folders are moved aside and replaced by empty ones. `changed` is false
     /// when there was nothing to remove.
-    pub fn reset_project(&self, id: &ProjectId) -> Result<Changed<BoardMeta>, AgboardError> {
+    pub fn reset_project(&self, id: &ProjectId) -> Result<Changed<BoardMeta>, AgpjError> {
         let shared = self.shared_dir();
         let (dir, _project) = super::ops::lock_project(shared, id)?;
         let file = reader::read_project_file(shared, id)?;

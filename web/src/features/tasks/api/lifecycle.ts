@@ -33,7 +33,7 @@ export async function deleteTask(projectId: ProjectId, id: number): Promise<Dele
       method: 'DELETE',
       headers: {
         ...authHeaders(),
-        'X-Agboard-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
+        'X-Agpj-Language': i18n.resolvedLanguage === 'ja' ? 'ja' : 'en',
       },
     });
     if (response.status === 204) return 'deleted';

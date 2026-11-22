@@ -2,7 +2,7 @@
 
 use super::Defect;
 use crate::domain::{MAX_ANSWER_TEXT_CHARS, MAX_QUESTION_CHARS};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::frontmatter;
 
 /// The TASK.md written when a task is created without a body.
@@ -27,19 +27,19 @@ pub fn check_document_body(text: &str) -> Vec<Defect> {
 
 /// Turn the first defect of a TASK.md text into a `file_invalid` error.
 /// `file` is the path shown to the caller (relative to the shared directory).
-pub fn ensure_task_body(text: &str, file: &str) -> Result<(), AgboardError> {
+pub fn ensure_task_body(text: &str, file: &str) -> Result<(), AgpjError> {
     first_defect_error(check_task_body(text), file)
 }
 
 /// The EPIC.md form of `ensure_task_body`.
-pub fn ensure_document_body(text: &str, file: &str) -> Result<(), AgboardError> {
+pub fn ensure_document_body(text: &str, file: &str) -> Result<(), AgpjError> {
     first_defect_error(check_document_body(text), file)
 }
 
-fn first_defect_error(defects: Vec<Defect>, file: &str) -> Result<(), AgboardError> {
+fn first_defect_error(defects: Vec<Defect>, file: &str) -> Result<(), AgpjError> {
     match defects.into_iter().next() {
         None => Ok(()),
-        Some(d) => Err(AgboardError::FileInvalid {
+        Some(d) => Err(AgpjError::FileInvalid {
             file: file.to_string(),
             field: d.field,
             reason: d.reason,
@@ -49,12 +49,12 @@ fn first_defect_error(defects: Vec<Defect>, file: &str) -> Result<(), AgboardErr
 
 /// Normalize line endings (CRLF to LF), trim the outer whitespace, and require
 /// 1 to 5,000 characters. This is the rule of a decision request's question.
-pub fn normalize_question(text: &str) -> Result<String, AgboardError> {
+pub fn normalize_question(text: &str) -> Result<String, AgpjError> {
     let normalized = text.replace("\r\n", "\n");
     let trimmed = normalized.trim();
     let count = trimmed.chars().count();
     if count == 0 || count > MAX_QUESTION_CHARS {
-        return Err(AgboardError::InvalidValue {
+        return Err(AgpjError::InvalidValue {
             field: "question".into(),
             reason: "Questions must be 1 to 5000 characters.".into(),
         });
@@ -64,14 +64,14 @@ pub fn normalize_question(text: &str) -> Result<String, AgboardError> {
 
 /// Normalize a free-text answer. Blank text counts as no text (`None`). Text
 /// over 2,000 characters is `InvalidValue`.
-pub fn normalize_answer_text(text: &str) -> Result<Option<String>, AgboardError> {
+pub fn normalize_answer_text(text: &str) -> Result<Option<String>, AgpjError> {
     let normalized = text.replace("\r\n", "\n");
     let trimmed = normalized.trim();
     if trimmed.is_empty() {
         return Ok(None);
     }
     if trimmed.chars().count() > MAX_ANSWER_TEXT_CHARS {
-        return Err(AgboardError::InvalidValue {
+        return Err(AgpjError::InvalidValue {
             field: "text".into(),
             reason: "Answers must be 2,000 characters or fewer.".into(),
         });

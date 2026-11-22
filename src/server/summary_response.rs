@@ -15,7 +15,7 @@ use super::contracts::{
     AcceptanceCount, DetailVersions, EpicDetailVersions, PendingChoice, Summary, SummaryEpic,
     SummaryEpicProgress, SummaryProblem, SummaryProject, SummaryTask,
 };
-use super::response::{agboard_error_response, json_response};
+use super::response::{agpj_error_response, json_response};
 use super::store::{indexed_projection_in, parse_project_id};
 use crate::file_store::index::ProjectIndex;
 use crate::file_store::projection::Projection;
@@ -31,7 +31,7 @@ pub(crate) fn respond(
         .and_then(|id| indexed_projection_in(shared, index, &id))
     {
         Ok(projection) => projection,
-        Err(error) => return agboard_error_response(&error),
+        Err(error) => return agpj_error_response(&error),
     };
     let etag = format!("\"{}\"", projection.version);
     let value = HeaderValue::from_str(&etag).ok();

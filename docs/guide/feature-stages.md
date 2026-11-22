@@ -4,7 +4,7 @@ title: Feature stages
 
 # Feature stages
 
-Every feature in Agent Board is in one of two stages: general availability (GA) or public preview. This page explains what each stage means, lists the features in each, and states the limits you should know before you rely on a preview feature. The product mixes both stages, so not every feature is GA.
+Every feature in Agent Project is in one of two stages: general availability (GA) or public preview. This page explains what each stage means, lists the features in each, and states the limits you should know before you rely on a preview feature. The product mixes both stages, so not every feature is GA.
 
 ## What the stages mean
 
@@ -44,7 +44,7 @@ Features that are GA show no notice.
 | Projects and working folders | CLI, PC browser | The nearest bound folder decides which project a folder belongs to. | [CLI reference](./reference/cli#projects) |
 | Saving and recovery of data | macOS | Only files with `formatVersion` 1 are supported. | [Data and backups](./operations/data) |
 | Language and themes | PC, remote access | English and Japanese, and 24 themes. | [Settings](./watch/board#settings) |
-| Agent CLI, JSON output, Hook, and `wait` | Claude Code, Codex | The Skill comes from the installed `agboard`, and the plugin updates itself when a session starts, trusting the Codex hook as well while its definition is the one `agboard` ships. Run `agboard update` only when the automatic update could not finish or the plugin needs repair. You start the agent yourself. | [Working with agents](./delegate/agents) |
+| Agent CLI, JSON output, Hook, and `wait` | Claude Code, Codex | The Skill comes from the installed `agpj`, and the plugin updates itself when a session starts, trusting the Codex hook as well while its definition is the one `agpj` ships. Run `agpj update` only when the automatic update could not finish or the plugin needs repair. You start the agent yourself. | [Working with agents](./delegate/agents) |
 | `setup` and `update` | macOS, with Claude Code or Codex found on your `PATH` and a network connection to GitHub | On a terminal both commands ask first; `--yes` agrees in advance. They depend on the plugin commands of Claude Code and Codex. | [Working with agents](./delegate/agents#set-up-your-agents), [CLI reference](./reference/cli#setup-and-update) |
 | Remote access | A browser on a phone, a tablet, or another computer, through ngrok or Tailscale. Below 768px wide it shows the phone screen; at 768px or wider, the same board as on the PC. | It depends on ngrok or Tailscale. With ngrok, ngrok ends the HTTPS connection; with Tailscale, the address is reachable only from your own Tailscale network. It works only while your computer is on and the server is running. | [Remote access](./watch/remote-access) |
 | First-run welcome | PC and phone browsers | It is offered once for a data area, and you can show it again from Settings. It runs in the browser and never changes your board. | [The first-run guide](./watch/board#the-first-run-guide) |
@@ -61,15 +61,15 @@ The Docs dialog lets you browse and read the files in a project's `docs/` folder
 
 ### Resident agents {#resident-sessions}
 
-A resident agent is a Claude Code or Codex session that Agent Board starts and keeps attached to the board. The board sends it your requests, the answers to its questions, and ready tasks, one at a time.
+A resident agent is a Claude Code or Codex session that Agent Project starts and keeps attached to the board. The board sends it your requests, the answers to its questions, and ready tasks, one at a time.
 
-- **Supported range:** Claude Code and Codex on the computer that runs `agboard serve`. You start and stop the session from **Settings** on the PC; the phone connection cannot.
+- **Supported range:** Claude Code and Codex on the computer that runs `agpj serve`. You start and stop the session from **Settings** on the PC; the phone connection cannot.
 - **Limits:** the session runs unattended and approves its actions automatically, so start it only in projects you trust. It depends on the `claude` stream-json interface and on `codex app-server`, which Codex marks as experimental, so it may change when those CLIs update. The board keeps one session at a time. An item that fails three times is skipped and shown in the dialog.
 - **Guide:** [Resident agent](./delegate/resident-session).
 
 ### Questions and requests {#questions-and-requests}
 
-An agent session you open yourself can keep itself on the board. One `agboard wait --until task` returns one of your requests, the answers to its questions, or a task, or ends with `idle_timeout`. The `wait` skill (`/agent-board:wait` in Claude Code) runs it again and again, so the session receives them one after another.
+An agent session you open yourself can keep itself on the board. One `agpj wait --until task` returns one of your requests, the answers to its questions, or a task, or ends with `idle_timeout`. The `wait` skill (`/agent-project:wait` in Claude Code) runs it again and again, so the session receives them one after another.
 
 - **Supported range:** Claude Code and Codex, following the procedure in the agent skill. A person starts it in the agent's session.
 - **Limits:** a task is not reserved when it is returned, so two sessions can still pick the same task. Only requests and answers are protected: the first `message accept` wins, and another session that tries gets `request_accepted` for a request and `answer_accepted` for an answer. The session ends when you interrupt it or when an error stops it.

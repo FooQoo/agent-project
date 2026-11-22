@@ -2,7 +2,7 @@
 //! stylesheets are in [`super::web_assets`].
 
 use super::web_assets::{APP_BUILD_ID, BUILD_ID_PLACEHOLDER};
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// `web/dist/index.html`, with [`TOKEN_PLACEHOLDER`] in the token `<meta>`
 /// and [`BUILD_ID_PLACEHOLDER`] in the build `<meta>`.
@@ -32,7 +32,7 @@ pub const HOME_ICON_512_PNG: &[u8] = include_bytes!(concat!(
 ));
 
 /// What the web build leaves in `index.html` for the server to fill in.
-pub const TOKEN_PLACEHOLDER: &str = "{{AGBOARD_TOKEN}}";
+pub const TOKEN_PLACEHOLDER: &str = "{{AGPJ_TOKEN}}";
 
 /// Number of random bytes behind a session token (64 hex characters).
 const TOKEN_BYTES: usize = 32;
@@ -51,9 +51,9 @@ pub fn to_hex(bytes: &[u8]) -> String {
 }
 
 /// A new session token: 32 random bytes as 64 lowercase hex characters.
-pub fn new_token() -> Result<String, AgboardError> {
+pub fn new_token() -> Result<String, AgpjError> {
     let mut bytes = [0u8; TOKEN_BYTES];
-    getrandom::fill(&mut bytes).map_err(|e| AgboardError::DatabaseError {
+    getrandom::fill(&mut bytes).map_err(|e| AgpjError::DatabaseError {
         reason: format!("Cannot create a session token: {e}"),
     })?;
     Ok(to_hex(&bytes))
@@ -71,10 +71,10 @@ mod tests {
 
     #[test]
     fn render_index_replaces_the_placeholder() {
-        let html = r#"<meta name="agboard-token" content="{{AGBOARD_TOKEN}}" />"#;
+        let html = r#"<meta name="agpj-token" content="{{AGPJ_TOKEN}}" />"#;
         assert_eq!(
             render_index(html, "abc123"),
-            r#"<meta name="agboard-token" content="abc123" />"#
+            r#"<meta name="agpj-token" content="abc123" />"#
         );
     }
 
@@ -85,10 +85,10 @@ mod tests {
 
     #[test]
     fn render_index_fills_in_the_build_id() {
-        let html = r#"<meta name="agboard-build" content="{{AGBOARD_BUILD_ID}}" />"#;
+        let html = r#"<meta name="agpj-build" content="{{AGPJ_BUILD_ID}}" />"#;
         assert_eq!(
             render_index(html, "abc"),
-            format!(r#"<meta name="agboard-build" content="{APP_BUILD_ID}" />"#)
+            format!(r#"<meta name="agpj-build" content="{APP_BUILD_ID}" />"#)
         );
     }
 

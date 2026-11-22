@@ -69,7 +69,7 @@ impl Launcher {
         if let Err(error) = store.record_agent_stopped(project, id, detail, SystemClock.now()) {
             let _ = writeln!(
                 std::io::stderr(),
-                "agboard: could not record that the resident agent stopped on task #{id}: {}",
+                "agpj: could not record that the resident agent stopped on task #{id}: {}",
                 error.reason()
             );
             let mut pending = self.unrecorded.lock().unwrap_or_else(|e| e.into_inner());

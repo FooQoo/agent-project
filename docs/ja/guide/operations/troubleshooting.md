@@ -10,15 +10,15 @@ title: トラブルシューティング
 
 | 症状 | 原因 | 対処 |
 | --- | --- | --- |
-| タスクがボードにない | ファイルが壊れている、またはサポートされない`formatVersion`を持つ。 | `agboard --project "My project" snapshot --json`を開き、`problems`を読みます。ファイル・項目・理由が書かれています。ファイルを手で直してください。Agent Boardは書き換えません。[ファイルに不備があるとき](../reference/file-format#ファイルに不備があるとき)を参照。 |
+| タスクがボードにない | ファイルが壊れている、またはサポートされない`formatVersion`を持つ。 | `agpj --project "My project" snapshot --json`を開き、`problems`を読みます。ファイル・項目・理由が書かれています。ファイルを手で直してください。Agent Projectは書き換えません。[ファイルに不備があるとき](../reference/file-format#ファイルに不備があるとき)を参照。 |
 | タスクに警告が出て、条件がない | `TASK.md`のfrontmatterが正しいYAMLでない。 | frontmatterを直します。その間も本文は表示されます。 |
-| エージェントが変更してもボードが更新されない | サーバーが動いていない、またはファイルがネットワークドライブにある。 | ページを再読み込みします。サーバーは、エージェントが待つときやHookが動くときに起動します。`agboard serve -d`で起動することもできます。ネットワークドライブは、ファイルの変更を知らせないことがあります。 |
-| ボードが勝手にブラウザーで開いた | エージェントのコマンドかHookがサーバーを裏で起動し、ボードのタブがつながっていなかった。起動のたびに一度だけ開きます。 | タブを開いたままにするか、`AGBOARD_OPEN_BROWSER=0`を設定して止めます。[ボードをブラウザーで開く](../reference/cli#open-the-board-in-the-browser)を参照。 |
-| サーバーが起動してもボードが開かない | 先にボードのタブがつながった、`AGBOARD_OPEN_BROWSER=0`を設定している、SSH越しに実行した、Linuxで画面がない、のどれか。データフォルダの`serve.log`にどれかが書かれています。 | `agboard open`を実行するか、`agboard open --print`が表示するアドレスを開きます。 |
+| エージェントが変更してもボードが更新されない | サーバーが動いていない、またはファイルがネットワークドライブにある。 | ページを再読み込みします。サーバーは、エージェントが待つときやHookが動くときに起動します。`agpj serve -d`で起動することもできます。ネットワークドライブは、ファイルの変更を知らせないことがあります。 |
+| ボードが勝手にブラウザーで開いた | エージェントのコマンドかHookがサーバーを裏で起動し、ボードのタブがつながっていなかった。起動のたびに一度だけ開きます。 | タブを開いたままにするか、`AGPJ_OPEN_BROWSER=0`を設定して止めます。[ボードをブラウザーで開く](../reference/cli#open-the-board-in-the-browser)を参照。 |
+| サーバーが起動してもボードが開かない | 先にボードのタブがつながった、`AGPJ_OPEN_BROWSER=0`を設定している、SSH越しに実行した、Linuxで画面がない、のどれか。データフォルダの`serve.log`にどれかが書かれています。 | `agpj open`を実行するか、`agpj open --print`が表示するアドレスを開きます。 |
 | 「切断」と表示される | ローカルのサーバーとの接続が切れた。 | しばらく待ちます。ページは自動で再接続し、ボードを読み直します。サーバーが止まっていたら、起動し直します。 |
 | エージェントが止まったあともタスクが**稼働中**のまま | 稼働中はエージェントが最後に報告した状態で、リアルタイムの確認ではない。 | タスクを移すか、エージェントに新しい状態を報告させます。 |
 | タスクやエピックがプレビューを閉じたあとも**下書き**のまま | 変更を残したままブラウザのウィンドウを閉じると下書きが残り、誰かが確定するまでそのままです。 | 詳細パネルで**確定する**を選びます。あらためてプレビューを開いて保存や破棄をしても、下書きは残ります。 |
-| 質問が消えた | チャットなど別の場所で回答された、またはエージェントが取り下げた。タスクを移動しても質問は取り下げられない。 | タスクの履歴タブを開くか、`agboard message ls --status all`を実行し、現在の質問があれば回答します。 |
+| 質問が消えた | チャットなど別の場所で回答された、またはエージェントが取り下げた。タスクを移動しても質問は取り下げられない。 | タスクの履歴タブを開くか、`agpj message ls --status all`を実行し、現在の質問があれば回答します。 |
 
 ## エージェントができないことがある
 
@@ -26,29 +26,29 @@ title: トラブルシューティング
 | --- | --- | --- |
 | `epic_is_draft` | エピックが下書きで、エージェントは詳細やタスクの順序を変更できない。 | 人が保存か破棄をするまで待つか、エピックの詳細で**確定する**を頼んでください。添付とタスクの所属は変更できます。 |
 | `task_is_draft` | タスクが人の下書きで、エージェントは変更できず、送信もできない。 | ブラウザで下書きを確定します。その間、エージェントはほかのタスクを進められます。 |
-| `task_in_backlog` | タスクがバックログにあり、エージェントは動かすことも実行することもできない。 | あなたが`agboard mv <id> todo --actor human`で未着手へ送ります。 |
+| `task_in_backlog` | タスクがバックログにあり、エージェントは動かすことも実行することもできない。 | あなたが`agpj mv <id> todo --actor human`で未着手へ送ります。 |
 | `send_with_open_questions` | 未回答の質問が残る計画を送った。 | 質問に答えるか、`--force`を付けてもう一度送ります。 |
 | `human_only` | エージェントが依頼を取り下げようとした。 | 依頼は人が取り下げます。 |
 | `task_is_done` | タスクが完了で、エージェントは変更できない。 | 作業が必要なら、ブラウザでタスクを再開します。 |
 | `acceptance_unmet` | 未達成の条件があるタスクを、エージェントが完了へ移そうとした。 | エージェントに条件を検証させて達成にします。そうすればタスクは自動で完了します。 |
-| `question_answered`または`question_withdrawn` | 質問がすでに回答された、または取り下げられた。最初に記録された回答が残る。 | `agboard message show`で質問を読み直し、現在の質問があれば回答します。 |
-| `start_blocked_by_questions` | タスク、またはエピックのタスクに、まだ誰も答えていない質問があるため、開始できない。 | メッセージが示す質問に答えて（ボード上、または`agboard message answer`）、もう一度開始します。 |
-| `request_accepted`・`answer_accepted`・`question_open`・`request_withdrawn`・`message_closed` | 依頼がすでに受け付けられた、または取り下げられた。回答がすでに受け取られた、または質問にまだ回答がない。あるいは、すでに回答や受け付けのあるメッセージを取り下げようとした。 | `agboard message show`でメッセージを確認します。ほかに必要な操作はありません。 |
+| `question_answered`または`question_withdrawn` | 質問がすでに回答された、または取り下げられた。最初に記録された回答が残る。 | `agpj message show`で質問を読み直し、現在の質問があれば回答します。 |
+| `start_blocked_by_questions` | タスク、またはエピックのタスクに、まだ誰も答えていない質問があるため、開始できない。 | メッセージが示す質問に答えて（ボード上、または`agpj message answer`）、もう一度開始します。 |
+| `request_accepted`・`answer_accepted`・`question_open`・`request_withdrawn`・`message_closed` | 依頼がすでに受け付けられた、または取り下げられた。回答がすでに受け取られた、または質問にまだ回答がない。あるいは、すでに回答や受け付けのあるメッセージを取り下げようとした。 | `agpj message show`でメッセージを確認します。ほかに必要な操作はありません。 |
 | `ai_only`・`message_type_mismatch`・`choice_unknown` | 人が質問を取り下げようとした、メッセージの種類に合わないコマンド（依頼に回答するなど）を使った、または選択肢が質問の選択肢にない。 | そのメッセージの種類に合うコマンドを使い、`message show`に出る選択肢を指定します。 |
 | `questions_unanswered` | タスクが回答を待っているため、エージェントが稼働中にも完了にもできない。 | ボードで質問に回答するか、エージェントに取り下げてもらいます。 |
-| `folder_unbound`・`bound_project_missing` | エージェントのフォルダがプロジェクトに登録されていない、またはプロジェクトが削除された（登録されていないフォルダでは、Hook自体は何も出力しません。このエラーは`agboard progress`と、削除されたプロジェクトで出ます）。 | フォルダを登録します: `agboard project bind "My project"`。[データとバックアップ](./data#フォルダを登録する)を参照。 |
+| `folder_unbound`・`bound_project_missing` | エージェントのフォルダがプロジェクトに登録されていない、またはプロジェクトが削除された（登録されていないフォルダでは、Hook自体は何も出力しません。このエラーは`agpj progress`と、削除されたプロジェクトで出ます）。 | フォルダを登録します: `agpj project bind "My project"`。[データとバックアップ](./data#フォルダを登録する)を参照。 |
 | `confirmation_required` | 削除には、端末での人の確認が必要。 | 自分でコマンドを実行します。 |
-| Hookが`AGBOARD_ERROR`を示す | 進行表を作れない（プロジェクトがない、表が256 KiBを超える、サーバーに届かない）。 | メッセージが示す原因を直します。有効な進行表を取得できるまで、エージェントはボードを変更してはいけません。 |
+| Hookが`AGPJ_ERROR`を示す | 進行表を作れない（プロジェクトがない、表が256 KiBを超える、サーバーに届かない）。 | メッセージが示す原因を直します。有効な進行表を取得できるまで、エージェントはボードを変更してはいけません。 |
 
 ## サーバーが起動しない
 
 | エラー | 原因 | 対処 |
 | --- | --- | --- |
-| `already_serving` | このデータフォルダで、すでに別のサーバーが動いている。 | そちらを使うか、`agboard stop`で先に止めます。コマンドが起動したサーバーなら、`agboard serve -d`で動かし続けられます。それ以外では、ターミナルで`agboard serve -d`を実行すると、置き換えるかどうかを確認します。 |
-| `port_in_use` | `agboard serve`に指定したポートが使われている。メッセージに、データフォルダの違う別のAgent Boardのサーバーか、別のプログラムかが出る。 | 別のポートを選びます: `agboard serve --port 7421`。 |
-| `local_network_denied` | ローカルのネットワーク接続が許されていない環境なので、サーバーを起動することも、つなぐこともできない。 | Codexでは`agboard setup`を実行し、`agboard`をサンドボックスの外で動かせるようにします。 |
+| `already_serving` | このデータフォルダで、すでに別のサーバーが動いている。 | そちらを使うか、`agpj stop`で先に止めます。コマンドが起動したサーバーなら、`agpj serve -d`で動かし続けられます。それ以外では、ターミナルで`agpj serve -d`を実行すると、置き換えるかどうかを確認します。 |
+| `port_in_use` | `agpj serve`に指定したポートが使われている。メッセージに、データフォルダの違う別のAgent Projectのサーバーか、別のプログラムかが出る。 | 別のポートを選びます: `agpj serve --port 7421`。 |
+| `local_network_denied` | ローカルのネットワーク接続が許されていない環境なので、サーバーを起動することも、つなぐこともできない。 | Codexでは`agpj setup`を実行し、`agpj`をサンドボックスの外で動かせるようにします。 |
 | `database_busy` | ほかのコマンドがプロジェクトの書き込みロックを5秒以上保持している。 | コマンドをもう一度実行します。 |
-| `browser_open_failed` | `agboard open`が、ブラウザーを開くプログラム（`open`、`xdg-open`、`AGBOARD_BROWSER_OPENER`）を起動できなかった。 | メッセージのアドレスを自分で開くか、そのプログラムを入れ直します。 |
+| `browser_open_failed` | `agpj open`が、ブラウザーを開くプログラム（`open`、`xdg-open`、`AGPJ_BROWSER_OPENER`）を起動できなかった。 | メッセージのアドレスを自分で開くか、そのプログラムを入れ直します。 |
 
 ## スマホからボードに接続できない
 
@@ -68,21 +68,21 @@ title: トラブルシューティング
 | --- | --- | --- |
 | `setup asks which agent to set up and needs a terminal`や`asks for a confirmation and needs a terminal`（終了コード2） | パイプ、スクリプト、エージェントから、または`--json`付きで、質問の代わりになるオプションなしに起動されました。 | ターミナルで自分で実行するか、`--agent`と`--yes`（または`--dry-run`）を付けてください。 |
 | `The codex command was not found on PATH`（または`claude`）と表示され、エージェントが`skipped`になる | エージェントがインストールされていないか、コマンドが`PATH`上にありません。 | インストールするか`PATH`を直してから、もう一度実行してください。 |
-| `update`が`The Agent Board plugin is not installed`と表示する | `update`は、導入済みのプラグインだけを更新します。 | そのエージェントで`agboard setup`を実行してください。 |
+| `update`が`The Agent Project plugin is not installed`と表示する | `update`は、導入済みのプラグインだけを更新します。 | そのエージェントで`agpj setup`を実行してください。 |
 | エージェントが`failed`になり、理由に`codex plugin …`や`claude plugin …`がある | エージェント自身のプラグインコマンドが失敗しました。たとえばGitHubへのネットワーク接続がない場合です。メッセージの末尾に、そのコマンドの出力があります。 | 原因を取り除いてから、もう一度実行してください。すでに書き込んだ設定ファイルは、そのままで正しく使えます。 |
-| `sandbox_mode`や権限プロファイルについての手作業の手順 | Codexの権限設定では、データフォルダに書き込めません。setupはその設定を変えません。 | Codexの`config.toml`で`sandbox_mode = "workspace-write"`を自分で設定するか、権限プロファイルにデータフォルダを追加してから、もう一度`agboard setup`を実行してください。 |
-| `Codex lists no hooks of the Agent Board plugin`や`still does not trust the hook` | Codexでプラグインが有効になっていないか、Codexが信頼の設定を受け付けませんでした。 | `codex plugin list`でプラグインを確認し、Codexの`/hooks`でHookを確認してください。 |
+| `sandbox_mode`や権限プロファイルについての手作業の手順 | Codexの権限設定では、データフォルダに書き込めません。setupはその設定を変えません。 | Codexの`config.toml`で`sandbox_mode = "workspace-write"`を自分で設定するか、権限プロファイルにデータフォルダを追加してから、もう一度`agpj setup`を実行してください。 |
+| `Codex lists no hooks of the Agent Project plugin`や`still does not trust the hook` | Codexでプラグインが有効になっていないか、Codexが信頼の設定を受け付けませんでした。 | `codex plugin list`でプラグインを確認し、Codexの`/hooks`でHookを確認してください。 |
 | エージェントがHookを実行しない | エージェントを再起動していないか、Claude CodeのHookを確認していません。 | 新しいセッションを始める（Claude Code）かCodexを再起動してから、`/hooks`でHookを確認してください。 |
-| 新しいセッションで、プラグインを更新中、または自動更新が完了しなかったと言われる | `agboard`を更新したあと、Hookが違うプラグインを見つけました。更新はバックグラウンドで動きます。終わらなかった、またはCodexのhookの信頼が必要です。 | 新しいセッションを始めると更新が有効になります。完了しなかったとき、またはCodexを使うときは、`agboard update`を実行してから、新しいセッションを始めてください。 |
+| 新しいセッションで、プラグインを更新中、または自動更新が完了しなかったと言われる | `agpj`を更新したあと、Hookが違うプラグインを見つけました。更新はバックグラウンドで動きます。終わらなかった、またはCodexのhookの信頼が必要です。 | 新しいセッションを始めると更新が有効になります。完了しなかったとき、またはCodexを使うときは、`agpj update`を実行してから、新しいセッションを始めてください。 |
 
 両コマンドの終了コードは、[CLIリファレンス](../reference/cli#setup-and-update)にあります。
 
-## macOSがagboardの実行を拒否する {#macos-will-not-run-agboard}
+## macOSがagpjの実行を拒否する {#macos-will-not-run-agpj}
 
-Homebrewで入るコマンドは、Developer ID証明書で署名され、Appleの公証を受けています。macOSが実行を止めたときは、Gatekeeperを無効にしたり、隔離属性を自分で外したりしないでください。まず、`brew install fooqoo/tap/agboard`がエラーなく終わったか、MacがmacOS 15以降か、`agboard --version`が動くかを確認します。初回の起動では、macOSが公証を確認するためにネットワーク接続が必要な場合があります。それでも止まるときは、macOSの版とメッセージを添えて、[Issueを作成](https://github.com/FooQoo/agent-board/issues)してください。
+Homebrewで入るコマンドは、Developer ID証明書で署名され、Appleの公証を受けています。macOSが実行を止めたときは、Gatekeeperを無効にしたり、隔離属性を自分で外したりしないでください。まず、`brew install fooqoo/tap/agpj`がエラーなく終わったか、MacがmacOS 15以降か、`agpj --version`が動くかを確認します。初回の起動では、macOSが公証を確認するためにネットワーク接続が必要な場合があります。それでも止まるときは、macOSの版とメッセージを添えて、[Issueを作成](https://github.com/FooQoo/agent-project/issues)してください。
 
 ## それでも解決しないとき
 
 - `snapshot --json`の`problems`を読みます。ファイルや形式のエラーを説明しています。
-- どのデータフォルダを使っているか確かめます。CLI・サーバー・Hookは、同じ`AGBOARD_HOME`を共有していなければなりません。[データとバックアップ](./data#データの保存先)を参照してください。
-- Agent Board自体を開発しているなら、[開発者向けのトラブルシューティング](../../dev/troubleshooting)が、ビルド・テスト・内部の失敗を扱います。
+- どのデータフォルダを使っているか確かめます。CLI・サーバー・Hookは、同じ`AGPJ_HOME`を共有していなければなりません。[データとバックアップ](./data#データの保存先)を参照してください。
+- Agent Project自体を開発しているなら、[開発者向けのトラブルシューティング](../../dev/troubleshooting)が、ビルド・テスト・内部の失敗を扱います。

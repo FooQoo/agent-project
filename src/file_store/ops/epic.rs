@@ -15,7 +15,7 @@ use super::super::model::{EpicFile, EpicView};
 use super::super::reader;
 use super::super::validate::{self, EpicId};
 use crate::domain::ProjectId;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 
 /// The epic folder and its `epic.json`, read strictly. A missing folder is
 /// `epic_not_found`; a defect in the file is `file_invalid`.
@@ -23,11 +23,11 @@ pub(super) fn read_epic_file(
     shared: &Path,
     project: &ProjectId,
     id: &EpicId,
-) -> Result<(PathBuf, EpicFile), AgboardError> {
+) -> Result<(PathBuf, EpicFile), AgpjError> {
     let project_dir = reader::project_dir_checked(shared, project)?;
     let dir = layout::epic_dir(&project_dir, id);
     if !dir.is_dir() {
-        return Err(AgboardError::EpicNotFound { id: id.to_string() });
+        return Err(AgpjError::EpicNotFound { id: id.to_string() });
     }
     let path = layout::epic_file(&dir);
     let label = layout::shared_label(shared, &path);
@@ -35,7 +35,7 @@ pub(super) fn read_epic_file(
     let file: EpicFile = reader::parse_epic_file(&bytes, &label)?;
     match validate::check_epic(&file, id.as_str()).into_iter().next() {
         None => Ok((dir, file)),
-        Some(d) => Err(AgboardError::FileInvalid {
+        Some(d) => Err(AgpjError::FileInvalid {
             file: label,
             field: d.field,
             reason: d.reason,
@@ -43,7 +43,7 @@ pub(super) fn read_epic_file(
     }
 }
 
-fn read_document(shared: &Path, dir: &Path) -> Result<String, AgboardError> {
+fn read_document(shared: &Path, dir: &Path) -> Result<String, AgpjError> {
     let path = layout::epic_document(dir);
     io::read_text(&path, &layout::shared_label(shared, &path))
 }
@@ -74,7 +74,7 @@ pub(super) fn epic_view(
     shared: &Path,
     project: &ProjectId,
     id: &EpicId,
-) -> Result<EpicView, AgboardError> {
+) -> Result<EpicView, AgpjError> {
     let (dir, file) = read_epic_file(shared, project, id)?;
     let document = read_document(shared, &dir)?;
     Ok(view_of(file, document))
@@ -82,7 +82,7 @@ pub(super) fn epic_view(
 
 /// A `#RRGGBB` color that none of `used` has. The color is random; a collision
 /// is drawn again, so a saved color is never handed out twice.
-fn random_color<'a>(used: impl Iterator<Item = &'a str> + Clone) -> Result<String, AgboardError> {
+fn random_color<'a>(used: impl Iterator<Item = &'a str> + Clone) -> Result<String, AgpjError> {
     for _ in 0..1_000 {
         let hex = io::random_hex(3).map_err(|e| io::write_error("epic.json", e))?;
         let color = format!("#{}", hex.to_ascii_uppercase());
@@ -93,19 +93,19 @@ fn random_color<'a>(used: impl Iterator<Item = &'a str> + Clone) -> Result<Strin
     Err(io::write_error("epic.json", "no free color could be drawn"))
 }
 
-fn save_epic(shared: &Path, dir: &Path, file: &EpicFile) -> Result<(), AgboardError> {
+fn save_epic(shared: &Path, dir: &Path, file: &EpicFile) -> Result<(), AgpjError> {
     let path = layout::epic_file(dir);
     io::write_json(&path, file, &layout::shared_label(shared, &path))
 }
 
-fn save_document(shared: &Path, dir: &Path, text: &str) -> Result<(), AgboardError> {
+fn save_document(shared: &Path, dir: &Path, text: &str) -> Result<(), AgpjError> {
     let path = layout::epic_document(dir);
     io::write_atomic(&path, text.as_bytes(), &layout::shared_label(shared, &path))
 }
 
 /// The document to store: the given text with CRLF folded, or the template when
 /// no text (or only whitespace) is given.
-fn document_to_store(document: Option<String>) -> Result<String, AgboardError> {
+fn document_to_store(document: Option<String>) -> Result<String, AgpjError> {
     match document {
         Some(text) if !text.trim().is_empty() => validate::normalize_document(&text),
         _ => Ok(validate::document_template()),

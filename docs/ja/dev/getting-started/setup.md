@@ -1,6 +1,6 @@
 # 開発環境のセットアップ
 
-Agent Boardの開発に必要な環境を用意し、ビルド・動作確認・ソースからのインストールまでを行います。動作確認には一時的なボードを使います。コマンドはすべてリポジトリのルートで実行します。
+Agent Projectの開発に必要な環境を用意し、ビルド・動作確認・ソースからのインストールまでを行います。動作確認には一時的なボードを使います。コマンドはすべてリポジトリのルートで実行します。
 
 ## 始める前に
 
@@ -13,9 +13,9 @@ Agent Boardの開発に必要な環境を用意し、ビルド・動作確認・
 
 普段使っているボードへの影響を避けるため、次の二点を守ってください。
 
-- **一時的なデータ領域を使う。** 既定のデータ領域（macOSは`~/.agent-board/`、Windowsは`%USERPROFILE%\.agent-board\`）は普段使っているボードの保存先です。試すときやテストでは、`AGBOARD_HOME`に一時ディレクトリを設定してください。この設定は現在のシェル内で有効です。
+- **一時的なデータ領域を使う。** 既定のデータ領域（macOSは`~/.agent-project/`、Windowsは`%USERPROFILE%\.agent-project\`）は普段使っているボードの保存先です。試すときやテストでは、`AGPJ_HOME`に一時ディレクトリを設定してください。この設定は現在のシェル内で有効です。
 - **ポート7420を空けておく。** 通常の利用の既定のポートです。ほかのポートか、テストではポート0を使ってください。
-- **コマンドがサーバーを起動することを知っておく。** `wait`、答えを待つ質問、Hookは、サーバーが動いていなければ、そのデータ領域のサーバーを裏で起動します。こうして起動したサーバーは、ボードをブラウザーでも開きます。試している間にサーバーを起動させたくなければ`AGBOARD_AUTOSTART=0`を、ブラウザーだけ開かせたくなければ`AGBOARD_OPEN_BROWSER=0`を設定してください。`agboard stop`で止められます。
+- **コマンドがサーバーを起動することを知っておく。** `wait`、答えを待つ質問、Hookは、サーバーが動いていなければ、そのデータ領域のサーバーを裏で起動します。こうして起動したサーバーは、ボードをブラウザーでも開きます。試している間にサーバーを起動させたくなければ`AGPJ_AUTOSTART=0`を、ブラウザーだけ開かせたくなければ`AGPJ_OPEN_BROWSER=0`を設定してください。`agpj stop`で止められます。
 
 ## ビルド
 
@@ -27,7 +27,7 @@ pnpm --dir web build
 cargo build
 ```
 
-実行ファイルは`target/debug/agboard`です。`cargo build`が`Run "pnpm --dir web build" first.`で止まったら、Web画面がまだビルドされていません。
+実行ファイルは`target/debug/agpj`です。`cargo build`が`Run "pnpm --dir web build" first.`で止まったら、Web画面がまだビルドされていません。
 
 開発用ビルドはデバッグ情報を行番号の表だけに絞っています（`Cargo.toml`の`[profile.dev]`）。panicやバックトレースにはファイル名と行番号が出たまま、`target/`が小さく済みます。それでも依存やブランチを切り替えるたびに`target/`は増え、worktreeごとに別に作られます。ディスクの空きが減ったら`cargo clean`で消してください。
 
@@ -44,9 +44,9 @@ just serve        # 保存されたボードとViteのHMR、Rustの監視(ポー
 ```
 
 - `just dev`はサンプルデータを配信し、Webのファイルが変わるとHMRでブラウザを更新します。
-- `just docs`はドキュメントサイトを`http://127.0.0.1:8662/agent-board/`で配信します。必要なら`just docs 8663`のように別のポートを指定できます。
+- `just docs`はドキュメントサイトを`http://127.0.0.1:8662/agent-project/`で配信します。必要なら`just docs 8663`のように別のポートを指定できます。
 - `just storybook`は部品とページのStoryを`http://127.0.0.1:8610/`で配信します。
-- `just serve`は実際のAPIに接続します。Rustのファイルが変わるとRustのサーバーを起動し直し、画面はViteのHMRで配信します。`http://127.0.0.1:7420/`を開きます。RustのAPIはポート7421を使います。ボードは通常の場所、または設定されていれば`AGBOARD_HOME`から読みます。Rustが起動し直すと、書き込み用トークンを更新するためにページが再読み込みされます。
+- `just serve`は実際のAPIに接続します。Rustのファイルが変わるとRustのサーバーを起動し直し、画面はViteのHMRで配信します。`http://127.0.0.1:7420/`を開きます。RustのAPIはポート7421を使います。ボードは通常の場所、または設定されていれば`AGPJ_HOME`から読みます。Rustが起動し直すと、書き込み用トークンを更新するためにページが再読み込みされます。
 - ほかのポートは引数で渡します。例: `just dev 5174`、`just serve 7500 7501`（Webのポート、RustのAPIのポートの順）。
 
 サンプルデータでWeb画面だけを開発するには:
@@ -60,7 +60,7 @@ pnpm --dir web dev --mode mock --port <port>
 手でCLIを試すときは、一時的なデータ領域を使います。
 
 ```sh
-export AGBOARD_HOME="$(mktemp -d)"
+export AGPJ_HOME="$(mktemp -d)"
 cargo run -- project create dev
 cargo run -- --project dev add "Try it" --assignee ai --actor ai
 cargo run -- serve --port <port>
@@ -70,16 +70,16 @@ cargo run -- serve --port <port>
 
 ## デモビルド {#demo-build}
 
-デモビルドは、同じサンプルデータのボードをサーバーなしの静的サイトで動かします。ドキュメントサイトの`/agent-board/demo/`で公開するのはこの版です。
+デモビルドは、同じサンプルデータのボードをサーバーなしの静的サイトで動かします。ドキュメントサイトの`/agent-project/demo/`で公開するのはこの版です。
 
 ```sh
 pnpm --dir web build:demo     # web/dist-demo/ に書き出す
-pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-board/demo/
+pnpm --dir web preview:demo   # http://127.0.0.1:4174/agent-project/demo/
 ```
 
 製品のビルドとの違いは次のとおりです。
 
-- ページは`/agent-board/demo/`から配信します。別のフォルダで配信するときは、ビルド時に`AGBOARD_DEMO_BASE`を指定します（例: `AGBOARD_DEMO_BASE=/demo/`）。
+- ページは`/agent-project/demo/`から配信します。別のフォルダで配信するときは、ビルド時に`AGPJ_DEMO_BASE`を指定します（例: `AGPJ_DEMO_BASE=/demo/`）。
 - サンプルデータのサーバーは、ページの中のService Worker（MSW）の後ろで動き、`/api/`へのリクエスト、ライブ更新、添付画像に応答します。ワーカーのスクリプトは`index.html`の隣に書き出します。Service Workerに対応しないブラウザでは、ボードの代わりにお知らせを表示します。
 - トークンは固定で、ビルドIDは空です。そのため新しいビルドを理由に再読み込みすることはありません。ページを再読み込みするとサンプルデータが元に戻り、初回の案内がもう一度表示されます。
 - パソコンが必要な機能は表示しません。対象は、プロジェクトのDocs（ファイルやフォルダを開くボタンを含む）、リモートアクセスの接続、貼り付けやドロップした画像の保存です。
@@ -127,13 +127,13 @@ Storyで使う架空の画像は`web/.storybook/static/`にあります。Storyb
 
 ## リリースをビルドする {#build-release}
 
-利用者はHomebrewでAgent Boardをインストールします（[インストールと起動](../../guide/getting-started.md)を参照）。この節は、リリースをビルドして公開する人のためのものです。ワークフローは`.github/workflows/release.yml`、スクリプトは`scripts/release/`にあります。
+利用者はHomebrewでAgent Projectをインストールします（[インストールと起動](../../guide/getting-started.md)を参照）。この節は、リリースをビルドして公開する人のためのものです。ワークフローは`.github/workflows/release.yml`、スクリプトは`scripts/release/`にあります。
 
 ### アーカイブと検査
 
 - **版。** 版は`Cargo.toml`と`Cargo.lock`が持ち、タグは`v`にその版を付けたものです。`scripts/release/check-version.py --tag vX.Y.Z`が、食い違いを失敗にします。`main`の版は開発中の版で、公開済みのGitHub Releaseだけがリリース済みの版です。
 - **ビルド。** CPUごとに専用のmacOSランナー（Apple Siliconは`macos-15`、Intelは`macos-15-intel`）で、Web画面、`cargo build --release --locked`の順にビルドします。`MACOSX_DEPLOYMENT_TARGET=15.0`で、両CPUとも最低のmacOSは15です。stripをする場合は、署名の前に行います。
-- **アーカイブ。** `package.sh`が`agboard-<version>-<target>.tar.gz`を作ります。中身は`agboard`、`LICENSE`、`THIRD_PARTY_NOTICES.txt`だけで、Web画面、Skill、Hookのテンプレートはバイナリの中にあります。`verify-artifact.sh`が、名前、2つのライセンスファイル、CPU、deployment target、システムライブラリだけにリンクしていること、実行できる環境では`--version`と埋め込んだWeb画面を確認します。
+- **アーカイブ。** `package.sh`が`agpj-<version>-<target>.tar.gz`を作ります。中身は`agpj`、`LICENSE`、`THIRD_PARTY_NOTICES.txt`だけで、Web画面、Skill、Hookのテンプレートはバイナリの中にあります。`verify-artifact.sh`が、名前、2つのライセンスファイル、CPU、deployment target、システムライブラリだけにリンクしていること、実行できる環境では`--version`と埋め込んだWeb画面を確認します。
 - **通知。** `generate-notices.py`が`THIRD_PARTY_NOTICES.txt`を作り、`--check`で古いと失敗します。MITの本文は`LICENSE`にあり、リリースの前に、著作権表示へ実際の権利者と年を入れる必要があります。
 - **Actions。** `release.yml`のすべての`uses:`は、40文字のコミットSHAに固定し、行末のコメントに版を書きます（`actions/checkout@<sha> # v7.0.1`）。更新するときは、タグをコミットに解決し（注釈付きタグは実体のコミット）、SHAとコメントを一緒に変えます。
 - **候補とリリース。** プルリクエストと手動の実行は、署名なしの候補（`candidate.json`が`signed: false`）だけを作ります。候補がリリースのファイルになることはありません。
@@ -143,7 +143,7 @@ Storyで使う架空の画像は`web/.storybook/static/`にあります。Storyb
 正式な経路は、プッシュまたは再実行した`v*`タグでだけ、保護された`release-signing` environmentの中で動きます。署名用のSecretsがあるのは、そこだけです。
 
 1. **人が一度だけ準備します。** Apple Developer Programに登録し、秘密鍵を持つDeveloper ID Application証明書を作って`.p12`に書き出し、App Store ConnectのAPIキー（`.p8`ファイルと、そのKey IDとIssuer ID）を作ります。次の6つのSecretsを、リポジトリSecretsではなく`release-signing` environmentに登録します。`MACOS_CERT_P12`、`MACOS_CERT_PASSWORD`、`APPLE_TEAM_ID`、`APP_STORE_CONNECT_API_KEY`（`.p8`ファイルの中身）、`APP_STORE_CONNECT_KEY_ID`、`APP_STORE_CONNECT_ISSUER_ID`です。値を、リポジトリ、Issue、ログに書いてはいけません。environmentは、信頼するタグに限定します。
-2. **署名します。** `sign-macos.sh`が、ジョブの一時ディレクトリに一時キーチェーンを作り、証明書を取り込み、期待するTeamのDeveloper ID Applicationのidentityがちょうど1つに決まることを確かめて、`--options runtime --timestamp`と固定のidentifier `io.github.FooQoo.agent-board.agboard`で署名します。証明書のパスワードをコマンドラインに出すことはありません。`openssl`が環境変数の`MACOS_CERT_PASSWORD`を読んで復号し、鍵と証明書を、乱数のその場限りのパスフレーズで守った一時的な`.p12`に包み直し、そのパスフレーズだけを`security import -P`に渡します。復号したPEMは0600のファイルで、包み直した直後に削除します。包み直した`.p12`をmacOSが受け付けることは、最初の本番の実行で確認する必要があります。`verify-signature.sh`が、Team ID、identifier、Hardened Runtime、secure timestamp、designated requirementが既定のものであることを確認します。
+2. **署名します。** `sign-macos.sh`が、ジョブの一時ディレクトリに一時キーチェーンを作り、証明書を取り込み、期待するTeamのDeveloper ID Applicationのidentityがちょうど1つに決まることを確かめて、`--options runtime --timestamp`と固定のidentifier `io.github.FooQoo.agent-project.agpj`で署名します。証明書のパスワードをコマンドラインに出すことはありません。`openssl`が環境変数の`MACOS_CERT_PASSWORD`を読んで復号し、鍵と証明書を、乱数のその場限りのパスフレーズで守った一時的な`.p12`に包み直し、そのパスフレーズだけを`security import -P`に渡します。復号したPEMは0600のファイルで、包み直した直後に削除します。包み直した`.p12`をmacOSが受け付けることは、最初の本番の実行で確認する必要があります。`verify-signature.sh`が、Team ID、identifier、Hardened Runtime、secure timestamp、designated requirementが既定のものであることを確認します。
 3. **公証します。** `notarize-macos.sh`が、署名したバイナリをZIPにし（notarytoolはtar.gzを受け付けません）、App Store ConnectのAPIキーで提出して待ち、状態が`Accepted`のときだけ成功にします。鍵は一時フォルダの0600のファイルに書き出し、`notarytool`には`--key <path> --key-id <id> --issuer <uuid>`で渡します。ファイルはどの終わり方でも削除し、秘密の値がコマンドラインに出ることはありません。Invalid、拒否、タイムアウト、処理中は失敗です。タイムアウトした提出は、再提出せずにIDで続きを確認できます。
 4. **同じバイト列を梱包します。** 公証に通ったバイナリをtar.gzへ入れ、`release-gate.py`が、署名したもの、公証したもの、梱包したものが同一であること、両CPUが同じTeam IDであることを確認してから、アーカイブと`SHA256SUMS`を作ります。一時キーチェーンと鍵の素材は、必ず実行されるステップで削除します。
 5. **ドラフト。** 両CPUが通ったときだけ、ジョブがGitHub Releaseのドラフトを作り、Formulaの候補を作ります。証明書がない、公証が拒否された、片方のCPUが失敗したときは、実行が止まります。署名なしのアーカイブへ切り替えることはありません。
@@ -152,13 +152,13 @@ Storyで使う架空の画像は`web/.storybook/static/`にあります。Storyb
 
 ### Homebrewへの公開
 
-Releaseを公開すると、`.github/workflows/homebrew-tap.yml`がFormulaを自動で公開します。`scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agboard.rb`は、公開したファイルからFormulaを作り、CPUの欠け、版の違い、ハッシュの不一致を拒否します。Formulaは、`on_macos`でCPUごとにアーカイブを選び、macOS 15を要求し（`depends_on macos: :sequoia`）、MITを宣言し、`agboard`を`bin`へ、2つのライセンスファイルを`pkgshare`へインストールします。`test do`では、`--version`を確認し、一時的な`AGBOARD_HOME`を使います。
+Releaseを公開すると、`.github/workflows/homebrew-tap.yml`がFormulaを自動で公開します。`scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agpj.rb`は、公開したファイルからFormulaを作り、CPUの欠け、版の違い、ハッシュの不一致を拒否します。Formulaは、`on_macos`でCPUごとにアーカイブを選び、macOS 15を要求し（`depends_on macos: :sequoia`）、MITを宣言し、`agpj`を`bin`へ、2つのライセンスファイルを`pkgshare`へインストールします。`test do`では、`--version`を確認し、一時的な`AGPJ_HOME`を使います。
 
 ワークフローはReleaseの公開時に動き、下書きとプレリリースは対象外です。次の順に進めます。
 
 1. `gh release download`で、そのタグの2つのアーカイブと`SHA256SUMS`を取得します。
 2. macOS 15でFormulaを作り、`scripts/release/test-formula.sh`と`ruby -c`で確認します。
-3. SSHで`FooQoo/homebrew-tap`をcloneし、`Formula/agboard.rb`をコピーします。ファイルが変わったときだけ、`github-actions[bot]`として`agboard X.Y.Z`をコミットし、既定ブランチへ直接pushします。
+3. SSHで`FooQoo/homebrew-tap`をcloneし、`Formula/agpj.rb`をコピーします。ファイルが変わったときだけ、`github-actions[bot]`として`agpj X.Y.Z`をコミットし、既定ブランチへ直接pushします。
 
 ジョブは`homebrew-tap` Environmentで動きます。このEnvironmentは`v*`タグだけを受け付け、シークレット`HOMEBREW_TAP_DEPLOY_KEY`を持ちます。これはtapリポジトリの読み書きできるデプロイキーで、pushのあいだだけ権限0600の一時ファイルに書き、ジョブの最後に削除します。SSHは固定したGitHubのホスト鍵だけを受け入れます。権限は`contents: read`だけで、コマンドラインにシークレットは現れません。`release.yml`は関与しません。
 
@@ -174,18 +174,18 @@ gh workflow run homebrew-tap.yml --ref vX.Y.Z
 
 ## ソースからインストール
 
-エージェントとHookは`PATH`の`agboard`を実行するので、変更をエージェント経由で試すには、ビルドした実行ファイルをインストールします。
+エージェントとHookは`PATH`の`agpj`を実行するので、変更をエージェント経由で試すには、ビルドした実行ファイルをインストールします。
 
 ```sh
 pnpm --dir web install
 pnpm --dir web build
 cargo install --path . --locked --force
-command -v agboard
+command -v agpj
 ```
 
-`cargo install`は`~/.cargo/bin`（または`$CARGO_HOME/bin`）に書き込みます。そのディレクトリが`PATH`に入っている必要があります。`command -v agboard`が何も表示しなければ、例えば`export PATH="$HOME/.cargo/bin:$PATH"`で追加し、新しいシェルを開きます。
+`cargo install`は`~/.cargo/bin`（または`$CARGO_HOME/bin`）に書き込みます。そのディレクトリが`PATH`に入っている必要があります。`command -v agpj`が何も表示しなければ、例えば`export PATH="$HOME/.cargo/bin:$PATH"`で追加し、新しいシェルを開きます。
 
-インストールした`agboard`と開発中のビルドは別のファイルです。Hookはインストールした方を呼び、`cargo build`・`cargo run`・`target/debug/agboard`は作業ツリーを使います。Hookで変更を確かめる前に、インストールし直してください。
+インストールした`agpj`と開発中のビルドは別のファイルです。Hookはインストールした方を呼び、`cargo build`・`cargo run`・`target/debug/agpj`は作業ツリーを使います。Hookで変更を確かめる前に、インストールし直してください。
 
 ### macOSでキーチェーンの許可を保つ
 
@@ -193,11 +193,11 @@ macOSでは、リモートアクセスのトークンをキーチェーンに保
 
 ```sh
 security find-identity -v -p codesigning   # 署名に使えるIDの一覧
-export AGBOARD_CODESIGN_IDENTITY="<IDの名前またはSHA-1>"
+export AGPJ_CODESIGN_IDENTITY="<IDの名前またはSHA-1>"
 scripts/dev/install-local.sh
 ```
 
-`just install`はweb UIをビルドしてからこのスクリプトを実行するので、`AGBOARD_CODESIGN_IDENTITY`を設定していれば同じように署名します。`AGBOARD_CODESIGN_IDENTITY`を設定していないとき、またはmacOS以外では、署名せずにインストールし、その旨を表示します。
+`just install`はweb UIをビルドしてからこのスクリプトを実行するので、`AGPJ_CODESIGN_IDENTITY`を設定していれば同じように署名します。`AGPJ_CODESIGN_IDENTITY`を設定していないとき、またはmacOS以外では、署名せずにインストールし、その旨を表示します。
 
 - 署名後の最初の実行では、確認が1回出ます。**常に許可**を選んでください。
 - `codesign`が署名用の鍵を使う許可を1回求めることがあります。ログインパスワードを入力し、**常に許可**を選んでください。ターミナルのアプリから実行してください。GUIのない環境から実行すると、`codesign`が`errSecInternalComponent`で失敗することがあります。
@@ -209,8 +209,8 @@ macOSでは、テストが極端に遅くなることもあります。macOSは�
 ```sh
 root="$(mktemp -d)"
 cargo install --path . --locked --root "$root"
-export AGBOARD_HOME="$(mktemp -d)"
-"$root/bin/agboard" --help
-"$root/bin/agboard" project create demo
-"$root/bin/agboard" --project demo ls
+export AGPJ_HOME="$(mktemp -d)"
+"$root/bin/agpj" --help
+"$root/bin/agpj" project create demo
+"$root/bin/agpj" --project demo ls
 ```

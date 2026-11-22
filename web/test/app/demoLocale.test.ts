@@ -80,7 +80,7 @@ describe('Japanese sample data', () => {
     const result = server.handle({
       method: 'POST',
       url: `/api/projects/${PROJECT}/tasks`,
-      headers: { 'x-agboard-token': 'demo-token', 'x-agboard-language': 'ja' },
+      headers: { 'x-agpj-token': 'demo-token', 'x-agpj-language': 'ja' },
       body: JSON.stringify({ title: '新しいカード', assignee: 'ai' }),
     });
     expect(result?.kind === 'response' && result.status).toBe(201);

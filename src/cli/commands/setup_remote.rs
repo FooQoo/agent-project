@@ -1,5 +1,5 @@
-//! `agboard setup remote`: save the remote connection settings (ngrok or Tailscale), and the
-//! optional remote step of plain `agboard setup`.
+//! `agpj setup remote`: save the remote connection settings (ngrok or Tailscale), and the
+//! optional remote step of plain `agpj setup`.
 //!
 //! The settings are global to the data area, so no project is needed. Storage
 //! and validation are in [`crate::remote_settings`], which the interactive
@@ -11,7 +11,7 @@
 //! - No option: on a terminal, show the state, ask which way the phone connects, and then ask
 //!   only that way's settings: for ngrok the domain and the token (typed hidden), each
 //!   skippable; for Tailscale nothing more. Without a terminal nothing is asked and the
-//!   command says what to add, as `agboard setup` does.
+//!   command says what to add, as `agpj setup` does.
 
 use std::io::{IsTerminal, Read};
 use std::path::Path;
@@ -21,7 +21,7 @@ use serde_json::json;
 use super::setup_remote_tailscale as advice;
 use crate::cli::Outcome;
 use crate::cli::args::SetupRemoteArgs;
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::remote_settings::{self as saved, APPLIES_NOTE, Change, Saved};
 use crate::server::monitor_connection::contracts::Provider;
 use crate::server::monitor_connection::keychain::TokenVault;
@@ -38,7 +38,7 @@ pub fn run(
     json: bool,
     vault: &dyn TokenVault,
     stdin: &mut dyn Read,
-) -> Result<Option<Outcome>, AgboardError> {
+) -> Result<Option<Outcome>, AgpjError> {
     if args.saves() {
         let change = Change {
             domain: if args.clear_domain {
@@ -62,17 +62,17 @@ pub fn run(
     }
     let terminal = std::io::stdin().is_terminal() && std::io::stderr().is_terminal();
     if json || !terminal {
-        return Err(AgboardError::InvalidArgument {
+        return Err(AgpjError::InvalidArgument {
             message: "setup remote asks questions and needs a terminal for it. Without a terminal or with --json, add --provider, --domain, --clear-domain, --enabled, or --token-stdin to save them.".to_string(),
             command: Some("setup".to_string()),
         });
     }
-    let _ = cliclack::intro("agboard setup remote");
+    let _ = cliclack::intro("agpj setup remote");
     ask(data_dir, vault)?;
     Ok(None)
 }
 
-fn save(data_dir: &Path, vault: &dyn TokenVault, change: Change) -> Result<Outcome, AgboardError> {
+fn save(data_dir: &Path, vault: &dyn TokenVault, change: Change) -> Result<Outcome, AgpjError> {
     let tailscale = (change.provider == Some(Provider::Tailscale)).then(advice::check_now);
     let now = saved::apply(data_dir, vault, change)?;
     let mut json = now.to_json();
@@ -93,9 +93,9 @@ fn save(data_dir: &Path, vault: &dyn TokenVault, change: Change) -> Result<Outco
     })
 }
 
-fn read_token(stdin: &mut dyn Read) -> Result<Secret, AgboardError> {
+fn read_token(stdin: &mut dyn Read) -> Result<Secret, AgpjError> {
     let mut bytes = Vec::new();
-    let invalid = |message: String| AgboardError::InvalidArgument {
+    let invalid = |message: String| AgpjError::InvalidArgument {
         message,
         command: Some("setup".to_string()),
     };
@@ -110,7 +110,7 @@ fn read_token(stdin: &mut dyn Read) -> Result<Secret, AgboardError> {
         })?;
     let text = String::from_utf8_lossy(&bytes);
     if bytes.len() as u64 > MAX_STDIN || text.trim().is_empty() {
-        return Err(invalid("--token-stdin needs the token on standard input, for example: printf '%s' \"$NGROK_AUTHTOKEN\" | agboard setup remote --token-stdin".to_string()));
+        return Err(invalid("--token-stdin needs the token on standard input, for example: printf '%s' \"$NGROK_AUTHTOKEN\" | agpj setup remote --token-stdin".to_string()));
     }
     saved::token_of(&text)
 }
@@ -132,7 +132,7 @@ pub fn apply_answers(
     data_dir: &Path,
     vault: &dyn TokenVault,
     answers: &Answers,
-) -> Result<Option<Saved>, AgboardError> {
+) -> Result<Option<Saved>, AgpjError> {
     let domain = match answers.domain.as_deref().map(str::trim) {
         None => None,
         Some("") => Some(None),
@@ -154,8 +154,8 @@ pub fn apply_answers(
     saved::apply(data_dir, vault, change).map(Some)
 }
 
-/// The optional ngrok step of plain `agboard setup`: asks whether to set it up
-/// and, if so, runs the same questions as `agboard setup remote`. A problem here
+/// The optional ngrok step of plain `agpj setup`: asks whether to set it up
+/// and, if so, runs the same questions as `agpj setup remote`. A problem here
 /// is reported and never fails the setup that already ran.
 pub fn offer(data_dir: &Path, vault: &dyn TokenVault) {
     let current = saved::read(data_dir, vault).ok();
@@ -164,7 +164,7 @@ pub fn offer(data_dir: &Path, vault: &dyn TokenVault) {
     }) {
         "Change the remote connection settings for the phone?"
     } else {
-        "Set up the remote connection for the phone (ngrok or Tailscale) now? You can skip this and do it later with \"agboard setup remote\"."
+        "Set up the remote connection for the phone (ngrok or Tailscale) now? You can skip this and do it later with \"agpj setup remote\"."
     };
     if !matches!(
         cliclack::confirm(question).initial_value(false).interact(),
@@ -179,7 +179,7 @@ pub fn offer(data_dir: &Path, vault: &dyn TokenVault) {
 
 /// The questions. Shows the current state first; an existing value is changed
 /// only when the user says so, and each question can be skipped.
-fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgboardError> {
+fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgpjError> {
     let now = saved::read(data_dir, vault)?;
     let _ = cliclack::note("Saved remote settings", now.human());
     let mut answers = Answers::default();
@@ -208,7 +208,7 @@ fn ask(data_dir: &Path, vault: &dyn TokenVault) -> Result<(), AgboardError> {
     finish(data_dir, vault, &answers)
 }
 
-fn finish(data_dir: &Path, vault: &dyn TokenVault, answers: &Answers) -> Result<(), AgboardError> {
+fn finish(data_dir: &Path, vault: &dyn TokenVault, answers: &Answers) -> Result<(), AgpjError> {
     match apply_answers(data_dir, vault, answers)? {
         Some(now) => {
             let _ = cliclack::note("Saved", format!("{}\n{APPLIES_NOTE}", now.human()));
@@ -230,12 +230,12 @@ pub(super) fn confirm(question: &str) -> Option<bool> {
 }
 
 /// A cancelled question: say so and tell the caller to save nothing.
-pub(super) fn cancel_false() -> Result<bool, AgboardError> {
+pub(super) fn cancel_false() -> Result<bool, AgpjError> {
     let _ = cancelled();
     Ok(false)
 }
 
-fn cancelled() -> Result<(), AgboardError> {
+fn cancelled() -> Result<(), AgpjError> {
     let _ = cliclack::outro_cancel("Nothing was changed.");
     Ok(())
 }

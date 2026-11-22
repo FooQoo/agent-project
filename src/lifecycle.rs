@@ -5,7 +5,7 @@
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use crate::error::AgboardError;
+use crate::error::AgpjError;
 use crate::file_store::lock::LifecycleLock;
 
 pub struct LifecycleGuard {
@@ -14,7 +14,7 @@ pub struct LifecycleGuard {
 
 impl LifecycleGuard {
     /// Take the lifecycle lock of `data_dir`. A second holder gets `DatabaseBusy`.
-    pub fn acquire(data_dir: &Path) -> Result<Self, AgboardError> {
+    pub fn acquire(data_dir: &Path) -> Result<Self, AgpjError> {
         Ok(Self {
             _lock: LifecycleLock::acquire(data_dir)?,
         })
@@ -26,12 +26,12 @@ impl LifecycleGuard {
     pub fn acquire_waiting(
         data_dir: &Path,
         wait: Duration,
-        give_up: impl Fn() -> Option<AgboardError>,
-    ) -> Result<Self, AgboardError> {
+        give_up: impl Fn() -> Option<AgpjError>,
+    ) -> Result<Self, AgpjError> {
         let deadline = Instant::now() + wait;
         loop {
             match Self::acquire(data_dir) {
-                Err(AgboardError::DatabaseBusy) if Instant::now() < deadline => {
+                Err(AgpjError::DatabaseBusy) if Instant::now() < deadline => {
                     if let Some(error) = give_up() {
                         return Err(error);
                     }
