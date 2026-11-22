@@ -140,7 +140,7 @@ describe('useGuide', () => {
     expect(result.current.phase).toBe('question');
     expect(cardOf(hook, SAMPLE_IDS[0])).toMatchObject({
       taskStatus: 'todo',
-      agentStatus: 'pending',
+      agentStatus: 'awaiting_answer',
     });
     expect(cardOf(hook, SAMPLE_IDS[0])?.pendingChoices).toHaveLength(2);
     // The question waits for the answer: the explanation's button does nothing.

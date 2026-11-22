@@ -18,7 +18,7 @@ const translate = ((key: string, options?: Record<string, unknown>): string => {
     'column.done': '完了',
     'runState.idle': '未稼働',
     'runState.running': '稼働中',
-    'runState.pending': '待機中',
+    'runState.awaiting_answer': '回答待',
   };
   return labels[key] ?? key;
 }) as unknown as TFunction;
@@ -77,9 +77,9 @@ describe('stateLabel', () => {
     expect(stateLabel(makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'running' }))).toBe(
       'Running',
     );
-    expect(stateLabel(makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'pending' }))).toBe(
-      'Pending',
-    );
+    expect(
+      stateLabel(makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'awaiting_answer' })),
+    ).toBe('Awaiting answer');
   });
 
   it('translates run state values only for doing tasks', () => {
@@ -90,9 +90,23 @@ describe('stateLabel', () => {
       stateLabel(makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'running' }), translate),
     ).toBe('稼働中');
     expect(
-      stateLabel(makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'pending' }), translate),
-    ).toBe('待機中');
+      stateLabel(
+        makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'awaiting_answer' }),
+        translate,
+      ),
+    ).toBe('回答待');
     expect(stateLabel(makeTask({ id: 1, taskStatus: 'todo' }), translate)).toBeNull();
+  });
+
+  it('labels a task that has run in Todo and Done, and a Todo task that waits for an answer', () => {
+    expect(stateLabel(makeTask({ id: 1, taskStatus: 'todo', agentStatus: 'ran' }))).toBe('Has run');
+    expect(stateLabel(makeTask({ id: 1, taskStatus: 'done', agentStatus: 'ran' }))).toBe('Has run');
+    expect(stateLabel(makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'paused' }))).toBe(
+      'Paused',
+    );
+    expect(
+      stateLabel(makeTask({ id: 1, taskStatus: 'todo', agentStatus: 'awaiting_answer' })),
+    ).toBe('Awaiting answer');
   });
 
   it('returns null for tasks that are not in doing', () => {

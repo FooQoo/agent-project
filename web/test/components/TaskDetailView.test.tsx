@@ -29,7 +29,7 @@ describe('TaskDetailView', () => {
     const task = makeTask({
       id: 72,
       title: 'Awaiting API review',
-      agentStatus: 'pending',
+      agentStatus: 'awaiting_answer',
       pendingReason: 'Which API shape should we use?',
       pendingChoices: [
         { id: 'a', label: 'Keep the current interface' },

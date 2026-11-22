@@ -39,7 +39,7 @@ function props(overrides: Partial<MonitorViewProps> = {}): MonitorViewProps {
           id: 1,
           title: 'Todo decision',
           taskStatus: 'todo',
-          agentStatus: 'pending',
+          agentStatus: 'awaiting_answer',
           pendingReason: 'Should the draft include both approaches?',
           pendingRequestId: 'request-1',
           openQuestionIds: ['Q-1'],
@@ -65,7 +65,7 @@ function props(overrides: Partial<MonitorViewProps> = {}): MonitorViewProps {
           id: 4,
           title: 'Doing decision',
           taskStatus: 'doing',
-          agentStatus: 'pending',
+          agentStatus: 'awaiting_answer',
           pendingReason: 'Should the implementation use the shared form?',
           pendingRequestId: 'request-4',
           openQuestionIds: ['Q-4'],
@@ -174,8 +174,8 @@ describe('remote access lanes and task actions', () => {
       'Done 1',
     ]);
     expect(screen.getAllByRole('article')).toHaveLength(4);
-    expect(screen.queryByRole('heading', { name: /Pending|Running/ })).toBeNull();
-    expect(screen.getAllByText('Pending')).toHaveLength(2);
+    expect(screen.queryByRole('heading', { name: /Awaiting answer|Running/ })).toBeNull();
+    expect(screen.getAllByText('Awaiting answer')).toHaveLength(2);
     // A decision card shows the button only; the question is read in the sheet.
     expect(screen.getAllByRole('button', { name: 'Answer the question' })).toHaveLength(2);
     expect(

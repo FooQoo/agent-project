@@ -19,7 +19,7 @@ Only a session the board launched follows this part.
    - `"kind":"requests"`: open requests. Read each with `message show <id>`, take it with `message accept <id> --actor ai`, and plan it as `agboard skills planning` describes. If `message accept` says another session already took it, drop it.
    - `"kind":"task"`: a ready task. Work it as `agboard skills listening` describes under "Process one returned task".
 3. The board never sends a message while you are working, so the next one arrives after your turn ends. A turn that ends with the item still open (for example a request you did not accept) is sent again after a delay, and the board gives up after three tries, so finish what you were given or say on the board why you cannot.
-   - If the item waits for a person (a check on a real device, a decision, a review), you cannot advance it, and leaving it Doing or Idle only makes the board send it again. Ask what you need with `message ask --no-wait --task <id> ...`, record that the task waits for the answer, and end your turn. A task with an open question is Pending, so the board stops sending it until the person answers.
+   - If the item waits for a person (a check on a real device, a decision, a review), you cannot advance it, and leaving it Doing or Idle only makes the board send it again. Ask what you need with `message ask --no-wait --task <id> ...`, record that the task waits for the answer, and end your turn. A task with an open question is awaiting an answer, so the board stops sending it until the person answers.
 4. Ending your turn is how you stay attached. Do not run a wait, and do not poll the board.
 
 The board asks questions of people for you: use `message ask`, and the answer comes back to you as an `answers` message.
@@ -63,7 +63,7 @@ Run the next wait before long optional work, such as a final summary. Stop only 
 
 A session the board launched asks with `message ask --no-wait`, records that the task waits for the answer, and ends its turn; the answer arrives as an `answers` message. The rest of this section is for a session that waits for itself.
 
-When a task needs a decision that is a person's (one of the four cases in the main Skill), register it with `message ask --task <id> ...` and do not wait on it with the foreground command. Use `--no-wait`, record that the task is waiting for the answer, and go back to the loop. The answer comes back from `wait --until task` as an `answers` result; take it in, then resume that task with a reason. A task with an open question is Pending and is never returned, so the session keeps working on other tasks while it waits. Never block the whole session on one question, and never leave the loop to wait on one.
+When a task needs a decision that is a person's (one of the four cases in the main Skill), register it with `message ask --task <id> ...` and do not wait on it with the foreground command. Use `--no-wait`, record that the task is waiting for the answer, and go back to the loop. The answer comes back from `wait --until task` as an `answers` result; take it in, then resume that task with a reason. A task with an open question is awaiting an answer and is never returned, so the session keeps working on other tasks while it waits. Never block the whole session on one question, and never leave the loop to wait on one.
 
 ## Errors
 

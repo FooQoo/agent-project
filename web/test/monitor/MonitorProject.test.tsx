@@ -198,7 +198,7 @@ describe('MonitorProject', () => {
     const summary = summaryOf([{ id: 1, document: 'd1', history: 'h1' }]);
     Object.assign(summary.tasks[0] ?? {}, {
       taskStatus: 'doing',
-      agentStatus: 'pending',
+      agentStatus: 'awaiting_answer',
       pendingRequestId: 'r1',
       pendingReason: 'Which one?',
       pendingChoices: [{ id: 'a', label: 'A' }],

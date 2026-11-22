@@ -32,8 +32,8 @@ describe('localized board content', () => {
     expect(screen.getByText('未稼働')).toBeTruthy();
     rerender(<StatusLabel kind="agent" status="running" />);
     expect(screen.getByText('稼働中')).toBeTruthy();
-    rerender(<StatusLabel kind="agent" status="pending" />);
-    expect(screen.getByText('待機中')).toBeTruthy();
+    rerender(<StatusLabel kind="agent" status="awaiting_answer" />);
+    expect(screen.getByText('回答待')).toBeTruthy();
   });
 
   it('translates loading, error, retry, and empty board messages while retaining the CLI command', async () => {

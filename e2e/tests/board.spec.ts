@@ -55,7 +55,7 @@ test('a task shows its ID, title, and update time', async ({ page }) => {
   ]);
 });
 
-test('Doing tasks show Idle, Running, or Pending, and a pending task shows its reason', async ({
+test('Doing tasks show Idle, Running, or Awaiting answer, and an awaiting-answer task shows its reason', async ({
   page,
 }) => {
   const doing = lane(page, 'Doing');
@@ -65,7 +65,7 @@ test('Doing tasks show Idle, Running, or Pending, and a pending task shows its r
   await expect(
     doing.getByRole('button', { name: '#13 AI Idle Check the board display 10/02 10:12' }),
   ).toBeVisible();
-  const pending = doing.getByRole('button', { name: /^#12 AI Pending Restore a board from JSON / });
+  const pending = doing.getByRole('button', { name: /^#12 AI Awaiting answer Restore a board from JSON / });
   await expect(pending).toBeVisible();
   // A pending question is answered in a dialog: its card holds only the button, not the question.
   await expect(pending.locator('..').getByRole('button', { name: 'Answer the question' })).toBeVisible();
@@ -74,7 +74,7 @@ test('Doing tasks show Idle, Running, or Pending, and a pending task shows its r
   // Only Doing cards carry a run state.
   for (const name of ['Todo', 'Done'] as const) {
     const column = lane(page, name);
-    await expect(column.getByText(/^(Idle|Running|Pending)$/)).toHaveCount(0);
+    await expect(column.getByText(/^(Idle|Running|Paused|Has run|Awaiting answer)$/)).toHaveCount(0);
   }
 });
 

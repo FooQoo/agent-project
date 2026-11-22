@@ -132,7 +132,7 @@ test('a decision request is answered with a choice only, with text only, or with
   await send(page);
   await closeMessages(page);
   await expect(answerButton(page, 16)).toHaveCount(0);
-  expect(show(16)).toMatchObject({ agentStatus: 'idle' });
+  expect(show(16)).toMatchObject({ agentStatus: 'paused' });
   expectHistoryNote(show(16).history.at(-1), ['Which way?', 'Proceed']);
 
   // Text alone, with no choice. No drawer is open, so the new request shows on the card on its own.
@@ -165,10 +165,10 @@ test('an answer with nothing chosen and nothing typed cannot be sent', async ({ 
 
 test('a Done task rejects agent edits while a person can still edit and show its body', async ({ page }) => {
   await openBoard(page);
-  // The agent reports the work: the card stays in Doing, idle.
+  // The agent reports the work: the card stays in Doing, paused.
   agboardOk(mainProject, ['state', '13', 'running', '--actor', 'ai', '--reason', 'Working.']);
-  agboardOk(mainProject, ['state', '13', 'idle', '--actor', 'ai', '--reason', 'Reported as finished.']);
-  expect(show(13)).toMatchObject({ taskStatus: 'doing', agentStatus: 'idle' });
+  agboardOk(mainProject, ['state', '13', 'paused', '--actor', 'ai', '--reason', 'Reported as finished.']);
+  expect(show(13)).toMatchObject({ taskStatus: 'doing', agentStatus: 'paused' });
   await expect(page.getByRole('region', { name: 'Doing' }).getByRole('button', { name: /^#13(?!\d)/ })).toBeVisible();
 
   // The coordinator moves it to Done with a reason.
@@ -179,7 +179,7 @@ test('a Done task rejects agent edits while a person can still edit and show its
   const refused = agboard(mainProject, ['edit', '13', '--desc-file', writeBody(taskBody('Corrected after Done.'))]);
   expect(refused.code).not.toBe(0);
   expect(refused.stderr).toContain('task #13 is done and read-only for agents');
-  expect(show(13)).toMatchObject({ taskStatus: 'done', agentStatus: 'idle' });
+  expect(show(13)).toMatchObject({ taskStatus: 'done', agentStatus: 'ran' });
   await task(page, 13).click();
   await expect(details(page)).toContainText('Check the layout at 1280, 800, and 480 px.');
   await expect(details(page)).toContainText('Done');

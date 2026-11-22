@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { CheckIcon, LoaderIcon, PauseIcon } from 'lucide-react';
+import { CheckIcon, ClockIcon, LoaderIcon, PauseIcon } from 'lucide-react';
 import { Badge } from '@/shared/ui/badge';
 import type { ColumnName, RunState } from '../../../shared/api/contracts';
 
@@ -16,7 +16,7 @@ export function StatusLabel({
   monitor?: boolean;
 }) {
   const { t } = useTranslation();
-  const monitorState = kind === 'agent' && (status === 'pending' || status === 'running');
+  const monitorState = kind === 'agent' && status !== 'idle';
   const monitorLane = kind === 'card' && status === 'done';
   const text =
     monitor && monitorState
@@ -34,9 +34,15 @@ export function StatusLabel({
   } else if (status === 'running') {
     variant = 'secondary';
     icon = <LoaderIcon aria-hidden="true" className="spinner text-[var(--r-text2)]" />;
-  } else if (status === 'pending') {
+  } else if (status === 'awaiting_answer') {
     variant = 'pending';
     icon = <PauseIcon aria-hidden="true" />;
+  } else if (status === 'paused') {
+    variant = 'outline';
+    icon = <ClockIcon aria-hidden="true" />;
+  } else if (status === 'ran') {
+    variant = 'muted';
+    icon = <CheckIcon aria-hidden="true" />;
   } else {
     variant = 'muted';
   }

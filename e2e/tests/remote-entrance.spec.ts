@@ -216,7 +216,7 @@ test('the phone bar counts the open questions; a question picked in its list is 
   await sheet.getByRole('radio', { name: 'Plan B' }).click();
   await sheet.getByRole('button', { name: 'Back to list' }).click();
   await closeMessages(page);
-  expect(json(['show', String(id)]).task.agentStatus).toBe('pending');
+  expect(json(['show', String(id)]).task.agentStatus).toBe('awaiting_answer');
 
   await openMessageList(page);
   await answerDialog(page).getByRole('button', { name: /Which plan for the band\?/ }).click();

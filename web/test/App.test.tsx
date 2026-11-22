@@ -133,12 +133,14 @@ describe('App', () => {
     setCurrent({
       ...current(),
       tasks: current().tasks.map((c) =>
-        c.id === 11 ? { ...c, agentStatus: 'pending' as const, pendingReason: 'Waiting' } : c,
+        c.id === 11
+          ? { ...c, agentStatus: 'awaiting_answer' as const, pendingReason: 'Waiting' }
+          : c,
       ),
     });
     act(() => FakeEventSource.latest.changed(PROJECT_A.id));
 
-    await waitFor(() => expect(screen.getAllByText('Pending').length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByText('Awaiting answer').length).toBeGreaterThan(0));
     expect(screen.getByRole('heading', { level: 2, name: 'Implement task moves' })).toBeTruthy();
   });
 

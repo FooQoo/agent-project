@@ -522,7 +522,7 @@ test('the answer dialog takes the focus and gives it back', async ({ page }) => 
   }
   await page.keyboard.press('Escape');
   await expect(answer).toHaveCount(0);
-  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('pending');
+  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('awaiting_answer');
 });
 
 // ------------------------------------------------------------------ The language never changes the data
@@ -599,7 +599,7 @@ test('create, move with a reason, answer, archive, and live updates work with a 
   // Answer a decision request; the run state goes back to Idle and the answer is in the history.
   await task(page, 12).click();
   const panel = details(page);
-  await expect(panel).toContainText('Pending');
+  await expect(panel).toContainText('Awaiting answer');
   await sendAnswer(page, 12, { choice: 'Keep compatibility (recommended)', text: 'Replace the board after a backup.' });
   await closeMessages(page);
   await expect(answerButton(page, 12)).toHaveCount(0);
@@ -631,13 +631,13 @@ test('create, move with a reason, answer, archive, and live updates work with a 
   agboardOk(mainProject, ['state', String(fresh + 1), 'running']);
   await expect(lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${fresh + 1} AI Running Added by the CLI `) })).toBeVisible();
   agboardOk(mainProject, askArgs(String(fresh + 1), decisionJson('Waiting for a theme review')));
-  await expect(lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${fresh + 1} AI Pending Added by the CLI `) })).toBeVisible();
+  await expect(lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${fresh + 1} AI Awaiting answer Added by the CLI `) })).toBeVisible();
   // The card offers the answer button; the question is read in its dialog.
   await expect(await openAnswer(page, fresh + 1)).toContainText('Waiting for a theme review');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // The pending state keeps its own amber, apart from the Red accent.
-  const pendingBadge = lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${fresh + 1} AI Pending `) }).locator('.status-label');
+  const pendingBadge = lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${fresh + 1} AI Awaiting answer `) }).locator('.status-label');
   await expect(pendingBadge).toHaveCSS('color', 'rgb(233, 176, 79)');
   expect(await page.evaluate(() => (window as unknown as { __opened?: boolean }).__opened)).toBe(true);
   // The theme was not lost along the way.
@@ -735,7 +735,7 @@ test('a request that fails keeps what was typed, shows the reason, and can be se
   // The dialog says the question was answered elsewhere, and keeps the typed note.
   await expect(answer.getByRole('alert')).toContainText('This question was answered elsewhere or withdrawn.');
   await expect(answer).toContainText('Kept answer.');
-  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('pending');
+  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('awaiting_answer');
   answerFails = false;
   await send(page);
   await closeMessages(page);

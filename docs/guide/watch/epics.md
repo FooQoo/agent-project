@@ -105,11 +105,11 @@ agboard progress --json
 agboard --project "My project" progress --json
 ```
 
-The progress table is what agents read to choose their next task. It groups Todo and Doing tasks under their epics, with a separate group for work without an epic. Done, archived, and Pending tasks are left out; a Pending question stays on the board until it is answered, and `show` or `snapshot` shows it. User-owned tasks and drafts stay in the table for context, but agents skip them when choosing work.
+The progress table is what agents read to choose their next task. It groups Todo and Doing tasks under their epics, with a separate group for work without an epic. Done, archived, and Awaiting answer tasks are left out; an open question stays on the board until it is answered, and `show` or `snapshot` shows it. User-owned tasks and drafts stay in the table for context, but agents skip them when choosing work.
 
 Each entry lists the task ID, title, owner, column, agent state, acceptance counts, and the path of its `TASK.md`. Epic entries include the path of `EPIC.md` (`documentPath` in JSON). Bodies, history, and images are not included: the agent reads only the files it needs for the work it chose. Hooks give agents this same table.
 
-The table also has a `nextTasks` list (`Next tasks` in the text output) of up to three recommended tasks: AI-owned Doing tasks that are idle come first (`why: resume`, stalled work to pick up again), then AI-owned Todo tasks that are idle (`why: next_in_epic`), each in the table's order. Drafts, Pending and Running tasks, and your own tasks are never listed. Dependencies between tasks are written in the epic details and are not evaluated, so agents read the `EPIC.md` before they start one.
+The table also has a `nextTasks` list (`Next tasks` in the text output) of up to three recommended tasks: AI-owned Doing tasks that are idle or paused come first (`why: resume`, stalled work to pick up again), then AI-owned Todo tasks that are idle or have run (`why: next_in_epic`), each in the table's order. Drafts, Awaiting answer and Running tasks, and your own tasks are never listed. Dependencies between tasks are written in the epic details and are not evaluated, so agents read the `EPIC.md` before they start one.
 
 By default the table leaves out tasks waiting for a decision and finished tasks. Add them when you need the whole picture:
 

@@ -13,7 +13,9 @@ describe('StatusLabel', () => {
     ['card', 'done', 'secondary', 'lucide-check'],
     ['agent', 'idle', 'muted', null],
     ['agent', 'running', 'secondary', 'lucide-loader'],
-    ['agent', 'pending', 'pending', 'lucide-pause'],
+    ['agent', 'paused', 'outline', 'lucide-clock'],
+    ['agent', 'ran', 'muted', 'lucide-check'],
+    ['agent', 'awaiting_answer', 'pending', 'lucide-pause'],
   ] as const)('shows %s %s as the %s badge with its icon', (kind, status, variant, icon) => {
     const { container } = render(<StatusLabel kind={kind} status={status} />);
     const badge = label(container);

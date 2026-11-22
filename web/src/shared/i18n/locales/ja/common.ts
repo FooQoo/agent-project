@@ -41,7 +41,9 @@ export const commonJa = {
   runState: {
     idle: '未稼働',
     running: '稼働中',
-    pending: '待機中',
+    paused: '稼働待',
+    ran: '稼働済み',
+    awaiting_answer: '回答待',
   },
   assignee: {
     ai: 'AI',

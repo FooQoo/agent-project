@@ -17,7 +17,7 @@ Agent Boardが保存するすべてのファイルを、項目と例とともに
 | `epicId` | 同じプロジェクトのEPIC-ID、または`null`。 |
 | `taskStatus` | レーン。`backlog`・`todo`・`doing`・`done`。バックログは、まだ始めてはいけない確定済みの計画を置くレーンで、未着手へ送れるのは人だけです。 |
 | `position` | 正の整数。同じレーンの未アーカイブのタスク内で一意。 |
-| `agentStatus` | AIの稼働状態。`task.json`には`idle`か`running`を保存します。未着手か進行中のAIタスクが人の判断待ちのとき、読み出すと`pending`になります（[メッセージ](../concepts/history-and-decisions.md#メッセージ)）。保存された`pending`は`idle`として読みます。 |
+| `agentStatus` | AIの稼働状態。`task.json`には`idle`・`running`・`paused`・`ran`のどれかを保存します。未着手か進行中のAIタスクが人の判断待ちのとき、読み出すと`awaiting_answer`になります（[メッセージ](../concepts/history-and-decisions.md#メッセージ)）。`awaiting_answer`は保存しません。取りうる値はレーンで決まります。進行中のAIタスクは`idle`・`running`・`paused`、未着手は`idle`か`ran`、Doneは`idle`か`ran`で、人のタスクは`idle`だけです。 |
 | `draft` | `null`または`"human"`。`human`は人がブラウザで書いている下書きで、編集ロックです。以前のバージョンのファイルは`isDraft`を持ち、`true`は`human`、`false`は`null`として読む。書き込みは`draft`だけを使う。エピックの場合、CLIの`epic edit`は`human`の下書きを`epic_is_draft`で拒否する。 |
 | `questions` | `TASK.md`のfrontmatterにあり、タスクが参照するプロジェクトの質問のIDを`[Q-12, Q-15]`のように並べます。省略・`null`・空はどれも0件で、重複は拒否します。 |
 | `plannedVersion` | `TASK.md`のフロントマター。タスクがリリースを予定している版で、たとえば`v1.8.0`です。キーがなければ予定なしです。[リリース予定の版](#planned-versions)を参照。 |
@@ -251,7 +251,7 @@ createdAt: 2026-11-14T03:00:00Z
 
 回答は人が1回だけ書き、受け付けはAIが1回だけ書きます。これは依頼の`acceptedAt`にも、回答の`acceptedAt`にも当てはまります。人がチャットで答え、エージェントが代わりに記録した回答（`via: chat`）は、受け付け済みの状態で書かれます。取り下げたあとは何も書きません。質問を参照しているタスク（`referencedBy`）は、このファイルではなくタスクの`questions`から求めます。
 
-読めない`QA.md`、上の規則に反するもの、`Q-<n>`以外の名前のフォルダにあるものは、どの一覧からも外し、`problems`に`projects/<id>/qa/Q-<n>/QA.md`として載せます。そのファイルへの書き込みは`file_invalid`で失敗します。読めない質問を参照するタスクは、待ち（Pending）のままです。
+読めない`QA.md`、上の規則に反するもの、`Q-<n>`以外の名前のフォルダにあるものは、どの一覧からも外し、`problems`に`projects/<id>/qa/Q-<n>/QA.md`として載せます。そのファイルへの書き込みは`file_invalid`で失敗します。読めない質問を参照するタスクは、回答待（Awaiting answer）のままです。
 
 プロジェクトは`shared/projects/<project-id>/`を複製してバックアップし、`serve`を止めてフォルダを戻して復元します。エクスポートやインポートのコマンドはありません。[データのガイド](../../guide/operations/data.md)を参照してください。
 
@@ -445,7 +445,7 @@ ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.i
 
 ## タスクのJSONとスナップショット
 
-CLI・Web API・Hookは、camelCaseの同じタスクの表現を使います。`task.json`のメタデータ（`results`を含み、常に配列として入ります）に、`history`・`description`・`body`・`acceptance`・`acceptanceError`、表示用の`updatedAt`、`epic`（`{id, name, color}`または`null`）を加えたものです。読むときに導く項目は、`agentStatus`、`questionIds`（タスクの`questions`）・`questionsError`（そのfrontmatterが不正か）・`openQuestionIds`、そして`pendingRequestId`・`pendingReason`・`pendingChoices`です。最後の3つは、タスクが`pending`と表示される間、IDが最も小さい未回答の質問から取り、それ以外は`null`と空です。`pendingRequestId`にはその質問のID（`Q-12`など）が入り、ボードは回答するときにこのIDを送ります。`requestAnswers`が履歴に現れることはありません。
+CLI・Web API・Hookは、camelCaseの同じタスクの表現を使います。`task.json`のメタデータ（`results`を含み、常に配列として入ります）に、`history`・`description`・`body`・`acceptance`・`acceptanceError`、表示用の`updatedAt`、`epic`（`{id, name, color}`または`null`）を加えたものです。読むときに導く項目は、`agentStatus`、`questionIds`（タスクの`questions`）・`questionsError`（そのfrontmatterが不正か）・`openQuestionIds`、そして`pendingRequestId`・`pendingReason`・`pendingChoices`です。最後の3つは、タスクが`awaiting_answer`と表示される間、IDが最も小さい未回答の質問から取り、それ以外は`null`と空です。`pendingRequestId`にはその質問のID（`Q-12`など）が入り、ボードは回答するときにこのIDを送ります。`requestAnswers`が履歴に現れることはありません。
 
 - スナップショットは、`project`・`version`・`cursor`・`epics`・`tasks`（それぞれ全履歴を持つ）・`problems`を一度の読み込みから返します。CLIのスナップショットは`nextTaskId`も含み、CLIのスナップショット・Hook・`wait`は`fetchedAt`を含みます。
 - プロジェクト一覧は`projects`（id・name・createdAt）と`catalogVersion`を返し、タスクは含みません。
