@@ -96,6 +96,7 @@ export function phoneItemOf(
     taskStatusChangedAt: card.taskStatusChangedAt,
     position: card.position,
     agentStatus: card.agentStatus,
+    awaitingAnswer: card.awaitingAnswer,
     pendingReason: card.pendingReason,
     pendingRequestId: card.pendingRequestId,
     pendingChoices: card.pendingChoices,

@@ -147,6 +147,7 @@ fn check_summary(body: &str, project: &ProjectId) -> Summary {
                 "plannedVersion",
                 "createdAt",
                 "updatedAt",
+                "awaitingAnswer",
                 "pendingRequestId",
                 "pendingReason",
                 "pendingChoices",

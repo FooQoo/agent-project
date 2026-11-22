@@ -59,7 +59,7 @@ If the session ends its turn without handling an item, for example a request it 
 Two cases look alike but differ:
 
 - **The last turn failed.** The board shows a warning, **Some items could not be handled**, with the reason. Handle the item yourself on the board, or stop and start the session.
-- **The turns ended without an error and the item did not change.** This is usually work that waits for a person, such as a check on a real device, which the agent cannot advance. The board shows it as **On hold**, in neutral wording and without a warning. It is not an error. Finish or answer the item on the board. To stop the board from handing it over at all, the agent should ask what it needs with a question: a task with an open question is Awaiting answer, and the board never hands over an Awaiting answer task. The agent's instructions tell it to do so.
+- **The turns ended without an error and the item did not change.** This is usually work that waits for a person, such as a check on a real device, which the agent cannot advance. The board shows it as **On hold**, in neutral wording and without a warning. It is not an error. Finish or answer the item on the board. To stop the board from handing it over at all, the agent should ask what it needs with a question: a task with an open question shows Awaiting answer, and the board never hands over an Awaiting answer task. The agent's instructions tell it to do so.
 
 The board shows these items in two places:
 

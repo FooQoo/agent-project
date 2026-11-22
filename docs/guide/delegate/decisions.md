@@ -8,7 +8,7 @@ A decision is a question an agent asks when it cannot continue without you. It i
 
 ## How you notice a question
 
-A question belongs to the project, and a task refers to it. An AI-owned task that refers to an open question is **Awaiting answer**. In Todo or Doing, its card says how many questions it waits on, such as **Unanswered questions: 2**, and shows an **Answer the question** button. You can also see Awaiting answer tasks on the [remote access](../watch/remote-access).
+A question belongs to the project, and a task refers to it. A task that refers to an open question is **Awaiting answer**, whoever owns it and in any lane except the archive. Its card says how many questions it waits on, such as **Unanswered questions: 2**, and shows an **Answer the question** button. You can also see Awaiting answer tasks on the [remote access](../watch/remote-access).
 
 Every open message of the project is counted in the **Messages** band above the lanes. The band is always there. It shows two counts:
 
@@ -50,7 +50,7 @@ On a window narrower than 900 px, the question and the answer stack in one colum
 
 ![The answer dialog, with the question on the left and the options and note on the right](../../images/guide/question.png){.screenshot}
 
-Each answer is saved to the history of every task that refers to its question. The question and each part of your answer appear as separate blocks there. A task stays in its current column. When none of its questions is open any more, its agent state becomes Idle, and the agent reads your response before it decides how to resume.
+Each answer is saved to the history of every task that refers to its question. The question and each part of your answer appear as separate blocks there. A task stays in its current column. When none of its questions is open any more, the agent takes in your answers. A Paused task that waited only on them goes back to Running by itself, and the agent reads your response before it decides how to continue.
 
 A question has no expiry. It stays open until it is answered or the agent withdraws it. Moving or archiving the task does not withdraw it.
 
@@ -189,7 +189,7 @@ agpj --project "My project" message answer Q-12 --actor human --via cli --choice
 
 A question with choices needs `--choice`, a note, or both (a note alone is an answer with no choice); a question without choices needs a note. Give a note with `--text` or `--text-file`. When the user answers in the chat, the agent records the user's words with `--via chat`. The first recorded answer is final: answering an answered question fails with `question_answered` and prints the recorded answer.
 
-After reading the answers and history, the agent resumes:
+After the agent takes in the answers, the task returns to Running. It reads the answers and history and continues:
 
 ```sh
 agpj --project "My project" state 1 running --actor ai --reason "Preparing the preview requested by the user"

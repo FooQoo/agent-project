@@ -186,7 +186,7 @@ fn state_history_and_questions_survive_reopen() {
 
     let reopened = FileStore::open(&fx.shared);
     let pending = reopened.task(&fx.project, id).unwrap();
-    assert_eq!(pending.agent_status, RunState::AwaitingAnswer);
+    assert!(pending.awaiting_answer);
     assert_eq!(pending.pending_reason.as_deref(), Some("Continue?"));
     assert_eq!(pending.pending_choices.len(), 2);
     assert_eq!(pending.question_ids, vec!["Q-1".to_string()]);

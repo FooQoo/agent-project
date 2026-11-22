@@ -8,7 +8,7 @@
 
 書き込みは一つの経路を通ります。操作はプロジェクトのロック（`src/file_store/ops/mod.rs`の`lock_project`）を取り、タスクを厳密に読み（`src/file_store/reader/task.rs`の`read_task_strict`）、規則を検査し、タスクと履歴をまとめて保存します。エージェントのスキルの規約でしかない規則は、この経路にありません。それらは後ろの2つ目の表にまとめています。
 
-タスクが待っているかどうかは保存されません。`src/file_store/qa/store.rs`の`QaIndex::is_waiting`が、タスクの参照する質問（回答のない質問、または読めないメッセージのファイル）から導きます。`src/file_store/ops/qa/mod.rs`の`task_waits`は、ロックの中で最新のファイルを読んで、これを呼びます。Awaiting answerの状態、Runningにできないこと、Doneにできないことは、すべてこの一つの導出から来ます。
+タスクが待っているかどうかは保存されません。`src/file_store/qa/store.rs`の`QaIndex::is_waiting`が、タスクの参照する質問（回答のない質問、または読めないメッセージのファイル）から導きます。`src/file_store/ops/qa/mod.rs`の`task_waits`は、ロックの中で最新のファイルを読んで、これを呼びます。`awaitingAnswer`の印、Runningにできないこと、Doneにできないことは、すべてこの一つの導出から来ます。
 
 ## Agent Projectが保証すること
 
@@ -18,9 +18,9 @@
 | --- | --- | --- |
 | タスクの所有者は変わらない。 | 所有者を決めるのは`src/file_store/ops/task/create.rs`の`create_task`だけです。`src/file_store/ops/task/edit.rs`の編集操作は所有者を受け取りません。 | 直接のテストはありません。所有者の引数がないこと自体が歯止めです。 |
 | 有効な状態だけが存在する。 | `src/domain/mod.rs`の`check_work_state`を、`src/file_store/ops/agent.rs`の`set_agent_status`が呼びます。`InvalidStateForAssignee`または`InvalidStateForColumn`を返します。 | `tests/domain_work.rs`の`run_states_follow_the_table_for_each_owner_and_column`。`tests/file_store_agent.rs`の`running_on_a_human_task_in_doing_is_refused`と`running_on_a_done_task_is_refused_by_the_state_table`。 |
-| Awaiting answerとHas runは手で設定できず、Doingの変更は許された手順だけ。 | `src/file_store/ops/agent.rs`の`set_agent_status`が、タスクを読む前に`awaiting_answer`と`ran`を`invalid_value`で拒み、IdleからRunning、RunningからPaused、PausedからRunning以外の変更を`invalid_state_change`で拒みます。 | `tests/server.rs`で、agent-statusのルートへの`awaiting_answer`の要求が422で拒まれます。 |
+| 稼働状態は`idle`・`running`・`paused`だけで、Doingの変更は許された手順だけ。 | `src/file_store/ops/agent.rs`の`set_agent_status`が、タスクを読む前にそれ以外の値（`awaiting_answer`や`ran`など）を`invalid_value`で拒み、IdleからRunning、RunningからPaused、PausedからRunning以外の変更を`invalid_state_change`で拒みます。AIによるPausedへの変更は`human_only`で拒みます。 | `tests/server.rs`で、agent-statusのルートへの`awaiting_answer`の要求が422で拒まれます。 |
 | 質問が開いている間、エージェントは待つ。 | `set_agent_status`は、`task_waits`が真のとき、`Running`を`QuestionsUnanswered`で拒みます。 | `tests/file_store_agent.rs`の`running_is_refused_while_a_referenced_question_is_open`。 |
-| 質問すると、RunningのタスクはPausedになる。 | `src/file_store/ops/qa/ask.rs`の質問の操作が、質問のファイルを保存する同じバッチでPausedにし、履歴を足します。 | `tests/file_store_messages.rs`の`every_message_is_one_file_and_one_sequence_numbers_them`が、Awaiting answerになりPausedになることを確かめます。 |
+| 質問するか質問に結び付けると、DoingのRunningのタスクはPausedになる。 | `src/file_store/ops/qa/`の質問とlinkの操作が、質問のファイルを保存する同じバッチでPausedにし、履歴（`Waiting for the answers to Q-1.`）を足します。回答を受け取る操作（`src/file_store/ops/qa/accept.rs`）は、条件に合うPausedのタスクをRunningに戻し、履歴（`Resumed after the answers to Q-1.`）を足します。 | `tests/file_store_messages.rs`の`every_message_is_one_file_and_one_sequence_numbers_them`が、回答待になりPausedになることを確かめます。 |
 | 回答は一度だけ記録され、履歴と一緒に保存される。 | `src/file_store/ops/qa/answer.rs`の`answer_questions`は、回答済みの質問を拒みます。質問のファイルと、参照するタスクの履歴は、`src/file_store/transaction/batch.rs`の`save_batch_locked`で保存します。質問、受け付け、取り下げも同じバッチを使います。 | `tests/file_store_messages.rs`の`a_reply_is_written_once_and_nothing_is_written_after_a_withdrawal`。対の保存とバッチの保存は`tests/file_store_transaction.rs`。 |
 | AIのタスクは、完了条件が満たされたときだけDoneになる。 | `src/file_store/ops/completion.rs`の`auto_complete_project`は、条件が1件以上あり、すべて済み、待っておらず、下書きでもアーカイブでもなく、未着手か進行中にあることを求めます。移す前にロックの中でファイルを読み直し、理由つきのレーンの履歴を残します。 | `src/file_store/ops/completion/tests.rs`の`only_valid_nonempty_fully_done_ai_conditions_are_eligible`、`completed_ai_todo_moves_once_and_records_a_reasoned_lane_event`、`pending_is_left_alone_then_answered_task_is_reconsidered`。 |
 | エージェントが手でDoneにするときも、すべての条件の達成と、待ちがないことが要る。条件のないタスクは通る（2つ目の表を参照）。 | `src/file_store/ops/agent.rs`の`move_task`が、エージェントのDoneへの移動で`ensure_acceptance_met`と`task_waits`を呼びます。`AcceptanceUnmet`か`QuestionsUnanswered`を返します。 | `tests/acceptance_cli.rs`の`an_agent_cannot_move_a_task_to_done_while_a_condition_is_unmet`。手での移動で、開いた質問があるときの拒否には直接のテストがありません。 |

@@ -148,7 +148,7 @@ test('with the guard, a draft switch and an edit follow the task rules; a bad bo
   }
   const pendingBefore = shown(12);
   expect((await fromPage(page, 'PUT', `${base}/12/draft`, { draft: 'human' })).status).toBe(200);
-  expect(shown(12)).toMatchObject({ draft: 'human', agentStatus: 'awaiting_answer', pendingRequestId: pendingBefore.pendingRequestId, pendingReason: pendingBefore.pendingReason });
+  expect(shown(12)).toMatchObject({ draft: 'human', awaitingAnswer: true, pendingRequestId: pendingBefore.pendingRequestId, pendingReason: pendingBefore.pendingReason });
   // An edit of a card that is not a draft is refused.
   const notDraft = await fromPage(page, 'PATCH', `${base}/13`, { description: 'Not allowed' });
   expect(notDraft.status).toBe(409);

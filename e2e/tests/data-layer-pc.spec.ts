@@ -138,7 +138,7 @@ test('the details panel does not hold updates; a dialog holds them while open an
   await sendAnswer(page, 12, { choice: 'Keep compatibility (recommended)', text: 'Keep the current name.' });
   await closeMessages(page);
   await expect(answerButton(page)).toHaveCount(0, { timeout: 2_000 });
-  await expect(lane(page, 'Doing').getByRole('button', { name: /^#12 AI Idle / })).toBeVisible({ timeout: 2_000 });
+  await expect(lane(page, 'Doing').getByRole('button', { name: /^#12 AI Paused / })).toBeVisible({ timeout: 2_000 });
 
   // A change made here shows at once, with a dialog open: the preview makes the card a draft at the
   // first change, and the card is a draft on its tile.

@@ -120,7 +120,7 @@ pub struct RmArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agpj --project demo ls\n  agpj --project demo ls --column doing\n  agpj --project demo ls --state awaiting_answer --json\n  agpj --project demo ls --current-version\n  agpj --project demo ls --version v1.8.0 --epic FILE-SHARE --json\n  agpj --project demo ls --unplanned\n  agpj ls --all-projects\n  agpj ls --all-projects --state awaiting_answer --json"
+    after_help = "Examples:\n  agpj --project demo ls\n  agpj --project demo ls --column doing\n  agpj --project demo ls --awaiting-answer --json\n  agpj --project demo ls --current-version\n  agpj --project demo ls --version v1.8.0 --epic FILE-SHARE --json\n  agpj --project demo ls --unplanned\n  agpj ls --all-projects\n  agpj ls --all-projects --awaiting-answer --json"
 )]
 pub struct LsArgs {
     /// List the tasks of every project, read-only; do not give --project
@@ -132,6 +132,9 @@ pub struct LsArgs {
     /// Only list tasks with this run state
     #[arg(long, value_name = "STATE")]
     pub state: Option<RunStateArg>,
+    /// Only list tasks that refer to an open question (awaiting an answer)
+    #[arg(long)]
+    pub awaiting_answer: bool,
     /// Only list tasks in this epic (its EPIC-ID)
     #[arg(long, value_name = "EPIC-ID")]
     pub epic: Option<String>,

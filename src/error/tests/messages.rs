@@ -30,10 +30,10 @@ fn messages_and_reasons_follow_the_design_table() {
         ),
         (
             "state is invalid for this assignee.",
-            "Only AI-owned tasks can be running, paused, or have run.",
+            "Only an AI-owned task in Doing can be running or paused.",
         ),
         (
-            "cannot change the state from ran to idle.",
+            "cannot change the state from running to idle.",
             "In Doing a task goes from idle to running, from running to paused, and from paused to running. Move the card to change the other states.",
         ),
         (

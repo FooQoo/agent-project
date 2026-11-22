@@ -8,12 +8,19 @@ const item = (
   projectId: string,
   id: number,
   taskStatus: 'todo' | 'doing' | 'done',
-  agentStatus: 'idle' | 'running' | 'awaiting_answer',
+  agentStatus: 'idle' | 'running' | 'waiting',
   archivedAt?: string,
 ): MonitorTask => ({
   projectId,
   projectName: projectId === PROJECT_A.id ? PROJECT_A.name : PROJECT_B.name,
-  task: makeTask({ id, taskStatus, agentStatus, archivedAt, draft: 'human' }),
+  task: makeTask({
+    id,
+    taskStatus,
+    agentStatus: agentStatus === 'waiting' ? 'paused' : agentStatus,
+    awaitingAnswer: agentStatus === 'waiting',
+    archivedAt,
+    draft: 'human',
+  }),
 });
 
 describe('selectMonitorCards', () => {
@@ -29,7 +36,7 @@ describe('selectMonitorCards', () => {
       item(PROJECT_A.id, 2, 'doing', 'running'),
       item(PROJECT_A.id, 3, 'done', 'running'),
       item(PROJECT_A.id, 4, 'doing', 'idle'),
-      item(PROJECT_A.id, 5, 'doing', 'awaiting_answer'),
+      item(PROJECT_A.id, 5, 'doing', 'waiting'),
       human,
       humanDoing,
       humanDone,

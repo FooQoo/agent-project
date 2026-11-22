@@ -21,9 +21,7 @@ export function answerQuestion(
     if (typeof input !== 'object' || input === null)
       return error(422, 'validation', 'invalid answers.', 'Send an answer.');
     const id = input.questionId;
-    const task = found.tasks.find(
-      (t) => t.agentStatus === 'awaiting_answer' && t.pendingRequestId === id,
-    );
+    const task = found.tasks.find((t) => t.awaitingAnswer && t.pendingRequestId === id);
     if (!task)
       return error(404, 'message_not_found', `question ${String(id)} not found.`, 'Refresh.');
     const choiceId = typeof input.choiceId === 'string' ? input.choiceId : undefined;
@@ -50,7 +48,7 @@ export function answerQuestion(
       before: task,
       after: {
         ...task,
-        agentStatus: 'idle',
+        awaitingAnswer: false,
         pendingReason: null,
         pendingRequestId: null,
         pendingChoices: [],

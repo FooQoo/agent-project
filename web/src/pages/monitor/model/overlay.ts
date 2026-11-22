@@ -53,6 +53,7 @@ export function applyOverlay(lanes: Lanes, overlay: LaneOverlay, now: string): L
         taskStatus: target,
         taskStatusChangedAt: now,
         agentStatus: 'idle',
+        awaitingAnswer: false,
         position: end,
       },
     });

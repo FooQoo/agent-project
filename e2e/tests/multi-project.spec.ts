@@ -227,7 +227,7 @@ test.describe('two projects with the same task numbers', () => {
     // Answer the pending request in Alpha with the board's own dialog.
     await answerCard(page, 2, 'Use the MIT license.');
     await expect(answerButton(page, 2)).toHaveCount(0);
-    await expect(task(page, 2)).toContainText('Idle');
+    await expect(task(page, 2)).toContainText('Paused');
     await expect(details(page).getByRole('listitem').first()).toContainText('Use the MIT license.');
     expect(snapshotOf('Beta', home)).toEqual(betaBefore);
 
@@ -267,9 +267,9 @@ test.describe('two projects with the same task numbers', () => {
     const alphaBefore = snapshotOf('Alpha', home);
     await answerCard(page, 2, 'Use plain files.');
     await expect(answerButton(page, 2)).toHaveCount(0);
-    await expect(task(page, 2)).toContainText('Idle');
+    await expect(task(page, 2)).toContainText('Paused');
     expect(snapshotOf('Alpha', home)).toEqual(alphaBefore);
-    expect(listTasks('Beta', home).find(({ id }) => id === 2)?.agentStatus).toBe('idle');
+    expect(listTasks('Beta', home).find(({ id }) => id === 2)?.agentStatus).toBe('paused');
   });
 
   test('changes made to another project do not change what is shown or selected', async ({ page }) => {
@@ -512,7 +512,7 @@ test.describe('two projects with the same task numbers', () => {
     await expect.poll(() => projectParam(page)).toBe(alpha);
     await expect(switcher(page)).toHaveText('Alpha');
     await expect(answer).toBeHidden();
-    expect(listTasks('Beta', home).find(({ id }) => id === 2)?.agentStatus).toBe('awaiting_answer');
+    expect(listTasks('Beta', home).find(({ id }) => id === 2)?.awaitingAnswer).toBe(true);
     expect(snapshotOf('Alpha', home)).toEqual(alphaBefore);
 
     // Answered again in Beta, the answer goes to Beta's request and never to Alpha's card #2.
@@ -528,12 +528,12 @@ test.describe('two projects with the same task numbers', () => {
     await send(page);
     expect((await answerResponse).status()).toBe(200);
     await closeMessages(page);
-    expect(listTasks('Beta', home).find(({ id }) => id === 2)?.agentStatus).toBe('idle');
+    expect(listTasks('Beta', home).find(({ id }) => id === 2)?.agentStatus).toBe('paused');
     await page.goBack();
     await expect(switcher(page)).toHaveText('Alpha');
     // Alpha has its own pending #2, so an ID-only locator now resolves to Alpha's answer button.
     await expect(answerButton(page, 2)).toBeVisible();
-    expect(listTasks('Alpha', home).find(({ id }) => id === 2)?.agentStatus).toBe('awaiting_answer');
+    expect(listTasks('Alpha', home).find(({ id }) => id === 2)?.awaitingAnswer).toBe(true);
     expect(snapshotOf('Alpha', home)).toEqual(alphaBefore);
   });
 
@@ -669,7 +669,7 @@ test.describe('two projects with the same task numbers', () => {
       };
       expect(received.project).toMatchObject({ id: alpha, name: 'Alpha' });
       const answered = received.tasks.find(({ id }) => id === 2)!;
-      expect(answered.agentStatus).toBe('idle');
+      expect(answered.agentStatus).toBe('paused');
       expectHistoryNote(answered.history.at(-1), ['Which license should Alpha use?', 'Use the MIT license, please.']);
       expect(out).not.toContain('Beta');
     } finally {

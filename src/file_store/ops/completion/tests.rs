@@ -128,7 +128,7 @@ fn completed_ai_todo_moves_once_and_records_a_reasoned_lane_event() {
 
     let task = f.store.task(&f.project, id).unwrap();
     assert_eq!(task.task_status, Column::Done);
-    assert_eq!(task.agent_status, RunState::Ran);
+    assert_eq!(task.agent_status, RunState::Idle);
     let completed: Vec<_> = task
         .history
         .iter()
@@ -215,10 +215,9 @@ fn pending_is_left_alone_then_answered_task_is_reconsidered() {
         .unwrap();
 
     f.store.auto_complete_all(at(4)).unwrap();
-    assert_eq!(
-        f.store.task(&f.project, id).unwrap().agent_status,
-        RunState::AwaitingAnswer
-    );
+    let waiting = f.store.task(&f.project, id).unwrap();
+    assert!(waiting.awaiting_answer);
+    assert_eq!(waiting.agent_status, RunState::Idle);
     f.store
         .answer_questions(
             &f.project,
@@ -236,7 +235,7 @@ fn pending_is_left_alone_then_answered_task_is_reconsidered() {
 
     let task = f.store.task(&f.project, id).unwrap();
     assert_eq!(task.task_status, Column::Done);
-    assert_eq!(task.agent_status, RunState::Ran);
+    assert_eq!(task.agent_status, RunState::Idle);
 }
 
 #[test]

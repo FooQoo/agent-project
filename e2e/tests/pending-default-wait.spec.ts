@@ -50,7 +50,7 @@ test('default pending waits for a browser answer', async ({ page }) => {
     const request = await openAnswer(page, 1);
     await expect(request).toContainText('Which plan should the default wait use?');
     expect(waiter.exitCode, 'the child keeps waiting while the question is open').toBeNull();
-    expect(show(home, 1)).toMatchObject({ agentStatus: 'awaiting_answer' });
+    expect(show(home, 1)).toMatchObject({ awaitingAnswer: true });
 
     await request.getByRole('radio', { name: 'Plan B' }).check();
     await send(page);

@@ -54,7 +54,7 @@ test('a waiting card opens its answer in a dialog; Later closes it without sendi
   await laterButton(page).click();
   await expect(dialog).toBeHidden();
   await expect(answerButton(page)).toHaveText('Answer the question');
-  expect(show(12).agentStatus).toBe('awaiting_answer');
+  expect(show(12).awaitingAnswer).toBe(true);
   // The detail history remains readable.
   await expect(panel.getByRole('tabpanel').getByRole('listitem').first()).toContainText('Waiting for confirmation');
 
@@ -71,20 +71,20 @@ test('a waiting card opens its answer in a dialog; Later closes it without sendi
   await dialog.getByRole('button', { name: 'Clear', exact: true }).click();
   await expect(note).toHaveValue('');
   await expect(dialog.getByRole('button', { name: 'Clear', exact: true })).toHaveCount(0);
-  expect(show(12).agentStatus).toBe('awaiting_answer');
+  expect(show(12).awaitingAnswer).toBe(true);
   await fillAnswer(dialog, { choice: compat, text: 'Keep the current name.\nDo not migrate.' });
   await send(page);
   await closeMessages(page);
 
-  // The card is Idle without a button, and the answer is in the detail history.
+  // The card is Paused (the agent has not taken the answer in yet) without a button, and the answer is in the detail history.
   await expect(answerButton(page)).toHaveCount(0);
-  await expect(lane(page, 'Doing').getByRole('button', { name: /^#12 AI Idle Restore a board from JSON / })).toBeVisible();
+  await expect(lane(page, 'Doing').getByRole('button', { name: /^#12 AI Paused Restore a board from JSON / })).toBeVisible();
   await panel.getByRole('tab', { name: /^History/ }).click();
   const newest = panel.getByRole('tabpanel').getByRole('listitem').first();
   await expect(newest).toContainText('Do not migrate.');
   await expect(newest.getByRole('img')).toHaveCount(0);
   const stored = show(12);
-  expect(stored).toMatchObject({ agentStatus: 'idle', pendingReason: null, pendingRequestId: null });
+  expect(stored).toMatchObject({ agentStatus: 'paused', pendingReason: null, pendingRequestId: null });
   expectHistoryNote(stored.history.at(-1), ['Waiting for confirmation on how to replace a board.', compat, 'Keep the current name.\nDo not migrate.']);
 });
 
@@ -112,7 +112,7 @@ test('while it is sent the dialog cannot be sent twice; a failure keeps the answ
   // Failed: the answer and the dialog stay, the error is announced, and nothing changed.
   await expect(dialog.getByRole('alert')).toContainText('It could not be sent. Try again.');
   await expect(dialog).toContainText('My answer.');
-  expect(show(12).agentStatus).toBe('awaiting_answer');
+  expect(show(12).awaitingAnswer).toBe(true);
 
   // Sent again while the server is slow: the answer is sent once, and the form is locked meanwhile.
   mode = 'hold';
@@ -123,7 +123,7 @@ test('while it is sent the dialog cannot be sent twice; a failure keeps the answ
   release();
   await expect(dialog.getByRole('region', { name: 'Your answer' })).toHaveCount(0);
   expect(posts).toBe(2);
-  expect(show(12)).toMatchObject({ agentStatus: 'idle' });
+  expect(show(12)).toMatchObject({ agentStatus: 'paused' });
   expectHistoryNote(show(12).history.at(-1), ['Waiting for confirmation on how to replace a board.', 'My answer.']);
 });
 
@@ -175,7 +175,7 @@ test('an answer sent from a page that missed the new request is refused by the s
   expect((await answered).status()).toBe(409);
   await expect(dialog.getByRole('alert')).toBeVisible();
   // Nothing was saved: still waiting, now with the new question.
-  expect(show(12)).toMatchObject({ agentStatus: 'awaiting_answer', pendingReason: 'A different question now.' });
+  expect(show(12)).toMatchObject({ awaitingAnswer: true, pendingReason: 'A different question now.' });
   expect(show(12).history.filter((event) => event.reason.includes('An answer to the old question.'))).toHaveLength(0);
 
   // Once the board can be read, the dialog no longer offers the old question.

@@ -77,7 +77,7 @@ impl FileStore {
 
             let at = stamp(now);
             let position = lane_end(shared, project, Column::Done)?;
-            let next_state = RunState::Ran;
+            let next_state = RunState::Idle;
             let event = transition_event(Transition {
                 language: self.history_language(project, &task)?,
                 kind: HistoryKind::Lane,

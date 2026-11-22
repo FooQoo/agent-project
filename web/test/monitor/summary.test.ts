@@ -15,7 +15,7 @@ describe('monitorTasksOf', () => {
     Object.assign(task, {
       title: 'Third',
       taskStatus: 'doing',
-      agentStatus: 'awaiting_answer',
+      awaitingAnswer: true,
       pendingRequestId: 'r1',
       pendingReason: 'Which one?',
       pendingChoices: [{ id: 'a', label: 'A' }],
@@ -29,7 +29,7 @@ describe('monitorTasksOf', () => {
       id: 3,
       title: 'Third',
       taskStatus: 'doing',
-      agentStatus: 'awaiting_answer',
+      awaitingAnswer: true,
       pendingRequestId: 'r1',
       pendingReason: 'Which one?',
       pendingChoices: [{ id: 'a', label: 'A' }],

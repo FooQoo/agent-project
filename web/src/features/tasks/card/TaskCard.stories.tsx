@@ -32,6 +32,7 @@ const summaryCard: TaskSummary = {
   taskStatusChangedAt: '2026-10-01T09:00:00Z',
   position: 1,
   agentStatus: 'running',
+  awaitingAnswer: false,
   agentStatusChangedAt: '2026-10-01T09:00:00Z',
   pendingReason: null,
   pendingRequestId: null,
@@ -85,7 +86,7 @@ export const PendingWithEpic: Story = {
   args: {
     task: makeTask({
       id: 44,
-      agentStatus: 'awaiting_answer',
+      awaitingAnswer: true,
       pendingReason: 'Waiting for a decision.',
       epic: makeEpic(),
     }),
@@ -116,7 +117,7 @@ const answerCard = (): Story['args'] => ({
   task: makeTask({
     id: 11,
     title: 'API refactor',
-    agentStatus: 'awaiting_answer',
+    awaitingAnswer: true,
     pendingReason: 'How much compatibility should v2 keep?',
     pendingRequestId: 'request-11',
     pendingChoices: [

@@ -44,6 +44,8 @@ export interface SummaryTask {
   title: string;
   taskStatus: ColumnName;
   agentStatus: RunState;
+  /** The task refers to an open question (or its questions cannot be read). */
+  awaitingAnswer: boolean;
   assignee: Assignee;
   draft: Draft | null;
   position: number;

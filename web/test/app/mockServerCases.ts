@@ -118,7 +118,7 @@ export function mockServerCases(): void {
       expect(summary.project.id).toBe(PROJECT);
       // The fixture cards and the long Markdown card.
       expect(summary.tasks.map((task) => task.id)).toEqual([8, 9, 11, 12, 13, 14, 15, 16, 17]);
-      expect(summary.tasks.find((task) => task.id === 11)?.agentStatus).toBe('awaiting_answer');
+      expect(summary.tasks.find((task) => task.id === 11)?.awaitingAnswer).toBe(true);
       expect(summary.tasks.find((task) => task.id === 12)?.acceptance).toEqual({
         done: 2,
         total: 2,
@@ -208,6 +208,7 @@ export function mockServerCases(): void {
       ).toMatchObject({
         taskStatus: 'done',
         agentStatus: 'idle',
+        awaitingAnswer: false,
       });
       expect(events[0]?.changes).toEqual([
         { resource: 'task', id: 13, facets: ['summary', 'history', 'request'] },

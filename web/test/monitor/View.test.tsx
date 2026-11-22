@@ -9,29 +9,25 @@ function props(): MonitorViewProps {
   const item = (
     id: number,
     taskStatus: 'todo' | 'doing' | 'done',
-    agentStatus: 'idle' | 'running' | 'awaiting_answer',
+    agentStatus: 'idle' | 'running' | 'waiting',
   ) => ({
     projectId: PROJECT_A.id,
     projectName: PROJECT_A.name,
     task: makeTask({
       id,
       taskStatus,
-      agentStatus,
-      pendingReason: agentStatus === 'awaiting_answer' ? 'Waiting for decision' : null,
-      pendingRequestId: agentStatus === 'awaiting_answer' ? `request-${id}` : null,
-      pendingChoices:
-        agentStatus === 'awaiting_answer' ? [{ id: 'choice', label: 'Continue' }] : [],
+      agentStatus: agentStatus === 'waiting' ? 'paused' : agentStatus,
+      awaitingAnswer: agentStatus === 'waiting',
+      pendingReason: agentStatus === 'waiting' ? 'Waiting for decision' : null,
+      pendingRequestId: agentStatus === 'waiting' ? `request-${id}` : null,
+      pendingChoices: agentStatus === 'waiting' ? [{ id: 'choice', label: 'Continue' }] : [],
     }),
   });
   return {
     summary: { backlog: 0, todo: 1, doing: 3, done: 1 },
     backlog: [],
     todo: [item(1, 'todo', 'idle')],
-    doing: [
-      item(2, 'doing', 'running'),
-      item(4, 'doing', 'awaiting_answer'),
-      item(5, 'doing', 'idle'),
-    ],
+    doing: [item(2, 'doing', 'running'), item(4, 'doing', 'waiting'), item(5, 'doing', 'idle')],
     done: [item(3, 'done', 'idle')],
     freshness: {
       state: 'fresh',
@@ -69,7 +65,7 @@ describe('MonitorView', () => {
     expect(within(pendingTask).queryByText('Waiting for decision')).toBeNull();
     expect(within(pendingTask).queryByRole('textbox')).toBeNull();
     expect(within(pendingTask).queryByRole('button', { name: 'Send' })).toBeNull();
-    expect(pendingTask.getAttribute('data-agent-status')).toBe('awaiting_answer');
+    expect(pendingTask.getAttribute('data-awaiting-answer')).toBe('true');
     const idleTodo = screen.getByRole('article', { name: /^#1 Todo Idle / });
     expect(idleTodo.getAttribute('data-agent-status')).toBe('idle');
     expect(idleTodo.querySelector('.status-label')?.textContent).toBe('Idle');

@@ -41,6 +41,7 @@ fn task_fields(task: &TaskView) -> TaskSummaryFields {
         planned_version: task.planned_version.clone(),
         created_at: crate::clock::format_utc(task.created_at),
         updated_at: crate::clock::format_utc(task.updated_at),
+        awaiting_answer: task.awaiting_answer,
         pending_request_id: task.pending_request_id.clone(),
         pending_reason: task.pending_reason.clone(),
         pending_choices: task.pending_choices.clone(),

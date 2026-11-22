@@ -19,7 +19,7 @@ export function completesAutomatically(task: Task): boolean {
     task.draft === null &&
     !task.archivedAt &&
     (task.taskStatus === 'todo' || task.taskStatus === 'doing') &&
-    task.agentStatus !== 'awaiting_answer' &&
+    !task.awaitingAnswer &&
     !task.acceptanceError &&
     task.acceptance.length > 0 &&
     task.acceptance.every((item) => item.done)
@@ -42,7 +42,8 @@ export function completedTasks(board: MockBoard, at: string): { tasks: Task[]; c
       taskStatus: 'done',
       taskStatusChangedAt: at,
       position,
-      agentStatus: task.agentStatus === 'idle' ? 'idle' : 'ran',
+      agentStatus: 'idle',
+      awaitingAnswer: false,
       ...(task.agentStatus === 'idle' ? {} : { agentStatusChangedAt: at }),
       pendingReason: null,
       pendingRequestId: null,

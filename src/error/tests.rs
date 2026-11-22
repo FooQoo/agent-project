@@ -26,7 +26,7 @@ pub(super) fn all_errors() -> Vec<AgpjError> {
         },
         AgpjError::InvalidStateForAssignee,
         AgpjError::InvalidStateChange {
-            from: RunState::Ran,
+            from: RunState::Running,
             to: RunState::Idle,
         },
         AgpjError::NoCurrentVersion,

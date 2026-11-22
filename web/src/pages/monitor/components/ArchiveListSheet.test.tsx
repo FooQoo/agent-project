@@ -15,6 +15,7 @@ const task = (id: number, taskStatus: ArchivedTask['taskStatus']): ArchivedTask 
   taskStatusChangedAt: '2026-10-01T09:00:00.000Z',
   position: 1,
   agentStatus: 'idle',
+  awaitingAnswer: false,
   pendingReason: null,
   pendingRequestId: null,
   pendingChoices: [],

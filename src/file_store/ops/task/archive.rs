@@ -19,17 +19,8 @@ use super::view;
 const ARCHIVE_REASON: &str = "Archived by user.";
 const RESTORE_REASON: &str = "Restored by user.";
 
-/// The run state an archived task keeps: idle when it never ran, otherwise has run.
-fn archived_state(old: RunState) -> RunState {
-    match old {
-        RunState::Idle | RunState::AwaitingAnswer => RunState::Idle,
-        _ => RunState::Ran,
-    }
-}
-
 impl FileStore {
-    /// Archive a task. Its lane and position stay as they are. A task that
-    /// ran keeps no running or paused state: it becomes "has run"; a task that never ran stays idle.
+    /// Archive a task. Its lane and position stay as they are, and its run state becomes idle.
     pub fn archive_task(
         &self,
         project: &ProjectId,
@@ -47,7 +38,7 @@ impl FileStore {
         }
         let at = stamp(now);
         let old_agent = task.agent_status;
-        let archived_state = archived_state(old_agent);
+        let archived_state = RunState::Idle;
         let event = transition_event(Transition {
             language: self.history_language(project, &task)?,
             kind: HistoryKind::Archive,
@@ -93,11 +84,7 @@ impl FileStore {
         }
         let at = stamp(now);
         let position = lane_end(shared, project, task.task_status)?;
-        // A task that has run and comes back into Doing is paused, as after a lane move.
-        let restored_state = match (task.agent_status, task.task_status) {
-            (RunState::Ran, Column::Doing) => RunState::Paused,
-            (state, _) => state,
-        };
+        let restored_state = task.agent_status;
         let event = transition_event(Transition {
             language: self.history_language(project, &task)?,
             kind: HistoryKind::Restore,
@@ -179,7 +166,7 @@ impl FileStore {
                 continue;
             }
             let old_agent = task.agent_status;
-            let archived_state = archived_state(old_agent);
+            let archived_state = RunState::Idle;
             let event = transition_event(Transition {
                 language: self.history_language(project, &task)?,
                 kind: HistoryKind::Archive,
