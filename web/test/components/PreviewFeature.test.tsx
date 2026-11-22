@@ -118,7 +118,7 @@ describe('a generally available screen', () => {
           open
           onOpenChange={() => {}}
           status="needs_config"
-          draft={{ token: '', save: false, domain: '' }}
+          draft={{ provider: 'ngrok', token: '', save: false, domain: '' }}
           onConnect={() => {}}
           onStop={() => {}}
           onResetToken={() => {}}

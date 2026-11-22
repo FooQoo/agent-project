@@ -14,7 +14,7 @@ const idle: ConnectionSnapshot = {
   status: 'disabled',
   url: null,
   revision: 3,
-  settings: { enabled: false, domain: null },
+  settings: { enabled: false, provider: 'ngrok', domain: null },
   domainEnv: null,
   tokenConfigured: false,
   tokenSource: null,
@@ -79,7 +79,11 @@ function mockApi(
       snapshot = {
         ...snapshot,
         revision: snapshot.revision + 1,
-        settings: { enabled: body.enabled, domain: body.domain || null },
+        settings: {
+          enabled: body.enabled,
+          provider: body.provider ?? snapshot.settings.provider,
+          domain: body.domain || null,
+        },
         domainEnv: null,
       };
       return reply(200, snapshot);
@@ -176,7 +180,12 @@ export const SaveAndConnect: Story = {
     const save = mock?.calls.find((call) => call.line.startsWith('PUT'));
     await expect(JSON.stringify(save?.body)).not.toContain('story-token');
     // The enabled flag and the (empty) domain are saved with the settings: no email, no Google app.
-    await expect(save?.body).toEqual({ enabled: true, revision: 3, domain: '' });
+    await expect(save?.body).toEqual({
+      enabled: true,
+      revision: 3,
+      provider: 'ngrok',
+      domain: '',
+    });
   },
 };
 
@@ -185,7 +194,7 @@ const connected: ConnectionSnapshot = {
   status: 'ready',
   url: phoneUrl,
   tokenConfigured: true,
-  settings: { enabled: true, domain: null },
+  settings: { enabled: true, provider: 'ngrok', domain: null },
   domainEnv: null,
   passcode,
 };
@@ -329,7 +338,7 @@ const savedToken: ConnectionSnapshot = {
   tokenConfigured: true,
   tokenSource: 'keychain',
   keychainTokenSaved: true,
-  settings: { enabled: true, domain: null },
+  settings: { enabled: true, provider: 'ngrok', domain: null },
   domainEnv: null,
 };
 

@@ -236,3 +236,36 @@ fn show_remote_reads_what_was_saved_and_show_still_takes_a_task_id() {
         .unwrap();
     assert_eq!(out.status.code(), Some(2), "{}", text(&out));
 }
+
+#[test]
+fn the_provider_is_saved_and_a_name_other_than_ngrok_or_tailscale_is_refused() {
+    let home = tempfile::tempdir().unwrap();
+    let out = agboard(home.path())
+        .args([
+            "--json",
+            "setup",
+            "remote",
+            "--provider",
+            "tailscale",
+            "--enabled",
+            "true",
+        ])
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "{}", text(&out));
+    let json: Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(json["provider"], "tailscale");
+    let file: Value =
+        serde_json::from_str(&std::fs::read_to_string(home.path().join(FILE)).unwrap()).unwrap();
+    assert_eq!(file["provider"], "tailscale");
+    assert_eq!(file["enabled"], true);
+
+    let bad = agboard(home.path())
+        .args(["setup", "remote", "--provider", "zerotier"])
+        .output()
+        .unwrap();
+    assert_eq!(bad.status.code(), Some(2), "{}", text(&bad));
+    let file: Value =
+        serde_json::from_str(&std::fs::read_to_string(home.path().join(FILE)).unwrap()).unwrap();
+    assert_eq!(file["provider"], "tailscale");
+}

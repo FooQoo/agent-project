@@ -1,9 +1,12 @@
+import type { Provider } from '../api';
 import type { ConnectionStatus } from './connectionProgress';
 
 export type { ConnectionStatus };
 
 /** What the person types: the token is held in memory only and never shown again. */
 export interface ConnectionDraft {
+  /** How the phone connects. Tailscale needs no token and no domain. */
+  provider: Provider;
   token: string;
   /** Keep the typed token in this PC's secure storage. Off unless the person turns it on. */
   save: boolean;

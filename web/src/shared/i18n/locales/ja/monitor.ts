@@ -68,6 +68,19 @@ export const monitorJa = {
     changeSettings: '接続設定を変更',
     reconnect: '再開',
     statusOn: '接続を受け付けています',
+    provider: {
+      label: 'スマホの接続方法',
+      ngrok: 'ngrok',
+      ngrokHint: 'ngrokアカウントの公開アドレスを使います。認証トークンが必要です。',
+      tailscale: 'Tailscale',
+      tailscaleHint:
+        '自分のTailscaleネットワーク内の非公開アドレスを使います。トークンは不要です。スマホでTailscaleをオンにしてください。',
+    },
+    tailscale: {
+      title: 'Tailscaleを確認',
+      body: 'このPCとスマホのTailscaleアプリにサインインし、tailnetでMagicDNSとHTTPS証明書を有効にしてください。',
+      note: 'ngrokとTailscaleを切り替えるとアドレスが変わるため、スマホで合言葉を入力し直し、通知をもう一度オンにします。',
+    },
     getTokenTitle: 'トークンを取得する',
     getTokenBody: 'ngrokにログインして、認証トークンをコピーします。',
     getTokenAction: 'トークンの取得ページを開く',
@@ -167,6 +180,14 @@ export const monitorJa = {
       internal: '内部エラーのため接続が止まりました。もう一度お試しください。',
       config_unreadable: '保存済みの設定を読み込めませんでした。保存し直してから続けてください。',
       config_invalid: '保存済みの設定が正しくありません。トークンを入力して接続し直してください。',
+      tailscale_not_installed:
+        'このPCでTailscaleが見つかりません。Tailscaleアプリをインストールしてサインインしてください。',
+      tailscale_not_logged_in:
+        'Tailscaleが起動していないか、サインインしていません。Tailscaleアプリを開いてサインインしてください。',
+      tailscale_https_disabled:
+        'tailnetでHTTPS証明書が無効です。Tailscaleの管理画面でMagicDNSとHTTPS証明書を有効にしてください。',
+      tailscale_serve_failed:
+        'Tailscaleがアドレスを開けませんでした。Tailscaleアプリを確認してもう一度お試しください。',
     },
   },
 } as const;
