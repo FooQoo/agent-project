@@ -73,6 +73,10 @@ fn every_topic_prints_its_text() {
         ("fixed-epic-bodies", "# Fixed bodies for BUG"),
         ("drafts", "# Drafts and archived tasks"),
         ("phone", "# Open the board on the phone"),
+        (
+            "release-report",
+            "# Report a version and look back at a theme",
+        ),
         ("project", "# Resolve the project"),
         ("language", "# Language of board content"),
         ("files", "# Find and edit the shared files"),

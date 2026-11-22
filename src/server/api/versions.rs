@@ -161,7 +161,7 @@ pub(super) async fn generate_release_doc(
                     "verified": doc.verified,
                     "remaining": doc.remaining,
                     "moved": doc.moved,
-                    "published": 0,
+                    "published": doc.published,
                 }),
             )
         }
