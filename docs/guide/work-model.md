@@ -27,27 +27,31 @@ Everything is stored as plain files in a folder on your machine (by default `~/.
 
 ## States
 
-A task is in one of three **columns**: **Todo** for work that has not started, **Doing** for work in progress, and **Done** for finished work. An AI-owned task also shows what its agent is doing: **Idle**, **Running**, or **Pending**.
+A task is in one of three **columns**: **Todo** for work that has not started, **Doing** for work in progress, and **Done** for finished work. An AI-owned task also shows what its agent is doing: **Idle**, **Running**, **Paused**, **Has run**, or **Awaiting answer**.
 
 | Owner | Todo | Doing | Done |
 | --- | --- | --- | --- |
-| **AI** | Idle, Pending | Idle, Running, Pending | Idle |
+| **AI** | Idle, Has run, Awaiting answer | Idle, Running, Paused, Awaiting answer | Idle, Has run |
 | **User** | Idle | Idle | Idle |
 
-- **Idle** means the agent is not working on the task right now.
-- **Running** is what the agent last reported, and it applies to Doing only. It is not a live check: if an agent crashes, its task stays Running until someone changes it. Moving a task to another column resets it to Idle.
-- **Pending** is not set by anyone. It is worked out from the questions: an AI-owned task in Todo or Doing is Pending while it refers to an open question.
+- **Idle** means the task has never run.
+- **Running** is what the agent last reported, and it applies to Doing only. It is not a live check: if an agent crashes, its task stays Running until someone changes it.
+- **Paused** means the task is in Doing and its run has stopped, but it has run before. An agent pauses a task, and a task becomes Paused when it asks a question while running, when the resident agent stops on an error, or when a task that has run is moved to Doing.
+- **Has run** means the task has run and now sits in Todo or Done.
+- **Awaiting answer** is not set by anyone. It is worked out from the questions: an AI-owned task in Todo or Doing is Awaiting answer while it refers to an open question.
+- In Doing, the state changes only from Idle to Running, from Running to Paused, and from Paused to Running; anything else is refused. Has run and Awaiting answer can never be set directly.
+- Moving a task to another column keeps its open questions. A task that has never run stays Idle. A task that has run becomes Paused in Doing and Has run in Todo or Done, and it never goes back to Idle. A task that waits for an answer keeps the state underneath: a task that has never run stays Idle, and one that was running counts as having run.
 - Tasks you own are always Idle.
 
 ## Questions {#decisions}
 
-When an agent cannot continue without you, it asks you a **question**, usually with a few options and a recommendation. Questions belong to the project, and the task that refers to one becomes **Pending** and shows the question. You choose an option, write a note, or both; the answer goes into the history and the agent reads it before continuing. A question stays open until it is answered.
+When an agent cannot continue without you, it asks you a **question**, usually with a few options and a recommendation. Questions belong to the project, and the task that refers to one becomes **Awaiting answer** and shows the question. You choose an option, write a note, or both; the answer goes into the history and the agent reads it before continuing. A question stays open until it is answered.
 
 You can answer on the board, on your phone, in the chat, or with the CLI. The first answer recorded is the one that counts. [Decisions](./delegate/decisions) explains how to answer.
 
 ## Acceptance conditions and automatic Done
 
-Acceptance conditions are written before the work starts. An agent marks a condition done only after it has verified it. When every condition of an AI-owned task is done and nothing is waiting on you, the task moves to **Done** by itself, while the server is running, and the history records why. Tasks without conditions, tasks you own, drafts, and Pending tasks do not finish automatically. The file format is described in [Markdown file format](./reference/file-format).
+Acceptance conditions are written before the work starts. An agent marks a condition done only after it has verified it. When every condition of an AI-owned task is done and nothing is waiting on you, the task moves to **Done** by itself, while the server is running, and the history records why. Tasks without conditions, tasks you own, drafts, and Awaiting answer tasks do not finish automatically. The file format is described in [Markdown file format](./reference/file-format).
 
 ## Epics and the order of work
 
@@ -62,8 +66,8 @@ Every change adds an entry to the task's history: moves, state changes, question
 These rules are kept by Agent Board itself, not left to the agent's good manners:
 
 - **Who owns a task never changes.** The owner is fixed when the task is created.
-- **Only valid states exist.** A column and a run state that do not go together are refused, and nobody can set Pending by hand.
-- **The agent waits when you have not answered.** A task that refers to an open question is Pending, and the agent cannot mark it Running. Asking a question puts a Running task back to Idle at the same moment.
+- **Only valid states exist.** A column and a run state that do not go together are refused, and nobody can set Awaiting answer or Has run by hand. In Doing, only Idle to Running, Running to Paused, and Paused to Running are allowed.
+- **The agent waits when you have not answered.** A task that refers to an open question is Awaiting answer, and the agent cannot mark it Running. Asking a question pauses a Running task at the same moment.
 - **An answer is recorded once.** The first answer stands and is not overwritten. A question, its answer, and the history of the tasks that refer to it are saved together.
 - **Done means the conditions are met.** An AI-owned task needs at least one acceptance condition, all of them done, and no open question. The check is made again on the latest files at the moment it moves, and the reason goes into the history. This is what automatic Done checks. An agent that moves a task to Done by hand also needs every condition done and no open question, but a task with no conditions is not refused; see [What still relies on the agent](#relies-on-agent).
 - **Finished work stays finished.** An agent cannot change a Done task. If you move it back, it can be worked on again. A Done task does not go back by itself when you uncheck a condition.

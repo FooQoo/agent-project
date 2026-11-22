@@ -59,7 +59,7 @@ If the session ends its turn without handling an item, for example a request it 
 Two cases look alike but differ:
 
 - **The last turn failed.** The board shows a warning, **Some items could not be handled**, with the reason. Handle the item yourself on the board, or stop and start the session.
-- **The turns ended without an error and the item did not change.** This is usually work that waits for a person, such as a check on a real device, which the agent cannot advance. The board shows it as **On hold**, in neutral wording and without a warning. It is not an error. Finish or answer the item on the board. To stop the board from handing it over at all, the agent should ask what it needs with a question: a task with an open question is Pending, and the board never hands over a Pending task. The agent's instructions tell it to do so.
+- **The turns ended without an error and the item did not change.** This is usually work that waits for a person, such as a check on a real device, which the agent cannot advance. The board shows it as **On hold**, in neutral wording and without a warning. It is not an error. Finish or answer the item on the board. To stop the board from handing it over at all, the agent should ask what it needs with a question: a task with an open question is Awaiting answer, and the board never hands over an Awaiting answer task. The agent's instructions tell it to do so.
 
 The board shows these items in two places:
 
@@ -68,7 +68,7 @@ The board shows these items in two places:
 
 ## When the agent stops on an error {#stopped-on-error}
 
-If the agent's turn fails, or its process stops in the middle of a turn without you stopping it, a task it was working on would stay Running with nobody behind it. The board adds one history entry to each such task. The entry says that the resident agent stopped on an error, gives a short reason, and says that another agent needs to take the task over, and the board sets the task's agent back to Idle so that any agent can pick it up. The entry is written in the language of the task's text. A task that was still Idle, or that is no longer in Doing, is left alone, and stopping the agent yourself writes nothing.
+If the agent's turn fails, or its process stops in the middle of a turn without you stopping it, a task it was working on would stay Running with nobody behind it. The board adds one history entry to each such task. The entry says that the resident agent stopped on an error, gives a short reason, and says that another agent needs to take the task over, and the board sets the task to Paused so that any agent can pick it up. The entry is written in the language of the task's text. A task that was not Running, or that is no longer in Doing, is left alone, and stopping the agent yourself writes nothing.
 
 ## Remote access {#remote-access}
 

@@ -8,7 +8,7 @@ A decision is a question an agent asks when it cannot continue without you. It i
 
 ## How you notice a question
 
-A question belongs to the project, and a task refers to it. An AI-owned task that refers to an open question is **Pending**. In Todo or Doing, its card says how many questions it waits on, such as **Unanswered questions: 2**, and shows an **Answer the question** button. You can also see Pending tasks on the [remote access](../watch/remote-access).
+A question belongs to the project, and a task refers to it. An AI-owned task that refers to an open question is **Awaiting answer**. In Todo or Doing, its card says how many questions it waits on, such as **Unanswered questions: 2**, and shows an **Answer the question** button. You can also see Awaiting answer tasks on the [remote access](../watch/remote-access).
 
 Every open message of the project is counted in the **Messages** band above the lanes. The band is always there. It shows two counts:
 
@@ -82,7 +82,7 @@ Each tab is as tall as its own content, so a long Summary tab does not stretch t
 
 ## Answer on your phone
 
-On remote access, a Pending task shows the same **Answer the question** button, and there is no band: **Messages** in the bottom bar opens the list as a sheet that slides up from the bottom, with the same tabs. The number on its icon counts the open questions only, and it is hidden at 0. **Ask** in the middle of the bar opens the request form.
+On remote access, an Awaiting answer task shows the same **Answer the question** button, and there is no band: **Messages** in the bottom bar opens the list as a sheet that slides up from the bottom, with the same tabs. The number on its icon counts the open questions only, and it is hidden at 0. **Ask** in the middle of the bar opens the request form.
 
 The sheet works like the modal. The tabs and rows are the same, and you can swipe the list sideways to switch between **AI's questions**, **Your requests**, and **Summary** in the same way; the selected tab follows your finger. Scrolling the list, tapping a row, and pulling the sheet down to close it work as before. To read the latest messages at once, pull the list down from its top, as you pull a lane: the hint reads **Pull to refresh**, then **Release to refresh**, and a spinner shows while the data is read again. A short pull and a sideways swipe do nothing. An open question stacks the answer under the question, with the question, your answer, the options, and the note all starting at the same edge. The sheet scrolls while the buttons stay at the bottom, in reach of your thumb. When you opened the question from the list, the left button is **Back to list**, which returns to the list without sending anything; when you opened it from a task's card, it is **Later**, which closes the sheet. **Send answer** is on the right in both cases. While you type, the sheet grows to fill the screen from under the status bar down to the keyboard, with the buttons just above the keyboard and the question scrolling above them. It looks the same with the keyboard closed. Opened from a task's **Answer the question** button, the sheet opens at that task's first open question.
 
@@ -104,7 +104,7 @@ sequenceDiagram
     participant B as Board
     participant U as User
     A->>B: message ask with questions and a task
-    Note over B: Task is Pending and shows an answer button
+    Note over B: Task is Awaiting answer and shows an answer button
     U->>B: Choose an option and/or write a note
     Note over B: Answer saved, history added to the task
     B-->>A: message ask prints the answers and ends
