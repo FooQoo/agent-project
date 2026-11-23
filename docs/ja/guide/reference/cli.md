@@ -106,6 +106,17 @@ agpj --project "My project" mode sleep      # あなたへの質問を止める
 agpj --project "My project" mode sparring   # 既定に戻す
 ```
 
+毎日の時間帯を決めておくと、自動でスリープになります。時刻はこのコンピューターの時計の`HH:MM`で、終了が開始より前なら日をまたぎます。
+
+```sh
+agpj --project "My project" mode schedule --start 23:00 --end 08:00   # 時間帯を決めてオンにする
+agpj --project "My project" mode schedule --off                        # オフにする（時刻は残る）
+agpj --project "My project" mode auto                                  # 手動のモードを忘れ、時間帯に決めさせる
+```
+
+手動のモードは、設定されているあいだ優先されます。時間帯のあいだに設定したものはその時間帯が終わるまで続き、終わるとスケジュールがまた決めます。時間帯の外で設定したものは、次の時間帯が始まるまで続きます（時間帯がなければ変えるまで）。`mode`は、いま効いているモード、その出どころ（`manual`か`schedule`。モードが終わる時刻の`until`も。時間帯の終わり、手動のモードならその保持の終わり）、時間帯を示します。`message ask`と`agpj progress`も同じ決め方を使い、進行表は`mode`の隣に`modeSource`と`modeUntil`を加えます。
+
+
 スリープ中の`message ask`は`sleep_mode`で拒否され、ボード・通知・チャットのどこにも届きません。エージェントはサブエージェントに判断させ、その結論で進め、タスクに記録します。
 
 ```sh

@@ -58,8 +58,8 @@ ngrokの入口は、カンバンのページと以下のルートを同じパス
 | `GET /api/events` | SSE。購読後にカンバンのビルドIDを含む`ready`（`{"build":"<16桁の16進数>"}`）、変更されたリソースを運ぶ`changed`（[変更イベント](#変更イベント)を参照）、保存した言語やテーマが変わったときに`preferences`（`GET /api/preferences`と同じJSON）、15秒ごとに接続維持のコメント。 |
 | `GET /api/preferences` | 保存済みの言語とカラーテーマ。`locale`・`theme`（`mode`・`accent`）・`revision`。ファイルがない、または読めない場合は既定値。キャッシュしない。[表示設定](#表示設定)を参照。 |
 | `PUT /api/preferences` | JSONの本文で`locale`・`theme`・両方のいずれかを保存し、`GET`と同じ形を、`revision`を1増やして返す。未知の項目と不正な値は422 `invalid_preferences`、書き込みの失敗は500 `preferences_unavailable`。拒否・失敗のときは保存済みの値を変えない。 |
-| `GET /api/projects/{projectId}/mode` | プロジェクトのやり取りのモード。`mode`（`sparring`または`sleep`）と、設定済みなら`since`。保存されたモードがないプロジェクトは`{"mode": "sparring"}`と読む。キャッシュしない。存在しないプロジェクトは404 `project_not_found`。[プロジェクトのモード](#プロジェクトのモード)を参照。 |
-| `PUT /api/projects/{projectId}/mode` | `{"mode": "sparring"}`か`{"mode": "sleep"}`を保存し、`GET`と同じ形を返す。それ以外の本文は422 `invalid_mode`、書き込みの失敗は500 `mode_unavailable`。 |
+| `GET /api/projects/{projectId}/mode` | いま効いているプロジェクトのやり取りのモード。`mode`（`sparring`または`sleep`）、`modeSource`（`manual`または`schedule`）、`since`（手動のモードを設定した時刻）、`until`（毎日の時間帯がスリープにしているときの、その終わり）、`manual`（手動で設定したモードがあれば）、`schedule`（保存されていれば`{enabled, start, end}`）。保存されたモードがないプロジェクトは`{"mode": "sparring", "modeSource": "manual"}`と読む。キャッシュしない。存在しないプロジェクトは404 `project_not_found`。[プロジェクトのモード](#プロジェクトのモード)を参照。 |
+| `PUT /api/projects/{projectId}/mode` | `{"mode": "sparring"}`、`{"mode": "sleep"}`、`{"mode": "auto"}`（手動のモードを忘れ、スケジュールに決めさせる）、`{"schedule": {"enabled": true, "start": "23:00", "end": "08:00"}}`（異なる2つの`HH:MM`）のうちちょうど1つを保存し、`GET`と同じ形を返す。それ以外の本文は422 `invalid_mode`、書き込みの失敗は500 `mode_unavailable`。 |
 | `GET /api/projects/{projectId}/summaries`<br>`POST /api/projects/{projectId}/summaries/{summaryId}/dismiss` | プロジェクトの定期サマリーを新しい順に返す経路と、1件を片付ける経路。[定期サマリー](#定期サマリー)を参照。 |
 | `GET /api/notification-settings` | スマホに届ける通知の種類。`kinds`・`summary`・`revision`。ファイルがない、または読めない場合は既定値。キャッシュしない。[通知設定](#通知設定)を参照。 |
 | `PUT /api/notification-settings` | JSONの本文で`kinds`グループ、`summary`グループ、またはその両方を保存し、`GET`と同じ形を、`revision`を1増やして返す。不正な本文は422 `invalid_notification_settings`、書き込みの失敗は500 `notification_settings_unavailable`。 |
@@ -280,9 +280,9 @@ JSONとして読めない本文は、ほかの書き込みと同じく400です�
 
 ### プロジェクトのモード
 
-`GET`と`PUT /api/projects/{projectId}/mode`は、プロジェクトのやり取りのモードを読み書きします。`agpj mode`が`<データ領域>/.internal/modes.json`に書くのと同じ項目です（[スリープモード](../concepts/agents.md#sleep-mode)を参照）。ローカルのリスナーが提供し、ngrokの入口は同じ組をsessionの背後で提供します（[入口のルート](./remote-routes.md)を参照）。`PUT`はほかのPCの書き込みと同じ書き込みガードを通り、入口ではsessionとCSRFトークンが必要です。本文は`{"mode": "sparring"}`か`{"mode": "sleep"}`だけで、未知の項目や値は422 `invalid_mode`、壊れたJSONは400、最後の保存が勝ちます。
+`GET`と`PUT /api/projects/{projectId}/mode`は、プロジェクトのやり取りのモードを読み書きします。`agpj mode`が`<データ領域>/.internal/modes.json`に書くのと同じ項目です（[スリープモード](../concepts/agents.md#sleep-mode)を参照）。ローカルのリスナーが提供し、ngrokの入口は同じ組をsessionの背後で提供します（[入口のルート](./remote-routes.md)を参照）。`PUT`はほかのPCの書き込みと同じ書き込みガードを通り、入口ではsessionとCSRFトークンが必要です。本文の項目はちょうど1つ（上の表を参照）で、未知の項目や値は422 `invalid_mode`、壊れたJSONは400、最後の保存が勝ちます。
 
-CLIは別のプロセスでモードを変えるので、`/api/events`は開いているストリームごとに、保存されたモードを1秒に1回比べ、そのストリームが最後に見た内容と違うときに`mode`イベントを送ります。データは`{"projects": {"<projectId>": {"mode": "sleep", "since": "..."}}}`で、変わったプロジェクトだけを含み、項目が消えたプロジェクトは組手です。接続時点の状態は送りません。`mode`イベントは`changed`になることはなく、ボードの`seq`とバージョンは動きません。`PUT`の保存も、ほかの開いているページに同じ形で届きます。再接続のあと、ボードは表示しているモードを読み直します。
+CLIは別のプロセスでモードを変えるので、`/api/events`は開いているストリームごとに、保存されたモードを1秒に1回比べ、そのストリームが最後に見た内容と違うときに`mode`イベントを送ります。データは`{"projects": {"<projectId>": {…GETと同じJSON…}}}`で、変わったプロジェクトだけを含みます。比べるときに時計も見るので、毎日の時間帯の開始と終了は、ファイルが変わらなくても知らせます。項目が消えたプロジェクトは組手です。接続時点の状態は送りません。`mode`イベントは`changed`になることはなく、ボードの`seq`とバージョンは動きません。`PUT`の保存も、ほかの開いているページに同じ形で届きます。再接続のあと、ボードは表示しているモードを読み直します。
 
 ### 通知設定
 

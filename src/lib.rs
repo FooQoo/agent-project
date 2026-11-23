@@ -9,6 +9,7 @@ pub mod file_store;
 pub mod interact;
 pub mod lifecycle;
 pub mod mode;
+pub mod mode_schedule;
 pub mod nudge;
 pub mod paths;
 pub mod plugin_hash;

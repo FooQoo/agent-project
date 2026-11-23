@@ -1,5 +1,5 @@
 import { authHeaders } from '../../shared/api/http';
-import { parseProjectMode, type ModeKind, type ProjectMode } from './model';
+import { parseProjectMode, type ModeKind, type ProjectMode, type Schedule } from './model';
 
 const url = (projectId: string) => `/api/projects/${projectId}/mode`;
 
@@ -31,8 +31,15 @@ export async function loadMode(projectId: string, fetcher: typeof fetch = fetch)
   return parse(response);
 }
 
-/** Saves the mode and returns the saved value. */
-export async function saveMode(projectId: string, mode: ModeKind, fetcher: typeof fetch = fetch) {
+/** What a save changes: the manual mode (`auto` forgets it), or the daily window. */
+export type ModeChange = { mode: ModeKind | 'auto' } | { schedule: Schedule };
+
+/** Saves one change and returns the saved state. */
+export async function saveMode(
+  projectId: string,
+  change: ModeChange,
+  fetcher: typeof fetch = fetch,
+) {
   let response: Response;
   try {
     response = await fetcher(url(projectId), {
@@ -43,7 +50,7 @@ export async function saveMode(projectId: string, mode: ModeKind, fetcher: typeo
         'Content-Type': 'application/json',
         ...authHeaders(),
       },
-      body: JSON.stringify({ mode }),
+      body: JSON.stringify(change),
     });
   } catch {
     throw new ModeError(0);

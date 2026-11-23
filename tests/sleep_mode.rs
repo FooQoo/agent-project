@@ -152,3 +152,61 @@ fn a_decision_is_one_history_entry_with_who_what_why_and_basis() {
         assert_ne!(code, 0);
     }
 }
+
+#[test]
+fn a_daily_window_sleeps_by_the_schedule_and_a_manual_mode_overrides_it() {
+    let home = tempfile::tempdir().unwrap();
+    demo_project(home.path());
+    // The test helper runs the binary with TZ=UTC, so the local time is UTC.
+    let now = chrono::Utc::now();
+    let hour = chrono::Duration::hours(1);
+    let start = (now - hour).format("%H:%M").to_string();
+    let end = (now + hour).format("%H:%M").to_string();
+    let run = |args: &[&str]| {
+        let mut all = vec!["--project", "Demo"];
+        all.extend_from_slice(args);
+        all.push("--json");
+        json_ok(home.path(), &all)
+    };
+
+    let scheduled = run(&["mode", "schedule", "--start", &start, "--end", &end]);
+    assert_eq!(scheduled["mode"]["kind"], "sleep");
+    assert_eq!(scheduled["mode"]["source"], "schedule");
+    assert!(scheduled["mode"]["until"].as_str().unwrap().ends_with('Z'));
+    assert_eq!(scheduled["schedule"]["start"], start);
+
+    let progress = run(&["progress"]);
+    assert_eq!(progress["mode"], "sleep");
+    assert_eq!(progress["modeSource"], "schedule");
+    assert!(progress["modeUntil"].is_string());
+    let (_, code) = ask(home.path());
+    assert_eq!(code, "sleep_mode");
+
+    // Sparring set by hand inside the window holds; `auto` gives the window back.
+    assert_eq!(run(&["mode", "sparring"])["mode"]["kind"], "sparring");
+    assert!(run(&["progress"]).get("mode").is_none());
+    assert_eq!(run(&["mode", "auto"])["mode"]["source"], "schedule");
+
+    // `--off` keeps the times; a bad time or a missing one is refused.
+    let off = run(&["mode", "schedule", "--off"]);
+    assert_eq!(off["mode"]["kind"], "sparring");
+    assert_eq!(off["schedule"]["enabled"], false);
+    let (_, code) = json_error(
+        home.path(),
+        &[
+            "--project",
+            "Demo",
+            "mode",
+            "schedule",
+            "--start",
+            "8:00",
+            "--json",
+        ],
+    );
+    assert_eq!(code, "invalid_value");
+    let (_, code) = json_error(
+        home.path(),
+        &["--project", "Demo", "mode", "sleep", "--off", "--json"],
+    );
+    assert_eq!(code, "invalid_value");
+}

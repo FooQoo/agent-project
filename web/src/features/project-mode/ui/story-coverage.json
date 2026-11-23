@@ -32,6 +32,21 @@
               "id": "projectmode-modesection--save-failed",
               "states": ["save error"],
               "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--by-schedule",
+              "states": ["asleep by the schedule until the end", "schedule on, times shown"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--manual-over-schedule",
+              "states": ["manual note", "follow the schedule button"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--turn-on-schedule",
+              "states": ["turning the window on saves it"],
+              "interaction": true
             }
           ]
         }
@@ -51,6 +66,11 @@
             {
               "id": "projectmode-modeindicator--sparring",
               "states": ["no chip in sparring"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modeindicator--asleep-by-schedule",
+              "states": ["chip with the window end"],
               "interaction": true
             }
           ]

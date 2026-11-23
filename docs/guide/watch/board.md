@@ -193,6 +193,13 @@ The settings dialog has a **Mode** switch for the project on the board, with two
 
 While the project is asleep, a **Sleep** chip with a moon icon shows in the header, on the PC and on the phone, so you notice it. The switch and the chip follow `agpj mode`: when the agent or you change the mode with the command, an open board shows it within a few seconds, without a reload. The mode belongs to you, not to the project's shared files, and is saved per project on this computer. A phone that opened the board through the remote entrance can switch it too.
 
+The same section can put the project to sleep on a daily schedule. Turn on **Sleep on a schedule** and set **From** and **Until**, as times of day on this computer's clock. If **Until** is earlier than **From**, the window crosses midnight (for example 23:00 to 08:00). While the window is on, the settings and the header say so: "Asleep by the schedule until 8:00".
+
+A mode you set by hand wins over the schedule while it is set:
+
+- A change you make **during a window** holds until that window ends. Then the schedule takes over again.
+- A change you make **outside a window** holds until the next window starts, so a forgotten toggle at noon does not switch off the nightly sleep. With no window set, it holds until you change it. Choose **Follow the schedule** (or run `agpj mode auto`) to hand the decision back to the window at any time.
+
 ### Notifications {#phone-notifications}
 
 Choose which notifications the phone gets, turn them on or off, and read what each kind opens in [Notifications in the app](./remote-access.md#notifications).

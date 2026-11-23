@@ -11,7 +11,7 @@ use axum::http::StatusCode;
 use axum::response::Response;
 use axum::routing::get;
 
-use crate::mode::{self, ModeKind};
+use crate::mode::{self, ModeKind, Schedule};
 use crate::server::AppState;
 use crate::server::request::ApiJson;
 use crate::server::response::{agpj_error_response, error_response, json_response};
@@ -37,8 +37,7 @@ async fn get_mode(State(state): State<Arc<AppState>>, Path(project): Path<String
         Ok(id) => id,
         Err(response) => return *response,
     };
-    let saved = mode::load(&mode::data_dir_of(&state.shared), &id);
-    json_response(StatusCode::OK, &saved.api_json())
+    json_response(StatusCode::OK, &current_json(&state, &id))
 }
 
 async fn put_mode(
@@ -50,27 +49,22 @@ async fn put_mode(
         Ok(id) => id,
         Err(response) => return *response,
     };
-    let kind = body
-        .as_object()
-        .filter(|fields| fields.len() == 1)
-        .and_then(|fields| fields.get("mode"))
-        .and_then(serde_json::Value::as_str)
-        .and_then(ModeKind::parse);
-    let Some(kind) = kind else {
-        return error_response(
-            StatusCode::UNPROCESSABLE_ENTITY,
-            "invalid_mode",
-            "mode is invalid.",
-            "The body must be {\"mode\": \"sparring\"} or {\"mode\": \"sleep\"}.",
-        );
+    let data_dir = mode::data_dir_of(&state.shared);
+    let saved = match parse_change(&body) {
+        Some(Change::Mode(kind)) => mode::set(&data_dir, &id, kind, chrono::Utc::now()).map(drop),
+        Some(Change::Auto) => mode::clear_manual(&data_dir, &id),
+        Some(Change::Schedule(schedule)) => mode::set_schedule(&data_dir, &id, schedule),
+        None => {
+            return error_response(
+                StatusCode::UNPROCESSABLE_ENTITY,
+                "invalid_mode",
+                "mode is invalid.",
+                "The body must be {\"mode\": \"sparring\" | \"sleep\" | \"auto\"} or {\"schedule\": {\"enabled\": true, \"start\": \"23:00\", \"end\": \"08:00\"}}.",
+            );
+        }
     };
-    match mode::set(
-        &mode::data_dir_of(&state.shared),
-        &id,
-        kind,
-        chrono::Utc::now(),
-    ) {
-        Ok(saved) => json_response(StatusCode::OK, &saved.api_json()),
+    match saved {
+        Ok(()) => json_response(StatusCode::OK, &current_json(&state, &id)),
         Err(_) => error_response(
             StatusCode::INTERNAL_SERVER_ERROR,
             "mode_unavailable",
@@ -78,6 +72,29 @@ async fn put_mode(
             "The modes file could not be written. The saved mode is unchanged.",
         ),
     }
+}
+
+enum Change {
+    Mode(ModeKind),
+    Auto,
+    Schedule(Schedule),
+}
+
+/// Exactly one field: `mode` (`sparring`, `sleep`, or `auto` to follow the schedule again), or a
+/// `schedule` of two different `HH:MM` times.
+fn parse_change(body: &serde_json::Value) -> Option<Change> {
+    let fields = body.as_object().filter(|fields| fields.len() == 1)?;
+    if let Some(text) = fields.get("mode") {
+        return match text.as_str()? {
+            "auto" => Some(Change::Auto),
+            other => ModeKind::parse(other).map(Change::Mode),
+        };
+    }
+    Schedule::from_json(fields.get("schedule")?).map(Change::Schedule)
+}
+
+fn current_json(state: &AppState, id: &str) -> serde_json::Value {
+    mode::state(&mode::data_dir_of(&state.shared), id).api_json(chrono::Local::now())
 }
 
 /// The route of the project's mode, served with the other saved settings.

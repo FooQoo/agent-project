@@ -68,6 +68,8 @@ The JSON that agents receive. The pieces are explained in [Agent integration](..
 
 The table also carries `"mode": "sleep"` while the project is in sleep mode. The key is absent in the default sparring mode, so an agent reads a missing `mode` as sparring. The mode is saved per project in the data area (`.internal/modes.json`), not in the shared project files, and `agpj mode` and `agpj progress` read it without a server. See [Sleep mode](../concepts/agents.md#sleep-mode).
 
+While the project sleeps the table also carries `modeSource` (`manual` or `schedule`) and, when the daily window holds it asleep, `modeUntil` (when the window ends, UTC). All three are absent for sparring. The window and how a manual mode overrides it are in [Sleep mode](../concepts/agents.md#sleep-mode).
+
 ## Hook output
 
 `agpj hook --agent claude|codex` writes JSON for the agent:

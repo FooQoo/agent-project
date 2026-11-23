@@ -112,21 +112,26 @@ fn change_payload(
 const MODE_POLL: Duration = Duration::from_secs(1);
 
 /// `mode` carries the projects whose mode changed since the last look:
-/// `{"projects": {"<id>": {"mode": "sleep", "since": "…"}}}`. A project whose entry is gone is
-/// sparring. Nothing is sent for the state at connection time: the board reads it with `GET`.
+/// `{"projects": {"<id>": {"mode": "sleep", "modeSource": "schedule", ...}}}`, the same JSON as
+/// `GET /api/projects/{id}/mode`. A project whose entry is gone is sparring. The look includes the
+/// clock, so the start and end of a daily window are announced although no file changed. Nothing is
+/// sent for the state at connection time: the board reads it with `GET`.
 fn mode_events(data_dir: std::path::PathBuf) -> impl Stream<Item = Result<Event, Infallible>> {
-    let mut known = crate::mode::load_all(&data_dir);
+    let mut known = crate::mode::api_json_all(&data_dir, &chrono::Local::now());
     tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(MODE_POLL)).filter_map(
         move |_| {
-            let now = crate::mode::load_all(&data_dir);
+            let now = crate::mode::api_json_all(&data_dir, &chrono::Local::now());
             let mut changed = serde_json::Map::new();
-            for (id, mode) in &now {
-                if known.get(id) != Some(mode) {
-                    changed.insert(id.clone(), mode.api_json());
+            for (id, state) in &now {
+                if known.get(id) != Some(state) {
+                    changed.insert(id.clone(), state.clone());
                 }
             }
             for id in known.keys().filter(|id| !now.contains_key(*id)) {
-                changed.insert(id.clone(), crate::mode::ProjectMode::default().api_json());
+                changed.insert(
+                    id.clone(),
+                    crate::mode::State::default().api_json(chrono::Local::now()),
+                );
             }
             known = now;
             if changed.is_empty() {

@@ -28,7 +28,11 @@ pub fn run(ctx: &Context, args: &ProgressCommandArgs) -> Result<Outcome, AgpjErr
         filter.as_ref(),
     );
     table.locale = crate::server::preferences::saved_locale(ctx.files.shared_dir());
-    table.mode = crate::mode::non_default(ctx.files.shared_dir(), ctx.project_id()?.as_str());
+    crate::mode::fill_progress(
+        &mut table,
+        ctx.files.shared_dir(),
+        ctx.project_id()?.as_str(),
+    );
     Ok(Outcome {
         changed: false,
         human: render(&table),
