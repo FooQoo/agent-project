@@ -297,8 +297,8 @@ test.describe('the first theme in an OS dark browser', () => {
       await expect(lane(page, 'Doing')).toBeVisible();
       const dialog = await openSettings(page);
       await expect(dialog.getByRole('radio', { name: 'Light Blue' })).toHaveAttribute('aria-checked', 'true');
-      // The language and the theme; the notification choices are in a dialog of their own.
-      await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(2);
+      // The language, the theme, and the mode; the notification choices are in a dialog of their own.
+      await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(3);
     });
   }
 
