@@ -15,7 +15,7 @@ Agent Projectが保存するすべてのファイルを、項目と例ととも�
 | `acceptance`・`acceptanceError` | frontmatterの完了条件（不正なときは空）と、`acceptance`かYAML構文が不正かどうか。 |
 | `assignee` | `ai`か`human`。作成時に決め、以後は変えない。 |
 | `epicId` | 同じプロジェクトのEPIC-ID、または`null`。 |
-| `taskStatus` | レーン。`backlog`・`todo`・`doing`・`done`。バックログは、まだ始めてはいけない確定済みの計画を置くレーンで、未着手へ送れるのは人だけです。 |
+| `taskStatus` | レーン。`backlog`・`todo`・`doing`・`done`。バックログは、まだ始めてはいけない確定済みの計画を置くレーンで、未着手へは送信でだけ移り、送るのは人か、ユーザーに指示されたエージェントです。 |
 | `position` | 正の整数。同じレーンの未アーカイブのタスク内で一意。 |
 | `agentStatus` | AIの稼働状態で、`idle`・`running`・`paused`のどれかです。それ以外の値（`ran`や`awaiting_answer`を含む）があると`task.json`は不正になります。`running`と`paused`があるのはDoingにあるAI担当のタスクだけで、ほかのタスクはすべて`idle`です。人の判断待ちは稼働状態ではなく、導き出す`awaitingAnswer`の印です（[メッセージ](../concepts/history-and-decisions.md#メッセージ)）。 |
 | `draft` | `null`または`"human"`。`human`は人がブラウザで書いている下書きで、編集ロックです。以前のバージョンのファイルは`isDraft`を持ち、`true`は`human`、`false`は`null`として読む。書き込みは`draft`だけを使う。エピックの場合、CLIの`epic edit`は`human`の下書きを`epic_is_draft`で拒否する。 |

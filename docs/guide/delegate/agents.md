@@ -4,7 +4,7 @@ title: Working with agents
 
 # Working with agents
 
-This is how you hand work to an agent. You ask in the chat; the agent turns the request into a plan on the board (in the Backlog when you ask for the plan only), asks what it cannot settle, and works through the tasks once a person has sent the plan to Todo (or at once when you asked for the work itself), stopping for you only when it must. A hook gives the agent a short progress table, and it reports what it does, asks when a decision is yours, and waits for the answer. This page shows how to set up an agent and what the work loop and the delegation flow look like. You can walk through the flow once in the [Quickstart](../quickstart), and the ideas behind it are in [The work model](../work-model).
+This is how you hand work to an agent. You ask in the chat; the agent turns the request into a plan on the board (in the Backlog when you ask for the plan only), asks what it cannot settle, and works through the tasks once the plan has been sent to Todo (by you, or by the agent when you tell it to start) (or at once when you asked for the work itself), stopping for you only when it must. A hook gives the agent a short progress table, and it reports what it does, asks when a decision is yours, and waits for the answer. This page shows how to set up an agent and what the work loop and the delegation flow look like. You can walk through the flow once in the [Quickstart](../quickstart), and the ideas behind it are in [The work model](../work-model).
 
 ## Set up your agents {#set-up-your-agents}
 
@@ -113,7 +113,7 @@ When you ask an agent for work that is more than one task, it decides what you a
 
 1. **Questions about the plan.** The agent asks what it cannot settle itself, as ordinary questions with choices and a recommendation. A task that refers to an open question shows **Awaiting answer** until you answer.
 2. **Revisions.** The agent changes the epic and the tasks as your answers say, and asks more questions if something is still open.
-3. **Send.** Only you send a Backlog plan to Todo, with `agpj epic send <EPIC-ID> --actor human` for the epic or `agpj mv <id> todo --actor human` for one task. An agent that tries gets `human_only`. If a question on one of the tasks is still open, the send is refused (`send_with_open_questions`) until you confirm it with `--force`. The history records "A person sent the task to Todo."
+3. **Send.** A Backlog plan starts only when you say so. Tell the agent in the chat ("start it"), and it sends the plan with `agpj epic send <EPIC-ID> --actor ai` or `agpj mv <id> todo --actor ai`, recording in the reason that you told it to. The agent never sends on its own judgment, even when the plan looks ready. You can also send it yourself, from the board or with `--actor human`. If a question on one of the tasks is still open, the send is refused (`send_with_open_questions`) until you confirm it with `--force`; an agent cannot confirm it (`human_only`). The history records "A person sent the task to Todo." or "An agent sent the task to Todo." with the agent's reason.
 4. **Work.** After the send, the agent works through the tasks in the epic's order without asking each time.
 
 After the start, the agent calls you only when:
@@ -198,7 +198,7 @@ Only the board on your own computer can start or stop these sessions. The phone 
 
 A draft a person is writing (`draft: "human"`) is read-only for agents: `edit`, `mv`, `state`, and `history add` fail with `task_is_draft`. Work on other tasks until the user finalizes it.
 
-A Backlog card is read-only for agents' moves: `mv` and `state` fail with `task_in_backlog`, while `edit` and `history add` work. An agent creates a Backlog card with `add --actor ai --backlog` only for a request for the plan; without `--backlog` its `add` creates an ordinary Todo task, also when it is for the user. Only a person sends a card to Todo (`mv <id> todo`, `epic send`); an agent's `mv <id> todo` and `epic send` fail with `human_only`.
+A Backlog card is read-only for agents' moves: `mv` and `state` fail with `task_in_backlog`, while `edit` and `history add` work. An agent creates a Backlog card with `add --actor ai --backlog` only for a request for the plan; without `--backlog` its `add` creates an ordinary Todo task, also when it is for the user. A card reaches Todo only by a send (`mv <id> todo`, `epic send`), which a person makes, or an agent makes when you told it to. It never sends on its own judgment and cannot confirm a send with open questions (`human_only`).
 
 On `AGPJ_ERROR`, a missing project, a technical connection failure, or an unreadable board, report the problem and stop board-dependent changes until a valid progress table is available. A timeout or an interrupted wait does not answer or expire a question. For causes and fixes, see [Troubleshooting](../operations/troubleshooting).
 

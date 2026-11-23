@@ -125,7 +125,7 @@ An agent's `add` creates an ordinary Todo task. For a request for the plan only,
 agpj --project "My project" add --title "Plan the launch" --assignee ai --actor ai --backlog --epic LAUNCH
 ```
 
-The Backlog holds settled plans that must not be started yet. An agent never starts them, and its `mv` and `state` on a Backlog card fail with `task_in_backlog` (exit code 1). Only a person sends a card to Todo, at the end of the lane. From the command line, send one card by moving it to `todo`; there is no separate `send` command:
+The Backlog holds settled plans that must not be started yet. An agent never starts them, and its `mv` and `state` on a Backlog card fail with `task_in_backlog` (exit code 1). A person sends a card to Todo, at the end of the lane; an agent does so only when the user told it to, and says so in `--reason`. From the command line, send one card by moving it to `todo`; there is no separate `send` command:
 
 ```sh
 agpj --project "My project" mv 12 todo --actor human
@@ -133,7 +133,7 @@ agpj --project "My project" epic send LAUNCH --actor human
 agpj --project "My project" epic send LAUNCH --actor human --tasks 1,2
 ```
 
-`mv <id> todo` sends one card; moving a card that is in the Backlog to any other lane is a person's move too. `epic send` sends the whole epic, or only the cards given with `--tasks`, in one save that either moves all of them or none. An agent that runs either gets `human_only`. So does an agent that moves a task from Doing back to Todo (`mv <id> todo` on a Doing task) or pauses a task (`state <id> paused`); only a person does either. An agent does not move a task to Done; eligible tasks move there automatically (see Finish a task). A card that is already out of the Backlog is moved like any other card, and a card a person is editing in the browser (`draft: human`) cannot be sent (`task_is_draft`). The history records "A person sent the task to Todo."
+`mv <id> todo` sends one card; moving a card that is in the Backlog to Doing or Done is a person's move; an agent gets `task_in_backlog`. `epic send` sends the whole epic, or only the cards given with `--tasks`, in one save that either moves all of them or none. An agent may run either one only when the user told it to; it cannot confirm a send with `--force` (`human_only`). An agent that moves a task from Doing back to Todo (`mv <id> todo` on a Doing task) or pauses a task (`state <id> paused`); only a person does either. An agent does not move a task to Done; eligible tasks move there automatically (see Finish a task). A card that is already out of the Backlog is moved like any other card, and a card a person is editing in the browser (`draft: human`) cannot be sent (`task_is_draft`). The history records "A person sent the task to Todo." or "An agent sent the task to Todo." followed by the `--reason` the agent gave.
 
 If the plan has open questions, the send is refused with `send_with_open_questions` (exit code 1) and the message lists the question IDs. Add `--force` to `mv` (or `epic send`) to send anyway; the questions stay open and the card is Awaiting answer until they are answered:
 

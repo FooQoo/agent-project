@@ -92,7 +92,7 @@ These checks prove that a request came from the page in a browser. They do not s
 ## Drafts and Done tasks
 
 - CLI `edit`, `mv`, `state`, and `history add` refuse a person's draft tasks (`draft: human`), so a cooperative agent does not overwrite a task a person is writing. An agent's `mv` and `state` also refuse a Backlog task (`task_in_backlog`); `edit` and `history add` still work on it.
-- Only a person sends a plan from the Backlog to Todo (`mv <id> todo`, `epic send`); an agent that tries, gets `human_only`. A plan with open questions needs the person's confirmation (`send_with_open_questions`). The send routes of the web server act as a person. The `--actor` value is a declaration, not authentication; see [What is not prevented](#what-is-not-prevented).
+- A plan leaves the Backlog only by a send (`mv <id> todo`, `epic send`). A person sends it, or an agent does when the user told it to; the skill requires the instruction and its record in `--reason`, and the code does not check that the instruction was given. An agent cannot confirm a send with open questions: `--force` from an agent gets `human_only`, so such a plan needs a person's confirmation (`send_with_open_questions`). The send routes of the web server act as a person. The `--actor` value is a declaration, not authentication; see [What is not prevented](#what-is-not-prevented).
 - AI changes to Done tasks (edit, state, epic, history, and images) are refused.
 - Writes to archived tasks (edit, draft change, move, state, answer, and attachments) are refused under the write lock; images stay readable.
 - The draft toggle and edit APIs accept only requests that pass the browser write guard.

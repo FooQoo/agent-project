@@ -40,7 +40,7 @@ The agent changes the plan as your answers say, and may ask a little more. If it
 
 ## 4. The agent starts the plan
 
-Once your questions are answered and you are happy with the plan, you send it to Todo yourself with `agpj epic send <EPIC-ID> --actor human`; an agent cannot send it. If a question is still open, the send is refused until you confirm it with `--force`. The history records that a person sent the task to Todo. If you want something changed first, send the agent a request with **Ask AI** or tell it in the chat.
+Once your questions are answered and you are happy with the plan, tell the agent in the chat to start it, for example "start the plan". The agent then sends the plan to Todo with `agpj epic send <EPIC-ID> --actor ai`; it does this only when you say so, never on its own. If you prefer, you can send it yourself from the board or with `agpj epic send <EPIC-ID> --actor human`. If a question is still open, the send is refused until you confirm it yourself with `--force`. The history records who sent the task to Todo, a person or an agent, and for an agent the reason says you told it to. If you want something changed first, send the agent a request with **Ask AI** or tell it in the chat.
 
 ## 5. Watch it run
 

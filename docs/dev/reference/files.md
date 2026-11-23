@@ -15,7 +15,7 @@ A task is one unit of work on the board. A task's state lives in `task.json`; it
 | `acceptance`, `acceptanceError` | The acceptance items from frontmatter (empty when invalid), and whether `acceptance` or the YAML syntax is invalid. |
 | `assignee` | `ai` or `human`. Set at creation and fixed afterwards. |
 | `epicId` | An EPIC-ID in the same project, or `null`. |
-| `taskStatus` | The lane: `backlog`, `todo`, `doing`, or `done`. The Backlog holds settled plans that must not be started yet; only a person sends a card to Todo. |
+| `taskStatus` | The lane: `backlog`, `todo`, `doing`, or `done`. The Backlog holds settled plans that must not be started yet; a card goes to Todo only by a send, from a person or from an agent the user told to. |
 | `position` | Positive integer, unique among unarchived tasks in the same lane. |
 | `agentStatus` | The AI run state: `idle`, `running`, or `paused`. Any other value, `ran` and `awaiting_answer` included, makes `task.json` invalid. `running` and `paused` appear only on an AI task in Doing; every other task holds `idle`. Waiting for a person is not a run state; it is the derived `awaitingAnswer` flag (see [Messages](../concepts/history-and-decisions.md#messages)). |
 | `draft` | `null` or `"human"`. `human` is a draft a person is writing in the browser, an edit lock. Files of earlier versions hold `isDraft`: `true` reads as `human` and `false` as `null`; writing uses `draft` only. For an epic, the CLI `epic edit` refuses a `human` draft with `epic_is_draft`. |

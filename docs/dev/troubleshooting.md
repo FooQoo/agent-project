@@ -8,7 +8,7 @@ Find the symptom, read the cause, and do what the last column says. Error codes 
 | --- | --- | --- |
 | `database_busy` | Another command or the server held the project write lock for more than 5 seconds. | Run the command again. If it keeps happening, look for a stuck process holding the project. See [Saving and recovery](./concepts/saving-and-recovery.md#locks). |
 | `task_is_draft` | The task is a person's draft: agents may not change it, and a send is refused. | Ask the person to finalize the draft in the web UI, and work on another task. Do not edit its `TASK.md`. |
-| `task_in_backlog` | The task is in the Backlog, which an agent may not move or run. | Leave it: only a person sends it to Todo (`agpj mv <id> todo --actor human`). Work on another task. |
+| `task_in_backlog` | The task is in the Backlog, which an agent may not move or run. | Leave it: it starts only after a send, which a person makes (`agpj mv <id> todo --actor human`) or an agent makes when the user told it to. Work on another task. |
 | `send_with_open_questions` | A person's send was refused because the plan has open questions. | Answer the named questions, or confirm the send with `--force` (CLI) or `ack: true` (API). |
 | `epic_is_draft` | The epic is marked as a draft; the CLI may not edit its details or task order. | Wait for the person to save or discard the draft, or ask them to finalize it. `epic attachment` and membership changes still work. Do not edit its `EPIC.md`. |
 | `task_is_done` | The task is Done; agents may not change it. | Ask the person to reopen it. |
