@@ -33,11 +33,11 @@ test('the board switches to sleep, shows the chip, and follows the CLI', async (
   const dialog = await openSettings(page);
   const modes = dialog.getByRole('radiogroup', { name: 'Mode' });
   await expect(modes.getByRole('radio', { name: 'Sparring' })).toBeChecked();
-  // The two options are the same size.
+  // The two options are the same size, give or take the pixel snapping of a fractional width.
   const sparring = await modes.getByRole('radio', { name: 'Sparring' }).boundingBox();
   const sleep = await modes.getByRole('radio', { name: 'Sleep' }).boundingBox();
-  expect(Math.abs(sparring!.width - sleep!.width)).toBeLessThan(1);
-  expect(Math.abs(sparring!.height - sleep!.height)).toBeLessThan(1);
+  expect(Math.abs(sparring!.width - sleep!.width)).toBeLessThan(2);
+  expect(Math.abs(sparring!.height - sleep!.height)).toBeLessThan(2);
 
   await modes.getByRole('radio', { name: 'Sleep' }).click();
   await expect(modes.getByRole('radio', { name: 'Sleep' })).toBeChecked();
