@@ -185,6 +185,14 @@ ol {
   flex: 1;
 }
 
+/* Ask AI and the menu button sit side by side, so both take the m button height and one centre line. */
+.header__add,
+.header__menu {
+  align-self: center;
+  box-sizing: border-box;
+  height: var(--btn-m-h);
+}
+
 .header__add {
   flex: none;
   gap: 6px;
