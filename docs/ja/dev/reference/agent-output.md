@@ -66,6 +66,8 @@
 - パスはローカルのCLIとHookの出力にだけ現れ、リモート向けのJSONには出ません。
 - 以前の`planPath`は出力されなくなりました。[データとバックアップ](../../guide/operations/data.md)のEPIC.mdへの移行の節を参照してください。
 
+プロジェクトがスリープモードのあいだ、進行表には`"mode": "sleep"`も入ります。既定の組手では、このキーはありません。エージェントは`mode`がなければ組手として読みます。モードはプロジェクトごとに、共有のプロジェクトファイルではなくデータ領域（`.internal/modes.json`）に保存され、`agpj mode`と`agpj progress`はサーバーなしで読みます。[スリープモード](../concepts/agents.md#sleep-mode)を参照してください。
+
 ## Hookの出力
 
 `agpj hook --agent claude|codex`は、エージェント向けにJSONを出力します。

@@ -14,6 +14,8 @@ Use the browser to review and edit work, and `agpj` for agent updates and projec
 | Read a task or the board | `show`, `ls`, `snapshot` |
 | Move a task or report what an agent is doing | `mv`, `state` |
 | Record a decision that matters later | `history add` |
+| Switch between sparring and sleep mode | `mode` |
+| Record a decision a subagent made in sleep mode | `decision add` |
 | Change a task's text | `edit` |
 | Plan tasks for a release | `version`, `edit --planned-version`, `epic plan` |
 | Attach images | `attachment` |
@@ -92,6 +94,28 @@ agpj --project "My project" message ask --actor ai --task 1 --questions-json - -
 ```
 
 It ends with `answered` (exit 0), `timeout` (exit 5, the questions stay open), or `withdrawn` (exit 6). Wait again with `message wait Q-12 Q-13`. Waiting needs the server: the command starts it in the background when none is running, before it saves the questions. `--no-wait` registers the questions and returns at once without one. `message answer`, `message ls`, `message show`, `message withdraw`, `message link`, and `message unlink` record an answer, read messages, withdraw a question, and change which tasks refer to a question. `message send` and `message accept` handle requests from a person to the agents. A question can carry pictures with `images`, a list of image file paths that the command saves with the question (see [Decisions](../delegate/decisions)). See [Decisions](../delegate/decisions) for the question format and every command. `progress` also lists up to three recommended tasks as `nextTasks` (see [Epics and progress](../watch/epics#read-the-progress-table)). For epics and the progress table, see [Epics and progress](../watch/epics).
+
+## Sleep mode {#sleep-mode}
+
+`mode` shows or switches the project's mode. Sparring is the default: the agent listens and asks you on the board. Sleep mode stops the questions.
+
+```sh
+agpj --project "My project" mode            # show the current mode
+agpj --project "My project" mode sleep      # stop questions to you
+agpj --project "My project" mode sparring   # back to the default
+```
+
+In sleep mode `message ask` is refused with `sleep_mode`, and nothing reaches the board, the notifications, or the chat. The agent has a subagent decide, continues with the conclusion, and records it on the task:
+
+```sh
+agpj --project "My project" decision add 1 \
+  --question "Delete or keep the old rows?" --choice "Keep and migrate" \
+  --reason "Deleting cannot be undone." --decided-by subagent:reviewer \
+  --basis "src/file_store/ops/task.rs" --basis "Q-12"
+```
+
+`--decided-by` must look like `subagent:NAME`, and `--basis` is required: give each code path, document, or past question (`Q-<n>`) the decision rests on. The command adds one history entry, `Decided in sleep mode by subagent:reviewer. Question: ... Choice: ... Reason: ... Basis: ...`, so the card's history shows what was decided, by whom, why, and on what grounds. The mode is saved per project and appears as `mode` in `agpj progress --json`.
+
 
 ## Edit long text from a file
 

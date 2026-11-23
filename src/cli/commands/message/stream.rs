@@ -227,12 +227,18 @@ fn wait_and_print(
 
 pub(super) fn ask(ctx: &mut Context, env: &mut Env, args: &MessageAskArgs) -> i32 {
     let prepared = (|| {
+        let project = ctx.project_id()?.clone();
+        // In sleep mode nothing reaches the board, the notifications, or the chat.
+        if crate::mode::current(&data_dir(ctx.files.shared_dir()), project.as_str())
+            == crate::mode::ModeKind::Sleep
+        {
+            return Err(AgpjError::SleepMode);
+        }
         let input = input::ask_input(&args.questions_json, args.actor.actor(), &args.tasks)?;
         let timeout = input::timeout(args.timeout.as_deref())?;
         if !args.no_wait {
             ensure_serving(ctx)?;
         }
-        let project = ctx.project_id()?.clone();
         let questions = ctx.files.ask_questions(&project, input, ctx.clock.now())?;
         Ok::<_, AgpjError>((questions, timeout))
     })();

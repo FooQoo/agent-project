@@ -14,6 +14,8 @@ title: CLIリファレンス
 | タスクやプロジェクトの情報を読む | `show`、`ls`、`snapshot` |
 | タスクを移す、エージェントの状態を報告する | `mv`、`state` |
 | 後で効く判断を記録する | `history add` |
+| 組手とスリープを切り替える | `mode` |
+| スリープ中にサブエージェントが下した判断を記録する | `decision add` |
 | タスクの本文を編集する | `edit` |
 | タスクをリリースに割り当てる | `version`、`edit --planned-version`、`epic plan` |
 | 画像を添付する | `attachment` |
@@ -93,6 +95,27 @@ agpj --project "My project" message ask --actor ai --task 1 --questions-json - -
 ```
 
 `answered`（終了コード0）、`timeout`（終了コード5。質問は未回答のまま残る）、`withdrawn`（終了コード6）のいずれかで終わります。待ち直すには`message wait Q-12 Q-13`を使います。待機にはサーバーが必要です。動いていなければ、質問を保存する前にコマンドが裏で起動します。`--no-wait`を付けると、質問を登録してすぐに戻り、サーバーも要りません。回答の記録、メッセージの確認、質問の取り下げ、タスクからの参照の変更には、それぞれ`message answer`、`message ls`と`message show`、`message withdraw`、`message link`と`message unlink`を使います。人からエージェントへの依頼には`message send`と`message accept`を使います。質問には`images`で画像ファイルのパスを並べて添えられ、コマンドが質問と一緒に保存します。質問の形式と各コマンドは[判断依頼](../delegate/decisions)を参照してください。`progress`は、おすすめのタスクを最大3件`nextTasks`として返します（[エピックと進行表](../watch/epics#進行表を読む)を参照）。エピックと進行表は[エピックと進行表](../watch/epics)を参照してください。
+
+## スリープモード {#sleep-mode}
+
+`mode`はプロジェクトのモードを表示・切り替えます。既定は組手（`sparring`）で、エージェントは待ち受けて、ボードであなたに質問します。スリープ（`sleep`）にすると質問が止まります。
+
+```sh
+agpj --project "My project" mode            # 現在のモードを表示
+agpj --project "My project" mode sleep      # あなたへの質問を止める
+agpj --project "My project" mode sparring   # 既定に戻す
+```
+
+スリープ中の`message ask`は`sleep_mode`で拒否され、ボード・通知・チャットのどこにも届きません。エージェントはサブエージェントに判断させ、その結論で進め、タスクに記録します。
+
+```sh
+agpj --project "My project" decision add 1 \
+  --question "古い行を削除するか残すか" --choice "残して移行する" \
+  --reason "削除は元に戻せないため" --decided-by subagent:reviewer \
+  --basis "src/file_store/ops/task.rs" --basis "Q-12"
+```
+
+`--decided-by`は`subagent:NAME`の形で指定し、`--basis`は必須です。判断の根拠にしたコードのパス、ドキュメント、過去の質問（`Q-<n>`）をそれぞれ書きます。履歴に1件、`スリープモード中にsubagent:reviewerが判断しました。質問: ... 選んだ案: ... 理由: ... 根拠: ...`が追加され、カードの履歴で、何を・誰が・なぜ・何を根拠に決めたかを確認できます。モードはプロジェクトごとに保存され、`agpj progress --json`の`mode`に出ます。
 
 ## ファイルを使って本文を編集する
 

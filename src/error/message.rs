@@ -38,6 +38,9 @@ impl AgpjError {
                     to.as_str()
                 )
             }
+            AgpjError::SleepMode => {
+                "the project is in sleep mode, so questions to the user are not accepted.".into()
+            }
             AgpjError::TaskIsDraft { id } => {
                 format!("task #{id} is a draft and read-only for agents.")
             }

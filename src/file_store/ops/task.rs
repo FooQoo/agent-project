@@ -20,7 +20,7 @@ use std::path::Path;
 use chrono::{DateTime, Utc};
 
 use super::super::FileStore;
-use super::super::model::{HistoryRecord, TaskView};
+use super::super::model::{Decision, HistoryRecord, TaskView};
 use super::super::reader;
 use super::{ensure_ai_task_not_done, lock_project, save_task, stamp};
 use crate::domain::{Actor, Changed, Column, ProjectId, normalize_and_validate_description};
@@ -40,7 +40,48 @@ fn view(shared: &Path, project: &ProjectId, id: i64) -> Result<TaskView, AgpjErr
     reader::read_task_locked(shared, project, id)
 }
 
+fn one_line(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
 impl FileStore {
+    /// Record a decision of sleep mode in the task history: who decided, the question, the
+    /// choice, why, and what it rests on.
+    pub fn add_decision(
+        &self,
+        project: &ProjectId,
+        id: i64,
+        decision: &Decision,
+        now: DateTime<Utc>,
+    ) -> Result<TaskView, AgpjError> {
+        let task = reader::read_task_strict(self.shared_dir(), project, id)?;
+        let language = self.history_language(project, &task)?;
+        let by = one_line(&decision.decided_by);
+        let question = one_line(&decision.question);
+        let choice = one_line(&decision.choice);
+        let why = one_line(&decision.reason);
+        let basis_en = decision
+            .basis
+            .iter()
+            .map(|b| one_line(b))
+            .collect::<Vec<_>>()
+            .join("; ");
+        let basis_ja = decision
+            .basis
+            .iter()
+            .map(|b| one_line(b))
+            .collect::<Vec<_>>()
+            .join("、");
+        let english = format!(
+            "Decided in sleep mode by {by}. Question: {question} Choice: {choice} Reason: {why} Basis: {basis_en}."
+        );
+        let japanese = format!(
+            "スリープモード中に{by}が判断しました。質問: {question} 選んだ案: {choice} 理由: {why} 根拠: {basis_ja}。"
+        );
+        let reason = language.text(&english, &japanese).to_owned();
+        self.add_history(project, id, Some(&reason), now)
+    }
+
     /// Append an AI work note using the same immutable/draft/archive guards as editing.
     pub fn add_history(
         &self,

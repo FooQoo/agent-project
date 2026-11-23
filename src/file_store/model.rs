@@ -86,3 +86,15 @@ pub struct RequestAnswer {
     #[serde(with = "crate::clock::serde_utc")]
     pub at: DateTime<Utc>,
 }
+
+/// A decision a subagent made in the user's place; it is written to the history as one entry.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Decision {
+    pub question: String,
+    pub choice: String,
+    pub reason: String,
+    /// `subagent:NAME`.
+    pub decided_by: String,
+    /// The code, documents, and past questions the decision rests on.
+    pub basis: Vec<String>,
+}

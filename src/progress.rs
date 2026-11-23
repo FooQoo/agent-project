@@ -43,6 +43,10 @@ pub struct Progress {
     /// saved. The callers fill it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub locale: Option<String>,
+    /// The project's mode when it is not the default sparring (`sleep`). Left out for sparring.
+    /// The callers fill it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mode: Option<crate::mode::ModeKind>,
     /// Epics in ID order. An epic with no listed task is left out.
     pub epics: Vec<ProgressEpic>,
     pub unassigned: Vec<ProgressTask>,
@@ -75,16 +79,6 @@ pub struct Progress {
     pub last_lane_move_at: Option<DateTime<Utc>>,
 }
 
-/// Extra sections of the table. The default adds nothing.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct Include {
-    /// Add the tasks waiting for a decision, with their questions.
-    pub awaiting_answer: bool,
-    /// Add this many of the most recently completed tasks of epics that still
-    /// have Todo or Doing work; 0 adds none.
-    pub done: usize,
-}
-
 pub use answers::{ProgressAnswer, unaccepted_answers};
 pub use count::Count;
 pub use final_result::{FinalResultMissing, final_result_missing};
@@ -92,7 +86,7 @@ pub(crate) use next::gated_by_waves;
 pub use next::{MAX_NEXT_TASKS, NextReason, NextTask, STALE_RUNNING_MINUTES};
 pub use requests::{ProgressRequest, open_requests};
 use task_entry::task_of;
-pub use types::{EpicToClose, ProgressEpic, ProgressTask};
+pub use types::{EpicToClose, Include, ProgressEpic, ProgressTask};
 
 /// Build the table from one project's unarchived snapshot. `shared` is the
 /// shared folder the snapshot was read from; the paths point into it.
@@ -179,6 +173,7 @@ pub fn build_filtered(
         version: snapshot.version.clone(),
         cursor: snapshot.cursor.clone(),
         locale: None,
+        mode: None,
         epics: groups,
         next_tasks: next::next_tasks(&listed, snapshot, &project_dir, fetched_at, &|task| {
             filter.is_none_or(|filter| filter.keeps(task.planned_version.as_deref()))
