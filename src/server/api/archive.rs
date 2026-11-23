@@ -56,7 +56,7 @@ pub(super) async fn archive_task(
         Err(response) => return *response,
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.archive_task(&project_id, id, chrono::Utc::now())
+        store.archive_task(&project_id, id, crate::clock::now())
     })
     .await;
     changed_task_response(&state, result)
@@ -76,7 +76,7 @@ pub(super) async fn restore_task(
         Err(response) => return *response,
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.restore_task(&project_id, id, chrono::Utc::now())
+        store.restore_task(&project_id, id, crate::clock::now())
     })
     .await;
     changed_task_response(&state, result)
@@ -99,7 +99,7 @@ pub(super) async fn archive_done(
         Err(error) => return agpj_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.archive_done(&project_id, &input.ids, chrono::Utc::now())
+        store.archive_done(&project_id, &input.ids, crate::clock::now())
     })
     .await;
     match result {

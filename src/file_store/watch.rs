@@ -147,9 +147,9 @@ impl Watch {
             .map_err(|e| watch_error(shared, e))?;
 
         // Reconcile completed AI work before the first snapshot is published.
-        FileStore::open(&root).auto_complete_all(chrono::Utc::now())?;
+        FileStore::open(&root).auto_complete_all(crate::clock::now())?;
         // Sample cards that an older release's guide left behind are archived now.
-        FileStore::open(&root).guide_upgrade(chrono::Utc::now())?;
+        FileStore::open(&root).guide_upgrade(crate::clock::now())?;
 
         {
             let mut guard = index.write().unwrap_or_else(|e| e.into_inner());
@@ -252,13 +252,13 @@ fn apply(root: &Path, index: &RwLock<ProjectIndex>, changed: &ChangeSink, ready:
     if ready.contains(&Target::All) {
         if let Ok(projects) = store.projects() {
             for project in projects {
-                let _ = store.auto_complete_project(&project.id, chrono::Utc::now());
+                let _ = store.auto_complete_project(&project.id, crate::clock::now());
             }
         }
     } else {
         for target in ready {
             if let Target::Project(id) = target {
-                let _ = store.auto_complete_project(id, chrono::Utc::now());
+                let _ = store.auto_complete_project(id, crate::clock::now());
             }
         }
     }

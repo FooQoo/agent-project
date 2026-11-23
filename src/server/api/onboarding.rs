@@ -22,7 +22,7 @@ pub(super) struct SeenInput {
 }
 
 pub(super) async fn get_onboarding(State(state): State<Arc<AppState>>) -> Response {
-    match with_files(&state, |store| store.guide(chrono::Utc::now())).await {
+    match with_files(&state, |store| store.guide(crate::clock::now())).await {
         Ok(file) => json_response(StatusCode::OK, &file),
         Err(error) => agpj_error_response(&error),
     }
@@ -33,7 +33,7 @@ pub(super) async fn mark_onboarding_seen(
     ApiJson(input): ApiJson<SeenInput>,
 ) -> Response {
     match with_files(&state, move |store| {
-        store.guide_seen(input.outcome, chrono::Utc::now())
+        store.guide_seen(input.outcome, crate::clock::now())
     })
     .await
     {

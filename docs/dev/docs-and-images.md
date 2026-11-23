@@ -38,6 +38,35 @@ node e2e/scripts/demo-video.mjs         # docs/public/videos/ (also needs ffmpeg
 
 Both scripts use disposable data in a temporary `AGPJ_HOME` and their own loopback ports, so your saved board and port 7420 are untouched. Review the generated images and videos before committing them.
 
+### Deterministic captures
+
+Capturing twice from the same commit gives the same images, so a change in a picture means a change in the product. The three scripts (`readme-screenshots.mjs`, `docs-screenshots.mjs`, `demo-video.mjs`) share the settings in `e2e/scripts/lib/sample-board.mjs`:
+
+- **One fixed "now".** `FIXED_NOW` (`2026-10-15T09:41:00Z`) is exported to the CLI and the server as `AGPJ_FIXED_NOW`. Product code takes its time from `crate::clock::now()`, which returns that instant when the variable holds a UTC timestamp, so every timestamp the sample data writes is the same. The dates the board reads from a task file's modified time follow it too. The variable has no effect when it is unset or does not parse.
+- **The browser has the same clock.** `freezeClock(context)` calls `context.clock.setFixedTime`, so `Date.now()` and `new Date()` return the same instant in every page. The "Synced" time and the card dates agree with the data. Timers still run. Contexts also use the UTC time zone.
+- **Rendering is steady.** Chromium starts with `--disable-gpu --disable-lcd-text --font-render-hinting=none`. `settle()` holds repeating animations (a spinner) at their first frame, and then waits until three screenshots in a row match, so a fade or a carousel that is still moving is not captured.
+
+A screenshot taken after these steps matches the previous one pixel for pixel, apart from a few edge pixels in some phone and tablet images that differ by 1 or 2 levels in a channel (anti-aliasing of a rounded border). A recorded video follows the wall clock, so its frames shift a little from run to run and are compared with a tolerance.
+
+### Compare captures with the committed files
+
+`e2e/scripts/compare-captures.mjs` reports which captured files differ in what they show from the files committed in the repository. Point `AGPJ_MEDIA_OUT` at a temporary folder for the capture, then compare:
+
+```sh
+AGPJ_MEDIA_OUT=/tmp/captures node e2e/scripts/readme-screenshots.mjs
+AGPJ_MEDIA_OUT=/tmp/captures node e2e/scripts/docs-screenshots.mjs
+AGPJ_MEDIA_OUT=/tmp/captures node e2e/scripts/demo-video.mjs
+node e2e/scripts/compare-captures.mjs --captured /tmp/captures            # list the changed files
+node e2e/scripts/compare-captures.mjs --captured /tmp/captures --json     # {"changed":[{"file","status","target"}],"unchanged":N}
+node e2e/scripts/compare-captures.mjs --captured /tmp/captures --apply    # copy the changed files into place
+```
+
+`readme/` is compared with `docs/images/`, `guide/` with `docs/images/guide/`, and `videos/` with `docs/public/videos/`. The exit code is 0 when nothing differs, 1 when something does, and 2 for a usage error, an unreadable file, or a folder with no PNG or MP4 files. A new file counts as changed (`added`). `--apply` also copies the `.jpg` poster of a changed video.
+
+- A PNG is decoded to RGBA and compared by its pixels, so encoder metadata and compression do not count. `--image-tolerance <n>` lets a pixel differ by up to `n` in a channel; use it (for example `4`) to ignore edge anti-aliasing noise.
+- An MP4 is decoded by `ffmpeg` to one frame per second at 480 x 300. Identical frames are unchanged. Otherwise each frame is compared with the frames a second either side of it, and the video is changed only when more than a tenth of its frames differ in more than 0.3% of their pixels. A change smaller than that, such as a date in a card, is not noticed in a video; the screenshots show it.
+- `--against <dir>` compares with another `AGPJ_MEDIA_OUT` folder instead of the repository, which is how to check that two captures match.
+
 ## Move a page and keep its old URL
 
 Old guide URLs are published in the README, the plugin README, and other people's links, so a page that moves must keep answering at its old address. `docs/.vitepress/redirects.ts` holds the list of moved pages as pairs of an old path and a new path, without a leading slash and without an extension, for example `guide/use/board` and `guide/watch/board`. For each pair the build writes a small HTML page at the old path that forwards to the new page.

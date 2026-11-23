@@ -139,7 +139,7 @@ pub(in crate::file_store) fn migrate_legacy_locked(
     let kept: Vec<String> = found.open.iter().map(|(q, _)| q.id.clone()).collect();
     let gone: Vec<&String> = found.dropped.iter().chain(&found.approvals).collect();
     let store = FileStore::open(shared);
-    let at = super::super::stamp(Utc::now());
+    let at = super::super::stamp(crate::clock::now());
 
     let mut changes = Vec::new();
     for task_id in reader::task_ids(project_dir)? {
