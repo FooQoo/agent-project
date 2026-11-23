@@ -77,4 +77,4 @@ The waiting command then ends with `answered` on its own; do not record the answ
 
 If the board is unavailable, report the connection problem and leave dependent work blocked; do not ask only in the chat instead. To show the user the board, run `agpj open`. Read a question and its answer with `agpj --project "<name>" message show <Q-id> --json`, and the open messages with `message ls --json`. An answer also appends a concise history reason to each task that refers to the question. To open the board on the phone, run `agpj skills phone`.
 
-After the answer, re-read the task: if it is `running` again, read the complete snapshot and history, reconsider the plan, and continue as `agpj skills waiting` describes.
+After the answer, re-read the task. If it is `running` again, read the complete snapshot and history, reconsider the plan, and continue as `agpj skills waiting` describes. If it is still `idle` and no longer awaiting an answer, it had not started yet: start it as the work loop describes (`agpj skills`, section 6).
