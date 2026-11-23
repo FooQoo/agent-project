@@ -80,13 +80,7 @@ impl FileStore {
         }
         ensure_ai_task_not_done(&task, Actor::Ai)?;
         let title_changed = title.as_ref().is_some_and(|value| *value != task.title);
-        let markdown = write_parts(
-            shared,
-            &project_dir,
-            &mut task,
-            parts.body,
-            parts.acceptance,
-        )?;
+        let markdown = write_parts(shared, &project_dir, &mut task, parts)?;
         if !title_changed && markdown.is_none() {
             return Ok(Changed {
                 value: view(shared, project, id)?,
@@ -250,13 +244,7 @@ impl FileStore {
         let current = Some(owner);
         let target = resolve_finalize(finalize.target, owner);
         let title_changed = title.as_ref().is_some_and(|value| *value != task.title);
-        let markdown = write_parts(
-            shared,
-            &project_dir,
-            &mut task,
-            parts.body,
-            parts.acceptance,
-        )?;
+        let markdown = write_parts(shared, &project_dir, &mut task, parts)?;
         let text_changed = title_changed || markdown.is_some();
         if !text_changed && target == current {
             return Ok(Changed {

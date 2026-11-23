@@ -14,9 +14,9 @@ ngrokの入口は、カンバンのページと以下のルートを同じパス
 | --- | --- |
 | `GET /` | 書き込み用トークンを`meta[name=agpj-token]`に埋め込んだHTML。 |
 | `GET /api/projects` | `projects`（id・name・createdAt）と`catalogVersion`。タスクは含まない。0件でも200。 |
-| `POST /api/projects/{projectId}/tasks` | title・body・acceptance・assigneeと任意の`draft: "human"`から未着手・Idleのタスクを作る（`"ai"`は422 `invalid_value`）。サーバーがfrontmatterを組み立てて検証する。201。 |
+| `POST /api/projects/{projectId}/tasks` | title・body・acceptance・`resultPlans`・assigneeと任意の`draft: "human"`から未着手・Idleのタスクを作る（`"ai"`は422 `invalid_value`）。サーバーがfrontmatterを組み立てて検証する。201。 |
 | `POST /api/projects/{projectId}/tasks/multipart` | 画像付きの通常タスク、または依頼本文・任意のエピック・画像をまとめた簡易依頼タスクを作る。下記を参照。 |
-| `PATCH /api/projects/{projectId}/tasks/{id}` | **下書き**のタスクのtitle・body・acceptanceと任意の`finalize: true`を更新する。`draft`は`"human"`または`null`で、それ以外の値は、以前のバージョンの`"ai"`も含めて拒否する（multipartフォームも同じ）。bodyだけならfrontmatterを、acceptanceだけなら本文を保つ。`description`と`body`の同時指定は422 `invalid_value`。後から保存した内容が優先される。下書きでなければ409 `task_not_draft`。 |
+| `PATCH /api/projects/{projectId}/tasks/{id}` | **下書き**のタスクのtitle・body・acceptance・`resultPlans`と任意の`finalize: true`を更新する。`draft`は`"human"`または`null`で、それ以外の値は、以前のバージョンの`"ai"`も含めて拒否する（multipartフォームも同じ）。bodyだけならfrontmatterを、acceptanceだけなら本文を保つ。`description`と`body`の同時指定は422 `invalid_value`。後から保存した内容が優先される。下書きでなければ409 `task_not_draft`。 |
 | `PUT /api/projects/{projectId}/tasks/{id}/draft` | `draft`（必須）を設定する。`"human"`で人の下書きにし、`null`で確定する。それ以外の値は、`"ai"`も含めて拒否し、何も書き込まない。`discard: true`（`null`と一緒の場合だけ）を付けると、確定せずに下書きを取り消し、履歴に`Discarded draft changes.`を残す。Runningのタスクは409 `invalid_state_for_draft`。 |
 | `POST /api/projects/{projectId}/tasks/{id}/send` | `{"ack"?: bool}`。人として、バックログのタスクを未着手の末尾へ送り、`{task, changed}`を返す。すでにバックログを出ているタスクは`changed: false`で何も書かないので、再試行しても安全。未回答の質問がある計画は、`ack: true`を付けるまで409 `send_with_open_questions`。人の下書きは409 `task_is_draft`、アーカイブ済みは409 `task_archived`。履歴に`A person sent the task to Todo.`を残す。CLIに送信のコマンドはなく、`agpj mv <id> todo --actor human [--force]`が同じ関数で同じ規則を適用する。 |
 | `POST /api/projects/{projectId}/epics/{epicId}/send` | `{"taskIds"?: [int], "ack"?: bool}`。人として、エピックのバックログのタスク（または`taskIds`だけ）を、全部成功か何も変えないかの一回の保存で送り、`{epic, sent, changed}`を返す。`sent`は移したタスクIDです。エピックの未完了のカードでない`taskId`は422 `invalid_value`。未回答の質問があれば`ack: true`が必要（409 `send_with_open_questions`）。人の下書きのエピックは409 `epic_is_draft`、下書きのタスクは409 `task_is_draft`。 |

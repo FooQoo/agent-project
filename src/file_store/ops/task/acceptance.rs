@@ -5,12 +5,12 @@ use chrono::{DateTime, Utc};
 
 use crate::domain::{Changed, ProjectId};
 use crate::error::AgpjError;
-use crate::file_store::FileStore;
 use crate::file_store::history::{ParseMode, parse_task};
 use crate::file_store::io;
 use crate::file_store::layout;
 use crate::file_store::model::TaskView;
 use crate::file_store::reader;
+use crate::file_store::{FileStore, TaskTextParts};
 
 use super::super::{
     HistoryKind, Transition, lock_project, save_task_with_markdown, stamp, transition_event,
@@ -88,7 +88,15 @@ impl FileStore {
             at,
         })?;
         task.history.push(event);
-        let markdown = write_parts(shared, &project_dir, &mut task, None, Some(&items))?;
+        let markdown = write_parts(
+            shared,
+            &project_dir,
+            &mut task,
+            TaskTextParts {
+                acceptance: Some(&items),
+                ..Default::default()
+            },
+        )?;
         task.updated_at = at;
         save_task_with_markdown(shared, &project_dir, &task, markdown.as_deref())?;
         Ok(Changed {

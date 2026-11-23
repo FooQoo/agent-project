@@ -7,12 +7,12 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
 use serde::{Deserialize, Deserializer};
 
-use super::epics::whole_or_parts;
+use super::epics::{whole_or_parts, whole_text};
 use super::{changed_task_response, parse_task_id};
 use crate::domain::{Actor, Draft};
 use crate::error::AgpjError;
-use crate::file_store::frontmatter::AcceptanceItem;
-use crate::file_store::validate::EpicId;
+use crate::file_store::frontmatter::{self, AcceptanceItem, ResultPlan};
+use crate::file_store::validate::{self, EpicId};
 use crate::file_store::{DraftSave, TaskTextParts};
 use crate::server::AppState;
 use crate::server::request::StrictJson;
@@ -28,6 +28,9 @@ pub(super) struct EditTaskInput {
     body: Option<String>,
     #[serde(default)]
     acceptance: Option<Vec<AcceptanceItem>>,
+    /// The planned results; an `id` left out is assigned by the server.
+    #[serde(default)]
+    result_plans: Option<Vec<ResultPlan>>,
     #[serde(default)]
     finalize: bool,
     /// `"human"` keeps the draft after the save.
@@ -43,6 +46,33 @@ pub(super) struct DraftInput {
     /// Leaving the draft discards its changes instead of confirming them.
     #[serde(default)]
     discard: bool,
+}
+
+/// The whole text for a new task: the given text, or one written from the body, the conditions,
+/// and the plans over the template. The store writes its template for an empty result. Plans
+/// are parts, so they cannot come with a whole text.
+pub(super) fn create_description(
+    given: Option<String>,
+    body: Option<String>,
+    acceptance: Option<Vec<AcceptanceItem>>,
+    result_plans: Option<Vec<ResultPlan>>,
+) -> Result<String, AgpjError> {
+    if result_plans.is_some() && given.is_some() {
+        return Err(whole_or_parts());
+    }
+    let text = whole_text(given, body, acceptance, validate::task_template)?.unwrap_or_default();
+    let Some(plans) = result_plans else {
+        return Ok(text);
+    };
+    let base = if text.trim().is_empty() {
+        validate::task_template()
+    } else {
+        text
+    };
+    frontmatter::compose_result_plans(&base, &plans).map_err(|defect| AgpjError::InvalidValue {
+        field: defect.field,
+        reason: defect.reason,
+    })
 }
 
 /// Save the title and description of a draft, and confirm it with `finalize`.
@@ -64,6 +94,7 @@ pub(super) async fn edit_task(
         && input.description.is_none()
         && input.body.is_none()
         && input.acceptance.is_none()
+        && input.result_plans.is_none()
         && !input.finalize
         && input.draft.is_none()
     {
@@ -76,7 +107,7 @@ pub(super) async fn edit_task(
         target: finalize_target(input.finalize, input.draft),
     };
     let result = with_request_files(&state, &headers, move |store| {
-        if input.body.is_some() || input.acceptance.is_some() {
+        if input.body.is_some() || input.acceptance.is_some() || input.result_plans.is_some() {
             if input.description.is_some() {
                 return Err(whole_or_parts());
             }
@@ -87,6 +118,7 @@ pub(super) async fn edit_task(
                 TaskTextParts {
                     body: input.body.as_deref(),
                     acceptance: input.acceptance.as_deref(),
+                    result_plans: input.result_plans.as_deref(),
                 },
                 finalize,
                 crate::clock::now(),

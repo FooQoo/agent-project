@@ -7,12 +7,11 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
 use serde::Deserialize;
 
-use super::epics::whole_text;
+use super::task_edit::create_description;
 use crate::domain::{Actor, Assignee, ChangeContext, Changed, Column, Draft, NewTask, RunState};
 use crate::error::AgpjError;
-use crate::file_store::frontmatter::AcceptanceItem;
+use crate::file_store::frontmatter::{AcceptanceItem, ResultPlan};
 use crate::file_store::model::TaskView;
-use crate::file_store::validate::{self};
 use crate::server::AppState;
 use crate::server::request::ApiJson;
 use crate::server::response::{agpj_error_response, error_response, json_response};
@@ -30,6 +29,9 @@ pub(super) struct CreateTaskInput {
     body: Option<String>,
     #[serde(default)]
     acceptance: Option<Vec<AcceptanceItem>>,
+    /// The planned results; an `id` left out is assigned by the server.
+    #[serde(default)]
+    result_plans: Option<Vec<ResultPlan>>,
     assignee: Assignee,
     /// `"human"` creates a person's draft.
     #[serde(default)]
@@ -80,13 +82,13 @@ pub(super) async fn create_task(
         Ok(id) => id,
         Err(error) => return agpj_error_response(&error),
     };
-    let description = match whole_text(
+    let description = match create_description(
         input.description,
         input.body,
         input.acceptance,
-        validate::task_template,
+        input.result_plans,
     ) {
-        Ok(description) => description.unwrap_or_default(),
+        Ok(description) => description,
         Err(error) => return agpj_error_response(&error),
     };
     match with_request_files(&state, &headers, move |store| {

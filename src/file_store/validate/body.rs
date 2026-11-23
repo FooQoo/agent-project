@@ -10,13 +10,14 @@ pub fn task_template() -> String {
     "---\nacceptance: []\n---\n\n".to_string()
 }
 
-/// Check a TASK.md text: its frontmatter (conditions and question references). The body is
+/// Check a TASK.md text: its frontmatter (conditions, result plans, and question references). The body is
 /// not checked.
 pub fn check_task_body(text: &str) -> Vec<Defect> {
     let mut defects = frontmatter::parse(text).defects;
     if let Err(defect) = frontmatter::questions_of(text) {
         defects.push(defect);
     }
+    defects.extend(frontmatter::result_plans_of(text, false).1);
     defects
 }
 

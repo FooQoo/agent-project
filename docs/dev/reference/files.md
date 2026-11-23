@@ -12,6 +12,7 @@ A task is one unit of work on the board. A task's state lives in `task.json`; it
 | `title` | 1 to 100 characters after trimming, one line. |
 | `description` | The whole `TASK.md`, frontmatter included. Only the body counts toward its 50,000-character limit. CRLF is normalized to LF. |
 | `body` | `description` without frontmatter: GitHub Flavored Markdown with no required headings. The task template recommends `Background`, `What to do`, `Approach`, and `Verification results` headings, but nothing validates them. |
+| `resultPlans`, `resultPlansError` | The planned results from frontmatter (empty when invalid), and whether `resultPlans` is invalid. See [Result plans](#result-plans). |
 | `acceptance`, `acceptanceError` | The acceptance items from frontmatter (empty when invalid), and whether `acceptance` or the YAML syntax is invalid. |
 | `assignee` | `ai` or `human`. Set at creation and fixed afterwards. |
 | `epicId` | An EPIC-ID in the same project, or `null`. |
@@ -135,6 +136,45 @@ history:
     reason: "Verified the setup guide links and recorded the result in the task body."
 ---
 ```
+
+### Result plans {#result-plans}
+
+A task can state at planning time what it will deliver and when. Each plan is an item of the top-level `resultPlans` list of `TASK.md`, kept apart from `acceptance`: a plan says what is delivered and under which condition it should be delivered, while an acceptance condition says what makes the task complete.
+
+```yaml
+---
+acceptance:
+  - id: AC-1
+    text: The report covers every endpoint
+    done: false
+resultPlans:
+  - id: RP-1
+    content: A screenshot of the new layout
+    condition: When the layout is fixed
+    final: false
+  - id: RP-2
+    content: The working endpoint
+    condition: When the endpoint answers its first request
+    final: false
+  - id: RP-3
+    content: The finished report
+    condition: When every acceptance condition is met
+    final: true
+history: []
+---
+```
+
+| Field | Rule |
+| --- | --- |
+| `id` | `RP-<n>`: a positive number without a leading zero, unique in the task. Input may leave it out and the store assigns the next free number above every `RP-` number in the list; an ID that is written never changes, so a plan keeps its ID after the task starts and is read again. A stored file without an ID is a problem on that file. |
+| `content` | What will be delivered. 1 to 2,000 characters after trimming; an empty text is an input error. |
+| `condition` | When it should be delivered, in natural language. 1 to 2,000 characters after trimming; an empty text is an input error. |
+| `final` | `true` for the final result, `false` or absent for an intermediate result. At most one plan is final. |
+
+- Plans are optional. A task with no `resultPlans` key, `null`, or `[]` has none, and an existing task or result reads and writes as before. A task may have no intermediate plan, many, or only a final one. The list has at most 50 plans, and the list order is only the order they were written in: it is not a delivery order or a step order.
+- Plans are written with the task: the file given to `add --desc-file` and to `edit --desc-file` may hold `resultPlans`, and the web API takes a `resultPlans` array on `POST …/tasks` and on the body-fields form of `PATCH …/tasks/{id}`. Plans without an ID get one in the same save. `edit --desc-file` replaces the whole list, like `acceptance`: keep the IDs of the plans that stay, and a plan left out is removed. The permissions of editing a task apply unchanged: a person's draft, a Done task, and an archived task refuse the same writes.
+- Every other write (a move, a state change, a result, a history entry, a title edit) keeps `resultPlans` as it is, in its place in front of `history`. A task that is started keeps the same IDs, content, and conditions.
+- A `resultPlans` that cannot be read (not a list, a plan that is not a mapping or has an unknown key, a missing or empty text, a bad or repeated ID, two final plans) is reported as a problem of the file, with the field `resultPlans[<index>].<key>`. The task then reads with `resultPlans: []` and `resultPlansError: true`, the same way an unreadable `acceptance` does, and the other fields are unaffected.
 
 ### Planned versions {#planned-versions}
 
@@ -450,7 +490,7 @@ The file holds no secret. A project that no longer exists, or has no bound folde
 
 ## Task JSON and snapshots
 
-The CLI, web API, and hook share one camelCase task representation: the `task.json` metadata (including `results`, always present as an array) plus `history`, `description`, `body`, `acceptance`, `acceptanceError`, the displayed `updatedAt`, and `epic` (`{id, name, color}` or `null`). The derived fields are `agentStatus` (the stored run state, never replaced by waiting); `awaitingAnswer` (a boolean, true while the task refers to an open question or its `questions` frontmatter cannot be read, for any assignee and lane, and false for an archived task); `questionIds` (the task's `questions`), `questionsError` (whether that frontmatter is invalid), and `openQuestionIds`; and `pendingRequestId`, `pendingReason`, and `pendingChoices`, taken from the open question with the smallest ID while `awaitingAnswer` is true (otherwise `null` and empty). `pendingRequestId` holds that question's ID, such as `Q-12`, which is what the board sends when it answers. `requestAnswers` never appears in history.
+The CLI, web API, and hook share one camelCase task representation: the `task.json` metadata (including `results`, always present as an array) plus `history`, `description`, `body`, `acceptance`, `acceptanceError`, the displayed `updatedAt`, `resultPlans` and `resultPlansError`, and `epic` (`{id, name, color}` or `null`). The derived fields are `agentStatus` (the stored run state, never replaced by waiting); `awaitingAnswer` (a boolean, true while the task refers to an open question or its `questions` frontmatter cannot be read, for any assignee and lane, and false for an archived task); `questionIds` (the task's `questions`), `questionsError` (whether that frontmatter is invalid), and `openQuestionIds`; and `pendingRequestId`, `pendingReason`, and `pendingChoices`, taken from the open question with the smallest ID while `awaitingAnswer` is true (otherwise `null` and empty). `pendingRequestId` holds that question's ID, such as `Q-12`, which is what the board sends when it answers. `requestAnswers` never appears in history.
 
 - A snapshot returns `project`, `version`, `cursor`, `epics`, `tasks` (each with full history), and `problems` from a single read. The CLI snapshot also includes `nextTaskId`; CLI snapshots, the hook, and `wait` include `fetchedAt`.
 - The project list returns `projects` (id, name, createdAt) and `catalogVersion`, without tasks.

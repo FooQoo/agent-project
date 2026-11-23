@@ -12,6 +12,7 @@ Agent Projectが保存するすべてのファイルを、項目と例ととも�
 | `title` | 前後の空白を除いて1〜100文字、1行。 |
 | `description` | frontmatterを含む`TASK.md`の全文。50,000文字の上限は本文だけを数える。CRLFはLFに正規化する。 |
 | `body` | `description`からfrontmatterを除いた本文。見出し構成は自由（雛形は「背景」「やること」「進め方」「検証結果」の見出しを推奨しますが、検証はしません）。GitHub Flavored Markdownに対応。 |
+| `resultPlans`・`resultPlansError` | frontmatterの成果の予定（不正なときは空）と、`resultPlans`が不正かどうか。[成果の予定](#result-plans)を参照してください。 |
 | `acceptance`・`acceptanceError` | frontmatterの完了条件（不正なときは空）と、`acceptance`かYAML構文が不正かどうか。 |
 | `assignee` | `ai`か`human`。作成時に決め、以後は変えない。 |
 | `epicId` | 同じプロジェクトのEPIC-ID、または`null`。 |
@@ -135,6 +136,45 @@ history:
     reason: "Verified the setup guide links and recorded the result in the task body."
 ---
 ```
+
+### 成果の予定 {#result-plans}
+
+タスクには、計画のときに「何を・いつ届けるか」を保存できます。予定は`TASK.md`の最上位の`resultPlans`リストの項目で、`acceptance`とは別に持ちます。予定は届けるものと届ける条件を表し、完了条件はタスクが完了したと言える条件を表します。
+
+```yaml
+---
+acceptance:
+  - id: AC-1
+    text: The report covers every endpoint
+    done: false
+resultPlans:
+  - id: RP-1
+    content: A screenshot of the new layout
+    condition: When the layout is fixed
+    final: false
+  - id: RP-2
+    content: The working endpoint
+    condition: When the endpoint answers its first request
+    final: false
+  - id: RP-3
+    content: The finished report
+    condition: When every acceptance condition is met
+    final: true
+history: []
+---
+```
+
+| 項目 | 規則 |
+| --- | --- |
+| `id` | `RP-<n>`。先頭に0を付けない正の数で、タスクの中で一意です。入力では省略でき、その場合はリスト内の最大の`RP-`番号の次の空き番号を割り当てます。書き込まれたIDは変わらないため、タスクを着手して読み直しても予定のIDは同じです。保存済みのファイルでIDがないものは、そのファイルの問題になります。 |
+| `content` | 届けるもの。前後の空白を除いて1〜2,000文字で、空は入力エラーです。 |
+| `condition` | 届ける条件を自然な言葉で書いたもの。前後の空白を除いて1〜2,000文字で、空は入力エラーです。 |
+| `final` | 最終成果なら`true`、中間成果なら`false`または省略。最終成果の予定は最大1件です。 |
+
+- 予定は任意です。`resultPlans`のキーがない、`null`、`[]`のいずれも予定なしで、既存のタスクや成果はこれまでどおり読み書きできます。中間成果の予定は0件でも複数でもよく、最終成果だけの予定も書けます。リストは最大50件で、並びは書いた順にすぎず、届ける順番やタスク内の手順の順番ではありません。
+- 予定はタスクと同時に書きます。`add --desc-file`と`edit --desc-file`のファイルに`resultPlans`を含められ、Web APIでは`POST …/tasks`と、`PATCH …/tasks/{id}`の本文フィールド形式が`resultPlans`の配列を受け取ります。IDのない予定には、同じ保存でIDが付きます。`edit --desc-file`は`acceptance`と同じようにリスト全体を置き換えます。残す予定のIDは入力に残してください。書かなかった予定は削除されます。タスクの編集権限はそのまま適用され、人の下書き・Done・アーカイブ済みのタスクは同じ書き込みを拒否します。
+- それ以外の書き込み（移動・状態変更・成果・履歴・タイトルの編集）は、`resultPlans`を`history`の前の位置にそのまま残します。着手したタスクでも、IDと内容と条件は変わりません。
+- 読めない`resultPlans`（リストでない、項目がマッピングでない、不明なキーがある、テキストがない・空、IDの形式不正や重複、最終成果が2件ある）は、`resultPlans[<index>].<key>`のフィールドでファイルの問題として報告されます。そのタスクは`resultPlans: []`・`resultPlansError: true`として読まれ、読めない`acceptance`と同じ扱いで、ほかの項目には影響しません。
 
 ### リリース予定のバージョン {#planned-versions}
 
@@ -449,7 +489,7 @@ ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.i
 
 ## タスクのJSONとスナップショット
 
-CLI・Web API・Hookは、camelCaseの同じタスクの表現を使います。`task.json`のメタデータ（`results`を含み、常に配列として入ります）に、`history`・`description`・`body`・`acceptance`・`acceptanceError`、表示用の`updatedAt`、`epic`（`{id, name, color}`または`null`）を加えたものです。読むときに導く項目は、`agentStatus`（保存した稼働状態で、待ちに置き換わることはありません）、`awaitingAnswer`（未回答の質問を参照している、またはその`questions`のfrontmatterを読めないときに真になる真偽値。担当者もレーンも問わず、アーカイブ済みのタスクでは偽）、`questionIds`（タスクの`questions`）・`questionsError`（そのfrontmatterが不正か）・`openQuestionIds`、そして`pendingRequestId`・`pendingReason`・`pendingChoices`です。最後の3つは、`awaitingAnswer`が真の間、IDが最も小さい未回答の質問から取り、それ以外は`null`と空です。`pendingRequestId`にはその質問のID（`Q-12`など）が入り、Agent Projectは回答するときにこのIDを送ります。`requestAnswers`が履歴に現れることはありません。
+CLI・Web API・Hookは、camelCaseの同じタスクの表現を使います。`task.json`のメタデータ（`results`を含み、常に配列として入ります）に、`history`・`description`・`body`・`acceptance`・`acceptanceError`・`resultPlans`・`resultPlansError`、表示用の`updatedAt`、`epic`（`{id, name, color}`または`null`）を加えたものです。読むときに導く項目は、`agentStatus`（保存した稼働状態で、待ちに置き換わることはありません）、`awaitingAnswer`（未回答の質問を参照している、またはその`questions`のfrontmatterを読めないときに真になる真偽値。担当者もレーンも問わず、アーカイブ済みのタスクでは偽）、`questionIds`（タスクの`questions`）・`questionsError`（そのfrontmatterが不正か）・`openQuestionIds`、そして`pendingRequestId`・`pendingReason`・`pendingChoices`です。最後の3つは、`awaitingAnswer`が真の間、IDが最も小さい未回答の質問から取り、それ以外は`null`と空です。`pendingRequestId`にはその質問のID（`Q-12`など）が入り、Agent Projectは回答するときにこのIDを送ります。`requestAnswers`が履歴に現れることはありません。
 
 - スナップショットは、`project`・`version`・`cursor`・`epics`・`tasks`（それぞれ全履歴を持つ）・`problems`を一度の読み込みから返します。CLIのスナップショットは`nextTaskId`も含み、CLIのスナップショット・Hook・`wait`は`fetchedAt`を含みます。
 - プロジェクト一覧は`projects`（id・name・createdAt）と`catalogVersion`を返し、タスクは含みません。

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{Choice, HistoryRecord, RequestAnswer};
 use crate::domain::{Assignee, Attachment, AttachmentInput, Column, Draft, RunState, TaskResult};
-use crate::file_store::frontmatter::AcceptanceItem;
+use crate::file_store::frontmatter::{AcceptanceItem, ResultPlan};
 use crate::file_store::onboarding_model::OnboardingSample;
 use crate::file_store::validate::EpicId;
 
@@ -216,6 +216,9 @@ pub struct TaskView {
     pub body: String,
     pub acceptance: Vec<AcceptanceItem>,
     pub acceptance_error: bool,
+    /// The planned results from the `resultPlans` frontmatter (empty when none or unreadable).
+    pub result_plans: Vec<ResultPlan>,
+    pub result_plans_error: bool,
     pub assignee: Assignee,
     pub epic_id: Option<String>,
     pub epic: Option<TaskEpic>,
