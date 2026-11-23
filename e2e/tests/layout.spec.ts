@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
 import { resetBoard, agpjOk, mainProject, projectId } from '../helpers/agpj';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
-import { readBoardAfterReset, waitForSync } from '../helpers/ui';
+import { readBoardAfterReset, waitForSync, openHeaderItem } from '../helpers/ui';
 
 // Headless Chromium hides scrollbars by default; the scroll cue needs the real ones.
 test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } });
@@ -294,7 +294,7 @@ test('dragging keeps the selection and the archive confirmation and selects no t
 
 test('Japanese: the handle is named in Japanese', async ({ page }) => {
   await open(page, 1280);
-  await page.getByRole('button', { name: 'Settings' }).click();
+  await openHeaderItem(page, 'Settings');
   await page.getByRole('radio', { name: '日本語' }).click();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('separator', { name: 'タスクの詳細の幅を変更' })).toBeVisible();

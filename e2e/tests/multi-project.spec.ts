@@ -1076,9 +1076,9 @@ test.describe('long names and many projects', () => {
     await page.setViewportSize({ width: 1024, height: 768 });
     await open(page, projectId(longName, home));
     await expect(page.getByRole('button', { name: 'AI に依頼' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '設定', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'メニュー', exact: true })).toBeVisible();
     const width = 1024;
-    for (const name of ['AI に依頼', '設定']) {
+    for (const name of ['AI に依頼', 'メニュー']) {
       const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
       expect(box.x + box.width).toBeLessThanOrEqual(width);
     }
