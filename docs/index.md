@@ -49,11 +49,11 @@ landing:
       caption: A waiting task shows how many questions need your answer.
       alt: The Kanban board with a waiting task in Doing that shows the agent's question and its options
     question:
-      caption: Opening it shows the question, its options, and a place for a memo.
-      alt: The Messages dialog with the agent's question about how to publish the website, two options, and a memo field
+      caption: Opening it shows the question, its options, and a place for a note.
+      alt: The Messages dialog with the agent's question about how to publish the website, two options, and a note field
     questions:
       - { title: What is stuck?, text: Waiting tasks change color and stand out in their lane. }
-      - { title: What needs my answer?, text: The task shows how many questions are unanswered. Open it in Messages and pick an option, with a memo if you like. }
+      - { title: What needs my answer?, text: "The task shows how many questions are unanswered. Open it in Messages and pick an option, with a note if you like." }
       - { title: How far along is it?, text: Each task keeps its acceptance count and its history. }
   loop:
     eyebrow: How it goes
