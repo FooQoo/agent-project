@@ -74,10 +74,9 @@ pub struct RecordedResult {
 }
 
 impl FileStore {
-    /// Record a result on a task, from the agent side (the CLI). A task that is
-    /// archived, a draft, or Done refuses it, as for any agent change, except
-    /// that a retry of a result that was already recorded succeeds quietly and
-    /// the first final result and a publication record may be added to a Done task.
+    /// Record a result on a task, from the agent side (the CLI). An archived, draft, or
+    /// Done task refuses it, except a retry of a recorded result, a first final result,
+    /// and a publication record.
     pub fn add_result(
         &self,
         project: &ProjectId,
