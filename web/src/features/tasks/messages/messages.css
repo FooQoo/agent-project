@@ -73,7 +73,8 @@
   min-height: 0;
 }
 
-.surface-modal.message-surface:not(.message-surface--answering) .message-list__page:not([aria-hidden="true"]) {
+.surface-modal.message-surface:not(.message-surface--answering)
+  .message-list__page:not([aria-hidden="true"]) {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
