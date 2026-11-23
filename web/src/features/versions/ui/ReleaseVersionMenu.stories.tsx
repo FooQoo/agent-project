@@ -72,9 +72,9 @@ export const TypingANewVersion: Story = {
   },
 };
 
-/** The phone's bottom sheet: it filters and lists versions, marks the release version, and has no release button. */
+/** The phone's bottom sheet: it filters and lists versions, marks the release version, and ends with the release button for another version. */
 export const PhoneSheet: Story = {
-  args: { kind: 'sheet', filter: 'v2.0.0', onMakeRelease: undefined },
+  args: { kind: 'sheet', filter: 'v2.0.0' },
   globals: { viewport: { value: 'mobile1' } },
   play: async ({ args, canvasElement }) => {
     await userEvent.click(within(canvasElement).getByRole('button', { name: /Version filter/ }));
@@ -83,8 +83,10 @@ export const PhoneSheet: Story = {
     await expect(view.getByRole('radio', { name: /v1\.8\.0/ }).parentElement).toHaveTextContent(
       '\u2605',
     );
-    await expect(view.queryByRole('button', { name: /release version/i })).toBeNull();
-    await userEvent.click(view.getByRole('radio', { name: /v1\.9\.0/ }));
-    await waitFor(() => expect(args.onFilter).toHaveBeenCalledWith('v1.9.0'));
+    await userEvent.click(
+      view.getByRole('button', { name: 'Make the shown v2.0.0 the release version' }),
+    );
+    await waitFor(() => expect(args.onMakeRelease).toHaveBeenCalledWith('v2.0.0'));
+    await expect(args.onFilter).not.toHaveBeenCalled();
   },
 };

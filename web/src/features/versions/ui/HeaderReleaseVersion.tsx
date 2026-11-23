@@ -15,7 +15,7 @@ export function HeaderReleaseVersion({
   filter: string | null;
   onFilter: (version: string | null) => void;
   disabled?: boolean;
-  /** The phone's menu: a bottom sheet that filters and lists versions, but cannot change the release version. */
+  /** The phone's menu: a bottom sheet instead of the PC's popover. */
   phone?: boolean;
 }) {
   const { versions, release, refresh } = useProjectVersions(projectId);
@@ -27,14 +27,10 @@ export function HeaderReleaseVersion({
       onFilter={onFilter}
       disabled={disabled}
       kind={phone ? 'sheet' : 'popover'}
-      onMakeRelease={
-        phone
-          ? undefined
-          : async (version) => {
-              await setReleaseVersion(projectId, version);
-              await refresh();
-            }
-      }
+      onMakeRelease={async (version) => {
+        await setReleaseVersion(projectId, version);
+        await refresh();
+      }}
       onAdd={async (name) => {
         await addVersion(projectId, name);
         await refresh();

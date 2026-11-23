@@ -133,6 +133,7 @@ describe('the version filter on the phone', () => {
   function phone(filter: string | null = 'v1.8.0') {
     const onFilter = vi.fn();
     const onAdd = vi.fn(async () => undefined);
+    const onMakeRelease = vi.fn(async () => undefined);
     render(
       <ReleaseVersionMenu
         kind="sheet"
@@ -140,19 +141,35 @@ describe('the version filter on the phone', () => {
         release="v1.8.0"
         filter={filter}
         onFilter={onFilter}
+        onMakeRelease={onMakeRelease}
         onAdd={onAdd}
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: /Version filter/ }));
-    return { onFilter, onAdd };
+    return { onFilter, onAdd, onMakeRelease };
   }
 
-  it('opens a sheet that filters, lists a new version, marks the release version and cannot change it', async () => {
-    const { onFilter, onAdd } = phone('v1.9.0');
+  it('opens a sheet that filters, lists a new version, marks the release version and makes the shown version the release version', async () => {
+    const { onAdd, onMakeRelease } = phone('v1.9.0');
     expect(
       (await screen.findByRole('radio', { name: /v1\.8\.0/ })).parentElement?.textContent,
     ).toContain('★');
-    expect(screen.queryByRole('button', { name: /release version/i })).toBeNull();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Make the shown v1.9.0 the release version' }),
+    );
+    await waitFor(() => expect(onMakeRelease).toHaveBeenCalledWith('v1.9.0'));
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  it('has no release button while the shown version is the release version', async () => {
+    phone('v1.8.0');
+    await screen.findByLabelText('New version');
+    expect(screen.queryByRole('button', { name: /the release version$/ })).toBeNull();
+  });
+
+  it('lists a version and filters', async () => {
+    const { onFilter, onAdd } = phone('v1.9.0');
+    await screen.findByLabelText('New version');
     fireEvent.change(screen.getByLabelText('New version'), { target: { value: 'v2.0.0' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add this version to the project' }));
     await waitFor(() => expect(onAdd).toHaveBeenCalledWith('v2.0.0'));

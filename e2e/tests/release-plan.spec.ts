@@ -7,7 +7,7 @@ import { waitForSync, openHeaderItem } from '../helpers/ui';
 
 // #646: planned versions on the PC board: the version filter in the header, the tag on a card, the planned
 // version in the task's edit dialog, and an epic's tasks planned together in the epic's edit dialog. The phone
-// shows the tag, filters by version and lists a new version, but cannot change the release version.
+// shows the tag, filters by version and lists a new version, but makes the shown version the release version.
 test.beforeEach(() => resetPreferences());
 test.afterEach(() => {
 	clearVersions();
@@ -175,7 +175,7 @@ test('the release version is unavailable in the task dialog while none is set', 
 	await expect(dialog.getByText('Unavailable: no release version is set')).toBeVisible();
 });
 
-test('the phone shows the planned version, filters by it and lists a new one, but cannot change the release version', async ({ page }) => {
+test('the phone shows the planned version, filters by it, lists a new one and makes the shown one the release version', async ({ page }) => {
 	const cards = await seed('v1.8.0');
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto('/');
@@ -198,7 +198,7 @@ test('the phone shows the planned version, filters by it and lists a new one, bu
 	const button = await filter.boundingBox();
 	expect(button!.x + button!.width).toBeLessThanOrEqual(bar!.x + bar!.width);
 
-	// The sheet lists a new version without changing the filter or the release version, and has no release button.
+	// The sheet lists a new version without changing the filter or the release version, and the release version is the one shown, so there is no release button.
 	await filter.click();
 	await page.getByLabel('New version').fill('v2.0.0');
 	await page.getByRole('button', { name: 'Add this version to the project' }).click();
@@ -216,6 +216,20 @@ test('the phone shows the planned version, filters by it and lists a new one, bu
 	await expect(page.locator('.monitor-card', { hasText: 'Plan E dark theme' })).toHaveCount(1);
 	expect(cards.e).toBeGreaterThan(0);
 	expect(await releaseVersion()).toBe('v1.8.0');
+
+	// Filter by another version and make it the release version from the sheet's last button.
+	await filter.click();
+	await page.getByRole('radio', { name: /^v1\.9\.0/ }).click();
+	await expect(filter).toHaveAccessibleName('Version filter: v1.9.0');
+	expect(await releaseVersion()).toBe('v1.8.0');
+	await filter.click();
+	await page.getByRole('button', { name: 'Make the shown v1.9.0 the release version' }).click();
+	await expect.poll(releaseVersion).toBe('v1.9.0');
+	await expect(filter).toHaveAccessibleName('Version filter: v1.9.0');
+	await filter.click();
+	await expect(page.getByRole('radio', { name: /^v1\.9\.0/ }).locator('..')).toContainText('\u2605');
+	await expect(page.getByRole('button', { name: /the release version$/ })).toHaveCount(0);
+	await page.getByRole('radio', { name: 'All' }).click();
 	await page.locator('.monitor-card', { hasText: 'Plan A login screen' }).getByRole('button', { name: 'Plan A login screen' }).click();
 	await expect(page.getByText('Planned version')).toHaveCount(0);
 

@@ -233,7 +233,7 @@ const body = () => within(document.body);
 
 /**
  * The top bar shows the logo alone and a version filter that starts on the release version. Its
- * sheet filters and lists versions but offers no way to change the release version, and the Backlog
+ * sheet filters, lists versions and offers the release button, and the Backlog
  * and unplanned cards stay when a version is chosen.
  */
 export const VersionFilterSheet: StoryObj<typeof VersionFilterStory> = {
@@ -253,7 +253,8 @@ export const VersionFilterSheet: StoryObj<typeof VersionFilterStory> = {
     await userEvent.click(filter);
     await expect(await body().findByLabelText('New version')).toBeVisible();
     await expect(body().getByRole('radio', { name: /v1\.8\.0/ })).toBeChecked();
-    await expect(body().queryByRole('button', { name: /release version/i })).toBeNull();
+    // The shown version is the release version, so there is nothing to make.
+    await expect(body().queryByRole('button', { name: /the release version$/ })).toBeNull();
     await userEvent.click(body().getByRole('radio', { name: 'All' }));
     await expect(await canvas.findByRole('button', { name: 'Version filter: All' })).toBeVisible();
     await expect(await canvas.findByRole('button', { name: 'Todo work item 2' })).toBeVisible();

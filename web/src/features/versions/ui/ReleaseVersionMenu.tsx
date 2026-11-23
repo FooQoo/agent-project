@@ -90,6 +90,22 @@ export function ReleaseVersionMenu({
       <ChevronDownIcon aria-hidden="true" />
     </Button>
   );
+  const makeRelease =
+    onMakeRelease && filter !== null && filter !== release ? (
+      <Button
+        type="button"
+        variant="outline"
+        disabled={busy}
+        onClick={() =>
+          void run(
+            () => onMakeRelease(filter),
+            () => setOpen(false),
+          )
+        }
+      >
+        {t('versions.header.makeRelease', { version: filter })}
+      </Button>
+    ) : null;
   const body = (
     <>
       <form
@@ -144,21 +160,7 @@ export function ReleaseVersionMenu({
         ))}
         {listed.length === 0 && <p className="ver-note">{t('versions.header.empty')}</p>}
       </RadioGroup>
-      {onMakeRelease && filter !== null && filter !== release && (
-        <Button
-          type="button"
-          variant="outline"
-          disabled={busy}
-          onClick={() =>
-            void run(
-              () => onMakeRelease(filter),
-              () => setOpen(false),
-            )
-          }
-        >
-          {t('versions.header.makeRelease', { version: filter })}
-        </Button>
-      )}
+      {kind === 'popover' && makeRelease}
       {failed && (
         <p className="ver-error" role="alert">
           {t('versions.header.failed')}
@@ -180,6 +182,7 @@ export function ReleaseVersionMenu({
               setFailed(false);
             }}
             className="ver-head-sheet"
+            footer={makeRelease}
           >
             {body}
           </Surface>
