@@ -26,11 +26,6 @@
   color: var(--r-accent);
 }
 
-.ver-head__label {
-  color: var(--r-muted);
-  font-weight: 400;
-}
-
 .ver-head__value {
   overflow: hidden;
   font-weight: 600;
@@ -122,12 +117,6 @@
 }
 
 /* ---- Fields of the editors ---- */
-
-@media (max-width: 1100px) {
-  .ver-head__label {
-    display: none;
-  }
-}
 
 /* The editor's side column has no padding of its own: the fields keep a margin to its edge. */
 .editor__aside > .ver-picker,

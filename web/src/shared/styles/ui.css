@@ -181,23 +181,9 @@
  * text are centred in it, and the side padding is trimmed so the width fits the longest label.
  */
 .header__add,
-.header__back,
-.header__docs,
-.header__epics,
-.header__archive {
+.header__back {
   min-width: var(--header-action-w);
   padding-inline: 12px;
-}
-
-/* Narrow windows keep the project name readable: the secondary buttons are icons there (app.css),
-   square like the settings button. */
-@media (max-width: 1023px) {
-  .header__docs,
-  .header__epics,
-  .header__archive {
-    min-width: 0;
-    padding-inline: 10px;
-  }
 }
 
 /* The icon and the text of an IconLabel: one icon box (16px) and one gap in every button. */

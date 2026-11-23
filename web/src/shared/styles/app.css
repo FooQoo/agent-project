@@ -190,29 +190,6 @@ ol {
   gap: 6px;
 }
 
-.header__docs,
-.header__epics,
-.header__archive {
-  gap: 6px;
-}
-
-.header__docs svg,
-.header__epics svg,
-.header__archive svg {
-  width: 14px;
-  height: 14px;
-}
-
-/*
- * Narrow windows keep the project name readable: below 1024px the Docs, Epics and Archive buttons
- * show their icons only, all at one width. A tablet held sideways (about 1180px) keeps the labels.
- */
-@media (max-width: 1023px) {
-  .header__label {
-    display: none;
-  }
-}
-
 .header__add svg {
   width: 14px;
   height: 14px;
@@ -226,6 +203,36 @@ ol {
   width: 18px;
   height: 18px;
   color: var(--r-text2);
+}
+
+/* The menu at the right end of the PC header: Docs, Epics, Archive and Settings. */
+.header__menu {
+  flex: none;
+}
+
+.header__menu svg {
+  width: 18px;
+  height: 18px;
+  color: var(--r-text2);
+}
+
+.header-menu .menu__item svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--r-text2);
+}
+
+.header-menu .menu__item[data-disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (pointer: coarse) {
+  .header-menu .menu__item {
+    /* biome-ignore lint/plugin: a finger needs 44px (the L button height) */
+    min-height: var(--btn-l-h);
+  }
 }
 
 @media (max-width: 400px) {

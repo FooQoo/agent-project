@@ -6,6 +6,7 @@ import type { Board } from '../src/shared/api/contracts';
 import { FakeEventSource, jsonResponse, stubBackend, type FakeBackend } from './fakes';
 import { PROJECTS, PROJECT_A, fixtureBoard } from './fixtures';
 import { renderApp } from './renderApp';
+import { chooseHeaderItem } from './headerMenu';
 
 describe('language changes in the app', () => {
   let backend: FakeBackend;
@@ -58,7 +59,7 @@ describe('language changes in the app', () => {
         .getAttribute('aria-current'),
     ).toBe('true');
 
-    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    await chooseHeaderItem('Settings');
     // The settings dialog loads on first use, so wait for the option instead of looking once.
     await userEvent.click(await screen.findByRole('radio', { name: '日本語' }));
     expect(screen.getByRole('dialog', { name: '設定' })).toBeTruthy();

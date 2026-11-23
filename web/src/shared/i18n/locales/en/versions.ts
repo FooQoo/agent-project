@@ -5,7 +5,6 @@ export const versionsEn = {
       current: 'Current',
     },
     header: {
-      button: 'Current version',
       buttonValue: 'Current version: {{version}}',
       unset: 'Not set',
       listLabel: 'Versions of this project',

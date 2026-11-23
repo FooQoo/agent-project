@@ -5,7 +5,6 @@ export const versionsJa = {
       current: 'カレント',
     },
     header: {
-      button: 'カレントバージョン',
       buttonValue: 'カレントバージョン: {{version}}',
       unset: '未設定',
       listLabel: 'このプロジェクトのバージョン',

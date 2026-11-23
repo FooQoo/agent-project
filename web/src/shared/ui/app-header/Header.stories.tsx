@@ -38,6 +38,7 @@ interface HeaderDemoProps {
   canAdd?: boolean;
   viewMode?: ViewMode;
   withSettings?: boolean;
+  menu?: boolean;
   onAdd?: () => void;
   onArchive?: () => void;
   onEpics?: () => void;
@@ -58,6 +59,7 @@ function HeaderDemo({
   const active = projects?.find((project) => project.id === activeProjectId);
   return (
     <Header
+      menu
       {...props}
       projects={projects}
       activeProjectId={activeProjectId}
@@ -93,29 +95,39 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The board header: the app name, the project control, the add, epics and archive buttons, and settings. */
+/** Opens the header's menu button and returns the menu. */
+async function openMenu(canvasElement: HTMLElement) {
+  await userEvent.click(within(canvasElement).getByRole('button', { name: /^(menu|メニュー)$/i }));
+  return within(await within(document.body).findByRole('menu'));
+}
+
+/** The board header: the app name, the project control and Ask AI stay; the rest is in the menu. */
 export const Board: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('heading', { name: 'Agent Project' })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: 'alpha' })).toBeEnabled();
     await expect(canvas.getByRole('button', { name: /ask ai/i })).toBeEnabled();
-    await expect(canvas.getByRole('button', { name: /docs/i })).toBeEnabled();
-    await expect(canvas.getByRole('button', { name: /epics/i })).toBeEnabled();
-    await expect(canvas.getByRole('button', { name: /archive/i })).toBeEnabled();
-    await expect(canvas.getByRole('button', { name: 'Settings' })).toBeEnabled();
+    await expect(canvas.queryByRole('button', { name: /docs/i })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Settings' })).toBeNull();
+    const menu = await openMenu(canvasElement);
+    await expect(menu.getByRole('menuitem', { name: /docs/i })).toBeEnabled();
+    await expect(menu.getByRole('menuitem', { name: /epics/i })).toBeEnabled();
+    await expect(menu.getByRole('menuitem', { name: /archive/i })).toBeEnabled();
+    await expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeEnabled();
   },
 };
 
-/** Before the board has loaded, add, epics and archive are not offered; settings stays. */
+/** Before the board has loaded, Ask AI, docs, epics and archive are not offered; settings stays in the menu. */
 export const BoardNotReady: Story = {
   args: { canAdd: false },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('button', { name: /ask ai/i })).toBeNull();
-    await expect(canvas.queryByRole('button', { name: /archive/i })).toBeNull();
-    await expect(canvas.queryByRole('button', { name: /docs/i })).toBeNull();
-    await expect(canvas.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
+    const menu = await openMenu(canvasElement);
+    await expect(menu.queryByRole('menuitem', { name: /archive/i })).toBeNull();
+    await expect(menu.queryByRole('menuitem', { name: /docs/i })).toBeNull();
+    await expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeInTheDocument();
   },
 };
 
@@ -126,9 +138,19 @@ export const SwitchDisabled: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('button', { name: 'alpha' })).toBeDisabled();
     await expect(canvas.getByRole('button', { name: /ask ai/i })).toBeDisabled();
-    await expect(canvas.getByRole('button', { name: /docs/i })).toBeDisabled();
-    await expect(canvas.getByRole('button', { name: /epics/i })).toBeDisabled();
-    await expect(canvas.getByRole('button', { name: /archive/i })).toBeDisabled();
+    const menu = await openMenu(canvasElement);
+    await expect(menu.getByRole('menuitem', { name: /docs/i })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    await expect(menu.getByRole('menuitem', { name: /epics/i })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    await expect(menu.getByRole('menuitem', { name: /archive/i })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
   },
 };
 
@@ -164,13 +186,13 @@ export const NoProjectList: Story = {
   },
 };
 
-/** The passcode screen's header: the app name only, with no settings button. */
+/** The passcode screen's header: the app name only, with no menu and no settings button. */
 export const WithoutSettings: Story = {
-  args: { projects: null, activeProjectId: null, canAdd: false, withSettings: false },
+  args: { projects: null, activeProjectId: null, canAdd: false, withSettings: false, menu: false },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('heading', { name: 'Agent Project' })).toBeInTheDocument();
-    await expect(canvas.queryByRole('button', { name: 'Settings' })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: /^menu$/i })).toBeNull();
   },
 };
 
@@ -180,34 +202,41 @@ export const JapaneseBoard: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('button', { name: /AI に依頼/ })).toBeEnabled();
-    await expect(canvas.getByRole('button', { name: /ドキュメント/ })).toBeEnabled();
-    await expect(canvas.getByRole('button', { name: '設定' })).toBeEnabled();
+    const menu = await openMenu(canvasElement);
+    await expect(menu.getByRole('menuitem', { name: /ドキュメント/ })).toBeEnabled();
+    await expect(menu.getByRole('menuitem', { name: '設定' })).toBeEnabled();
   },
 };
 
-/** Each header action calls its own callback once. */
+/** Each header action calls its own callback once; the menu closes after each choice. */
 export const ActionCallbacks: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: /ask ai/i }));
     await expect(args.onAdd).toHaveBeenCalledTimes(1);
-    await userEvent.click(canvas.getByRole('button', { name: /docs/i }));
+    await userEvent.click((await openMenu(canvasElement)).getByRole('menuitem', { name: /docs/i }));
     await expect(args.onDocs).toHaveBeenCalledTimes(1);
-    await userEvent.click(canvas.getByRole('button', { name: /epics/i }));
+    await userEvent.click(
+      (await openMenu(canvasElement)).getByRole('menuitem', { name: /epics/i }),
+    );
     await expect(args.onEpics).toHaveBeenCalledTimes(1);
-    await userEvent.click(canvas.getByRole('button', { name: /archive/i }));
+    await userEvent.click(
+      (await openMenu(canvasElement)).getByRole('menuitem', { name: /archive/i }),
+    );
     await expect(args.onArchive).toHaveBeenCalledTimes(1);
   },
 };
 
-/** The settings button opens the settings slot, and Escape gives the focus back to the button. */
+/** The settings item opens the settings slot, and Escape gives the focus back to the menu button. */
 export const SettingsOpensAndRestoresFocus: Story = {
   play: async ({ canvasElement }) => {
-    const settings = within(canvasElement).getByRole('button', { name: 'Settings' });
-    await userEvent.click(settings);
+    const menuButton = within(canvasElement).getByRole('button', { name: /^menu$/i });
+    await userEvent.click(
+      (await openMenu(canvasElement)).getByRole('menuitem', { name: 'Settings' }),
+    );
     await expect(await within(document.body).findByRole('dialog')).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(within(document.body).queryByRole('dialog')).toBeNull());
-    await waitFor(() => expect(settings).toHaveFocus());
+    await waitFor(() => expect(menuButton).toHaveFocus());
   },
 };

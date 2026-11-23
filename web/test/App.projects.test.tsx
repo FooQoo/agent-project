@@ -15,6 +15,7 @@ import {
   makeTask,
 } from './fixtures';
 import { renderApp } from './renderApp';
+import { chooseHeaderItem } from './headerMenu';
 
 const missing = 'e'.repeat(32);
 const tasksOfB: Task[] = [
@@ -178,7 +179,7 @@ describe('which project is shown', () => {
     };
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await chooseHeaderItem('Archive');
 
     expect(await screen.findByRole('heading', { level: 2, name: 'Archive' })).toBeTruthy();
     expect(within(screen.getByRole('main')).getByText('1 archived task')).toBeTruthy();
@@ -229,7 +230,7 @@ describe('which project is shown', () => {
 
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await chooseHeaderItem('Archive');
     await userEvent.click(await screen.findByRole('button', { name: /Restore a pending task/ }));
     const detail = screen.getByRole('complementary');
     expect(within(detail).getByRole('button', { name: 'Restore' })).toBeTruthy();
@@ -278,7 +279,7 @@ describe('which project is shown', () => {
 
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await chooseHeaderItem('Archive');
     await userEvent.click(await screen.findByRole('button', { name: /Retry restore/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Restore' }));
     expect((await screen.findByRole('alert')).textContent).toContain(
@@ -314,7 +315,7 @@ describe('which project is shown', () => {
 
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await chooseHeaderItem('Archive');
     await userEvent.click(
       await screen.findByRole('button', { name: /Permanently remove this task/ }),
     );
@@ -341,7 +342,7 @@ describe('which project is shown', () => {
     backend.archives = { [PROJECT_A.id]: [], [PROJECT_B.id]: [], [PROJECT_C.id]: [] };
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await chooseHeaderItem('Archive');
     await screen.findByRole('heading', { level: 2, name: 'Archive' });
 
     await choose('agent-board', 'knowledge');
@@ -358,7 +359,7 @@ describe('which project is shown', () => {
     };
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await chooseHeaderItem('Archive');
     await userEvent.click(
       await screen.findByRole('button', { name: /Archived during board failure/ }),
     );
@@ -386,7 +387,7 @@ describe('which project is shown', () => {
       url.startsWith(`/api/projects/${PROJECT_A.id}/archive`) ? gate.promise : undefined;
     const app = renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await chooseHeaderItem('Archive');
     expect(await screen.findByRole('status', { name: 'Loading…' })).toBeTruthy();
 
     app.navigate(urlOf(PROJECT_B.id));
@@ -408,7 +409,7 @@ describe('which project is shown', () => {
     };
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await chooseHeaderItem('Archive');
     await screen.findByRole('button', { name: /First archived task/ });
     expect(within(screen.getByRole('main')).getByText('1 archived task')).toBeTruthy();
 
@@ -430,7 +431,7 @@ describe('which project is shown', () => {
     };
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await chooseHeaderItem('Archive');
     await screen.findByRole('button', { name: /Archived from deleted project/ });
 
     backend.projects = [PROJECT_B, PROJECT_C];
@@ -455,7 +456,7 @@ describe('which project is shown', () => {
     };
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await chooseHeaderItem('Archive');
 
     expect(await screen.findByText('Could not load the archive.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy();
@@ -506,7 +507,7 @@ describe('states', () => {
     renderApp(urlOf(PROJECT_A.id));
     expect(await screen.findByText('Could not load the board.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'agent-board' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Settings' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Menu' })).toBeTruthy();
 
     backend.projects = PROJECTS;
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
@@ -905,7 +906,7 @@ describe('switching while a form is open', () => {
     await screen.findByRole('region', { name: 'Todo' });
     await openAskForm();
     await userEvent.keyboard('{Escape}');
-    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    await chooseHeaderItem('Settings');
     await userEvent.click(screen.getByRole('radio', { name: '日本語' }));
     expect(document.documentElement.lang).toBe('ja');
     await userEvent.keyboard('{Escape}');

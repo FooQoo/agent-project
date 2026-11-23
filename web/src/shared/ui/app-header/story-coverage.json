@@ -8,18 +8,18 @@
       "stories": [
         {
           "id": "shared-ui-header--board",
-          "states": ["board", "add, docs, epics, archive and settings enabled"],
-          "interaction": false
+          "states": ["board", "menu with docs, epics, archive and settings enabled"],
+          "interaction": true
         },
         {
           "id": "shared-ui-header--board-not-ready",
-          "states": ["board not loaded", "settings only"],
-          "interaction": false
+          "states": ["board not loaded", "menu with settings only"],
+          "interaction": true
         },
         {
           "id": "shared-ui-header--switch-disabled",
-          "states": ["card form open", "switcher and buttons disabled"],
-          "interaction": false
+          "states": ["card form open", "switcher, add and menu items disabled"],
+          "interaction": true
         },
         {
           "id": "shared-ui-header--archive-view",
@@ -38,13 +38,13 @@
         },
         {
           "id": "shared-ui-header--without-settings",
-          "states": ["passcode screen", "no settings button"],
+          "states": ["passcode screen", "no menu"],
           "interaction": true
         },
         {
           "id": "shared-ui-header--japanese-board",
           "states": ["japanese", "board"],
-          "interaction": false
+          "interaction": true
         },
         {
           "id": "shared-ui-header--action-callbacks",
@@ -53,7 +53,7 @@
         },
         {
           "id": "shared-ui-header--settings-opens-and-restores-focus",
-          "states": ["settings dialog", "escape", "focus back to settings"],
+          "states": ["settings dialog", "escape", "focus back to menu button"],
           "interaction": true
         }
       ]
