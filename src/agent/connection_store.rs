@@ -119,3 +119,38 @@ pub(crate) fn delete_secret(data_dir: &Path, project: &ProjectId) {
         &SessionIdentity::from_env().key,
     ));
 }
+
+/// An exclusive lock on this session's connection, held while it connects: the check that the
+/// session holds no connection, the code exchange, and the secret save must not interleave with
+/// another `connect` of the same session. Released when dropped.
+pub(crate) struct SessionLock(#[allow(dead_code)] std::fs::File);
+
+pub(crate) fn lock_session(data_dir: &Path, project: &ProjectId) -> Result<SessionLock, AgpjError> {
+    use std::os::fd::AsRawFd;
+    let path = secret_file(data_dir, project, &SessionIdentity::from_env().key)
+        .with_extension("secret.lock");
+    let fail = |e: std::io::Error| AgpjError::FileError {
+        action: crate::error::FileAction::Write,
+        file: "connections".into(),
+        reason: format!("The session's connection lock could not be taken: {e}."),
+    };
+    if let Some(dir) = path.parent() {
+        std::fs::DirBuilder::new()
+            .recursive(true)
+            .mode(0o700)
+            .create(dir)
+            .map_err(fail)?;
+    }
+    let file = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .mode(0o600)
+        .open(&path)
+        .map_err(fail)?;
+    // SAFETY: flock on a descriptor this function owns; it blocks until the holder lets go.
+    if unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX) } != 0 {
+        return Err(fail(std::io::Error::last_os_error()));
+    }
+    Ok(SessionLock(file))
+}

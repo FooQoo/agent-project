@@ -600,3 +600,107 @@ fn a_session_holds_one_agent_and_disconnect_lets_it_take_another() {
     let again = run(&["--project", "Demo", "connect", &code("A-2")]);
     assert!(again.status.success(), "{again:?}");
 }
+
+#[test]
+fn concurrent_connects_of_one_session_let_exactly_one_win() {
+    let home = tempfile::tempdir().unwrap();
+    let cmd = |args: &[&str]| {
+        let mut c = std::process::Command::new(env!("CARGO_BIN_EXE_agpj"));
+        c.env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_HOME", home.path())
+            .env("CLAUDE_CODE_SESSION_ID", "session-race")
+            .env_remove("AGPJ_CONNECTION_SECRET")
+            .current_dir(home.path())
+            .args(args)
+            .stdin(std::process::Stdio::null());
+        c
+    };
+    assert!(
+        cmd(&["project", "create", "Race"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    let store = FileStore::open(&home.path().join("shared"));
+    let project = store.project_by_name("Race").unwrap().id;
+    store.register_agent(&project, "One", "", t0()).unwrap();
+    store.register_agent(&project, "Two", "", t0()).unwrap();
+    for _ in 0..4 {
+        let codes: Vec<String> = ["A-1", "A-2"]
+            .iter()
+            .map(|a| {
+                store
+                    .issue_connect_code(&project, a, false, Utc::now())
+                    .unwrap()
+                    .code
+            })
+            .collect();
+        let children: Vec<_> = codes
+            .iter()
+            .map(|code| {
+                cmd(&["--project", "Race", "connect", code])
+                    .stdout(std::process::Stdio::piped())
+                    .stderr(std::process::Stdio::piped())
+                    .spawn()
+                    .unwrap()
+            })
+            .collect();
+        let outcomes: Vec<_> = children
+            .into_iter()
+            .map(|c| c.wait_with_output().unwrap())
+            .collect();
+        let wins = outcomes.iter().filter(|o| o.status.success()).count();
+        assert_eq!(wins, 1, "{outcomes:?}");
+        let refused = outcomes.iter().find(|o| !o.status.success()).unwrap();
+        assert!(String::from_utf8_lossy(&refused.stderr).contains("disconnect"));
+        // The stored secret is the winner's and still works: disconnect uses it.
+        let out = cmd(&["--project", "Race", "disconnect"]).output().unwrap();
+        assert!(out.status.success(), "{out:?}");
+    }
+}
+
+#[test]
+fn a_failed_secret_write_leaves_no_active_connection() {
+    let home = tempfile::tempdir().unwrap();
+    let run = |args: &[&str]| {
+        std::process::Command::new(env!("CARGO_BIN_EXE_agpj"))
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_HOME", home.path())
+            .env("CLAUDE_CODE_SESSION_ID", "session-full")
+            .env_remove("AGPJ_CONNECTION_SECRET")
+            .current_dir(home.path())
+            .args(args)
+            .stdin(std::process::Stdio::null())
+            .output()
+            .unwrap()
+    };
+    assert!(run(&["project", "create", "Full"]).status.success());
+    let store = FileStore::open(&home.path().join("shared"));
+    let project = store.project_by_name("Full").unwrap().id;
+    store.register_agent(&project, "One", "", t0()).unwrap();
+    let code = store
+        .issue_connect_code(&project, "A-1", false, Utc::now())
+        .unwrap()
+        .code;
+    // A folder where the secret file belongs makes the secret unwritable (the lock still works).
+    {
+        use sha2::{Digest, Sha256};
+        let digest = Sha256::digest("session-full".as_bytes());
+        let hex: String = digest.iter().take(8).map(|b| format!("{b:02x}")).collect();
+        let blocked = home
+            .path()
+            .join("connections")
+            .join(project.as_str())
+            .join(format!("claude_{hex}.secret"));
+        std::fs::create_dir_all(&blocked).unwrap();
+    }
+    let out = run(&["--project", "Full", "connect", &code]);
+    assert!(!out.status.success());
+    // The new connection was revoked: the agent is free for a plain code.
+    assert!(
+        store
+            .issue_connect_code(&project, "A-1", false, Utc::now())
+            .is_ok()
+    );
+}
