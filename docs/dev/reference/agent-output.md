@@ -66,9 +66,11 @@ The JSON that agents receive. The pieces are explained in [Agent integration](..
 - The paths appear only in local CLI and hook output, never in remote JSON.
 - The earlier `planPath` field is no longer produced or accepted. See the [data guide](../../guide/operations/data.md).
 
-The table also carries `"mode": "sleep"` while the project is in sleep mode. The key is absent in the default sparring mode, so an agent reads a missing `mode` as sparring. The mode is saved per project in the data area (`.internal/modes.json`), not in the shared project files, and `agpj mode` and `agpj progress` read it without a server. See [Sleep mode](../concepts/agents.md#sleep-mode).
+The table also carries `"mode": "sleep"` or `"mode": "brainstorm"` while the project is in that mode. The key is absent in the default sparring mode, so an agent reads a missing `mode` as sparring. The mode is saved per project in the data area (`.internal/modes.json`), not in the shared project files, and `agpj mode` and `agpj progress` read it without a server. See [Sleep mode](../concepts/agents.md#sleep-mode).
 
 While the project sleeps the table also carries `modeSource` (`manual` or `schedule`) and, when the daily window holds it asleep, `modeUntil` (when the window ends, UTC). All three are absent for sparring. The window and how a manual mode overrides it are in [Sleep mode](../concepts/agents.md#sleep-mode).
+
+In brainstorm mode the table carries `"mode": "brainstorm"`, `"modeSource": "manual"`, and `"modeTarget": {"type": "epic" | "task", "id": "<EPIC-ID or task number>"}`, and `modeUntil` when the next sleep window will end the hold. `modeTarget` is present only in brainstorm. See [Brainstorm mode](../concepts/agents.md#brainstorm-mode).
 
 ## Hook output
 

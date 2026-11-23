@@ -153,6 +153,12 @@ When you go away on purpose, switch the project to sleep mode (`agpj mode sleep`
 
 When you come back, the task's history shows each decision: what the question was, what was chosen, who decided (`subagent:NAME`), why, and what it rests on (code, documents, or past questions such as `Q-12`). If you disagree, tell the agent and it changes course. `agpj mode sparring` returns to the default, where the agent listens and asks you again. The commands are in [Sleep mode](../reference/cli#sleep-mode).
 
+### Brainstorm mode {#brainstorm-mode}
+
+When you want to think an epic or a task through, switch the project to brainstorm mode with a target (`agpj mode brainstorm --target <epic-id|task-number>`). The agent reads the epic or the task and what is already decided, and asks you one question at a time about the biggest gap: the purpose, the reader, the constraints, the alternatives, or the risks. The questions arrive on the board like any other question, and the task you chose keeps running, because a brainstorm question does not pause it. The agent follows up on each answer and records a decision you reach in the task's history or the epic's document.
+
+End the brainstorm with `agpj mode sparring`, and the agent goes back to listening. Questions about ordinary work are still accepted while you brainstorm. If the project goes to sleep, for example when a sleep window starts, the brainstorm ends and the agent stops asking. The commands are in [Brainstorm mode](../reference/cli#brainstorm-mode).
+
 ## Wait for changes
 
 ```sh

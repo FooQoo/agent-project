@@ -14,7 +14,7 @@ Use the browser to review and edit work, and `agpj` for agent updates and projec
 | Read a task or the board | `show`, `ls`, `snapshot` |
 | Move a task or report what an agent is doing | `mv`, `state` |
 | Record a decision that matters later | `history add` |
-| Switch between sparring and sleep mode | `mode` |
+| Switch between sparring, sleep, and brainstorm mode | `mode` |
 | Record a decision a subagent made in sleep mode | `decision add` |
 | Change a task's text | `edit` |
 | Plan tasks for a release | `version`, `edit --planned-version`, `epic plan` |
@@ -115,6 +115,26 @@ agpj --project "My project" mode auto                                  # forget 
 
 A manual mode wins while it is set. One set during a window holds until that window ends, and then the schedule takes over again; one set outside a window holds until the next window starts (with no window, until you change it). `mode` shows the mode in effect, where it comes from (`manual` or `schedule`, with `until` when the mode ends: the window's end, or for a manual mode the end of its hold), and the window. `message ask` and `agpj progress` use the same resolution; the progress table adds `modeSource` and `modeUntil` next to `mode`.
 
+
+### Brainstorm mode {#brainstorm-mode}
+
+Brainstorm mode asks the agent to question you about one epic or one task. Start it with the target, a task number or an epic ID, and end it by returning to sparring:
+
+```sh
+agpj --project "My project" mode brainstorm --target INTERACTION-MODES   # an epic
+agpj --project "My project" mode brainstorm --target 12                  # a task
+agpj --project "My project" mode sparring                                # end it
+```
+
+`--target` is required, and it is accepted only with `brainstorm`. A target that does not exist is refused, and so is an archived task. Starting a brainstorm also sends the agent a request, "Start brainstorming on ...", so an agent that is listening with `wait` begins at once. The progress table then shows `mode: "brainstorm"` and `modeTarget`, and `mode` prints the target.
+
+The agent asks its questions with `--brainstorm`. They are not linked to a task, so the target task keeps running:
+
+```sh
+agpj --project "My project" message ask --actor ai --brainstorm --questions-json '{"questions":[{"body":"Who reads this page first?"}]}'
+```
+
+`message ask --brainstorm` is refused with `brainstorm_not_active` once the mode is no longer brainstorm. Questions without `--brainstorm` are ordinary and are still accepted. Sleep always wins: when a sleep window starts, the mode becomes sleep and every `message ask` is refused with `sleep_mode`.
 
 In sleep mode `message ask` is refused with `sleep_mode`, and nothing reaches the board, the notifications, or the chat. The agent has a subagent decide, continues with the conclusion, and records it on the task:
 

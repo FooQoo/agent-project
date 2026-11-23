@@ -14,7 +14,7 @@ title: CLIリファレンス
 | タスクやプロジェクトの情報を読む | `show`、`ls`、`snapshot` |
 | タスクを移す、エージェントの状態を報告する | `mv`、`state` |
 | 後で効く判断を記録する | `history add` |
-| 組手とスリープを切り替える | `mode` |
+| 組手・スリープ・壁打ちを切り替える | `mode` |
 | スリープ中にサブエージェントが下した判断を記録する | `decision add` |
 | タスクの本文を編集する | `edit` |
 | タスクをリリースに割り当てる | `version`、`edit --planned-version`、`epic plan` |
@@ -116,6 +116,26 @@ agpj --project "My project" mode auto                                  # 手動�
 
 手動のモードは、設定されているあいだ優先されます。時間帯のあいだに設定したものはその時間帯が終わるまで続き、終わるとスケジュールがまた決めます。時間帯の外で設定したものは、次の時間帯が始まるまで続きます（時間帯がなければ変えるまで）。`mode`は、いま効いているモード、その出どころ（`manual`か`schedule`。モードが終わる時刻の`until`も。時間帯の終わり、手動のモードならその保持の終わり）、時間帯を示します。`message ask`と`agpj progress`も同じ決め方を使い、進行表は`mode`の隣に`modeSource`と`modeUntil`を加えます。
 
+
+### 壁打ちモード {#brainstorm-mode}
+
+壁打ちモードでは、1つのエピックか1つのタスクについて、エージェントがあなたに質問します。対象（タスク番号かエピックID）を付けて始め、組手に戻して終わります。
+
+```sh
+agpj --project "My project" mode brainstorm --target INTERACTION-MODES   # エピック
+agpj --project "My project" mode brainstorm --target 12                  # タスク
+agpj --project "My project" mode sparring                                # 終わる
+```
+
+`--target`は必須で、`brainstorm`のときだけ使えます。存在しない対象と、アーカイブ済みのタスクは拒否されます。壁打ちを始めると、エージェントへ「Start brainstorming on ...」という依頼も送るので、`wait`で待ち受けているエージェントはすぐに始めます。進行表には`mode: "brainstorm"`と`modeTarget`が入り、`mode`コマンドも対象を表示します。
+
+エージェントは`--brainstorm`を付けて質問します。タスクには紐付かないので、対象のタスクは動き続けます。
+
+```sh
+agpj --project "My project" message ask --actor ai --brainstorm --questions-json '{"questions":[{"body":"Who reads this page first?"}]}'
+```
+
+モードが壁打ちでなくなると、`message ask --brainstorm`は`brainstorm_not_active`で拒否されます。`--brainstorm`のない質問は通常の質問で、そのまま受け付けます。スリープが常に優先されます。スリープの時間帯が始まるとモードはスリープになり、すべての`message ask`が`sleep_mode`で拒否されます。
 
 スリープ中の`message ask`は`sleep_mode`で拒否され、ボード・通知・チャットのどこにも届きません。エージェントはサブエージェントに判断させ、その結論で進め、タスクに記録します。
 

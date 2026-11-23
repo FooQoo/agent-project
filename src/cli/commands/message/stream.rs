@@ -229,12 +229,10 @@ pub(super) fn ask(ctx: &mut Context, env: &mut Env, args: &MessageAskArgs) -> i3
     let prepared = (|| {
         let project = ctx.project_id()?.clone();
         // In sleep mode nothing reaches the board, the notifications, or the chat.
-        if crate::mode::current(&data_dir(ctx.files.shared_dir()), project.as_str())
-            == crate::mode::ModeKind::Sleep
-        {
-            return Err(AgpjError::SleepMode);
-        }
-        let input = input::ask_input(&args.questions_json, args.actor.actor(), &args.tasks)?;
+        let brainstorm =
+            super::brainstorm::target_for_ask(ctx.files.shared_dir(), &project, args.brainstorm)?;
+        let mut input = input::ask_input(&args.questions_json, args.actor.actor(), &args.tasks)?;
+        input.brainstorm = brainstorm;
         let timeout = input::timeout(args.timeout.as_deref())?;
         if !args.no_wait {
             ensure_serving(ctx)?;

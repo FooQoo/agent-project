@@ -76,6 +76,9 @@ pub struct MessageAskArgs {
     /// Ask and return at once, without waiting
     #[arg(long)]
     pub no_wait: bool,
+    /// Mark the questions as brainstorm questions about the current brainstorm target (refused when the project is not in brainstorm mode)
+    #[arg(long)]
+    pub brainstorm: bool,
 }
 
 #[derive(Args, Debug)]

@@ -2,25 +2,28 @@
 //!
 //! The default is sparring (組手): the agent listens with `agpj wait` and handles requests and
 //! answers. In sleep mode (スリープ) questions to the user are not accepted, and a subagent
-//! decides in the user's place. A mode is saved per project in the app's internal area as
+//! decides in the user's place. In brainstorm mode (壁打ち) the agent asks the user questions that
+//! deepen one epic or task, the target saved with the mode. A mode is saved per project in the app's internal area as
 //! `<data_dir>/.internal/modes.json`, not in the shared project files, so it is the user's
 //! setting and does not travel with the project. A project with no entry is in sparring.
 //!
-//! The mode is independent of who the task is assigned to. A later mode (brainstorm) adds a
-//! `kind` and an optional target to the same entry; an unknown `kind` reads as sparring.
+//! The mode is independent of who the task is assigned to. The entry has a `kind` and, for
+//! brainstorm, a `target`; an unknown `kind`, or brainstorm with no valid target, reads as
+//! sparring. A manual mode holds until the next sleep window starts, so a window ends a brainstorm
+//! and sleep takes over.
 
 use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Local, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 
 pub use crate::mode_schedule::{Effective, Schedule, Source};
+pub use brainstorm::start_brainstorm;
+pub use progress_fields::ProgressMode;
+pub use target::{Target, TargetKind, check as check_target};
 
-const FORMAT_VERSION: u32 = 1;
-const INTERNAL_DIR: &str = ".internal";
-const FILE_NAME: &str = "modes.json";
-const LOCK_NAME: &str = "modes.lock";
+use store::{read_projects, update, update_with};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -30,6 +33,8 @@ pub enum ModeKind {
     Sparring,
     /// Questions to the user are not accepted; a subagent decides.
     Sleep,
+    /// The agent asks questions that deepen one epic or task (the target).
+    Brainstorm,
 }
 
 impl ModeKind {
@@ -37,6 +42,7 @@ impl ModeKind {
         match self {
             ModeKind::Sparring => "sparring",
             ModeKind::Sleep => "sleep",
+            ModeKind::Brainstorm => "brainstorm",
         }
     }
 
@@ -44,6 +50,7 @@ impl ModeKind {
         match text {
             "sparring" => Some(ModeKind::Sparring),
             "sleep" => Some(ModeKind::Sleep),
+            "brainstorm" => Some(ModeKind::Brainstorm),
             _ => None,
         }
     }
@@ -79,43 +86,6 @@ pub fn data_dir_of(shared: &Path) -> PathBuf {
         .to_path_buf()
 }
 
-fn path_in(data_dir: &Path) -> PathBuf {
-    data_dir.join(INTERNAL_DIR).join(FILE_NAME)
-}
-
-fn read_projects(data_dir: &Path) -> Map<String, Value> {
-    let Ok(bytes) = std::fs::read(path_in(data_dir)) else {
-        return Map::new();
-    };
-    match serde_json::from_slice::<Value>(&bytes) {
-        Ok(Value::Object(mut file)) => match file.remove("projects") {
-            Some(Value::Object(projects)) => projects,
-            _ => Map::new(),
-        },
-        _ => Map::new(),
-    }
-}
-
-/// The saved entries for `set`. A missing file is an empty map; any other read or parse error is
-/// returned, so `set` never overwrites saved modes it could not read.
-fn read_projects_strict(data_dir: &Path) -> std::io::Result<Map<String, Value>> {
-    let bytes = match std::fs::read(path_in(data_dir)) {
-        Ok(bytes) => bytes,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Map::new()),
-        Err(error) => return Err(error),
-    };
-    let invalid =
-        |what: &str| std::io::Error::new(std::io::ErrorKind::InvalidData, what.to_string());
-    match serde_json::from_slice::<Value>(&bytes).map_err(std::io::Error::other)? {
-        Value::Object(mut file) => match file.remove("projects") {
-            Some(Value::Object(projects)) => Ok(projects),
-            None => Ok(Map::new()),
-            Some(_) => Err(invalid("modes.json: projects is not an object")),
-        },
-        _ => Err(invalid("modes.json is not an object")),
-    }
-}
-
 fn parse_entry(entry: &Value) -> State {
     let manual = entry
         .get("kind")
@@ -129,8 +99,27 @@ fn parse_entry(entry: &Value) -> State {
                 .and_then(|text| DateTime::parse_from_rfc3339(text).ok())
                 .map(|time| time.with_timezone(&Utc)),
         });
+    let target = entry
+        .get("target")
+        .and_then(|target| serde_json::from_value::<Target>(target.clone()).ok());
+    // Brainstorm needs a target; without a valid one the entry reads as sparring.
+    let (manual, target) = match manual {
+        Some(ProjectMode {
+            kind: ModeKind::Brainstorm,
+            ..
+        }) if target.is_none() => (None, None),
+        Some(ProjectMode {
+            kind: ModeKind::Brainstorm,
+            ..
+        }) => (manual, target),
+        other => (other, None),
+    };
     let schedule = entry.get("schedule").and_then(Schedule::from_json);
-    State { manual, schedule }
+    State {
+        manual,
+        schedule,
+        target,
+    }
 }
 
 /// The saved state of a project. A missing, invalid, or unknown entry is sparring with no window.
@@ -167,72 +156,26 @@ pub fn current(data_dir: &Path, project: &str) -> ModeKind {
     effective(data_dir, project).kind
 }
 
-/// Fills the `mode`, `modeSource`, and `modeUntil` of the progress table while the project sleeps.
-/// All three are left out for sparring.
+/// The brainstorm target, only while the mode in effect is brainstorm.
+pub fn brainstorm_target(data_dir: &Path, project: &str) -> Option<Target> {
+    state(data_dir, project).target_at(Local::now())
+}
+
+/// Fills the `mode`, `modeSource`, and `modeUntil` of the progress table while the project is not
+/// in sparring, and `modeTarget` in brainstorm. All are left out for sparring.
 pub fn fill_progress(table: &mut crate::progress::Progress, shared: &Path, project: &str) {
-    let effective = effective(&data_dir_of(shared), project);
+    let state = state(&data_dir_of(shared), project);
+    let now = Local::now();
+    let effective = state.effective_at(now);
     if effective.kind == ModeKind::Sparring {
         return;
     }
-    table.mode = Some(effective.kind);
-    table.mode_source = Some(effective.source.as_str());
-    table.mode_until = effective.until.map(crate::clock::format_utc);
-}
-
-/// Read the file, let `change` edit the project's entry, and replace the file in one step. An
-/// entry with neither a manual mode nor a window is removed.
-fn update(
-    data_dir: &Path,
-    project: &str,
-    change: impl FnOnce(&mut Map<String, Value>),
-) -> std::io::Result<()> {
-    update_with(data_dir, project, |entry| {
-        change(entry);
-        Ok::<(), std::convert::Infallible>(())
-    })
-    .map(|_| ())
-}
-
-/// Like `update`, but `change` may refuse (nothing is saved).
-fn update_with<E>(
-    data_dir: &Path,
-    project: &str,
-    change: impl FnOnce(&mut Map<String, Value>) -> Result<(), E>,
-) -> std::io::Result<Result<(), E>> {
-    let path = path_in(data_dir);
-    let dir = path.parent().unwrap_or(data_dir);
-    crate::server::preferences::create_private_dir(dir)?;
-    // Exclusive from the read to the rename: the board and the CLI cannot overwrite each other.
-    let _lock = crate::file_store::lock::WriteLock::acquire(&dir.join(LOCK_NAME))
-        .map_err(std::io::Error::other)?;
-    let mut projects = read_projects_strict(data_dir)?;
-    let mut entry = projects
-        .get(project)
-        .and_then(Value::as_object)
-        .cloned()
-        .unwrap_or_default();
-    if let Err(error) = change(&mut entry) {
-        return Ok(Err(error));
-    }
-    if entry.contains_key("kind") || entry.contains_key("schedule") {
-        projects.insert(project.to_string(), Value::Object(entry));
-    } else {
-        projects.remove(project);
-    }
-    let bytes = serde_json::to_vec_pretty(&json!({
-        "formatVersion": FORMAT_VERSION,
-        "projects": projects,
-    }))
-    .map_err(std::io::Error::other)?;
-    let temporary = dir.join(format!("{FILE_NAME}.{}.tmp", std::process::id()));
-    let result = crate::server::preferences::write_owner_only(&temporary, &bytes)
-        .and_then(|()| std::fs::rename(&temporary, &path));
-    if result.is_err() {
-        let _ = std::fs::remove_file(&temporary);
-    } else {
-        crate::server::preferences::sync_dir(dir);
-    }
-    result.map(|()| Ok(()))
+    table.mode = ProgressMode {
+        kind: Some(effective.kind),
+        source: Some(effective.source.as_str()),
+        until: effective.until.map(crate::clock::format_utc),
+        target: state.target_at(now),
+    };
 }
 
 /// Set the manual mode, keeping the window. Sparring is kept only if the locked entry has one.
@@ -251,6 +194,7 @@ pub fn set(
         {
             entry.insert("kind".into(), json!(kind.as_str()));
             entry.insert("since".into(), json!(crate::clock::format_utc(now)));
+            entry.remove("target");
             saved = ProjectMode {
                 kind,
                 since: Some(now),
@@ -258,9 +202,24 @@ pub fn set(
         } else {
             entry.remove("kind");
             entry.remove("since");
+            entry.remove("target");
         }
     })?;
     Ok(saved)
+}
+
+/// Set the manual mode to brainstorm on `target`, keeping the window.
+pub fn set_brainstorm(
+    data_dir: &Path,
+    project: &str,
+    target: &Target,
+    now: DateTime<Utc>,
+) -> std::io::Result<()> {
+    update(data_dir, project, |entry| {
+        entry.insert("kind".into(), json!(ModeKind::Brainstorm.as_str()));
+        entry.insert("since".into(), json!(crate::clock::format_utc(now)));
+        entry.insert("target".into(), json!(target));
+    })
 }
 
 /// Forget the manual mode, so the daily window (if any) decides.
@@ -268,6 +227,7 @@ pub fn clear_manual(data_dir: &Path, project: &str) -> std::io::Result<()> {
     update(data_dir, project, |entry| {
         entry.remove("kind");
         entry.remove("since");
+        entry.remove("target");
     })
 }
 
@@ -293,7 +253,11 @@ pub fn change_schedule<E>(
     })
 }
 
+mod brainstorm;
+mod progress_fields;
 mod state;
+mod store;
+mod target;
 #[cfg(test)]
 mod tests;
 

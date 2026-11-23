@@ -207,3 +207,57 @@ fn a_daily_window_puts_the_project_to_sleep_and_a_manual_change_in_it_holds() {
     assert_eq!(reply["schedule"]["enabled"], false);
     server.stop();
 }
+
+#[test]
+fn put_brainstorm_needs_a_target_that_exists_and_sends_a_request() {
+    let home = tempfile::tempdir().unwrap();
+    demo_project(home.path());
+    let id = project_id(home.path());
+    let server = Running::start(home.path());
+    let target = json!({"type": "task", "id": "1"});
+
+    for body in [
+        json!({"mode": "brainstorm"}),
+        json!({"mode": "brainstorm", "target": {"type": "other", "id": "1"}}),
+        json!({"mode": "sleep", "target": target}),
+        json!({"target": target}),
+    ] {
+        assert_eq!(put(&server, &id, &body).status, 422, "{body}");
+    }
+    let missing = put(
+        &server,
+        &id,
+        &json!({"mode": "brainstorm", "target": {"type": "task", "id": "99"}}),
+    );
+    assert_eq!(missing.status, 404, "{}", missing.body);
+    assert_eq!(missing.json()["error"]["code"], "task_not_found");
+    let no_epic = put(
+        &server,
+        &id,
+        &json!({"mode": "brainstorm", "target": {"type": "epic", "id": "NOPE"}}),
+    );
+    assert_eq!(no_epic.json()["error"]["code"], "epic_not_found");
+
+    let saved = put(
+        &server,
+        &id,
+        &json!({"mode": "brainstorm", "target": target}),
+    );
+    assert_eq!(saved.status, 200, "{}", saved.body);
+    assert_eq!(saved.json()["mode"], "brainstorm");
+    assert_eq!(saved.json()["target"], target);
+    assert_eq!(
+        server.get(&format!("/api/projects/{id}/mode")).json()["target"],
+        target
+    );
+    assert_eq!(mode::current(home.path(), &id), ModeKind::Brainstorm);
+    assert!(
+        server
+            .get(&format!("/api/projects/{id}/messages"))
+            .body
+            .contains("Start brainstorming on task #1")
+    );
+
+    let back = put(&server, &id, &json!({"mode": "sparring"}));
+    assert!(back.json().get("target").is_none());
+}

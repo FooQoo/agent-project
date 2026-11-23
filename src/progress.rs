@@ -43,13 +43,9 @@ pub struct Progress {
     /// saved. The callers fill it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub locale: Option<String>,
-    /// The project's mode when it is not the default sparring (`sleep`). Left out for sparring.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mode: Option<crate::mode::ModeKind>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mode_source: Option<&'static str>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mode_until: Option<String>,
+    /// `mode`, `modeSource`, `modeUntil`, and `modeTarget`; all left out for sparring.
+    #[serde(flatten)]
+    pub mode: crate::mode::ProgressMode,
     /// Epics in ID order. An epic with no listed task is left out.
     pub epics: Vec<ProgressEpic>,
     pub unassigned: Vec<ProgressTask>,
@@ -176,9 +172,7 @@ pub fn build_filtered(
         version: snapshot.version.clone(),
         cursor: snapshot.cursor.clone(),
         locale: None,
-        mode: None,
-        mode_source: None,
-        mode_until: None,
+        mode: Default::default(),
         epics: groups,
         next_tasks: next::next_tasks(&listed, snapshot, &project_dir, fetched_at, &|task| {
             filter.is_none_or(|filter| filter.keeps(task.planned_version.as_deref()))

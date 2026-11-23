@@ -38,6 +38,9 @@ pub struct AskInput {
     pub actor: Actor,
     /// The board-launched session that asks (`AGPJ_RESIDENT_ID`), recorded on each question.
     pub asked_by: Option<String>,
+    /// The brainstorm target the questions are about (`message ask --brainstorm`). It is not a
+    /// task link.
+    pub brainstorm: Option<crate::mode::Target>,
     pub questions: Vec<AskQuestion>,
     /// Tasks that wait on every question.
     pub tasks: Vec<i64>,
@@ -80,6 +83,7 @@ fn normalize(input: &AskInput) -> Result<Vec<Question>, AgpjError> {
             withdrawn_at: None,
             created_at: chrono::DateTime::<Utc>::UNIX_EPOCH,
             asked_by: input.asked_by.clone(),
+            brainstorm: input.brainstorm.clone(),
         };
         if let Some(d) = question_defect(&question) {
             return Err(invalid(format!("questions[{index}].{}", d.field), d.reason));

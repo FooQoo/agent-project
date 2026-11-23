@@ -198,6 +198,7 @@ choices:
   - { id: keep, label: Keep them }
 recommended: keep
 askedBy: resident-3f9a1c0e5b7d2a46
+brainstorm: { type: epic, id: INTERACTION-MODES }
 reply:
   choice: keep
   images:
@@ -239,6 +240,7 @@ Fields of a question:
 | `choices` | Optional. 2 to 10 items with an ID unique in the question (1 to 64 characters of `[A-Za-z0-9_-]`) and a label of 1 to 200 characters. Without choices, the question is answered with text. |
 | `recommended` | Optional. One choice ID. |
 | `askedBy` | Optional. The launch ID (`AGPJ_RESIDENT_ID`) of the board-launched session that asked the question; `message ask` writes it when the variable is set. The board uses it to push the answer back to that session. A question an external session asks has none. |
+| `brainstorm` | Optional. `{type, id}` (`type` is `epic` or `task`; `id` is the epic ID or the task number): the target of the brainstorm the question belongs to. `message ask --brainstorm` writes it. It is not a task link: the target task does not wait on the question, and `tasks` is not set by it. A question that was not asked for a brainstorm has none. See [Brainstorm mode](../concepts/agents.md#brainstorm-mode). |
 | `reply` | `null` until answered. `choice` is never set when the question has no choices, and with choices at least one of `choice` and `text` is set; `text` is 1 to 2,000 characters and required when there are no choices; `images` is optional (omitted when empty): up to 20 plain file names of the pictures the person attached, stored in the question's `attachments/` next to the pictures of the question itself; `via` is `ui`, `chat`, or `cli`; `at` is when it was recorded. `acceptedAt` is optional: absent or `null` until an agent takes the answer in, then when it did. |
 
 Fields of a request:
