@@ -15,6 +15,26 @@ use crate::file_store::qa::{
 use crate::file_store::reader;
 use crate::file_store::transaction::save_batch_locked;
 
+/// The history entry written when accepted answers resume a task, in English and Japanese.
+fn resume_texts(listed: &str) -> (String, String) {
+    (
+        format!("Resumed after the answers to {listed}."),
+        format!("{listed} の回答を受け取ったので再開しました。"),
+    )
+}
+
+/// Whether a history reason is the resume entry that names the question `id`, in either language.
+fn is_resume_entry_for(reason: &str, id: &str) -> bool {
+    let (en, ja) = resume_texts("\u{0}");
+    [en, ja].iter().any(|template| {
+        let (head, tail) = template.split_once('\u{0}').expect("a placeholder");
+        reason
+            .strip_prefix(head)
+            .and_then(|rest| rest.strip_suffix(tail))
+            .is_some_and(|listed| listed.split(", ").any(|q| q == id))
+    })
+}
+
 /// A message after an agent accepted it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(clippy::large_enum_variant)] // a question view is larger than a request view; boxing would change every caller
@@ -166,6 +186,12 @@ impl FileStore {
         by_task.sort_by_key(|(id, _)| *id);
         let at = stamp(now);
         for (id, questions) in by_task {
+            // When the answers were taken in, so a replay can tell whether the resume ran.
+            let accepted_since = answered
+                .iter()
+                .filter(|q| questions.contains(&q.id.as_str()))
+                .filter_map(|q| q.reply.as_ref().and_then(|r| r.accepted_at))
+                .min();
             let Ok(mut task) = reader::read_task_strict(shared, project, id) else {
                 continue;
             };
@@ -184,10 +210,18 @@ impl FileStore {
             if index.is_waiting(&parsed.questions, !parsed.questions_defects.is_empty()) {
                 continue;
             }
+            // A resume entry since the acceptance means the first run finished; a person may have
+            // paused the task after it, and a replay must leave that pause alone.
+            let resumed_already = task.history.iter().any(|e| {
+                accepted_since.is_some_and(|since| e.at >= since)
+                    && questions.iter().any(|q| is_resume_entry_for(&e.reason, q))
+            });
+            if resumed_already {
+                continue;
+            }
             let language = self.history_language(project, &task)?;
             let listed = questions.join(", ");
-            let english = format!("Resumed after the answers to {listed}.");
-            let japanese = format!("{listed} の回答を受け取ったので再開しました。");
+            let (english, japanese) = resume_texts(&listed);
             task.history.push(transition_event(Transition {
                 language,
                 kind: HistoryKind::Agent,

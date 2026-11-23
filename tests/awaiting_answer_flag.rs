@@ -412,9 +412,48 @@ fn next_tasks_carry_the_run_state_and_list_a_stalled_task_first() {
     assert_eq!(json["agentStatus"], "running");
 }
 
-#[test]
-fn a_retried_acceptance_still_resumes_a_task_the_first_one_left_paused() {
-    let fx = fx();
+impl Fx {
+    fn task_files(&self, id: i64) -> Vec<(std::path::PathBuf, Vec<u8>)> {
+        let dir = self
+            .root
+            .path()
+            .join("shared/projects")
+            .join(self.project.as_str())
+            .join("tasks")
+            .join(id.to_string());
+        std::fs::read_dir(dir)
+            .unwrap()
+            .map(|e| e.unwrap().path())
+            .filter(|p| p.is_file())
+            .map(|p| {
+                let bytes = std::fs::read(&p).unwrap();
+                (p, bytes)
+            })
+            .collect()
+    }
+
+    fn resumes(&self, id: i64) -> usize {
+        self.view(id)
+            .history
+            .iter()
+            .filter(|e| e.reason == "Resumed after the answers to Q-1.")
+            .count()
+    }
+
+    fn person_pauses(&self, id: i64) {
+        self.store
+            .set_agent_status(
+                &self.project,
+                id,
+                RunState::Paused,
+                ctx(Actor::Human),
+                now(),
+            )
+            .unwrap();
+    }
+}
+
+fn asked_and_answered(fx: &Fx) -> i64 {
     let id = fx.task(Assignee::Ai);
     fx.run(id);
     qa::ask(
@@ -425,15 +464,19 @@ fn a_retried_acceptance_still_resumes_a_task_the_first_one_left_paused() {
         &[("a", "A"), ("b", "B")],
     );
     qa::answer(&fx.store, &fx.project, "Q-1", Some("a"), None);
+    id
+}
+
+#[test]
+fn a_replayed_acceptance_leaves_a_pause_a_person_made_after_the_resume() {
+    let fx = fx();
+    let id = asked_and_answered(&fx);
     fx.store
         .accept_message(&fx.project, "Q-1", Actor::Ai, now())
         .unwrap();
     assert_eq!(fx.view(id).agent_status, RunState::Running);
 
-    // The answer is already accepted but the task is paused again, as a failed resume leaves it.
-    fx.store
-        .set_agent_status(&fx.project, id, RunState::Paused, ctx(Actor::Human), now())
-        .unwrap();
+    fx.person_pauses(id);
     let again = fx
         .store
         .accept_message(&fx.project, "Q-1", Actor::Ai, now());
@@ -441,29 +484,49 @@ fn a_retried_acceptance_still_resumes_a_task_the_first_one_left_paused() {
         again,
         Err(agent_project::error::AgpjError::AnswerAccepted { .. })
     ));
-    assert_eq!(fx.view(id).agent_status, RunState::Running);
-    // A further retry changes nothing and writes no duplicate history.
-    let resumed = |fx: &Fx| {
-        fx.view(id)
-            .history
-            .iter()
-            .filter(|e| e.reason == "Resumed after the answers to Q-1.")
-            .count()
-    };
-    assert_eq!(resumed(&fx), 2);
-    let _ = fx
-        .store
-        .accept_message(&fx.project, "Q-1", Actor::Ai, now());
-    assert_eq!(resumed(&fx), 2);
-
-    // The wait's hand-over takes the same path.
-    fx.store
-        .set_agent_status(&fx.project, id, RunState::Paused, ctx(Actor::Human), now())
-        .unwrap();
     let written = fx
         .store
         .accept_answers(&fx.project, &["Q-1".to_string()], now())
         .unwrap();
     assert!(written.is_empty());
-    assert_eq!(fx.view(id).agent_status, RunState::Running);
+    assert_eq!(fx.view(id).agent_status, RunState::Paused);
+    assert_eq!(fx.resumes(id), 1);
+}
+
+#[test]
+fn a_replayed_acceptance_finishes_a_resume_that_never_happened() {
+    for via_wait in [false, true] {
+        let fx = fx();
+        let id = asked_and_answered(&fx);
+        // The acceptance is saved but the task save failed: restore the task as it was.
+        let before = fx.task_files(id);
+        fx.store
+            .accept_message(&fx.project, "Q-1", Actor::Ai, now())
+            .unwrap();
+        for (path, bytes) in &before {
+            std::fs::write(path, bytes).unwrap();
+        }
+        assert_eq!(fx.view(id).agent_status, RunState::Paused);
+        assert_eq!(fx.resumes(id), 0);
+
+        let replay = |fx: &Fx| {
+            if via_wait {
+                fx.store
+                    .accept_answers(&fx.project, &["Q-1".to_string()], now())
+                    .unwrap();
+            } else {
+                let _ = fx
+                    .store
+                    .accept_message(&fx.project, "Q-1", Actor::Ai, now());
+            }
+        };
+        replay(&fx);
+        assert_eq!(fx.view(id).agent_status, RunState::Running, "{via_wait}");
+        assert_eq!(fx.resumes(id), 1);
+        // A further replay adds nothing, even when a person paused the task in between.
+        fx.person_pauses(id);
+        replay(&fx);
+        assert_eq!(fx.view(id).agent_status, RunState::Paused);
+        assert_eq!(fx.resumes(id), 1);
+    }
 }
