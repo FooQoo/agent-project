@@ -99,6 +99,32 @@ export const FinalOnly: Story = {
 
 export const FinalOnlyPhone: Story = { args: { plans: [REPORT] }, globals: PHONE_DARK };
 
+const JA_LAYOUT = plan('RP-1', '新しいレイアウトのスクリーンショット', 'レイアウトが固まったら');
+const JA_ENDPOINT = plan(
+  'RP-2',
+  '動作するエンドポイントとサンプルリクエスト',
+  '最初のリクエストにエンドポイントが応答したら',
+);
+const JA_REPORT = plan('RP-3', '全項目を含む最終レポート', 'すべての条件を満たしたら', {
+  final: true,
+});
+
+/** The same rows in Japanese, with Japanese plan text. */
+export const UndeliveredJapanese: Story = {
+  args: { plans: [JA_LAYOUT, JA_ENDPOINT, JA_REPORT] },
+  globals: { locale: 'ja' },
+};
+
+export const DeliveredJapanese: Story = {
+  args: { plans: [{ ...JA_LAYOUT, deliveredResultVersion: 1 }, JA_ENDPOINT, JA_REPORT] },
+  globals: { locale: 'ja' },
+};
+
+export const FinalOnlyJapanese: Story = {
+  args: { plans: [JA_REPORT] },
+  globals: { locale: 'ja' },
+};
+
 /** A task with no plans draws nothing: the Results tab is what it was. */
 export const NoPlans: Story = {
   args: { plans: [] },
@@ -181,6 +207,16 @@ export const EditorSeveralPlans: Story = {
 export const EditorPhone: Story = {
   render: () => <EditorState initial={EDITING} />,
   globals: PHONE_DARK_JA,
+};
+
+/** The editor with Japanese plan text. */
+export const EditorJapanese: Story = {
+  render: () => (
+    <EditorState
+      initial={[{ ...itemOf(JA_LAYOUT), delivered: 1 }, itemOf(JA_ENDPOINT), itemOf(JA_REPORT)]}
+    />
+  ),
+  globals: { locale: 'ja' },
 };
 
 /** Folded to a line with the count, as the dialog opens. */

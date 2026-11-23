@@ -67,6 +67,21 @@
               "id": "task-detail-resultplans--register-retry",
               "states": ["failure keeps input", "try again", "closes on success"],
               "interaction": true
+            },
+            {
+              "id": "task-detail-resultplans--undelivered-japanese",
+              "states": ["Japanese plan text"],
+              "interaction": false
+            },
+            {
+              "id": "task-detail-resultplans--delivered-japanese",
+              "states": ["Japanese plan text"],
+              "interaction": false
+            },
+            {
+              "id": "task-detail-resultplans--final-only-japanese",
+              "states": ["Japanese plan text"],
+              "interaction": false
             }
           ]
         }
@@ -95,6 +110,11 @@
             {
               "id": "task-detail-resultplans--editor-folded",
               "states": ["folded line with count"],
+              "interaction": false
+            },
+            {
+              "id": "task-detail-resultplans--editor-japanese",
+              "states": ["Japanese plan text"],
               "interaction": false
             }
           ]
