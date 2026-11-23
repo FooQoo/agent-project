@@ -46,3 +46,20 @@ fn set_keeps_an_unreadable_file_intact() {
     assert!(set(dir.path(), "p1", ModeKind::Sleep, Utc::now()).is_err());
     assert!(file.is_dir());
 }
+
+#[test]
+fn concurrent_saves_of_different_projects_both_survive() {
+    let dir = tempfile::tempdir().unwrap();
+    let now = Utc::now();
+    std::thread::scope(|scope| {
+        for n in 0..8 {
+            let path = dir.path();
+            scope.spawn(move || {
+                set(path, &format!("p{n}"), ModeKind::Sleep, now).unwrap();
+            });
+        }
+    });
+    for n in 0..8 {
+        assert_eq!(current(dir.path(), &format!("p{n}")), ModeKind::Sleep);
+    }
+}
