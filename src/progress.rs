@@ -69,6 +69,10 @@ pub struct Progress {
     /// Doing work, newest first. Only when asked for.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub done: Option<Vec<ProgressTask>>,
+    /// When a task last changed lane (a creation counts), over every unarchived task. Not
+    /// printed: the `lane-review` rule reads it from the table.
+    #[serde(skip)]
+    pub last_lane_move_at: Option<DateTime<Utc>>,
 }
 
 /// Extra sections of the table. The default adds nothing.
@@ -218,6 +222,12 @@ pub fn build_filtered(
                 .map(|task| task_of(task, &project_dir))
                 .collect()
         }),
+        last_lane_move_at: snapshot
+            .tasks
+            .iter()
+            .filter(|task| !is_sample(task))
+            .map(|task| task.task_status_changed_at)
+            .max(),
     };
     table.reminders = crate::nudge::state_reminders(&table, fetched_at);
     if let Some(filter) = filter {

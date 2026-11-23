@@ -121,6 +121,12 @@ pub const RULES: &[Rule] = &[
         state_rules::stale_running,
     ),
     entry(
+        "lane-review",
+        Area::RunState,
+        Kind::Check,
+        state_rules::lane_review,
+    ),
+    entry(
         "next-task",
         Area::RunState,
         Kind::Check,

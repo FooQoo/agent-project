@@ -27,6 +27,7 @@ pub(super) fn task_of(task: &TaskView, project_dir: &std::path::Path) -> Progres
                         at.max(task.agent_status_changed_at)
                     })
             }),
+        last_history_at: task.history.iter().map(|entry| entry.at).max(),
         has_final_result: task.assignee == Assignee::Ai
             && task.task_status == Column::Doing
             && task.results.iter().any(|r| r.kind == ResultKind::Final),

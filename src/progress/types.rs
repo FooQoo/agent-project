@@ -47,6 +47,9 @@ pub struct ProgressTask {
     /// A final result is recorded. Only on an AI task in Doing; left out when false.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub has_final_result: bool,
+    /// The time of the latest history entry. Not printed: the `lane-review` rule reads it.
+    #[serde(skip)]
+    pub last_history_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 /// An epic whose tasks are all Done while its `EPIC.md` still has an unchecked reference

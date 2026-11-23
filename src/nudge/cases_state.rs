@@ -8,7 +8,7 @@ use crate::domain::{Column, RunState};
 use crate::progress::{EpicToClose, Progress, ProgressAnswer, ProgressRequest, ProgressTask};
 
 /// The table's only task, for a case to change.
-fn task(p: &mut Progress) -> &mut ProgressTask {
+pub(super) fn task(p: &mut Progress) -> &mut ProgressTask {
     p.epics
         .iter_mut()
         .flat_map(|e| e.tasks.iter_mut())
@@ -17,13 +17,13 @@ fn task(p: &mut Progress) -> &mut ProgressTask {
         .unwrap()
 }
 
-fn with(change: impl FnOnce(&mut Progress)) -> Scenario {
+pub(super) fn with(change: impl FnOnce(&mut Progress)) -> Scenario {
     let mut p = progress_with(false, &[]);
     change(&mut p);
     Scenario::state(p)
 }
 
-fn doing(p: &mut Progress, running: bool) {
+pub(super) fn doing(p: &mut Progress, running: bool) {
     let t = task(p);
     t.task_status = Column::Doing;
     t.agent_status = if running {
