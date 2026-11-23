@@ -60,6 +60,7 @@ export function useDialogSubmit(
             description: data.description,
             body: data.body,
             acceptance: data.acceptance,
+            resultPlans: data.resultPlans,
             finalize: data.finalize,
           });
       }

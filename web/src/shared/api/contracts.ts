@@ -39,7 +39,26 @@ export interface TaskResult {
   attachmentIds?: string[];
   /** A URL or storage location of the main artifact; shown as text, never opened by the board. */
   link?: string;
+  /** The result plan (`RP-<n>`) this result delivers; absent for a result with no plan. */
+  planId?: string;
   at: string;
+}
+
+/** One planned result of a task: what will be delivered and in which state it should be. */
+export interface ResultPlan {
+  /** `RP-<n>`; the server assigns it when a new plan is saved without one. */
+  id: string;
+  /** What will be delivered. */
+  content: string;
+  /** In words, the state in which it should be delivered. */
+  condition: string;
+  /** The final result; at most one plan of a task is final. */
+  final?: boolean;
+}
+
+/** A plan with whether it has been delivered: the version of the first result that delivers it. */
+export interface ResultPlanView extends ResultPlan {
+  deliveredResultVersion: number | null;
 }
 
 /** Every image of a result in order, whichever field holds them (older data has only `attachmentId`). */
@@ -151,6 +170,10 @@ export interface Task {
   acceptanceError: boolean;
   /** The version the task is planned for; `null` or absent when unplanned. */
   plannedVersion?: string | null;
+  /** The planned results, each with its delivered state. */
+  resultPlans?: ResultPlanView[];
+  /** The planned results cannot be read from the frontmatter. */
+  resultPlansError?: boolean;
   assignee: Assignee;
   taskStatus: ColumnName;
   /** Time of the last real lane change; independent of later notes and edits. */

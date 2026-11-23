@@ -1,0 +1,257 @@
+/* Planned results: the editor in the edit dialog and the section on the Results tab. */
+.plans-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--font-sans);
+}
+
+.plans-edit__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plans-edit__row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--r-border);
+  border-radius: 8px;
+}
+
+.plans-edit__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.plans-edit__spacer {
+  flex: 1 1 0;
+}
+
+.plans-edit__id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--r-text2);
+}
+
+.plans-edit__delivered {
+  font-size: 12px;
+  color: var(--r-accent);
+}
+
+.plans-edit__final {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--r-text);
+}
+
+.plans-edit__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.plans-edit__caption {
+  font-size: 12px;
+  color: var(--r-text2);
+}
+
+.plans-edit__error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--r-danger, #c0392b);
+}
+
+.plans-edit__note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--r-muted);
+}
+
+.plans-edit__add {
+  align-self: flex-start;
+}
+
+.plans {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-family: var(--font-sans);
+}
+
+.plans__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.plans__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--r-text);
+}
+
+.plans__count {
+  font-size: 12px;
+  color: var(--r-text2);
+}
+
+.plans__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plans__row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--r-border);
+  border-radius: 8px;
+  background: var(--r-bg);
+}
+
+.plans__row[data-state="delivered"] {
+  border-color: color-mix(in srgb, var(--r-accent) 45%, var(--r-border));
+}
+
+.plans__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.plans__id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--r-text2);
+}
+
+.plans__kind {
+  font-size: 11px;
+  padding: 1px 6px;
+  border: 1px solid var(--r-border);
+  border-radius: 999px;
+  color: var(--r-text2);
+}
+
+.plans__kind[data-final="true"] {
+  color: var(--r-accent);
+  border-color: var(--r-accent);
+}
+
+.plans__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--r-text2);
+}
+
+.plans__state[data-state="delivered"] {
+  color: var(--r-accent);
+}
+
+.plans__state svg {
+  width: 14px;
+  height: 14px;
+}
+
+.plans__content {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--r-text);
+  overflow-wrap: anywhere;
+}
+
+.plans__condition {
+  margin: 0;
+  font-size: 13px;
+  color: var(--r-text2);
+  overflow-wrap: anywhere;
+}
+
+.plans__condition-label {
+  margin-right: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.plan-register {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: stretch;
+}
+
+.plan-register__caption {
+  font-size: 12px;
+  color: var(--r-text2);
+}
+
+.plan-register__summary {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--r-border);
+  border-radius: 8px;
+  background: var(--r-bg);
+  color: var(--r-text);
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.plan-register__images {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-register__error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--r-danger, #c0392b);
+}
+
+.plan-register__actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* The two buttons that end the form are choices: they share one width. */
+.plan-register__actions > * {
+  flex: 1 1 0;
+}
+
+@media (min-width: 641px) {
+  .plan-register__actions > * {
+    flex: 0 0 140px;
+  }
+}
+
+/* The edit dialog holds the conditions and the planned results as two docks. */
+.editor__dock {
+  gap: 8px;
+}

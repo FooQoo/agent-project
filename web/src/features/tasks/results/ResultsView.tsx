@@ -2,10 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ImageOffIcon, LinkIcon, Maximize2Icon } from 'lucide-react';
 import { ImageLightbox } from '../../../shared/ui/lightbox/ImageLightbox';
-import { resultImageIds, type TaskResult } from '../../../shared/api/contracts';
+import {
+  resultImageIds,
+  type ResultPlanView,
+  type TaskResult,
+} from '../../../shared/api/contracts';
 import { openableUrl } from './openableUrl';
 import { formatShort } from '../model/format';
 import type { TaskResultsState } from './useTaskResults';
+import { ResultPlansSection } from '../result-plans/ResultPlansSection';
+import type { PlanDelivery } from '../result-plans/deliverPlan';
 import './results.css';
 import { Spinner } from '@/shared/ui/spinner/Spinner';
 
@@ -20,6 +26,8 @@ export function ResultsView({
   focusVersion,
   refreshFailed = false,
   onRetry,
+  canRegister = false,
+  onRegister,
 }: {
   state: TaskResultsState;
   attachmentUrl: (attachmentId: string) => string;
@@ -27,8 +35,14 @@ export function ResultsView({
   /** The latest read failed; the results shown are the ones read before. */
   refreshFailed?: boolean;
   onRetry?: () => void;
+  /** The person may register a result from a plan's row. */
+  canRegister?: boolean;
+  /** Registers the real result of a plan; it rejects when the server refuses, and the form retries. */
+  onRegister?: (plan: ResultPlanView, delivery: PlanDelivery) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  // The result a plan's "Open result" button chose; it wins over the one the link names.
+  const [opened, setOpened] = useState<number | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
   const openedAt = useRef(Date.now());
   // Pictures above the linked result change the layout as they load: for a moment after the view
@@ -51,8 +65,8 @@ export function ResultsView({
       </div>
     );
   const newestFirst = [...state.results].sort((a, b) => b.version - a.version);
-  const missing =
-    focusVersion != null && !state.results.some((result) => result.version === focusVersion);
+  const focus = opened ?? focusVersion;
+  const missing = focus != null && !state.results.some((result) => result.version === focus);
   return (
     <div className="results">
       {refreshFailed && (
@@ -67,9 +81,15 @@ export function ResultsView({
       )}
       {missing && (
         <p className="results__note" role="status">
-          {t('results.versionMissing', { version: focusVersion })}
+          {t('results.versionMissing', { version: focus })}
         </p>
       )}
+      <ResultPlansSection
+        plans={state.plans ?? []}
+        canRegister={canRegister}
+        onRegister={onRegister}
+        onOpenResult={setOpened}
+      />
       {state.results.length === 0 && <p className="results__note">{t('results.empty')}</p>}
       <ol className="results__list" ref={listRef} onLoadCapture={settleFocus}>
         {newestFirst.map((result) => (
@@ -77,7 +97,7 @@ export function ResultsView({
             key={result.version}
             result={result}
             attachmentUrl={attachmentUrl}
-            focused={result.version === focusVersion}
+            focused={result.version === focus}
           />
         ))}
       </ol>

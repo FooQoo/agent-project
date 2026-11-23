@@ -17,6 +17,16 @@ The editor shows the outline on the left, the Markdown body in the middle, and t
 - **Saving.** **Save** writes all of the dialog's changes together. Record verification before you check off a completion condition.
 - **Conditions.** When you create or edit a task, its acceptance conditions sit in a panel below the body, which starts folded. Expand it to edit them; a long list scrolls inside the panel. Conditions have stable IDs and cannot be reordered. To read conditions on an existing task, use its **Conditions** tab. An epic has no conditions panel: its reference conditions are ordinary Markdown in its details.
 
+### Plan the results {#plan-the-results}
+
+Below the conditions, a second panel, **Planned results**, holds what the task will deliver. It starts folded to a line such as **1 of 3 delivered**. Expand it to edit the plans. Each plan has:
+
+- **What will be delivered**, for example a screenshot of the new layout;
+- **In what state**, for example once the layout is fixed;
+- **Final**, which marks the final result. Only one plan is final; choosing it on another plan moves the mark.
+
+Add a plan with **Add plan**, and remove one with its remove button. A plan that was already delivered says so, and cannot be removed. Both fields must be filled in before you can save. Plans are saved with the rest of the dialog, in the same step as the body and conditions. To register the real result of a plan, see [Planned results](./board.md#planned-results).
+
 For the epic dialog (name, color, details, and task order), see [Epics and progress](./epics). For drafts, see [The board](./board#drafts).
 
 ## Preview and save {#preview-and-save}

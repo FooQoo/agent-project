@@ -54,6 +54,24 @@ When an agent delivers a result with `agpj result add` (see [Deliver a result](.
 
 A result is also readable on its own from an address that names the project, the task, and the version: `https://<host>/?project=<ProjectId>&task=<id>&result=<version>`. Opening it shows that task's details with the Results tab selected, and scrolls to the result and highlights it. This works on the phone through [remote access](./remote-access.md#open-a-result-from-a-link) and on the PC board, and it works even if another project was on the screen. If the task has no such version, the tab says so and lists the results it does have.
 
+### See planned results and register the real one {#planned-results}
+
+When a task has planned results (see [Plan the results](./editing.md#plan-the-results)), the **Results** tab lists them above the delivered results. The heading shows how many are delivered, such as **1 of 3 delivered**. Each row shows:
+
+- the plan's number, and whether it is **Final** or **Intermediate**;
+- **Delivered** or **Not delivered**;
+- what will be delivered, and the state in which it should be delivered, after **When**.
+
+A task with no plans shows only the results, as before. A task whose only plan is the final one shows that single row.
+
+For a plan that is not delivered, select **Register the result** to open a form in the row. Write a summary, add pictures with **Add images**, and give a link, then select **Register**. All three are optional: a summary left empty reads as the plan's content. The same form is used on the phone, where the pictures are picked from the photo library or the camera.
+
+- If registering fails, the form stays open with what you entered. Read the reason under the fields and select **Try again**; nothing was saved by the failed request.
+- After it succeeds, the row shows **Delivered** and the result appears in the list. Select **Open result N** in the row to scroll to that result and highlight it.
+- A plan is delivered once. A draft task cannot take results, so its rows show no register button.
+
+When you open a result from a notification, the plans sit above it and the result it names is highlighted.
+
 ## Move a task
 
 On a touch screen, press the grip at the left of the card's header and move your finger to drag at once. Pressing elsewhere on the card and holding for a moment also drags it, and a quick swipe scrolls the column instead.

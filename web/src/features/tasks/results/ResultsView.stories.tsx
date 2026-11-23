@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
-import type { TaskResult } from '../../../shared/api/contracts';
+import type { ResultPlanView, TaskResult } from '../../../shared/api/contracts';
 import { ResultsView } from './ResultsView';
 
 /** A plain picture drawn as a data URI, so no network or file is needed. */
@@ -295,5 +295,58 @@ export const JapaneseDarkNarrow: Story = {
     const focused = canvasElement.querySelector('[data-focused="true"]');
     await expect(focused).toHaveTextContent('最終');
     await expect(focused).toHaveTextContent('リンク');
+  },
+};
+
+const PLANS: ResultPlanView[] = [
+  {
+    id: 'RP-1',
+    content: 'A screenshot of the list screen',
+    condition: 'Once the list screen is drawn',
+    deliveredResultVersion: 1,
+  },
+  {
+    id: 'RP-2',
+    content: 'The finished report',
+    condition: 'When both screens are done',
+    final: true,
+    deliveredResultVersion: 3,
+  },
+  {
+    id: 'RP-3',
+    content: 'A walkthrough video of both screens',
+    condition: 'After the report is reviewed',
+    deliveredResultVersion: null,
+  },
+];
+
+/** The plans sit above the results; a delivered plan opens the result that delivered it. */
+export const WithPlans: Story = {
+  args: { state: { status: 'ready', results: RESULTS, plans: PLANS }, canRegister: true },
+  play: async ({ canvasElement }) => {
+    const view = within(canvasElement);
+    await userEvent.click(view.getByRole('button', { name: 'Open result 3' }));
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-result-version="3"]')).toHaveAttribute(
+        'data-focused',
+        'true',
+      ),
+    );
+  },
+};
+
+/** Opened from a notification: the result it names is highlighted below the plans. */
+export const FromNotification: Story = {
+  args: {
+    state: { status: 'ready', results: RESULTS, plans: PLANS },
+    focusVersion: 2,
+    canRegister: true,
+  },
+  globals: { width: 'phone-375', mode: 'dark' },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector('[data-result-version="2"]')).toHaveAttribute(
+      'data-focused',
+      'true',
+    );
   },
 };

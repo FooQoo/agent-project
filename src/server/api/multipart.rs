@@ -101,16 +101,14 @@ pub(super) async fn parse_multipart<M: DeserializeOwned + ImageList>(
                     "Send exactly one metadata part.",
                 ));
             }
-            metadata = Some(
-                serde_json::from_slice::<M>(&bytes).map_err(|_| {
-                    error_response(
-                        StatusCode::UNPROCESSABLE_ENTITY,
-                        "invalid_value",
-                        "request body is invalid.",
-                        "The metadata part is not valid for this route.",
-                    )
-                })?,
-            );
+            metadata = Some(serde_json::from_slice::<M>(&bytes).map_err(|_| {
+                error_response(
+                    StatusCode::UNPROCESSABLE_ENTITY,
+                    "invalid_value",
+                    "request body is invalid.",
+                    "The metadata part is not valid for this route.",
+                )
+            })?);
         } else if matches!(
             name.as_str(),
             "file" | "files" | "attachment" | "attachments"

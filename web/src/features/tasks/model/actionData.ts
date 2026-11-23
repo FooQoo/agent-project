@@ -1,4 +1,4 @@
-import type { AcceptanceItem, Assignee } from '../../../shared/api/contracts';
+import type { AcceptanceItem, Assignee, ResultPlan } from '../../../shared/api/contracts';
 import type { EditorAttachment } from '../../../shared/ui/editor/attachmentTypes';
 
 export interface ActionDialogData {
@@ -9,6 +9,8 @@ export interface ActionDialogData {
   /** The body without its frontmatter, saved with `acceptance`. */
   body?: string;
   acceptance?: AcceptanceItem[];
+  /** The planned results; a plan without an `id` is new. Saved with `body` or alone. */
+  resultPlans?: (Omit<ResultPlan, 'id'> & { id?: string })[];
   assignee?: Assignee;
   /** Create: the card is made a draft once it is added. */
   draft?: 'human';

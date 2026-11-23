@@ -80,6 +80,16 @@
               "id": "task-detail-resultsview--japanese-dark-narrow",
               "states": ["japanese locale", "dark theme", "phone width"],
               "interaction": true
+            },
+            {
+              "id": "task-detail-resultsview--with-plans",
+              "states": ["plans above results", "open the delivering result"],
+              "interaction": true
+            },
+            {
+              "id": "task-detail-resultsview--from-notification",
+              "states": ["linked result highlighted below the plans", "phone width, dark"],
+              "interaction": true
             }
           ]
         }

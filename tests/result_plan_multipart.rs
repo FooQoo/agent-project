@@ -74,11 +74,17 @@ fn a_plan_is_delivered_with_an_image_and_shows_as_delivered() {
     assert_eq!(reply.status, 201, "{}", reply.body);
     let made = reply.json();
     assert_eq!(made["result"]["planId"], "RP-1");
-    assert_eq!(made["result"]["attachmentId"], "0123456789abcdef0123456789abcdef");
+    assert_eq!(
+        made["result"]["attachmentId"],
+        "0123456789abcdef0123456789abcdef"
+    );
 
     let after = server.get(&path).json();
     assert_eq!(after["resultPlans"][0]["deliveredResultVersion"], 1);
-    assert_eq!(after["resultPlans"][1]["deliveredResultVersion"], Value::Null);
+    assert_eq!(
+        after["resultPlans"][1]["deliveredResultVersion"],
+        Value::Null
+    );
 
     // The same plan cannot be delivered twice.
     let meta = json!({"plan": "RP-1", "summary": "Again"}).to_string();
