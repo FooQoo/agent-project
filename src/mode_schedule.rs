@@ -7,7 +7,8 @@
 //! - A manual mode wins while it is set.
 //! - A manual change made while a window was active holds until that window ends; then the
 //!   schedule takes over again.
-//! - A manual change made outside a window holds until it is changed (`agpj mode auto` clears it).
+//! - A manual change made outside a window holds until the next window starts; then the schedule
+//!   takes over (with no window it holds until changed). `agpj mode auto` clears it at any time.
 //! - With no manual mode, the window means sleep and everything else means sparring.
 
 use chrono::{DateTime, Duration, NaiveTime, TimeZone, Utc};
@@ -39,7 +40,8 @@ impl Source {
     }
 }
 
-/// The mode in effect now. `until` is the end of the window while the schedule decides sleep.
+/// The mode in effect now. `until` is when it ends: the end of the window while the schedule decides
+/// sleep, or the end of the hold of a manual mode (the window's end or the next window's start).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Effective {
     pub kind: ModeKind,
@@ -109,6 +111,23 @@ impl Schedule {
         }
         None
     }
+
+    /// The first start of the window after `at`.
+    pub fn next_start<Tz: TimeZone>(&self, at: &DateTime<Tz>) -> Option<DateTime<Utc>> {
+        let local = at.naive_local();
+        let tz = at.timezone();
+        [0, 1].into_iter().find_map(|days| {
+            let start = (local.date() + Duration::days(days)).and_time(self.start);
+            if start <= local {
+                return None;
+            }
+            let instant = tz
+                .from_local_datetime(&start)
+                .earliest()
+                .or_else(|| tz.from_local_datetime(&start).latest())?;
+            Some(instant.with_timezone(&Utc))
+        })
+    }
 }
 
 /// The mode in effect at `now`, from the manual mode (with when it was set) and the schedule.
@@ -118,19 +137,22 @@ pub fn resolve<Tz: TimeZone>(
     now: DateTime<Tz>,
 ) -> Effective {
     let in_window = |at: &DateTime<Tz>| schedule.and_then(|s| s.window_end(at));
+    let now_utc = now.with_timezone(&Utc);
     if let Some((kind, since)) = manual {
-        let tz = now.timezone();
-        let held = match in_window(&since.with_timezone(&tz)) {
-            // Set during a window: it holds until that window ends.
-            Some(end) => now.with_timezone(&Utc) < end,
-            None => true,
-        };
-        if held {
+        let set_at = since.with_timezone(&now.timezone());
+        // Set during a window: held until that window ends. Set outside one: held until the next
+        // window starts. With no window it is held until changed.
+        let hold_end = in_window(&set_at).or_else(|| {
+            schedule
+                .filter(|s| s.enabled && s.is_valid())
+                .and_then(|s| s.next_start(&set_at))
+        });
+        if hold_end.is_none_or(|end| now_utc < end) {
             return Effective {
                 kind,
                 source: Source::Manual,
                 since: Some(since),
-                until: None,
+                until: hold_end,
             };
         }
     }
@@ -262,17 +284,55 @@ mod tests {
     }
 
     #[test]
-    fn a_manual_sleep_outside_a_window_holds_until_it_is_changed() {
+    fn a_manual_mode_outside_a_window_holds_until_the_next_window_starts() {
         let s = night();
         let manual = Some((ModeKind::Sleep, at(0, 12, 0).with_timezone(&Utc)));
-        for time in [at(0, 13, 0), at(0, 23, 30), at(1, 12, 0), at(5, 3, 0)] {
-            let got = resolve(manual, Some(&s), time);
-            assert_eq!(
-                (got.kind, got.source),
-                (ModeKind::Sleep, Source::Manual),
-                "{time}"
-            );
+        let held = resolve(manual, Some(&s), at(0, 22, 59));
+        assert_eq!((held.kind, held.source), (ModeKind::Sleep, Source::Manual));
+        assert_eq!(held.until, Some(at(0, 23, 0).with_timezone(&Utc)));
+        assert_eq!(
+            resolve(manual, Some(&s), at(0, 13, 0)).source,
+            Source::Manual
+        );
+        // The window starts: the schedule takes over, and a forgotten toggle expires.
+        let sparring = Some((ModeKind::Sparring, at(0, 12, 0).with_timezone(&Utc)));
+        for manual in [manual, sparring] {
+            let got = resolve(manual, Some(&s), at(0, 23, 0));
+            assert_eq!((got.kind, got.source), (ModeKind::Sleep, Source::Schedule));
         }
+        // A manual change made after midnight but before the window of that day.
+        let early = Some((ModeKind::Sleep, at(1, 9, 0).with_timezone(&Utc)));
+        assert_eq!(resolve(early, Some(&s), at(1, 22, 0)).kind, ModeKind::Sleep);
+        assert_eq!(
+            resolve(early, Some(&s), at(1, 23, 0)).source,
+            Source::Schedule
+        );
+    }
+
+    #[test]
+    fn next_start_is_today_or_tomorrow() {
+        let s = night();
+        assert_eq!(
+            s.next_start(&at(0, 12, 0)),
+            Some(at(0, 23, 0).with_timezone(&Utc))
+        );
+        assert_eq!(
+            s.next_start(&at(0, 23, 0)),
+            Some(at(1, 23, 0).with_timezone(&Utc))
+        );
+    }
+
+    #[test]
+    fn a_disabled_window_never_expires_a_manual_mode() {
+        let s = Schedule {
+            enabled: false,
+            ..night()
+        };
+        let manual = Some((ModeKind::Sleep, at(0, 12, 0).with_timezone(&Utc)));
+        assert_eq!(
+            resolve(manual, Some(&s), at(3, 23, 30)).kind,
+            ModeKind::Sleep
+        );
     }
 
     #[test]

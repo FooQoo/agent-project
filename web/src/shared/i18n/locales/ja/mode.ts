@@ -13,7 +13,7 @@ export const modeJa = {
     scheduleEnd: '終了',
     byScheduleUntil: 'スケジュールにより {{time}} までスリープ',
     manualHolds:
-      '手動の設定です。いまの時間帯が終わるまで、時間帯の外なら変えるまで、そのままです。',
+      '手動の設定です。いまの時間帯が終わるまで、時間帯の外で設定したなら次の時間帯が始まるまで、そのままです。',
     followSchedule: 'スケジュールに従う',
     until: '{{time}} まで',
     saveError: 'モードを保存できませんでした。元のままです。',

@@ -198,7 +198,7 @@ The same section can put the project to sleep on a daily schedule. Turn on **Sle
 A mode you set by hand wins over the schedule while it is set:
 
 - A change you make **during a window** holds until that window ends. Then the schedule takes over again.
-- A change you make **outside a window** holds until you change it, even when a window starts later. Choose **Follow the schedule** (or run `agpj mode auto`) to hand the decision back to the window.
+- A change you make **outside a window** holds until the next window starts, so a forgotten toggle at noon does not switch off the nightly sleep. With no window set, it holds until you change it. Choose **Follow the schedule** (or run `agpj mode auto`) to hand the decision back to the window at any time.
 
 ### Notifications {#phone-notifications}
 

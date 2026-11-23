@@ -14,7 +14,7 @@ export const modeEn = {
     scheduleEnd: 'Until',
     byScheduleUntil: 'Asleep by the schedule until {{time}}',
     manualHolds:
-      'Set by hand: it holds until the current window ends. Otherwise it holds until you change it.',
+      'Set by hand: it holds until the current window ends, or until the next one starts when it was set outside a window.',
     followSchedule: 'Follow the schedule',
     until: 'until {{time}}',
     saveError: 'The mode could not be saved. It stays as it was.',

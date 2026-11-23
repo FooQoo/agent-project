@@ -113,7 +113,7 @@ agpj --project "My project" mode schedule --off                        # turn it
 agpj --project "My project" mode auto                                  # forget the manual mode; the window decides
 ```
 
-A manual mode wins while it is set. One set during a window holds until that window ends, and then the schedule takes over again; one set outside a window holds until you change it. `mode` shows the mode in effect, where it comes from (`manual` or `schedule`, with `until` while the schedule holds the project asleep), and the window. `message ask` and `agpj progress` use the same resolution; the progress table adds `modeSource` and `modeUntil` next to `mode`.
+A manual mode wins while it is set. One set during a window holds until that window ends, and then the schedule takes over again; one set outside a window holds until the next window starts (with no window, until you change it). `mode` shows the mode in effect, where it comes from (`manual` or `schedule`, with `until` when the mode ends: the window's end, or for a manual mode the end of its hold), and the window. `message ask` and `agpj progress` use the same resolution; the progress table adds `modeSource` and `modeUntil` next to `mode`.
 
 
 In sleep mode `message ask` is refused with `sleep_mode`, and nothing reaches the board, the notifications, or the chat. The agent has a subagent decide, continues with the conclusion, and records it on the task:
