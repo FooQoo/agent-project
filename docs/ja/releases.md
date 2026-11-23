@@ -49,14 +49,14 @@ Agent Board は Agent Project になり、コマンドは `agpj` に変わりま
 brew install fooqoo/tap/agpj
 ```
 
+データフォルダーは、`agpj` を初めて実行する前に移してください。`~/.agent-project` がすでにあると、`mv` は古いフォルダーを `~/.agent-project/.agent-board` としてその中に入れてしまいます。その場合は、先に `agpj stop` で止めてから、今ある `~/.agent-project` を `~/.agent-project.new` などの名前に変えて退けておきます。すでに中に入ってしまったときは、`mv ~/.agent-project/.agent-board ~/.agent-board` で戻してからやり直してください。
+
 ボードを引き継ぐには、古いサーバーを止めてデータフォルダーを移し、シェルのプロファイルにある `AGBOARD_*` の環境変数を `AGPJ_*` に変えます。
 
 ```sh
 agboard stop
 mv ~/.agent-board ~/.agent-project
 ```
-
-これは `agpj` を初めて実行する前に行ってください。`~/.agent-project` がすでにあると、`mv` は古いフォルダーをその中に入れてしまいます。その場合は、先に `agpj stop` で止めてから、そのフォルダーを `~/.agent-project.new` などの名前に変えて退けておきます。
 
 Agent Project は保存済みのファイルを変換しません。起動する前に、移したフォルダーを手で書き換えてください。
 

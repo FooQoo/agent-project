@@ -49,14 +49,14 @@ Install the new command. The old `agboard` formula stays and is not replaced:
 brew install fooqoo/tap/agpj
 ```
 
+Move the data folder before you run `agpj` for the first time. If `~/.agent-project` already exists, `mv` puts the old folder inside it as `~/.agent-project/.agent-board`. In that case, first stop `agpj` with `agpj stop` and rename the existing folder out of the way, for example to `~/.agent-project.new`. If the move already happened, move the folder back with `mv ~/.agent-project/.agent-board ~/.agent-board` and start again.
+
 To keep your boards, stop the old server, move the data folder, and rename any `AGBOARD_*` variables in your shell profile to `AGPJ_*`:
 
 ```sh
 agboard stop
 mv ~/.agent-board ~/.agent-project
 ```
-
-Do this before you run `agpj` for the first time. If `~/.agent-project` already exists, `mv` puts the old folder inside it, so first stop `agpj` with `agpj stop` and rename that folder out of the way, for example to `~/.agent-project.new`.
 
 Agent Project does not convert stored files. Before you start it, edit the moved folder by hand:
 
