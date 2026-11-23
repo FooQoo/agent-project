@@ -79,10 +79,15 @@ impl FileStore {
         let (project_dir, _lock) = lock_project(shared, project)?;
         if refuse_when_agents
             && secret.is_none()
-            && ctx.actor == Actor::Ai
             && super::assignment::has_live_agents_locked(shared, &project_dir)?
         {
-            return Err(AgpjError::NotConnected);
+            return Err(if ctx.actor == Actor::Ai {
+                AgpjError::NotConnected
+            } else {
+                AgpjError::HumanOnly {
+                    action: "Changing a run state from the command line as a person".into(),
+                }
+            });
         }
         let verified = secret
             .map(|secret| {

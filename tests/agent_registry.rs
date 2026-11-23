@@ -519,6 +519,14 @@ fn a_run_state_without_a_connection_is_refused_once_the_project_has_agents() {
         t0(),
     );
     assert!(matches!(refused, Err(AgpjError::NotConnected)));
+    let human = fx.store.set_agent_status_unconnected(
+        &fx.project,
+        id,
+        RunState::Running,
+        ctx(Actor::Human),
+        t0(),
+    );
+    assert!(matches!(human, Err(AgpjError::HumanOnly { .. })));
     assert_eq!(
         fx.store.task(&fx.project, id).unwrap().agent_status,
         RunState::Paused
