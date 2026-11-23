@@ -469,6 +469,52 @@ export const PhoneQuestionWithImage: Story = {
   },
 };
 
+/** The three tabs in turn; returns the modal's layout size on each (the open animation scales its drawn box). */
+async function boxesOnEveryTab(list: HTMLElement) {
+  const boxes: { width: number; height: number }[] = [];
+  for (const name of [/AI の質問/, /あなたの依頼/, /サマリー/]) {
+    await userEvent.click(within(list).getByRole('tab', { name }));
+    await waitFor(() =>
+      expect(within(list).getByRole('tab', { name })).toHaveAttribute('aria-selected', 'true'),
+    );
+    boxes.push({ width: list.offsetWidth, height: list.offsetHeight });
+  }
+  return boxes;
+}
+
+/** Full tabs: the modal is the same size on every tab; its fullest tab scrolls inside the body. */
+export const ModalSizeFixedFull: Story = {
+  args: { initial: { tab: 'fromAi' }, summaries: { dismiss: fn(async () => undefined) } },
+  play: async () => {
+    const list = await page().findByRole('dialog', { name: 'メッセージ' });
+    await expect(await within(list).findByText('#552')).toBeInTheDocument();
+    const [first, ...rest] = await boxesOnEveryTab(list);
+    for (const box of rest) {
+      await expect(box.width).toBe(first?.width);
+      await expect(box.height).toBe(first?.height);
+    }
+  },
+};
+
+/** Empty tabs: the same frame as the full ones, with the space left at the bottom. */
+export const ModalSizeFixedEmpty: Story = {
+  args: {
+    empty: true,
+    initial: { tab: 'fromAi' },
+    summaries: { dismiss: fn(async () => undefined), none: true },
+  },
+  play: async () => {
+    const list = await page().findByRole('dialog', { name: 'メッセージ' });
+    const [first, ...rest] = await boxesOnEveryTab(list);
+    for (const box of rest) {
+      await expect(box.width).toBe(first?.width);
+      await expect(box.height).toBe(first?.height);
+    }
+    // The frame is not the content's height: it is the fixed size, capped by the viewport.
+    await expect(first?.height).toBe(Math.min(640, window.innerHeight - 48));
+  },
+};
+
 /** English, dark: the list. */
 export const ListEnDark: Story = {
   args: { initial: { tab: 'fromAi' } },

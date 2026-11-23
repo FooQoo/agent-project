@@ -44,6 +44,16 @@
   background: var(--r-surface);
 }
 
+/* ---- The list on the PC: one size for every tab ----
+   The frame does not follow the open tab. It is 720px wide and 640px tall, which holds the fullest
+   tab, and is capped by the viewport (an iPad landscape 1024x768 and a short laptop) the way the
+   answer dialog is. A longer tab scrolls inside the body; header and tabs stay put. */
+
+.modal.surface-modal.message-surface:not(.message-surface--answering) {
+  width: min(720px, calc(100vw - 48px));
+  height: min(640px, calc(var(--stable-vh, 100svh) - 48px));
+}
+
 /* ---- An open question on a phone: the Ask AI sheet's build ----
    The sheet body is the only scroller and the only horizontal padding (16px), so the question, the
    answer heading, the options, and the note all start at the same edge. The footer is the buttons. */
