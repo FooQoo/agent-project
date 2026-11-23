@@ -100,7 +100,7 @@ pub(crate) fn run<F: Future<Output = ()>>(
     };
     let shared = data_dir.join("shared");
     crate::file_store::io::remove_stale_temporaries(&shared, STALE_TEMPORARY_AGE);
-    crate::file_store::FileStore::open(&shared).seed_unseeded_projects(chrono::Utc::now());
+    crate::file_store::FileStore::open(&shared).seed_unseeded_projects(crate::clock::now());
     let locale =
         DocsLocale::from_locale(&preferences::PreferencesStore::new(&data_dir).load().locale);
     crate::file_store::FileStore::open(&shared).ensure_docs_dirs(locale);
@@ -198,7 +198,7 @@ pub(crate) fn run<F: Future<Output = ()>>(
             &ServeInfo {
                 pid,
                 port: addr.port(),
-                started_at: format_utc(chrono::Utc::now()),
+                started_at: format_utc(crate::clock::now()),
                 mode: if launch.auto.is_some() {
                     ServeMode::Auto
                 } else {

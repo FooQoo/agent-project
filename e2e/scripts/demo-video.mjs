@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, expect } from '@playwright/test';
 import { setPreferences } from '../helpers/preferences.mjs';
+import { browserArgs, freezeClock } from './lib/sample-board.mjs';
 
 // Records the English and Japanese demo videos from the real UI.
 // Build web/ and the CLI first. Needs ffmpeg and ffprobe. Only disposable data is used.
@@ -180,9 +181,9 @@ async function record(browser, locale, tmp) {
       return fetch(`${origin}/api/health`).then((r) => r.ok).catch(() => false);
     }).toBe(true);
     const run = (...args) => cli(home, ['--project', project, ...args]);
-    context = await browser.newContext({
+    context = await freezeClock(await browser.newContext({
       viewport: size, timezoneId: 'UTC', recordVideo: { dir: videoDir, size },
-    });
+    }));
     // The language and theme are saved on the board, as the settings screen does.
     await setPreferences(origin, { locale, theme: { mode: 'light', accent: 'blue' } });
     const created = Date.now();
@@ -348,7 +349,7 @@ const tmp = mkdtempSync(path.join(os.tmpdir(), 'agpj-demo-'));
 let browser;
 try {
   mkdirSync(output, { recursive: true });
-  browser = await chromium.launch();
+  browser = await chromium.launch({ args: browserArgs });
   for (const locale of ['en', 'ja']) {
     const { webm, start, end } = await record(browser, locale, tmp);
     const { mp4, duration } = encode(webm, start, end, locale === 'ja' ? '.ja' : '');

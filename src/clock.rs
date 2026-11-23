@@ -8,8 +8,25 @@ pub struct SystemClock;
 
 impl Clock for SystemClock {
     fn now(&self) -> DateTime<Utc> {
-        Utc::now()
+        now()
     }
+}
+
+/// The instant `AGPJ_FIXED_NOW` pins the board to, for example `2026-11-02T09:00:00Z`; `None` when it is unset or
+/// does not parse. The sample-media scripts set it so every capture shows the same dates.
+pub fn fixed_now() -> Option<DateTime<Utc>> {
+    static FIXED: std::sync::OnceLock<Option<DateTime<Utc>>> = std::sync::OnceLock::new();
+    *FIXED.get_or_init(|| {
+        std::env::var("AGPJ_FIXED_NOW")
+            .ok()
+            .and_then(|value| parse_utc(&value).ok())
+    })
+}
+
+/// The current instant, or the one `AGPJ_FIXED_NOW` pins. Product code takes its time from here instead of
+/// calling `Utc::now()`.
+pub fn now() -> DateTime<Utc> {
+    fixed_now().unwrap_or_else(Utc::now)
 }
 
 /// A clock that always returns the same instant. For tests.

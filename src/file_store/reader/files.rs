@@ -108,6 +108,10 @@ pub(crate) fn problem_of(error: AgpjError) -> Problem {
 }
 
 pub(super) fn file_time(path: &Path) -> Option<DateTime<Utc>> {
+    // A pinned clock (AGPJ_FIXED_NOW) also pins the dates read from file times, which the board shows on cards.
+    if let Some(fixed) = crate::clock::fixed_now() {
+        return Some(fixed);
+    }
     let modified = fs::metadata(path).ok()?.modified().ok()?;
     DateTime::from_timestamp(DateTime::<Utc>::from(modified).timestamp(), 0)
 }

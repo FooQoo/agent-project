@@ -4,12 +4,14 @@
 pub mod add;
 pub mod attachment;
 pub mod connect;
+pub mod decision;
 pub mod edit;
 pub mod epic;
 pub mod epic_plan;
 pub mod init;
 pub mod ls;
 pub mod message;
+pub mod mode;
 pub mod mv;
 pub mod open;
 pub mod progress;

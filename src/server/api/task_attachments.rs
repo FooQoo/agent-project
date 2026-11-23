@@ -98,7 +98,7 @@ pub(super) async fn add_task_attachment(
     let result = with_files(&state, move |store| {
         let owner = AttachmentOwner::Task(id);
         for input in additions {
-            store.add_attachment_for_user(&project_id, &owner, input, chrono::Utc::now())?;
+            store.add_attachment_for_user(&project_id, &owner, input, crate::clock::now())?;
         }
         store.task(&project_id, id)
     })
@@ -153,7 +153,7 @@ pub(super) async fn delete_task_attachment(
             &project_id,
             &AttachmentOwner::Task(id),
             &attachment_id,
-            chrono::Utc::now(),
+            crate::clock::now(),
         )?;
         store.task(&project_id, id)
     })

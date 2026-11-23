@@ -89,7 +89,7 @@ pub(super) async fn edit_task(
                     acceptance: input.acceptance.as_deref(),
                 },
                 finalize,
-                chrono::Utc::now(),
+                crate::clock::now(),
             )
         } else {
             store.edit_draft_task_to(
@@ -98,7 +98,7 @@ pub(super) async fn edit_task(
                 input.title.as_deref(),
                 input.description.as_deref(),
                 finalize,
-                chrono::Utc::now(),
+                crate::clock::now(),
             )
         }
     })
@@ -130,7 +130,7 @@ pub(super) async fn set_draft(
         );
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.set_draft(&project_id, id, draft, input.discard, chrono::Utc::now())
+        store.set_draft(&project_id, id, draft, input.discard, crate::clock::now())
     })
     .await;
     changed_task_response(&state, result)
@@ -188,7 +188,7 @@ pub(super) async fn set_task_epic(
             id,
             epic.as_ref(),
             Actor::Human,
-            chrono::Utc::now(),
+            crate::clock::now(),
         )
     })
     .await;

@@ -61,3 +61,13 @@ pub struct EpicToClose {
     pub name: String,
     pub document_path: PathBuf,
 }
+
+/// Extra sections of the table. The default adds nothing.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Include {
+    /// Add the tasks waiting for a decision, with their questions.
+    pub awaiting_answer: bool,
+    /// Add this many of the most recently completed tasks of epics that still
+    /// have Todo or Doing work; 0 adds none.
+    pub done: usize,
+}

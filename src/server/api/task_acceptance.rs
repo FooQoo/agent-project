@@ -66,7 +66,7 @@ pub(super) async fn record_publication(
                 key: input.key,
                 published: Some(input.published),
             },
-            chrono::Utc::now(),
+            crate::clock::now(),
         )
     })
     .await;

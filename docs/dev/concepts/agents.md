@@ -43,6 +43,18 @@ The skill turns a multi-task request into a plan, depending on what the request 
 
 In a session a person started, the skill waits the same way in every agent: it keeps `message ask` running until its last line, and after `timeout` runs `message wait <question-id>`. Claude Code runs the command in the background, is told when it ends, and ends its turn after showing the question, so an answer on the board wakes it; Codex cannot be woken that way, so it runs the command in the foreground and reads its output in chunks without a time limit on the command, and the user answers on the board or interrupts it to reply in the chat. The default 600-second wait matches the 10-minute limit of a Claude Code tool call. Nothing pushes an answer into such a session (a session the board launched is the exception: it asks with `--no-wait` and the answer is pushed to it, see [Push mode](#push-mode)): the board only stores answers, and the command that waits returns them.
 
+### Sleep mode {#sleep-mode}
+
+A project has a mode, saved by project ID in `<data_dir>/.internal/modes.json` (`src/mode.rs`). It belongs to the user, not to the project's shared files, and it does not depend on who a task is assigned to. A project with no entry is in sparring, the default. `agpj mode [sparring|sleep]` reads and writes it with no server, and a missing, invalid, or unknown entry reads as sparring. A later mode with a target adds a `kind` to the same entry.
+
+The mode has three effects:
+
+- **Progress.** `agpj progress` and the hook add `mode: "sleep"` to the table, and leave the key out for sparring, so an agent sees the mode whenever it reads the table (see [Progress table](../reference/agent-output.md#progress-table)).
+- **Refusal.** `message ask` checks the mode before it saves anything, validates the input, or starts a server. In sleep mode it fails with `sleep_mode` (`AgpjError::SleepMode`); no question is created, so nothing reaches the board, the notifications, or the chat. The `reason` is the recovery text: have a subagent decide, continue, and record it.
+- **Record.** `agpj decision add <id> --question --choice --reason --decided-by subagent:NAME --basis ...` (`FileStore::add_decision`) writes one ordinary history entry through `add_history`, with the same draft, archive, and Done guards: `Decided in sleep mode by <who>. Question: ... Choice: ... Reason: ... Basis: ...`, or its Japanese form on a board whose history is Japanese. `--basis` is required, so the code, documents, and past questions that the decision rests on are always in the history.
+
+The skill topic `agpj skills sleep` (`src/skills/topics/sleep.md`) tells the agent what to do: delegate the decision to a subagent with the choices and constraints, ground it in existing code, the project docs, and past answered questions, continue with the conclusion, and record it. Work only a person can do (a check on a real device) is not asked: the agent leaves it undone, records with `history add` that a person must complete it and why, and moves on. The main skill, `questions`, and `resident` point to it. Turning the mode back to sparring needs no cleanup; questions asked before the switch are unaffected. See [Sleep mode](../../guide/reference/cli.md#sleep-mode) for the commands.
+
 ### Nudge rules {#nudge-rules}
 
 A nudge reminds an agent of something it tends to forget. One registry, `RULES` in `src/nudge/rules.rs`, feeds both places an agent is reminded: the `reminders` of the [progress table](../reference/agent-output.md#progress-table) while it works, and the Stop hook's checklist at the end of a turn. A rule is one entry with these fields:

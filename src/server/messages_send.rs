@@ -60,7 +60,7 @@ pub(crate) async fn send_request(
         store.send_request(
             &project,
             SendRequestInput { text, images },
-            chrono::Utc::now(),
+            crate::clock::now(),
         )
     })
     .await;

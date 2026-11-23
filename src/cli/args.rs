@@ -8,6 +8,7 @@ mod epic;
 mod help;
 mod history;
 mod message;
+mod mode;
 mod project;
 mod registry;
 mod release;
@@ -22,6 +23,7 @@ pub use self::enums::*;
 pub use self::epic::*;
 pub use self::history::*;
 pub use self::message::*;
+pub use self::mode::*;
 pub use self::project::*;
 pub use self::registry::*;
 pub use self::release::*;
@@ -76,6 +78,10 @@ pub enum Command {
     Agent(AgentArgs),
     /// Append a work note to a task history
     History(HistoryArgs),
+    /// Record a decision that a subagent made in the user's place
+    Decision(DecisionArgs),
+    /// Show or switch the mode: sparring (default) or sleep
+    Mode(ModeArgs),
     /// Ask the user questions, wait for the answers, and handle requests from the user
     Message(MessageArgs),
     /// Delete a task (humans only; asks for confirmation)
@@ -135,6 +141,8 @@ impl Command {
             Command::Connect(_) => "connect",
             Command::Agent(_) => "agent",
             Command::History(_) => "history",
+            Command::Decision(_) => "decision",
+            Command::Mode(_) => "mode",
             Command::Message(_) => "message",
             Command::Rm(_) => "rm",
             Command::Ls(_) => "ls",

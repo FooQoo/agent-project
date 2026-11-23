@@ -38,6 +38,35 @@ node e2e/scripts/demo-video.mjs         # docs/public/videos/(ffmpegも必要)
 
 どちらのスクリプトも、一時的な`AGPJ_HOME`と専用のループバックポートを使うため、普段のカンバンやポート7420には影響しません。生成した画像と動画は、コミット前に確認してください。
 
+### 撮影を決まった結果にする
+
+同じコミットから2回撮影すると同じ画像になります。そのため、画像が変わったときは製品が変わったと分かります。3つのスクリプト(`readme-screenshots.mjs`、`docs-screenshots.mjs`、`demo-video.mjs`)は、`e2e/scripts/lib/sample-board.mjs`の設定を共有します。
+
+- **「現在」を1つに固定します。** `FIXED_NOW`(`2026-10-15T09:41:00Z`)を、`AGPJ_FIXED_NOW`としてCLIとサーバーに渡します。製品のコードは時刻を`crate::clock::now()`から取り、この変数にUTCの時刻が入っていればその時刻を返すので、サンプルデータに書かれる時刻はすべて同じになります。カードの更新日のようにタスクファイルの更新時刻から読む日付も、これに従います。変数がない、または読み取れない場合は何も起きません。
+- **ブラウザにも同じ時計を持たせます。** `freezeClock(context)`が`context.clock.setFixedTime`を呼ぶので、どのページでも`Date.now()`と`new Date()`が同じ時刻を返します。「同期済み」の時刻とカードの日付が、データと一致します。タイマーは動き続けます。コンテキストのタイムゾーンもUTCです。
+- **描画を安定させます。** Chromiumは`--disable-gpu --disable-lcd-text --font-render-hinting=none`で起動します。`settle()`は繰り返しのアニメーション(スピナー)を最初のフレームで止め、そのあと3回続けて同じ画面が撮れるまで待つので、フェードやカルーセルの途中は撮りません。
+
+この手順で撮ったスクリーンショットは、前回と画素まで一致します。ただし、スマホとタブレットの一部の画像では、角丸の枠線のアンチエイリアスにより、数画素がチャンネルあたり1〜2段階ずれることがあります。録画した動画は実時間で進むため、実行のたびにフレームが少しずれ、許容を付けて比べます。
+
+### 撮影結果をコミット済みのファイルと比べる
+
+`e2e/scripts/compare-captures.mjs`は、撮影したファイルのうち、見た目がリポジトリのコミット済みファイルと異なるものだけを報告します。`AGPJ_MEDIA_OUT`に一時フォルダーを指定して撮影し、比べます。
+
+```sh
+AGPJ_MEDIA_OUT=/tmp/captures node e2e/scripts/readme-screenshots.mjs
+AGPJ_MEDIA_OUT=/tmp/captures node e2e/scripts/docs-screenshots.mjs
+AGPJ_MEDIA_OUT=/tmp/captures node e2e/scripts/demo-video.mjs
+node e2e/scripts/compare-captures.mjs --captured /tmp/captures            # 変わったファイルを一覧する
+node e2e/scripts/compare-captures.mjs --captured /tmp/captures --json     # {"changed":[{"file","status","target"}],"unchanged":N}
+node e2e/scripts/compare-captures.mjs --captured /tmp/captures --apply    # 変わったファイルを所定の場所へコピーする
+```
+
+`readme/`は`docs/images/`、`guide/`は`docs/images/guide/`、`videos/`は`docs/public/videos/`と比べます。終了コードは、差がなければ0、あれば1、使い方の誤り・読めないファイル・PNGもMP4もないフォルダーなら2です。新しいファイルは変更(`added`)として数えます。`--apply`は、変わった動画の`.jpg`ポスターもコピーします。
+
+- PNGはRGBAに復号し、画素で比べるため、エンコーダーのメタデータや圧縮の違いは差になりません。`--image-tolerance <n>`を付けると、チャンネルあたり`n`までのずれを許します。縁のアンチエイリアスによるノイズを無視したいときに使います(例: `4`)。
+- MP4は`ffmpeg`で1秒に1フレーム、480×300に復号します。フレームがすべて同じなら変更なしです。そうでなければ、各フレームを前後1秒のフレームと比べ、画素の0.3%を超えて違うフレームが全体の1割を超えたときだけ変更とします。カードの日付のような小さな変化は動画では気づけません。その場合はスクリーンショットに現れます。
+- `--against <dir>`を付けると、リポジトリではなく別の`AGPJ_MEDIA_OUT`フォルダーと比べます。2回の撮影が一致するかを確かめるときに使います。
+
 ## ページを移してもURLを保つ
 
 ガイドの古いURLは、READMEやプラグインのREADME、他の人のリンクに載っています。そのため、移したページは古いアドレスでも応答し続ける必要があります。`docs/.vitepress/redirects.ts`は、移したページの一覧を、古いパスと新しいパスの組で持ちます。パスは先頭のスラッシュも拡張子もない形で、たとえば`guide/use/board`と`guide/watch/board`です。ビルドは組ごとに、古いパスに小さなHTMLページを書き出し、新しいページへ転送します。

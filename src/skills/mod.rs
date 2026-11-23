@@ -20,6 +20,7 @@ pub const TOPICS: &[(&str, &str)] = &[
     ("requests", include_str!("topics/requests.md")),
     ("work-loop", include_str!("topics/work-loop.md")),
     ("questions", include_str!("topics/questions.md")),
+    ("sleep", include_str!("topics/sleep.md")),
     ("waiting", include_str!("topics/waiting.md")),
     ("file-format", include_str!("topics/file-format.md")),
     ("listening", include_str!("topics/listening.md")),

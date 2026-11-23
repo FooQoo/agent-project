@@ -74,7 +74,7 @@ pub(super) async fn add_epic_attachment(
     let result = with_files(&state, move |store| {
         let owner = AttachmentOwner::Epic(epic_id.clone());
         for input in additions {
-            store.add_attachment_for_user(&project_id, &owner, input, chrono::Utc::now())?;
+            store.add_attachment_for_user(&project_id, &owner, input, crate::clock::now())?;
         }
         store.epic(&project_id, &epic_id)
     })
@@ -130,7 +130,7 @@ pub(super) async fn delete_epic_attachment(
             &project_id,
             &AttachmentOwner::Epic(epic_id.clone()),
             &attachment_id,
-            chrono::Utc::now(),
+            crate::clock::now(),
         )?;
         store.epic(&project_id, &epic_id)
     })

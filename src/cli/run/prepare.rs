@@ -74,8 +74,9 @@ fn access(command: &Command) -> Access {
         | Command::State(_)
         | Command::Connect(_)
         | Command::History(_)
+        | Command::Decision(_)
         | Command::Rm(_) => Access::ChangeProject,
-        Command::Progress(_) | Command::Open(_) => Access::ReadBoundProject,
+        Command::Progress(_) | Command::Open(_) | Command::Mode(_) => Access::ReadBoundProject,
         Command::Serve(_)
         | Command::Stop(_)
         | Command::Setup(_)
@@ -148,6 +149,8 @@ fn dispatch(ctx: &mut Context, command: &Command) -> Result<Outcome, AgpjError> 
         Command::Connect(args) => commands::connect::connect(ctx, args),
         Command::Agent(args) => commands::connect::agent(ctx, args),
         Command::History(args) => commands::history::run(ctx, args),
+        Command::Decision(args) => commands::decision::run(ctx, args),
+        Command::Mode(args) => commands::mode::run(ctx, args),
         Command::Rm(args) => commands::rm::run(ctx, args),
         Command::Ls(args) => commands::ls::run(ctx, args),
         Command::Show(args) => commands::show::run(ctx, args),
