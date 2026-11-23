@@ -63,7 +63,7 @@ Run the next wait before long optional work, such as a final summary. Stop only 
 
 A session the board launched asks with `message ask --no-wait`, records that the task waits for the answer, and ends its turn; the answer arrives as an `answers` message. The rest of this section is for a session that waits for itself.
 
-When a task needs a decision that is a person's (one of the four cases in the main Skill), register it with `message ask --task <id> ...` and do not wait on it with the foreground command. Use `--no-wait`, record that the task is waiting for the answer, and go back to the loop. The answer comes back from `wait --until task` as an `answers` result; take it in; the task returns to `running` automatically, so continue it. A task with an open question is awaiting an answer and is never returned, so the session keeps working on other tasks while it waits. Never block the whole session on one question, and never leave the loop to wait on one.
+When a task needs a decision that is a person's (one of the four cases in the main Skill), register it with `message ask --task <id> ...` and do not wait on it with the foreground command. Use `--no-wait`, record that the task is waiting for the answer, and go back to the loop. The answer comes back from `wait --until task` as an `answers` result; take it in, then re-read the task: it returns to `running` automatically only when no other question it refers to is open, so continue it only if it resumed. A task with an open question is awaiting an answer and is never returned, so the session keeps working on other tasks while it waits. Never block the whole session on one question, and never leave the loop to wait on one.
 
 ## Errors
 
