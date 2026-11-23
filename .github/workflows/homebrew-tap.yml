@@ -79,7 +79,7 @@ jobs:
           mkdir -p Formula
           cp "${RUNNER_TEMP}/formula/agpj.rb" Formula/agpj.rb
           git add Formula/agpj.rb
-          # Formula/agboard.rb stays pinned to the preserved v1.1.1; only agpj.rb may change.
+          # Formula/agboard.rb stays at the preserved v1.7.0 and the README changes by PR; only agpj.rb may change here.
           changed=$(git status --porcelain | awk '{print $2}')
           case "${changed}" in
             ""|"Formula/agpj.rb") ;;

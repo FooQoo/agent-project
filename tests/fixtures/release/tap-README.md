@@ -1,19 +1,27 @@
 # FooQoo/homebrew-tap
 
-Homebrew tap for Agent Project (`agpj`) and the preserved Agent Board (`agboard`).
+Homebrew tap for Agent Project.
 
 ```sh
 brew install fooqoo/tap/agpj
 brew upgrade fooqoo/tap/agpj
 ```
 
-The old `agboard` Formula is still installable with `brew install fooqoo/tap/agboard`.
-
-`Formula/agboard.rb` is the previous product's Formula. It stays pinned to the
-preserved v1.1.1 and is not updated by new releases.
-
 `Formula/agpj.rb` is generated, not edited by hand. It requires macOS 15 or
-later and installs the prebuilt, signed binary from the Release of the same tag.
+later and installs the prebuilt, signed binary from the Release of the same tag
+in FooQoo/agent-project.
+
+## Agent Board (agboard)
+
+Agent Board was renamed to Agent Project in v2.0.0. `Formula/agboard.rb` keeps
+the last Agent Board, v1.7.0, as it was, and is no longer updated:
+
+```sh
+brew install fooqoo/tap/agboard
+```
+
+The two formulas install different commands (`agpj` and `agboard`) and can be
+installed side by side.
 
 ## What this repository receives
 
