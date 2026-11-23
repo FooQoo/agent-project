@@ -11,7 +11,7 @@ use crate::domain::ProjectId;
 use crate::error::AgpjError;
 
 /// The `format` value written to `workspace.json`.
-pub const FORMAT_NAME: &str = "agboard-files";
+pub const FORMAT_NAME: &str = "agpj-files";
 /// The only `formatVersion` this build reads and writes.
 pub const FORMAT_VERSION: u32 = 1;
 

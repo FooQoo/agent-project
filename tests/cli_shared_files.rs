@@ -44,7 +44,7 @@ fn the_first_project_creates_the_shared_folder() {
             &std::fs::read_to_string(shared.join("workspace.json")).unwrap()
         )
         .unwrap(),
-        serde_json::json!({"format": "agboard-files", "formatVersion": 1})
+        serde_json::json!({"format": "agpj-files", "formatVersion": 1})
     );
     let project = shared.join("projects").join(&id);
     assert!(project.join("project.json").is_file());
