@@ -47,11 +47,35 @@
 /* ---- The list on the PC: one size for every tab ----
    The frame does not follow the open tab. It is 720px wide and 640px tall, which holds the fullest
    tab, and is capped by the viewport (an iPad landscape 1024x768 and a short laptop) the way the
-   answer dialog is. A longer tab scrolls inside the body; header and tabs stay put. */
+   answer dialog is. A longer tab scrolls inside its own page, below the tabs; header and tabs stay put. */
 
 .modal.surface-modal.message-surface:not(.message-surface--answering) {
   width: min(720px, calc(100vw - 48px));
   height: min(640px, calc(var(--stable-vh, 100svh) - 48px));
+}
+
+/* The header and the tabs stay put: the body takes the rest of the frame and does not scroll, and the
+   shown page scrolls inside the swipe viewport, below the tabs. The phone sheet is not touched: its
+   body is the scroller there, which pull-to-refresh reads. */
+.modal.surface-modal.message-surface:not(.message-surface--answering) {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.modal.surface-modal.message-surface:not(.message-surface--answering) .surface__body {
+  overflow: hidden;
+}
+
+.surface-modal.message-surface:not(.message-surface--answering) .message-list {
+  min-height: 0;
+}
+
+.surface-modal.message-surface:not(.message-surface--answering) .message-list__viewport {
+  min-height: 0;
+}
+
+.surface-modal.message-surface:not(.message-surface--answering) .message-list__page:not([aria-hidden="true"]) {
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* ---- An open question on a phone: the Ask AI sheet's build ----

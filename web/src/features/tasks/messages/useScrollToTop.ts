@@ -39,10 +39,10 @@ export function useRestoreScroll(
     let tries = 0;
     const settle = () => {
       if (pending.current === null) return;
-      // The PC modal's list scrolls in its swipe viewport, a phone sheet in the body itself.
+      // The PC modal's list scrolls in the shown page, a phone sheet in the body itself.
       const body = ref.current;
       const scrollers = body
-        ? [body, ...body.querySelectorAll<HTMLElement>('.message-list__viewport')]
+        ? [body, ...body.querySelectorAll<HTMLElement>('.message-list__viewport, .message-list__page')]
         : [];
       const el = scrollers.find(
         (item) => item.scrollHeight - item.clientHeight >= (pending.current ?? 0),

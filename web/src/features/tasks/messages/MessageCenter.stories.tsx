@@ -493,6 +493,21 @@ export const ModalSizeFixedFull: Story = {
       await expect(box.width).toBe(first?.width);
       await expect(box.height).toBe(first?.height);
     }
+    // A long tab scrolls inside its page: the tabs stay where they are, and the frame keeps its size.
+    const shown = list.querySelector('.message-list__page[aria-hidden="false"]');
+    const tabs = list.querySelector('.message-tabs');
+    if (!(shown instanceof HTMLElement) || !(tabs instanceof HTMLElement)) {
+      throw new Error('The list has no shown page or tabs.');
+    }
+    for (let i = 0; i < 8; i++) {
+      for (const child of Array.from(shown.children)) shown.append(child.cloneNode(true));
+      if (shown.scrollHeight > shown.clientHeight * 2) break;
+    }
+    const tabsTop = tabs.getBoundingClientRect().top;
+    shown.scrollTop = 200;
+    await expect(shown.scrollTop).toBeGreaterThan(0);
+    await expect(tabs.getBoundingClientRect().top).toBe(tabsTop);
+    await expect(list.offsetHeight).toBe(first?.height);
   },
 };
 
