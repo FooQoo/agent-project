@@ -24,6 +24,16 @@
               "interaction": true
             },
             {
+              "id": "task-card-taskcard--todo-has-no-state",
+              "states": ["todo", "no run state label"],
+              "interaction": true
+            },
+            {
+              "id": "task-card-taskcard--awaiting-answer-in-todo-owned-by-human",
+              "states": ["todo", "human owner", "awaiting answer label"],
+              "interaction": true
+            },
+            {
               "id": "task-card-taskcard--selected",
               "states": ["selected", "aria-current"],
               "interaction": true

@@ -58,7 +58,7 @@ const poster = computed(() => withBase(`/videos/demo${ja.value ? '.ja' : ''}.jpg
 const href = (link: string) => (link.startsWith('/') ? withBase(link) : link)
 const lines = (text: string) => text.split('\n')
 const laneTone = ['todo', 'doing', 'done']
-// The loop has four lanes: request and plan, answers, work, and done.
+// The loop has four lanes: plan, start, work, and result.
 const loopTone = ['todo', 'todo', 'doing', 'done']
 const featureTone: Record<string, string> = { board: 'doing', epic: 'todo', mobile: 'pending', docs: 'done' }
 
@@ -127,6 +127,23 @@ onMounted(() => {
             playsinline
           ></video>
         </div>
+      </div>
+    </section>
+
+    <section class="lp-section lp-section--soft">
+      <div class="lp-container">
+        <header class="lp-heading">
+          <p class="lp-eyebrow">{{ c.pm.eyebrow }}</p>
+          <h2>{{ c.pm.title }}</h2>
+          <p class="lp-lead">{{ c.pm.lead }}</p>
+        </header>
+        <ul class="lp-questions lp-questions--four">
+          <li v-for="item in c.pm.items" :key="item.title">
+            <LandingIcon :name="item.icon" :size="22" :class="`lp-ink--${item.tone}`" />
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.text }}</p>
+          </li>
+        </ul>
       </div>
     </section>
 
@@ -598,6 +615,9 @@ onMounted(() => {
 .lp-fill--done {
   background: var(--lp-done);
 }
+.lp-ink--todo {
+  color: var(--lp-todo);
+}
 .lp-ink--pending {
   color: var(--lp-pending-text);
 }
@@ -797,6 +817,14 @@ onMounted(() => {
   .lp-questions {
     grid-template-columns: repeat(3, 1fr);
     gap: 32px;
+  }
+  .lp-questions--four {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1100px) {
+  .lp-questions--four {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 

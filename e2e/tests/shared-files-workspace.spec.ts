@@ -66,7 +66,7 @@ test('a shared folder and an epic are created by the CLI, and the epic label sho
   const id = JSON.parse(agpj(name, ['workspace', '--json']).stdout).projectId as string;
   const shared = path.join(mainHome(), 'shared');
   expect(JSON.parse(readFileSync(path.join(shared, 'workspace.json'), 'utf8'))).toEqual({
-    format: 'agboard-files',
+    format: 'agpj-files',
     formatVersion: 1,
   });
   const folder = JSON.parse(agpj(name, ['workspace', '--json']).stdout).folder as string;

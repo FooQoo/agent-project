@@ -53,7 +53,7 @@ pub fn check_workspace(file: &WorkspaceFile) -> Vec<Defect> {
     if file.format == FORMAT_NAME {
         Vec::new()
     } else {
-        vec![defect("format", "The format must be agboard-files.")]
+        vec![defect("format", "The format must be agpj-files.")]
     }
 }
 

@@ -32,7 +32,7 @@ fn an_empty_data_area_gets_workspace_project_and_readme() {
     let shared = root.path().join("shared");
     assert_eq!(
         read_json(&shared.join("workspace.json")),
-        serde_json::json!({"format": "agboard-files", "formatVersion": 1})
+        serde_json::json!({"format": "agpj-files", "formatVersion": 1})
     );
     let dir = shared.join("projects").join(project.id.as_str());
     let project_json = read_json(&dir.join("project.json"));
@@ -115,7 +115,7 @@ fn a_workspace_with_another_format_version_is_refused_and_not_converted() {
     let shared = root.path().join("shared");
     fs::create_dir_all(&shared).unwrap();
     let path = shared.join("workspace.json");
-    let text = "{\n  \"format\": \"agboard-files\",\n  \"formatVersion\": 2\n}\n";
+    let text = "{\n  \"format\": \"agpj-files\",\n  \"formatVersion\": 2\n}\n";
     fs::write(&path, text).unwrap();
 
     let err = store.projects().unwrap_err();
@@ -123,6 +123,26 @@ fn a_workspace_with_another_format_version_is_refused_and_not_converted() {
         matches!(err, AgpjError::FormatUnsupported { .. }),
         "{err:?}"
     );
+    assert_eq!(fs::read_to_string(&path).unwrap(), text);
+}
+
+#[test]
+fn a_workspace_with_the_former_format_name_is_refused_and_left_untouched() {
+    let (root, store) = store();
+    let shared = root.path().join("shared");
+    fs::create_dir_all(&shared).unwrap();
+    let path = shared.join("workspace.json");
+    let former = concat!("agboard", "-files");
+    let text = format!("{{\n  \"format\": \"{former}\",\n  \"formatVersion\": 1\n}}\n");
+    fs::write(&path, &text).unwrap();
+
+    match store.projects().unwrap_err() {
+        AgpjError::FileInvalid { field, reason, .. } => {
+            assert_eq!(field, "format");
+            assert_eq!(reason, "The format must be agpj-files.");
+        }
+        other => panic!("{other:?}"),
+    }
     assert_eq!(fs::read_to_string(&path).unwrap(), text);
 }
 
