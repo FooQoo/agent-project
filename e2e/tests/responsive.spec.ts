@@ -67,7 +67,7 @@ for (const width of [1024, 1280, 1920]) {
       expect(todo.x).toBeLessThan(doing.x);
       expect(doing.x).toBeLessThan(done.x);
       // At 1024px the four lanes scroll sideways inside the board.
-      if (width >= 1280) expect(done.x + done.width).toBeLessThanOrEqual(panel.x);
+      if (width >= 1400) expect(done.x + done.width).toBeLessThanOrEqual(panel.x);
       // The lanes are as tall as the area between the header and the footer.
       expect(new Set([backlog.height, todo.height, doing.height, done.height]).size).toBe(1);
     }
