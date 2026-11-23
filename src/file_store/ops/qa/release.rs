@@ -26,7 +26,9 @@ impl FileStore {
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut held: Vec<Question> = Vec::new();
         for id in message_ids(&project_dir)? {
-            if let Message::Question(question) = read_message(shared, &project_dir, &id)?
+            // A malformed message is reported by the snapshot's problems; it must not keep the
+            // valid held questions back.
+            if let Ok(Message::Question(question)) = read_message(shared, &project_dir, &id)
                 && question.state() == MessageState::Held
             {
                 held.push(question);

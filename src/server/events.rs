@@ -119,21 +119,33 @@ const MODE_POLL: Duration = Duration::from_secs(1);
 fn mode_events(data_dir: std::path::PathBuf) -> impl Stream<Item = Result<Event, Infallible>> {
     let shared = data_dir.join("shared");
     let mut known = crate::mode::api_json_all(&data_dir, &chrono::Local::now());
+    // Projects not asleep that may still hold questions: all of them when the stream starts.
+    let mut pending: std::collections::BTreeSet<String> = known.keys().cloned().collect();
     tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(MODE_POLL)).filter_map(
         move |_| {
             let mut now = crate::mode::api_json_all(&data_dir, &chrono::Local::now());
             // A project that left sleep (the daily window ended, or the entry is gone) gets its
-            // held questions delivered; one that is asleep reports how many it holds.
+            // held questions delivered. A project is checked until its release succeeds, so a
+            // transition missed while the board was away, or a failed release, is retried.
             for (id, before) in &known {
-                let was_asleep = before["mode"] == "sleep";
-                let asleep = now.get(id).is_some_and(|state| state["mode"] == "sleep");
-                if was_asleep
-                    && !asleep
-                    && let Ok(project) = id.parse()
-                {
-                    let _ = crate::mode::release_held(&shared, &project);
+                if before["mode"] == "sleep" {
+                    pending.insert(id.clone());
                 }
             }
+            for id in now.keys() {
+                if now[id]["mode"] == "sleep" {
+                    pending.remove(id);
+                }
+            }
+            pending.retain(|id| {
+                if now.get(id).is_some_and(|state| state["mode"] == "sleep") {
+                    return false;
+                }
+                let Ok(project) = id.parse() else {
+                    return false;
+                };
+                crate::mode::release_held(&shared, &project).is_err()
+            });
             for (id, state) in now.iter_mut() {
                 if state["mode"] == "sleep" {
                     state["heldCount"] = serde_json::json!(crate::mode::held_count(&shared, id));
