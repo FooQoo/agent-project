@@ -94,6 +94,7 @@ The board subscribes to `GET /api/events`, which carries every project. The phon
 - `resync` when the stream has fallen behind.
 - A keep-alive every 15 seconds. A keep-alive does not fetch anything.
 - `preferences` after a saved language or theme change.
+- `mode` after a project's mode changes, including a change the CLI makes in another process. The stream compares the saved modes once a second (see [Project mode](../reference/web-api.md#project-mode)).
 - `docs` on the board's stream only, after a change in a project's `docs/` folder (see [The docs](#the-docs)).
 
 A connection that has sent nothing for 45 seconds is dropped and reopened, with growing pauses of 1, 2, 5, 10, and then 30 seconds. The browser lets go of the connection while its tab is hidden and opens it again when the tab becomes visible. The first read of a project waits until the connection reports `ready`, so a change made between the read and the subscription is not missed; after a reconnect, the cache is marked outdated and read again.

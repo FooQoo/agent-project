@@ -74,6 +74,7 @@
 - `web/src/shared/markdown/`: Markdownの描画部です。`MarkdownBlocks`は本文のブロックを描き、大きい本文を仮想化します（`VirtualMarkdown.tsx`）。`collectImages.ts`は1つの本文にある画像を並べ、`EnlargedImages.tsx`はそれらをまたいで拡大表示を開きます。
 - `web/src/shared/ui/lightbox/`: 画像や図の拡大表示です。`Lightbox`はダイアログの枠（図にも使います）、`ImageViewer`はスワイプで切り替えるビューア（スライドは`ZoomSlide`で、`useImageZoom`と`web/src/shared/lib/gesture/pinchZoom.ts`が拡大縮小を担います）、`ImageLightbox`はその2つを組み合わせたものです。スタイルは`web/src/shared/styles/lightbox.css`にあります。
 - `web/src/features/notification-settings/`: 設定ダイアログの「通知」の行と、それが開くダイアログ。読み取りと保存、およびサーバーと同じ種類と既定値を持ちます。
+- `web/src/features/project-mode/`: 設定ダイアログの**モード**の切り替え（`ui/ModeSection.tsx`）とヘッダーの**スリープ**表示（`ui/ModeIndicator.tsx`）。`/api/projects/{id}/mode`の読み書き（`api.ts`）と、`mode`イベントで最新に保つページ側のコピー（`store.ts`）を持ちます。`web/src/app/modeSlot.tsx`が、ボードとスマホ画面に配置します。
 - `web/src/shared/preferences/`: ブラウザ側の保存した言語とカラーテーマ。読み取りと保存、ブラウザの最初の描画用の控え、`preferences`イベントを扱います。[サーバーと画面](../concepts/server-and-ui.md)を参照してください。
 - `web/.storybook/`: Storybookの設定、架空のfixture、decorator、StoryのためのMSWワーカーとそのハンドラ、共通部分のテストを置きます。UIのStoryと対応台帳は、説明するソースの近くに置きます。詳しくは[Storybookのセットアップと台帳](../getting-started/setup.md#storybook)を参照してください。
 - `tests/`: Rustの結合テストとCLIのテストを置きます。

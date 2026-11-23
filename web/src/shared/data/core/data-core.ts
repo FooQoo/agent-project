@@ -20,6 +20,7 @@ export interface DataCoreOptions {
   /** The build ID of the server's `ready` event. */
   onReady?(build: string): void;
   onPreferences?(payload: unknown): void;
+  onMode?(payload: unknown): void;
   onConnectionState?(state: ConnectionState): void;
 }
 
@@ -83,6 +84,7 @@ export class DataCore {
       },
       onReady: options.onReady,
       onPreferences: options.onPreferences,
+      onMode: options.onMode,
       onState: (state) => {
         options.onConnectionState?.(state);
         for (const listener of [...this.stateListeners]) listener();

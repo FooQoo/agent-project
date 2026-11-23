@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { modeIndicatorSlot } from './modeSlot';
 import { MessageCenter } from '../features/tasks/messages/MessageCenter';
 import { messagesApi as productMessagesApi } from '../features/tasks/messages/api';
 import type { MessagesApi } from '../features/tasks/messages/model/messages';
@@ -113,6 +114,7 @@ export function BoardWorkspace({
         switchDisabled={operation !== null}
         projectSwitcher={projectSwitcher}
         versionSlot={planned.versionSlot}
+        statusSlot={modeIndicatorSlot(known ? activeId : null)}
         settings={boardSettingsSlot}
         canAdd={session.viewMode === 'board' && model.view === 'board'}
         viewMode={session.viewMode}

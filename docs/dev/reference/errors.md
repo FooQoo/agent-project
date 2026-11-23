@@ -147,6 +147,15 @@ These are returned by the `/api/preferences` route (see [Web API](./web-api.md#d
 | `preferences_unavailable` | The preferences file could not be written. The saved value is unchanged. | n/a | 500 |
 
 
+## Project mode
+
+These are returned by the `/api/projects/{projectId}/mode` route (see [Web API](./web-api.md#project-mode)). They are not CLI errors, so they have no exit code. A modes file that cannot be read is not an error: the project reads as sparring.
+
+| Code | When | Exit | HTTP |
+| --- | --- | --- | --- |
+| `invalid_mode` | The body is not exactly `{"mode": "sparring"}` or `{"mode": "sleep"}`. Nothing is saved. | n/a | 422 |
+| `mode_unavailable` | The modes file could not be written. The saved mode is unchanged. | n/a | 500 |
+
 ## Phone notification settings
 
 These are returned by the `/api/notification-settings` route (see [Web API](./web-api.md#phone-notification-settings)). They are not CLI errors, so they have no exit code. A settings file that cannot be read is not an error: the defaults are used.

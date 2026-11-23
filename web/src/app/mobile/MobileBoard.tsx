@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { modeIndicatorSlot } from '../modeSlot';
 import { BoardMessage } from '../../pages/board/ui/BoardMessage';
 import { MonitorScreen } from '../../pages/monitor/MonitorProject';
 import type { BuildReloadHook } from '../../pages/monitor/MonitorProject';
@@ -40,6 +41,7 @@ export default function MobileBoard({
       projects.projects.length > 0 || model.view === 'no-projects' ? projects.projects : null,
     activeProjectId: known ? activeId : null,
     switchDisabled: session.operation !== null,
+    statusSlot: modeIndicatorSlot(known ? activeId : null),
     projectSwitcher: (
       <ProjectSwitcher
         projects={projects.projects}

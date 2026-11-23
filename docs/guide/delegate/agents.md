@@ -147,6 +147,8 @@ The agent uses `--no-wait` only when you explicitly ask it to register a questio
 
 ### Sleep mode {#sleep-mode}
 
+You can also switch the mode from the board: see [Mode](../watch/board#mode).
+
 When you go away on purpose, switch the project to sleep mode (`agpj mode sleep`). In sleep mode the agent does not ask you anything: `message ask` is refused, so no question reaches the board, your notifications, or the chat. The agent has a subagent decide, based on the existing code, the project's docs, and the answers you gave to earlier questions, and then continues with the conclusion without waiting. Work that only you can do, such as a check on a real device, is left undone; the agent notes in the task history that you need to complete it and why, and moves on to other work.
 
 When you come back, the task's history shows each decision: what the question was, what was chosen, who decided (`subagent:NAME`), why, and what it rests on (code, documents, or past questions such as `Q-12`). If you disagree, tell the agent and it changes course. `agpj mode sparring` returns to the default, where the agent listens and asks you again. The commands are in [Sleep mode](../reference/cli#sleep-mode).

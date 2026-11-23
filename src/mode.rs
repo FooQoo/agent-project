@@ -18,6 +18,7 @@ use serde_json::{Map, Value, json};
 const FORMAT_VERSION: u32 = 1;
 const INTERNAL_DIR: &str = ".internal";
 const FILE_NAME: &str = "modes.json";
+const LOCK_NAME: &str = "modes.lock";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -37,7 +38,7 @@ impl ModeKind {
         }
     }
 
-    fn parse(text: &str) -> Option<ModeKind> {
+    pub fn parse(text: &str) -> Option<ModeKind> {
         match text {
             "sparring" => Some(ModeKind::Sparring),
             "sleep" => Some(ModeKind::Sleep),
@@ -113,25 +114,44 @@ fn read_projects_strict(data_dir: &Path) -> std::io::Result<Map<String, Value>> 
     }
 }
 
-/// The saved mode of a project. A missing, invalid, or unknown entry is sparring.
-pub fn load(data_dir: &Path, project: &str) -> ProjectMode {
-    let projects = read_projects(data_dir);
-    let Some(entry) = projects.get(project) else {
-        return ProjectMode::default();
-    };
-    let Some(kind) = entry
+fn parse_entry(entry: &Value) -> Option<ProjectMode> {
+    let kind = entry
         .get("kind")
         .and_then(Value::as_str)
-        .and_then(ModeKind::parse)
-    else {
-        return ProjectMode::default();
-    };
+        .and_then(ModeKind::parse)?;
     let since = entry
         .get("since")
         .and_then(Value::as_str)
         .and_then(|text| DateTime::parse_from_rfc3339(text).ok())
         .map(|time| time.with_timezone(&Utc));
-    ProjectMode { kind, since }
+    Some(ProjectMode { kind, since })
+}
+
+/// The saved mode of a project. A missing, invalid, or unknown entry is sparring.
+pub fn load(data_dir: &Path, project: &str) -> ProjectMode {
+    read_projects(data_dir)
+        .get(project)
+        .and_then(parse_entry)
+        .unwrap_or_default()
+}
+
+/// Every project that has a saved, valid mode entry, for the board's change stream.
+pub fn load_all(data_dir: &Path) -> std::collections::BTreeMap<String, ProjectMode> {
+    read_projects(data_dir)
+        .iter()
+        .filter_map(|(id, entry)| parse_entry(entry).map(|mode| (id.clone(), mode)))
+        .collect()
+}
+
+impl ProjectMode {
+    /// The JSON the board's API and event stream carry: `{"mode": "sleep", "since": "…"}`.
+    pub fn api_json(&self) -> Value {
+        let mut body = json!({"mode": self.kind.as_str()});
+        if let Some(since) = self.since {
+            body["since"] = Value::String(crate::clock::format_utc(since));
+        }
+        body
+    }
 }
 
 /// The saved kind of a project.
@@ -152,6 +172,13 @@ pub fn set(
     kind: ModeKind,
     now: DateTime<Utc>,
 ) -> std::io::Result<ProjectMode> {
+    let path = path_in(data_dir);
+    let dir = path.parent().unwrap_or(data_dir);
+    crate::server::preferences::create_private_dir(dir)?;
+    // One exclusive lock from the read to the rename, so the board and the CLI (a separate
+    // process) cannot overwrite each other's update.
+    let _lock = crate::file_store::lock::WriteLock::acquire(&dir.join(LOCK_NAME))
+        .map_err(std::io::Error::other)?;
     let mut projects = read_projects_strict(data_dir)?;
     let mode = if kind == ModeKind::Sparring {
         projects.remove(project);
@@ -172,9 +199,6 @@ pub fn set(
         "projects": projects,
     }))
     .map_err(std::io::Error::other)?;
-    let path = path_in(data_dir);
-    let dir = path.parent().unwrap_or(data_dir);
-    crate::server::preferences::create_private_dir(dir)?;
     let temporary = dir.join(format!("{FILE_NAME}.{}.tmp", std::process::id()));
     let result = crate::server::preferences::write_owner_only(&temporary, &bytes)
         .and_then(|()| std::fs::rename(&temporary, &path));
@@ -240,5 +264,20 @@ mod strict_tests {
         std::fs::create_dir(&file).unwrap();
         assert!(set(dir.path(), "p1", ModeKind::Sleep, Utc::now()).is_err());
         assert!(file.is_dir());
+    }
+
+    #[test]
+    fn concurrent_saves_of_different_projects_both_survive() {
+        let dir = tempfile::tempdir().unwrap();
+        let now = Utc::now();
+        std::thread::scope(|scope| {
+            for n in 0..8 {
+                let path = dir.path();
+                scope.spawn(move || {
+                    set(path, &format!("p{n}"), ModeKind::Sleep, now).unwrap();
+                });
+            }
+        });
+        assert_eq!(load_all(dir.path()).len(), 8);
     }
 }

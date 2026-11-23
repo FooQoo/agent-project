@@ -52,6 +52,7 @@ Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登�
 - **進行表。** `agpj progress`とHookは、表に`mode: "sleep"`を足し、組手ではキーを出しません。エージェントは表を読むたびにモードを知ります（[進行表](../reference/agent-output.md#progress-table)を参照）。
 - **拒否。** `message ask`は、何かを保存する前、入力を検証する前、サーバーを起動する前にモードを確かめます。スリープ中は`sleep_mode`（`AgpjError::SleepMode`）で失敗し、質問は作られないので、ボード・通知・チャットのどこにも届きません。`reason`は復旧の案内で、サブエージェントに判断させ、進め、記録するよう伝えます。
 - **記録。** `agpj decision add <id> --question --choice --reason --decided-by subagent:NAME --basis ...`（`FileStore::add_decision`）は、`add_history`を通して通常の履歴を1件書きます。下書き・アーカイブ・Doneのガードも同じです。`Decided in sleep mode by <who>. Question: ... Choice: ... Reason: ... Basis: ...`で、履歴が日本語のボードでは日本語の形になります。`--basis`は必須なので、判断の根拠にしたコード・ドキュメント・過去の質問が必ず履歴に残ります。
+- **ボードの切り替え。** 設定ダイアログ（PC）と設定シート（スマホ）に**モード**の切り替えがあり、プロジェクトがスリープ中はヘッダーに**スリープ**表示が出ます（`web/src/features/project-mode/`）。ページは`GET /api/projects/{id}/mode`で読み、`PUT`で保存し、`/api/events`の`mode`イベントに追従するので、CLIが変えた内容は再読み込みなしで表示されます（[プロジェクトのモード](../reference/web-api.md#プロジェクトのモード)を参照）。サーバーは`src/mode.rs`をそのまま使うので、ボードとCLIは常に同じ項目を読み書きします。画面の説明は[モード](../../guide/watch/board.md#mode)にあります。
 
 スキルのトピック`agpj skills sleep`（`src/skills/topics/sleep.md`）が、エージェントのすることを伝えます。選択肢と制約を渡してサブエージェントに判断させ、既存のコード、プロジェクトのドキュメント、回答済みの過去の質問を根拠にし、結論で進め、記録します。実機での確認のように人にしかできない作業は質問せず、未着手のまま`history add`で「人が行う必要があること」とその理由を記録し、ほかの作業へ進みます。メインのスキル、`questions`、`resident`がここを指します。組手に戻すときの後始末は要らず、切り替え前に出した質問には影響しません。コマンドは[スリープモード](../../guide/reference/cli.md#sleep-mode)を参照してください。
 

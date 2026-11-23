@@ -51,6 +51,9 @@ pub(crate) async fn events(
     // A lagged notice may have named any project, so it asks for every project's Docs.
     let docs = BroadcastStream::new(state.docs_changed.subscribe())
         .map(|project| Ok(docs_event(project.unwrap_or(None).as_ref())));
+    // The CLI changes a mode in another process, so the stream compares the saved modes now and
+    // then and tells the board of each difference.
+    let modes = mode_events(crate::mode::data_dir_of(&state.shared));
     // The stream is use for as long as it is open, so an automatic server keeps running.
     let board = !headers.contains_key(WAITING_COMMAND_HEADER);
     let held = state.activity.open_stream(board);
@@ -59,7 +62,7 @@ pub(crate) async fn events(
     let stream = tokio_stream::once(Ok(Event::default()
         .event("ready")
         .data(format!(r#"{{"build":"{APP_BUILD_ID}"}}"#))))
-    .chain(changes.merge(preferences).merge(docs))
+    .chain(changes.merge(preferences).merge(docs).merge(modes))
     .map(move |event| {
         let _ = (&held, &session);
         event
@@ -103,6 +106,36 @@ fn change_payload(
         ),
         Err(BroadcastStreamRecvError::Lagged(_)) => ("resync", resync_data(feed)),
     }
+}
+
+/// How often an open stream compares the saved modes with what it last told the board.
+const MODE_POLL: Duration = Duration::from_secs(1);
+
+/// `mode` carries the projects whose mode changed since the last look:
+/// `{"projects": {"<id>": {"mode": "sleep", "since": "…"}}}`. A project whose entry is gone is
+/// sparring. Nothing is sent for the state at connection time: the board reads it with `GET`.
+fn mode_events(data_dir: std::path::PathBuf) -> impl Stream<Item = Result<Event, Infallible>> {
+    let mut known = crate::mode::load_all(&data_dir);
+    tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(MODE_POLL)).filter_map(
+        move |_| {
+            let now = crate::mode::load_all(&data_dir);
+            let mut changed = serde_json::Map::new();
+            for (id, mode) in &now {
+                if known.get(id) != Some(mode) {
+                    changed.insert(id.clone(), mode.api_json());
+                }
+            }
+            for id in known.keys().filter(|id| !now.contains_key(*id)) {
+                changed.insert(id.clone(), crate::mode::ProjectMode::default().api_json());
+            }
+            known = now;
+            if changed.is_empty() {
+                return None;
+            }
+            let data = serde_json::json!({ "projects": changed }).to_string();
+            Some(Ok(Event::default().event("mode").data(data)))
+        },
+    )
 }
 
 #[cfg(test)]
