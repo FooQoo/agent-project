@@ -63,6 +63,10 @@ try {
       await tablet.goto(`${remote}/?project=${id}`);
       await server.unlockPage(tablet);
       await expect(tablet.locator('[data-decision-answer][data-task-id="3"]')).toHaveText(answerLabel);
+      // Select the same card as the desktop board, then scroll the lanes so Doing and Done are fully in view.
+      await tablet.getByRole('button', { name: /^#3(?!\d)/ }).click();
+      await expect(tablet.getByRole('tab')).toHaveCount(5);
+      await tablet.locator('.board__lanes').evaluate((element) => { element.scrollLeft = element.scrollWidth; });
       await settle(tablet);
       await tablet.screenshot({ path: path.join(output, `tablet${suffix}.png`) });
 
