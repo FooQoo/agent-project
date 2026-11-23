@@ -130,7 +130,8 @@ pub fn stale_running(facts: &Facts) -> Vec<Finding> {
 }
 
 /// No card has moved between lanes for a while, and Doing holds a card nothing is working on or
-/// Todo holds an AI card. Backlog never counts.
+/// Todo holds an AI card. Backlog never counts. A card with a history entry later than the last
+/// lane move counts as reviewed and is left out until the next lane move.
 pub fn lane_review(facts: &Facts) -> Vec<Finding> {
     let Some(progress) = facts.progress else {
         return Vec::new();
@@ -143,7 +144,9 @@ pub fn lane_review(facts: &Facts) -> Vec<Finding> {
     }
     let ids = |keep: &dyn Fn(&ProgressTask) -> bool| -> String {
         let mut ids: Vec<i64> = tasks(progress)
-            .filter(|t| t.draft.is_none() && keep(t))
+            .filter(|t| {
+                t.draft.is_none() && t.last_history_at.is_none_or(|at| at <= last_move) && keep(t)
+            })
             .map(|t| t.id)
             .collect();
         ids.sort_unstable();
@@ -173,6 +176,7 @@ pub fn lane_review(facts: &Facts) -> Vec<Finding> {
             " Todo holds AI cards: {queued}. Start the ones that are ready, following the work loop and the epic order; a card that is waiting its turn (for example, for a release) stays in Todo, with the reason recorded by `agpj history add` if it is not recorded yet."
         ));
     }
+    text.push_str(" Recording the decision with `agpj history add` keeps a card out of this reminder until the next lane move.");
     vec![Finding::new(text)]
 }
 

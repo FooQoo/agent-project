@@ -18,6 +18,8 @@ mod turn;
 #[cfg(test)]
 mod cases;
 #[cfg(test)]
+mod cases_lane;
+#[cfg(test)]
 mod cases_question;
 #[cfg(test)]
 mod cases_state;

@@ -143,5 +143,6 @@ pub fn all() -> Vec<Case> {
     cases.extend(super::record_cases::all());
     cases.extend(super::cases_question::all());
     cases.extend(super::cases_state::all());
+    cases.extend(super::cases_lane::all());
     cases
 }
