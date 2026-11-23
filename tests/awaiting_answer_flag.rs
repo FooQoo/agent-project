@@ -530,3 +530,40 @@ fn a_replayed_acceptance_finishes_a_resume_that_never_happened() {
         assert_eq!(fx.resumes(id), 1);
     }
 }
+
+#[test]
+fn an_older_answers_resume_entry_does_not_mask_a_newer_answer() {
+    let fx = fx();
+    let id = asked_and_answered(&fx);
+    fx.store
+        .accept_message(&fx.project, "Q-1", Actor::Ai, now())
+        .unwrap();
+    assert_eq!(fx.view(id).agent_status, RunState::Running);
+    assert_eq!(fx.resumes(id), 1);
+
+    // A second question pauses the task again and is answered, but not yet accepted.
+    qa::ask(
+        &fx.store,
+        &fx.project,
+        &[id],
+        "Next?",
+        &[("a", "A"), ("b", "B")],
+    );
+    assert_eq!(fx.view(id).agent_status, RunState::Paused);
+    qa::answer(&fx.store, &fx.project, "Q-2", Some("b"), None);
+
+    let written = fx
+        .store
+        .accept_answers(&fx.project, &["Q-1".to_string(), "Q-2".to_string()], now())
+        .unwrap();
+    assert_eq!(written, vec!["Q-2".to_string()]);
+    assert_eq!(fx.view(id).agent_status, RunState::Running);
+    assert_eq!(fx.resumes(id), 1);
+    let resumed_total = fx
+        .view(id)
+        .history
+        .iter()
+        .filter(|e| e.reason.starts_with("Resumed after the answers to"))
+        .count();
+    assert_eq!(resumed_total, 2);
+}

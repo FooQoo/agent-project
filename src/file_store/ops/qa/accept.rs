@@ -186,12 +186,6 @@ impl FileStore {
         by_task.sort_by_key(|(id, _)| *id);
         let at = stamp(now);
         for (id, questions) in by_task {
-            // When the answers were taken in, so a replay can tell whether the resume ran.
-            let accepted_since = answered
-                .iter()
-                .filter(|q| questions.contains(&q.id.as_str()))
-                .filter_map(|q| q.reply.as_ref().and_then(|r| r.accepted_at))
-                .min();
             let Ok(mut task) = reader::read_task_strict(shared, project, id) else {
                 continue;
             };
@@ -210,12 +204,19 @@ impl FileStore {
             if index.is_waiting(&parsed.questions, !parsed.questions_defects.is_empty()) {
                 continue;
             }
-            // A resume entry since the acceptance means the first run finished; a person may have
-            // paused the task after it, and a replay must leave that pause alone.
-            let resumed_already = task.history.iter().any(|e| {
-                accepted_since.is_some_and(|since| e.at >= since)
-                    && questions.iter().any(|q| is_resume_entry_for(&e.reason, q))
-            });
+            // A replay must leave a pause a person made after the resume. So skip only when every
+            // answer of this batch that refers to the task has its own resume entry since its own
+            // acceptance; an older answer's entry must not mask a newer one.
+            let resumed_already = answered
+                .iter()
+                .filter(|q| questions.contains(&q.id.as_str()))
+                .all(|q| {
+                    let since = q.reply.as_ref().and_then(|r| r.accepted_at);
+                    task.history.iter().any(|e| {
+                        since.is_some_and(|since| e.at >= since)
+                            && is_resume_entry_for(&e.reason, &q.id)
+                    })
+                });
             if resumed_already {
                 continue;
             }
