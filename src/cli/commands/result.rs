@@ -74,7 +74,8 @@ fn add(ctx: &mut Context, args: &ResultAddArgs) -> Result<Outcome, AgpjError> {
                 ResultKind::Progress
             },
             title: args.title.clone(),
-            summary: args.summary.clone(),
+            summary: args.summary.clone().unwrap_or_default(),
+            plan: args.plan.clone(),
             link: args.link.clone(),
             images,
             key: args.key.clone(),
@@ -92,8 +93,13 @@ fn add(ctx: &mut Context, args: &ResultAddArgs) -> Result<Outcome, AgpjError> {
         })
         .collect();
     let human = if recorded.created {
+        let plan = result
+            .plan_id
+            .as_deref()
+            .map(|p| format!(" for plan {p}"))
+            .unwrap_or_default();
         format!(
-            "Recorded {} result v{} on #{}.\n",
+            "Recorded {} result v{}{plan} on #{}.\n",
             result.kind.as_str(),
             result.version,
             args.task_id

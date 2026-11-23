@@ -17,7 +17,9 @@ use crate::file_store::history::{ParseMode, parse_task};
 use crate::file_store::io;
 use crate::file_store::layout;
 use crate::file_store::lock::WriteLock;
-use crate::file_store::model::{EpicView, Problem, TaskEpic, TaskFile, TaskMetadata, TaskView};
+use crate::file_store::model::{
+    EpicView, Problem, ResultPlanView, TaskEpic, TaskFile, TaskMetadata, TaskView,
+};
 use crate::file_store::qa::{self, QaIndex};
 use crate::file_store::transaction;
 use crate::file_store::validate;
@@ -130,6 +132,18 @@ pub(crate) fn task_view(
     let parts = frontmatter::parse(&description);
     let questions = frontmatter::questions_of(&description);
     let (result_plans, plan_defects) = frontmatter::result_plans_of(&description, true);
+    let result_plans = result_plans
+        .into_iter()
+        .map(|plan| ResultPlanView {
+            delivered_result_version: task
+                .results
+                .iter()
+                .filter(|r| r.plan_id.as_deref() == Some(plan.id.as_str()))
+                .map(|r| r.version)
+                .min(),
+            plan,
+        })
+        .collect();
     TaskView {
         id: task.id,
         title: task.title,

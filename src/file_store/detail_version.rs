@@ -58,7 +58,13 @@ pub fn task_versions(task: &TaskView) -> DetailVersions {
         document.field(if item.done { "done" } else { "open" });
     }
     document.field(&task.result_plans.len().to_string());
-    for plan in &task.result_plans {
+    for view in &task.result_plans {
+        let plan = &view.plan;
+        document.field(
+            &view
+                .delivered_result_version
+                .map_or_else(String::new, |v| v.to_string()),
+        );
         document.field(&plan.id);
         document.field(&plan.content);
         document.field(&plan.condition);

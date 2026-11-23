@@ -77,8 +77,12 @@ agpj --project "My project" result add 1 --summary "Top page capture" --file top
 agpj --project "My project" result add 1 --summary "All screens of the mock" --file 01.png --file 02.png --file 03.png --actor ai
 agpj --project "My project" result add 1 --summary "Finished and checked" --final --actor ai
 agpj --project "My project" result add 1 --published v1.0.0 --link https://example.com/releases/v1.0.0 --summary "Released" --actor ai
+agpj --project "My project" result add 1 --plan RP-2 --summary "The endpoint answers its first request" --link https://example.com/demo --actor ai
+agpj --project "My project" result add 1 --plan RP-3 --actor ai
 agpj --project "My project" result ls 1
 ```
+
+`--plan RP-<n>`を付けると、タスクの[成果の予定](../../dev/reference/files.md#result-plans)のどれかに対する成果として届けます。順番は問わず、予定を書き写す必要もありません。タイトルの既定は予定の内容（`--title`で上書き）、`--summary`は省くと予定の内容が要約になり、成果には予定のIDが`planId`として付きます。予定は、そのIDを持つ成果が保存されている間「届け済み」とみなし、`show --json`が各予定の`deliveredResultVersion`として返します（未届けの間は`null`）。最終成果の予定は`--final`なしでも最終の成果になります。中間成果の予定に`--final`を付けると`invalid_value`で失敗し、`--plan`なしの`--final`はこれまでどおりです。存在しない予定のIDや別のタスクの予定は`result_plan_not_found`で失敗します。1つの予定を届ける成果は1件で、内容を変えて届け直すと`result_plan_delivered`で失敗し、同じ配信の再送（下の判定に予定も含みます）は安全です。`--plan`と`--published`は同時に使えません。届けていない中間成果の予定が作業や自動Doneを止めることはなく、`finalResultMissing`の案内も変わりません。
 
 成果には、タスクごとに次のバージョン番号（1、2、……）が付きます。記録しても列と稼働状態は変わらず、履歴が1件増えます。同じ成果を繰り返し送っても安全です。すでに記録した成果を見つけて`created: false`を返し、何も書きません。`--key`を省くと、内容（種別・要約・リンク・画像のバイト列）で同じ成果かを判断します。`--key <key>`で自分で名前を付けることもでき、別の内容に同じキーを使うと`invalid_value`で失敗します。`--title`を省くと、タイトルは要約の最初の1文を80文字までに切ったものになります（切ったときは最後が`…`）。タイトルは同じ成果かどうかの判断にも含まれるため、別のタイトルで送り直すと、同じ`--key`を使わない限り別の成果になります（同じ`--key`では`invalid_value`で失敗します）。要約とリンクは1〜2,000文字、1つのタスクに残せる成果は100件までです。AIは、人の下書き・アーカイブ済み・完了のタスクには成果を記録できません。ただし、すでに記録した成果の再送は成功します。`--published バージョン名`は公開の記録です。`--link`が必須で、`--final`とは併用できず、バージョン名は`version add`と同じ規則で検証され、要約の先頭に`Published: バージョン名`の行が付きます。Doneのタスクが受け付ける唯一の成果で、最終成果がすでにあっても、AIでも人でも追加できます。
 

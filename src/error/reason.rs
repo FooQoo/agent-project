@@ -22,6 +22,13 @@ impl AgpjError {
             AgpjError::TaskNotFound { id } => {
                 format!("No task has ID {id}. Run \"agpj ls\" to see the tasks.")
             }
+            AgpjError::ResultPlanNotFound { id, .. } => {
+                format!("Run \"agpj show {id} --json\" and use an ID from resultPlans.")
+            }
+            AgpjError::ResultPlanDelivered { .. } => {
+                "Pick a plan whose deliveredResultVersion is null, or record the result without --plan."
+                    .into()
+            }
             AgpjError::TaskArchived { .. } => "Restore the task before editing it.".into(),
             AgpjError::TaskNotArchived { .. } => "Only an archived task can be deleted here.".into(),
             AgpjError::NoReleaseVersion => {

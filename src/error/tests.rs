@@ -11,6 +11,15 @@ pub(super) fn all_errors() -> Vec<AgpjError> {
             name: "Alpha".into(),
         },
         AgpjError::TaskNotFound { id: 7 },
+        AgpjError::ResultPlanNotFound {
+            id: 7,
+            plan: "RP-9".into(),
+        },
+        AgpjError::ResultPlanDelivered {
+            id: 7,
+            plan: "RP-1".into(),
+            version: 2,
+        },
         AgpjError::InvalidArgument {
             message: "unexpected argument '--x'".into(),
             command: Some("add".into()),
@@ -194,6 +203,8 @@ fn codes_and_exit_codes_follow_the_design_table() {
             ("project_not_found", 4),
             ("project_name_exists", 2),
             ("task_not_found", 3),
+            ("result_plan_not_found", 3),
+            ("result_plan_delivered", 1),
             ("invalid_argument", 2),
             ("invalid_value", 2),
             ("invalid_state_for_column", 1),

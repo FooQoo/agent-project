@@ -92,6 +92,7 @@ fn recording_continues_from_the_newest_stored_summary_and_skips_an_empty_window(
                     images: Vec::new(),
                     key: None,
                     published: None,
+                    plan: None,
                 },
                 when,
             )
@@ -161,6 +162,7 @@ fn a_result_saved_just_before_the_end_of_a_window_is_in_its_summary() {
                 images: Vec::new(),
                 key: None,
                 published: None,
+                plan: None,
             },
             at(10, 59),
         )
@@ -221,6 +223,7 @@ fn recording_a_summary_dismisses_the_oldest_beyond_ten_and_keeps_every_line() {
                 images: Vec::new(),
                 key: None,
                 published: None,
+                plan: None,
             },
             at(11, 30),
         )

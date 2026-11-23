@@ -233,6 +233,7 @@ fn progress(summary: &str) -> ResultInput {
         images: Vec::new(),
         key: None,
         published: None,
+        plan: None,
     }
 }
 
