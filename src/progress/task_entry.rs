@@ -1,6 +1,6 @@
 //! One task of the progress table.
 
-use super::{ProgressTask, count, is_waiting, text};
+use super::{ProgressResultPlan, ProgressTask, count, is_waiting, text};
 use crate::domain::{Assignee, Column, ResultKind, RunState};
 use crate::file_store::layout;
 use crate::file_store::model::TaskView;
@@ -27,6 +27,7 @@ pub(super) fn task_of(task: &TaskView, project_dir: &std::path::Path) -> Progres
                         at.max(task.agent_status_changed_at)
                     })
             }),
+        result_plans: undelivered_plans(task),
         last_history_at: task.history.iter().map(|entry| entry.at).max(),
         has_final_result: task.assignee == Assignee::Ai
             && task.task_status == Column::Doing
@@ -37,4 +38,25 @@ pub(super) fn task_of(task: &TaskView, project_dir: &std::path::Path) -> Progres
             None
         },
     }
+}
+
+/// The plans of an AI task in Todo or Doing that have no delivered result yet. A task whose
+/// plans cannot be read has none to show.
+fn undelivered_plans(task: &TaskView) -> Vec<ProgressResultPlan> {
+    if task.assignee != Assignee::Ai
+        || !matches!(task.task_status, Column::Todo | Column::Doing)
+        || task.result_plans_error
+    {
+        return Vec::new();
+    }
+    task.result_plans
+        .iter()
+        .filter(|view| view.delivered_result_version.is_none())
+        .map(|view| ProgressResultPlan {
+            id: view.plan.id.clone(),
+            content: text::short_plan(&view.plan.content),
+            condition: text::short_plan(&view.plan.condition),
+            is_final: view.plan.is_final,
+        })
+        .collect()
 }

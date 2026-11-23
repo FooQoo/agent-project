@@ -85,7 +85,7 @@ pub(crate) use next::gated_by_waves;
 pub use next::{MAX_NEXT_TASKS, NextReason, NextTask, STALE_RUNNING_MINUTES};
 pub use requests::{ProgressRequest, open_requests};
 use task_entry::task_of;
-pub use types::{EpicToClose, Include, ProgressEpic, ProgressTask};
+pub use types::{EpicToClose, Include, ProgressEpic, ProgressResultPlan, ProgressTask};
 
 /// Build the table from one project's unarchived snapshot. `shared` is the
 /// shared folder the snapshot was read from; the paths point into it.

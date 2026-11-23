@@ -47,9 +47,25 @@ pub struct ProgressTask {
     /// A final result is recorded. Only on an AI task in Doing; left out when false.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub has_final_result: bool,
+    /// The result plans not yet delivered, in plan order. Only on an AI task in Todo or Doing;
+    /// left out when none is undelivered (or the task has no plans).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub result_plans: Vec<ProgressResultPlan>,
     /// The time of the latest history entry. Not printed: the `lane-review` rule reads it.
     #[serde(skip)]
     pub last_history_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+/// An undelivered result plan as the progress table shows it: what to deliver, and when.
+/// `content` and `condition` are cut to a short length; `show` has the full text.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProgressResultPlan {
+    pub id: String,
+    pub content: String,
+    pub condition: String,
+    #[serde(rename = "final")]
+    pub is_final: bool,
 }
 
 /// An epic whose tasks are all Done while its `EPIC.md` still has an unchecked reference

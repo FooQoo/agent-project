@@ -13,6 +13,15 @@ pub(super) fn short_question(text: &str) -> String {
     cut(&flat, QUESTION_LIMIT)
 }
 
+/// Longest plan content or condition in the table, in characters.
+const PLAN_LIMIT: usize = 300;
+
+/// A plan's content or condition on one line, cut to `PLAN_LIMIT` characters.
+pub(super) fn short_plan(text: &str) -> String {
+    let flat = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    cut(&flat, PLAN_LIMIT)
+}
+
 /// The first non-empty line as plain text, cut to `TITLE_LIMIT` characters with an
 /// ellipsis when it was longer.
 pub(super) fn request_title(body: &str) -> String {
