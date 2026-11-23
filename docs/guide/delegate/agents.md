@@ -145,6 +145,12 @@ The agent writes its chat replies in the language you use with it. If you chose 
 
 The agent uses `--no-wait` only when you explicitly ask it to register a question and return immediately. If the board is unavailable, it reports the problem and waits to ask there.
 
+### Sleep mode {#sleep-mode}
+
+When you go away on purpose, switch the project to sleep mode (`agpj mode sleep`). In sleep mode the agent does not ask you anything: `message ask` is refused, so no question reaches the board, your notifications, or the chat. The agent has a subagent decide, based on the existing code, the project's docs, and the answers you gave to earlier questions, and then continues with the conclusion without waiting.
+
+When you come back, the task's history shows each decision: what the question was, what was chosen, who decided (`subagent:NAME`), why, and what it rests on (code, documents, or past questions such as `Q-12`). If you disagree, tell the agent and it changes course. `agpj mode sparring` returns to the default, where the agent listens and asks you again. The commands are in [Sleep mode](../reference/cli#sleep-mode).
+
 ## Wait for changes
 
 ```sh

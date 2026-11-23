@@ -93,6 +93,8 @@ pub enum AgpjError {
         from: RunState,
         to: RunState,
     },
+    /// The project is in sleep mode: questions to the user are not accepted.
+    SleepMode,
     /// The task is a draft: agents and the CLI cannot change it.
     TaskIsDraft {
         id: i64,

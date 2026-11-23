@@ -56,6 +56,11 @@ pub const COMMANDS: &[(&str, Cover)] = &[
         NoRule("plans cards for a version; nothing to forget"),
     ),
     ("history add", Rules(&["history"])),
+    ("decision add", Rules(&["history"])),
+    (
+        "mode",
+        NoRule("a setting the user also switches; nothing to record"),
+    ),
     ("hook", NoRule("the hook itself; it runs the rules")),
     ("init", NoRule("one-time board setup")),
     ("ls", READ_ONLY),

@@ -7,7 +7,7 @@ There are two kinds of resident agent, and the environment tells them apart:
 
 Both keep one session attached to one project and working until the board stops the process. Neither ends when the board is idle; that is the difference from `agpj skills listening`, which ends at `idle_timeout` and is for an explicit one-off request.
 
-Nobody watches a board-launched session. It runs headless with automatic approval: a prompt for permission is refused rather than shown. So never ask a person anything in the chat. Every question for a person goes on the board with `message ask`, as the main Skill describes.
+Nobody watches a board-launched session. It runs headless with automatic approval: a prompt for permission is refused rather than shown. So never ask a person anything in the chat. Every question for a person goes on the board with `message ask`, as the main Skill describes, except in sleep mode (`mode: "sleep"` in the progress table), where `message ask` is refused with `sleep_mode` and a subagent decides as `agpj skills sleep` describes.
 
 ## Work the board pushes
 
