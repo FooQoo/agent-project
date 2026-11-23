@@ -114,13 +114,38 @@ fn an_agent_runs_pauses_and_resumes_in_doing() {
 }
 
 #[test]
+fn an_agent_pauses_its_own_running_task() {
+    let fx = fx();
+    let id = fx.task(Assignee::Ai);
+    fx.mv(id, Column::Doing);
+    fx.state(id, RunState::Running).unwrap();
+    assert_eq!(fx.state(id, RunState::Paused).unwrap(), RunState::Paused);
+    // Pausing again is not a change, and the agent can resume.
+    assert_eq!(fx.state(id, RunState::Paused).unwrap(), RunState::Paused);
+    assert_eq!(fx.state(id, RunState::Running).unwrap(), RunState::Running);
+}
+
+#[test]
+fn an_agent_cannot_pause_a_person_task_or_one_outside_doing() {
+    let fx = fx();
+    let person = fx.task(Assignee::Human);
+    fx.mv(person, Column::Doing);
+    assert!(fx.state(person, RunState::Paused).is_err());
+    let todo = fx.task(Assignee::Ai);
+    assert!(fx.state(todo, RunState::Paused).is_err());
+}
+
+#[test]
 fn refused_changes_leave_the_state_as_it_was() {
     let fx = fx();
     let id = fx.task(Assignee::Ai);
     fx.mv(id, Column::Doing);
-    // An agent never pauses a task.
+    // An idle task cannot be paused, by an agent or by anyone.
     let err = fx.state(id, RunState::Paused).unwrap_err();
-    assert!(matches!(err, AgpjError::HumanOnly { .. }), "{err:?}");
+    assert!(
+        matches!(err, AgpjError::InvalidStateChange { .. }),
+        "{err:?}"
+    );
     fx.state(id, RunState::Running).unwrap();
     // running -> idle: a task that has run never goes back to idle.
     let err = fx.state(id, RunState::Idle).unwrap_err();

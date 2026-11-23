@@ -119,7 +119,7 @@ pub fn stale_running(facts: &Facts) -> Vec<Finding> {
             let idle = facts.now - t.last_activity_at?;
             (idle > limit).then(|| {
                 Finding::new(format!(
-                    "Task #{id} has been running for {minutes} minutes with no history entry: continue the work on it (check its PR and CI state and carry on; if you are blocked on a person, ask with `agpj message ask`, which pauses the task). If you truly cannot resume it, record why with `agpj history add {id} --reason \"<why it cannot resume>\"`.",
+                    "Task #{id} has been running for {minutes} minutes with no history entry: if you are actually working on it, continue (check its PR and CI state, and record progress with `agpj history add {id} --reason \"<progress>\"`; if you are blocked on a person, ask with `agpj message ask`, which pauses the task). If you are not working on it, pause it with `agpj state {id} paused --actor ai --reason \"<why you stopped>\"`.",
                     id = t.id,
                     minutes = idle.num_minutes()
                 ))

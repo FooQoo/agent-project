@@ -29,10 +29,10 @@ The output includes `projectId`, `cursor`, the task, `taskPath`, and `documentPa
 
 When the task is resolved, or work on it cannot continue and the reason is recorded with `history add`, call `wait --until task --idle-timeout <seconds> --json` again.
 
-You cannot pause a task. A task that is still `idle` or `paused` in Doing stays eligible, so calling wait again can return the same task at once. Do not loop on it:
+Pause a task only when the stalled-task reminder flags it and you are not working on it. A task that is still `idle` or `paused` in Doing stays eligible, so calling wait again can return the same task at once. Do not loop on it:
 
 - If the task waits on a person, ask with `message ask`. An open question sets `awaitingAnswer` and pauses the task if it is running, and taking in the last open answer resumes it; `wait --until task` never returns such a task, and the session then waits for the answer as above.
-- If the task cannot continue for another cause, such as an external service that is unavailable, record why with `history add`, and remember the task in this session. Then handle it the same way whether it is `idle`, `paused`, or still `running` (`wait --until task` never returns a `running` task, and returns an `idle` or `paused` one at once):
+- If the task cannot continue for another cause, such as an external service that is unavailable, record why with `history add`, and remember the task in this session; a task you paused yourself is one of these, and you must not take it again until its cause is resolved. Then handle it the same way whether it is `idle`, `paused`, or still `running` (`wait --until task` never returns a `running` task, and returns an `idle` or `paused` one at once):
   - Do not call `wait --until task` while the blocked task is unchanged, and do not set it to Running.
   - Block with `agpj --project "<current project name>" wait --after <cursor from the latest output> --timeout <the same number of seconds as the idle timeout> --json` until the project changes, so the listener keeps its idle bound.
   - After each change, first take in pending answers and requests from the progress table, as for any other wait. Then read the blocked task. If it is no longer eligible (archived, moved out of Todo or Doing, or no longer owned by AI), stop blocking and call `wait --until task` again. Once its cause is resolved (an answer, a change by a person, or new history by someone else), continue its work; if it is still `running`, leave its state as it is. Otherwise block again.

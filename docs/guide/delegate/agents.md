@@ -180,7 +180,7 @@ Use the listener procedure of the agent-project skill (printed by `agpj skills l
 
 When the task the session is working on in Todo or Doing is Awaiting answer, the session waits for that answer before taking another task, and the waiting time does not count toward idle timeout. An AI task in Backlog or Done with an open question is left alone, and the listener continues other work. When the answer is taken in, follow "After an answer" in `agpj skills waiting`: a Paused task in Doing goes back to Running by itself, and a task that a person paused or moved to another column keeps its current state. Only then does the session listen again.
 
-An agent cannot pause a task. When it is blocked on a person, it asks a question so that the task shows Awaiting answer; for any other cause it records why with `history add`.
+An agent pauses a task in one case: when the reminder says a Running task has had no history entry for 30 minutes and the agent is not working on it, it runs `state <id> paused --actor ai --reason "<why>"`, and an agent that is working on it keeps going. When it is blocked on a person, it asks a question so that the task shows Awaiting answer; for any other cause it records why with `history add`.
 
 To keep a session on the board without typing the command, invoke the plugin's `wait` skill (`/agent-project:wait` in Claude Code). It follows the listener procedure with a 3600-second idle timeout when you give none, and starts the wait again after each `idle_timeout`, so the session stays attached until you interrupt it or an error stops it. It handles answers and requests before tasks.
 

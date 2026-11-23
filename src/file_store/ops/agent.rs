@@ -220,7 +220,8 @@ impl FileStore {
     }
 
     /// Change a task's run state. Only an AI-owned task in Doing can run or pause, and only
-    /// idle to running, running to paused, and paused to running are allowed. An agent cannot
+    /// idle to running, running to paused, and paused to running are allowed. An agent may
+    /// pause its own running task (the stale-running reminder asks for it) but cannot
     /// run a task that waits for answers. A state that is already set is not a change,
     /// whatever the reason. Waiting is never stored: it is read from the questions.
     pub fn set_agent_status(
@@ -231,13 +232,6 @@ impl FileStore {
         ctx: ChangeContext,
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgpjError> {
-        if ctx.actor == Actor::Ai && state == RunState::Paused {
-            // An agent never pauses itself: asking a question pauses the task, and a person
-            // may pause it.
-            return Err(AgpjError::HumanOnly {
-                action: "pausing a task".into(),
-            });
-        }
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;

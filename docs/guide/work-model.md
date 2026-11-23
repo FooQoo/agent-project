@@ -36,7 +36,7 @@ A task is in one of three **columns**: **Todo** for work that has not started, *
 
 - **Idle** means the agent is not working on the task.
 - **Running** is what the agent last reported, and it applies to AI tasks in Doing only. It is not a live check: if an agent crashes, its task stays Running until someone changes it.
-- **Paused** means the task is in Doing and its run has stopped. A task becomes Paused when an agent asks a question while running (see below), when the resident agent stops on an error, or when you pause it. An agent cannot pause a task on its own.
+- **Paused** means the task is in Doing and its run has stopped. A task becomes Paused when an agent asks a question while running (see below), when the resident agent stops on an error, when you pause it, or when an agent that the stalled-task reminder flagged is not working on the task and pauses it.
 - In Doing, the state changes only from Idle to Running, from Running to Paused, and from Paused to Running; anything else is refused.
 - **Awaiting answer** is not a state and is not set by anyone. It is worked out from the questions: any task, in any column and of any owner, shows Awaiting answer while it refers to an open question. The label replaces the state label, and a task that is not in Doing shows no state label otherwise.
 - Moving a task into Doing or out of Doing (to any column) resets its state to Idle, so a task moved into Doing starts Idle. Reordering a task inside Doing keeps its state. Moving a task keeps its open questions.
