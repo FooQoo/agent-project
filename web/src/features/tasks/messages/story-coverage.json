@@ -219,6 +219,16 @@
               "interaction": true
             },
             {
+              "id": "task-messages-messagecenter--modal-size-fixed-full",
+              "states": ["three tabs, full", "same width and height on every tab"],
+              "interaction": true
+            },
+            {
+              "id": "task-messages-messagecenter--modal-size-fixed-empty",
+              "states": ["three tabs, empty", "same width and height on every tab", "fixed height"],
+              "interaction": true
+            },
+            {
               "id": "task-messages-messagecenter--summary-tab-empty",
               "states": ["tab: summary", "no summaries", "english"],
               "interaction": true

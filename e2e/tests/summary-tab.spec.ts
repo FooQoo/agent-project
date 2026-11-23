@@ -167,9 +167,9 @@ function writeManySummaries(): void {
   writeFileSync(file, `${rows.join('\n')}\n`);
 }
 
-/** How far the list is scrolled: the PC modal scrolls in the swipe viewport, a phone sheet in its body. */
+/** How far the list is scrolled: the PC modal scrolls in the shown page below the tabs, a phone sheet in its body. */
 const scrolledTop = (list: Locator) =>
-  list.locator('.surface__body, .message-list__viewport').evaluateAll((els) => Math.max(...els.map((el) => el.scrollTop)));
+  list.locator('.surface__body, .message-list__viewport, .message-list__page').evaluateAll((els) => Math.max(...els.map((el) => el.scrollTop)));
 
 /** Opens the Summary list, scrolls it down, follows a result near the bottom, and gives back where the list was. */
 async function openResultFromScrolledList(page: Page) {
