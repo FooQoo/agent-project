@@ -290,3 +290,9 @@
 .ver-head-sheet .ver-head-list {
   max-height: none;
 }
+
+.ver-head-sheet .surface__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

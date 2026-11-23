@@ -203,10 +203,12 @@ test('the phone shows the planned version, filters by it and lists a new one, bu
 	await page.getByLabel('New version').fill('v2.0.0');
 	await page.getByRole('button', { name: 'Add this version to the project' }).click();
 	await expect(page.getByRole('radio', { name: /^v2\.0\.0/ })).toBeVisible();
+	await expect(page.getByRole('radio', { name: /^v1\.8\.0/ }).locator('..')).toContainText('\u2605');
+	await expect(page.getByRole('button', { name: /the release version$/ })).toHaveCount(0);
+	await page.keyboard.press('Escape');
 	await expect(filter).toHaveAccessibleName('Version filter: v1.8.0');
 	expect(await releaseVersion()).toBe('v1.8.0');
-	await expect(page.getByRole('radio', { name: /^v1\.8\.0/ })).toContainText('\u2605');
-	await expect(page.getByRole('button', { name: /the release version$/ })).toHaveCount(0);
+	await filter.click();
 
 	// All shows every version's cards again; the Backlog is never filtered.
 	await page.getByRole('radio', { name: 'All' }).click();
