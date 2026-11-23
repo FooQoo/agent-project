@@ -33,10 +33,9 @@ const AWAITING_ANSWER_LABEL = 'Awaiting answer';
 
 /** The run state is shown for cards in Doing; a card that waits for an answer shows that instead. */
 export function stateLabel(task: TaskSummary, t?: TFunction): string | null {
-  // An AI card shows its run state in Doing; elsewhere only a question that waits for an answer
-  // is worth a label, and that label takes precedence over the run state.
-  if (task.assignee !== 'ai') return null;
+  // A question that waits for an answer is labelled on any card, whoever owns it and in any lane,
+  // and that label takes precedence. Otherwise only an AI card in Doing shows its run state.
   if (task.awaitingAnswer) return t ? t('runState.awaitingAnswer') : AWAITING_ANSWER_LABEL;
-  if (task.taskStatus !== 'doing') return null;
+  if (task.assignee !== 'ai' || task.taskStatus !== 'doing') return null;
   return t ? t(`runState.${task.agentStatus}`) : STATE_LABELS[task.agentStatus];
 }
