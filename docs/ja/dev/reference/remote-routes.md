@@ -1,26 +1,26 @@
 # 入口のルート
 
-ngrokの入口の背後で配信する経路です。PCと同じアプリとAPIであるボードのアプリです。入口・Hostの検査・session・トンネルの関係は[リモートアクセス](../concepts/remote-access.md)にあります。接続設定のAPIはローカルの経路で、[Web API](./web-api.md#リモート接続)にあります。
+ngrokの入口の背後で配信する経路です。PCと同じアプリとAPIであるAgent Projectのアプリです。入口・Hostの検査・session・トンネルの関係は[リモートアクセス](../concepts/remote-access.md)にあります。接続設定のAPIはローカルの経路で、[Web API](./web-api.md#リモート接続)にあります。
 
 ## 二つのprovider
 
 経路は、ngrokの入口の背後でもTailscaleの入口の背後でも同じです。違うのは公開アドレスだけで、ngrokではエンドポイントのホスト、Tailscaleではこのマシンの`ts.net`の名前です。Cookieの名前はどちらも`agpj_remote_session`と`agpj_remote_device`で、Cookieは設定されたホストに属します。`Tailscale-User-Login`ヘッダーも`X-Forwarded-*`ヘッダーも無視します。
 
-## 入口から使うボードのアプリ
+## 入口から使うAgent Projectのアプリ
 
-入口は、ローカルのリスナーと同じパスで、ボードのページとAPIを配信します。スマホやほかのコンピューターのブラウザは、ボードのアプリそのものを使い、画面はウィンドウの幅で切り替わります（[サーバーと画面](../concepts/server-and-ui.md)を参照）。
+入口は、ローカルのリスナーと同じパスで、カンバンのページとAPIを配信します。スマホやほかのコンピューターのブラウザは、Agent Projectのアプリそのものを使い、画面はウィンドウの幅で切り替わります（[サーバーと画面](../concepts/server-and-ui.md)を参照）。
 
 | ルート | 内容 |
 | --- | --- |
-| GET/HEAD `/` | ボードのページ。PCと同じHTMLで、`meta[name=agpj-token]`は空。トークン・session・ボードのデータは含まない。ngrokの警告ページで**Visit Site**を押すとこのアドレスに戻る。 |
-| GET/HEAD `/assets/{name}`、`/logo.png`、`/logo-white.png`、`/home-icon-{180,192,512}.png`、`/docs-sandbox`、`/docs-sandbox/{name}` | 内容で名前を付けたスクリプトとスタイルシート、ロゴ、背景が白で不透明なホーム画面用アイコン、固定のDocsサンドボックスのページ。どれもトークンやボードのデータを持たないので、入口の検査は通すがsessionは要らない。 |
+| GET/HEAD `/` | カンバンのページ。PCと同じHTMLで、`meta[name=agpj-token]`は空。トークン・session・Agent Projectのデータは含まない。ngrokの警告ページで**Visit Site**を押すとこのアドレスに戻る。 |
+| GET/HEAD `/assets/{name}`、`/logo.png`、`/logo-white.png`、`/home-icon-{180,192,512}.png`、`/docs-sandbox`、`/docs-sandbox/{name}` | 内容で名前を付けたスクリプトとスタイルシート、ロゴ、背景が白で不透明なホーム画面用アイコン、固定のDocsサンドボックスのページ。どれもトークンやAgent Projectのデータを持たないので、入口の検査は通すがsessionは要らない。 |
 | GET `/api/remote/session` | Cookieの有効なsessionを知らせ、`csrfToken`・`expiresAt`・`expiresInSeconds`を返す。有効なsessionがなくても、有効な`agpj_remote_device`のCookie（登録済みの端末で、この公開アドレスに結び付く）があれば、ここで合言葉なしに新しいsessionを開き、同じ本文で200を返し、`agpj_remote_session`のCookieと更新した端末Cookieを設定する。なければ401 `session_required`で、何も設定しない。クロスサイトの`Sec-Fetch-Site`は403。 |
 | POST `/api/remote/unlock` | 合言葉をsessionと交換する。本文はJSONの`{"code":"1234"}`で256バイトまで。公開Originと`Sec-Fetch-Site: same-origin`が必要で、CSRFトークンは要らない。正しければCookie`agpj_remote_session`（`Path=/`）と、ブラウザが登録済みの端末のCookieをまだ持っていなければ新しい`agpj_remote_device`（`Secure; HttpOnly; SameSite=Lax; Path=/`、`Max-Age=34560000`）を設定し、`csrfToken`・`expiresAt`・`expiresInSeconds`を返す。間違いは手がかりを示さない403 `unlock_failed`。連続5回間違えたあとは、正しい合言葉も含むすべての試行が、接続を開始し直すまで429 `unlock_locked`になる。Originやフェッチサイトの不備は403 `forbidden`、JSONと宣言されていない本文は415、256バイトを超える本文は413、解釈できない本文は400（どれも推測として数えない）。 |
 | GET `/api/remote/push` | sessionが必要。`{deviceRegistered, publicKey, subscribed}`を返す。sessionに登録済みの端末があるか、購読に使うVAPIDの公開鍵、端末がすでに購読しているか。登録済みの端末がなければ`{"deviceRegistered": false}`だけで、鍵は返さない。 |
 | PUT `/api/remote/push/subscription` | sessionとCSRFトークンが必要。ブラウザの`PushSubscription.toJSON()`の本文（`endpoint`と`keys.p256dh`/`keys.auth`、JSONで4 KiBまで）を、sessionの端末のものとして保存し、古いものは置き換える。登録済みの端末がなければ409 `device_required`、公開`https`アドレスでないendpointや不正な鍵は400 `invalid_subscription`、ほかに400 `invalid_json`・413・415。`{"subscribed": true}`を返す。 |
 | DELETE `/api/remote/push/subscription` | sessionとCSRFトークンが必要。端末の購読を削除する（購読がなくても成功）。登録済みの端末がなければ409 `device_required`。 |
 | GET `/manifest.webmanifest`、`/sw.js` | sessionは不要。Webアプリのマニフェストと、ページがWeb Pushを受け取るためのService Worker。ローカルのリスナーでも提供する。 |
-| [Web API](./web-api.md)のそのほかの`/api/`の経路すべて | ボード自身の経路。SummaryとDetail、イベント（`/api/events`）、書き込み、プロジェクトのドキュメント、ガイド、表示設定、通知設定。読み取りには有効なsessionが必要。変更にはさらに、公開Origin・`Sec-Fetch-Site: same-origin`・`X-Agpj-Csrf`のCSRFトークンが必要で、クライアントが送った`X-Agpj-Token`は取り除く。 |
+| [Web API](./web-api.md)のそのほかの`/api/`の経路すべて | サーバー自身の経路。SummaryとDetail、イベント（`/api/events`）、書き込み、プロジェクトのドキュメント、ガイド、表示設定、通知設定。読み取りには有効なsessionが必要。変更にはさらに、公開Origin・`Sec-Fetch-Site: same-origin`・`X-Agpj-Csrf`のCSRFトークンが必要で、クライアントが送った`X-Agpj-Token`は取り除く。 |
 
 - sessionがないとき、ページの殻と上の静的ファイル、sessionの経路、unlockの経路以外はすべて401 `session_required`で、イベントのストリームも同じです。Cookieを設定するのは、正しい合言葉と、登録済みの端末のCookieだけです。
 - PC自身に作用する経路は、sessionがあっても入口には含めません。接続設定（`/api/monitor-connections`とその配下）、`POST /api/notify`、`POST /api/projects/{projectId}/docs/open`は、ここでは404です。
@@ -29,11 +29,11 @@ ngrokの入口の背後で配信する経路です。PCと同じアプリとAPI�
 
 ## プロジェクトの一覧と切り替え
 
-スマホでも、PCと同じ方法でプロジェクトを一覧し、切り替えます。`GET /api/projects`がすべてのプロジェクトを返し、各プロジェクトは`/api/projects/{projectId}/…`（Summary、Detail、イベントなど、[Web API](./web-api.md)のとおり）で読みます。ページはアドレスでプロジェクトを指定し（`/?project=<ProjectId>`）、ボードのアプリがPCと同じように読み取ります。パスにあるProjectIdは読み取り先を選ぶだけで、アクセス権ではありません。合言葉を通ったsessionは、PCにあるすべてのプロジェクトを読めます。
+スマホでも、PCと同じ方法でプロジェクトを一覧し、切り替えます。`GET /api/projects`がすべてのプロジェクトを返し、各プロジェクトは`/api/projects/{projectId}/…`（Summary、Detail、イベントなど、[Web API](./web-api.md)のとおり）で読みます。ページはアドレスでプロジェクトを指定し（`/?project=<ProjectId>`）、Agent ProjectのアプリがPCと同じように読み取ります。パスにあるProjectIdは読み取り先を選ぶだけで、アクセス権ではありません。合言葉を通ったsessionは、PCにあるすべてのプロジェクトを読めます。
 
 ## 成果のリンク
 
-成果のリンクは、ボード自身のページに、対象をクエリで付けたものです。`/?project=<ProjectId>&task=<id>&result=<version>`
+成果のリンクは、サーバー自身のページに、対象をクエリで付けたものです。`/?project=<ProjectId>&task=<id>&result=<version>`
 
 | 部分 | 規則 |
 | --- | --- |
@@ -42,11 +42,11 @@ ngrokの入口の背後で配信する経路です。PCと同じアプリとAPI�
 | `task` | タスクID（正の整数）。 |
 | `result` | そのタスクの成果のバージョン（正の整数。[成果](./files.md#results)を参照）。 |
 
-- **配信。** ページ本体はどのクエリでも配信されます。`GET /`はクエリを無視し、Hostの検査だけを通し、トークンもボードのデータも含みません。そのため成果のリンクは、sessionなしで読み込めます。
-- **合言葉のあと。** `RemoteGate`は合言葉の画面をその場に表示し、あとからボードをマウントします。リダイレクトは行わないのでクエリは失われず、送り先となるアドレスもありません。対象はページ自身だけです。ボードは`task`と`result`をクエリから読みます（`useResultLink`、`web/src/app/model/useResultLink.ts`）。
-- **開く動作。** Summaryにそのタスクが載った時点で、スマホはタスクのドロワーを成果タブで開き、PCのボードはカードを選んで成果タブを開きます。成果までスクロールして強調表示します。値が壊れている、プロジェクトにないタスク、アーカイブ済みのタスクは、通常のボードを開きます。タスクにないバージョンは、あるものの一覧の上に通知を表示します。
+- **配信。** ページ本体はどのクエリでも配信されます。`GET /`はクエリを無視し、Hostの検査だけを通し、トークンもAgent Projectのデータも含みません。そのため成果のリンクは、sessionなしで読み込めます。
+- **合言葉のあと。** `RemoteGate`は合言葉の画面をその場に表示し、あとからカンバンをマウントします。リダイレクトは行わないのでクエリは失われず、送り先となるアドレスもありません。対象はページ自身だけです。カンバンは`task`と`result`をクエリから読みます（`useResultLink`、`web/src/app/model/useResultLink.ts`）。
+- **開く動作。** Summaryにそのタスクが載った時点で、スマホはタスクのドロワーを成果タブで開き、PCのカンバンはカードを選んで成果タブを開きます。成果までスクロールして強調表示します。値が壊れている、プロジェクトにないタスク、アーカイブ済みのタスクは、通常のカンバンを開きます。タスクにないバージョンは、あるものの一覧の上に通知を表示します。
 - **消去。** ドロワーを閉じるか別のプロジェクトを選ぶと、アドレスから`task`と`result`が外れるので、再読み込みしても開き直しません。
-- **読み取り。** 成果タブは`GET …/tasks/{id}/results`（[Web API](./web-api.md)を参照）を読みます。SummaryとDetailのストリームは成果を運ばないためです。画像は`GET …/tasks/{id}/attachments/{attachmentId}`から表示します。どちらもsessionの内側にある、ボードの通常のルートです。
+- **読み取り。** 成果タブは`GET …/tasks/{id}/results`（[Web API](./web-api.md)を参照）を読みます。SummaryとDetailのストリームは成果を運ばないためです。画像は`GET …/tasks/{id}/attachments/{attachmentId}`から表示します。どちらもsessionの内側にある、カンバンの通常のルートです。
 
 ### 履歴と質問のリンク
 
@@ -54,10 +54,10 @@ ngrokの入口の背後で配信する経路です。PCと同じアプリとAPI�
 
 | クエリ | 開くもの |
 | --- | --- |
-| `?project=<ProjectId>&task=<id>&tab=history` | タスクのドロワーを履歴タブで開きます（PCのボードではカードを選んで履歴タブ）。履歴の通知に使います。 |
-| `?project=<ProjectId>&task=<id>&question=<Q-n>` | メッセージの一覧をその質問で開きます（PCのボードもスマホも）。Summaryのメッセージにその質問がないとき（回答済み、取り下げ済み）は、代わりにカードを開きます。質問の通知に使います。 |
+| `?project=<ProjectId>&task=<id>&tab=history` | タスクのドロワーを履歴タブで開きます（PCのカンバンではカードを選んで履歴タブ）。履歴の通知に使います。 |
+| `?project=<ProjectId>&task=<id>&question=<Q-n>` | メッセージの一覧をその質問で開きます（PCのカンバンもスマホも）。Summaryのメッセージにその質問がないとき（回答済み、取り下げ済み）は、代わりにカードを開きます。質問の通知に使います。 |
 
-クエリに`result`があるときは、`tab`と`question`より優先します。壊れた`result`、未知の`tab`の値、`Q-`と正の整数でない`question`は対象になりません。通常のボードを開きます。`useResultLink`は`tab`と`question`も読み、`task`や`result`と一緒に外します。
+クエリに`result`があるときは、`tab`と`question`より優先します。壊れた`result`、未知の`tab`の値、`Q-`と正の整数でない`question`は対象になりません。通常のカンバンを開きます。`useResultLink`は`tab`と`question`も読み、`task`や`result`と一緒に外します。
 
 **リンクの作り方。** `PublicOrigin::result_link(project_id, task_id, version)`（`src/server/monitor_connection/contracts/access.rs`）を使います。`https://<host>[:port]/?project=<id>&task=<n>&result=<version>`を返し、小文字16進32桁でないプロジェクトや、1未満のタスクまたはバージョンには`None`を返します。Web側にも同じ規則の`resultLinkUrl`（`web/src/features/tasks/results/resultLink.ts`）があります。プッシュ通知は、このURLをクリック先に持たせます。ほかの2つ（`…&tab=history`、`…&question=<Q-n>`）は、同じ制限で`PublicOrigin::history_link(project_id, task_id)`と`PublicOrigin::question_link(project_id, task_id, question_id)`が作ります。`question_id`は`Q-`と正の整数でなければなりません。Web側には同じファイルに`historyLinkQuery`と`questionLinkQuery`があります。
 

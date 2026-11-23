@@ -1,6 +1,6 @@
 # 開発者ガイド
 
-この章では、Agent Projectの開発に必要な構成・実装・検証方法を説明します。ボードの使い方は、[利用ガイド](../guide/index.md)を読んでください。
+この章では、Agent Projectの開発に必要な構成・実装・検証方法を説明します。カンバンの使い方は、[利用ガイド](../guide/index.md)を読んでください。
 
 Agent Projectは、CLIとWebサーバーを兼ねる一つのRust製プログラム`agpj`です。データはすべてファイルに保存され、CLI・Markdownの直接編集・ブラウザから同じデータを読み書きできます。
 
@@ -23,7 +23,7 @@ flowchart LR
 
 ## 初めて開発する場合の読み順
 
-1. [開発環境のセットアップ](./getting-started/setup.md): ビルドして、一時的なボードで動かします。
+1. [開発環境のセットアップ](./getting-started/setup.md): ビルドして、一時的なカンバンで動かします。
 2. [Agent Projectの仕組み](./concepts/overview.md): 全体像を読み、変更が各処理を経て画面に反映されるまでを確認します。
 3. [仕事のモデルと実装](./concepts/work-model.md): Agent Projectがどの規則を、どこで守り、どのテストが確かめているかを確認します。
 4. [最初の変更を追う](./getting-started/first-change.md): 一つの規則を、CLIからファイル、テストまで追います。

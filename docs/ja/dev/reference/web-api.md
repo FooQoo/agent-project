@@ -2,11 +2,11 @@
 
 `agpj serve`のHTTP APIです。書き込みの保護を含むリクエストの処理は、[サーバーと画面](../concepts/server-and-ui.md)で説明しています。
 
-タスクの書き込みでは、自動生成する履歴の言語を`X-Agpj-Language: en`または`ja`で指定できます。ボードは現在の画面言語を送ります。未指定・重複・未対応の値では、本文の言語に従います。そのリクエストで自動生成する文章だけが対象で、明示した理由と保存済みの履歴は変わりません。[履歴](../concepts/history-and-decisions.md#履歴)を参照してください。
+タスクの書き込みでは、自動生成する履歴の言語を`X-Agpj-Language: en`または`ja`で指定できます。カンバンは現在の画面言語を送ります。未指定・重複・未対応の値では、本文の言語に従います。そのリクエストで自動生成する文章だけが対象で、明示した理由と保存済みの履歴は変わりません。[履歴](../concepts/history-and-decisions.md#履歴)を参照してください。
 
 ## ngrokの入口から使う
 
-ngrokの入口は、ボードのページと以下のルートを同じパスで配信します。ローカルのHost・Origin・トークンの検査の代わりに、合言葉のsessionの背後に置きます。そこのページはトークンを持ちません。変更にはsessionのCSRFトークンを`X-Agpj-Csrf`で送り、sessionは`/api/remote/session`と`/api/remote/unlock`で開きます。この2つの経路と、入口が配信しないもの（接続設定、`POST /api/notify`、`docs/open`）は、[入口のルート](./remote-routes.md#入口から使うボードのアプリ)を参照してください。
+ngrokの入口は、カンバンのページと以下のルートを同じパスで配信します。ローカルのHost・Origin・トークンの検査の代わりに、合言葉のsessionの背後に置きます。そこのページはトークンを持ちません。変更にはsessionのCSRFトークンを`X-Agpj-Csrf`で送り、sessionは`/api/remote/session`と`/api/remote/unlock`で開きます。この2つの経路と、入口が配信しないもの（接続設定、`POST /api/notify`、`docs/open`）は、[入口のルート](./remote-routes.md#入口から使うagent-projectのアプリ)を参照してください。
 
 ## エンドポイント
 
@@ -27,7 +27,7 @@ ngrokの入口は、ボードのページと以下のルートを同じパスで
 | `PUT /api/projects/{projectId}/tasks/{id}/planned-version` | 利用者として1つのタスクの予定のバージョンを設定する。`{"choice": "named" \| "current" \| "unset", "version"?, "expectedPlannedVersion"?}`。`{task, changed}`を返す。Doneやアーカイブされたタスクにも使える。古い`expectedPlannedVersion`は409 `planned_version_changed`。[予定のバージョン](#planned-versions)を参照。 |
 | `POST /api/projects/{projectId}/epics/{epicId}/planned-version` | 利用者がチェックを残したエピックのタスクに予定のバージョンを設定する。`dryRun`なら設定せずに結果だけ返す。`{changed, unchanged, skipped, skippedReasons, dryRun}`を返す。[予定のバージョン](#planned-versions)を参照。 |
 | `PUT /api/projects/{projectId}/tasks/{id}/epic` | `{epicId: string \| null}`。未知のEPIC-IDは404 `epic_not_found`。 |
-| `POST /api/projects/{projectId}/tasks/{id}/move` | `taskStatus`、任意の`reason`、任意の`fromStatus`（利用者が移動を選んだときに画面が表示していた状態）。`fromStatus`があるとき、タスクがもうその状態にいなければ409 `task_status_changed`で、何も書かない。本文には今の状態の`currentStatus`を加えるので、画面はそれを表示し、利用者はそこからもう一度移動できる。ボードとスマホの画面は`reason`を送らず（サーバーが理由を生成します）、いつも`fromStatus`を送る。移動が拒否されたときは、カードはその列のままで、画面に短い通知を出す。人によるバックログのタスクの未着手への移動は送信です。DoingやDoneへの移動は通常のカードと同じく移動し、送信と同じ規則に従います。編集中のカードは422 `task_is_draft`、未回答の質問があれば、リクエストに`ack: true`を付けるまで409 `send_with_open_questions`です。エージェントの移動はこのルートでは行われず、CLIは`human_only`（未着手への移動）または`task_in_backlog`（DoingやDoneへの移動）で拒否します。 |
+| `POST /api/projects/{projectId}/tasks/{id}/move` | `taskStatus`、任意の`reason`、任意の`fromStatus`（利用者が移動を選んだときに画面が表示していた状態）。`fromStatus`があるとき、タスクがもうその状態にいなければ409 `task_status_changed`で、何も書かない。本文には今の状態の`currentStatus`を加えるので、画面はそれを表示し、利用者はそこからもう一度移動できる。カンバンとスマホの画面は`reason`を送らず（サーバーが理由を生成します）、いつも`fromStatus`を送る。移動が拒否されたときは、カードはその列のままで、画面に短い通知を出す。人によるバックログのタスクの未着手への移動は送信です。DoingやDoneへの移動は通常のカードと同じく移動し、送信と同じ規則に従います。編集中のカードは422 `task_is_draft`、未回答の質問があれば、リクエストに`ack: true`を付けるまで409 `send_with_open_questions`です。エージェントの移動はこのルートでは行われず、CLIは`human_only`（未着手への移動）または`task_in_backlog`（DoingやDoneへの移動）で拒否します。 |
 | `POST /api/projects/{projectId}/tasks/{id}/agent-status` | 状態の規則の範囲で稼働状態を変える。Doingで許されるのは、IdleからRunning、RunningからPaused、PausedからRunningだけ。それ以外の変更は422 `invalid_state_change`、`idle`・`running`・`paused`以外の値（`ran`や`awaiting_answer`など）は422 `invalid_value`。レスポンスのタスクはすべて真偽値`awaitingAnswer`を持つ。このWebエンドポイントは常に人として動き、渡された`actor`は無視する。エージェントへの拒否（Pausedへの変更とDoingからTodoへの移動は403 `human_only`）はCLIの`--actor ai`に適用される。画面から操作する機能はない。 |
 | `GET /api/projects/{projectId}/messages` | 質問と依頼をまとめて`{messages}`で、新しい順に返す。`status`は`open`（既定）・`closed`・`withdrawn`・`all`、`type`は`question`か`request`、`limit`は1〜500（既定50）。 |
 | `GET /api/projects/{projectId}/messages/{messageId}` | メッセージ1件を`{question}`または`{request}`で返す。質問は`id`・`type`・`from`・`to`・`body`・`tasks`・`choices`・`recommendedChoiceId`・`reply`（`choiceId`・`choiceLabel`・`text`・`images`（回答に添えた画像のファイル名で、質問の`attachments/`にある）・`via`・`at`・`acceptedAt`、なければ`null`。`acceptedAt`はAIが回答を受け取るまで`null`）・`status`（`open`・`answered`・`withdrawn`）・`referencedBy`・`createdAt`・`withdrawnAt`を持つ。依頼は`id`・`type`・`from`・`to`・`body`・`status`（`open`・`accepted`・`withdrawn`）・`acceptedAt`・`withdrawnAt`・`createdAt`を持つ。未知のIDは404 `message_not_found`。 |
@@ -46,16 +46,16 @@ ngrokの入口は、ボードのページと以下のルートを同じパスで
 | `POST …/tasks/{id}/archive`、`POST …/tasks/{id}/restore` | 本文なし。すでにその状態のタスクに繰り返すと、変更せず同じタスクを返す。 |
 | `POST …/tasks/archive-done` | `{ids: number[]}`。空・重複・不正なIDは422。`{tasks, archivedCount}`を返す。 |
 | `GET /api/projects/{projectId}/archive` | アーカイブ済みのタスクを1ページ分返す。[アーカイブのページ分け](#アーカイブのページ分け)を参照。 |
-| `GET /api/projects/{projectId}/summary` | ボードの一覧に使うデータ。プロジェクト、`version`、タスク、エピック、problemsを返し、本文は含めない。[SummaryとDetail](#summaryとdetail)を参照。 |
-| `GET /api/projects/{projectId}/sessions` | プロジェクトに張り付いているエージェントセッションとその数、およびボードが起動したセッション。[張り付いたセッション](#張り付いたセッション)を参照。キャッシュしません。 |
+| `GET /api/projects/{projectId}/summary` | カンバンの一覧に使うデータ。プロジェクト、`version`、タスク、エピック、problemsを返し、本文は含めない。[SummaryとDetail](#summaryとdetail)を参照。 |
+| `GET /api/projects/{projectId}/sessions` | プロジェクトに張り付いているエージェントセッションとその数、およびAgent Projectが起動したセッション。[張り付いたセッション](#張り付いたセッション)を参照。キャッシュしません。 |
 | `POST /api/projects/{projectId}/sessions/touch` | ヘッダーで名乗った外部のセッションを5分間数える。すべての`agpj`コマンドとフックが送る。常に204。ローカルのリスナーのみ。[張り付いたセッション](#張り付いたセッション)を参照。 |
 | `GET …/sessions/models`、`GET …/sessions/log`、`POST …/sessions/launch`、`POST …/sessions/stop` | 画面を持たないClaude CodeとCodexのセッションを起動・停止する。ローカルのリスナーのみ。[セッションの起動](#セッションの起動)を参照。 |
 | `GET /api/projects/{projectId}/tasks/{id}/detail` | 1件のタスクの本文・完了条件・履歴をNDJSONのストリームで返す。アーカイブ済みのタスクも同じ方法で読む。 |
 | `GET /api/projects/{projectId}/epics/{epicId}/detail` | 1件のエピックのドキュメントをNDJSONのストリームで返す。 |
 | `GET /api/projects/{projectId}/docs/tree`<br>`GET /api/projects/{projectId}/docs/file`<br>`GET /api/projects/{projectId}/docs/assets`<br>`POST /api/projects/{projectId}/docs/open` | プロジェクトの`docs/`にある文書を読むだけのルート。フォルダのツリー、MarkdownかMDXのファイル1つ、画像、フォルダやファイルをコンピュータのアプリで開く操作。[プロジェクトのドキュメント](#プロジェクトのドキュメント)を参照。 |
 | `GET /assets/{name}` | `build.rs`が生成した表にある、内容から名前を付けたスクリプトとスタイルシートだけ。ほかは404。immutableでキャッシュする。`Accept-Encoding`が許せばgzipで送り、`Vary: Accept-Encoding`を付ける。 |
-| `GET /docs-sandbox`<br>`GET /docs-sandbox/{name}` | 文書のMDXを実行するページと、内容から名前を付けたそのスクリプト（ほかの名前は404）。トークンもボードのデータも持たない固定のページ。専用の`Content-Security-Policy`（`default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`）と`X-Content-Type-Options: nosniff`を付ける。ボードは`sandbox="allow-scripts"`のiframeで埋め込む。[ドキュメントのMDX](../concepts/security.md#ドキュメントのmdx)を参照。 |
-| `GET /api/events` | SSE。購読後にボードのビルドIDを含む`ready`（`{"build":"<16桁の16進数>"}`）、変更されたリソースを運ぶ`changed`（[変更イベント](#変更イベント)を参照）、保存した言語やテーマが変わったときに`preferences`（`GET /api/preferences`と同じJSON）、15秒ごとに接続維持のコメント。 |
+| `GET /docs-sandbox`<br>`GET /docs-sandbox/{name}` | 文書のMDXを実行するページと、内容から名前を付けたそのスクリプト（ほかの名前は404）。トークンもAgent Projectのデータも持たない固定のページ。専用の`Content-Security-Policy`（`default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`）と`X-Content-Type-Options: nosniff`を付ける。カンバンは`sandbox="allow-scripts"`のiframeで埋め込む。[ドキュメントのMDX](../concepts/security.md#ドキュメントのmdx)を参照。 |
+| `GET /api/events` | SSE。購読後にカンバンのビルドIDを含む`ready`（`{"build":"<16桁の16進数>"}`）、変更されたリソースを運ぶ`changed`（[変更イベント](#変更イベント)を参照）、保存した言語やテーマが変わったときに`preferences`（`GET /api/preferences`と同じJSON）、15秒ごとに接続維持のコメント。 |
 | `GET /api/preferences` | 保存済みの言語とカラーテーマ。`locale`・`theme`（`mode`・`accent`）・`revision`。ファイルがない、または読めない場合は既定値。キャッシュしない。[表示設定](#表示設定)を参照。 |
 | `PUT /api/preferences` | JSONの本文で`locale`・`theme`・両方のいずれかを保存し、`GET`と同じ形を、`revision`を1増やして返す。未知の項目と不正な値は422 `invalid_preferences`、書き込みの失敗は500 `preferences_unavailable`。拒否・失敗のときは保存済みの値を変えない。 |
 | `GET /api/projects/{projectId}/summaries`<br>`POST /api/projects/{projectId}/summaries/{summaryId}/dismiss` | プロジェクトの定期サマリーを新しい順に返す経路と、1件を片付ける経路。[定期サマリー](#定期サマリー)を参照。 |
@@ -67,7 +67,7 @@ ngrokの入口は、ボードのページと以下のルートを同じパスで
 
 ### 予定のバージョン {#planned-versions}
 
-ボードは、プロジェクトのバージョンと、各タスクの予定のバージョンを、次のルートで変更します。使うのは利用者だけなので、操作する主体は常に利用者です。ほかの書き込みと同じ書き込みガードを通り、入口のルートではパスコードのセッションの内側で提供します。保存される内容は[予定のバージョン](./files.md#planned-versions)を参照してください。
+カンバンは、プロジェクトのバージョンと、各タスクの予定のバージョンを、次のルートで変更します。使うのは利用者だけなので、操作する主体は常に利用者です。ほかの書き込みと同じ書き込みガードを通り、入口のルートではパスコードのセッションの内側で提供します。保存される内容は[予定のバージョン](./files.md#planned-versions)を参照してください。
 
 - **バージョン。** `GET …/versions`と、バージョンを変更する`POST`・`PUT`は、`versions`（プロジェクトの`docs/release/`直下にある`*.md`の名前を、自然順で新しいものから並べたもの）と`currentVersion`（未設定、またはそのファイルがなければ`null`）を返します。バージョン名は1〜64文字で、空白、制御文字、ファイル名に使えない文字（`/ \ : * ? " < > |`）、先頭のドットを含められず、日本語などのASCII以外の文字も使えます。それ以外は422 `invalid_value`です。1つのプロジェクトに登録できるバージョンは200までです。登録済みの名前での`POST …/versions`や、すでに設定済みの値での`PUT …/versions/current`は何も変えず、`changed: false`を返します。すでにあるバージョンのファイルを上書きすることはありません。新しいバージョンのファイルは`docs/release/TEMPLATE.md`のコピーで、この呼び出しは、AIがリリースノートを書くためのBacklogのカードもバージョンごとに1枚だけ作ります（[予定のバージョン](./files.md#planned-versions)を参照）。バージョンを追加しても`currentVersion`は変わりません。
 - **1つのタスク。** `choice`は、`named`（プロジェクトが登録している`version`を併せて指定）、`current`（プロジェクトのカレントのバージョン。名前で保存）、`unset`のいずれかです。`named`以外で`version`を付けた、`named`で`version`がない、登録されていないバージョン、カレントのバージョンがないのに`current`、はいずれも422です。アーカイブ済みのタスクは409 `task_archived`で、下書きやDoneのタスクは利用者なら変更できます。同じ値をもう一度指定すると`changed: false`で、履歴は書きません。
@@ -77,7 +77,7 @@ ngrokの入口は、ボードのページと以下のルートを同じパスで
 
 ### SummaryとDetail
 
-ボードは、プロジェクトを2段階で読みます。Summaryは、カードや一覧の行に表示する内容をまとめて返します。Detailは、カードやエピックを開いたときにだけ必要な内容をストリームで返します。同じ経路はngrokの入口からも合言葉のsessionの背後で提供します。[入口のルート](./remote-routes.md)を参照してください。パスのプロジェクトIDは読む対象の指定であり、アクセス権ではありません。
+カンバンは、プロジェクトを2段階で読みます。Summaryは、カードや一覧の行に表示する内容をまとめて返します。Detailは、カードやエピックを開いたときにだけ必要な内容をストリームで返します。同じ経路はngrokの入口からも合言葉のsessionの背後で提供します。[入口のルート](./remote-routes.md)を参照してください。パスのプロジェクトIDは読む対象の指定であり、アクセス権ではありません。
 
 以下の形は、`src/server/contracts/`のRustの型と、`tests/fixtures/data-layer/`のゴールデン例で固定します。RustとTypeScriptのテストは、同じゴールデン例を読みます。
 
@@ -85,11 +85,11 @@ ngrokの入口は、ボードのページと以下のルートを同じパスで
 
 | 項目 | フィールド |
 | --- | --- |
-| タスク | `id`（整数）、`title`、`taskStatus`、`agentStatus`、`assignee`、`draft`、`position`、`epicId`（なければ`null`）、`acceptance`（`done`・`total`）、`acceptanceError`、`plannedVersion`（なければ`null`）、`createdAt`、`updatedAt`、`taskStatusChangedAt`、`agentStatusChangedAt`、`questionIds`、`openQuestionIds`、`pendingRequestId`、`pendingReason`、`pendingChoices`、`onboardingSample`（以前のリリースの案内が作ったカードのみ）、`detailVersions`（`document`・`history`）。名前はボードの`Task`と同じ。 |
+| タスク | `id`（整数）、`title`、`taskStatus`、`agentStatus`、`assignee`、`draft`、`position`、`epicId`（なければ`null`）、`acceptance`（`done`・`total`）、`acceptanceError`、`plannedVersion`（なければ`null`）、`createdAt`、`updatedAt`、`taskStatusChangedAt`、`agentStatusChangedAt`、`questionIds`、`openQuestionIds`、`pendingRequestId`、`pendingReason`、`pendingChoices`、`onboardingSample`（以前のリリースの案内が作ったカードのみ）、`detailVersions`（`document`・`history`）。名前はカンバンの`Task`と同じ。 |
 | エピック | `id`（文字列）、`name`、`color`、`draft`、`waves`（ウェーブごとにまとめたタスクID。例: `[[566],[572],[569,570,571]]`。定めなければ空）、`wavesError`（保存された順序を読めないため、`waves`は無視する）、`progress`（`todo`・`doing`・`done`・`archived`・`total`。0でなければ`backlog`も）、`detailVersions`（`document`）。 |
 | 質問 | 未回答の質問をID順に並べる。`id`・`title`（最初の空でない行からMarkdownの記号を除いたプレーンテキスト、200文字まで）・`recommendedChoiceId`・`referencedBy`（参照しているアーカイブ前のタスク）・`createdAt`。全文は`GET …/messages/{messageId}`で読む。 |
 | メッセージ | 未完了の質問と依頼を一つの形で、古い順（同時刻はID順）に並べる。`id`（`Q-<n>`）・`type`（`question`・`request`）・`from`・`to`（`ai`か`human`）・`turn`（次に動く側。`ai`・`human`、終わったものは`null`）・`title`・`createdAt`・`tasks`（関わるタスクの番号。依頼は持たない）・`epicId`（または`null`）。質問の`turn`は、未回答のあいだは`human`、回答済みでAIがまだ回答を受け取っていないあいだは`ai`で、その間も一覧に残る。依頼の`turn`は`ai`。回答をAIが受け取った質問、受け付け済みの依頼、取り下げたメッセージは含めないため、載っているメッセージには必ず`turn`がある。`questions`は、まだ読んでいる画面のために残す。 |
-| Problem | `file`・`field`・`reason`。ボードと同じ。 |
+| Problem | `file`・`field`・`reason`。カンバンと同じ。 |
 
 versionはすべて不透明な文字列で、解析済みデータの内容ハッシュです。サーバーの起動回に依存しないため、再起動後も保存済みの値と比べられます。versionは等しいかどうかだけを比べてください。
 
@@ -137,7 +137,7 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 
 ### 張り付いたセッション
 
-`GET /api/projects/{projectId}/sessions`は、プロジェクトを待っているエージェントセッションを返します。設定画面とフッターが使います。外部のセッションは、`wait --until task`コマンドが`/api/events`のストリームを開いている間、およびそのセッションの`agpj`コマンドまたはフックがサーバーに届いてから5分間、張り付いているとみなします。ボードが起動したセッションは、起動処理が加えます。ほかの読み取りと同じく、ngrokの入口でもパスコードのセッションの内側で同じルートを使えます。パス、プロセスID、環境変数の値は含みません。
+`GET /api/projects/{projectId}/sessions`は、プロジェクトを待っているエージェントセッションを返します。設定画面とフッターが使います。外部のセッションは、`wait --until task`コマンドが`/api/events`のストリームを開いている間、およびそのセッションの`agpj`コマンドまたはフックがサーバーに届いてから5分間、張り付いているとみなします。Agent Projectが起動したセッションは、起動処理が加えます。ほかの読み取りと同じく、ngrokの入口でもパスコードのセッションの内側で同じルートを使えます。パス、プロセスID、環境変数の値は含みません。
 
 ```json
 {
@@ -160,12 +160,12 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 }
 ```
 
-- `tool`は`claude-code`、`codex`、`unknown`のいずれかです。`origin`は、ボードが起動したセッションなら`board`、それ以外は`external`です。
-- `state`は、ストリームが開いている間は`connected`です。それ以外は`grace`で、最後のストリームが閉じてから30秒間（待機から次の待機までの間に数がちらつかないようにするため）と、セッションの最後の`agpj`コマンドまたはフックがサーバーに届いてから5分間のうち、最後に終わるものまで続きます。`grace`のセッションも`total`などの数に含まれ、`connected`は開いているストリームだけを数えます。そのため、待機せずにボードを使うセッションは`connected`になりません。どちらの期間も過ぎるとセッションは消えます。`lastSeenAt`は、接続中は現在時刻、それ以外は最後に閉じたストリームまたは最後のコマンドの時刻です。間に合って再接続した、または別のコマンドを実行したセッションは同じセッションとして扱い、最初の`connectedAt`を保ちます。
+- `tool`は`claude-code`、`codex`、`unknown`のいずれかです。`origin`は、Agent Projectが起動したセッションなら`board`、それ以外は`external`です。
+- `state`は、ストリームが開いている間は`connected`です。それ以外は`grace`で、最後のストリームが閉じてから30秒間（待機から次の待機までの間に数がちらつかないようにするため）と、セッションの最後の`agpj`コマンドまたはフックがサーバーに届いてから5分間のうち、最後に終わるものまで続きます。`grace`のセッションも`total`などの数に含まれ、`connected`は開いているストリームだけを数えます。そのため、待機せずにカンバンを使うセッションは`connected`になりません。どちらの期間も過ぎるとセッションは消えます。`lastSeenAt`は、接続中は現在時刻、それ以外は最後に閉じたストリームまたは最後のコマンドの時刻です。間に合って再接続した、または別のコマンドを実行したセッションは同じセッションとして扱い、最初の`connectedAt`を保ちます。
 - セッションは`connectedAt`順に並びます。形式の誤ったプロジェクトIDは422 `invalid_value`です。セッションがないプロジェクト（存在しないプロジェクトも）は空のリストを返します。
 - 登録はサーバーのメモリにだけ置きます。再起動すると空になり、待機が再接続し、コマンドが実行されるたびに戻ります。一覧はリクエストのたびに読みます。UIはポーリングし、変更を知らせるイベントはありません。
 
-セッションが名乗る方法は次のとおりです。タスクを待つコマンドは、`GET /api/events`のリクエストに4つのヘッダーを付けます。ほかのコマンドとフックは、同じ4つのヘッダーを`POST /api/projects/{projectId}/sessions/touch`に付けます（ヘッダーのプロジェクトは、パスのプロジェクトと同じでなければなりません）。正しい組がないリクエストは、数えられないだけで、ストリームは通常どおり使え、touchは204を返します。起動元が`board`のtouchは無視するため、ボードが起動したセッションが二重に数えられることはありません。
+セッションが名乗る方法は次のとおりです。タスクを待つコマンドは、`GET /api/events`のリクエストに4つのヘッダーを付けます。ほかのコマンドとフックは、同じ4つのヘッダーを`POST /api/projects/{projectId}/sessions/touch`に付けます（ヘッダーのプロジェクトは、パスのプロジェクトと同じでなければなりません）。正しい組がないリクエストは、数えられないだけで、ストリームは通常どおり使え、touchは204を返します。起動元が`board`のtouchは無視するため、Agent Projectが起動したセッションが二重に数えられることはありません。
 
 | ヘッダー | 値 |
 | --- | --- |
@@ -174,25 +174,25 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 | `X-Agpj-Session-Tool` | `claude-code`、`codex`、`unknown`のいずれか。 |
 | `X-Agpj-Session-Origin` | `board`または`external`。 |
 
-起動の上限は起動処理が持ちます。生きている子プロセスや待っている再起動があるときは起動を拒否し、起動処理が知らないボード起動元の待機を`SessionRegistry::check_board_launch()`が見つけたときも拒否します。ボードが起動したセッションは、2つのツールと全プロジェクトを通して全体で1つまでです。拒否の理由には、枠を持っているツールが入ります。外部のセッションには上限がなく、この上限の数にも入りません。`AGPJ_SESSION_GRACE_MS`は、30秒の猶予を指定したミリ秒に置き換えます。テストで使います。5分の窓は固定です。
+起動の上限は起動処理が持ちます。生きている子プロセスや待っている再起動があるときは起動を拒否し、起動処理が知らないカンバン起動元の待機を`SessionRegistry::check_board_launch()`が見つけたときも拒否します。Agent Projectが起動したセッションは、2つのツールと全プロジェクトを通して全体で1つまでです。拒否の理由には、枠を持っているツールが入ります。外部のセッションには上限がなく、この上限の数にも入りません。`AGPJ_SESSION_GRACE_MS`は、30秒の猶予を指定したミリ秒に置き換えます。テストで使います。5分の窓は固定です。
 
 ### セッションの起動
 
-このルートは、ボードが起動する、画面を持たないセッションを起動・停止します（[張り付くセッションの起動](../concepts/agents.md#張り付くセッションの起動)を参照）。**起動したセッションは、無人で自動承認のまま動きます。** [ボードが起動するセッション](../concepts/security.md#ボードが起動するセッション)を参照してください。このルートは、[リモート接続](#リモート接続)のルートと同じく、ローカルのリスナーだけにあります。ngrokの入口は提供しません（404）。読み取りはローカルのページから行う必要があり、2つの書き込みはブラウザーの書き込みガードを通ります。形式が誤ったプロジェクトIDは422 `invalid_value`です。
+このルートは、Agent Projectが起動する、画面を持たないセッションを起動・停止します（[張り付くセッションの起動](../concepts/agents.md#張り付くセッションの起動)を参照）。**起動したセッションは、無人で自動承認のまま動きます。** [Agent Projectが起動するセッション](../concepts/security.md#agent-projectが起動するセッション)を参照してください。このルートは、[リモート接続](#リモート接続)のルートと同じく、ローカルのリスナーだけにあります。ngrokの入口は提供しません（404）。読み取りはローカルのページから行う必要があり、2つの書き込みはブラウザーの書き込みガードを通ります。形式が誤ったプロジェクトIDは422 `invalid_value`です。
 
 | API | 内容 |
 | --- | --- |
 | `GET /api/projects/{projectId}/sessions/models?tool=` | `tool`は`claude-code`か`codex`です（ほかの値は422 `invalid_value`）。`{"models": [{"id", "label"}], "reason": null}`を返します。一覧を読めないときは`{"models": [], "reason": "<理由>"}`で、モデルを指定しない起動ではツールの既定のモデルを使います。コマンドがないときは409 `agent_cli_missing`です。 |
 | `GET /api/projects/{projectId}/sessions/log?tool=` | `tool`は`claude-code`か`codex`です（ほかの値は422 `invalid_value`）。そのツールの起動ログ（`resident/<tool>.log`、[共有ファイル](./files.md)を参照）の末尾を`{"tool", "exists", "text", "truncated", "size"}`で返します。`text`は最大で末尾64 KiBで、不正なバイトは置き換えてUTF-8として読みます。ファイルがそれより大きいときは行の境目から始まり（途中で切れた先頭行は捨てます）、`truncated`は`true`です。`size`はファイル全体のバイト数です。読むのはファイルの末尾だけです。起動したことのないツールにはファイルがないので、`exists`は`false`、`text`は空で、ステータスは200です。ログにはエージェントが出力したものがそのまま入りうるため、ローカルのページにだけ提供します。 |
-| `POST /api/projects/{projectId}/sessions/launch` | `{"tool": "claude-code" \| "codex", "model"?: string}`。`model`がない、空、または`"default"`のときは、ツールに任せます。プロジェクトの結び付いたフォルダでセッションを起動し、`{"launched": {"tool", "projectId", "model", "startedAt"}}`を返します。示していないモデルやモデル名でない値は422 `invalid_value`、存在しないプロジェクトは404 `project_not_found`、存在する結び付いたフォルダがないプロジェクトは409 `project_has_no_folder`、CLIがない・ログインしていないときは409 `agent_cli_missing`・`agent_cli_logged_out`、そのツールのセッションがすでに起動済みか、ボード起動として張り付いているときは理由付きの409 `session_launch_refused`、プロセスを起動できなかったときは500 `session_launch_failed`です。 |
+| `POST /api/projects/{projectId}/sessions/launch` | `{"tool": "claude-code" \| "codex", "model"?: string}`。`model`がない、空、または`"default"`のときは、ツールに任せます。プロジェクトの結び付いたフォルダでセッションを起動し、`{"launched": {"tool", "projectId", "model", "startedAt"}}`を返します。示していないモデルやモデル名でない値は422 `invalid_value`、存在しないプロジェクトは404 `project_not_found`、存在する結び付いたフォルダがないプロジェクトは409 `project_has_no_folder`、CLIがない・ログインしていないときは409 `agent_cli_missing`・`agent_cli_logged_out`、そのツールのセッションがすでに起動済みか、カンバン起動として張り付いているときは理由付きの409 `session_launch_refused`、プロセスを起動できなかったときは500 `session_launch_failed`です。 |
 | `PUT /api/projects/{projectId}/sessions/autostart` | `{"enabled": boolean, "tool"?: "claude-code" \| "codex", "model"?: string}`。サーバーと一緒にセッションを起動するかどうかと、どれを起動するか（このツール、このプロジェクト、このモデル）を保存します（`model`がない、空、または`"default"`のときは、ツールに任せます）。選択は全体で1つで、保存すると置き換わります。`enabled`が`true`のときは`tool`が必須です（ないとき、未知のツール、フラグに読めるモデルは422 `invalid_value`）。起動はせず、動いているセッションも止めません。`{"autoStart": {"tool", "projectId", "model"}}`を返し、`enabled`が`false`のときは`{"autoStart": null}`です。存在しないプロジェクトは404 `project_not_found`、存在する結び付いたフォルダがないときは409 `project_has_no_folder`です。保存するファイルは[共有ファイル](./files.md#セッションの自動起動)にあります。 |
 | `POST /api/projects/{projectId}/sessions/stop` | `{}`。起動済みのセッションを止めます。全体で1つなので、リクエストにツールは要りません（本文の`tool`は受け付けて無視します）。呼び出しが返った時点で`{"stopped": true}`を返し、動いていなかったときは`{"stopped": false}`です。待っている再起動や表示中の失敗も消します。セッションは数えられなくなるので、すぐに新しく起動できます。 |
 
-`GET /api/projects/{projectId}/sessions`は、そのプロジェクトで起動処理がプロセスを持っているセッションを、`launched`として`[{"tool", "projectId", "model", "startedAt"}]`の形でも返します。プロセスIDは含みません。起動したセッションは、ドライバーが最初のイベントを報告すると`sessions`に（`origin: "board"`、`id`は`resident:`に起動IDを続けたもので）現れます。ボードを待たないので、サーバーがレジストリの一覧と数に加えます。`state`は、ターンの合間は`connected`、作業中は`grace`です。外部のセッションはこれまでどおり、待機で一覧に載り、数えられます。
+`GET /api/projects/{projectId}/sessions`は、そのプロジェクトで起動処理がプロセスを持っているセッションを、`launched`として`[{"tool", "projectId", "model", "startedAt"}]`の形でも返します。プロセスIDは含みません。起動したセッションは、ドライバーが最初のイベントを報告すると`sessions`に（`origin: "board"`、`id`は`resident:`に起動IDを続けたもので）現れます。Agent Projectを待たないので、サーバーがレジストリの一覧と数に加えます。`state`は、ターンの合間は`connected`、作業中は`grace`です。外部のセッションはこれまでどおり、待機で一覧に載り、数えられます。
 
 #### セッションの健全性
 
-`GET /api/projects/{projectId}/sessions`は、`health`も返します。ボードのセッションの枠は1つなので、オブジェクト1つです。プロジェクトではなくボードに属するので、`projectId`でどのプロジェクトのセッションかを示します。パスやプロセスIDは含みません。
+`GET /api/projects/{projectId}/sessions`は、`health`も返します。Agent Projectのセッションの枠は1つなので、オブジェクト1つです。プロジェクトではなくカンバンに属するので、`projectId`でどのプロジェクトのセッションかを示します。パスやプロセスIDは含みません。
 
 ```json
 "health": {
@@ -215,13 +215,13 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 
 | 項目 | 意味 |
 | --- | --- |
-| `tool` | ボードが動かし続けているセッションのツールです。`stopped`のときは`null`です。 |
-| `state` | `running`はボードがセッションを動かし続けていて、子プロセスがある状態です。`restarting`は子プロセスが終了し、`nextRestartAt`に再起動が待っている状態です。`failed`はボードが諦めた、またはセッションを起動できなかった状態で、`reason`に理由があります。`stopped`は何も動かし続けていない状態です。 |
-| `projectId`、`model` | ボードが起動し直す対象です。`stopped`のときは`null`です。 |
+| `tool` | Agent Projectが動かし続けているセッションのツールです。`stopped`のときは`null`です。 |
+| `state` | `running`はAgent Projectがセッションを動かし続けていて、子プロセスがある状態です。`restarting`は子プロセスが終了し、`nextRestartAt`に再起動が待っている状態です。`failed`はAgent Projectが諦めた、またはセッションを起動できなかった状態で、`reason`に理由があります。`stopped`は何も動かし続けていない状態です。 |
+| `projectId`、`model` | Agent Projectが起動し直す対象です。`stopped`のときは`null`です。 |
 | `reason` | `restarting`または`failed`の理由です。それ以外は`null`です。クラッシュの繰り返しは、再起動をやめたと伝える理由付きの`failed`で終わります。 |
-| `waiting` | セッションが張り付いていて、2つのターンの合間にいて、ボードが仕事を渡せる間は`true`です。`running`で`waiting: false`のセッションは作業中で、そのことを理由に終了されることはありません。 |
-| `backgroundTasks` | 作業中のセッションが待っているものです。セッションが始めて、まだ終わっていないサブエージェントやバックグラウンドのコマンドの説明を、Claude Codeの`task_started`と`task_notification`のイベントから読みます。待機中のセッションとCodexでは空です。この配列に項目がある作業中のセッションを、ボードは「作業中（サブエージェント待ち）」と表示します。 |
-| `pushStalled` | ボードがセッションへ何度も押し込んだのに処理されず、あきらめた項目を、1件ずつ`{"kind", "id", "attempts", "lastError", "onHold"}`の形で並べます。`kind`は`request`、`answer`、`task`のいずれかで、`id`は依頼や質問のID（`Q-3`など）、またはテキストにしたタスク番号です。`attempts`は押し込んだ回数、`lastError`は直前に失敗したターンのメッセージで、なければ`null`です。`onHold`は、ターンがエラーなく終わったのに項目が変わらなかったとき（`lastError`が`null`）に真で、失敗ではなく「保留中」として表示されます。なければ空です。項目がボードから消えると一覧からも消えます。[pushモード](../concepts/agents.md#push-mode)を参照。 |
+| `waiting` | セッションが張り付いていて、2つのターンの合間にいて、Agent Projectが仕事を渡せる間は`true`です。`running`で`waiting: false`のセッションは作業中で、そのことを理由に終了されることはありません。 |
+| `backgroundTasks` | 作業中のセッションが待っているものです。セッションが始めて、まだ終わっていないサブエージェントやバックグラウンドのコマンドの説明を、Claude Codeの`task_started`と`task_notification`のイベントから読みます。待機中のセッションとCodexでは空です。この配列に項目がある作業中のセッションを、カンバンは「作業中（サブエージェント待ち）」と表示します。 |
+| `pushStalled` | Agent Projectがセッションへ何度も押し込んだのに処理されず、あきらめた項目を、1件ずつ`{"kind", "id", "attempts", "lastError", "onHold"}`の形で並べます。`kind`は`request`、`answer`、`task`のいずれかで、`id`は依頼や質問のID（`Q-3`など）、またはテキストにしたタスク番号です。`attempts`は押し込んだ回数、`lastError`は直前に失敗したターンのメッセージで、なければ`null`です。`onHold`は、ターンがエラーなく終わったのに項目が変わらなかったとき（`lastError`が`null`）に真で、失敗ではなく「保留中」として表示されます。なければ空です。項目がカンバンから消えると一覧からも消えます。[pushモード](../concepts/agents.md#push-mode)を参照。 |
 | `restartCount` | 人が最後に起動または停止してからの再起動の回数です。 |
 | `lastExitAt` | 人が止めたのではなく、子プロセスが最後に終了した時刻です。一度もなければ`null`です。 |
 | `nextRestartAt` | 待っている再起動が始まる時刻です。`restarting`以外は`null`です。 |
@@ -300,13 +300,13 @@ JSONとして読めない本文は400です。空の本文、未知の項目、�
 
 `GET /api/projects/{projectId}/summaries`は、`{"summaries": [...]}`を新しい順（期間の終わりの順）に返します。各要素は、プロジェクトの`notify/`のファイルの1行です（[定期サマリー](./files.md#定期サマリー)を参照）。`id`・`dismissed`・`from`・`to`・`results`（`taskId`・`version`・`title`・`at`。`version`は、記録される前に書いた行にはありません）を持ちます。片付けたサマリーは含めず、新しい10件までを返します。`?dismissed=include`を付けると、片付けたものも含めて全行を、件数の上限なしで返します。要求のたびにファイルを読むので、手で編集した内容はすぐに見えます。キャッシュしません。
 
-`POST /api/projects/{projectId}/summaries/{summaryId}/dismiss`は、そのサマリーの行に`dismissed`を立て、`{"summary": {...}}`を返します。本文は取らず、繰り返しても安全で、行を消すことはありません。未知のサマリーは404 `message_not_found`、未知のプロジェクトは404 `project_not_found`、形式の誤ったプロジェクトIDは422 `invalid_value`です。どちらの経路もボードのルーターにあるので、ngrokの入口もsessionの背後で提供します。書き込みの保護はほかの変更と同じです。
+`POST /api/projects/{projectId}/summaries/{summaryId}/dismiss`は、そのサマリーの行に`dismissed`を立て、`{"summary": {...}}`を返します。本文は取らず、繰り返しても安全で、行を消すことはありません。未知のサマリーは404 `message_not_found`、未知のプロジェクトは404 `project_not_found`、形式の誤ったプロジェクトIDは422 `invalid_value`です。どちらの経路もサーバーのルーターにあるので、ngrokの入口もsessionの背後で提供します。書き込みの保護はほかの変更と同じです。
 
 サーバーがサマリーを記録したとき、片付けたとき、ファイルを手で編集したときは、いずれもプロジェクトの`messages`リソースの`summary`ファセットで`changed`を送ります。
 
 ### プロジェクトのドキュメント
 
-次のルートは、プロジェクトの`docs/`（`shared/projects/<projectId>/docs/`）にあるファイルを読みます。書き込むルートはなく、ファイルのルートへの`PUT`は405です。ボードのルーターにあり、ngrokの入口はsessionの背後で配信します。ただし`POST .../docs/open`はローカルのリスナーだけが配信します。ディスク上のドキュメントの変化は、`changed`ではなくSSEの`docs`イベントで知らせます（[変更の通知](../concepts/notifications.md#ドキュメント)を参照）。パスは`docs/`からの相対パスで、区切りは`/`です。検証の内容は[セキュリティモデル](../concepts/security.md#プロジェクトのドキュメント)にあります。プロジェクトIDが32文字の小文字16進数でないときは422 `invalid_value`です。
+次のルートは、プロジェクトの`docs/`（`shared/projects/<projectId>/docs/`）にあるファイルを読みます。書き込むルートはなく、ファイルのルートへの`PUT`は405です。サーバーのルーターにあり、ngrokの入口はsessionの背後で配信します。ただし`POST .../docs/open`はローカルのリスナーだけが配信します。ディスク上のドキュメントの変化は、`changed`ではなくSSEの`docs`イベントで知らせます（[変更の通知](../concepts/notifications.md#ドキュメント)を参照）。パスは`docs/`からの相対パスで、区切りは`/`です。検証の内容は[セキュリティモデル](../concepts/security.md#プロジェクトのドキュメント)にあります。プロジェクトIDが32文字の小文字16進数でないときは422 `invalid_value`です。
 
 | API | 入出力と動作 |
 | --- | --- |
@@ -396,4 +396,4 @@ Web UIは、PCの一覧とスマートフォンのシートの両方で、一つ
 | `GET /api/onboarding` | このデータ領域が案内を見たかどうか。`{ "formatVersion": 2, "status": "unseen" \| "completed" \| "skipped" }`。読み取りだけ。 |
 | `POST /api/onboarding/seen` | 案内の終わり方を記録する。`{ "outcome": "completed" \| "skipped" }`。`GET`と同じ形を返す。あとからもう一度呼ぶと前の結果を置き換える。 |
 
-書き込みは書き込みの保護を通ります。未知のフィールドがある、`outcome`がない、ほかの値が入っている本文は、`invalid_value`（422）で拒否します。どちらの経路もボードのルーターにあるため、ngrokの入口でも、ほかのボードの経路と同じようにセッションの内側で使えます。案内そのものはWeb UIの中で進み、サーバーはこの状態だけを保存します。[保存と復旧](../concepts/saving-and-recovery.md#初回案内の状態)を参照してください。
+書き込みは書き込みの保護を通ります。未知のフィールドがある、`outcome`がない、ほかの値が入っている本文は、`invalid_value`（422）で拒否します。どちらの経路もサーバーのルーターにあるため、ngrokの入口でも、ほかのサーバーの経路と同じようにセッションの内側で使えます。案内そのものはWeb UIの中で進み、サーバーはこの状態だけを保存します。[保存と復旧](../concepts/saving-and-recovery.md#初回案内の状態)を参照してください。

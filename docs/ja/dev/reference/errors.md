@@ -12,8 +12,8 @@
 | `task_archived` | アーカイブ済みのタスクへの書き込み。 | 1 | 409 |
 | `task_not_archived` | アーカイブされていないタスクの削除や復元。 | 1 | 409 |
 | `epic_is_draft` | CLIの`epic edit`、または`epic edit --waves`が人の下書きのエピックを対象にした。または、人の下書きのエピックを送ろうとした。 | 1 | 409 |
-| `task_is_draft` | AIの`edit`・`history add`・`mv`・`state`が人の下書き（`human`）を対象にした。または人の`mv`による未着手への移動・`epic send`・ボードからの送信が下書きを対象にした。`reason`は、ユーザーが確定するのを待つよう案内します。 | 1 | 409 |
-| `no_current_version` | 現在のバージョンがないプロジェクトで、`add`・`edit`・`ls`・`progress`に`--current-version`を付けた。何も保存しません。`version current VERSION`で設定するか、バージョンの名前を指定します。ボードのAPIは422を返します。 | 1 | 422 |
+| `task_is_draft` | AIの`edit`・`history add`・`mv`・`state`が人の下書き（`human`）を対象にした。または人の`mv`による未着手への移動・`epic send`・カンバンからの送信が下書きを対象にした。`reason`は、ユーザーが確定するのを待つよう案内します。 | 1 | 409 |
+| `no_current_version` | 現在のバージョンがないプロジェクトで、`add`・`edit`・`ls`・`progress`に`--current-version`を付けた。何も保存しません。`version current VERSION`で設定するか、バージョンの名前を指定します。サーバーのAPIは422を返します。 | 1 | 422 |
 | `task_in_backlog` | エージェントの`mv`・`state`が、バックログのタスクを対象にした。バックログから出せるのは人だけです。 | 1 | 409 |
 | `send_with_open_questions` | 人の`mv <id> todo`・`epic send`・Webでの未着手への移動が、未回答の質問がある計画を、確認なし（`--force`、APIでは`ack: true`）で対象にした。何も保存せず、メッセージに質問のIDを示す。確認して送ったあとも質問は残り、回答があるまでタスクはAwaiting answerです。 | 1 | 409 |
 | `human_only` | エージェントが依頼の取り下げ、バックログのカードへの`mv <id> todo`・`epic send`・`mv ... backlog`、タスクの一時停止（`state <id> paused`、または`actor`が`ai`の`agent-status`。「pausing a task is for a person only.」）、DoingのタスクのTodoへの差し戻し（「moving a task from Doing back to Todo is for a person only.」）を行おうとした。これを行えるのは人だけ。 | 1 | 403 |
@@ -84,12 +84,12 @@
 | `local_network_denied` | OSやサンドボックスが、`agpj`が`127.0.0.1`で待ち受けることや接続することを拒んだ（`EACCES`か`EPERM`）。Codexでは`agpj setup`で`agpj`をサンドボックスの外で動かせるようにする。 | 1 | なし |
 | `board_unavailable` | 回答を待つ`message ask`、`message wait`、`wait`、`open`、Hookがサーバーに届かない。自動起動が無効（`AGPJ_AUTOSTART=0`）、サーバーを起動できない（理由に`serve.log`を示す）、`serve.json`のサーバーが応えない、接続に失敗した、のどれか。回答を待つ`message ask`は保存前にサーバーを確認するため、利用できない場合は質問を保存しない。`--no-wait`ならサーバーは不要。 | 1 | なし |
 | `remote_unavailable` | `--project`を付けた`show remote`が報告できる、準備のできたngrok接続がない。サーバーが動いていないか、接続が`ready`ではない（無効、開始中、再接続中、失敗など）。理由にどちらかを示し、接続が失敗したときは失敗コードも示す。何も起動せず、アドレスと合言葉は出力しない。 | 1 | なし |
-| `invalid_domain` | `setup remote --domain`の値がホスト名だけではない（スキーム、パス、ポート、ワイルドカード、空白を含む）。ボードの設定APIも同じコードをHTTP 422で返す。何も保存しない。 | 2 | 422 |
-| `keychain_unavailable` | `setup remote --token-stdin`（または`setup`のトークンの質問）がOSのキーチェーンを使えない。同じコマンドのほかのオプションも含めて、何も保存しない。ボードのAPIも同じコードをHTTP 409で返す。 | 1 | 409 |
+| `invalid_domain` | `setup remote --domain`の値がホスト名だけではない（スキーム、パス、ポート、ワイルドカード、空白を含む）。サーバーの設定APIも同じコードをHTTP 422で返す。何も保存しない。 | 2 | 422 |
+| `keychain_unavailable` | `setup remote --token-stdin`（または`setup`のトークンの質問）がOSのキーチェーンを使えない。同じコマンドのほかのオプションも含めて、何も保存しない。サーバーのAPIも同じコードをHTTP 409で返す。 | 1 | 409 |
 | `browser_open_failed` | `open`が、ブラウザーを開くプログラム（`open`、`xdg-open`、`AGPJ_BROWSER_OPENER`）を起動できなかった。理由に、手で開くアドレスを示す。ブラウザーを開いてはいけないとき（`AGPJ_OPEN_BROWSER=0`、SSH、画面がない）はエラーではない。 | 1 | なし |
-| `agent_cli_missing` | `claude`または`codex`がサーバーの`PATH`にない（または`AGPJ_CLAUDE_BIN`・`AGPJ_CODEX_BIN`がファイルを指していない）ため、ボードがセッションを起動できない。 | 1 | 409 |
+| `agent_cli_missing` | `claude`または`codex`がサーバーの`PATH`にない（または`AGPJ_CLAUDE_BIN`・`AGPJ_CODEX_BIN`がファイルを指していない）ため、Agent Projectがセッションを起動できない。 | 1 | 409 |
 | `agent_cli_logged_out` | エージェントのCLIはあるが、ログインしていない（`claude auth status`の`loggedIn`がfalse、または`codex login status`が失敗）。理由に、ターミナルでログインするよう示す。 | 1 | 409 |
-| `session_launch_refused` | どちらかのツールのセッションをボードがすでに起動していて、動いている、再起動を待っている、または張り付いている。ボードが起動するセッションは、2つのツールと全プロジェクトを通して全体で1つまで。理由に、そのツールを示し、先に止めるよう示す。 | 1 | 409 |
+| `session_launch_refused` | どちらかのツールのセッションをAgent Projectがすでに起動していて、動いている、再起動を待っている、または張り付いている。Agent Projectが起動するセッションは、2つのツールと全プロジェクトを通して全体で1つまで。理由に、そのツールを示し、先に止めるよう示す。 | 1 | 409 |
 | `session_launch_failed` | エージェントのCLIを起動できなかった、ログファイルに書けなかった、またはログインの確認が20秒以内に終わらなかった。 | 1 | 500 |
 | `project_has_no_folder` | プロジェクトに、存在する結び付いたフォルダがないため、セッションを起動できない。`agpj project bind`で結び付ける。 | 1 | 409 |
 | `cursor_invalid` | cursorの形式が誤っている、または別のプロジェクトのもの。 | 1 | なし |
@@ -171,4 +171,4 @@ ngrokの入口では、Hostの確認に失敗した要求は理由`not available
 
 `setup`と`update`は、結果を自分で表示し、独自の終了コードを使います。成功、何もすることがない、取り消しが0、失敗したエージェントがある、または`setup`が1つのエージェントも設定できなかったが1、コマンドラインが不正、またはターミナルがない（か`--json`を付けた）のに必要な`--agent`、`--yes`、`--dry-run`がないが2です。グローバルの`--json`を付けると、結果は各エージェントの`status`と`reason`を持つJSONになります。エージェントの失敗の理由は、たとえば`The codex command was not found on PATH`のような文で、飛ばしたエージェントの理由も同じ項目に入ります。読めるフォルダに紐付けがないHookは、エラーではありません。何も出力せず、終了コード0で終わります。[setupとupdate](../concepts/agents.md#setupとupdate)を参照してください。
 
-タスク待ちモード（`wait --until task --idle-timeout <seconds>`）では、idle期限まで対象タスクが現れないと、成功結果の`kind: "idle_timeout"`を出力して終了コード0を返します。対象タスクを取得した場合も終了コード0です。引数誤りは2、プロジェクトがない場合は4、起動できないサーバー・不整合な応答・不正なボードデータ・ストリーム障害は`board_unavailable`で1です。これらは対象なしの正常終了ではありません。idle秒数は必須で1〜86,400です。
+タスク待ちモード（`wait --until task --idle-timeout <seconds>`）では、idle期限まで対象タスクが現れないと、成功結果の`kind: "idle_timeout"`を出力して終了コード0を返します。対象タスクを取得した場合も終了コード0です。引数誤りは2、プロジェクトがない場合は4、起動できないサーバー・不整合な応答・不正なAgent Projectデータ・ストリーム障害は`board_unavailable`で1です。これらは対象なしの正常終了ではありません。idle秒数は必須で1〜86,400です。
