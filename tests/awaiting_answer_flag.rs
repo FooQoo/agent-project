@@ -249,18 +249,15 @@ fn a_stored_ran_or_awaiting_answer_state_is_an_invalid_file() {
 }
 
 #[test]
-fn an_agent_cannot_pause_a_task_but_a_person_can() {
+fn an_agent_can_pause_its_running_task_and_so_can_a_person() {
     let fx = fx();
     let id = fx.task(Assignee::Ai);
     fx.run(id);
-    let err = fx
-        .store
+    fx.store
         .set_agent_status(&fx.project, id, RunState::Paused, ctx(Actor::Ai), now())
-        .unwrap_err();
-    assert!(
-        matches!(err, agent_project::error::AgpjError::HumanOnly { .. }),
-        "{err:?}"
-    );
+        .unwrap();
+    assert_eq!(fx.view(id).agent_status, RunState::Paused);
+    fx.run(id);
     assert_eq!(fx.view(id).agent_status, RunState::Running);
     fx.store
         .set_agent_status(&fx.project, id, RunState::Paused, ctx(Actor::Human), now())

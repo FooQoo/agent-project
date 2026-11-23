@@ -26,7 +26,7 @@
 | ai | done | idleのみ |
 | human | すべて（backlogを含む） | idleのみ |
 
-- **Idle**は、エージェントが作業していないタスクです。**Running**は自己申告で、生存監視ではありません。自動で戻ることはなく、エージェントもセッションが始まったというだけでは変えません。**Paused**（`paused`）は、稼働が止まっている、Doingのタスクです。質問を出したか結び付けたとき、常駐エージェントがエラーで止まったとき、または人が一時停止したときにPausedになります。エージェントはタスクを一時停止できません。
+- **Idle**は、エージェントが作業していないタスクです。**Running**は自己申告で、生存監視ではありません。自動で戻ることはなく、エージェントもセッションが始まったというだけでは変えません。**Paused**（`paused`）は、稼働が止まっている、Doingのタスクです。質問を出したか結び付けたとき、常駐エージェントがエラーで止まったとき、人が一時停止したとき、または止まり検知のリマインダーに指摘されたエージェントが、作業していない自分のRunningのタスクを一時停止したときにPausedになります。エージェントがそれ以外で`state <id> paused`を使うことはありません。
 - `running`と`paused`があるのは、DoingにあるAI担当のタスクだけで、ほかのタスクはすべて`idle`です。`task.json`に保存するのは`idle`・`running`・`paused`のどれかで、`ran`や`awaiting_answer`を含むそれ以外の値は、未知の値と同じく不正なファイルになります。
 - **Awaiting answer**（回答待）は稼働状態ではなく、導き出す印`awaitingAnswer`です。タスクが参照するプロジェクトの質問にまだ回答がない場合、または読めないメッセージのファイルを参照している場合に真になります。担当者、レーン（バックログとDoneを含む）、稼働状態を問わず付き、アーカイブ済みのタスクは対象外です。`agentStatus`を上書きすることはなく、読み出すときにタスクの`questions`から導き（[メッセージ](./history-and-decisions.md#メッセージ)）、画面では稼働状態のラベルの上に表示します。その間もほかのタスクを進めてかまいません。
 - 無効な組み合わせは保存しません。下書きのタスクは、どのレーンでもIdleです。
@@ -35,7 +35,7 @@
 
 - **作成**はタスクを未着手・Idleでレーンの末尾に置き、作成を履歴に記録します。本文がなければ空の`acceptance`と空の本文を書き、指定した本文はfrontmatterの検証を通します。
 - **列移動**は`actor`が必須で、`reason`は任意です。タスクは移動先のレーンの末尾に置きます。実際の移動ではタスクの未回答の質問を保ち、Doingに入るとき、またはDoingから出るとき（どのレーンへでも）は稼働状態をIdleに戻すので、Doingに移したタスクはIdleから始まります。すでにDoingにあって並べ替えだけのタスクは状態を保ちます。実際の移動は履歴を追加し、`taskStatusChangedAt`を更新します。同じレーンへの移動は何も変えません。自動DoneもIdleにします。
-- **稼働状態の変更**は`actor`が必須で、レーンは変わりません。`state`はDoingにあるAI担当のタスクに使います。許されるのは、IdleからRunning、RunningからPaused、PausedからRunningの変更だけで、それ以外（たとえばRunningからIdle、IdleからPaused）は`invalid_state_change`で拒否します。`idle`・`running`・`paused`以外の値（`ran`や`awaiting_answer`など）は`invalid_value`で拒否します。AIがPausedに変えようとすると`human_only`（「pausing a task is for a person only.」）で拒否します。一時停止できるのは人です。回答待ちのタスクをAIがRunningにしようとすると`questions_unanswered`で拒否します。質問は`message ask`で出し、そのときDoingのRunningのタスクは同じ保存でPausedになります。`message link`でタスクを結び付けるときも同じです（[メッセージ](./history-and-decisions.md#メッセージ)）。列移動やアーカイブをしても、タスクの質問と参照は残ります。同じ状態の再申告は変更ではありません。
+- **稼働状態の変更**は`actor`が必須で、レーンは変わりません。`state`はDoingにあるAI担当のタスクに使います。許されるのは、IdleからRunning、RunningからPaused、PausedからRunningの変更だけで、それ以外（たとえばRunningからIdle、IdleからPaused）は`invalid_state_change`で拒否します。`idle`・`running`・`paused`以外の値（`ran`や`awaiting_answer`など）は`invalid_value`で拒否します。エージェントは自分のRunningのタスクを、止めた理由を`--reason`に書いてPausedにできます。スキルが使うよう指示するのは止まり検知のリマインダーのときだけで、再開は`state <id> running`です。回答待ちのタスクをAIがRunningにしようとすると`questions_unanswered`で拒否します。質問は`message ask`で出し、そのときDoingのRunningのタスクは同じ保存でPausedになります。`message link`でタスクを結び付けるときも同じです（[メッセージ](./history-and-decisions.md#メッセージ)）。列移動やアーカイブをしても、タスクの質問と参照は残ります。同じ状態の再申告は変更ではありません。
 - **自動再開。** エージェントが回答を受け取ると（`message accept <Q-id> --actor ai`、または回答済みの結果を返す`message ask`と`message wait`。この2つは回答を受け取ります）、その質問を参照し、Pausedで、下書きでなく、ほかに未回答の質問を参照していない、DoingのAI担当のタスクは、同じ保存でRunningに戻ります。履歴には、プロダクトが作る言語に合わせた定型文「Q-1 の回答を受け取ったので再開しました。」を残します（IDが複数のときは「, 」で並べます）。質問によるPausedの履歴は「Q-1 の回答を待ちます。」です。
 - **DoingからTodoへの差し戻し。** エージェントはDoingのタスクをTodoに戻せません。DoingのタスクへのAIの`mv <id> todo --actor ai`は`human_only`（「moving a task from Doing back to Todo is for a person only.」）で拒否します。戻せるのは人です。エージェントはタスクをDoneに移して終えます。
 - **編集**で変わるのはタイトル・本文・完了条件だけで、担当は変わりません。CLIの`--desc`・`--desc-file`はファイル全体を受け取りますが、保存済みの最新の`TASK.md`の履歴と`questions`の参照を保ちます。入力のこの2つのキーは無視されるため、未回答の質問を参照するタスクは回答待のままです。`epic edit --document-file`は`EPIC.md`の全文を置き換えます。Web画面は`body`と`acceptance`を送り、ロックの中で最新のファイルに適用します。
