@@ -75,12 +75,14 @@ pub fn run(ctx: &mut Context, args: &ModeArgs) -> Result<Outcome, AgpjError> {
         }
         Some(ModeArg::Auto) => mode::clear_manual(&data_dir, &project).map_err(write_failed)?,
         Some(ModeArg::Schedule) => {
-            let saved = mode::state(&data_dir, &project).schedule;
-            // "--off" with no window saved has nothing to turn off.
-            if !(args.off && saved.is_none() && args.start.is_none() && args.end.is_none()) {
-                let schedule = next_schedule(args, saved)?;
-                mode::set_schedule(&data_dir, &project, schedule).map_err(write_failed)?;
-            }
+            mode::change_schedule(&data_dir, &project, |saved| {
+                // "--off" with no window saved has nothing to turn off.
+                if args.off && saved.is_none() && args.start.is_none() && args.end.is_none() {
+                    return Ok(None);
+                }
+                next_schedule(args, saved).map(Some)
+            })
+            .map_err(write_failed)??;
         }
     }
     let state = mode::state(&data_dir, &project);

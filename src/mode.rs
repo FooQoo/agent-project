@@ -18,7 +18,6 @@ use serde_json::{Map, Value, json};
 pub use crate::mode_schedule::{Effective, Schedule, Source};
 
 const FORMAT_VERSION: u32 = 1;
-
 const INTERNAL_DIR: &str = ".internal";
 const FILE_NAME: &str = "modes.json";
 const LOCK_NAME: &str = "modes.lock";
@@ -187,11 +186,23 @@ fn update(
     project: &str,
     change: impl FnOnce(&mut Map<String, Value>),
 ) -> std::io::Result<()> {
+    update_with(data_dir, project, |entry| {
+        change(entry);
+        Ok::<(), std::convert::Infallible>(())
+    })
+    .map(|_| ())
+}
+
+/// Like `update`, but `change` may refuse; a refusal saves nothing and is the inner error.
+fn update_with<E>(
+    data_dir: &Path,
+    project: &str,
+    change: impl FnOnce(&mut Map<String, Value>) -> Result<(), E>,
+) -> std::io::Result<Result<(), E>> {
     let path = path_in(data_dir);
     let dir = path.parent().unwrap_or(data_dir);
     crate::server::preferences::create_private_dir(dir)?;
-    // One exclusive lock from the read to the rename, so the board and the CLI (a separate
-    // process) cannot overwrite each other's update.
+    // Exclusive from the read to the rename: the board and the CLI cannot overwrite each other.
     let _lock = crate::file_store::lock::WriteLock::acquire(&dir.join(LOCK_NAME))
         .map_err(std::io::Error::other)?;
     let mut projects = read_projects_strict(data_dir)?;
@@ -200,7 +211,9 @@ fn update(
         .and_then(Value::as_object)
         .cloned()
         .unwrap_or_default();
-    change(&mut entry);
+    if let Err(error) = change(&mut entry) {
+        return Ok(Err(error));
+    }
     if entry.contains_key("kind") || entry.contains_key("schedule") {
         projects.insert(project.to_string(), Value::Object(entry));
     } else {
@@ -219,7 +232,7 @@ fn update(
     } else {
         crate::server::preferences::sync_dir(dir);
     }
-    result
+    result.map(|()| Ok(()))
 }
 
 /// Set the manual mode, keeping the daily window. Sparring with no window removes the entry; with
@@ -262,6 +275,21 @@ pub fn clear_manual(data_dir: &Path, project: &str) -> std::io::Result<()> {
 pub fn set_schedule(data_dir: &Path, project: &str, schedule: Schedule) -> std::io::Result<()> {
     update(data_dir, project, |entry| {
         entry.insert("schedule".into(), schedule.to_json());
+    })
+}
+
+/// Compute the new window from the saved one and save it under the lock; `None` leaves it alone.
+pub fn change_schedule<E>(
+    data_dir: &Path,
+    project: &str,
+    change: impl FnOnce(Option<Schedule>) -> Result<Option<Schedule>, E>,
+) -> std::io::Result<Result<(), E>> {
+    update_with(data_dir, project, |entry| {
+        let saved = entry.get("schedule").and_then(Schedule::from_json);
+        if let Some(schedule) = change(saved)? {
+            entry.insert("schedule".into(), schedule.to_json());
+        }
+        Ok(())
     })
 }
 

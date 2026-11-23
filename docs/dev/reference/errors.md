@@ -153,7 +153,7 @@ These are returned by the `/api/projects/{projectId}/mode` route (see [Web API](
 
 | Code | When | Exit | HTTP |
 | --- | --- | --- | --- |
-| `invalid_mode` | The body is not exactly one of `{"mode": "sparring" | "sleep" | "auto"}` or a `{"schedule": {enabled, start, end}}` with two different `HH:MM` times. Nothing is saved. | n/a | 422 |
+| `invalid_mode` | The body is not exactly one of `{"mode": "sparring" \| "sleep" \| "auto"}` or a `{"schedule": {enabled, start, end}}` with two different `HH:MM` times. Nothing is saved. | n/a | 422 |
 | `mode_unavailable` | The modes file could not be written. The saved mode is unchanged. | n/a | 500 |
 
 ## Phone notification settings
