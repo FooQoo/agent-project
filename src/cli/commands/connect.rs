@@ -33,7 +33,7 @@ pub fn connect(ctx: &mut Context, args: &ConnectArgs) -> Result<Outcome, AgpjErr
     let _session = connection_store::lock_session(&data_dir, &project)?;
     // One session holds one agent: a second connection would replace the stored secret of the
     // first and leave it unreleasable.
-    let held = match connection_store::load_secret(&data_dir, &project) {
+    let held = match connection_store::try_load_secret(&data_dir, &project)? {
         Some(held) => active_agent(
             ctx.files
                 .verify_connection(&project, &held, ctx.clock.now()),
@@ -99,7 +99,7 @@ pub fn disconnect(ctx: &mut Context) -> Result<Outcome, AgpjError> {
     // The same lock as `connect`: a disconnect never deletes a secret a connect just saved.
     let _session = connection_store::lock_session(&data_dir, &project)?;
     let secret =
-        connection_store::load_secret(&data_dir, &project).ok_or(AgpjError::NotConnected)?;
+        connection_store::try_load_secret(&data_dir, &project)?.ok_or(AgpjError::NotConnected)?;
     let paused = ctx
         .files
         .disconnect_session(&project, &secret, ctx.clock.now())?;

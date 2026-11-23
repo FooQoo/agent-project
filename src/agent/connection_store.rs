@@ -45,6 +45,35 @@ pub(crate) fn load_secret(data_dir: &Path, project: &ProjectId) -> Option<String
     load_secret_for_key(data_dir, project, &SessionIdentity::from_env().key)
 }
 
+/// [`load_secret`] that tells a missing secret from one that cannot be read: only a missing
+/// file or an empty one means "no secret"; any other read error is returned, so that `connect`
+/// never replaces a secret it could not look at.
+pub(crate) fn try_load_secret(
+    data_dir: &Path,
+    project: &ProjectId,
+) -> Result<Option<String>, AgpjError> {
+    if let Some(secret) = std::env::var(SECRET_ENV)
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+    {
+        return Ok(Some(secret));
+    }
+    let path = secret_file(data_dir, project, &SessionIdentity::from_env().key);
+    match std::fs::read_to_string(&path) {
+        Ok(text) => {
+            let text = text.trim();
+            Ok((!text.is_empty()).then(|| text.to_string()))
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(AgpjError::FileError {
+            action: crate::error::FileAction::Read,
+            file: "connections".into(),
+            reason: format!("The stored connection secret could not be read: {e}."),
+        }),
+    }
+}
+
 /// The stored secret of the session with this key.
 pub(crate) fn load_secret_for_key(
     data_dir: &Path,

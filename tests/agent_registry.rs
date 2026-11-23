@@ -967,3 +967,77 @@ fn a_verification_that_cannot_run_stops_connect_and_changes_nothing() {
         .success()
     );
 }
+
+#[test]
+fn an_unreadable_secret_file_stops_connect_and_changes_nothing() {
+    use sha2::{Digest, Sha256};
+    use std::os::unix::fs::PermissionsExt;
+    let home = tempfile::tempdir().unwrap();
+    assert!(
+        session_cmd(home.path(), "s-sec", &["project", "create", "Sec"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    let store = FileStore::open(&home.path().join("shared"));
+    let project = store.project_by_name("Sec").unwrap().id;
+    store.register_agent(&project, "One", "", t0()).unwrap();
+    store.register_agent(&project, "Two", "", t0()).unwrap();
+    let first = store
+        .issue_connect_code(&project, "A-1", false, Utc::now())
+        .unwrap();
+    assert!(
+        session_cmd(
+            home.path(),
+            "s-sec",
+            &["--project", "Sec", "connect", &first.code]
+        )
+        .output()
+        .unwrap()
+        .status
+        .success()
+    );
+    let digest = Sha256::digest("s-sec".as_bytes());
+    let hex: String = digest.iter().take(8).map(|b| format!("{b:02x}")).collect();
+    let file = home
+        .path()
+        .join("connections")
+        .join(project.as_str())
+        .join(format!("claude_{hex}.secret"));
+    let before = std::fs::read(&file).unwrap();
+    let second = store
+        .issue_connect_code(&project, "A-2", false, Utc::now())
+        .unwrap();
+    std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o000)).unwrap();
+    let out = session_cmd(
+        home.path(),
+        "s-sec",
+        &["--project", "Sec", "connect", &second.code],
+    )
+    .output()
+    .unwrap();
+    std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o600)).unwrap();
+    assert!(!out.status.success());
+    assert!(String::from_utf8_lossy(&out.stderr).contains("could not be read"));
+    assert_eq!(std::fs::read(&file).unwrap(), before);
+    // The second code was not consumed: it still connects once the first is released.
+    assert!(
+        session_cmd(home.path(), "s-sec", &["--project", "Sec", "disconnect"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    assert!(
+        session_cmd(
+            home.path(),
+            "s-sec",
+            &["--project", "Sec", "connect", &second.code]
+        )
+        .output()
+        .unwrap()
+        .status
+        .success()
+    );
+}
