@@ -6,9 +6,9 @@
 
 [![CI](https://github.com/FooQoo/agent-project/actions/workflows/ci.yml/badge.svg)](https://github.com/FooQoo/agent-project/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/FooQoo/agent-project/graph/badge.svg)](https://codecov.io/gh/FooQoo/agent-project) [![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/FooQoo/agent-project?utm_source=oss&utm_medium=github&utm_campaign=FooQoo%2Fagent-project&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)](https://coderabbit.ai)
 
-**Delegate big work. Stop babysitting it.**
+**Big work moves on without you driving it.**
 
-Agent Project is a shared workspace where your AI agent plans and reports, and you answer. It turns your request into a plan with acceptance conditions, starts it once your questions are answered, and stops for you only when it must. Watch and answer from your PC, your phone, or the chat.
+Agent Project gives Codex and Claude Code the project management they lack. Ask AI to plan the work, approve the start, and answer the questions it raises along the way. It breaks the goal into tasks, decides up front what done means, asks you only what it must not decide alone, and brings back results checked against those conditions.
 
 ```sh
 brew install fooqoo/tap/agpj
@@ -26,9 +26,16 @@ brew install fooqoo/tap/agpj
 
 ## What is Agent Project?
 
-You can hand big work to an AI agent, but it rarely finishes unless someone keeps watching: turning the request into a plan, noticing when it is stuck, catching a question buried in the log, explaining the work again in the next session, and checking at the end that it is really done.
+An AI agent can take on big work, but a long job still needs someone to drive it. The agent wanders, stops, or calls the work done too early, and you end up writing the plan, catching the question buried in the log, explaining the work again in the next session, and checking at the end that it is really done.
 
-Agent Project is a **shared workspace** that sits alongside your agent, such as Claude Code or Codex: the agent plans and reports there, and you answer. It does not run the agent. It holds the work in one place that both of you read and write: a plan (epics and tasks in order), acceptance conditions that say when each task is done, questions the agent must stop for, and a history of what happened and why. It all lives in plain files on your machine, with no account or hosted service.
+Agent Project gives the agent the project management it lacks, so the work moves on without you driving it. It sits alongside your agent, such as Claude Code or Codex, and does not run it. The board holds four things that agent and person both read and write:
+
+- **A plan in order.** The goal is broken into epics and tasks, and the progress table tells the agent what can move next.
+- **A definition of done.** Each task has acceptance conditions, set before the work starts.
+- **Questions for you.** When your intent is unclear, your preference decides, an action cannot be undone, or the work grows, the agent stops and asks instead of deciding alone.
+- **A record.** History and results keep what the agent did and decided, so the next session or agent starts from there.
+
+It is built for people building a product alone with Codex or Claude Code. Everything lives in plain files on your machine, with no account or hosted service.
 
 ```mermaid
 flowchart LR
@@ -40,11 +47,11 @@ To see it for yourself, [try the demo](https://fooqoo.github.io/agent-project/de
 
 ## How delegation works
 
-1. **Request.** Tell your agent what you want, in plain words.
-2. **Plan.** The agent puts an epic and its tasks on the board as a plan, each task with acceptance conditions, and asks the questions it cannot settle itself.
-3. **Answers, then the send.** You answer. A plan that asks only for planning waits in the Backlog until you send it to Todo; a request to carry out the work goes straight to Todo. A task does not start while a question linked to it is open.
-4. **Work in order.** The agent works through the tasks and stops for you only when your intent is unclear, your preference decides it, an action cannot be undone, or the work grows beyond what you asked.
-5. **Done on its own.** When the agent has verified every acceptance condition of a task and nothing is waiting on you, the task moves to Done by itself.
+1. **Ask AI to plan.** Tell your agent what you want, in plain words.
+2. **It plans.** The agent puts an epic and its tasks on the board, each task with acceptance conditions, and asks the questions it cannot settle itself.
+3. **You approve the start.** You answer, and the plan goes to Todo. A plan that asks only for planning waits in the Backlog until you send it; a request to carry out the work goes straight to Todo. A task does not start while a question linked to it is open.
+4. **You answer on the way.** The agent works through the tasks in order and stops for you only when your intent is unclear, your preference decides it, an action cannot be undone, or the work grows beyond what you asked.
+5. **You receive the result.** When the agent has verified every acceptance condition of a task and nothing is waiting on you, the task moves to Done by itself, and what was done and decided stays in its history and results.
 
 You take part in two ways. When the agent stops to ask, you answer wherever is easiest, and the answer is recorded once (human in the loop). While it works, you can watch, move a card back, check a condition, or rewrite a plan without stopping it, and the agent follows the change (human on the loop). See [The work model](https://fooqoo.github.io/agent-project/guide/work-model) and the [Quickstart](https://fooqoo.github.io/agent-project/guide/quickstart).
 
