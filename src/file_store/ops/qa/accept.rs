@@ -220,6 +220,22 @@ impl FileStore {
             if resumed_already {
                 continue;
             }
+            // A task assigned to a registered agent resumes only on that agent's active
+            // connection, which can release it when the session ends. With none, it stays
+            // paused and no resume is recorded; a project without agents resumes on its own.
+            let connection = match task.agent_id.as_deref() {
+                Some(agent) => {
+                    match crate::file_store::ops::assignment::active_connection_locked(
+                        shared,
+                        project_dir,
+                        agent,
+                    )? {
+                        Some(connection) => Some(connection),
+                        None => continue,
+                    }
+                }
+                None => None,
+            };
             let language = self.history_language(project, &task)?;
             let listed = questions.join(", ");
             let (english, japanese) = resume_texts(&listed);
@@ -234,16 +250,7 @@ impl FileStore {
                 at,
             })?);
             task.agent_status = RunState::Running;
-            // A task that runs on an agent's connection keeps a connection that can release it
-            // when the session ends; a project without agents has none to record.
-            task.run_connection_id = match task.agent_id.as_deref() {
-                Some(agent) => crate::file_store::ops::assignment::active_connection_locked(
-                    shared,
-                    project_dir,
-                    agent,
-                )?,
-                None => None,
-            };
+            task.run_connection_id = connection;
             task.agent_status_changed_at = at;
             task.updated_at = at;
             save_task(shared, project_dir, &task)?;

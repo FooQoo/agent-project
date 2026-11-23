@@ -8,6 +8,9 @@ use agent_project::error::AgpjError;
 use agent_project::file_store::{ConnectionOrigin, FileStore, STALE_RUN_SECONDS};
 use chrono::{DateTime, Duration, TimeZone, Utc};
 
+#[path = "support/qa.rs"]
+mod qa;
+
 fn t0() -> DateTime<Utc> {
     Utc.with_ymd_and_hms(2026, 11, 24, 9, 0, 0).unwrap()
 }
@@ -1040,4 +1043,87 @@ fn an_unreadable_secret_file_stops_connect_and_changes_nothing() {
         .status
         .success()
     );
+}
+
+impl Fx {
+    /// A card of a registered agent that is paused on one open question, and the answer given.
+    fn paused_on_an_answered_question(&self, secret: &str) -> i64 {
+        let id = self.doing_task();
+        self.run(id, secret, t0()).unwrap();
+        qa::ask(
+            &self.store,
+            &self.project,
+            &[id],
+            "Which way?",
+            &[("a", "A"), ("b", "B")],
+        );
+        assert_eq!(
+            self.store.task(&self.project, id).unwrap().agent_status,
+            RunState::Paused
+        );
+        qa::answer(&self.store, &self.project, "Q-1", Some("a"), None);
+        id
+    }
+
+    fn accept_the_answer(&self) {
+        self.store
+            .accept_message(&self.project, "Q-1", Actor::Ai, t0())
+            .unwrap();
+    }
+}
+
+#[test]
+fn a_registered_agents_card_stays_paused_after_the_last_answer_without_a_connection() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let secret = fx.connect("A-1", false, t0()).unwrap();
+    let id = fx.paused_on_an_answered_question(&secret);
+    fx.store
+        .disconnect_session(&fx.project, &secret, t0())
+        .unwrap();
+    fx.accept_the_answer();
+    let task = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(task.agent_status, RunState::Paused);
+    assert!(
+        !task.history.iter().any(|e| e.reason.starts_with("Resumed")),
+        "{:?}",
+        task.history
+    );
+}
+
+#[test]
+fn a_registered_agents_card_resumes_on_its_connection_after_the_last_answer() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let secret = fx.connect("A-1", false, t0()).unwrap();
+    let id = fx.paused_on_an_answered_question(&secret);
+    fx.accept_the_answer();
+    let task = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(task.agent_status, RunState::Running);
+    assert!(task.run_connection_id.is_some());
+}
+
+#[test]
+fn a_project_without_agents_still_resumes_after_the_last_answer() {
+    let fx = fx();
+    let id = fx.doing_task();
+    fx.store
+        .set_agent_status(&fx.project, id, RunState::Running, ctx(Actor::Ai), t0())
+        .unwrap();
+    qa::ask(
+        &fx.store,
+        &fx.project,
+        &[id],
+        "Which way?",
+        &[("a", "A"), ("b", "B")],
+    );
+    qa::answer(&fx.store, &fx.project, "Q-1", Some("a"), None);
+    fx.accept_the_answer();
+    let task = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(task.agent_status, RunState::Running);
+    assert_eq!(task.run_connection_id, None);
 }

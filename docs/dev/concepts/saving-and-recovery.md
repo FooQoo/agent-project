@@ -108,7 +108,7 @@ Releases before this format kept a whole run in the file, with sample cards on t
 | The OS drops events and asks for a rescan | Every project is reloaded. |
 | An editor overwrites a file in place without a temporary file | A half-written body may appear briefly in `problems`, until the event for the finished write triggers a reload. |
 | The project lock is busy for more than 5 seconds | `database_busy`; nothing changes; retry. |
-| An agent crashes while its task is Running | The task stays Running. Nothing resets it automatically. |
+| An agent crashes while its task is Running | A task that runs on a connection returns to waiting after the connection has been quiet for a fixed time, or when its session ends. A task without a connection stays Running; nothing resets it automatically. |
 | The shared area is on a network drive | Not supported: OS events may not arrive. |
 
 Browser-side failures (lost responses, retries, disconnects) are covered in [Server and web UI](./server-and-ui.md#behavior-on-failure-in-the-ui).
