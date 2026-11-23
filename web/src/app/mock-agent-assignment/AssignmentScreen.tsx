@@ -1,9 +1,8 @@
-import { CheckCircle2Icon, GaugeIcon } from 'lucide-react';
+import { GaugeIcon } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
 import { EpicLabel } from '../../features/epics/label/EpicLabel';
 import type { DetailTab } from '../../features/tasks/detail/DetailTabs';
 import { TaskCardView } from '../../features/tasks/card/TaskCard';
-import { Button } from '@/shared/ui/button';
 import { Drawer } from '@/shared/ui/drawer';
 import { Header } from '../../shared/ui/app-header/Header';
 import '../../pages/monitor/components/monitor-lanes.css';
@@ -18,49 +17,29 @@ import {
   countIn,
   summaryOf,
 } from './data';
-import { AgentsSurface, BulkSurface, ReassignSurface, SwitchSurface } from './Dialogs';
+import { AgentsSurface } from './AgentsSurface';
+import { BulkSurface } from './BulkSurface';
+import { NoticeView } from './NoticeView';
+import { ReassignSurface } from './ReassignSurface';
+import { SwitchSurface } from './SwitchSurface';
 import { DetailPane } from './DetailPane';
+import {
+  type DialogName,
+  type Initial,
+  type Notice,
+  bulkAssign,
+  handOver,
+  initialState,
+} from './screen-state';
 import { useIsJa, useMockText } from './text';
 import './assignment-mock.css';
 
-export type DialogName = 'agents' | 'agentsAdd' | 'switch' | 'switchCode' | 'reassign' | 'bulk';
-
-export interface Initial {
-  openId?: number | null;
-  tab?: DetailTab;
-  lane?: Lane;
-  dialog?: DialogName;
-  /** The agent the switch dialog is about. */
-  switchAgent?: string;
-  /** The choice already made in the handover or the bulk dialog. */
-  to?: string;
-  epicId?: string;
-  /** Shows the result of an operation that was just confirmed. */
-  done?: 'reassign' | 'bulk';
-}
+export type { DialogName, Initial } from './screen-state';
 
 export interface AssignmentScreenProps {
   variant?: 'desktop' | 'phone';
   initial?: Initial;
 }
-
-type Notice =
-  | { kind: 'reassign'; id: number; from: string; to: string; g0: number; g1: number }
-  | { kind: 'bulk'; ids: number[]; to: string; kept: number };
-
-const handOver = (cards: MockCard[], id: number, to: string): MockCard[] =>
-  cards.map((c) =>
-    c.id === id
-      ? { ...c, agentId: to, generation: c.generation + 1, running: false, fresh: true }
-      : { ...c, fresh: false },
-  );
-
-const bulkAssign = (cards: MockCard[], epicId: string, to: string): MockCard[] =>
-  cards.map((c) =>
-    c.epicId === epicId && c.agentId === null
-      ? { ...c, agentId: to, generation: c.generation + 1, fresh: true }
-      : { ...c, fresh: false },
-  );
 
 /**
  * The agent-assignment mock: the board with an agent strip, the card detail with an assignment section,
@@ -75,34 +54,7 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
   const kind = phone ? 'sheet' : 'dialog';
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: the initial state is read once per language
-  const start = useMemo(() => {
-    let cards = buildFixture(ja).cards;
-    let notice: Notice | null = null;
-    if (initial.done === 'reassign') {
-      const card = cards.find((c) => c.id === 28);
-      cards = handOver(cards, 28, initial.to ?? 'A-3');
-      notice = {
-        kind: 'reassign',
-        id: 28,
-        from: 'A-2',
-        to: initial.to ?? 'A-3',
-        g0: card?.generation ?? 2,
-        g1: (card?.generation ?? 2) + 1,
-      };
-    }
-    if (initial.done === 'bulk') {
-      const epicId = initial.epicId ?? 'LOGIN-1';
-      const ids = cards.filter((c) => c.epicId === epicId && c.agentId === null).map((c) => c.id);
-      cards = bulkAssign(cards, epicId, initial.to ?? 'A-1');
-      notice = {
-        kind: 'bulk',
-        ids,
-        to: initial.to ?? 'A-1',
-        kept: cards.filter((c) => c.epicId === epicId).length - ids.length,
-      };
-    }
-    return { cards, notice };
-  }, [ja]);
+  const start = useMemo(() => initialState(ja, initial), [ja]);
 
   const [cards, setCards] = useState<MockCard[]>(start.cards);
   const [notice, setNotice] = useState<Notice | null>(start.notice);
@@ -192,34 +144,7 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
     );
 
   const noticeView = notice && (
-    <div className="anotice" role="status">
-      <CheckCircle2Icon aria-hidden="true" />
-      <div className="anotice__text">
-        {notice.kind === 'reassign' ? (
-          <>
-            <strong>
-              {m.resultReassigned(
-                notice.id,
-                agentOf(fixture.agents, notice.from)?.name ?? '',
-                agentOf(fixture.agents, notice.to)?.name ?? '',
-              )}
-            </strong>
-            <span>{m.resultReassignedBody(notice.g0, notice.g1)}</span>
-          </>
-        ) : (
-          <>
-            <strong>
-              {m.resultBulk(notice.ids.length, agentOf(fixture.agents, notice.to)?.name ?? '')} (
-              {notice.ids.map((id) => `#${id}`).join(', ')})
-            </strong>
-            <span>{m.resultBulkBody(notice.kept)}</span>
-          </>
-        )}
-      </div>
-      <Button type="button" size="s" variant="outline" onClick={() => setNotice(null)}>
-        {m.dismiss}
-      </Button>
-    </div>
+    <NoticeView notice={notice} agents={fixture.agents} onDismiss={() => setNotice(null)} />
   );
 
   const strip = (
