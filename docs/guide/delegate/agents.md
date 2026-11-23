@@ -99,7 +99,7 @@ flowchart TD
 2. **Start.** Move the task to Doing with a reason, then report Running. Review a user-owned task only when it affects the work.
 3. **Work and record.** Put the grounds for a move or state change in its `--reason`; that entry is the record. Add `history add` only for a decision that changes no state but matters later, such as keeping a card in Todo, with the grounds, the decision, and when known the condition for reconsidering. Reading the list needs no entry, and `result add` records itself. Keep the plan and concise verification results in the body; attach images when visual proof is useful.
 4. **Ask when blocked.** Ask with `message ask` when you need a decision; the task shows Awaiting answer until you answer, and a Running task in Doing is paused automatically when the question is attached (see [Decisions](./decisions)). An agent never pauses a task itself.
-5. **Resume.** When the agent takes in the answer, the task goes back to Running by itself. It then reads the task and history and reconsiders the plan.
+5. **Resume.** When the agent takes in the answer, the task goes back to Running by itself, provided every question it refers to is answered and it is an AI task in Doing and Paused; while another referenced question is open, it stays Paused. The agent re-reads the task to see whether it resumed, then reads the task and history and reconsiders the plan.
 6. **Finish.** Mark acceptance conditions done only after verifying them. Eligible AI tasks move to Done automatically when all conditions are complete. An agent never moves a Doing task back to Todo.
 7. **Wait.** If no work can proceed, wait for a change (see below).
 

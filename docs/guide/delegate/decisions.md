@@ -50,7 +50,7 @@ On a window narrower than 900 px, the question and the answer stack in one colum
 
 ![The answer dialog, with the question on the left and the options and note on the right](../../images/guide/question.png){.screenshot}
 
-Each answer is saved to the history of every task that refers to its question. The question and each part of your answer appear as separate blocks there. A task stays in its current column. When none of its questions is open any more, the agent takes in your answers. A Paused task that waited only on them goes back to Running by itself, and the agent reads your response before it decides how to continue.
+Each answer is saved to the history of every task that refers to its question. The question and each part of your answer appear as separate blocks there. A task stays in its current column. When none of its questions is open any more, the agent takes in your answers. An AI task in Doing that is Paused and refers to no other open question goes back to Running by itself, and the agent reads your response before it decides how to continue.
 
 A question has no expiry. It stays open until it is answered or the agent withdraws it. Moving or archiving the task does not withdraw it.
 
