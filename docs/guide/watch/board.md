@@ -104,7 +104,7 @@ When you ask an agent for a plan only, it puts the plan in the Backlog: settled 
 
 Plans are corrected through chat or requests to the AI: send the agent a request with **Ask AI**. A request to carry out the work, instead of a plan, creates ordinary Todo cards.
 
-Only you send a plan to Todo, and a card sent to Todo goes to the end of its lane. Moving one card and sending several are two separate flows.
+You send a plan to Todo from the board, or tell the agent in the chat to start it; the agent never sends on its own. A card sent to Todo goes to the end of its lane. Moving one card and sending several are two separate flows.
 
 **Move one card.** This works like a move between any other lanes: the card is in its new lane at once, with no extra step and no notice when it went. If the server refuses, the card goes back to the Backlog and a notice gives the reason.
 

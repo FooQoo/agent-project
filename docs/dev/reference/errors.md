@@ -13,10 +13,10 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `task_not_archived` | A delete or restore targets a task that is not archived. | 1 | 409 |
 | `task_is_draft` | An AI `edit`, `history add`, `mv`, or `state` targets a person's draft (`human`); or a person's `mv` to Todo, `epic send`, or send from the board targets one. The `reason` says to wait for the user to finalize it. | 1 | 409 |
 | `no_release_version` | `add`, `edit`, `ls`, or `progress` with `--release-version` runs in a project that has no release version. Nothing is saved. Set one with `version release VERSION`, or name a version. The board API answers 422. | 1 | 422 |
-| `task_in_backlog` | An agent's `mv` or `state` targets a Backlog task. Only a person moves it out of the Backlog. | 1 | 409 |
+| `task_in_backlog` | An agent's `mv` or `state` targets a Backlog task. `mv` to Doing or Done is refused for an agent; it leaves the Backlog only by a send to Todo. | 1 | 409 |
 | `send_with_open_questions` | A person's `mv <id> todo`, `epic send`, or Web move to Todo targets a plan with open questions and no confirmation (`--force`, or `ack: true` in the API). Nothing is saved; the message lists the question IDs. After a confirmed send the question stays and the task is Awaiting answer until it is answered. | 1 | 409 |
 | `epic_is_draft` | A CLI `epic edit`, or `epic edit --waves`, targets a person's draft epic; or a person sends an epic in a person's draft. | 1 | 409 |
-| `human_only` | An agent withdraws a request, runs `mv <id> todo` on a Backlog card, `epic send`, or `mv ... backlog`, or moves a task from Doing back to Todo ("moving a task from Doing back to Todo is for a person only."). Only a person can. | 1 | 403 |
+| `human_only` | An agent withdraws a request, confirms a send with open questions (`--force`), runs `mv ... backlog`, or moves a task from Doing back to Todo ("moving a task from Doing back to Todo is for a person only."). Only a person can. | 1 | 403 |
 | `task_not_draft` | A web edit targets a task that is not a draft. | 1 | 409 |
 | `task_is_done` | An AI change targets a Done task. Two changes are allowed: the first `result add --final` on a Done task with no final result, and a publication record (`result add --published`). | 1 | 409 |
 | `acceptance_unmet` | An AI moves a task to Done while a condition is unmet or the frontmatter is invalid. | 2 | n/a |

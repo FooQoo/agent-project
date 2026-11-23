@@ -255,9 +255,21 @@ fn send(ctx: &mut Context, args: &EpicSendArgs) -> Result<Outcome, AgpjError> {
     let actor = args.actor.actor();
     let ack = super::mv::ack_of(actor, args.force)?;
     let only = args.tasks.as_deref().map(parse_task_ids).transpose()?;
-    let result = ctx
-        .files
-        .send_epic(project, &id, only.as_deref(), actor, ack, ctx.clock.now())?;
+    let reason =
+        crate::cli::args::read_reason(args.reason.as_deref(), args.reason_file.as_deref())?
+            .unwrap_or_default();
+    if !reason.trim().is_empty() {
+        crate::domain::validate_work_reason(&reason)?;
+    }
+    let result = ctx.files.send_epic(
+        project,
+        &id,
+        only.as_deref(),
+        actor,
+        ack,
+        reason.trim(),
+        ctx.clock.now(),
+    )?;
     let sent = &result.value.sent;
     let human = if result.changed {
         format!("Sent {} task(s) of epic {} to Todo.\n", sent.len(), id)

@@ -126,7 +126,7 @@ agpj --project "My project" epic edit LAUNCH --waves 3 1,2
 agpj --project "My project" add --title "Plan the launch" --assignee ai --actor ai --backlog --epic LAUNCH
 ```
 
-バックログは、まだ始めてはいけない確定済みの計画を置く場所です。エージェントは始めず、バックログのカードへのエージェントの`mv`と`state`は`task_in_backlog`（終了コード1）で失敗します。カードを未着手の末尾へ送れるのは人だけです。コマンドラインでは、カードを`todo`へ移して送ります。`send`という別のコマンドはありません。
+バックログは、まだ始めてはいけない確定済みの計画を置く場所です。エージェントは始めず、バックログのカードへのエージェントの`mv`と`state`は`task_in_backlog`（終了コード1）で失敗します。カードは人が未着手の末尾へ送ります。エージェントが送るのは、ユーザーに指示されたときだけで、`--reason`にそのことを書きます。コマンドラインでは、カードを`todo`へ移して送ります。`send`という別のコマンドはありません。
 
 ```sh
 agpj --project "My project" mv 12 todo --actor human
@@ -134,7 +134,7 @@ agpj --project "My project" epic send LAUNCH --actor human
 agpj --project "My project" epic send LAUNCH --actor human --tasks 1,2
 ```
 
-`mv <id> todo`は1枚のカードを送ります。バックログのカードをほかのレーンへ移すのも人の操作です。`epic send`は、エピック全体、または`--tasks`で指定したカードだけを、全部移すか何も移さないかの一回の保存で送ります。エージェントがどちらを実行しても`human_only`になります。DoingのタスクをTodoに戻す（DoingのタスクへのAIの`mv <id> todo`）ことは人だけの操作で、エージェントが実行すると`human_only`になります。エージェントは自分の稼働中のタスクを`state <id> paused --actor ai --reason "<理由>"`で一時停止できますが、止まりを指摘するリマインダーを受け、作業していないときにだけ使います。エージェントはタスクをDoneに移しません。対象のタスクは自動でDoneに移ります（「タスクを終える」を参照）。すでにバックログを出たカードは、ほかのカードと同じように移ります。ブラウザで人が編集中のカード（`draft: human`）は送れません（`task_is_draft`）。履歴には「人が Todo へ送りました。」と残ります。
+`mv <id> todo`は1枚のカードを送ります。バックログのカードをDoingやDoneへ移すのは人の操作で、エージェントは`task_in_backlog`になります。`epic send`は、エピック全体、または`--tasks`で指定したカードだけを、全部移すか何も移さないかの一回の保存で送ります。エージェントはどちらも、ユーザーに指示されたときだけ実行でき、`--force`で送信を確認することはできません（`human_only`）。DoingのタスクをTodoに戻す（DoingのタスクへのAIの`mv <id> todo`）ことは人だけの操作で、エージェントが実行すると`human_only`になります。エージェントは自分の稼働中のタスクを`state <id> paused --actor ai --reason "<理由>"`で一時停止できますが、止まりを指摘するリマインダーを受け、作業していないときにだけ使います。エージェントはタスクをDoneに移しません。対象のタスクは自動でDoneに移ります（「タスクを終える」を参照）。すでにバックログを出たカードは、ほかのカードと同じように移ります。ブラウザで人が編集中のカード（`draft: human`）は送れません（`task_is_draft`）。履歴には「人が Todo へ送りました。」または「エージェントが Todo へ送りました。」と残り、エージェントの場合は続けて`--reason`の内容が入ります。
 
 計画に未回答の質問があると、送信は`send_with_open_questions`（終了コード1）で断られ、メッセージに質問のIDが並びます。`mv`（または`epic send`）に`--force`を付けると、そのまま送ります。質問は未回答のまま残り、回答があるまでカードは回答待です。
 

@@ -128,7 +128,7 @@ test('a draft is read-only for edit, mv, and state, and everything else still wo
   expect(show(13)).toMatchObject({ title: 'Changed by an agent', taskStatus: 'done' });
 });
 
-test('a plan in the Backlog takes AI edits and history but not mv, state, or a move to Todo; a person moves it with mv', async () => {
+test('a plan in the Backlog takes AI edits and history but not a move to Doing or state; the AI sends it to Todo when told, and a person can too', async () => {
   const id = nextTaskId(mainProject);
   agpjOk(mainProject, [
     'add',
@@ -149,12 +149,11 @@ test('a plan in the Backlog takes AI edits and history but not mv, state, or a m
   agpjOk(mainProject, ['history', 'add', String(id), '--reason', 'Refined the plan.']);
   expect(show(id)).toMatchObject({ title: 'Proposed again', taskStatus: 'backlog' });
 
-  // It cannot move, run, or hand it to Todo, and nothing changes.
+  // It cannot start or run it from the Backlog, and nothing changes.
   const before = board();
   for (const [args, code] of [
     [['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Go.'], 'task_in_backlog'],
     [['state', String(id), 'running', '--actor', 'ai', '--reason', 'Go.'], 'task_in_backlog'],
-    [['mv', String(id), 'todo', '--actor', 'ai', '--reason', 'Go.'], 'human_only'],
   ] as const) {
     const refused = agpj(mainProject, [...args, '--json']);
     expect(refused.code, args[0]).toBe(1);
@@ -162,11 +161,18 @@ test('a plan in the Backlog takes AI edits and history but not mv, state, or a m
   }
   expect(board()).toBe(before);
 
-  // A person moves it to Todo, and then the AI can work on it.
-  agpjOk(mainProject, ['mv', String(id), 'todo', '--actor', 'human']);
+  // When the user tells it to start, the AI sends it to Todo, and then works on it.
+  agpjOk(mainProject, ['mv', String(id), 'todo', '--actor', 'ai', '--reason', 'The user said to start it.']);
   expect(show(id).taskStatus).toBe('todo');
+  expect(show(id).history.at(-1)?.reason).toContain('The user said to start it.');
   agpjOk(mainProject, ['mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Go.']);
   expect(show(id).taskStatus).toBe('doing');
+
+  // A person can send a Backlog card to Todo too.
+  const other = nextTaskId(mainProject);
+  agpjOk(mainProject, ['add', 'Proposed later', '--assignee', 'ai', '--actor', 'ai', '--backlog']);
+  agpjOk(mainProject, ['mv', String(other), 'todo', '--actor', 'human']);
+  expect(show(other).taskStatus).toBe('todo');
 });
 
 test('a draft stays a draft over time, and toggling it wakes wait; history updates the displayed time', async ({

@@ -27,6 +27,7 @@ Agent Board is now Agent Project, with the `agpj` command, and this release adds
 - **The first-run guide shows Attach task.** In the guide's Ask AI step you can attach the sample cards to the request.
 - **A quieter Backlog lane.** The Backlog lane on the PC no longer has a dashed frame; its cards keep their dashed outline.
 - **The Japanese screens say バージョン.** Versions are written バージョン instead of 版 in the Japanese screens, history, and pages.
+- **Tell the agent to start a plan.** An agent can now send Backlog work to Todo (`agpj mv <id> todo --actor ai`, `agpj epic send <EPIC-ID> --actor ai`), but only when you tell it to, for example "start the plan" in the chat. It never sends on its own judgment and cannot confirm a send with open questions. The history records "An agent sent the task to Todo." with the reason. You can still send plans yourself from the board.
 
 ### Fixes
 

@@ -55,7 +55,7 @@ pub struct AddArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "A task a person is drafting (draft: human) is read-only for agents: edit fails with task_is_draft (exit code 1) and changes nothing. Wait for the user to finalize it, then try again. A task you created with --backlog waits in the Backlog: you can edit it, and only a person sends it to Todo.\n\nExamples:\n  agpj --project demo edit 15 --planned-version v1.9.0\n  agpj --project demo edit 15 --release-version\n  agpj --project demo edit 15 --unplanned\n  agpj --project demo edit 15 --title \"Write the install guide\"\n  agpj --project demo edit 15 --desc \"Steps for macOS and Linux\"\n  agpj --project demo edit 15 --desc \"\""
+    after_help = "A task a person is drafting (draft: human) is read-only for agents: edit fails with task_is_draft (exit code 1) and changes nothing. Wait for the user to finalize it, then try again. A task you created with --backlog waits in the Backlog: you can edit it. A person sends it to Todo, or you do when the user tells you to.\n\nExamples:\n  agpj --project demo edit 15 --planned-version v1.9.0\n  agpj --project demo edit 15 --release-version\n  agpj --project demo edit 15 --unplanned\n  agpj --project demo edit 15 --title \"Write the install guide\"\n  agpj --project demo edit 15 --desc \"Steps for macOS and Linux\"\n  agpj --project demo edit 15 --desc \"\""
 )]
 pub struct EditArgs {
     /// ID of the task
@@ -77,7 +77,7 @@ pub struct EditArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "A task a person is editing (draft: human) is read-only here: mv fails with task_is_draft (exit code 1). Wait for the user to finalize it.\n\nMoving a Backlog task to todo is how a plan is handed over to be worked on; saving, answering, and checking conditions never do. Only a person does it: an agent is refused with human_only. When a question about the task is still open, it is refused with send_with_open_questions until the person confirms with --force. A task that is not in the Backlog is moved like any other.\n\nExamples:\n  agpj --project demo mv 12 doing --actor ai --reason \"Starting\"\n  agpj --project demo mv 12 done --actor ai --reason \"Finished\"\n  agpj --project demo mv 12 todo --actor human\n  agpj --project demo mv 12 todo --actor human --force"
+    after_help = "A task a person is editing (draft: human) is read-only here: mv fails with task_is_draft (exit code 1). Wait for the user to finalize it.\n\nMoving a Backlog task to todo is how a plan is handed over to be worked on; saving, answering, and checking conditions never do. A person does it, or an agent when the user told it to, with that stated in --reason; never on the agent's own judgment. When a question about the task is still open, it is refused with send_with_open_questions until a person confirms with --force (an agent is refused with human_only). A task that is not in the Backlog is moved like any other.\n\nExamples:\n  agpj --project demo mv 12 doing --actor ai --reason \"Starting\"\n  agpj --project demo mv 12 done --actor ai --reason \"Finished\"\n  agpj --project demo mv 12 todo --actor ai --reason \"The user said to start it\"\n  agpj --project demo mv 12 todo --actor human\n  agpj --project demo mv 12 todo --actor human --force"
 )]
 pub struct MvArgs {
     /// ID of the task

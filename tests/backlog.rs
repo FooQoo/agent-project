@@ -182,17 +182,34 @@ fn saving_and_answering_never_move_a_plan_and_it_is_all_there_after_a_restart() 
 }
 
 #[test]
-fn only_a_person_sends_a_plan_and_an_agent_is_refused() {
+fn an_agent_can_send_a_plan_but_cannot_confirm_a_warning() {
     let f = fx();
     let first = f.plan("First");
     let second = f.plan("Second");
+    let third = f.plan("Third");
 
     let refused = f
         .store
-        .send_task(&f.project, first, Actor::Ai, false, now())
+        .send_task(&f.project, first, Actor::Ai, true, now())
         .unwrap_err();
     assert_eq!(refused.code(), "human_only");
     assert_eq!(f.lane(first), Column::Backlog);
+
+    let by_agent = f
+        .store
+        .send_task(&f.project, third, Actor::Ai, false, now())
+        .unwrap();
+    assert!(by_agent.changed);
+    assert_eq!(by_agent.value.task_status, Column::Todo);
+    assert!(
+        by_agent
+            .value
+            .history
+            .last()
+            .unwrap()
+            .reason
+            .contains("An agent")
+    );
 
     let sent = f
         .store
@@ -276,16 +293,15 @@ fn mv_from_the_backlog_to_todo_follows_the_rules_of_a_send() {
         reason: String::new(),
     };
 
-    // An agent is refused with human_only and nothing moves.
+    // An agent sends it like a person does.
     let plan = f.plan("Plan");
-    let refused = f
+    let moved = f
         .store
         .move_work_task(&f.project, plan, Column::Todo, ctx(Actor::Ai), now())
-        .unwrap_err();
-    assert_eq!(refused.code(), "human_only");
-    assert_eq!(f.lane(plan), Column::Backlog);
-
-    // A person sends it.
+        .unwrap();
+    assert!(moved.changed);
+    assert_eq!(f.lane(plan), Column::Todo);
+    let plan = f.plan("Second plan");
     let moved = f
         .store
         .move_work_task(&f.project, plan, Column::Todo, ctx(Actor::Human), now())
@@ -346,7 +362,15 @@ fn an_epic_is_sent_whole_or_by_chosen_cards_and_a_failure_sends_nothing() {
     // A person sends the chosen cards only; the rest stay in the Backlog.
     let sent = f
         .store
-        .send_epic(&f.project, &epic, Some(&[b]), Actor::Human, false, now())
+        .send_epic(
+            &f.project,
+            &epic,
+            Some(&[b]),
+            Actor::Human,
+            false,
+            "",
+            now(),
+        )
         .unwrap();
     assert_eq!(sent.value.sent, vec![b]);
     assert_eq!(f.lane(a), Column::Backlog);
@@ -362,6 +386,7 @@ fn an_epic_is_sent_whole_or_by_chosen_cards_and_a_failure_sends_nothing() {
             Some(&[a, outside]),
             Actor::Human,
             false,
+            "",
             now(),
         )
         .unwrap_err();
@@ -374,29 +399,55 @@ fn an_epic_is_sent_whole_or_by_chosen_cards_and_a_failure_sends_nothing() {
         .unwrap();
     let refused = f
         .store
-        .send_epic(&f.project, &epic, None, Actor::Human, false, now())
+        .send_epic(&f.project, &epic, None, Actor::Human, false, "", now())
         .unwrap_err();
     assert_eq!(refused.code(), "task_is_draft");
     assert_eq!(f.lane(a), Column::Backlog);
     f.store.set_draft(&f.project, c, None, true, now()).unwrap();
 
-    // An agent cannot send an epic.
+    // An agent cannot confirm a warning when it sends an epic.
     let refused = f
         .store
-        .send_epic(&f.project, &epic, None, Actor::Ai, false, now())
+        .send_epic(&f.project, &epic, None, Actor::Ai, true, "", now())
         .unwrap_err();
     assert_eq!(refused.code(), "human_only");
     assert_eq!(f.lane(a), Column::Backlog);
 
-    // The person sends every Backlog card that is left. A second send changes nothing.
+    // An agent sends every Backlog card that is left, with the user's instruction in the
+    // reason. A second send changes nothing.
     let sent = f
         .store
-        .send_epic(&f.project, &epic, None, Actor::Human, false, now())
+        .send_epic(
+            &f.project,
+            &epic,
+            None,
+            Actor::Ai,
+            false,
+            "The user said to start the plan",
+            now(),
+        )
         .unwrap();
     assert_eq!(sent.value.sent, vec![a, c]);
+    let reason = f
+        .store
+        .task(&f.project, a)
+        .unwrap()
+        .history
+        .last()
+        .unwrap()
+        .reason
+        .clone();
+    assert!(
+        reason.contains("An agent sent the task to Todo."),
+        "{reason}"
+    );
+    assert!(
+        reason.contains("The user said to start the plan"),
+        "{reason}"
+    );
     let again = f
         .store
-        .send_epic(&f.project, &epic, None, Actor::Human, false, now())
+        .send_epic(&f.project, &epic, None, Actor::Human, false, "", now())
         .unwrap();
     assert!(!again.changed);
 }
@@ -421,10 +472,6 @@ fn nothing_leaves_the_backlog_by_a_move_or_a_run_state_except_a_persons_move() {
         go(Actor::Ai, Column::Doing).unwrap_err().code(),
         "task_in_backlog"
     );
-    assert_eq!(
-        go(Actor::Ai, Column::Todo).unwrap_err().code(),
-        "human_only"
-    );
     let state = f.store.set_agent_status(
         &f.project,
         id,
@@ -436,6 +483,23 @@ fn nothing_leaves_the_backlog_by_a_move_or_a_run_state_except_a_persons_move() {
         now(),
     );
     assert_eq!(state.unwrap_err().code(), "task_in_backlog");
+    // An agent may make the send itself, on the user's instruction.
+    let other = f.plan("Sent by an agent");
+    assert!(
+        f.store
+            .move_work_task(
+                &f.project,
+                other,
+                Column::Todo,
+                ChangeContext {
+                    actor: Actor::Ai,
+                    reason: "go".into(),
+                },
+                now(),
+            )
+            .unwrap()
+            .changed
+    );
     // A person moves it to Todo (the send), Doing or Done.
     let user_move = |id, to| {
         f.store.move_work_task_for_user(
@@ -470,23 +534,18 @@ fn nothing_leaves_the_backlog_by_a_move_or_a_run_state_except_a_persons_move() {
 fn an_agent_still_cannot_move_a_backlog_card_to_any_lane() {
     let f = fx();
     let id = f.plan("Plan");
-    for to in [Column::Todo, Column::Doing, Column::Done] {
+    // Todo is the send, which an agent may make; the other lanes stay closed outright.
+    for to in [Column::Doing, Column::Done] {
         let ctx = || ChangeContext {
             actor: Actor::Ai,
             reason: "go".into(),
         };
-        // Todo is the send, which only a person makes; the other lanes stay closed outright.
-        let code = if to == Column::Todo {
-            "human_only"
-        } else {
-            "task_in_backlog"
-        };
         let agent = f.store.move_work_task(&f.project, id, to, ctx(), now());
-        assert_eq!(agent.unwrap_err().code(), code);
+        assert_eq!(agent.unwrap_err().code(), "task_in_backlog");
         let user = f
             .store
             .move_work_task_for_user(&f.project, id, to, ctx(), now());
-        assert_eq!(user.unwrap_err().code(), code);
+        assert_eq!(user.unwrap_err().code(), "task_in_backlog");
     }
     assert_eq!(f.lane(id), Column::Backlog);
 }
@@ -552,13 +611,12 @@ fn only_a_person_takes_an_unstarted_todo_card_back_to_the_backlog() {
     assert_eq!(back(Actor::Ai).unwrap_err().code(), "human_only");
     let moved = back(Actor::Human).unwrap();
     assert_eq!(moved.value.task_status, Column::Backlog);
-    // An agent cannot send it again.
-    assert_eq!(
+    // An agent can send it again, on the user's instruction.
+    assert!(
         f.store
             .send_task(&f.project, id, Actor::Ai, false, now())
-            .unwrap_err()
-            .code(),
-        "human_only"
+            .unwrap()
+            .changed
     );
 
     // A started card cannot go back.

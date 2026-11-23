@@ -1,7 +1,8 @@
 //! Sending a plan to Todo: one card, or the cards of an epic.
 //!
-//! Sending is the only operation that takes a card out of the Backlog, and only
-//! a person can do it. Saving, answering and checking conditions never do. An
+//! Sending is the only operation that takes a card out of the Backlog. A person
+//! sends from the board; an agent sends only when the user told it to, and
+//! records that in the reason. Saving, answering and checking conditions never do. An
 //! open question is a warning the person confirms (`ack`). An epic is sent in
 //! one batch: if any card cannot be sent, none is.
 
@@ -9,7 +10,7 @@ use std::path::Path;
 
 use chrono::{DateTime, Utc};
 
-use crate::domain::{Actor, Changed, Column, Draft, ProjectId};
+use crate::domain::{Actor, ChangeContext, Changed, Column, Draft, ProjectId};
 use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::history_language::HistoryLanguage;
@@ -49,13 +50,13 @@ pub(super) fn open_questions(
     Ok(open)
 }
 
-/// Only a person sends a plan. An open question is a warning they confirm
-/// with `ack`; the question stays, so no agent can run the card until it is
-/// answered.
+/// A person or an agent (on the user's instruction) sends a plan. An open
+/// question is a warning only a person confirms with `ack`; the question stays,
+/// so no agent can run the card until it is answered.
 pub(super) fn check_sender(actor: Actor, ack: bool, open: Vec<String>) -> Result<(), AgpjError> {
-    if actor == Actor::Ai {
+    if ack && actor == Actor::Ai {
         return Err(AgpjError::HumanOnly {
-            action: "sending a plan to Todo".into(),
+            action: "confirming a send with open questions".into(),
         });
     }
     if !open.is_empty() && !ack {
@@ -66,17 +67,30 @@ pub(super) fn check_sender(actor: Actor, ack: bool, open: Vec<String>) -> Result
 
 fn send_event(
     task: &TaskFile,
+    actor: Actor,
+    note: &str,
     at: DateTime<Utc>,
     language: HistoryLanguage,
 ) -> Result<HistoryRecord, AgpjError> {
-    let reason = language.text(
-        "A person sent the task to Todo.",
-        "人が Todo へ送りました。",
-    );
+    let base = match actor {
+        Actor::Human => language.text(
+            "A person sent the task to Todo.",
+            "人が Todo へ送りました。",
+        ),
+        Actor::Ai => language.text(
+            "An agent sent the task to Todo.",
+            "エージェントが Todo へ送りました。",
+        ),
+    };
+    let reason = if note.trim().is_empty() {
+        base.to_string()
+    } else {
+        format!("{base} {note}")
+    };
     transition_event(Transition {
         language,
         kind: HistoryKind::Lane,
-        reason: Some(reason),
+        reason: Some(&reason),
         from_task: Some(task.task_status),
         to_task: Column::Todo,
         from_agent: Some(task.agent_status),
@@ -89,10 +103,12 @@ fn send_event(
 fn move_to_todo(
     task: &mut TaskFile,
     position: i64,
+    actor: Actor,
+    note: &str,
     at: DateTime<Utc>,
     language: HistoryLanguage,
 ) -> Result<(), AgpjError> {
-    let event = send_event(task, at, language)?;
+    let event = send_event(task, actor, note, at, language)?;
     task.task_status = Column::Todo;
     task.position = position;
     task.task_status_changed_at = at;
@@ -116,7 +132,11 @@ impl FileStore {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let task = reader::read_task_strict(shared, project, id)?;
-        self.send_task_locked(project, &project_dir, task, actor, ack, now)
+        let ctx = ChangeContext {
+            actor,
+            reason: String::new(),
+        };
+        self.send_task_locked(project, &project_dir, task, &ctx, ack, now)
     }
 
     /// [`FileStore::send_task`] with the project lock held and the card read.
@@ -125,10 +145,11 @@ impl FileStore {
         project: &ProjectId,
         project_dir: &Path,
         mut task: TaskFile,
-        actor: Actor,
+        ctx: &ChangeContext,
         ack: bool,
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgpjError> {
+        let (actor, note) = (ctx.actor, ctx.reason.as_str());
         let shared = self.shared_dir();
         let id = task.id;
         if task.archived_at.is_some() {
@@ -146,7 +167,7 @@ impl FileStore {
         check_sender(actor, ack, open_questions(shared, project, &[id])?)?;
         let language = self.history_language(project, &task)?;
         let position = lane_end(shared, project, Column::Todo)?;
-        move_to_todo(&mut task, position, stamp(now), language)?;
+        move_to_todo(&mut task, position, actor, note, stamp(now), language)?;
         save_task(shared, project_dir, &task)?;
         Ok(Changed {
             value: reader::read_task_locked(shared, project, id)?,
@@ -158,6 +179,7 @@ impl FileStore {
     /// only `task_ids`. Nothing is sent when any of them cannot be: a card a
     /// person is editing, or an open question an agent or an unconfirmed person
     /// meets. A card that is not in the Backlog is left as it is.
+    #[allow(clippy::too_many_arguments)]
     pub fn send_epic(
         &self,
         project: &ProjectId,
@@ -165,6 +187,7 @@ impl FileStore {
         task_ids: Option<&[i64]>,
         actor: Actor,
         ack: bool,
+        note: &str,
         now: DateTime<Utc>,
     ) -> Result<Changed<EpicSent>, AgpjError> {
         let shared = self.shared_dir();
@@ -214,7 +237,7 @@ impl FileStore {
         let mut changes = Vec::new();
         for (position, task) in (first..).zip(chosen.iter_mut()) {
             let language = self.history_language(project, task)?;
-            move_to_todo(task, position, at, language)?;
+            move_to_todo(task, position, actor, note, at, language)?;
             changes.extend(task_pair_changes(shared, &project_dir, task, None)?);
         }
         save_batch_locked(&project_dir, changes)?;

@@ -82,6 +82,8 @@ Descriptions and drafts:
     Create it with `add --actor ai --backlog` only when a request asks for the
     plan only; a request to carry out the work gets ordinary Todo tasks. When it is
     unclear which one a request asks for, ask with `message ask` before you plan.
-    You can `edit` a Backlog task and add `history`; `mv`, `state`, and `send`
-    fail (task_in_backlog or human_only). Only a person sends it to Todo.
+    You can `edit` a Backlog task and add `history`; `mv` to doing or done, and
+    `state`, fail (task_in_backlog). You send a Backlog task to Todo (`mv <id> todo`,
+    or `epic send`) only when the user tells you to, and say so in --reason; never on
+    your own judgment. You cannot confirm a send with open questions (--force).
     `add`, `show`, `ls`, `snapshot`, and `wait` still work.";
