@@ -15,4 +15,6 @@ agpj --project "<name>" decision add <task-id> --question "<what would have been
 
 `--basis` is required: give at least one ground, and repeat the flag for each. The command adds one entry to the task history in the form `Decided in sleep mode by subagent:<name>. Question: ... Choice: ... Reason: ... Basis: ...`, which the board shows in the card's history. Record each decision on the task it affects; record it before you act on a risky one.
 
+Work that only a person can do, such as a check on a real device, is not a decision a subagent can make. Do not run `message ask` for it. Leave it undone, record with `agpj history add` that a person must complete it and why, and move on to other work. The user sees the note in the task's history when they return.
+
 When the user turns sleep mode off, you are back in sparring: ask again as usual. Decisions made in sleep mode stay in the history. If the user disagrees with one on return, they say so and you change course.
