@@ -40,6 +40,11 @@ export function mockHandlers(
   };
 
   return [
+    // The project mode is saved by the real server only; the sample data keeps every project in sparring.
+    http.get('/api/projects/:projectId/mode', () => HttpResponse.json({ mode: 'sparring' })),
+    http.put('/api/projects/:projectId/mode', async ({ request }) =>
+      HttpResponse.json(await request.json()),
+    ),
     // A stream the server refuses (`?disconnect=1`) is answered as an error; any other `/api/events`
     // request falls through to the stream below.
     http.get('/api/events', async ({ request }) => {

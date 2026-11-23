@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "owner": "U10",
+  "file": "features/project-mode/ui/ModeIndicator.tsx",
+  "exports": [
+    {
+      "name": "ModeIndicatorView",
+      "stories": [
+        {
+          "id": "projectmode-modeindicator--asleep",
+          "states": ["sleep chip"],
+          "interaction": true
+        },
+        {
+          "id": "projectmode-modeindicator--sparring",
+          "states": ["no chip in sparring"],
+          "interaction": true
+        }
+      ]
+    }
+  ]
+}

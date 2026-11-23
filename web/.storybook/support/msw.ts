@@ -2,7 +2,7 @@
 // mode and the demo use. A Story that wants data adds the handlers over a sample-data server with
 // `useMockServer`; a product request no handler answers fails and is recorded, so the test that made
 // it can fail too. Navigation, assets and other requests pass.
-import { HttpResponse, type UnhandledFrameHandle } from 'msw';
+import { http, HttpResponse, type UnhandledFrameHandle } from 'msw';
 import { setupWorker } from 'msw/browser';
 import { mockHandlers, type MockHandlerOptions } from '../../src/app/development/mocks/handlers';
 import {
@@ -14,7 +14,11 @@ import type { Board } from '../../src/shared/api/contracts';
 import fixture from '../../test/fixtures/board.json';
 import longMarkdown from '../../test/fixtures/long-markdown.md?raw';
 
-export const worker = setupWorker();
+// The board asks for the project's mode on every screen, so a Story that serves no sample data still
+// gets one answer: the default, sparring.
+export const worker = setupWorker(
+  http.get('/api/projects/:projectId/mode', () => HttpResponse.json({ mode: 'sparring' })),
+);
 
 const PRODUCT_PREFIXES = ['/api/', '/__mock/'];
 
