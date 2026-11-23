@@ -50,6 +50,25 @@ export const Idle: Story = {
   play: async ({ canvasElement }) =>
     expect(within(canvasElement).getByText('Idle')).toBeInTheDocument(),
 };
+export const TodoHasNoState: Story = {
+  args: { task: makeTask({ id: 48, taskStatus: 'todo', agentStatus: 'idle' }) },
+  play: async ({ canvasElement }) =>
+    expect(within(canvasElement).queryByText('Idle')).not.toBeInTheDocument(),
+};
+export const AwaitingAnswerInTodoOwnedByHuman: Story = {
+  args: {
+    task: makeTask({
+      id: 49,
+      assignee: 'human',
+      taskStatus: 'todo',
+      agentStatus: 'idle',
+      awaitingAnswer: true,
+      pendingReason: 'Waiting for a decision.',
+    }),
+  },
+  play: async ({ canvasElement }) =>
+    expect(within(canvasElement).getByText('Awaiting answer')).toBeInTheDocument(),
+};
 export const Selected: Story = {
   args: { selected: true },
   play: async ({ canvasElement }) =>
