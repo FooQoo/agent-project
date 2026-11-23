@@ -823,3 +823,147 @@ fn a_failed_secret_save_leaves_the_code_valid_and_no_active_connection() {
     assert_eq!(ok.secret, kept);
     assert!(fx.store.verify_connection(&fx.project, &kept, t0()).is_ok());
 }
+
+fn session_cmd(home: &std::path::Path, session: &str, args: &[&str]) -> std::process::Command {
+    let mut c = std::process::Command::new(env!("CARGO_BIN_EXE_agpj"));
+    c.env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_HOME", home)
+        .env("CLAUDE_CODE_SESSION_ID", session)
+        .env_remove("AGPJ_CONNECTION_SECRET")
+        .current_dir(home)
+        .args(args)
+        .stdin(std::process::Stdio::null());
+    c
+}
+
+#[test]
+fn a_revoked_secret_lets_the_session_connect_to_another_agent() {
+    let home = tempfile::tempdir().unwrap();
+    assert!(
+        session_cmd(home.path(), "s-rev", &["project", "create", "Rev"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    let store = FileStore::open(&home.path().join("shared"));
+    let project = store.project_by_name("Rev").unwrap().id;
+    store.register_agent(&project, "One", "", t0()).unwrap();
+    store.register_agent(&project, "Two", "", t0()).unwrap();
+    let first = store
+        .issue_connect_code(&project, "A-1", false, Utc::now())
+        .unwrap();
+    assert!(
+        session_cmd(
+            home.path(),
+            "s-rev",
+            &["--project", "Rev", "connect", &first.code]
+        )
+        .output()
+        .unwrap()
+        .status
+        .success()
+    );
+    // The user switches agent One to another session: this session's stored secret is replaced.
+    let switch = store
+        .issue_connect_code(&project, "A-1", true, Utc::now())
+        .unwrap();
+    store
+        .exchange_connect_code(
+            &project,
+            &switch.code,
+            ConnectionOrigin::External,
+            "claude-code",
+            "claude:other",
+            Utc::now(),
+        )
+        .unwrap();
+    let second = store
+        .issue_connect_code(&project, "A-2", false, Utc::now())
+        .unwrap();
+    let out = session_cmd(
+        home.path(),
+        "s-rev",
+        &["--project", "Rev", "connect", &second.code],
+    )
+    .output()
+    .unwrap();
+    assert!(out.status.success(), "{out:?}");
+}
+
+#[test]
+fn a_verification_that_cannot_run_stops_connect_and_changes_nothing() {
+    use std::os::unix::fs::PermissionsExt;
+    let home = tempfile::tempdir().unwrap();
+    assert!(
+        session_cmd(home.path(), "s-io", &["project", "create", "Io"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    let store = FileStore::open(&home.path().join("shared"));
+    let project = store.project_by_name("Io").unwrap().id;
+    store.register_agent(&project, "One", "", t0()).unwrap();
+    store.register_agent(&project, "Two", "", t0()).unwrap();
+    let first = store
+        .issue_connect_code(&project, "A-1", false, Utc::now())
+        .unwrap();
+    assert!(
+        session_cmd(
+            home.path(),
+            "s-io",
+            &["--project", "Io", "connect", &first.code]
+        )
+        .output()
+        .unwrap()
+        .status
+        .success()
+    );
+    let second = store
+        .issue_connect_code(&project, "A-2", false, Utc::now())
+        .unwrap();
+    let ws = session_cmd(
+        home.path(),
+        "s-io",
+        &["--project", "Io", "workspace", "--json"],
+    )
+    .output()
+    .unwrap();
+    let folder: serde_json::Value = serde_json::from_slice(&ws.stdout).unwrap();
+    let file = std::path::Path::new(folder["folder"].as_str().unwrap())
+        .join(".internal")
+        .join("connections.json");
+    let mode = std::fs::metadata(&file).unwrap().permissions();
+    std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o000)).unwrap();
+    let out = session_cmd(
+        home.path(),
+        "s-io",
+        &["--project", "Io", "connect", &second.code],
+    )
+    .output()
+    .unwrap();
+    std::fs::set_permissions(&file, mode).unwrap();
+    assert!(!out.status.success());
+    // The first connection is still the session's, and the second code was not consumed.
+    let agents = store.list_agents(&project).unwrap();
+    assert!(agents[0].connection.is_some() && agents[1].connection.is_none());
+    assert!(
+        session_cmd(home.path(), "s-io", &["--project", "Io", "disconnect"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    assert!(
+        session_cmd(
+            home.path(),
+            "s-io",
+            &["--project", "Io", "connect", &second.code]
+        )
+        .output()
+        .unwrap()
+        .status
+        .success()
+    );
+}

@@ -33,15 +33,17 @@ pub fn connect(ctx: &mut Context, args: &ConnectArgs) -> Result<Outcome, AgpjErr
     let _session = connection_store::lock_session(&data_dir, &project)?;
     // One session holds one agent: a second connection would replace the stored secret of the
     // first and leave it unreleasable.
-    if let Some(held) = connection_store::load_secret(&data_dir, &project)
-        && let Ok(verified) = ctx
-            .files
-            .verify_connection(&project, &held, ctx.clock.now())
-    {
+    let held = match connection_store::load_secret(&data_dir, &project) {
+        Some(held) => active_agent(
+            ctx.files
+                .verify_connection(&project, &held, ctx.clock.now()),
+        )?,
+        None => None,
+    };
+    if let Some(agent_id) = held {
         return Err(AgpjError::InvalidArgument {
             message: format!(
-                "This session is already connected to agent {}; run agpj disconnect first.",
-                verified.agent_id
+                "This session is already connected to agent {agent_id}; run agpj disconnect first."
             ),
             command: None,
         });
@@ -69,6 +71,19 @@ pub fn connect(ctx: &mut Context, args: &ConnectArgs) -> Result<Outcome, AgpjErr
         ),
         json: json!({"agent": connected.agent, "connection": connected.connection}),
     })
+}
+
+/// The agent a stored secret still connects, if any. Only an unknown, revoked, or replaced secret
+/// means the session holds no connection; any other failure (a busy project, a read error) is
+/// returned, so that a connect never overwrites the secret of a connection that may be active.
+fn active_agent(
+    verified: Result<crate::file_store::Verified, AgpjError>,
+) -> Result<Option<String>, AgpjError> {
+    match verified {
+        Ok(verified) => Ok(Some(verified.agent_id)),
+        Err(AgpjError::NotConnected | AgpjError::ConnectionReplaced) => Ok(None),
+        Err(other) => Err(other),
+    }
 }
 
 pub fn disconnect(ctx: &mut Context) -> Result<Outcome, AgpjError> {
@@ -121,5 +136,28 @@ pub fn agent(ctx: &mut Context, args: &AgentArgs) -> Result<Outcome, AgpjError> 
                 json: json!({"agents": agents}),
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_an_unknown_or_replaced_secret_means_no_connection() {
+        let verified = crate::file_store::Verified {
+            connection_id: "C-1".into(),
+            agent_id: "A-1".into(),
+        };
+        assert_eq!(active_agent(Ok(verified)).unwrap(), Some("A-1".into()));
+        assert_eq!(active_agent(Err(AgpjError::NotConnected)).unwrap(), None);
+        assert_eq!(
+            active_agent(Err(AgpjError::ConnectionReplaced)).unwrap(),
+            None
+        );
+        assert!(matches!(
+            active_agent(Err(AgpjError::DatabaseBusy)),
+            Err(AgpjError::DatabaseBusy)
+        ));
     }
 }
