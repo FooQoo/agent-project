@@ -150,7 +150,7 @@ export function BoardWorkspace({
         ) : (
           <Board
             message={message}
-            tasks={tasks}
+            tasks={planned.filterTasks(tasks)}
             selectedId={selected?.id ?? null}
             onSelect={actions.onSelectCard}
             onRetry={retry}

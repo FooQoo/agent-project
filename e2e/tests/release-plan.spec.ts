@@ -5,7 +5,7 @@ import { resetPreferences } from '../helpers/preferences';
 import { clearVersions, releaseVersion, plannedVersions, planTask, seedVersions } from '../helpers/versions';
 import { waitForSync, openHeaderItem } from '../helpers/ui';
 
-// #646: planned versions on the PC board: the release version in the header, the tag on a card, the planned
+// #646: planned versions on the PC board: the version filter in the header, the tag on a card, the planned
 // version in the task's edit dialog, and an epic's tasks planned together in the epic's edit dialog. The phone
 // shows the tag and sets nothing.
 test.beforeEach(() => resetPreferences());
@@ -57,16 +57,16 @@ async function openTaskDialog(page: Page, title: string, id: number) {
 	}).toPass();
 	return page.getByRole('dialog', { name: new RegExp(`^#${id} Task preview`) });
 }
-const headerMenu = (page: Page) => page.getByRole('button', { name: /^Release version:/ });
+const headerMenu = (page: Page) => page.getByRole('button', { name: /^Version filter:/ });
 
-test('sets the release version from the header, plans a task and plans an epic in their edit dialogs', async ({ page }) => {
+test('filters the board by a version, makes it the release version from the header, plans a task and plans an epic in their edit dialogs', async ({ page }) => {
 	const cards = await seed();
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto('/');
 	await waitForSync(page);
 
-	// The release version is a menu in the header. A project that lists versions shows the tag on every card.
-	await expect(headerMenu(page)).toHaveAccessibleName('Release version: Not set');
+	// The version filter is a menu in the header; with no release version it starts on All. A project that lists versions shows the tag on every card.
+	await expect(headerMenu(page)).toHaveAccessibleName('Version filter: All');
 	await expect(card(page, 'Plan A login screen').locator('.ver-tag')).toContainText('v1.8.0');
 	await expect(card(page, 'Plan C session').locator('.ver-tag')).toContainText('Unplanned');
 	// The tag shares the date row: it is at the left of the date, which has no "Updated" word. The acceptance
@@ -81,24 +81,41 @@ test('sets the release version from the header, plans a task and plans an epic i
 		expect(Math.abs(tag!.y + tag!.height / 2 - (updated!.y + updated!.height / 2))).toBeLessThan(6);
 	}
 
-	// Type a new version and confirm: it is listed, but it does not become the release version.
+	// Type a new version and confirm: it is listed, and neither the filter nor the release version changes.
 	await headerMenu(page).click();
 	const confirm = page.getByRole('button', { name: 'Add this version to the project' });
 	await expect(confirm).toBeDisabled();
 	await page.getByLabel('New version').fill('v2.0.0');
 	await confirm.click();
 	await expect(page.getByRole('radio', { name: /^v2\.0\.0/ })).toBeVisible();
-	await expect(headerMenu(page)).toHaveAccessibleName('Release version: Not set');
+	await expect(headerMenu(page)).toHaveAccessibleName('Version filter: All');
 	expect(await releaseVersion()).toBeNull();
-	// The list is newest first.
+	// All is first, then the versions newest first; there is no "No release version" item and no release button while All is shown.
 	const listed = await page.getByRole('radio').evaluateAll((radios) => radios.map((radio) => radio.parentElement?.textContent ?? ''));
-	expect(listed.map((text) => text.replace(/Release version$/, ''))).toEqual(['v2.0.0', 'v1.9.0', 'v1.8.0', 'No release version']);
+	expect(listed).toEqual(['All', 'v2.0.0', 'v1.9.0', 'v1.8.0']);
+	await expect(page.getByRole('button', { name: /the release version$/ })).toHaveCount(0);
 
-	// Choose a listed version: it becomes the release version, and its cards carry the Release version mark.
+	// Choose a version: the Todo, Doing and Done lanes show that version's cards and the unplanned ones. Nothing is saved.
 	await page.getByRole('radio', { name: /^v1\.8\.0/ }).click();
-	await expect(headerMenu(page)).toHaveAccessibleName('Release version: v1.8.0');
+	await expect(headerMenu(page)).toHaveAccessibleName('Version filter: v1.8.0');
+	expect(await releaseVersion()).toBeNull();
+	await expect(card(page, 'Plan A login screen')).toHaveCount(1);
+	await expect(card(page, 'Plan C session')).toHaveCount(1);
+	await expect(card(page, 'Plan E dark theme')).toHaveCount(0);
+
+	// Make the shown version the release version: its cards carry the Release version mark and the star marks it in the list.
+	await headerMenu(page).click();
+	await page.getByRole('button', { name: 'Make the shown v1.8.0 the release version' }).click();
 	await expect.poll(releaseVersion).toBe('v1.8.0');
+	await expect(headerMenu(page)).toHaveAccessibleName('Version filter: v1.8.0');
 	await expect(card(page, 'Plan A login screen').locator('.ver-tag')).toContainText('Release version');
+	await headerMenu(page).click();
+	await expect(page.getByRole('radio', { name: /^v1\.8\.0/ }).locator('xpath=..')).toContainText('\u2605');
+	await expect(page.getByRole('button', { name: /the release version$/ })).toHaveCount(0);
+	// All clears the filter again.
+	await page.getByRole('radio', { name: 'All' }).click();
+	await expect(headerMenu(page)).toHaveAccessibleName('Version filter: All');
+	await expect(card(page, 'Plan E dark theme')).toHaveCount(1);
 	expect(await plannedVersions()).toMatchObject({ [cards.a]: 'v1.8.0', [cards.e]: 'v1.9.0' });
 
 	// A task's planned version is edited in its edit dialog, and saved with the dialog.
@@ -169,7 +186,7 @@ test('the phone shows the planned version on its cards and offers nothing to set
 	await expect(meta.locator('.ver-tag')).toHaveCount(1);
 	const [metaTag, metaTime] = await Promise.all([meta.locator('.ver-tag').boundingBox(), meta.locator('.monitor-card__time').boundingBox()]);
 	expect(metaTag!.x + metaTag!.width).toBeLessThanOrEqual(metaTime!.x);
-	await expect(page.getByRole('button', { name: /^Release version:/ })).toHaveCount(0);
+	await expect(page.getByRole('button', { name: /^Version filter:/ })).toHaveCount(0);
 	await page.locator('.monitor-card', { hasText: 'Plan A login screen' }).getByRole('button', { name: 'Plan A login screen' }).click();
 	await expect(page.getByText('Planned version')).toHaveCount(0);
 	// Nothing overflows sideways at this width.

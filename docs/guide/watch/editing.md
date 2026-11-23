@@ -94,7 +94,7 @@ The save carries the planned version the field showed. If the task was planned d
 
 ### Set the release version {#release-version}
 
-The project's release version is changed with the version button in the header, right of the project's name, and changes no task. Choose a version of the list to make it the release version, **No release version** to clear it, or type a new version in the top row and choose the check button to add it to the project. Adding a version does not make it current: choose it from the list for that. The list shows the newest version first. See [Planned versions on the board](./board#planned-versions).
+The project's release version is changed with the version button in the header, right of the project's name, and changes no task. Choose a version in the list, then choose **Make the shown vX the release version** at the bottom of the menu. Choosing a version in the list only filters the board; it does not change the release version. To add a version, type it in the top row and choose the check button; adding does not make it the release version. The list shows the newest version first, under **All**. See [Planned versions on the board](./board#planned-versions).
 
 ## Edit the files directly
 

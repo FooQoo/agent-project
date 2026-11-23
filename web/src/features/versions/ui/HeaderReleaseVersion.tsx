@@ -3,12 +3,16 @@ import { addVersion, setReleaseVersion } from '../api/versions';
 import { useProjectVersions } from '../model/useProjectVersions';
 import { ReleaseVersionMenu } from './ReleaseVersionMenu';
 
-/** The header's release-version menu of a project, wired to the version routes. */
+/** The header's version filter of a project, wired to the version routes. */
 export function HeaderReleaseVersion({
   projectId,
+  filter,
+  onFilter,
   disabled,
 }: {
   projectId: ProjectId;
+  filter: string | null;
+  onFilter: (version: string | null) => void;
   disabled?: boolean;
 }) {
   const { versions, release, refresh } = useProjectVersions(projectId);
@@ -16,8 +20,10 @@ export function HeaderReleaseVersion({
     <ReleaseVersionMenu
       versions={versions}
       release={release}
+      filter={filter}
+      onFilter={onFilter}
       disabled={disabled}
-      onSelect={async (version) => {
+      onMakeRelease={async (version) => {
         await setReleaseVersion(projectId, version);
         await refresh();
       }}

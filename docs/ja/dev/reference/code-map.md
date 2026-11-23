@@ -137,7 +137,7 @@
 
 - `web/src/features/versions/api/versions.ts`: 書き込みのリクエスト。
 - `web/src/features/versions/model/`: Summaryから読むプロジェクトのバージョン（`useProjectVersions.ts`）。
-- `web/src/features/versions/ui/`: カードのタグ、ヘッダーのリリースバージョンメニュー（`ReleaseVersionMenu.tsx`、配線は`HeaderReleaseVersion.tsx`）、タスクの予定バージョンフィールド（`PlannedVersionPicker.tsx`、配線は`TaskPlanField.tsx`）、エピックのフィールド（`EpicPlanField.tsx`、配線は`EpicPlan.tsx`）、選択肢の行、スマホの`PlanContext.tsx`。
+- `web/src/features/versions/ui/`: カードのタグ、ヘッダーのバージョン絞り込みメニュー（`ReleaseVersionMenu.tsx`、配線は`HeaderReleaseVersion.tsx`）、タスクの予定バージョンフィールド（`PlannedVersionPicker.tsx`、配線は`TaskPlanField.tsx`）、エピックのフィールド（`EpicPlanField.tsx`、配線は`EpicPlan.tsx`）、選択肢の行、スマホの`PlanContext.tsx`。
 - `web/src/shared/ui/editor/planField.ts`と`usePendingPlan.ts`: エディターと予定バージョンフィールドの取り決め。
 - `web/src/app/useBoardVersions.tsx`: PCカンバンのカードのタグとヘッダーのスロット。
 - `web/src/pages/monitor/model/planProject.ts`: スマホのカードがタグを読むバージョン。
