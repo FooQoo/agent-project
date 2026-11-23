@@ -174,18 +174,10 @@ impl FileStore {
     ) -> Result<(), AgpjError> {
         let shared = self.shared_dir();
         let index = QaIndex::load(shared, project_dir)?;
-        let mut by_task: Vec<(i64, Vec<&str>)> = Vec::new();
-        for question in answered {
-            for task in &question.tasks {
-                match by_task.iter_mut().find(|(id, _)| id == task) {
-                    Some((_, ids)) => ids.push(question.id.as_str()),
-                    None => by_task.push((*task, vec![question.id.as_str()])),
-                }
-            }
-        }
-        by_task.sort_by_key(|(id, _)| *id);
         let at = stamp(now);
-        for (id, questions) in by_task {
+        // The targets are the tasks whose current `questions` name an accepted answer, not the
+        // `tasks` list a question keeps, which only follows open questions.
+        for id in reader::task_ids(project_dir)? {
             let Ok(mut task) = reader::read_task_strict(shared, project, id) else {
                 continue;
             };
@@ -201,6 +193,14 @@ impl FileStore {
                 continue;
             };
             let parsed = parse_task(&text, ParseMode::Stored);
+            let questions: Vec<&str> = answered
+                .iter()
+                .map(|q| q.id.as_str())
+                .filter(|q| parsed.questions.iter().any(|r| r == q))
+                .collect();
+            if questions.is_empty() {
+                continue;
+            }
             if index.is_waiting(&parsed.questions, !parsed.questions_defects.is_empty()) {
                 continue;
             }

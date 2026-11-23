@@ -567,3 +567,45 @@ fn an_older_answers_resume_entry_does_not_mask_a_newer_answer() {
         .count();
     assert_eq!(resumed_total, 2);
 }
+
+#[test]
+fn accepting_resumes_by_the_tasks_current_references() {
+    let fx = fx();
+    // A task that dropped the answered question is not resumed by its acceptance.
+    let dropped = asked_and_answered(&fx);
+    fx.store
+        .link_questions(
+            &fx.project,
+            dropped,
+            &["Q-1".to_string()],
+            false,
+            Actor::Human,
+            now(),
+        )
+        .unwrap();
+    assert_eq!(fx.view(dropped).agent_status, RunState::Paused);
+
+    // A paused task that refers to the already answered question is resumed by it.
+    let linked = fx.task(Assignee::Ai);
+    fx.run(linked);
+    fx.person_pauses(linked);
+    fx.store
+        .link_questions(
+            &fx.project,
+            linked,
+            &["Q-1".to_string()],
+            true,
+            Actor::Human,
+            now(),
+        )
+        .unwrap();
+    assert_eq!(fx.view(linked).agent_status, RunState::Paused);
+
+    fx.store
+        .accept_message(&fx.project, "Q-1", Actor::Ai, now())
+        .unwrap();
+    assert_eq!(fx.view(dropped).agent_status, RunState::Paused);
+    assert_eq!(fx.resumes(dropped), 0);
+    assert_eq!(fx.view(linked).agent_status, RunState::Running);
+    assert_eq!(fx.resumes(linked), 1);
+}
