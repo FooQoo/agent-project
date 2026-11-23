@@ -12,6 +12,8 @@ const known = new Map<string, ProjectMode>();
 const displayed = new Set<string>();
 /** Counts the updates of each project, so a read that started earlier does not overwrite them. */
 const versions = new Map<string, number>();
+/** The latest read started for each project, so a read that a newer read replaced is dropped. */
+const reads = new Map<string, number>();
 const listeners = new Set<() => void>();
 
 function put(projectId: string, mode: ProjectMode) {
@@ -22,9 +24,13 @@ function put(projectId: string, mode: ProjectMode) {
 /** Reads a project's mode and applies it only if nothing newer arrived while the read ran. */
 function loadAndApply(projectId: string) {
   const started = versions.get(projectId) ?? 0;
+  const read = (reads.get(projectId) ?? 0) + 1;
+  reads.set(projectId, read);
   return loadMode(projectId).then(
     (mode) => {
-      if ((versions.get(projectId) ?? 0) === started) setProjectMode(projectId, mode);
+      if (reads.get(projectId) === read && (versions.get(projectId) ?? 0) === started) {
+        setProjectMode(projectId, mode);
+      }
     },
     () => undefined,
   );
@@ -57,6 +63,7 @@ export function resetModes() {
   known.clear();
   displayed.clear();
   versions.clear();
+  reads.clear();
   emit();
 }
 

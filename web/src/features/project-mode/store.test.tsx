@@ -77,4 +77,24 @@ describe('useProjectMode', () => {
     });
     expect(result.current?.mode).toBe('sleep');
   });
+
+  it('keeps a newer read when an older read completes first', async () => {
+    const pending: Array<(response: Response) => void> = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>((resolve) => pending.push(resolve))),
+    );
+    const { result } = renderHook(() => useProjectMode('p5'));
+    act(() => {
+      refreshModes();
+    });
+    await act(async () => {
+      pending[0](Response.json({ mode: 'sparring' }));
+    });
+    expect(result.current).toBeNull();
+    await act(async () => {
+      pending[1](Response.json({ mode: 'sleep' }));
+    });
+    expect(result.current?.mode).toBe('sleep');
+  });
 });
