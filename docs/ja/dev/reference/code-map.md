@@ -40,7 +40,7 @@
 | `reader` | JSONとMarkdownから、スナップショットと`problems`を組み立てる。 |
 | `projection` | 解析済みのスナップショットから作るプロジェクトのSummaryと、2つの投影の間の変更の組。タスクとエピックごとのversionを持つ。 |
 | `detail` | 1つのDetailストリームのデータ。スナップショットからコピーし、そこからNDJSONのイベントを作る。読むのは画像のヘッダーだけ。 |
-| `ops/` | タスク・稼働状態・メッセージ（`qa/`: 質問・回答・依頼の送信・受け付け・取り下げ・参照・読み出しと、旧形式の一度きりの変換`migrate.rs`）・人による完了条件のチェック・エピック・画像・自動完了の操作・`send.rs`（人によるバックログのタスクの未着手への送信。1件、エピック全体、選んだ一部を一回の保存で。CLIのバックログのタスクへの`mv <id> todo`も同じコードに行き着きます）・`version.rs`（プロジェクトのカレントの版と一覧にある版、タスクまたはエピックの全タスクのリリース予定の版）。`file_store/releases.rs`は`docs/release/*.md`から版を一覧にし、版の空ファイルを作ります。`frontmatter/planned.rs`は`TASK.md`の`plannedVersion`キーを読み書きします。 |
+| `ops/` | タスク・稼働状態・メッセージ（`qa/`: 質問・回答・依頼の送信・受け付け・取り下げ・参照・読み出しと、旧形式の一度きりの変換`migrate.rs`）・人による完了条件のチェック・エピック・画像・自動完了の操作・`send.rs`（人によるバックログのタスクの未着手への送信。1件、エピック全体、選んだ一部を一回の保存で。CLIのバックログのタスクへの`mv <id> todo`も同じコードに行き着きます）・`version.rs`（プロジェクトのカレントのバージョンと一覧にあるバージョン、タスクまたはエピックの全タスクのリリース予定のバージョン）。`file_store/releases.rs`は`docs/release/*.md`からバージョンを一覧にし、バージョンの空ファイルを作ります。`frontmatter/planned.rs`は`TASK.md`の`plannedVersion`キーを読み書きします。 |
 | `io`・`lock` | renameによる置き換え保存と、`write.lock`・`lifecycle.lock`。 |
 | `project`・`bindings` | プロジェクトの一覧と、フォルダの紐付け。 |
 | `index`・`watch` | `serve`内のメモリ上の索引と、OSイベントの監視。 |
@@ -85,13 +85,13 @@
 ### プラグインのsetupとupdate
 
 - `src/setup/`: `mod.rs`（エージェントとオプション）、`prepare.rs`（読み取りだけの計画）、`execute.rs`（計画の実行）、`report.rs`（テキストとJSONの結果、終了コード）。`plan.rs`・`codex.rs`・`claude.rs`が設定の変更を求め、`apply.rs`と`apply/files.rs`がバックアップを取りながら書き込みます。`env.rs`はパスを解決し、`agent_cli.rs`はエージェントのコマンドを実行し、`plugin.rs`はマーケットプレイスからプラグインを導入し、`trust.rs`は`codex app-server`を通してCodexのhookを信頼します。
-- `src/cli/commands/version.rs`と`src/cli/args/version.rs`: `agpj version ls|add|current`と、ほかのコマンドと共有する版のオプション。`add`・`edit`・`epic plan`の`PlanArgs`（`--planned-version`、`--current-version`、`--unplanned`）と、`ls`・`progress`の`VersionFilterArgs`（`--version`、`--current-version`、`--unplanned`）です。保存の操作は`src/file_store/ops/version.rs`にあり、`progress::build_filtered`は着手可能かどうかを決めたあとで絞り込みを適用します。
-- `src/file_store/release_doc.rs`（`release_doc/render.rs`を含む）と`src/file_store/ops/release_doc.rs`：版のリリースドキュメント（`agpj release doc`、`POST …/release-doc`）。前者は副作用のない部分で、タスクを予定・検証済み・受入条件なしで完了・残作業・別の版へ移したものに分け（別の版へ移したものは、どちらの言語でも書かれる予定の版の履歴から読む）、`agpj:generated`マーカーの間のブロックを書き、ファイルにはめ込みます。後者はプロジェクトのロックを持ち、アーカイブ済みを含むスナップショットを読み、変更されていないことを確かめてからファイルを原子的に保存します。`src/cli/commands/release.rs`、`src/cli/args/release.rs`、`src/server/api/versions.rs`が入口です。
+- `src/cli/commands/version.rs`と`src/cli/args/version.rs`: `agpj version ls|add|current`と、ほかのコマンドと共有するバージョンのオプション。`add`・`edit`・`epic plan`の`PlanArgs`（`--planned-version`、`--current-version`、`--unplanned`）と、`ls`・`progress`の`VersionFilterArgs`（`--version`、`--current-version`、`--unplanned`）です。保存の操作は`src/file_store/ops/version.rs`にあり、`progress::build_filtered`は着手可能かどうかを決めたあとで絞り込みを適用します。
+- `src/file_store/release_doc.rs`（`release_doc/render.rs`を含む）と`src/file_store/ops/release_doc.rs`：バージョンのリリースドキュメント（`agpj release doc`、`POST …/release-doc`）。前者は副作用のない部分で、タスクを予定・検証済み・受入条件なしで完了・残作業・別のバージョンへ移したものに分け（別のバージョンへ移したものは、どちらの言語でも書かれる予定のバージョンの履歴から読む）、`agpj:generated`マーカーの間のブロックを書き、ファイルにはめ込みます。後者はプロジェクトのロックを持ち、アーカイブ済みを含むスナップショットを読み、変更されていないことを確かめてからファイルを原子的に保存します。`src/cli/commands/release.rs`、`src/cli/args/release.rs`、`src/server/api/versions.rs`が入口です。
 - `src/cli/commands/setup.rs`: `agpj setup`と`agpj update`のオプション、エージェントの選択、確認の質問。`setup_remote.rs`は`agpj setup remote`と、`setup`の任意のリモートアクセスの手順、`remote.rs`は`agpj show remote`です。`src/cli/run/remote.rs`は、プロジェクトの保存領域が要らないときに、この二つを実行します。`src/remote_settings.rs`は、保存するngrok設定の、共有された検証と保存です。
 - `src/nudge/`: エージェントが忘れやすいことのリマインダー。`mod.rs`にルールの登録簿の型と2つの実行方法（進行表向けの`state_reminders`、Stopフック向けの`turn_end_reminders`）、`rules.rs`に`RULES`の一覧、`turn.rs`にClaude CodeとCodexのトランスクリプトの読み取り、`cases.rs`に全ルールのテストケース、`coverage.rs`に全コマンドと進行表のフィールドをルールに対応付ける表があります。Stopフック本体は`src/agent/stop/`です。[忘れごとのルール](../concepts/agents.md#nudge-rules)を参照してください。
 - `src/skills/`: `agpj skills`が出力する`agent-project`スキルの本文（`agent-project.md`、`topics/`）。
 - `src/plugin_hash.rs`、`src/setup/auto_update.rs`、`src/setup/auto_update/`: プラグインの内容のハッシュ（`build.rs`が計算）と、Hookの自動更新、そのロックと記録。`tests/plugin_auto_update.rs`と`tests/skills_command.rs`がテストします。
-- `tests/setup.rs`と`tests/setup_plugin.rs`: 偽のエージェントのコマンド（`tests/support/fake_agents.rs`）を相手にしたsetupとupdateのテスト。`tests/plugin_layout.rs`は、マーケットプレイスとプラグインのファイルと、その版を確かめます。
+- `tests/setup.rs`と`tests/setup_plugin.rs`: 偽のエージェントのコマンド（`tests/support/fake_agents.rs`）を相手にしたsetupとupdateのテスト。`tests/plugin_layout.rs`は、マーケットプレイスとプラグインのファイルと、そのバージョンを確かめます。
 - `src/cli/commands/message/`と`src/cli/args/message.rs`: `agpj message`の各コマンド、そのJSON入力（`input.rs`）、`message ask`と`message wait`のJSON Linesのイベント（`stream.rs`）。待機そのものは、共通の待機エンジンの上に作った`src/agent/message_wait.rs`です。
 - `web/src/features/tasks/messages/`: メッセージの一覧。`model/messages.ts`はタブ・件数・`canSendAnswer`、`api.ts`はメッセージの読み出しと回答・取り下げの送信、`MessageBand.tsx`は件数を示す帯（PCのボードとスマホ画面で共通）、`MessageCenter.tsx`は帯と一覧をつなぎ、`MessageRows.tsx`は行を描き、`MessagesSurface.tsx`は一覧・質問・依頼をモーダルまたは下からのシートで表示します。`web/src/features/tasks/answer/`は質問と回答の欄（`DecisionQuestion`・`DecisionAnswerFields`）を描き、`web/src/app/model/useMessagesController.ts`は一覧をPCのボードにつなぎます。
 - `web/src/features/messages/ask/`: **AIに依頼**の入力画面（`AskAiDialog.tsx`、`AskAiToolbar.tsx`）と、multipartの依頼を組み立てる`sendRequest.ts`。
@@ -133,15 +133,15 @@
 - `web/demo-build.ts`: `demo`モードのベースパスと出力フォルダ。
 - `e2e/playwright.demo.config.ts`と`e2e/demo/`: ビルド済みのドキュメントサイトを相手にするデモのスイート。[ブラウザのデモ](../concepts/demo.md)を参照してください。
 
-### 予定版
+### 予定バージョン
 
 - `web/src/features/versions/api/versions.ts`: 書き込みのリクエスト。
-- `web/src/features/versions/model/`: Summaryから読むプロジェクトの版（`useProjectVersions.ts`）。
-- `web/src/features/versions/ui/`: カードのタグ、ヘッダーのカレント版メニュー（`CurrentVersionMenu.tsx`、配線は`HeaderCurrentVersion.tsx`）、タスクの予定版フィールド（`PlannedVersionPicker.tsx`、配線は`TaskPlanField.tsx`）、エピックのフィールド（`EpicPlanField.tsx`、配線は`EpicPlan.tsx`）、選択肢の行、スマホの`PlanContext.tsx`。
-- `web/src/shared/ui/editor/planField.ts`と`usePendingPlan.ts`: エディターと予定版フィールドの取り決め。
+- `web/src/features/versions/model/`: Summaryから読むプロジェクトのバージョン（`useProjectVersions.ts`）。
+- `web/src/features/versions/ui/`: カードのタグ、ヘッダーのカレントバージョンメニュー（`CurrentVersionMenu.tsx`、配線は`HeaderCurrentVersion.tsx`）、タスクの予定バージョンフィールド（`PlannedVersionPicker.tsx`、配線は`TaskPlanField.tsx`）、エピックのフィールド（`EpicPlanField.tsx`、配線は`EpicPlan.tsx`）、選択肢の行、スマホの`PlanContext.tsx`。
+- `web/src/shared/ui/editor/planField.ts`と`usePendingPlan.ts`: エディターと予定バージョンフィールドの取り決め。
 - `web/src/app/useBoardVersions.tsx`: PCボードのカードのタグとヘッダーのスロット。
-- `web/src/pages/monitor/model/planProject.ts`: スマホのカードがタグを読む版。
-- `web/src/app/development/mock-server/versions.ts`: サンプルデータサーバーの版のルート。
+- `web/src/pages/monitor/model/planProject.ts`: スマホのカードがタグを読むバージョン。
+- `web/src/app/development/mock-server/versions.ts`: サンプルデータサーバーのバージョンのルート。
 - `e2e/tests/release-plan.spec.ts`: エンドツーエンドのテスト。
 
 ## 採用技術

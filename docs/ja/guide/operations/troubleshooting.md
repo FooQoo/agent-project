@@ -79,7 +79,7 @@ title: トラブルシューティング
 
 ## macOSがagpjの実行を拒否する {#macos-will-not-run-agpj}
 
-Homebrewで入るコマンドは、Developer ID証明書で署名され、Appleの公証を受けています。macOSが実行を止めたときは、Gatekeeperを無効にしたり、隔離属性を自分で外したりしないでください。まず、`brew install fooqoo/tap/agpj`がエラーなく終わったか、MacがmacOS 15以降か、`agpj --version`が動くかを確認します。初回の起動では、macOSが公証を確認するためにネットワーク接続が必要な場合があります。それでも止まるときは、macOSの版とメッセージを添えて、[Issueを作成](https://github.com/FooQoo/agent-project/issues)してください。
+Homebrewで入るコマンドは、Developer ID証明書で署名され、Appleの公証を受けています。macOSが実行を止めたときは、Gatekeeperを無効にしたり、隔離属性を自分で外したりしないでください。まず、`brew install fooqoo/tap/agpj`がエラーなく終わったか、MacがmacOS 15以降か、`agpj --version`が動くかを確認します。初回の起動では、macOSが公証を確認するためにネットワーク接続が必要な場合があります。それでも止まるときは、macOSのバージョンとメッセージを添えて、[Issueを作成](https://github.com/FooQoo/agent-project/issues)してください。
 
 ## それでも解決しないとき
 

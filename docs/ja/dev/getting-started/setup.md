@@ -70,7 +70,7 @@ cargo run -- serve --port <port>
 
 ## デモビルド {#demo-build}
 
-デモビルドは、同じサンプルデータのボードをサーバーなしの静的サイトで動かします。ドキュメントサイトの`/agent-project/demo/`で公開するのはこの版です。
+デモビルドは、同じサンプルデータのボードをサーバーなしの静的サイトで動かします。ドキュメントサイトの`/agent-project/demo/`で公開するのはこのビルドです。
 
 ```sh
 pnpm --dir web build:demo     # web/dist-demo/ に書き出す
@@ -131,11 +131,11 @@ Storyで使う架空の画像は`web/.storybook/static/`にあります。Storyb
 
 ### アーカイブと検査
 
-- **版。** 版は`Cargo.toml`と`Cargo.lock`が持ち、タグは`v`にその版を付けたものです。`scripts/release/check-version.py --tag vX.Y.Z`が、食い違いを失敗にします。`main`の版は開発中の版で、公開済みのGitHub Releaseだけがリリース済みの版です。
+- **バージョン。** バージョンは`Cargo.toml`と`Cargo.lock`が持ち、タグは`v`にそのバージョンを付けたものです。`scripts/release/check-version.py --tag vX.Y.Z`が、食い違いを失敗にします。`main`のバージョンは開発中のバージョンで、公開済みのGitHub Releaseだけがリリース済みのバージョンです。
 - **ビルド。** CPUごとに専用のmacOSランナー（Apple Siliconは`macos-15`、Intelは`macos-15-intel`）で、Web画面、`cargo build --release --locked`の順にビルドします。`MACOSX_DEPLOYMENT_TARGET=15.0`で、両CPUとも最低のmacOSは15です。stripをする場合は、署名の前に行います。
 - **アーカイブ。** `package.sh`が`agpj-<version>-<target>.tar.gz`を作ります。中身は`agpj`、`LICENSE`、`THIRD_PARTY_NOTICES.txt`だけで、Web画面、Skill、Hookのテンプレートはバイナリの中にあります。`verify-artifact.sh`が、名前、2つのライセンスファイル、CPU、deployment target、システムライブラリだけにリンクしていること、実行できる環境では`--version`と埋め込んだWeb画面を確認します。
 - **通知。** `generate-notices.py`が`THIRD_PARTY_NOTICES.txt`を作り、`--check`で古いと失敗します。MITの本文は`LICENSE`にあり、リリースの前に、著作権表示へ実際の権利者と年を入れる必要があります。
-- **Actions。** `release.yml`のすべての`uses:`は、40文字のコミットSHAに固定し、行末のコメントに版を書きます（`actions/checkout@<sha> # v7.0.1`）。更新するときは、タグをコミットに解決し（注釈付きタグは実体のコミット）、SHAとコメントを一緒に変えます。
+- **Actions。** `release.yml`のすべての`uses:`は、40文字のコミットSHAに固定し、行末のコメントにバージョンを書きます（`actions/checkout@<sha> # v7.0.1`）。更新するときは、タグをコミットに解決し（注釈付きタグは実体のコミット）、SHAとコメントを一緒に変えます。
 - **候補とリリース。** プルリクエストと手動の実行は、署名なしの候補（`candidate.json`が`signed: false`）だけを作ります。候補がリリースのファイルになることはありません。
 
 ### 署名と公証
@@ -152,7 +152,7 @@ Storyで使う架空の画像は`web/.storybook/static/`にあります。Storyb
 
 ### Homebrewへの公開
 
-Releaseを公開すると、`.github/workflows/homebrew-tap.yml`がFormulaを自動で公開します。`scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agpj.rb`は、公開したファイルからFormulaを作り、CPUの欠け、版の違い、ハッシュの不一致を拒否します。Formulaは、`on_macos`でCPUごとにアーカイブを選び、macOS 15を要求し（`depends_on macos: :sequoia`）、MITを宣言し、`agpj`を`bin`へ、2つのライセンスファイルを`pkgshare`へインストールします。`test do`では、`--version`を確認し、一時的な`AGPJ_HOME`を使います。
+Releaseを公開すると、`.github/workflows/homebrew-tap.yml`がFormulaを自動で公開します。`scripts/release/render-formula.py --tag vX.Y.Z --sums SHA256SUMS --assets <dir> --out Formula/agpj.rb`は、公開したファイルからFormulaを作り、CPUの欠け、バージョンの違い、ハッシュの不一致を拒否します。Formulaは、`on_macos`でCPUごとにアーカイブを選び、macOS 15を要求し（`depends_on macos: :sequoia`）、MITを宣言し、`agpj`を`bin`へ、2つのライセンスファイルを`pkgshare`へインストールします。`test do`では、`--version`を確認し、一時的な`AGPJ_HOME`を使います。
 
 ワークフローはReleaseの公開時に動き、下書きとプレリリースは対象外です。次の順に進めます。
 

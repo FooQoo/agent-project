@@ -87,7 +87,7 @@ pub fn render_block(tasks: &[TaskView], version: &str, language: HistoryLanguage
         groups.done_unchecked.len(),
         t("Remaining", "残作業"),
         groups.remaining.len(),
-        t("Moved to another version", "別の版へ移した"),
+        t("Moved to another version", "別のバージョンへ移した"),
         groups.moved.len()
     ));
     out.truncate(out.len() - 1);
@@ -122,7 +122,7 @@ pub fn render_block(tasks: &[TaskView], version: &str, language: HistoryLanguage
             .collect(),
         t(
             "No task is planned for this version.",
-            "この版に予定したタスクはありません。",
+            "このバージョンに予定したタスクはありません。",
         ),
     );
     section(
@@ -163,7 +163,7 @@ pub fn render_block(tasks: &[TaskView], version: &str, language: HistoryLanguage
     );
     section(
         &mut out,
-        t("Moved to another version", "別の版へ移した"),
+        t("Moved to another version", "別のバージョンへ移した"),
         groups
             .moved
             .iter()
@@ -184,7 +184,7 @@ pub fn render_block(tasks: &[TaskView], version: &str, language: HistoryLanguage
             .collect(),
         t(
             "No task was moved out of this version.",
-            "この版から外れたタスクはありません。",
+            "このバージョンから外れたタスクはありません。",
         ),
     );
     out.push_str(&format!("### {}\n\n", t("Publication", "公開")));
@@ -192,7 +192,7 @@ pub fn render_block(tasks: &[TaskView], version: &str, language: HistoryLanguage
         "{}\n\n",
         t(
             "A task counts as published only when one of its results states `Published: VERSION` on its own line and links to what was published. Done alone is not publication. Generating this document publishes nothing.",
-            "タスクを公開済みと数えるのは、成果の本文に `Published: 版名` の行があり、公開物へのリンクが付いている場合だけです。Done だけでは公開済みになりません。この文書を生成しても何も公開されません。",
+            "タスクを公開済みと数えるのは、成果の本文に `Published: バージョン名` の行があり、公開物へのリンクが付いている場合だけです。Done だけでは公開済みになりません。この文書を生成しても何も公開されません。",
         )
     ));
     let mut confirmed = Vec::new();
