@@ -53,7 +53,7 @@
   width: 100%;
 }
 
-.mode-schedule__times label {
+.mode-schedule__times > div {
   display: flex;
   flex-direction: column;
   gap: 4px;

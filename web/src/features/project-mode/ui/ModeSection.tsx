@@ -40,6 +40,8 @@ export function ModeSection({
   const { t, i18n } = useTranslation();
   const headingId = useId();
   const scheduleId = useId();
+  const startId = useId();
+  const endId = useId();
   const schedule = mode?.schedule ?? DEFAULT_SCHEDULE;
   const unavailable = disabled || mode === null;
   const bySchedule = mode?.mode === 'sleep' && mode.modeSource === 'schedule';
@@ -87,24 +89,26 @@ export function ModeSection({
             <span>{t('mode.scheduleHeading')}</span>
           </label>
           <div className="mode-schedule__times">
-            <label>
-              <span>{t('mode.scheduleStart')}</span>
+            <div>
+              <label htmlFor={startId}>{t('mode.scheduleStart')}</label>
               <Input
+                id={startId}
                 type="time"
                 value={schedule.start}
                 disabled={unavailable}
                 onChange={(event) => saveSchedule({ start: event.target.value })}
               />
-            </label>
-            <label>
-              <span>{t('mode.scheduleEnd')}</span>
+            </div>
+            <div>
+              <label htmlFor={endId}>{t('mode.scheduleEnd')}</label>
               <Input
+                id={endId}
                 type="time"
                 value={schedule.end}
                 disabled={unavailable}
                 onChange={(event) => saveSchedule({ end: event.target.value })}
               />
-            </label>
+            </div>
           </div>
           <p className="settings__note">{t('mode.scheduleNote')}</p>
           {schedule.enabled && mode?.manual && onFollowSchedule ? (
