@@ -268,7 +268,7 @@ impl FileStore {
             target.as_deref().unwrap_or("none")
         );
         let japanese = format!(
-            "リリース予定の版を{}から{}に変更しました。",
+            "リリース予定のバージョンを{}から{}に変更しました。",
             from.as_deref().unwrap_or("なし"),
             target.as_deref().unwrap_or("なし")
         );

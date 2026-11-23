@@ -330,7 +330,7 @@ fn a_japanese_task_gets_a_japanese_history_reason() {
         .create_task(
             &f.project,
             NewTask {
-                title: "版を決める".into(),
+                title: "バージョンを決める".into(),
                 description: "---\nacceptance: []\n---\n\n日本語の本文です。\n".into(),
                 assignee: Assignee::Ai,
                 actor: Actor::Human,
@@ -343,7 +343,7 @@ fn a_japanese_task_gets_a_japanese_history_reason() {
     let (view, _) = f.set(task.id, named("v1.8.0"), 5);
     assert_eq!(
         view.history.last().unwrap().reason,
-        "リリース予定の版をなしからv1.8.0に変更しました。"
+        "リリース予定のバージョンをなしからv1.8.0に変更しました。"
     );
 }
 

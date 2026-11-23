@@ -133,6 +133,6 @@ Agent Projectは、[MITライセンス](LICENSE)で公開しています。同�
 
 - [使い方ガイド](https://fooqoo.github.io/agent-project/ja/guide/) — ブラウザ操作、CLIの例、エージェントの作業手順、共有ファイル、バックアップ。
 - [リモートアクセス](https://fooqoo.github.io/agent-project/ja/guide/watch/remote-access) — ngrokまたはTailscaleと合言葉によるスマホの接続、モニターの表示内容、確認方法。
-- [リリース](https://github.com/FooQoo/agent-project/releases) — 公開した各版の変更点。
+- [リリース](https://github.com/FooQoo/agent-project/releases) — 公開した各バージョンの変更点。
 - [Agent Projectプラグイン（英語）](plugins/agent-project/README.md) — `setup`がClaude CodeとCodexに導入するものと、Hookの仕組み。
 - [開発に参加する](CONTRIBUTING.ja.md) — 開発と検証。
