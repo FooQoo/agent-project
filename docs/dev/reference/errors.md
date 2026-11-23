@@ -11,6 +11,8 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `task_not_found` | The task ID does not exist in the project. | 3 | 404 |
 | `task_archived` | A write targets an archived task. | 1 | 409 |
 | `task_not_archived` | A delete or restore targets a task that is not archived. | 1 | 409 |
+| `result_plan_not_found` | `result add --plan` (or the API's `plan`) names a plan ID the task does not have: an unknown ID, or the ID of another task's plan. Nothing is written. | 3 | 404 |
+| `result_plan_delivered` | `result add --plan` names a plan that a saved result already delivers, and the delivery is not a repeat of that result. Nothing is written; the message names the delivering result's version. | 1 | 409 |
 | `task_is_draft` | An AI `edit`, `history add`, `mv`, or `state` targets a person's draft (`human`); or a person's `mv` to Todo, `epic send`, or send from the board targets one. The `reason` says to wait for the user to finalize it. | 1 | 409 |
 | `sleep_mode` | `message ask` while the project is in sleep mode. Nothing is saved, notified, or shown in the chat. The `reason` tells the agent to have a subagent decide, continue with its conclusion, and record it with `decision add`. | 1 | none (CLI only) |
 | `brainstorm_not_active` | `message ask --brainstorm` while the mode in effect is not brainstorm, for example after the user ended it with `agpj mode sparring`. Nothing is saved. The `reason` tells the agent to stop asking brainstorm questions and check `mode` in the progress table. Sleep is checked first, so in sleep mode the error is `sleep_mode`. | 1 | none (CLI only) |

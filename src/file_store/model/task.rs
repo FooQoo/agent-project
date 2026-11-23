@@ -204,6 +204,17 @@ pub struct TaskEpic {
     pub color: String,
 }
 
+/// A planned result as `show` and the API return it: the plan as written in `TASK.md`, and the
+/// version of the first saved result that carries its ID (`null` while it is undelivered). The
+/// delivered state is derived from the results; nothing is stored in the plan.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResultPlanView {
+    #[serde(flatten)]
+    pub plan: ResultPlan,
+    pub delivered_result_version: Option<u32>,
+}
+
 /// A task as callers receive it: `task.json` plus `TASK.md`, with the epic resolved from its
 /// file and the run state derived from the questions it refers to.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -217,7 +228,7 @@ pub struct TaskView {
     pub acceptance: Vec<AcceptanceItem>,
     pub acceptance_error: bool,
     /// The planned results from the `resultPlans` frontmatter (empty when none or unreadable).
-    pub result_plans: Vec<ResultPlan>,
+    pub result_plans: Vec<ResultPlanView>,
     pub result_plans_error: bool,
     pub assignee: Assignee,
     pub epic_id: Option<String>,

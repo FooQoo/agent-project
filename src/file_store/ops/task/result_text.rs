@@ -3,8 +3,15 @@
 
 use sha2::{Digest, Sha256};
 
+use std::fs;
+use std::path::Path;
+
+use super::super::super::frontmatter::{self, ResultPlan};
+use super::super::super::layout;
+use super::super::super::model::TaskFile;
+use super::super::super::reader;
 use super::result::{MAX_RESULT_KEY_CHARS, MAX_RESULT_TEXT_CHARS};
-use crate::domain::{AttachmentInput, MAX_RESULT_TITLE_CHARS, ResultKind};
+use crate::domain::{AttachmentInput, MAX_RESULT_TITLE_CHARS, ProjectId, ResultKind, TaskResult};
 use crate::error::AgpjError;
 
 pub(super) fn invalid(field: &str, reason: &str) -> AgpjError {
@@ -72,6 +79,7 @@ pub(super) fn content_key(
     summary: &str,
     link: Option<&str>,
     images: &[AttachmentInput],
+    plan: Option<&str>,
 ) -> String {
     let mut hash = Sha256::new();
     hash.update(kind.as_str().as_bytes());
@@ -89,6 +97,13 @@ pub(super) fn content_key(
         }
         hash.update(Sha256::digest(&image.bytes));
     }
+    // A delivery against a plan differs from the same content without one. Nothing is written
+    // for no plan, so the keys of results recorded without a plan are unchanged.
+    if let Some(plan) = plan {
+        hash.update([0]);
+        hash.update(b"plan:");
+        hash.update(plan.as_bytes());
+    }
     hash.finalize()[..16]
         .iter()
         .map(|b| format!("{b:02x}"))
@@ -104,4 +119,65 @@ pub(super) fn excerpt(summary: &str) -> String {
     } else {
         line.to_owned()
     }
+}
+
+/// The plan `result add --plan` names, read from the task's `TASK.md` (the caller holds the
+/// project lock). An unknown ID, a plan of another task included, is `result_plan_not_found`;
+/// `--final` is refused for an intermediate plan, and a publication record cannot deliver a plan.
+pub(super) fn resolve_plan(
+    shared: &Path,
+    project: &ProjectId,
+    id: i64,
+    plan_id: &str,
+    kind: ResultKind,
+    publication: bool,
+) -> Result<ResultPlan, AgpjError> {
+    if publication {
+        return Err(invalid(
+            "plan",
+            "A publication record cannot deliver a result plan.",
+        ));
+    }
+    let plan_id = plan_id.trim();
+    let text = reader::read_body(shared, project, id)?;
+    let (plans, _) = frontmatter::result_plans_of(&text, true);
+    let plan = plans.into_iter().find(|p| p.id == plan_id).ok_or_else(|| {
+        AgpjError::ResultPlanNotFound {
+            id,
+            plan: plan_id.to_owned(),
+        }
+    })?;
+    if kind == ResultKind::Final && !plan.is_final {
+        return Err(invalid(
+            "final",
+            &format!(
+                "{} is an intermediate plan; --final marks only the final plan's result.",
+                plan.id
+            ),
+        ));
+    }
+    Ok(plan)
+}
+
+/// Whether the images stored for `existing` are, byte for byte, the images of a new delivery.
+pub(super) fn same_images(
+    task: &TaskFile,
+    project_dir: &Path,
+    id: i64,
+    existing: &TaskResult,
+    images: &[AttachmentInput],
+) -> bool {
+    let stored = existing.image_ids();
+    stored.len() == images.len()
+        && stored.iter().zip(images).all(|(attachment_id, image)| {
+            task.attachments
+                .iter()
+                .find(|a| a.id == *attachment_id)
+                .and_then(|a| {
+                    let ext = layout::asset_extension(&a.media_type)?;
+                    let path = layout::task_asset_path(project_dir, id, &a.id, ext).ok()?;
+                    fs::read(path).ok()
+                })
+                .is_some_and(|bytes| Sha256::digest(&bytes) == Sha256::digest(&image.bytes))
+        })
 }

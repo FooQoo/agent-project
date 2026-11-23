@@ -5,6 +5,7 @@ mod limits;
 pub mod markdown_blocks;
 mod plain_title;
 mod project;
+mod result_title;
 mod task;
 mod version;
 mod work;
@@ -18,14 +19,15 @@ pub use limits::{
 };
 pub use plain_title::{first_line_plain, strip_inline_markdown};
 pub use project::{ChangeCursor, ProjectCatalog, ProjectId, ProjectMeta};
+pub use result_title::{MAX_RESULT_TITLE_CHARS, derive_result_title};
 pub use task::BoardMeta;
 pub use version::{
     MAX_VERSION_CHARS, MAX_VERSIONS, VersionFilter, compare_versions, validate_version_name,
 };
 pub use work::{
     Actor, Assignee, Attachment, AttachmentData, AttachmentInput, BulkArchiveResult, ChangeContext,
-    Changed, Draft, HistoryEvent, MAX_RESULT_TITLE_CHARS, NewTask, ResultKind, Task, TaskResult,
-    ValidatedAttachment, ValidatedBoard, derive_result_title,
+    Changed, Draft, HistoryEvent, NewTask, ResultKind, Task, TaskResult, ValidatedAttachment,
+    ValidatedBoard,
 };
 
 const WORK_REASON_MAX: usize = 10_000;

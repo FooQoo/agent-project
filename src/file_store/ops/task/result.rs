@@ -12,16 +12,15 @@
 use std::fs;
 
 use chrono::{DateTime, Utc};
-use sha2::{Digest, Sha256};
 
 use super::super::super::FileStore;
-use super::super::super::layout;
 use super::super::super::model::{HistoryRecord, TaskView};
 use super::super::super::reader;
 use super::super::attachment::write_image;
 use super::super::{ensure_ai_task_not_done, lock_project, save_task, stamp};
 use super::result_text::{
-    clean_key, clean_link, clean_text, clean_title, content_key, excerpt, invalid,
+    clean_key, clean_link, clean_text, clean_title, content_key, excerpt, invalid, resolve_plan,
+    same_images,
 };
 use super::view;
 use crate::domain::validate_version_name;
@@ -57,6 +56,10 @@ pub struct ResultInput {
     /// The version this result records the publication of. It needs a link and is a
     /// progress result; it is the one result a Done task still takes.
     pub published: Option<String>,
+    /// The result plan (`RP-<n>`) of the task this result delivers. The plan's content is the
+    /// default summary and title; a final plan makes the result final, and `kind: Final` with an
+    /// intermediate plan is refused. Cannot be combined with `published`.
+    pub plan: Option<String>,
 }
 
 /// The outcome of recording a result.
@@ -82,7 +85,32 @@ impl FileStore {
         input: ResultInput,
         now: DateTime<Utc>,
     ) -> Result<RecordedResult, AgpjError> {
-        let mut summary = clean_text("summary", &input.summary)?;
+        let shared = self.shared_dir();
+        let (project_dir, _lock) = lock_project(shared, project)?;
+        let mut task = reader::read_task_strict(shared, project, id)?;
+
+        let plan = match input.plan.as_deref() {
+            Some(plan_id) => Some(resolve_plan(
+                shared,
+                project,
+                id,
+                plan_id,
+                input.kind,
+                input.published.is_some(),
+            )?),
+            None => None,
+        };
+        let kind = match &plan {
+            Some(plan) if plan.is_final => ResultKind::Final,
+            _ => input.kind,
+        };
+        let plan_id = plan.as_ref().map(|p| p.id.clone());
+
+        let given_summary = match (&plan, input.summary.trim().is_empty()) {
+            (Some(plan), true) => plan.content.as_str(),
+            _ => input.summary.as_str(),
+        };
+        let mut summary = clean_text("summary", given_summary)?;
         let link = input.link.as_deref().map(clean_link).transpose()?;
         let published = match input.published.as_deref() {
             Some(version) => {
@@ -93,7 +121,7 @@ impl FileStore {
                         "A publication record needs a link to what was published.",
                     ));
                 }
-                if input.kind == ResultKind::Final {
+                if kind == ResultKind::Final {
                     return Err(invalid(
                         "final",
                         "A publication record cannot be the final result.",
@@ -110,9 +138,10 @@ impl FileStore {
             }
             None => false,
         };
-        let title = match input.title.as_deref() {
-            Some(title) => clean_title(title)?,
-            None => derive_result_title(&summary),
+        let title = match (input.title.as_deref(), &plan) {
+            (Some(title), _) => clean_title(title)?,
+            (None, Some(plan)) => derive_result_title(&plan.content),
+            (None, None) => derive_result_title(&summary),
         };
         if input.images.len() > MAX_RESULT_IMAGES {
             return Err(invalid(
@@ -122,34 +151,19 @@ impl FileStore {
         }
         let key = match input.key.as_deref() {
             Some(key) => clean_key(key)?,
-            None => content_key(input.kind, &summary, link.as_deref(), &input.images),
+            None => content_key(
+                kind,
+                &summary,
+                link.as_deref(),
+                &input.images,
+                plan_id.as_deref(),
+            ),
         };
 
-        let shared = self.shared_dir();
-        let (project_dir, _lock) = lock_project(shared, project)?;
-        let mut task = reader::read_task_strict(shared, project, id)?;
-
         if let Some(existing) = task.results.iter().find(|r| r.key == key) {
-            let stored = existing.image_ids();
-            let same_image = stored.len() == input.images.len()
-                && stored
-                    .iter()
-                    .zip(&input.images)
-                    .all(|(attachment_id, image)| {
-                        task.attachments
-                            .iter()
-                            .find(|a| a.id == *attachment_id)
-                            .and_then(|a| {
-                                let ext = layout::asset_extension(&a.media_type)?;
-                                let path =
-                                    layout::task_asset_path(&project_dir, id, &a.id, ext).ok()?;
-                                fs::read(path).ok()
-                            })
-                            .is_some_and(|bytes| {
-                                Sha256::digest(&bytes) == Sha256::digest(&image.bytes)
-                            })
-                    });
-            if existing.kind != input.kind
+            let same_image = same_images(&task, &project_dir, id, existing, &input.images);
+            if existing.kind != kind
+                || existing.plan_id != plan_id
                 || existing.summary != summary
                 || existing.link != link
                 || existing.title != title
@@ -171,13 +185,25 @@ impl FileStore {
             });
         }
 
+        if let Some(plan_id) = &plan_id
+            && let Some(delivered) = task
+                .results
+                .iter()
+                .find(|r| r.plan_id.as_deref() == Some(plan_id.as_str()))
+        {
+            return Err(AgpjError::ResultPlanDelivered {
+                id,
+                plan: plan_id.clone(),
+                version: delivered.version,
+            });
+        }
         if task.archived_at.is_some() {
             return Err(AgpjError::TaskArchived { id });
         }
         // A final result may still be recorded on a Done task that has none: automatic Done
         // can happen before the agent writes it.
-        let late_final = input.kind == ResultKind::Final
-            && !task.results.iter().any(|r| r.kind == ResultKind::Final);
+        let late_final =
+            kind == ResultKind::Final && !task.results.iter().any(|r| r.kind == ResultKind::Final);
         if !late_final && !published {
             ensure_ai_task_not_done(&task, crate::domain::Actor::Ai)?;
         }
@@ -216,12 +242,13 @@ impl FileStore {
         let result = TaskResult {
             version,
             key,
-            kind: input.kind,
+            kind,
             title,
             summary,
             attachment_id: None,
             attachment_ids: Vec::new(),
             link,
+            plan_id: plan_id.clone(),
             at,
         }
         .with_images(attachments.iter().map(|a| a.id.clone()).collect());
@@ -230,12 +257,19 @@ impl FileStore {
             ResultKind::Progress => ("progress", "途中"),
             ResultKind::Final => ("final", "最終"),
         };
-        let reason = language
-            .text(
-                &format!("Recorded {english_kind} result v{version}: {note}"),
-                &format!("成果 v{version}（{japanese_kind}）を記録しました: {note}"),
-            )
-            .to_owned();
+        let (english, japanese) = match &plan_id {
+            Some(plan_id) => (
+                format!("Recorded {english_kind} result v{version} for plan {plan_id}: {note}"),
+                format!(
+                    "予定 {plan_id} の成果 v{version}（{japanese_kind}）を記録しました: {note}"
+                ),
+            ),
+            None => (
+                format!("Recorded {english_kind} result v{version}: {note}"),
+                format!("成果 v{version}（{japanese_kind}）を記録しました: {note}"),
+            ),
+        };
+        let reason = language.text(&english, &japanese).to_owned();
         task.results.push(result.clone());
         task.history.push(HistoryRecord { at, reason });
         task.updated_at = at;
@@ -257,6 +291,7 @@ impl FileStore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sha2::{Digest, Sha256};
 
     /// The key as it was computed when a result held at most one image.
     fn legacy_key(summary: &str, link: Option<&str>, image: Option<&[u8]>) -> String {
@@ -286,16 +321,28 @@ mod tests {
 
     #[test]
     fn keys_of_results_with_no_image_or_one_image_are_unchanged() {
-        let none = content_key(ResultKind::Progress, "S", Some("L"), &[]);
+        let none = content_key(ResultKind::Progress, "S", Some("L"), &[], None);
         assert_eq!(none, legacy_key("S", Some("L"), None));
-        let one = content_key(ResultKind::Progress, "S", None, &[input(b"abc")]);
+        let one = content_key(ResultKind::Progress, "S", None, &[input(b"abc")], None);
         assert_eq!(one, legacy_key("S", None, Some(b"abc")));
     }
 
     #[test]
     fn keys_of_several_images_depend_on_their_order() {
-        let ab = content_key(ResultKind::Progress, "S", None, &[input(b"a"), input(b"b")]);
-        let ba = content_key(ResultKind::Progress, "S", None, &[input(b"b"), input(b"a")]);
+        let ab = content_key(
+            ResultKind::Progress,
+            "S",
+            None,
+            &[input(b"a"), input(b"b")],
+            None,
+        );
+        let ba = content_key(
+            ResultKind::Progress,
+            "S",
+            None,
+            &[input(b"b"), input(b"a")],
+            None,
+        );
         assert_ne!(ab, ba);
     }
 }

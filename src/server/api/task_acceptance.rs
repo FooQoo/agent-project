@@ -30,14 +30,23 @@ pub(super) async fn set_acceptance(
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct PublicationInput {
-    published: String,
-    link: String,
+    /// A version name: the body records a publication (`link` required). Without it the body
+    /// delivers a result, optionally against a result plan.
+    published: Option<String>,
+    link: Option<String>,
+    /// Required, except that a delivery against `plan` defaults to the plan's content.
+    #[serde(default)]
     summary: String,
     title: Option<String>,
     key: Option<String>,
+    /// A result plan ID (`RP-<n>`) of the task this result delivers.
+    plan: Option<String>,
+    /// Marks the result final (implied by a final plan).
+    #[serde(default, rename = "final")]
+    is_final: bool,
 }
 
-/// `POST .../tasks/{id}/results`: record a publication result and answer
+/// `POST .../tasks/{id}/results`: record a publication or a delivery of a plan and answer
 /// `{task, result, created}`; `created` is false when the same record already existed.
 pub(super) async fn record_publication(
     headers: HeaderMap,
@@ -58,13 +67,18 @@ pub(super) async fn record_publication(
             &project_id,
             id,
             ResultInput {
-                kind: ResultKind::Progress,
+                kind: if input.is_final {
+                    ResultKind::Final
+                } else {
+                    ResultKind::Progress
+                },
                 title: input.title,
                 summary: input.summary,
-                link: Some(input.link),
+                link: input.link,
                 images: Vec::new(),
                 key: input.key,
-                published: Some(input.published),
+                published: input.published,
+                plan: input.plan,
             },
             crate::clock::now(),
         )

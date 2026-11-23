@@ -48,6 +48,17 @@ pub enum AgpjError {
     TaskNotFound {
         id: i64,
     },
+    /// `result add --plan` names a plan the task does not have.
+    ResultPlanNotFound {
+        id: i64,
+        plan: String,
+    },
+    /// `result add --plan` names a plan that a saved result already delivers.
+    ResultPlanDelivered {
+        id: i64,
+        plan: String,
+        version: u32,
+    },
     TaskArchived {
         id: i64,
     },

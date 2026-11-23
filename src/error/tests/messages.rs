@@ -20,6 +20,14 @@ fn messages_and_reasons_follow_the_design_table() {
             "No task has ID 7. Run \"agpj ls\" to see the tasks.",
         ),
         (
+            "task #7 has no result plan RP-9.",
+            "Run \"agpj show 7 --json\" and use an ID from resultPlans.",
+        ),
+        (
+            "result plan RP-1 of task #7 is already delivered by result v2.",
+            "Pick a plan whose deliveredResultVersion is null, or record the result without --plan.",
+        ),
+        (
             "unexpected argument '--x'",
             "Run \"agpj add --help\" for usage.",
         ),

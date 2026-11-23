@@ -47,9 +47,9 @@ fn plans_get_stable_ids_when_the_task_is_created_and_survive_a_start() {
     assert_eq!(code, 0, "{err}");
 
     let expected = json!([
-        {"id": "RP-1", "content": "A screenshot of the layout", "condition": "When the layout is fixed", "final": false},
-        {"id": "RP-2", "content": "The working endpoint", "condition": "When the endpoint answers its first request", "final": false},
-        {"id": "RP-3", "content": "The finished report", "condition": "When every condition is met", "final": true},
+        {"id": "RP-1", "content": "A screenshot of the layout", "condition": "When the layout is fixed", "final": false, "deliveredResultVersion": null},
+        {"id": "RP-2", "content": "The working endpoint", "condition": "When the endpoint answers its first request", "final": false, "deliveredResultVersion": null},
+        {"id": "RP-3", "content": "The finished report", "condition": "When every condition is met", "final": true, "deliveredResultVersion": null},
     ]);
     let created = show(home.path(), "2");
     assert_eq!(plans(&created), expected);
@@ -85,7 +85,7 @@ fn a_task_can_have_only_a_final_plan_or_none_at_all() {
     assert_eq!(add(home.path(), only_final).0, 0);
     assert_eq!(
         plans(&show(home.path(), "2")),
-        json!([{"id": "RP-7", "content": "The report", "condition": "When done", "final": true}]),
+        json!([{"id": "RP-7", "content": "The report", "condition": "When done", "final": true, "deliveredResultVersion": null}]),
         "a given ID is kept"
     );
     let only_intermediate = "---\nresultPlans:\n  - content: A\n    condition: B\n---\n\nBody.\n";

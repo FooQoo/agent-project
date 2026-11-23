@@ -10,6 +10,8 @@ impl AgpjError {
             AgpjError::FolderUnbound { .. } => "folder_unbound",
             AgpjError::BoundProjectMissing { .. } => "bound_project_missing",
             AgpjError::TaskNotFound { .. } => "task_not_found",
+            AgpjError::ResultPlanNotFound { .. } => "result_plan_not_found",
+            AgpjError::ResultPlanDelivered { .. } => "result_plan_delivered",
             AgpjError::TaskArchived { .. } => "task_archived",
             AgpjError::TaskNotArchived { .. } => "task_not_archived",
             AgpjError::NoReleaseVersion => "no_release_version",
@@ -91,7 +93,10 @@ impl AgpjError {
             AgpjError::ProjectNameExists { .. } => 2,
             AgpjError::FolderBoundElsewhere { .. } => 2,
             AgpjError::FolderUnbound { .. } | AgpjError::BoundProjectMissing { .. } => 4,
-            AgpjError::TaskNotFound { .. } | AgpjError::MessageNotFound { .. } => 3,
+            AgpjError::TaskNotFound { .. }
+            | AgpjError::MessageNotFound { .. }
+            | AgpjError::ResultPlanNotFound { .. } => 3,
+            AgpjError::ResultPlanDelivered { .. } => 1,
             AgpjError::InvalidArgument { .. } | AgpjError::InvalidValue { .. } => 2,
             AgpjError::InvalidDomain => 2,
             AgpjError::InvalidStateForAssignee => 2,
