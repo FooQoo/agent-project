@@ -35,12 +35,12 @@ pnpm --dir web build               # required before cargo build
 cargo build
 cargo fmt --all -- --check
 cargo clippy --all-targets -- -D warnings
-TZ=UTC cargo nextest run
+cargo nextest run
 pnpm --dir web typecheck
 pnpm --dir web check
-TZ=UTC pnpm --dir web test
+pnpm --dir web test
 pnpm --dir web typecheck:storybook
-TZ=UTC pnpm --dir web test:storybook
+pnpm --dir web test:storybook
 pnpm --dir web build-storybook
 ```
 
@@ -64,11 +64,11 @@ Wait for CodeRabbit before you merge. A Major or Critical finding makes it reque
 
 Check that the Rust and web jobs pass before you merge, and run `pnpm --dir e2e test` locally when the change affects the app. When the E2E job fails, its traces are attached to the run as the `e2e-results-<shard>` artifact of the shard that failed.
 
-The Rust tests run with [cargo-nextest](https://nexte.st/) (`cargo install cargo-nextest --locked`). Each test runs in its own process, and `.config/nextest.toml` stops a test that runs longer than two minutes. `TZ=UTC cargo test` still works, but it runs each test binary's tests in one process and has no time limit.
+The Rust tests run with [cargo-nextest](https://nexte.st/) (`cargo install cargo-nextest --locked`). Each test runs in its own process, and `.config/nextest.toml` stops a test that runs longer than two minutes. `cargo test` still works, but it runs each test binary's tests in one process and has no time limit.
 
 Rules for tests:
 
-- Set `TZ=UTC` so displayed times are fixed.
+- Do not depend on the machine's time zone, so no `TZ` prefix is needed. The web tests run in UTC (set in `web/vite.config.ts` and `web/vitest.storybook.config.ts`, which also set the browser time zone for Stories). A Rust test of local time formats through a function that takes the zone, not through the machine's zone.
 - Never use the default data area: each test sets `AGPJ_HOME` to a temporary directory.
 - A test that runs the `agpj` binary sets `AGPJ_AUTOSTART=0`, so that a wait or the hook does not start a server by itself, and `AGPJ_OPEN_BROWSER=0`, so that nothing opens a browser. The Playwright config sets both for the whole suite. A test of autostart itself leaves `AGPJ_AUTOSTART` unset and sets `AGPJ_AUTOSTART_PORT=0`, and stops every server it started. A test that runs `setup remote` or `show remote` sets `AGPJ_KEYCHAIN=none`, so that the OS keychain is never read or written. A test of opening the board points `AGPJ_BROWSER_OPENER` at a script that records the address, as `tests/open_board.rs` does; no test opens a real browser.
 - A test that starts `agpj serve` sets `AGPJ_WATCH=poll`, and an embedded server is started with `server::run_until_in` and `WatchMode::Poll`. Only `tests/file_watch.rs` uses the platform's file events.

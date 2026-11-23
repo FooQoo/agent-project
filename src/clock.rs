@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, NaiveDateTime, Utc};
+use chrono::{DateTime, Local, NaiveDateTime, TimeZone, Utc};
 
 pub trait Clock {
     fn now(&self) -> DateTime<Utc>;
@@ -36,7 +36,16 @@ pub fn parse_utc(s: &str) -> Result<DateTime<Utc>, chrono::ParseError> {
 
 /// Format in the local time zone as `MM/DD HH:mm`, e.g. `10/02 10:08`.
 pub fn format_local_short(dt: DateTime<Utc>) -> String {
-    dt.with_timezone(&Local).format("%m/%d %H:%M").to_string()
+    format_short_in(dt, &Local)
+}
+
+/// Format in the given time zone as `MM/DD HH:mm`. Tests pass a fixed zone.
+fn format_short_in<Tz>(dt: DateTime<Utc>, tz: &Tz) -> String
+where
+    Tz: TimeZone,
+    Tz::Offset: std::fmt::Display,
+{
+    dt.with_timezone(tz).format("%m/%d %H:%M").to_string()
 }
 
 /// serde adapter: `#[serde(with = "agent_project::clock::serde_utc")]`.
@@ -126,8 +135,9 @@ mod tests {
 
     #[test]
     fn local_short_formats_month_day_hour_minute() {
-        // Tests run with TZ=UTC (see RUNTIME.md).
-        assert_eq!(format_local_short(sample()), "10/02 01:08");
+        assert_eq!(format_short_in(sample(), &Utc), "10/02 01:08");
+        let tokyo = chrono::FixedOffset::east_opt(9 * 3600).unwrap();
+        assert_eq!(format_short_in(sample(), &tokyo), "10/02 10:08");
     }
 
     #[test]

@@ -94,7 +94,7 @@ Storybookでは、UI部品とページ全体を架空のデータで表示でき
 just storybook
 pnpm --dir web build-storybook
 pnpm --dir web typecheck:storybook
-TZ=UTC pnpm --dir web test:storybook
+pnpm --dir web test:storybook
 ```
 
 - `storybook`は開発サーバーを`http://127.0.0.1:8610/`で起動します。
