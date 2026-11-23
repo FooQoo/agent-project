@@ -103,7 +103,7 @@ landing:
           - A task open in the bottom drawer of remote access, on its Conditions tab
       - image: docs
         title: Project docs
-        text: Open your project's design notes and specs right from the Kanban board. Releases keep their own record too. Each version gets a release document that lists the work planned for it, the work verified, and the work left.
+        text: Read your project's design notes and specs. Releases keep their own record too. Each version gets a release document that lists the work planned for it, the work verified, and the work left.
         link: { text: Project docs, link: /guide/watch/docs }
         preview: /guide/feature-stages#docs
         alt: The Docs dialog with a file list and a rendered Markdown document
