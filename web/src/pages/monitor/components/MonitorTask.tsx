@@ -32,11 +32,12 @@ export function MonitorTask({
         : task.agentStatusChangedAt;
   // Keep the AI run state visible within active lanes; lane position and run state answer different questions.
   const showsState = task.assignee === 'ai' && (section !== 'done' || task.awaitingAnswer);
-  const pending = showsState && task.awaitingAnswer;
+  // Waiting for an answer is shown on any task that refers to an open question, human-owned ones included.
+  const pending = task.awaitingAnswer;
   const label = [
     `#${task.id}`,
     t(`monitor.status.${section}`),
-    showsState ? t(pending ? 'runState.awaitingAnswer' : `runState.${task.agentStatus}`) : '',
+    pending ? t('runState.awaitingAnswer') : showsState ? t(`runState.${task.agentStatus}`) : '',
     task.title,
     pending ? task.pendingReason : '',
   ]
@@ -57,7 +58,7 @@ export function MonitorTask({
           {task.taskStatus === 'backlog' && (task.openQuestionIds?.length ?? 0) > 0 && (
             <span className="card__open-question">{t('backlog.openQuestion')}</span>
           )}
-          {showsState && (
+          {(showsState || pending) && (
             <StatusLabel
               kind="agent"
               status={task.agentStatus}
