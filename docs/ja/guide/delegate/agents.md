@@ -29,7 +29,7 @@ agpj setup
 ### setupが変更するもの
 
 - **データフォルダ。** データフォルダと、その中の`shared`フォルダを作成します（[データとバックアップ](../operations/data)を参照）。
-- **プラグイン。** エージェント自身のプラグインコマンドで導入します。マーケットプレイスは、`agpj`の版のタグを指定したAgent Projectのリポジトリなので、プラグインは常にコマンドと同じ版になります。Codexでは`codex plugin marketplace add https://github.com/FooQoo/agent-project.git --ref vX.Y.Z`と`codex plugin add agent-project@agent-project`を、Claude Codeでは`claude plugin marketplace add https://github.com/FooQoo/agent-project.git#vX.Y.Z`と`claude plugin install agent-project@agent-project`を実行します。同じ版のプラグインが導入済みなら、何も導入しません。
+- **プラグイン。** エージェント自身のプラグインコマンドで導入します。マーケットプレイスは、`agpj`のバージョンのタグを指定したAgent Projectのリポジトリなので、プラグインは常にコマンドと同じバージョンになります。Codexでは`codex plugin marketplace add https://github.com/FooQoo/agent-project.git --ref vX.Y.Z`と`codex plugin add agent-project@agent-project`を、Claude Codeでは`claude plugin marketplace add https://github.com/FooQoo/agent-project.git#vX.Y.Z`と`claude plugin install agent-project@agent-project`を実行します。同じバージョンのプラグインが導入済みなら、何も導入しません。
 - **共有フォルダへのアクセス。** Claude Codeでは、`~/.claude/settings.json`の`permissions.additionalDirectories`にデータフォルダを追加します。Codexでは、`~/.codex/config.toml`の`sandbox_workspace_write.writable_roots`に追加します。これが効くのは`sandbox_mode = "workspace-write"`のときだけです。ほかのモードや権限プロファイルを使っているときは、ファイルをそのままにして、自分で行う手順を表示します。サンドボックスのモードを変えることはありません。`danger-full-access`では何も必要ないので、何も書き込みません。
 - **Codexでのagpjコマンド。** Codexが毎回確認せずに`agpj`を実行できるよう、`~/.codex/rules/agpj.rules`に`prefix_rule(pattern=["agpj"], decision="allow")`を書き込みます。すでにあるファイルはそのまま残します。`danger-full-access`では書き込みません。
 - **CodexのHookの信頼。** Codexは、信頼済みのプラグインのHookだけを実行します。あなたが同意すると、setupはCodex自身の仕組みでAgent ProjectのHookを信頼済みにします。ほかのHookには触れません。
@@ -44,7 +44,7 @@ agpj setup
 
 ### プラグインを更新する {#update-the-plugin}
 
-`brew upgrade fooqoo/tap/agpj`のあと、プラグインは自分で更新されます。新しいエージェントのセッションが始まると、Hookが、エージェントが実行しているプラグインと、`agpj`が同梱するプラグインを比べます。違うときは、`agpj`の版のタグからプラグインをバックグラウンドで入れ直し、エージェントがそのことを知らせます。新しいプラグインは、次のセッションから有効になります。何も尋ねません。Codexでは、更新がAgent Projectのhookも信頼済みにしますが、導入した定義が`agpj`の同梱するものと完全に同じときだけです。`agpj setup`での同意は、Agent Project自身のhookを信頼することを含みます。変わった定義や未知の定義は信頼しません。これは`agpj update`と同じ入れ直しなので、自分で実行することもでき、次の場合には必要です。
+`brew upgrade fooqoo/tap/agpj`のあと、プラグインは自分で更新されます。新しいエージェントのセッションが始まると、Hookが、エージェントが実行しているプラグインと、`agpj`が同梱するプラグインを比べます。違うときは、`agpj`のバージョンのタグからプラグインをバックグラウンドで入れ直し、エージェントがそのことを知らせます。新しいプラグインは、次のセッションから有効になります。何も尋ねません。Codexでは、更新がAgent Projectのhookも信頼済みにしますが、導入した定義が`agpj`の同梱するものと完全に同じときだけです。`agpj setup`での同意は、Agent Project自身のhookを信頼することを含みます。変わった定義や未知の定義は信頼しません。これは`agpj update`と同じ入れ直しなので、自分で実行することもでき、次の場合には必要です。
 
 - **Codexで、hookの定義が`agpj`の同梱するものと違うとき。** Codexはプラグインのhookを、信頼したものだけ実行します。信頼はhookの定義に結び付きます。定義が変わることはまれで、自動更新が信頼するのは`agpj`が同梱する定義だけです。導入された定義が違うと何も信頼せず、エージェントが知らせるので、一度`agpj update`を実行してください（`setup`と同じ質問をします）。
 - **自動更新が終わらなかったとき。** エージェントが、完了しなかったこと（たとえばGitHubに届かない）を知らせます。更新は6時間やり直しません。いま試すには`agpj update`を実行します。
@@ -57,7 +57,7 @@ agpj update
 agpj update --yes
 ```
 
-`update`は、プラグインが導入されたすべてのエージェントを対象にします。`--agent`で1つに絞れます。マーケットプレイスを新しい版のタグに移し、新しいプラグインを導入し、新しいCodexのHookを信頼し直します。`setup`と同じように計画を表示して確認します。`--yes`はあらかじめ同意し、`--dry-run`は計画だけを表示します。設定ファイルは変更しません。プラグインがないエージェントは、`agpj setup`を実行するよう示して飛ばします。
+`update`は、プラグインが導入されたすべてのエージェントを対象にします。`--agent`で1つに絞れます。マーケットプレイスを新しいバージョンのタグに移し、新しいプラグインを導入し、新しいCodexのHookを信頼し直します。`setup`と同じように計画を表示して確認します。`--yes`はあらかじめ同意し、`--dry-run`は計画だけを表示します。設定ファイルは変更しません。プラグインがないエージェントは、`agpj setup`を実行するよう示して飛ばします。
 
 
 ### Hookが行うこと

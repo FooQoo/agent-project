@@ -36,7 +36,7 @@ pub fn plan_change_of(record: &HistoryRecord) -> Option<PlanChange> {
         let (from, to) = rest.split_once(" to ")?;
         (from, to)
     } else if let Some(rest) = reason
-        .strip_prefix("リリース予定の版を")
+        .strip_prefix("リリース予定のバージョンを")
         .and_then(|r| r.strip_suffix("に変更しました。"))
     {
         rest.split_once("から")?
@@ -236,7 +236,10 @@ mod tests {
             (en.from.as_deref(), en.to.as_deref()),
             (Some("v1"), Some("v2"))
         );
-        let ja = plan_change_of(&record("リリース予定の版をv1からなしに変更しました。")).unwrap();
+        let ja = plan_change_of(&record(
+            "リリース予定のバージョンをv1からなしに変更しました。",
+        ))
+        .unwrap();
         assert_eq!((ja.from.as_deref(), ja.to), (Some("v1"), None));
         assert!(plan_change_of(&record("Something else.")).is_none());
     }
