@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { formatShort } from '../../../features/tasks/model/format';
+import { formatShort, stateLabel } from '../../../features/tasks/model/format';
 import { TaskCardContent, waitsOnQuestion } from '../../../features/tasks/card/TaskCard';
 import { StatusLabel } from '../../../features/tasks/status/StatusLabel';
 import { AcceptanceProgress } from '../../../features/tasks/acceptance/AcceptanceProgress';
 import { DecisionAnswerButton } from '../../../features/tasks/answer/DecisionAnswerButton';
+import { AssigneeLabel } from '../../../features/tasks/assignee/AssigneeLabel';
 import { EpicLabel } from '../../../features/epics/label/EpicLabel';
 import { PlanTag } from '../../../features/versions/ui/PlanContext';
 import type { MonitorTask as MonitorTaskModel, MonitorViewProps } from '../contracts';
@@ -30,14 +31,14 @@ export function MonitorTask({
       : section === 'todo'
         ? task.createdAt
         : task.agentStatusChangedAt;
-  // Keep the AI run state visible within active lanes; lane position and run state answer different questions.
-  const showsState = task.assignee === 'ai' && (section !== 'done' || task.awaitingAnswer);
-  // Waiting for an answer is shown on any task that refers to an open question, human-owned ones included.
+  // The PC board and the phone share one rule for the state label (stateLabel).
+  const state = stateLabel(task, t);
+  const showsState = state !== null && !task.awaitingAnswer;
   const pending = task.awaitingAnswer;
   const label = [
     `#${task.id}`,
     t(`monitor.status.${section}`),
-    pending ? t('runState.awaitingAnswer') : showsState ? t(`runState.${task.agentStatus}`) : '',
+    state ?? '',
     task.title,
     pending ? task.pendingReason : '',
   ]
@@ -54,11 +55,12 @@ export function MonitorTask({
       <span className="monitor-card__top">
         {/* The guide's sample cards have no number of their own; the span keeps the row's layout. */}
         <span className="monitor-card__id">{task.id > 0 ? `#${task.id}` : ''}</span>
+        <AssigneeLabel assignee={task.assignee} />
         <span className="monitor-card__indicators">
           {task.taskStatus === 'backlog' && (task.openQuestionIds?.length ?? 0) > 0 && (
             <span className="card__open-question">{t('backlog.openQuestion')}</span>
           )}
-          {(showsState || pending) && (
+          {state !== null && (
             <StatusLabel
               kind="agent"
               status={task.agentStatus}

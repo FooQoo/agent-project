@@ -66,9 +66,12 @@ describe('MonitorView', () => {
     expect(within(pendingTask).queryByRole('textbox')).toBeNull();
     expect(within(pendingTask).queryByRole('button', { name: 'Send' })).toBeNull();
     expect(pendingTask.getAttribute('data-awaiting-answer')).toBe('true');
-    const idleTodo = screen.getByRole('article', { name: /^#1 Todo Idle / });
-    expect(idleTodo.getAttribute('data-agent-status')).toBe('idle');
-    expect(idleTodo.querySelector('.status-label')?.textContent).toBe('Idle');
+    // Only cards in Doing show a run state; a Todo card shows none.
+    const idleTodo = screen.getByRole('article', { name: /^#1 Todo Task/ });
+    expect(idleTodo.getAttribute('data-agent-status')).toBeNull();
+    expect(idleTodo.querySelector('.status-label')).toBeNull();
+    // Every card shows who owns it, as on the PC board.
+    expect(within(idleTodo).getByRole('img', { name: 'AI' })).toBeTruthy();
     const idleDoing = screen.getByRole('article', { name: /^#5 Doing Idle / });
     expect(idleDoing.getAttribute('data-agent-status')).toBe('idle');
     expect(idleDoing.querySelector('.status-label')?.textContent).toBe('Idle');
