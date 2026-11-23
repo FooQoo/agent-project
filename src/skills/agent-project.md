@@ -60,7 +60,7 @@ When a request needs more than one task, run `agpj skills planning` before you r
 
 ## 5. Lanes and run states
 
-Lanes are `backlog`, `todo`, `doing`, and `done`. You never take work from `backlog`: only a person sends it to `todo`. Run states are `idle`, `running`, and `paused` (in Doing, the run stopped):
+Lanes are `backlog`, `todo`, `doing`, and `done`. You never take work from `backlog`: it reaches `todo` only by a send (`mv <id> todo`, `epic send`), which you make only when the user explicitly tells you to (for example, "start it" in the chat), never on your own judgment. Run states are `idle`, `running`, and `paused` (in Doing, the run stopped):
 
 | Owner | Lane | Allowed run state |
 | --- | --- | --- |
