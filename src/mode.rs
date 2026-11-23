@@ -37,7 +37,7 @@ impl ModeKind {
         }
     }
 
-    fn parse(text: &str) -> Option<ModeKind> {
+    pub fn parse(text: &str) -> Option<ModeKind> {
         match text {
             "sparring" => Some(ModeKind::Sparring),
             "sleep" => Some(ModeKind::Sleep),
@@ -93,25 +93,44 @@ fn read_projects(data_dir: &Path) -> Map<String, Value> {
     }
 }
 
-/// The saved mode of a project. A missing, invalid, or unknown entry is sparring.
-pub fn load(data_dir: &Path, project: &str) -> ProjectMode {
-    let projects = read_projects(data_dir);
-    let Some(entry) = projects.get(project) else {
-        return ProjectMode::default();
-    };
-    let Some(kind) = entry
+fn parse_entry(entry: &Value) -> Option<ProjectMode> {
+    let kind = entry
         .get("kind")
         .and_then(Value::as_str)
-        .and_then(ModeKind::parse)
-    else {
-        return ProjectMode::default();
-    };
+        .and_then(ModeKind::parse)?;
     let since = entry
         .get("since")
         .and_then(Value::as_str)
         .and_then(|text| DateTime::parse_from_rfc3339(text).ok())
         .map(|time| time.with_timezone(&Utc));
-    ProjectMode { kind, since }
+    Some(ProjectMode { kind, since })
+}
+
+/// The saved mode of a project. A missing, invalid, or unknown entry is sparring.
+pub fn load(data_dir: &Path, project: &str) -> ProjectMode {
+    read_projects(data_dir)
+        .get(project)
+        .and_then(parse_entry)
+        .unwrap_or_default()
+}
+
+/// Every project that has a saved, valid mode entry, for the board's change stream.
+pub fn load_all(data_dir: &Path) -> std::collections::BTreeMap<String, ProjectMode> {
+    read_projects(data_dir)
+        .iter()
+        .filter_map(|(id, entry)| parse_entry(entry).map(|mode| (id.clone(), mode)))
+        .collect()
+}
+
+impl ProjectMode {
+    /// The JSON the board's API and event stream carry: `{"mode": "sleep", "since": "…"}`.
+    pub fn api_json(&self) -> Value {
+        let mut body = json!({"mode": self.kind.as_str()});
+        if let Some(since) = self.since {
+            body["since"] = Value::String(crate::clock::format_utc(since));
+        }
+        body
+    }
 }
 
 /// The saved kind of a project.

@@ -35,6 +35,7 @@ export interface ConnectionOptions {
   /** The build ID of the `ready` event. */
   onReady?(build: string): void;
   onPreferences?(payload: unknown): void;
+  onMode?(payload: unknown): void;
   onState?(state: ConnectionState): void;
   visibility?: VisibilitySource;
   heartbeatMs?: number;
@@ -122,6 +123,11 @@ export class EventConnection {
         if (generation !== this.generation) return;
         this.armHeartbeat();
         this.options.onPreferences?.(payload);
+      },
+      onMode: (payload) => {
+        if (generation !== this.generation) return;
+        this.armHeartbeat();
+        this.options.onMode?.(payload);
       },
       onClose: live(() => this.fail()),
     });

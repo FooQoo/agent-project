@@ -5,6 +5,7 @@ import type { PreferencesEndpoint } from '../../shared/preferences';
 import type { SettingsSlotState } from '../../shared/ui/app-header/Header';
 import { TutorialEntryRow } from '../onboarding/TutorialEntryRow';
 import { requestTutorial } from '../onboarding/tutorialRequest';
+import { ModeSettingsSection } from '../modeSlot';
 import { NotificationSettingsRow } from '../notificationSlot';
 import { ResidentSettingsRow } from '../residentSlot';
 
@@ -38,6 +39,7 @@ export function PhoneSettings({
       kind="sheet"
       extra={
         <>
+          <ModeSettingsSection projectId={projectId} />
           <div className="settings__entries">
             <TutorialEntryRow
               onStart={() => {

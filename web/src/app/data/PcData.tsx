@@ -2,6 +2,7 @@ import { createContext, type ReactNode, useCallback, useContext, useMemo, useSta
 import { applyPreferenceEvent, syncPreferences } from '../../shared/preferences';
 import type { ConnectionState } from '../../shared/data/core';
 import { DataProvider } from '../../shared/data/react';
+import { applyModeEvent, refreshModes } from '../../features/project-mode/store';
 import { createPcAdapter, type PcAdapter } from './pcAdapter';
 
 export interface PcConnection {
@@ -36,11 +37,15 @@ export function PcDataProvider({
   const onReady = useCallback((build: string) => {
     setServerBuild(build === '' ? null : build);
     // A save made while the stream was down is read again.
-    if (import.meta.env.MODE !== 'mock' && import.meta.env.MODE !== 'demo')
+    if (import.meta.env.MODE !== 'mock' && import.meta.env.MODE !== 'demo') {
       void syncPreferences({ url: '/api/preferences' });
+      // A mode changed while the stream was down is read again.
+      refreshModes();
+    }
   }, []);
   // The saved language and theme are shown at once; the board is not read again for them.
   const onPreferences = useCallback((event: unknown) => applyPreferenceEvent(event as Event), []);
+  const onMode = useCallback((event: unknown) => applyModeEvent(event), []);
   const onConnectionState = useCallback(
     (state: ConnectionState) => setStreamDown(state === 'disconnected'),
     [],
@@ -55,6 +60,7 @@ export function PcDataProvider({
       adapter={adapter}
       onReady={onReady}
       onPreferences={onPreferences}
+      onMode={onMode}
       onConnectionState={onConnectionState}
     >
       <Context.Provider value={value}>{children}</Context.Provider>

@@ -1,6 +1,8 @@
 //! `GET` and `PUT /api/preferences`: the saved language and color theme on the
 //! PC board. The write guard in `api` checks each `PUT` first.
 
+mod mode;
+
 use std::sync::Arc;
 
 use axum::Router;
@@ -25,9 +27,10 @@ pub(super) async fn put_preferences(
     http::save(&state.preferences, &state.preferences_changed, body)
 }
 
-/// The routes of the two saved settings: the display preferences and the phone notifications.
+/// The routes of the saved settings: the display preferences, the phone notifications, and the project mode.
 pub(super) fn routes() -> Router<Arc<AppState>> {
     Router::new()
+        .merge(mode::routes())
         .route(
             "/api/preferences",
             get(get_preferences).put(put_preferences),

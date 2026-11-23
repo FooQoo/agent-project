@@ -187,6 +187,12 @@ Below the themes, four rows open other features. Each has an icon, a title, one 
 
 The dialog has a language switch and a grid of themes: one row of 12 light colors and one row of 12 dark colors. On a narrow window the button of each row moves under its description.
 
+### Mode {#mode}
+
+The settings dialog has a **Mode** switch for the project on the board, with two options: **Sparring** and **Sleep**. Both options are the same size. Sparring is the default: the agent listens and asks you on the board when it needs an answer. Sleep stops the questions: the agent keeps working and decides in your place, and each decision is recorded on the task's history (see [Sleep mode](../delegate/agents#sleep-mode)).
+
+While the project is asleep, a **Sleep** chip with a moon icon shows in the header, on the PC and on the phone, so you notice it. The switch and the chip follow `agpj mode`: when the agent or you change the mode with the command, an open board shows it within a few seconds, without a reload. The mode belongs to you, not to the project's shared files, and is saved per project on this computer. A phone that opened the board through the remote entrance can switch it too.
+
 ### Notifications {#phone-notifications}
 
 Choose which notifications the phone gets, turn them on or off, and read what each kind opens in [Notifications in the app](./remote-access.md#notifications).

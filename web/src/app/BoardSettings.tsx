@@ -6,6 +6,7 @@ import { SettingsDialog } from '../features/settings/ui/SettingsDialog';
 import { csrfHeaders, readToken } from '../shared/api/http';
 import { TutorialEntryRow } from './onboarding/TutorialEntryRow';
 import { requestTutorial } from './onboarding/tutorialRequest';
+import { ModeSettingsSection } from './modeSlot';
 import { NotificationSettingsRow } from './notificationSlot';
 import { ResidentSettingsRow } from './residentSlot';
 import { usesRemoteSession } from './remote/session';
@@ -43,6 +44,7 @@ export function BoardSettings({ open, onOpenChange, restoreFocusRef }: SettingsS
         preferencesEndpoint={boardPreferences}
         extra={
           <>
+            <ModeSettingsSection projectId={projectId} />
             <div className="settings__entries">
               <TutorialEntryRow
                 onStart={() => {
