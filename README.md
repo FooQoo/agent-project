@@ -8,7 +8,7 @@
 
 **Big work moves on without you driving it.**
 
-When you build a product on your own, you can talk an idea through in your usual AI chat. Once you know what you want to try, ask Codex or Claude Code to plan the work on the Agent Project board. Your agent works through the plan and checks the result against the agreed conditions. You can use what you learn to choose your next test, with less time spent managing each one.
+Agent Project lets you hand off substantial work to Codex or Claude Code, from plan to verification, when you’re building a product on your own. The plan and its progress sit on the Kanban board, and the questions that need your decision arrive in Messages. With these two, the project moves without you watching over it.
 
 ```sh
 brew install fooqoo/tap/agpj
@@ -28,7 +28,7 @@ brew install fooqoo/tap/agpj
 
 An AI agent can take on big work, but a long job still needs someone to drive it. The agent wanders, stops, or calls the work done too early, and you end up writing the plan, catching the question buried in the log, explaining the work again in the next session, and checking at the end that it is really done.
 
-Agent Project gives the agent the project management it lacks, so the work moves on without you driving it. It sits alongside your agent, such as Claude Code or Codex, and does not run it. The board holds four things that agent and person both read and write:
+Agent Project gives the agent the project management it lacks, so the work moves on without you driving it. It sits alongside your agent, such as Claude Code or Codex, and does not run it. It keeps four things that agent and person both read and write:
 
 - **A plan in order.** The goal is broken into epics and tasks, and the progress table tells the agent what can move next.
 - **A definition of done.** Each task has acceptance conditions, set before the work starts.
@@ -48,21 +48,22 @@ To see it for yourself, [try the demo](https://fooqoo.github.io/agent-project/de
 ## How delegation works
 
 1. **Ask AI to plan.** Tell your agent what you want, in plain words.
-2. **It plans.** The agent puts an epic and its tasks on the board, each task with acceptance conditions, and asks the questions it cannot settle itself.
-3. **You approve the start.** You answer, and the plan goes to Todo. A plan that asks only for planning waits in the Backlog until you send it; a request to carry out the work goes straight to Todo. A task does not start while a question linked to it is open.
+2. **It plans.** The agent puts an epic and its tasks in Backlog, each task with acceptance conditions, and asks the questions it cannot settle itself.
+3. **Start it.** Move the plan from Backlog to Todo, and the agent starts working. Until you do, the agent leaves the plan alone. When you ask for the work itself rather than a plan, the tasks go straight to Todo.
 4. **You answer on the way.** The agent works through the tasks in order and stops for you only when your intent is unclear, your preference decides it, an action cannot be undone, or the work grows beyond what you asked.
 5. **You receive the result.** When the agent has verified every acceptance condition of a task and nothing is waiting on you, the task moves to Done by itself, and what was done and decided stays in its history and results.
 
 You take part in two ways. When the agent stops to ask, you answer wherever is easiest, and the answer is recorded once (human in the loop). While it works, you can watch, move a card back, check a condition, or rewrite a plan without stopping it, and the agent follows the change (human on the loop). See [The work model](https://fooqoo.github.io/agent-project/guide/work-model) and the [Quickstart](https://fooqoo.github.io/agent-project/guide/quickstart).
 
-## Monitors for the work
+## The Kanban board and Messages
 
-The board is one monitor for the work, not the whole of it. A monitor is a place to watch, answer, and step in.
+Agent Project has two main screens: the Kanban board and Messages. Watch the work on the Kanban board and answer the agent in Messages. With these two, the project moves on.
 
-- **The board.** Watch the work move through Todo, Doing, and Done. Step in on a card without stopping the agent, and answer questions right on the task. [Using the board](https://fooqoo.github.io/agent-project/guide/watch/board)
+- **The Kanban board.** The plan and the work sit in the Backlog, Todo, Doing, and Done lanes. You see at a glance how far it has come and which task is stuck, and you can step in on a card without stopping the agent. [Using the Kanban board](https://fooqoo.github.io/agent-project/guide/watch/board)
+- **Messages.** The agent's questions and your requests gather in one place. Pick an option to answer, and the agent takes your answer and carries on. [Decisions](https://fooqoo.github.io/agent-project/guide/delegate/decisions)
 - **Epics and progress.** An epic holds the plan and the order of its tasks, and the progress table returns the work that can move next to your agent. [Epics and progress](https://fooqoo.github.io/agent-project/guide/watch/epics)
-- **Check from anywhere.** Away from your desk, watch the work and answer the agent from your phone or tablet with remote access. [Remote access](https://fooqoo.github.io/agent-project/guide/watch/remote-access)
-- **Project docs.** Open the design notes and specs in your project's `docs/` folder right from the board. In public preview. [Project docs](https://fooqoo.github.io/agent-project/guide/watch/docs)
+- **Check from anywhere.** Away from your desk, open the Kanban board and Messages on your phone or tablet with remote access, watch the work, and answer the agent. [Remote access](https://fooqoo.github.io/agent-project/guide/watch/remote-access)
+- **Project docs.** Open the design notes and specs in your project's `docs/` folder right from the Kanban board. In public preview. [Project docs](https://fooqoo.github.io/agent-project/guide/watch/docs)
 
 You can also answer in the chat with your agent, and the `agpj` command is what the agent and your scripts use. Plans and results are Markdown files on your machine (`EPIC.md` and `TASK.md`), with acceptance conditions and history in the frontmatter.
 

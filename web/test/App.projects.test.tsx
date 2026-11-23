@@ -923,7 +923,7 @@ describe('Japanese state screens use the approved texts', () => {
     const gate = deferred();
     backend.gate = (url) => (url.endsWith('/summary') ? gate.promise : undefined);
     renderApp(urlOf(PROJECT_B.id));
-    expect(await screen.findByRole('status', { name: 'ボードを読み込み中…' })).toBeTruthy();
+    expect(await screen.findByRole('status', { name: 'カンバンを読み込み中…' })).toBeTruthy();
     expect(
       screen.getByText('読み込み中', { selector: '.status-bar__text .visually-hidden' }),
     ).toBeTruthy();
@@ -935,7 +935,7 @@ describe('Japanese state screens use the approved texts', () => {
     selectLocale('ja');
     backend.boards[PROJECT_B.id] = 500;
     renderApp(urlOf(PROJECT_B.id));
-    expect(await screen.findByText('ボードを読み込めませんでした')).toBeTruthy();
+    expect(await screen.findByText('カンバンを読み込めませんでした')).toBeTruthy();
     expect(
       screen.getByText('もう一度お試しください。別のプロジェクトにも切り替えられます。'),
     ).toBeTruthy();

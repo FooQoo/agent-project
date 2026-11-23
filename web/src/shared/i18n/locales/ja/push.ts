@@ -2,10 +2,10 @@
 export const pushJa = {
   push: {
     title: '通知',
-    offBody: 'ボードにあなた宛ての用件があるとき、このスマホに通知します。',
+    offBody: 'Agent Projectからの連絡を、このスマホで受け取れます。',
     onBody: 'このスマホへの通知はオンです。',
     deniedBody:
-      'このスマホでは通知がブロックされています。通知がなくてもボードは使えます。許可するには、設定アプリで Agent Project を選び、通知をオンにしてください。',
+      'このスマホでは通知がブロックされています。通知がなくてもAgent Projectは使えます。許可するには、設定アプリで Agent Project を選び、通知をオンにしてください。',
     needsDeviceBody:
       'このスマホはまだ登録されていません。PC に表示されたパスコードをもう一度入力して登録してから、通知をオンにしてください。',
     unsupportedIos:

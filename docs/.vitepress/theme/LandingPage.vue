@@ -18,6 +18,8 @@ import boardDark from '../../images/guide/board-dark.png'
 import boardDarkJa from '../../images/guide/board-dark.ja.png'
 import docs from '../../images/guide/docs.png'
 import docsJa from '../../images/guide/docs.ja.png'
+import messages from '../../images/guide/messages-list.png'
+import messagesJa from '../../images/guide/messages-list.ja.png'
 
 // The copy lives in the `landing` frontmatter of each language's index.md; this component only lays it out.
 type Link = { text: string; link: string }
@@ -43,8 +45,8 @@ const ja = computed(() => lang.value === 'ja')
 
 const images = computed(() =>
   ja.value
-    ? { board: boardJa, boardDark: boardDarkJa, epic: epicJa, docs: docsJa }
-    : { board, boardDark, epic, docs },
+    ? { board: boardJa, boardDark: boardDarkJa, messages: messagesJa, epic: epicJa, docs: docsJa }
+    : { board, boardDark, messages, epic, docs },
 )
 // The phone feature shows, from the left, the card list, a question being answered, and a task in the drawer.
 const phones = computed(() =>
@@ -60,7 +62,7 @@ const lines = (text: string) => text.split('\n')
 const laneTone = ['todo', 'doing', 'done']
 // The loop has four lanes: plan, start, work, and result.
 const loopTone = ['todo', 'todo', 'doing', 'done']
-const featureTone: Record<string, string> = { board: 'doing', epic: 'todo', mobile: 'pending', docs: 'done' }
+const featureTone: Record<string, string> = { board: 'doing', messages: 'pending', epic: 'todo', mobile: 'pending', docs: 'done' }
 
 // Copy a command and show the copied state briefly.
 const copied = ref('')

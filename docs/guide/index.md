@@ -10,7 +10,7 @@ import { withBase } from 'vitepress'
 
 <video class="demo-video" :src="withBase('/videos/demo.mp4')" :poster="withBase('/videos/demo.jpg')" autoplay muted loop playsinline></video>
 
-Agent Project lets big work move on without you driving it. You ask AI to plan the work with **Ask AI**, approve the start, and answer the decisions it raises along the way. You then receive results that were checked against the acceptance conditions: when every condition of a task is verified, the task moves to Done on its own.
+Agent Project lets big work move on without you driving it. You ask AI to plan the work with **Ask AI**, move the plan to Todo so the agent starts, and answer the decisions it raises along the way. You then receive results that were checked against the acceptance conditions: when every condition of a task is verified, the task moves to Done on its own.
 
 Want to see it for yourself? [Try the demo](https://fooqoo.github.io/agent-project/demo/) in your browser, with nothing to install. It opens the first-run guide on sample data, in Japanese when your browser prefers Japanese and in English otherwise. Reloading the page starts it over.
 
@@ -37,14 +37,14 @@ You do not write the plan. You ask, and the agent does the planning on the board
 
 1. **Ask AI to plan.** Ask for what you want in your own words, with **Ask AI** on the board or in the agent's chat.
 2. **It plans.** The agent puts a plan on the board: an epic, and tasks in work order, each with acceptance conditions. It also asks the questions it cannot settle itself.
-3. **You approve the start.** You answer the questions, and the plan goes to Todo. A plan you asked for on its own waits in the Backlog until you send it; a request to carry out the work goes straight to Todo. A task does not start while a question linked to it is open.
+3. **Start it.** Move the plan from Backlog to Todo, and the agent starts working. Until you do, the agent leaves the plan alone. When you ask for the work itself rather than a plan, the tasks go straight to Todo.
 4. **You answer on the way.** The agent works through the tasks in order, records what it does, and decides everything else itself. It calls you in four cases: your intent is unclear, your preference decides it, an action cannot be undone, or the work grows beyond what you asked.
 5. **You receive the result.** When the agent has verified every acceptance condition of a task and nothing is waiting on you, the task moves to Done by itself, and what was done and decided stays in its history and results.
 
 ```mermaid
 flowchart LR
     R["You: ask AI to plan"] --> P["Agent: plan and questions"]
-    P --> A["You: answer and approve the start"]
+    P --> A["You: answer and start it"]
     A --> W["Agent: works in order"]
     W -- "unclear, preference, irreversible, bigger" --> Q["You: answer"]
     Q --> W

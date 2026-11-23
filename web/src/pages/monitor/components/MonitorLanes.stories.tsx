@@ -503,7 +503,7 @@ export const ArchiveFromBar: Story = {
     await expect(sheet.getAttribute('data-slot')).toBe('drawer-popup');
     await expect(within(sheet).getAllByRole('listitem')).toHaveLength(3);
     // Switching tabs closes it.
-    await userEvent.click(within(bar).getByRole('button', { name: 'ボード', hidden: true }));
+    await userEvent.click(within(bar).getByRole('button', { name: 'カンバン', hidden: true }));
     await waitFor(() => expect(within(document.body).queryByRole('dialog')).toBeNull());
   },
 };
@@ -618,7 +618,7 @@ export const BottomBar: Story = {
     const bar = within(canvasElement).getByRole('navigation', { name: '主なナビゲーション' });
     const items = within(bar).getAllByRole('button');
     await expect(items.map((item) => item.textContent?.replace(/^\d+/, ''))).toEqual([
-      'ボード',
+      'カンバン',
       'メッセージ',
       '依頼',
       'アーカイブ',

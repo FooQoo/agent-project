@@ -352,7 +352,7 @@ const noProjectPlay = (locale: 'en' | 'ja') => async () => {
   await expect(view.getByRole('status')).toBeInTheDocument();
   await expect(view.getByTestId('project-needed')).toHaveTextContent(
     locale === 'ja'
-      ? 'ボードでプロジェクトを選ぶと、QRコードとURLが表示されます。'
+      ? 'カンバンでプロジェクトを選ぶと、QRコードとURLが表示されます。'
       : 'Select a project on the board to show its QR code and URL.',
   );
   await expect(view.queryByRole('img', { name: /QR code/ })).toBeNull();

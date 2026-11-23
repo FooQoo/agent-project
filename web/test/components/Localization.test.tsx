@@ -41,7 +41,7 @@ describe('localized board content', () => {
     const { rerender } = render(<BoardMessage kind="loading" />);
     expect(screen.getByRole('status', { name: '読み込み中…' })).toBeTruthy();
     rerender(<BoardMessage kind="error" onRetry={() => undefined} />);
-    expect(screen.getByText('ボードを読み込めませんでした。')).toBeTruthy();
+    expect(screen.getByText('カンバンを読み込めませんでした。')).toBeTruthy();
     expect(screen.getByRole('button', { name: '再試行' })).toBeTruthy();
     rerender(<BoardMessage kind="empty" />);
     expect(screen.getByText('タスクはまだありません。')).toBeTruthy();
