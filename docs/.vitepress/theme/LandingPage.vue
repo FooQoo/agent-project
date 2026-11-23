@@ -47,8 +47,8 @@ const ja = computed(() => lang.value === 'ja')
 
 const images = computed(() =>
   ja.value
-    ? { board: boardJa, boardDark: boardDarkJa, messages: messagesJa, question: questionJa, mobileQuestion: mobileQuestionJa, epic: epicJa, docs: docsJa }
-    : { board, boardDark, messages, question, mobileQuestion, epic, docs },
+    ? { board: boardJa, boardDark: boardDarkJa, messages: messagesJa, question: questionJa, epic: epicJa, docs: docsJa }
+    : { board, boardDark, messages, question, epic, docs },
 )
 // The phone feature shows, from the left, the card list, a question being answered, and a task in the drawer.
 const phones = computed(() =>
@@ -178,10 +178,9 @@ onMounted(() => {
         </div>
         <figure class="lp-question-fig">
           <div class="lp-question-shot">
-            <picture>
-              <source media="(max-width: 639px)" :srcset="images.mobileQuestion" />
+            <div class="lp-question-pane">
               <img :src="images.question" :alt="c.problem.question.alt" loading="lazy" />
-            </picture>
+            </div>
           </div>
           <figcaption>{{ c.problem.question.caption }}</figcaption>
         </figure>
@@ -802,29 +801,27 @@ onMounted(() => {
   font-size: 14px;
 }
 .lp-question-shot {
-  overflow: hidden;
-  width: 100%;
-  max-width: 340px;
-  margin: 0 auto;
-  aspect-ratio: 390 / 530;
+  overflow-x: auto;
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   background: var(--lp-lane);
 }
-/* On a phone the picture is the phone capture, cropped from the sheet header to the memo field. */
-.lp-question-shot img {
+/* On a phone the dialog keeps a readable size and scrolls sideways, starting at the question. */
+.lp-question-pane {
+  overflow: hidden;
+  width: 680px;
+  aspect-ratio: 2240 / 1060;
+}
+.lp-question-pane img {
   display: block;
   width: 100%;
-  margin-top: -14.6%;
 }
 @media (min-width: 640px) {
   .lp-question-shot {
-    max-width: none;
-    margin: 0;
-    aspect-ratio: 2240 / 1060;
+    overflow: hidden;
   }
-  .lp-question-shot img {
-    margin-top: 0;
+  .lp-question-pane {
+    width: 100%;
   }
 }
 @media (min-width: 960px) {
