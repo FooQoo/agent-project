@@ -18,7 +18,7 @@ Want to see it for yourself? [Try the demo](https://fooqoo.github.io/agent-proje
 
 You can hand a big piece of work to an AI agent, but it rarely runs to the end on its own. It wanders, stops, or calls the work done too early, so someone has to turn the request into a plan, notice when the agent is stuck or off course, catch the question that scrolled past in the chat, explain the work again after a new session starts, and check at the end whether it is really done. The agent works, and you keep driving.
 
-Agent Project is built to cut that driving down. It does not run the agent. It gives the agent the project management it lacks, so that you can ask for the work, answer when you are asked, and stay away the rest of the time. It is made for people building a product alone with Codex or Claude Code.
+Agent Project is built to cut that driving down. It does not run the agent. It gives the agent the project management it lacks, so that you can ask for the work, answer when you are asked, and spend the rest of your time on something else, such as thinking about your product's features and strategy. It is made for people building a product alone with Codex or Claude Code.
 
 ## Agent Project: project management for agents
 
