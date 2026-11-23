@@ -1,0 +1,1191 @@
+{
+  "schemaVersion": 1,
+  "owner": "U9",
+  "files": [
+    {
+      "file": "app/mock-agent-assignment/AssignmentScreen.tsx",
+      "exports": [
+        {
+          "name": "AssignmentScreen",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--board",
+              "states": ["board"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-agentassignment-desktop--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--board",
+              "states": ["board"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/mock-agent-assignment/AgentParts.tsx",
+      "exports": [
+        {
+          "name": "Avatar",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--board",
+              "states": ["board"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-agentassignment-desktop--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--board",
+              "states": ["board"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        },
+        {
+          "name": "StateBadge",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--board",
+              "states": ["board"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-agentassignment-desktop--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--board",
+              "states": ["board"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        },
+        {
+          "name": "AgentChip",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--board",
+              "states": ["board"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-agentassignment-desktop--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--board",
+              "states": ["board"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        },
+        {
+          "name": "SessionLine",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--board",
+              "states": ["board"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-agentassignment-desktop--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--board",
+              "states": ["board"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        },
+        {
+          "name": "AgentIdentity",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--board",
+              "states": ["board"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-agentassignment-desktop--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--board",
+              "states": ["board"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        },
+        {
+          "name": "AgentStrip",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--board",
+              "states": ["board"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-agentassignment-desktop--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--board",
+              "states": ["board"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        },
+        {
+          "name": "AssignSection",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--board",
+              "states": ["board"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-agentassignment-desktop--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--board",
+              "states": ["board"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/mock-agent-assignment/NoticeView.tsx",
+      "exports": [
+        {
+          "name": "NoticeView",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/mock-agent-assignment/AgentsSurface.tsx",
+      "exports": [
+        {
+          "name": "AgentsSurface",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/mock-agent-assignment/SwitchSurface.tsx",
+      "exports": [
+        {
+          "name": "SwitchSurface",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/mock-agent-assignment/ReassignSurface.tsx",
+      "exports": [
+        {
+          "name": "ReassignSurface",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/mock-agent-assignment/BulkSurface.tsx",
+      "exports": [
+        {
+          "name": "BulkSurface",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/mock-agent-assignment/AgentChoice.tsx",
+      "exports": [
+        {
+          "name": "AgentChoice",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/mock-agent-assignment/Surface.tsx",
+      "exports": [
+        {
+          "name": "Surface",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--board",
+              "states": ["board"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-agentassignment-desktop--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--board",
+              "states": ["board"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/mock-agent-assignment/DetailPane.tsx",
+      "exports": [
+        {
+          "name": "DetailPane",
+          "stories": [
+            {
+              "id": "mocks-agentassignment-desktop--board",
+              "states": ["board"],
+              "interaction": true
+            },
+            {
+              "id": "mocks-agentassignment-desktop--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--agents-add",
+              "states": ["agents add"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-confirm",
+              "states": ["switch confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-desktop--switch-code",
+              "states": ["switch code"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--board",
+              "states": ["board"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--card-detail",
+              "states": ["card detail"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-choose",
+              "states": ["reassign choose"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--reassign-unconnected",
+              "states": ["reassign unconnected"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-reassign",
+              "states": ["after reassign"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--epic-bulk-confirm",
+              "states": ["epic bulk confirm"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--after-bulk",
+              "states": ["after bulk"],
+              "interaction": false
+            },
+            {
+              "id": "mocks-agentassignment-phone--agents-settings",
+              "states": ["agents settings"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
