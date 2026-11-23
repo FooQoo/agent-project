@@ -98,46 +98,24 @@ Some things are not enforced by Agent Project yet. They depend on the agent foll
 - **Your own tasks.** Tasks you own are recorded, not verified.
 - **Epics.** Agent Project does not track whether an epic is finished; its completion conditions are written in its body.
 
-## How it differs from AI-DLC and spec-driven development {#compare}
+## Other approaches and where Agent Project fits {#compare}
 
-AI-DLC and spec-driven development (SDD) answer a different question from the work model. They are methods: they say what to produce, and in which phases, before and while an agent writes code. Agent Project is a harness: it is the place where the work runs and is tracked, whatever method produced the plan.
+Agent Project is a harness where agent work runs and is tracked, so it sits next to methods and tools like these:
 
-[AI-DLC](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/) (the AI-Driven Development Life Cycle, introduced by AWS) has the AI draft plans, code, and tests while people validate each step. Its workflow runs from inception, where requirements and units of work are agreed, through construction to operations, and AWS publishes it as [open-source workflow rules](https://github.com/awslabs/aidlc-workflows) for several coding agents. SDD writes a spec before the code and treats it as the source of truth for the person and the agent. [GitHub Spec Kit](https://github.com/github/spec-kit) walks from a constitution through specify, plan, and tasks to implement, and [Kiro](https://kiro.dev/docs/specs/) keeps `requirements.md`, `design.md`, and `tasks.md` for each feature.
+- [AI-DLC](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/): a method from AWS in which the AI drafts plans, code, and tests and people validate each step.
+- Spec-driven development with [GitHub Spec Kit](https://github.com/github/spec-kit) and [Kiro](https://kiro.dev/docs/specs/): writing a spec before the code and treating it as the source of truth.
+- [Vercel Board](https://vercel.com/blog/introducing-vercel-board): an experimental message board where a team's people and coding agents share work.
+- [Backlog.md](https://github.com/MrLesk/Backlog.md): a Markdown-native task manager and Kanban board for a Git repository.
 
-Agent Project does not prescribe phases or documents. It adds what a method alone leaves to convention: one shared board that holds the plan, the progress, and the history, and rules that Agent Project itself enforces. The agent waits for an open question, a task finishes only when its acceptance conditions are met, and the history lets another session or agent continue. Because it works through a CLI, a Skill, and a hook, it is not tied to one agent; the plugin covers Claude Code and Codex.
+Methods like these combine well with Agent Project: a spec or a phase plan can live in an epic, with each step as a task.
 
-The approaches combine well. A spec written with Spec Kit or Kiro, or the phase plan of AI-DLC, can live in an epic, with each task of the plan as a task on the board and each acceptance criterion as an acceptance condition. The method decides what to build, and Agent Project carries the work through to Done.
+### Agent Project's strengths
 
-|  | Agent Project | AI-DLC | Spec-driven development |
-| --- | --- | --- | --- |
-| **What it is** | A harness: a local board and rules that the work runs on. | A development method with phases, centred on AI-drafted plans that people validate. | A practice of writing a spec before code, supported by tools such as Spec Kit and Kiro. |
-| **What it produces** | Epics, tasks, questions, acceptance conditions, and a history, as plain files. | Requirements, units of work, designs, code, and tests, phase by phase. | A spec, a plan, and a task list as Markdown files, often one set per feature. |
-| **Where plan, progress, and history live** | One shared board for the project, with a history in every task. | In the files and the session of the workflow in use. | The plan and task list live in spec files; progress depends on the tool. |
-| **How you step in** | You answer questions, or watch the board live and move cards, check conditions, or rewrite plans, from the browser or your phone. | You validate the AI's proposals at each phase. | You review and edit the spec files. |
-| **How done is judged** | Automatically: all acceptance conditions are done and no question is open. | By the validation of each step. | By the tasks and checklists in the spec; the tool does not verify them. |
-| **Resuming in another session or agent** | The task history records what was done and why, so a new session or agent continues from there. | Relies on the workflow's recorded state. | Relies on the spec files. |
-| **Tool dependence** | Any agent that can run the `agpj` command; the plugin covers Claude Code and Codex. | Rules for agents such as Claude Code, Kiro, and Codex CLI. | Depends on the tool, for example an IDE or a set of slash commands. |
-
-These columns describe each approach at its core, as its public documentation presents it. Teams adapt methods and tools, so check the sources above for the details. The strengths of Agent Project are in its column, the first after the labels: its guarantees are enforced rather than agreed, and the person and the agent see the same state as it changes.
-
-## How it differs from Vercel Board and Backlog.md {#compare-boards}
-
-Vercel Board and Backlog.md are also places where people and agents share work, so they sit closer to Agent Project than the methods above do. Agent Project is a project-management harness for agents: it is not only a place that shows tasks, but a tool that enforces rules. Agents break work into epics and tasks with acceptance conditions, ask you on the board and wait for the answer, and record a history so another session can continue. A task becomes Done automatically only when its conditions are met and no question is open.
-
-[Vercel Board](https://vercel.com/blog/introducing-vercel-board) ([docs](https://vercel.com/docs/board)) is an experimental message board for a team's people and coding agents. It organizes channels, threads, and labels, and a task is a thread with a state that the board keeps. Agents claim tasks, post updates, and wait for replies, and a thread can sync with Slack, GitHub, or Linear. [Backlog.md](https://github.com/MrLesk/Backlog.md) is a Markdown-native task manager and Kanban board for a Git repository. Each task is a Markdown file in the repository, with acceptance criteria and an optional Definition of Done checklist, and it is used from a CLI, a terminal board, or a local web board.
-
-|  | Agent Project | Vercel Board | Backlog.md |
-| --- | --- | --- | --- |
-| **What it is** | A harness: a local board and rules that the work runs on. | An experimental message board with channels, threads, labels, and tasks for a team and its agents. | A Markdown-native task manager and Kanban visualizer for a Git repository. |
-| **Where the data lives** | Plain files in a local data area on your machine. | On your Vercel team's board, with data stored in the United States. | Markdown files in the repository, with no server, account, or telemetry. |
-| **How work is organized** | Projects, epics, and tasks in lanes; the agent plans the breakdown. | Boards, channels, and threads; a task is a thread, and tasks can depend on other tasks. | Tasks as files, with statuses, milestones, and dependencies. |
-| **Completion conditions** | Each task has acceptance conditions that the work must meet. | Not described; an agent completes a task with a message. | Acceptance criteria per task, and an optional Definition of Done checklist. |
-| **Asking a person** | The agent asks on the board and waits for your answer. | Agents can wait for replies from people or other agents. | Not described; the README describes review checkpoints for the spec, the plan, and the code. |
-| **Done** | Automatic: all acceptance conditions are done and no question is open. | An agent marks the task complete. | Tasks move through statuses, with a configurable final status; the README does not describe an automatic check. |
-| **History for another session** | Every task keeps a history of what was done and why. | A thread keeps the conversation and updates, and an event log records each change. | Not described. |
-| **How you use it** | A web board, a CLI, and a skill for agents; the plugin covers Claude Code and Codex. | The `vercel board` CLI, a JavaScript SDK, and a skill; sync with Slack, GitHub, and Linear. | A CLI, a terminal board, a local web board, and an optional MCP connector. |
-
-These columns compare each product as its public documentation describes it; "not described" means the pages do not say, not that the feature is absent. Vercel Board is experimental and may change. The products also fit different needs: Vercel Board suits agent swarms that coordinate on a team's Vercel account, and Backlog.md suits a task list that lives in the repository. What sets Agent Project apart is that its guarantees are enforced by the tool rather than agreed in convention.
+- **Done is decided by conditions you set first.** A task finishes only when all its acceptance conditions are done and no question is open.
+- **The agent asks you and waits.** It asks on the board, stops until you answer, and resumes by itself afterward. You can answer from your phone too.
+- **You can watch and step in without stopping the agent.** You see the state as it changes and move cards, check conditions, or rewrite plans while it works.
+- **Another session or agent can pick up the work.** Every task keeps a history of what was done and why.
+- **Plain local files, any agent.** Data stays in files on your machine, and any agent that can run `agpj` can use it; the plugin covers Claude Code and Codex.
 
 ## Next
 
