@@ -3,16 +3,16 @@ import type { ApiError, ProjectId, Task } from '../../../shared/api/contracts';
 import { authHeaders, projectPath } from '../../../shared/api/http';
 import { WriteError, writeFailure } from '../../../shared/api/writeErrors';
 
-/** The project's versions and the current one: `GET .../versions`. */
+/** The project's versions and the release version: `GET .../versions`. */
 export interface ProjectVersions {
   versions: string[];
-  currentVersion: string | null;
+  releaseVersion: string | null;
 }
 
-/** Which version to plan: a version the project lists, its current one, or none. */
+/** Which version to plan: a version the project lists, its release version, or none. */
 export type VersionChoice =
   | { choice: 'named'; version: string }
-  | { choice: 'current' }
+  | { choice: 'release' }
   | { choice: 'unset' };
 
 /** Which of the checked tasks an epic-wide change touches. */
@@ -81,11 +81,11 @@ export function addVersion(projectId: ProjectId, name: string) {
   );
 }
 
-/** Sets the current version, or clears it with `null`. A version not yet listed is listed. */
-export function setCurrentVersion(projectId: ProjectId, version: string | null) {
+/** Sets the release version, or clears it with `null`. A version not yet listed is listed. */
+export function setReleaseVersion(projectId: ProjectId, version: string | null) {
   return send<ProjectVersions & { changed: boolean }>(
     'PUT',
-    `${projectPath(projectId)}/versions/current`,
+    `${projectPath(projectId)}/versions/release`,
     { version },
   );
 }
@@ -93,7 +93,7 @@ export function setCurrentVersion(projectId: ProjectId, version: string | null) 
 /**
  * Sets one task's planned version as a person. `expected` is the planned version the page showed
  * (`null` for none): a task that has another one now is refused, nothing is written, and
- * `PlannedVersionChangedError` names its current version. Without `expected` the choice is saved
+ * `PlannedVersionChangedError` names the planned version it is now. Without `expected` the choice is saved
  * over the latest file.
  */
 export async function setTaskPlannedVersion(

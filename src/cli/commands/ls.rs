@@ -32,7 +32,7 @@ pub fn run(ctx: &mut Context, args: &LsArgs) -> Result<Outcome, AgpjError> {
     let project = ctx.project_id()?;
     let filter = args
         .version
-        .resolve(|| Ok(ctx.files.project_versions(project)?.current))?;
+        .resolve(|| Ok(ctx.files.project_versions(project)?.release))?;
     let tasks: Vec<TaskView> = ctx
         .files
         .board(project)?

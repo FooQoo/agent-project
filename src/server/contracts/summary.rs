@@ -43,7 +43,7 @@ pub struct SummaryProject {
     /// The versions the project lists, in the order they were added.
     pub versions: Vec<String>,
     /// The version new work is planned for, when one is set.
-    pub current_version: Option<String>,
+    pub release_version: Option<String>,
 }
 
 /// A task without `description`, `body`, `history` and the acceptance text.

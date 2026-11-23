@@ -58,10 +58,10 @@ fn access(command: &Command) -> Access {
         },
         Command::Version(args) => match args.command {
             VersionCommand::Ls => Access::ReadProject,
-            VersionCommand::Current(ref current) if current.version.is_none() && !current.clear => {
+            VersionCommand::Release(ref release) if release.version.is_none() && !release.clear => {
                 Access::ReadProject
             }
-            VersionCommand::Add(_) | VersionCommand::Current(_) => Access::ChangeProject,
+            VersionCommand::Add(_) | VersionCommand::Release(_) => Access::ChangeProject,
         },
         Command::Release(_) => Access::ChangeProject,
         Command::Init(_) => Access::ChangeOrCreateProject,

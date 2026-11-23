@@ -3,7 +3,7 @@ import { WriteError } from '../../../shared/api/writeErrors';
 import {
   PlannedVersionChangedError,
   addVersion,
-  setCurrentVersion,
+  setReleaseVersion,
   setEpicPlannedVersion,
   setTaskPlannedVersion,
 } from './versions';
@@ -28,16 +28,16 @@ afterEach(() => vi.unstubAllGlobals());
 const PROJECT = '0123456789abcdef0123456789abcdef';
 
 describe('version writes', () => {
-  it('lists a version and sets the current one', async () => {
-    const add = answer(200, { versions: ['v1.9.0'], currentVersion: null, changed: true });
+  it('lists a version and sets the release one', async () => {
+    const add = answer(200, { versions: ['v1.9.0'], releaseVersion: null, changed: true });
     await addVersion(PROJECT, 'v1.9.0');
     expect(sent(add)).toMatchObject({ method: 'POST', body: { name: 'v1.9.0' } });
     expect(sent(add).path).toContain('/versions');
 
-    const current = answer(200, { versions: ['v1.9.0'], currentVersion: 'v1.9.0', changed: true });
-    await setCurrentVersion(PROJECT, 'v1.9.0');
-    expect(sent(current)).toMatchObject({ method: 'PUT', body: { version: 'v1.9.0' } });
-    expect(sent(current).path).toContain('/versions/current');
+    const release = answer(200, { versions: ['v1.9.0'], releaseVersion: 'v1.9.0', changed: true });
+    await setReleaseVersion(PROJECT, 'v1.9.0');
+    expect(sent(release)).toMatchObject({ method: 'PUT', body: { version: 'v1.9.0' } });
+    expect(sent(release).path).toContain('/versions/release');
   });
 
   it('sends the page expectation with a task choice, and only when given', async () => {
@@ -51,8 +51,8 @@ describe('version writes', () => {
     expect(sent(withExpected).path).toContain('/tasks/7/planned-version');
 
     const without = answer(200, { task: {}, changed: true });
-    await setTaskPlannedVersion(PROJECT, 7, { choice: 'current' });
-    expect(sent(without).body).toEqual({ choice: 'current' });
+    await setTaskPlannedVersion(PROJECT, 7, { choice: 'release' });
+    expect(sent(without).body).toEqual({ choice: 'release' });
   });
 
   it('names the version a stale task has now', async () => {

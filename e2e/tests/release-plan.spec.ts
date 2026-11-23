@@ -2,10 +2,10 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '../helpers/fixtures';
 import { agpjOk, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
 import { resetPreferences } from '../helpers/preferences';
-import { clearVersions, currentVersion, plannedVersions, planTask, seedVersions } from '../helpers/versions';
+import { clearVersions, releaseVersion, plannedVersions, planTask, seedVersions } from '../helpers/versions';
 import { waitForSync, openHeaderItem } from '../helpers/ui';
 
-// #646: planned versions on the PC board: the current version in the header, the tag on a card, the planned
+// #646: planned versions on the PC board: the release version in the header, the tag on a card, the planned
 // version in the task's edit dialog, and an epic's tasks planned together in the epic's edit dialog. The phone
 // shows the tag and sets nothing.
 test.beforeEach(() => resetPreferences());
@@ -24,8 +24,8 @@ interface Seed {
 	e: number;
 }
 
-/** Two versions, the card layout above, and no current version yet. */
-async function seed(current: string | null = null): Promise<Seed> {
+/** Two versions, the card layout above, and no release version yet. */
+async function seed(release: string | null = null): Promise<Seed> {
 	clearVersions();
 	resetBoard(mainProject);
 	agpjOk(mainProject, ['epic', 'add', 'LOGIN', '--name', 'Login work', '--actor', 'human']);
@@ -39,7 +39,7 @@ async function seed(current: string | null = null): Promise<Seed> {
 	add('Plan D history', 'LOGIN');
 	add('Plan E dark theme');
 	agpjOk(mainProject, ['mv', String(ids[3]), 'doing', '--actor', 'human', '--reason', 'Start']);
-	await seedVersions(['v1.8.0', 'v1.9.0'], current);
+	await seedVersions(['v1.8.0', 'v1.9.0'], release);
 	await planTask(ids[0] as number, 'v1.8.0');
 	await planTask(ids[4] as number, 'v1.9.0');
 	const [a, b, c, d, e] = ids as [number, number, number, number, number];
@@ -57,16 +57,16 @@ async function openTaskDialog(page: Page, title: string, id: number) {
 	}).toPass();
 	return page.getByRole('dialog', { name: new RegExp(`^#${id} Task preview`) });
 }
-const headerMenu = (page: Page) => page.getByRole('button', { name: /^Current version:/ });
+const headerMenu = (page: Page) => page.getByRole('button', { name: /^Release version:/ });
 
-test('sets the current version from the header, plans a task and plans an epic in their edit dialogs', async ({ page }) => {
+test('sets the release version from the header, plans a task and plans an epic in their edit dialogs', async ({ page }) => {
 	const cards = await seed();
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto('/');
 	await waitForSync(page);
 
-	// The current version is a menu in the header. A project that lists versions shows the tag on every card.
-	await expect(headerMenu(page)).toHaveAccessibleName('Current version: Not set');
+	// The release version is a menu in the header. A project that lists versions shows the tag on every card.
+	await expect(headerMenu(page)).toHaveAccessibleName('Release version: Not set');
 	await expect(card(page, 'Plan A login screen').locator('.ver-tag')).toContainText('v1.8.0');
 	await expect(card(page, 'Plan C session').locator('.ver-tag')).toContainText('Unplanned');
 	// The tag shares the date row: it is at the left of the date, which has no "Updated" word. The acceptance
@@ -81,29 +81,29 @@ test('sets the current version from the header, plans a task and plans an epic i
 		expect(Math.abs(tag!.y + tag!.height / 2 - (updated!.y + updated!.height / 2))).toBeLessThan(6);
 	}
 
-	// Type a new version and confirm: it is listed, but it does not become current.
+	// Type a new version and confirm: it is listed, but it does not become the release version.
 	await headerMenu(page).click();
 	const confirm = page.getByRole('button', { name: 'Add this version to the project' });
 	await expect(confirm).toBeDisabled();
 	await page.getByLabel('New version').fill('v2.0.0');
 	await confirm.click();
 	await expect(page.getByRole('radio', { name: /^v2\.0\.0/ })).toBeVisible();
-	await expect(headerMenu(page)).toHaveAccessibleName('Current version: Not set');
-	expect(await currentVersion()).toBeNull();
+	await expect(headerMenu(page)).toHaveAccessibleName('Release version: Not set');
+	expect(await releaseVersion()).toBeNull();
 	// The list is newest first.
 	const listed = await page.getByRole('radio').evaluateAll((radios) => radios.map((radio) => radio.parentElement?.textContent ?? ''));
-	expect(listed.map((text) => text.replace(/Current$/, ''))).toEqual(['v2.0.0', 'v1.9.0', 'v1.8.0', 'No current version']);
+	expect(listed.map((text) => text.replace(/Release version$/, ''))).toEqual(['v2.0.0', 'v1.9.0', 'v1.8.0', 'No release version']);
 
-	// Choose a listed version: it becomes current, and its cards carry the Current mark.
+	// Choose a listed version: it becomes the release version, and its cards carry the Release version mark.
 	await page.getByRole('radio', { name: /^v1\.8\.0/ }).click();
-	await expect(headerMenu(page)).toHaveAccessibleName('Current version: v1.8.0');
-	await expect.poll(currentVersion).toBe('v1.8.0');
-	await expect(card(page, 'Plan A login screen').locator('.ver-tag')).toContainText('Current');
+	await expect(headerMenu(page)).toHaveAccessibleName('Release version: v1.8.0');
+	await expect.poll(releaseVersion).toBe('v1.8.0');
+	await expect(card(page, 'Plan A login screen').locator('.ver-tag')).toContainText('Release version');
 	expect(await plannedVersions()).toMatchObject({ [cards.a]: 'v1.8.0', [cards.e]: 'v1.9.0' });
 
 	// A task's planned version is edited in its edit dialog, and saved with the dialog.
 	const taskDialog = await openTaskDialog(page, 'Plan B reset mail', cards.b);
-	await expect(taskDialog.getByRole('radio', { name: /Make it current \(v1\.8\.0\)/ })).toBeEnabled();
+	await expect(taskDialog.getByRole('radio', { name: /Make it the release version \(v1\.8\.0\)/ })).toBeEnabled();
 	await taskDialog.getByRole('radio', { name: /v1\.9\.0/ }).click();
 	expect((await plannedVersions())[cards.b]).toBeNull();
 	await taskDialog.getByRole('button', { name: 'Save', exact: true }).click();
@@ -120,7 +120,7 @@ test('sets the current version from the header, plans a task and plans an epic i
 	await epicDialog.getByRole('button', { name: 'Planned versions' }).click();
 	await epicDialog.getByRole('button', { name: 'Planned version of the epic: No change' }).click();
 	await expect(page.getByRole('radio', { name: 'No change' })).toBeChecked();
-	await expect(page.getByRole('radio', { name: 'Current (v1.8.0)' })).toBeVisible();
+	await expect(page.getByRole('radio', { name: 'Release version (v1.8.0)' })).toBeVisible();
 	await page.getByRole('radio', { name: 'v1.9.0' }).click();
 	await expect(epicDialog.getByRole('button', { name: 'Planned version of the epic: v1.9.0' })).toBeVisible();
 	expect(await plannedVersions()).toMatchObject({ [cards.a]: 'v1.8.0', [cards.c]: null });
@@ -148,14 +148,14 @@ test('the task dialog refuses to overwrite a change made elsewhere and shows the
 	await expect(dialog).toBeVisible();
 });
 
-test('the current version is unavailable in the task dialog while none is set', async ({ page }) => {
+test('the release version is unavailable in the task dialog while none is set', async ({ page }) => {
 	const cards = await seed(null);
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto('/');
 	await waitForSync(page);
 	const dialog = await openTaskDialog(page, 'Plan C session', cards.c);
-	await expect(dialog.getByRole('radio', { name: /Make it current/ })).toBeDisabled();
-	await expect(dialog.getByText('Unavailable: no current version is set')).toBeVisible();
+	await expect(dialog.getByRole('radio', { name: /Make it the release version/ })).toBeDisabled();
+	await expect(dialog.getByText('Unavailable: no release version is set')).toBeVisible();
 });
 
 test('the phone shows the planned version on its cards and offers nothing to set it', async ({ page }) => {
@@ -163,13 +163,13 @@ test('the phone shows the planned version on its cards and offers nothing to set
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto('/');
 	await page.getByRole('tab', { name: /Todo/ }).click();
-	await expect(page.locator('.monitor-card', { hasText: 'Plan A login screen' }).locator('.ver-tag')).toContainText('Current');
+	await expect(page.locator('.monitor-card', { hasText: 'Plan A login screen' }).locator('.ver-tag')).toContainText('Release version');
 	// The tag sits in the date row, at the left of the time.
 	const meta = page.locator('.monitor-card', { hasText: 'Plan A login screen' }).locator('.monitor-card__meta');
 	await expect(meta.locator('.ver-tag')).toHaveCount(1);
 	const [metaTag, metaTime] = await Promise.all([meta.locator('.ver-tag').boundingBox(), meta.locator('.monitor-card__time').boundingBox()]);
 	expect(metaTag!.x + metaTag!.width).toBeLessThanOrEqual(metaTime!.x);
-	await expect(page.getByRole('button', { name: /^Current version:/ })).toHaveCount(0);
+	await expect(page.getByRole('button', { name: /^Release version:/ })).toHaveCount(0);
 	await page.locator('.monitor-card', { hasText: 'Plan A login screen' }).getByRole('button', { name: 'Plan A login screen' }).click();
 	await expect(page.getByText('Planned version')).toHaveCount(0);
 	// Nothing overflows sideways at this width.

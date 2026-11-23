@@ -25,7 +25,7 @@ export interface SummaryProject {
   /** The versions the project lists, in the order they were added. */
   versions: string[];
   /** The version new work is planned for; `null` when none is set. */
-  currentVersion: string | null;
+  releaseVersion: string | null;
 }
 
 export interface AcceptanceCount {

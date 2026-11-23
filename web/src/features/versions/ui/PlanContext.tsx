@@ -8,7 +8,7 @@ import { VersionTag, showsVersionTag } from './VersionTag';
  */
 export interface PlanProject {
   versions: readonly string[];
-  current: string | null;
+  release: string | null;
 }
 
 export const PlanContext = createContext<PlanProject | null>(null);
@@ -21,5 +21,5 @@ export function usePlanProject(): PlanProject | null {
 export function PlanTag({ planned }: { planned: string | null }) {
   const project = usePlanProject();
   if (project === null || !showsVersionTag(planned, project)) return null;
-  return <VersionTag planned={planned} current={project.current} />;
+  return <VersionTag planned={planned} release={project.release} />;
 }

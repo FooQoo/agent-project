@@ -26,10 +26,10 @@ async function send(method: 'POST' | 'PUT', path: string, body: unknown): Promis
 	return response.json();
 }
 
-/** Lists versions and sets the current one, as the version settings do. */
-export async function seedVersions(versions: string[], current: string | null): Promise<void> {
+/** Lists versions and sets the release one, as the version settings do. */
+export async function seedVersions(versions: string[], release: string | null): Promise<void> {
 	for (const name of versions) await send('POST', '/versions', { name });
-	await send('PUT', '/versions/current', { version: current });
+	await send('PUT', '/versions/release', { version: release });
 }
 
 /** Plans one task for a version, as the task detail's picker does. */
@@ -44,14 +44,14 @@ export async function plannedVersions(): Promise<Record<number, string | null>> 
 	return Object.fromEntries(summary.tasks.map((task) => [task.id, task.plannedVersion]));
 }
 
-/** The project's current version, as the Summary names it. */
-export async function currentVersion(): Promise<string | null> {
+/** The project's release version, as the Summary names it. */
+export async function releaseVersion(): Promise<string | null> {
 	const response = await fetch(`${mainOrigin()}/api/projects/${projectId(mainProject, mainHome())}/summary`);
-	return ((await response.json()) as { project: { currentVersion: string | null } }).project.currentVersion;
+	return ((await response.json()) as { project: { releaseVersion: string | null } }).project.releaseVersion;
 }
 
 /**
- * Takes the versions and the current version out of the main project, so a spec that listed some leaves the
+ * Takes the versions and the release version out of the main project, so a spec that listed some leaves the
  * board as the others expect it: a project that lists a version shows a planned-version tag on every card.
  * A version is a file of `docs/release/`, so the files this spec's versions made are removed. Cards lose their
  * planned version when the board is reset to its fixture.
@@ -65,7 +65,7 @@ export function clearVersions(): void {
 	const file = path.join(folder, 'project.json');
 	const project = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
 	delete project.versions;
-	delete project.currentVersion;
+	delete project.releaseVersion;
 	writeFileSync(file, `${JSON.stringify(project, null, 2)}\n`);
 	// A serve that polls compares modification times in whole seconds: make this write a later one.
 	const later = new Date(Date.now() + 1000);

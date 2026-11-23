@@ -389,8 +389,8 @@ test.describe('two projects with the same task numbers', () => {
     await expect(switcher(page)).toBeFocused();
     // Tab leaves the menu closed and moves on.
     await page.keyboard.press('Tab');
-    // The header order is project, current version, Ask AI, menu.
-    await expect(page.getByRole('button', { name: /^Current version:/ })).toBeFocused();
+    // The header order is project, release version, Ask AI, menu.
+    await expect(page.getByRole('button', { name: /^Release version:/ })).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name: 'Ask AI', exact: true })).toBeFocused();
   });

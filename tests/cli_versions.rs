@@ -1,4 +1,4 @@
-//! The version commands: the current version, a task's planned version, an epic's bulk change,
+//! The version commands: the release version, a task's planned version, an epic's bulk change,
 //! and the version filter of `ls` and `progress`. Each test runs the real binary against a
 //! temporary data area.
 
@@ -78,7 +78,7 @@ fn ls_ids(home: &Path, args: &[&str]) -> Vec<i64> {
 fn waves_board(home: &Path) {
     demo(home);
     list_versions(home, &["v1.8.0", "v1.9.0"]);
-    run(home, &["version", "current", "v1.9.0"]);
+    run(home, &["version", "release", "v1.9.0"]);
     let (code, _, err) = agpj(
         home,
         &[
@@ -106,48 +106,48 @@ fn waves_board(home: &Path) {
         }
         add(home, title, &extra);
     }
-    add(home, "Loose", &["--current-version"]);
+    add(home, "Loose", &["--release-version"]);
     run(home, &["epic", "edit", "WAVES", "--waves", "1,2", "3"]);
 }
 
 #[test]
-fn the_current_version_is_shown_set_listed_and_cleared() {
+fn the_release_version_is_shown_set_listed_and_cleared() {
     let home = tempfile::tempdir().unwrap();
     demo(home.path());
-    let shown = run(home.path(), &["version", "current"]);
-    assert_eq!(shown["currentVersion"], Value::Null);
+    let shown = run(home.path(), &["version", "release"]);
+    assert_eq!(shown["releaseVersion"], Value::Null);
     assert_eq!(shown["versions"], serde_json::json!([]));
     assert_eq!(
-        plain(home.path(), &["version", "current"]),
-        "No current version.\n"
+        plain(home.path(), &["version", "release"]),
+        "No release version.\n"
     );
 
-    let set = run(home.path(), &["version", "current", "v1.8.0"]);
-    assert_eq!(set["currentVersion"], "v1.8.0");
+    let set = run(home.path(), &["version", "release", "v1.8.0"]);
+    assert_eq!(set["releaseVersion"], "v1.8.0");
     assert_eq!(set["versions"], serde_json::json!(["v1.8.0"]));
     run(home.path(), &["version", "add", "v1.9.0"]);
     assert_eq!(
         plain(home.path(), &["version", "ls"]),
-        "v1.9.0\nv1.8.0 (current)\n"
+        "v1.9.0\nv1.8.0 (release)\n"
     );
     assert_eq!(
-        plain(home.path(), &["version", "current"]),
-        "Current version: v1.8.0\n"
+        plain(home.path(), &["version", "release"]),
+        "Release version: v1.8.0\n"
     );
 
-    let cleared = run(home.path(), &["version", "current", "--clear"]);
-    assert_eq!(cleared["currentVersion"], Value::Null);
+    let cleared = run(home.path(), &["version", "release", "--clear"]);
+    assert_eq!(cleared["releaseVersion"], Value::Null);
     assert_eq!(cleared["versions"], serde_json::json!(["v1.9.0", "v1.8.0"]));
 
     // A value with --clear is a usage error.
-    let (code, name) = fail(home.path(), &["version", "current", "v2", "--clear"]);
+    let (code, name) = fail(home.path(), &["version", "release", "v2", "--clear"]);
     assert_eq!((code, name.as_str()), (2, "invalid_argument"));
     let (code, name) = fail(home.path(), &["version", "add", "bad name"]);
     assert_eq!((code, name.as_str()), (2, "invalid_value"));
 }
 
 #[test]
-fn add_stores_the_concrete_current_version_and_refuses_without_one() {
+fn add_stores_the_concrete_release_version_and_refuses_without_one() {
     let home = tempfile::tempdir().unwrap();
     demo(home.path());
     let (code, name) = fail(
@@ -159,29 +159,29 @@ fn add_stores_the_concrete_current_version_and_refuses_without_one() {
             "ai",
             "--actor",
             "human",
-            "--current-version",
+            "--release-version",
         ],
     );
-    assert_eq!((code, name.as_str()), (1, "no_current_version"));
+    assert_eq!((code, name.as_str()), (1, "no_release_version"));
     assert_eq!(
         ls_ids(home.path(), &[]),
         Vec::<i64>::new(),
         "nothing was created"
     );
 
-    run(home.path(), &["version", "current", "v1.8.0"]);
-    let id = add(home.path(), "T", &["--current-version"]);
+    run(home.path(), &["version", "release", "v1.8.0"]);
+    let id = add(home.path(), "T", &["--release-version"]);
     let task = &run(home.path(), &["show", &id.to_string()])["task"];
     assert_eq!(task["plannedVersion"], "v1.8.0");
 
-    // Switching the current version later does not move the task.
-    run(home.path(), &["version", "current", "v1.9.0"]);
+    // Switching the release version later does not move the task.
+    run(home.path(), &["version", "release", "v1.9.0"]);
     let task = &run(home.path(), &["show", &id.to_string()])["task"];
     assert_eq!(task["plannedVersion"], "v1.8.0");
 }
 
 #[test]
-fn edit_plans_a_task_for_a_version_the_current_one_or_none() {
+fn edit_plans_a_task_for_a_version_the_release_version_or_none() {
     let home = tempfile::tempdir().unwrap();
     demo(home.path());
     let id = add(home.path(), "T", &[]).to_string();
@@ -197,10 +197,10 @@ fn edit_plans_a_task_for_a_version_the_current_one_or_none() {
     let task = &run(home.path(), &["edit", &id, "--unplanned"])["task"];
     assert!(task.get("plannedVersion").is_none_or(Value::is_null));
 
-    let (code, name) = fail(home.path(), &["edit", &id, "--current-version"]);
-    assert_eq!((code, name.as_str()), (1, "no_current_version"));
-    run(home.path(), &["version", "current", "v1.8.0"]);
-    let task = &run(home.path(), &["edit", &id, "--current-version"])["task"];
+    let (code, name) = fail(home.path(), &["edit", &id, "--release-version"]);
+    assert_eq!((code, name.as_str()), (1, "no_release_version"));
+    run(home.path(), &["version", "release", "v1.8.0"]);
+    let task = &run(home.path(), &["edit", &id, "--release-version"])["task"];
     assert_eq!(task["plannedVersion"], "v1.8.0");
 
     // A version the project does not list, and options that exclude each other.
@@ -208,7 +208,7 @@ fn edit_plans_a_task_for_a_version_the_current_one_or_none() {
     assert_eq!((code, name.as_str()), (2, "invalid_argument"));
     let (code, name) = fail(
         home.path(),
-        &["edit", &id, "--unplanned", "--current-version"],
+        &["edit", &id, "--unplanned", "--release-version"],
     );
     assert_eq!((code, name.as_str()), (2, "invalid_argument"));
 }
@@ -322,10 +322,10 @@ fn epic_plan_reports_counts_skips_done_cards_and_can_leave_planned_cards_alone()
         &["epic", "plan", "waves", "--unplanned", "--only-unplanned"],
     );
     assert_eq!(code, 2);
-    let (code, name) = fail(home.path(), &["epic", "plan", "nope", "--current-version"]);
+    let (code, name) = fail(home.path(), &["epic", "plan", "nope", "--release-version"]);
     assert_eq!(code, 1);
     assert!(
-        name == "epic_not_found" || name == "no_current_version",
+        name == "epic_not_found" || name == "no_release_version",
         "{name}"
     );
 }
@@ -334,11 +334,11 @@ fn epic_plan_reports_counts_skips_done_cards_and_can_leave_planned_cards_alone()
 fn ls_narrows_by_version_and_combines_with_the_other_filters() {
     let home = tempfile::tempdir().unwrap();
     waves_board(home.path());
-    run(home.path(), &["version", "current", "v1.9.0"]);
+    run(home.path(), &["version", "release", "v1.9.0"]);
 
     assert_eq!(ls_ids(home.path(), &[]), vec![1, 2, 3, 4, 5]);
     assert_eq!(ls_ids(home.path(), &["--version", "v1.9.0"]), vec![2, 3, 5]);
-    assert_eq!(ls_ids(home.path(), &["--current-version"]), vec![2, 3, 5]);
+    assert_eq!(ls_ids(home.path(), &["--release-version"]), vec![2, 3, 5]);
     assert_eq!(ls_ids(home.path(), &["--version", "v1.8.0"]), vec![1]);
     assert_eq!(ls_ids(home.path(), &["--unplanned"]), vec![4]);
     // Combined with the epic, column, and state filters.
@@ -357,7 +357,7 @@ fn ls_narrows_by_version_and_combines_with_the_other_filters() {
     assert_eq!(
         ls_ids(
             home.path(),
-            &["--state", "idle", "--current-version", "--epic", "waves"]
+            &["--state", "idle", "--release-version", "--epic", "waves"]
         ),
         vec![2, 3]
     );
@@ -387,15 +387,15 @@ fn ls_narrows_by_version_and_combines_with_the_other_filters() {
     );
     assert!(!text.contains("#2"), "{text}");
 
-    // Another project's current version is not this project's.
+    // Another project's release version is not this project's.
     let (code, name) = {
-        run(home.path(), &["version", "current", "--clear"]);
-        fail(home.path(), &["ls", "--current-version"])
+        run(home.path(), &["version", "release", "--clear"]);
+        fail(home.path(), &["ls", "--release-version"])
     };
-    assert_eq!((code, name.as_str()), (1, "no_current_version"));
+    assert_eq!((code, name.as_str()), (1, "no_release_version"));
     let (code, name) = fail(
         home.path(),
-        &["ls", "--current-version", "--version", "v1.8.0"],
+        &["ls", "--release-version", "--version", "v1.8.0"],
     );
     assert_eq!((code, name.as_str()), (2, "invalid_argument"));
     let (code, name) = fail(home.path(), &["ls", "--unplanned", "--version", "v1.8.0"]);
@@ -403,7 +403,7 @@ fn ls_narrows_by_version_and_combines_with_the_other_filters() {
 }
 
 #[test]
-fn ls_of_every_project_takes_a_named_version_but_not_the_current_one() {
+fn ls_of_every_project_takes_a_named_version_but_not_the_release_version() {
     let home = tempfile::tempdir().unwrap();
     waves_board(home.path());
     let out = json_ok(
@@ -411,7 +411,7 @@ fn ls_of_every_project_takes_a_named_version_but_not_the_current_one() {
         &["ls", "--all-projects", "--version", "v1.8.0", "--json"],
     );
     assert_eq!(ids(&out["projects"][0]["tasks"]), vec![1]);
-    let (code, name) = json_error(home.path(), &["ls", "--all-projects", "--current-version"]);
+    let (code, name) = json_error(home.path(), &["ls", "--all-projects", "--release-version"]);
     assert_eq!((code, name.as_str()), (2, "invalid_argument"));
 }
 
@@ -434,7 +434,7 @@ fn epic_task_ids(table: &Value) -> Vec<i64> {
 fn a_version_filter_in_progress_hides_tasks_but_never_makes_one_ready() {
     let home = tempfile::tempdir().unwrap();
     waves_board(home.path());
-    run(home.path(), &["version", "current", "v1.9.0"]);
+    run(home.path(), &["version", "release", "v1.9.0"]);
 
     // The whole board: wave 1 (#1, #2) is ready, wave 2 (#3) waits for it.
     let all = progress(home.path(), &[]);
@@ -448,7 +448,7 @@ fn a_version_filter_in_progress_hides_tasks_but_never_makes_one_ready() {
     assert_eq!(epic_task_ids(&filtered), vec![2, 3]);
     assert_eq!(ids(&filtered["nextTasks"]), vec![2, 5]);
     assert!(!ids(&filtered["nextTasks"]).contains(&3));
-    assert_eq!(progress(home.path(), &["--current-version"]), filtered);
+    assert_eq!(progress(home.path(), &["--release-version"]), filtered);
 
     // Only #3: its blockers are all outside the filter, and it is still not ready.
     run(home.path(), &["edit", "2", "--planned-version", "v1.8.0"]);
@@ -464,15 +464,15 @@ fn a_version_filter_in_progress_hides_tasks_but_never_makes_one_ready() {
     assert_eq!(other["epics"], serde_json::json!([]));
     assert_eq!(other["nextTasks"], serde_json::json!([]));
 
-    // Text output shows the plan, and a project with no current version is refused.
+    // Text output shows the plan, and a project with no release version is refused.
     let text = plain(home.path(), &["progress", "--version", "v1.8.0"]);
     assert!(text.contains("plan v1.8.0"), "{text}");
-    run(home.path(), &["version", "current", "--clear"]);
-    let (code, name) = fail(home.path(), &["progress", "--current-version"]);
-    assert_eq!((code, name.as_str()), (1, "no_current_version"));
+    run(home.path(), &["version", "release", "--clear"]);
+    let (code, name) = fail(home.path(), &["progress", "--release-version"]);
+    assert_eq!((code, name.as_str()), (1, "no_release_version"));
     let (code, name) = fail(
         home.path(),
-        &["progress", "--current-version", "--unplanned"],
+        &["progress", "--release-version", "--unplanned"],
     );
     assert_eq!((code, name.as_str()), (2, "invalid_argument"));
 }
@@ -498,12 +498,12 @@ fn a_failed_version_change_in_edit_leaves_the_other_changes_unsaved() {
     demo(home.path());
     let id = add(home.path(), "Old title", &[]).to_string();
 
-    // No current version: the title is not changed.
+    // No release version: the title is not changed.
     let (code, name) = fail(
         home.path(),
-        &["edit", &id, "--title", "New title", "--current-version"],
+        &["edit", &id, "--title", "New title", "--release-version"],
     );
-    assert_eq!((code, name.as_str()), (1, "no_current_version"));
+    assert_eq!((code, name.as_str()), (1, "no_release_version"));
     assert_eq!(
         run(home.path(), &["show", &id])["task"]["title"],
         "Old title"

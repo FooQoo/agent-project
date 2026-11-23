@@ -10,8 +10,8 @@
         "reason": "Development-only sample, not a product UI component; the same Markdown renderer is covered by shared/markdown Stories."
       },
       {
-        "file": "features/versions/ui/HeaderCurrentVersion.tsx",
-        "reason": "Wires the header menu to the project Summary and the version write routes; the menu is covered by the Versions/CurrentVersionMenu Stories and the whole path by the E2E suite."
+        "file": "features/versions/ui/HeaderReleaseVersion.tsx",
+        "reason": "Wires the header menu to the project Summary and the version write routes; the menu is covered by the Versions/ReleaseVersionMenu Stories and the whole path by the E2E suite."
       },
       {
         "file": "features/versions/ui/TaskPlanField.tsx",

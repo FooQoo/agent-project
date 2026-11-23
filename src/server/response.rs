@@ -72,7 +72,7 @@ pub(crate) fn agpj_error_response(error: &AgpjError) -> Response {
         | AgpjError::ArchiveTargetsChanged => StatusCode::CONFLICT,
         AgpjError::InvalidArgument { .. }
         | AgpjError::InvalidValue { .. }
-        | AgpjError::NoCurrentVersion
+        | AgpjError::NoReleaseVersion
         | AgpjError::FileInvalid { .. }
         | AgpjError::InvalidStateForColumn { .. }
         | AgpjError::InvalidStateForAssignee

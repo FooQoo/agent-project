@@ -125,8 +125,8 @@ pub const COMMANDS: &[(&str, Cover)] = &[
     ("update", NoRule("installation by a person")),
     ("version add", NoRule("lists a version; nothing to forget")),
     (
-        "version current",
-        NoRule("a person or an agent sets the current version; nothing to forget"),
+        "version release",
+        NoRule("a person or an agent sets the release version; nothing to forget"),
     ),
     ("version ls", READ_ONLY),
     ("wait", NoRule("the listener itself; it waits by design")),

@@ -1,5 +1,5 @@
 {
-  "project": { "id": "0123456789abcdef0123456789abcdef", "name": "Agent Board", "versions": [], "currentVersion": null },
+  "project": { "id": "0123456789abcdef0123456789abcdef", "name": "Agent Board", "versions": [], "releaseVersion": null },
   "version": "9f2c41d07a6b8e35",
   "tasks": [
     {

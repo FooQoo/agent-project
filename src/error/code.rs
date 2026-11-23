@@ -12,7 +12,7 @@ impl AgpjError {
             AgpjError::TaskNotFound { .. } => "task_not_found",
             AgpjError::TaskArchived { .. } => "task_archived",
             AgpjError::TaskNotArchived { .. } => "task_not_archived",
-            AgpjError::NoCurrentVersion => "no_current_version",
+            AgpjError::NoReleaseVersion => "no_release_version",
             AgpjError::ArchiveTargetsChanged => "archive_targets_changed",
             AgpjError::AttachmentNotFound { .. } => "attachment_not_found",
             AgpjError::AttachmentLimitExceeded => "attachment_limit_exceeded",

@@ -29,7 +29,7 @@ Commands:
   snapshot Fetch the complete board and history
   progress Show active work in epic wave order
   release Generate the release document of a version in docs/release/
-  version List the project's versions, or show, set, or clear the current one
+  version List the project's versions, or show, set, or clear the release version
   hook    Add the current progress table to an agent hook
   skills  Print the instructions of the agent-project Skill
   wait    Wait for a board change or the next task

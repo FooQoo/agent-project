@@ -17,19 +17,19 @@ use crate::server::request::StrictJson;
 use crate::server::response::{agpj_error_response, json_response};
 use crate::server::store::{parse_project_id, refresh_index, with_request_files};
 
-/// Which version to plan: a named one, the project's current one, or none.
+/// Which version to plan: a named one, the project's release version, or none.
 #[derive(Deserialize, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 enum Choice {
     Named,
-    Current,
+    Release,
     Unset,
 }
 
 fn choice_of(choice: Choice, version: Option<String>) -> Result<VersionChoice, AgpjError> {
     match (choice, version) {
         (Choice::Named, Some(name)) => Ok(VersionChoice::Named(name)),
-        (Choice::Current, None) => Ok(VersionChoice::Current),
+        (Choice::Release, None) => Ok(VersionChoice::Release),
         (Choice::Unset, None) => Ok(VersionChoice::Unset),
         (Choice::Named, None) => Err(AgpjError::InvalidValue {
             field: "version".into(),

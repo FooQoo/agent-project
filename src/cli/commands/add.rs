@@ -14,7 +14,7 @@ pub fn run(ctx: &mut Context, args: &AddArgs) -> Result<Outcome, AgpjError> {
         ctx.files.epic(ctx.project_id()?, id)?;
     }
     let project = ctx.project_id()?.clone();
-    // The plan is resolved before the task is written, so a project with no current version
+    // The plan is resolved before the task is written, so a project with no release version
     // creates nothing.
     let plan = match args.plan.choice()? {
         Some(choice) => Some(ctx.files.resolve_version_choice(&project, &choice)?),

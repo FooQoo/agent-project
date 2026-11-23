@@ -41,7 +41,7 @@ export interface HeaderProps {
   onBack?: () => void;
   /** The project switcher, shown after the slash when the project list is known. */
   projectSwitcher?: ReactNode;
-  /** The project's current-version menu, shown right of the project's name on the board. */
+  /** The project's release-version menu, shown right of the project's name on the board. */
   versionSlot?: ReactNode;
   /** The settings dialog; without it the settings button opens nothing. */
   settings?: HeaderSettings;

@@ -25,7 +25,7 @@ export function OptionRow({
   disabled?: boolean;
   label: string;
   hint?: string;
-  /** A small mark after the label, such as "Current". */
+  /** A small mark after the label, such as "Release version". */
   mark?: string;
 }) {
   const id = useId();

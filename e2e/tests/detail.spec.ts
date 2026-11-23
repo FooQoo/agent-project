@@ -173,8 +173,8 @@ test('the task grips never take keyboard focus', async ({ page }) => {
   }
   expect(visited).toEqual([
     'BUTTON agent-board',
-    // The project's current version is a menu in the header, after the project's name.
-    'BUTTON Current version: Not set',
+    // The project's release version is a menu in the header, after the project's name.
+    'BUTTON Release version: Not set',
     'BUTTON Ask AI',
     // Docs, Epics, Archive and Settings are in one menu at the right end.
     'BUTTON Menu',
@@ -211,7 +211,7 @@ test('the task grips never take keyboard focus', async ({ page }) => {
       .filter((element) => element.tabIndex >= 0 && !element.matches(':disabled'))
       .map((element) => (element.textContent ?? '').trim().slice(0, 3) || element.getAttribute('aria-label')),
   );
-  // Header actions (switcher, Ask AI, the menu), the current version, the band's two counts and its button, eight
+  // Header actions (switcher, Ask AI, the menu), the release version, the band's two counts and its button, eight
   // cards, the Pending card's answer button, Archive completed tasks, four detail controls.
   expect(focusable).toHaveLength(3 + 1 + 3 + 8 + 1 + 1 + 4);
   expect(await page.locator('.grip').evaluateAll((elements) => elements.every((element) => (element as HTMLElement).tabIndex < 0))).toBe(true);

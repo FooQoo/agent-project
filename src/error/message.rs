@@ -18,7 +18,7 @@ impl AgpjError {
             AgpjError::TaskNotFound { id } => format!("task #{id} not found."),
             AgpjError::TaskArchived { id } => format!("task #{id} is archived."),
             AgpjError::TaskNotArchived { id } => format!("task #{id} is not archived."),
-            AgpjError::NoCurrentVersion => "the project has no current version.".into(),
+            AgpjError::NoReleaseVersion => "the project has no release version.".into(),
             AgpjError::ArchiveTargetsChanged => "archive targets changed.".into(),
             AgpjError::AttachmentNotFound { id } => format!("attachment {id} not found."),
             AgpjError::AttachmentLimitExceeded => "attachment limits were exceeded.".into(),

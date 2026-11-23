@@ -15,7 +15,7 @@ pub fn run(ctx: &Context, args: &ProgressCommandArgs) -> Result<Outcome, AgpjErr
     let project = ctx.project_id()?;
     let filter = args
         .version
-        .resolve(|| Ok(ctx.files.project_versions(project)?.current))?;
+        .resolve(|| Ok(ctx.files.project_versions(project)?.release))?;
     let snapshot = ctx.files.board(project)?;
     let mut table = progress::build_filtered(
         &snapshot,

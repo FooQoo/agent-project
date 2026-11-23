@@ -28,34 +28,34 @@ const refetch = fn();
 const pickerArgs = {
   taskId: 7,
   planned: null,
-  current: 'v1.8.0',
+  release: 'v1.8.0',
   versions: ['v1.8.0', 'v1.9.0'],
 };
 
-export const PickerCurrentEnabled: Story = {
+export const PickerReleaseEnabled: Story = {
   render: () => (
     <PlannedVersionPicker {...pickerArgs} onSave={fn(async () => undefined)} onPending={fn()} />
   ),
   play: async ({ canvasElement }) => {
     const view = within(canvasElement);
-    await expect(view.getByRole('radio', { name: /Make it current/ })).toBeEnabled();
+    await expect(view.getByRole('radio', { name: /Make it the release version/ })).toBeEnabled();
     await expect(view.getByRole('radio', { name: /Leave unplanned/ })).toBeChecked();
   },
 };
 
-export const PickerCurrentDisabled: Story = {
+export const PickerReleaseDisabled: Story = {
   render: () => (
     <PlannedVersionPicker
       {...pickerArgs}
-      current={null}
+      release={null}
       onSave={fn(async () => undefined)}
       onPending={fn()}
     />
   ),
   play: async ({ canvasElement }) => {
     const view = within(canvasElement);
-    await expect(view.getByRole('radio', { name: /Make it current/ })).toBeDisabled();
-    await expect(view.getByText('Unavailable: no current version is set')).toBeVisible();
+    await expect(view.getByRole('radio', { name: /Make it the release version/ })).toBeDisabled();
+    await expect(view.getByText('Unavailable: no release version is set')).toBeVisible();
   },
 };
 
@@ -76,7 +76,7 @@ export const PickerConflict: Story = {
   play: async ({ canvasElement }) => {
     const view = within(canvasElement);
     refetch.mockClear();
-    await userEvent.click(view.getByRole('radio', { name: /Make it current/ }));
+    await userEvent.click(view.getByRole('radio', { name: /Make it the release version/ }));
     await expect(pending).not.toBeNull();
     await expect((pending as PendingSave | null)?.()).rejects.toBeInstanceOf(
       PlannedVersionChangedError,
@@ -94,7 +94,7 @@ const result: EpicVersionResult = {
   dryRun: false,
 };
 
-const epicArgs = { current: 'v1.8.0' as string | null, versions: ['v1.8.0', 'v1.9.0'] };
+const epicArgs = { release: 'v1.8.0' as string | null, versions: ['v1.8.0', 'v1.9.0'] };
 
 export const EpicDefaultNoChange: Story = {
   render: () => <EpicPlanField {...epicArgs} apply={fn(async () => result)} onPending={fn()} />,
@@ -112,7 +112,7 @@ export const EpicDropdownOpen: Story = {
     await userEvent.click(within(canvasElement).getByRole('button'));
     const list = within(document.body);
     await expect(await list.findByRole('radio', { name: 'No change' })).toBeChecked();
-    await expect(list.getByRole('radio', { name: 'Current (v1.8.0)' })).toBeVisible();
+    await expect(list.getByRole('radio', { name: 'Release version (v1.8.0)' })).toBeVisible();
     await expect(list.getByRole('radio', { name: 'v1.9.0' })).toBeVisible();
     await expect(list.getByRole('radio', { name: 'Leave unplanned' })).toBeVisible();
   },
@@ -129,14 +129,14 @@ export const EpicPickingAVersion: Story = {
   },
 };
 
-export const EpicCurrentUnavailable: Story = {
+export const EpicReleaseUnavailable: Story = {
   render: () => (
-    <EpicPlanField {...epicArgs} current={null} apply={fn(async () => result)} onPending={fn()} />
+    <EpicPlanField {...epicArgs} release={null} apply={fn(async () => result)} onPending={fn()} />
   ),
   play: async ({ canvasElement }) => {
     await userEvent.click(within(canvasElement).getByRole('button'));
     await expect(
-      await within(document.body).findByRole('radio', { name: /^Current/ }),
+      await within(document.body).findByRole('radio', { name: /^Release version/ }),
     ).toBeDisabled();
   },
 };

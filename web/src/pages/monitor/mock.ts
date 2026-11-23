@@ -147,7 +147,7 @@ export function createMonitorFixture(): MonitorFixture {
       project: {
         id: PROJECT_ID,
         versions: [],
-        currentVersion: null,
+        releaseVersion: null,
         name: long
           ? `${PROJECT_NAME} project with an intentionally long name for one-line truncation`
           : PROJECT_NAME,

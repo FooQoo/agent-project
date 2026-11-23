@@ -15,15 +15,15 @@ type Story = StoryObj<typeof meta>;
 export const VersionTagStates: Story = {
   render: () => (
     <div style={{ display: 'flex', gap: 8 }}>
-      <VersionTag planned="v1.9.0" current="v1.8.0" />
-      <VersionTag planned="v1.8.0" current="v1.8.0" />
-      <VersionTag planned={null} current="v1.8.0" />
+      <VersionTag planned="v1.9.0" release="v1.8.0" />
+      <VersionTag planned="v1.8.0" release="v1.8.0" />
+      <VersionTag planned={null} release="v1.8.0" />
     </div>
   ),
   play: async ({ canvasElement }) => {
     const view = within(canvasElement);
     await expect(view.getByText('v1.9.0')).toBeVisible();
-    await expect(view.getByText('Current')).toBeVisible();
+    await expect(view.getByText('Release version')).toBeVisible();
     await expect(view.getByText('Unplanned')).toBeVisible();
   },
 };
@@ -32,7 +32,7 @@ export const VersionTagStates: Story = {
 export const PlanTagInContext: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <PlanContext.Provider value={{ versions: ['v1.8.0'], current: 'v1.8.0' }}>
+      <PlanContext.Provider value={{ versions: ['v1.8.0'], release: 'v1.8.0' }}>
         <div data-testid="with">
           <PlanTag planned="v1.8.0" />
         </div>
