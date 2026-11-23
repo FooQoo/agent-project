@@ -62,11 +62,15 @@ pub fn connect(ctx: &mut Context, args: &ConnectArgs) -> Result<Outcome, AgpjErr
     if let Err(e) = connection_store::save_secret(&data_dir, &project, &connected.secret) {
         // The connection and its secret stand or fall together: with no secret to use it, the
         // new connection would only keep the agent busy.
-        return Err(recover_unsaved(e, &connected.agent.id, || {
-            ctx.files
-                .disconnect_session(&project, &connected.secret, ctx.clock.now())
-                .map(|_| ())
-        }));
+        return Err(recover_unsaved(
+            e,
+            &format!("{} ({})", connected.agent.id, connected.agent.name),
+            || {
+                ctx.files
+                    .disconnect_session(&project, &connected.secret, ctx.clock.now())
+                    .map(|_| ())
+            },
+        ));
     }
     Ok(Outcome {
         changed: true,
@@ -113,6 +117,8 @@ pub fn disconnect(ctx: &mut Context) -> Result<Outcome, AgpjError> {
         .ok_or_else(|| AgpjError::BoardUnavailable {
             reason: "The data folder cannot be found.".into(),
         })?;
+    // The same lock as `connect`: a disconnect never deletes a secret a connect just saved.
+    let _session = connection_store::lock_session(&data_dir, &project)?;
     let secret =
         connection_store::load_secret(&data_dir, &project).ok_or(AgpjError::NotConnected)?;
     let paused = ctx

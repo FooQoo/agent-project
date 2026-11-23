@@ -704,3 +704,79 @@ fn a_failed_secret_write_leaves_no_active_connection() {
             .is_ok()
     );
 }
+
+#[test]
+fn connect_and_disconnect_racing_leave_a_consistent_state() {
+    let home = tempfile::tempdir().unwrap();
+    let cmd = |args: &[&str]| {
+        let mut c = std::process::Command::new(env!("CARGO_BIN_EXE_agpj"));
+        c.env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_HOME", home.path())
+            .env("CLAUDE_CODE_SESSION_ID", "session-flip")
+            .env_remove("AGPJ_CONNECTION_SECRET")
+            .current_dir(home.path())
+            .args(args)
+            .stdin(std::process::Stdio::null());
+        c
+    };
+    assert!(
+        cmd(&["project", "create", "Flip"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    let store = FileStore::open(&home.path().join("shared"));
+    let project = store.project_by_name("Flip").unwrap().id;
+    store.register_agent(&project, "One", "", t0()).unwrap();
+    store.register_agent(&project, "Two", "", t0()).unwrap();
+    let code = |agent: &str| {
+        store
+            .issue_connect_code(&project, agent, false, Utc::now())
+            .unwrap()
+            .code
+    };
+    assert!(
+        cmd(&["--project", "Flip", "connect", &code("A-1")])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    for _ in 0..4 {
+        // A disconnect and a connect to the other agent start together.
+        let next = if store.has_agents(&project).unwrap() {
+            code("A-2")
+        } else {
+            String::new()
+        };
+        let a = cmd(&["--project", "Flip", "disconnect"]).spawn().unwrap();
+        let b = cmd(&["--project", "Flip", "connect", &next])
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+            .unwrap();
+        let (a, b) = (a.wait_with_output().unwrap(), b.wait_with_output().unwrap());
+        let _ = a;
+        // Consistent: either connected with a secret that verifies (disconnect succeeds), or
+        // fully disconnected (the disconnect then says there is nothing to leave).
+        let agents = store.list_agents(&project).unwrap();
+        let connected = agents.iter().filter(|x| x.connection.is_some()).count();
+        let out = cmd(&["--project", "Flip", "disconnect"]).output().unwrap();
+        if connected == 1 {
+            assert!(b.status.success() || out.status.success());
+            assert!(out.status.success(), "{out:?}");
+        } else {
+            assert_eq!(connected, 0);
+            assert!(!out.status.success());
+        }
+        // Back to a held connection for the next round.
+        assert!(
+            cmd(&["--project", "Flip", "connect", &code("A-1")])
+                .output()
+                .unwrap()
+                .status
+                .success()
+        );
+    }
+}
