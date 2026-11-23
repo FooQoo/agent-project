@@ -18,6 +18,7 @@ use serde_json::{Map, Value, json};
 const FORMAT_VERSION: u32 = 1;
 const INTERNAL_DIR: &str = ".internal";
 const FILE_NAME: &str = "modes.json";
+const LOCK_NAME: &str = "modes.lock";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -171,6 +172,13 @@ pub fn set(
     kind: ModeKind,
     now: DateTime<Utc>,
 ) -> std::io::Result<ProjectMode> {
+    let path = path_in(data_dir);
+    let dir = path.parent().unwrap_or(data_dir);
+    crate::server::preferences::create_private_dir(dir)?;
+    // One exclusive lock from the read to the rename, so the board and the CLI (a separate
+    // process) cannot overwrite each other's update.
+    let _lock = crate::file_store::lock::WriteLock::acquire(&dir.join(LOCK_NAME))
+        .map_err(std::io::Error::other)?;
     let mut projects = read_projects_strict(data_dir)?;
     let mode = if kind == ModeKind::Sparring {
         projects.remove(project);
@@ -191,9 +199,6 @@ pub fn set(
         "projects": projects,
     }))
     .map_err(std::io::Error::other)?;
-    let path = path_in(data_dir);
-    let dir = path.parent().unwrap_or(data_dir);
-    crate::server::preferences::create_private_dir(dir)?;
     let temporary = dir.join(format!("{FILE_NAME}.{}.tmp", std::process::id()));
     let result = crate::server::preferences::write_owner_only(&temporary, &bytes)
         .and_then(|()| std::fs::rename(&temporary, &path));
@@ -259,5 +264,20 @@ mod strict_tests {
         std::fs::create_dir(&file).unwrap();
         assert!(set(dir.path(), "p1", ModeKind::Sleep, Utc::now()).is_err());
         assert!(file.is_dir());
+    }
+
+    #[test]
+    fn concurrent_saves_of_different_projects_both_survive() {
+        let dir = tempfile::tempdir().unwrap();
+        let now = Utc::now();
+        std::thread::scope(|scope| {
+            for n in 0..8 {
+                let path = dir.path();
+                scope.spawn(move || {
+                    set(path, &format!("p{n}"), ModeKind::Sleep, now).unwrap();
+                });
+            }
+        });
+        assert_eq!(load_all(dir.path()).len(), 8);
     }
 }

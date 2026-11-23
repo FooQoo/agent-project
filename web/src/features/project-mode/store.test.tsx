@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyModeEvent, resetModes, setProjectMode, useProjectMode } from './store';
+import { applyModeEvent, refreshModes, resetModes, setProjectMode, useProjectMode } from './store';
 
 afterEach(() => {
   resetModes();
@@ -43,5 +43,38 @@ describe('useProjectMode', () => {
     const { result } = renderHook(() => useProjectMode('p2'));
     await act(async () => {});
     expect(result.current).toBeNull();
+  });
+
+  it('retries a project whose first read failed when the stream reconnects', async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('no', { status: 500 }))
+      .mockResolvedValueOnce(Response.json({ mode: 'sleep' }));
+    vi.stubGlobal('fetch', fetcher);
+    const { result } = renderHook(() => useProjectMode('p3'));
+    await act(async () => {});
+    expect(result.current).toBeNull();
+    await act(async () => {
+      refreshModes();
+    });
+    expect(result.current?.mode).toBe('sleep');
+  });
+
+  it('does not let an older read overwrite a newer update', async () => {
+    let finish: (response: Response) => void = () => undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>((resolve) => (finish = resolve))),
+    );
+    const { result } = renderHook(() => useProjectMode('p4'));
+    act(() => {
+      applyModeEvent({
+        data: JSON.stringify({ projects: { p4: { mode: 'sleep', since: null } } }),
+      });
+    });
+    await act(async () => {
+      finish(Response.json({ mode: 'sparring' }));
+    });
+    expect(result.current?.mode).toBe('sleep');
   });
 });

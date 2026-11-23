@@ -8,14 +8,34 @@ import { parseModeEvent, SPARRING, type ProjectMode } from './model';
  * and a change made by the CLI shows without a reload.
  */
 const known = new Map<string, ProjectMode>();
+/** Projects the page shows, whether or not a read has succeeded, so a reconnect retries them. */
+const displayed = new Set<string>();
+/** Counts the updates of each project, so a read that started earlier does not overwrite them. */
+const versions = new Map<string, number>();
 const listeners = new Set<() => void>();
+
+function put(projectId: string, mode: ProjectMode) {
+  known.set(projectId, mode);
+  versions.set(projectId, (versions.get(projectId) ?? 0) + 1);
+}
+
+/** Reads a project's mode and applies it only if nothing newer arrived while the read ran. */
+function loadAndApply(projectId: string) {
+  const started = versions.get(projectId) ?? 0;
+  return loadMode(projectId).then(
+    (mode) => {
+      if ((versions.get(projectId) ?? 0) === started) setProjectMode(projectId, mode);
+    },
+    () => undefined,
+  );
+}
 
 function emit() {
   for (const listener of [...listeners]) listener();
 }
 
 export function setProjectMode(projectId: string, mode: ProjectMode) {
-  known.set(projectId, mode);
+  put(projectId, mode);
   emit();
 }
 
@@ -24,22 +44,19 @@ export function applyModeEvent(event: unknown) {
   const data = (event as { data?: unknown } | null)?.data;
   const changes = parseModeEvent(data);
   if (changes.length === 0) return;
-  for (const [id, mode] of changes) known.set(id, mode);
+  for (const [id, mode] of changes) put(id, mode);
   emit();
 }
 
 /** Reads again every project the page shows, for events missed while the stream was down. */
 export function refreshModes() {
-  for (const id of [...known.keys()]) {
-    loadMode(id).then(
-      (mode) => setProjectMode(id, mode),
-      () => undefined,
-    );
-  }
+  for (const id of new Set([...displayed, ...known.keys()])) void loadAndApply(id);
 }
 
 export function resetModes() {
   known.clear();
+  displayed.clear();
+  versions.clear();
   emit();
 }
 
@@ -60,17 +77,9 @@ export function useProjectMode(projectId: string | null): ProjectMode | null {
     projectId ? known.get(projectId) : undefined,
   );
   useEffect(() => {
-    if (!projectId || known.has(projectId)) return undefined;
-    let current = true;
-    loadMode(projectId).then(
-      (loaded) => {
-        if (current && !known.has(projectId)) setProjectMode(projectId, loaded);
-      },
-      () => undefined,
-    );
-    return () => {
-      current = false;
-    };
+    if (!projectId) return;
+    displayed.add(projectId);
+    if (!known.has(projectId)) void loadAndApply(projectId);
   }, [projectId]);
   return mode ?? null;
 }
