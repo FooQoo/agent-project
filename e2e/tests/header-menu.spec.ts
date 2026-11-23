@@ -48,3 +48,22 @@ test('the menu holds Docs, Epics, Archive and Settings, in that order', async ({
   await expect(page.getByRole('menu')).toHaveCount(0);
   await expect(page.getByRole('banner').getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
 });
+
+test('the menu keeps the same four items on Epics and Archive, marks the open one, and moves between screens', async ({ page }) => {
+  let menu = await openHeaderMenu(page);
+  await menu.getByRole('menuitem', { name: 'Epics' }).click();
+  await expect(page.getByRole('button', { name: 'Back to board' })).toBeVisible();
+
+  menu = await openHeaderMenu(page);
+  await expect(menu.getByRole('menuitem')).toHaveText(['Docs', 'Epics', 'Archive', 'Settings']);
+  await expect(menu.getByRole('menuitem', { name: 'Epics' })).toHaveAttribute('aria-current', 'page');
+  await expect(menu.getByRole('menuitem', { name: 'Epics' })).toHaveAttribute('aria-disabled', 'true');
+  await menu.getByRole('menuitem', { name: 'Archive' }).click();
+
+  menu = await openHeaderMenu(page);
+  await expect(menu.getByRole('menuitem')).toHaveText(['Docs', 'Epics', 'Archive', 'Settings']);
+  await expect(menu.getByRole('menuitem', { name: 'Archive' })).toHaveAttribute('aria-current', 'page');
+  await expect(menu.getByRole('menuitem', { name: 'Epics' })).not.toHaveAttribute('aria-disabled', 'true');
+  await menu.getByRole('menuitem', { name: 'Docs' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+});

@@ -236,6 +236,18 @@ ol {
   cursor: default;
 }
 
+/* The screen that is open: kept in the menu, not selectable, and marked rather than dimmed. */
+.header-menu .menu__item[data-current] {
+  background: var(--r-bg);
+  color: var(--r-accent);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.header-menu .menu__item[data-current] svg {
+  color: var(--r-accent);
+}
+
 @media (pointer: coarse) {
   .header-menu .menu__item {
     /* biome-ignore lint/plugin: a finger needs 44px (the L button height) */

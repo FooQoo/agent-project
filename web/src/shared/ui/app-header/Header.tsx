@@ -35,7 +35,7 @@ export interface HeaderProps {
   onAdd?: () => void;
   onArchive?: () => void;
   onEpics?: () => void;
-  /** Opens the project's docs, from the menu. Offered with Epics and Archive, on the board only. */
+  /** Opens the project's docs, from the menu, on every screen. The item is left out without it. */
   onDocs?: () => void;
   viewMode?: ViewMode;
   onBack?: () => void;
@@ -139,10 +139,12 @@ export function Header({
       {menu ? (
         <HeaderMenu
           triggerRef={menuButtonRef}
-          switchDisabled={switchDisabled}
-          onDocs={viewMode === 'board' && canAdd ? onDocs : undefined}
-          onEpics={viewMode === 'board' && canAdd ? onEpics : undefined}
-          onArchive={viewMode === 'board' && canAdd ? onArchive : undefined}
+          // Before the board has loaded its destinations wait; the Epics and Archive screens are already loaded.
+          switchDisabled={switchDisabled || (viewMode === 'board' && !canAdd)}
+          current={viewMode === 'board' ? undefined : viewMode}
+          onDocs={onDocs}
+          onEpics={onEpics}
+          onArchive={onArchive}
           onSettings={withSettings ? () => setSettingsOpen(true) : undefined}
         />
       ) : (

@@ -118,16 +118,17 @@ export const Board: Story = {
   },
 };
 
-/** Before the board has loaded, Ask AI, docs, epics and archive are not offered; settings stays in the menu. */
+/** Before the board has loaded, Ask AI is not offered and the menu keeps its four items, with the destinations disabled. */
 export const BoardNotReady: Story = {
   args: { canAdd: false },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('button', { name: /ask ai/i })).toBeNull();
     const menu = await openMenu(canvasElement);
-    await expect(menu.queryByRole('menuitem', { name: /archive/i })).toBeNull();
-    await expect(menu.queryByRole('menuitem', { name: /docs/i })).toBeNull();
-    await expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeInTheDocument();
+    for (const name of [/docs/i, /epics/i, /archive/i]) {
+      await expect(menu.getByRole('menuitem', { name })).toHaveAttribute('aria-disabled', 'true');
+    }
+    await expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeEnabled();
   },
 };
 
@@ -154,25 +155,56 @@ export const SwitchDisabled: Story = {
   },
 };
 
-/** The archive screen replaces the board buttons with a back button; the project control stays. */
+/** The four menu items, in order, as the names the menu shows. */
+const MENU_ITEMS = [/docs/i, /epics/i, /archive/i, /^settings$/i];
+
+/** The archive screen replaces the board buttons with a back button; the menu keeps its four items. */
 export const ArchiveView: Story = {
   args: { viewMode: 'archive' },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('button', { name: /ask ai/i })).toBeNull();
+    const menu = await openMenu(canvasElement);
+    await expect(menu.getAllByRole('menuitem')).toHaveLength(MENU_ITEMS.length);
+    const current = menu.getByRole('menuitem', { name: /archive/i });
+    await expect(current).toHaveAttribute('aria-current', 'page');
+    await expect(current).toHaveAttribute('aria-disabled', 'true');
+    await expect(menu.getByRole('menuitem', { name: /docs/i })).toBeEnabled();
+    await expect(menu.getByRole('menuitem', { name: /epics/i })).toBeEnabled();
+    await userEvent.click(menu.getByRole('menuitem', { name: /epics/i }));
+    await expect(args.onEpics).toHaveBeenCalledTimes(1);
     await userEvent.click(canvas.getByRole('button', { name: 'Back to board' }));
     await expect(args.onBack).toHaveBeenCalledTimes(1);
   },
 };
 
-/** The epics screen shows the project name as text instead of the project control, and its back button. */
+/** The epics screen shows the project name as text and its back button; the menu marks Epics as the current place. */
 export const EpicsView: Story = {
   args: { viewMode: 'epics' },
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('button', { name: 'alpha' })).toBeNull();
     await expect(canvas.getByText('alpha')).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: 'Back to board' })).toBeEnabled();
+    const menu = await openMenu(canvasElement);
+    await expect(menu.getAllByRole('menuitem')).toHaveLength(MENU_ITEMS.length);
+    const current = menu.getByRole('menuitem', { name: /epics/i });
+    await expect(current).toHaveAttribute('aria-current', 'page');
+    await expect(current).toHaveAttribute('aria-disabled', 'true');
+    await userEvent.click(menu.getByRole('menuitem', { name: /docs/i }));
+    await expect(args.onDocs).toHaveBeenCalledTimes(1);
+  },
+};
+
+/** A card form is open on the Epics screen: every destination stays disabled, and Settings still works. */
+export const EpicsSwitchDisabled: Story = {
+  args: { viewMode: 'epics', switchDisabled: true },
+  play: async ({ canvasElement }) => {
+    const menu = await openMenu(canvasElement);
+    for (const name of [/docs/i, /epics/i, /archive/i]) {
+      await expect(menu.getByRole('menuitem', { name })).toHaveAttribute('aria-disabled', 'true');
+    }
+    await expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeEnabled();
   },
 };
 

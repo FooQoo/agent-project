@@ -18,7 +18,30 @@
         },
         {
           "id": "shared-ui-header--board-not-ready",
-          "states": ["board not loaded", "settings only"],
+          "states": ["board not loaded", "four items", "destinations disabled"],
+          "interaction": true
+        },
+        {
+          "id": "shared-ui-header--archive-view",
+          "states": [
+            "archive open",
+            "archive current and not selectable",
+            "docs and epics enabled"
+          ],
+          "interaction": true
+        },
+        {
+          "id": "shared-ui-header--epics-view",
+          "states": [
+            "epics open",
+            "epics current and not selectable",
+            "docs choice calls its callback"
+          ],
+          "interaction": true
+        },
+        {
+          "id": "shared-ui-header--epics-switch-disabled",
+          "states": ["card form open", "all destinations disabled", "settings enabled"],
           "interaction": true
         },
         {
