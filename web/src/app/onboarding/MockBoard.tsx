@@ -56,6 +56,7 @@ export function MockBoard({
       style={{ position: 'fixed', inset: 0, background: 'var(--r-bg)' }}
     >
       <Header
+        menu
         projects={[SAMPLE_PROJECT]}
         activeProjectId={SAMPLE_PROJECT.id}
         canAdd

@@ -73,7 +73,7 @@ describe('App', () => {
     expect(screen.queryByRole('separator')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Ask AI' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'agent-board' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Settings' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Menu' })).toBeTruthy();
 
     // The project name shows once the list is in; the board follows with its own request.
     await screen.findByText('agent-board');
@@ -291,7 +291,7 @@ describe('App', () => {
     expect(screen.getByRole('complementary', { name: 'Task details' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'agent-board' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Ask AI' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Settings' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Menu' })).toBeTruthy();
 
     backend.boards[PROJECT_A.id] = structuredClone(fixtureBoard);
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));

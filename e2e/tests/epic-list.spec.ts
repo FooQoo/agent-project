@@ -1,6 +1,6 @@
 import { expect, test } from '../helpers/fixtures';
 import { agpjOk, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
-import { waitForSync } from '../helpers/ui';
+import { waitForSync, openHeaderItem } from '../helpers/ui';
 
 // The epic list from the header: every epic with its task counts, the details beside it, the existing editor,
 // and the counts that follow a task's state. Each test seeds its own epics so they do not depend on the fixture.
@@ -23,7 +23,7 @@ test('epic details confirm deletion, retain refusals, and remove an unused epic'
 	agpjOk(mainProject, ['add', 'Keep the used epic', '--assignee', 'ai', '--actor', 'human', '--epic', 'USEDDEL']);
 	await page.goto('/');
 	await waitForSync(page);
-	await page.getByRole('button', { name: 'Epics', exact: true }).click();
+	await openHeaderItem(page, 'Epics');
 	await row(page, 'Occupied epic sample').getByRole('button').first().click();
 	await page.getByRole('button', { name: 'Delete epic', exact: true }).click();
 	const confirm = page.getByRole('group', { name: /Delete this epic|epic details and images/ });
@@ -56,7 +56,7 @@ test('the header lists the epics with their counts, and selecting one shows its 
 	await page.getByRole('button', { name: /Flow todo/ }).click();
 	const taskActionGap = await actionGap(page);
 	await page.getByRole('button', { name: 'Close details' }).click();
-	await page.getByRole('button', { name: 'Epics' }).click();
+	await openHeaderItem(page, 'Epics');
 
 	const flow = row(page, 'Epic list flow');
 	await expect(flow).toBeVisible();
@@ -97,7 +97,7 @@ test('an epic with no tasks reads zero in every state', async ({ page }) => {
 
 	await page.goto('/');
 	await waitForSync(page);
-	await page.getByRole('button', { name: 'Epics' }).click();
+	await openHeaderItem(page, 'Epics');
 
 	const empty = row(page, 'No tasks yet');
 	await expect(empty).toContainText('Total 0 tasks');
@@ -120,12 +120,12 @@ test('a task archived from the board is counted as archived in its epic, once', 
 	await detail.getByRole('button', { name: 'Archive task' }).click();
 	await detail.getByRole('button', { name: 'Archive', exact: true }).click();
 	await expect(page.getByRole('button', { name: /Counted once/ })).toHaveCount(0);
-	await page.locator('.header__archive').click();
+	await openHeaderItem(page, 'Archive');
 	await page.locator('.archive-row > button').filter({ hasText: 'Counted once' }).click();
 	expect(await actionGap(page)).toBeCloseTo(taskActionGap, 1);
 	await page.getByRole('button', { name: 'Back to board' }).click();
 
-	await page.getByRole('button', { name: 'Epics' }).click();
+	await openHeaderItem(page, 'Epics');
 	const archived = row(page, 'Archive count');
 	await expect(archived).toContainText('Total 1 task');
 	const counts = archived.getByRole('group', { name: 'Tasks by state' });

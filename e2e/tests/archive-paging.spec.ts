@@ -2,6 +2,7 @@ import { expect, test } from '../helpers/fixtures';
 import { mainProject, resetBoard } from '../helpers/agpj';
 import { stubArchivePages } from '../helpers/archive-pages';
 import { resetPreferences } from '../helpers/preferences';
+import { openHeaderItem } from '../helpers/ui';
 
 // #664: the PC archive list reads 50 tasks at a time and reads the next page when the last row comes into view.
 // The server's paging is tested in Rust; here the reads are answered with 130 synthetic tasks.
@@ -14,7 +15,7 @@ async function openArchive(page: import('@playwright/test').Page) {
 	resetBoard(mainProject);
 	await page.setViewportSize({ width: 1280, height: 900 });
 	await page.goto('/');
-	await page.locator('.header__archive').click();
+	await openHeaderItem(page, 'Archive');
 }
 
 const scrollToBottom = (page: import('@playwright/test').Page) =>

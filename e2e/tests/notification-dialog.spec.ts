@@ -1,6 +1,6 @@
 import { expect, test } from '../helpers/fixtures';
 import { mainProject, resetBoard } from '../helpers/agpj';
-import { readBoardAfterReset } from '../helpers/ui';
+import { readBoardAfterReset, openHeaderItem } from '../helpers/ui';
 
 // The "Notifications" row of the settings dialog opens a dialog of its own. The choices are
 // saved at once through the real server, and the settings list no longer holds them.
@@ -13,8 +13,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('the row opens the notification dialog, a choice is saved, and focus returns to Settings', async ({ page }) => {
-  const settingsButton = page.getByRole('button', { name: 'Settings', exact: true });
-  await settingsButton.click();
+  await openHeaderItem(page, 'Settings');
   const settings = page.getByRole('dialog', { name: 'Settings' });
   // The settings list has the row, not the checkboxes.
   await expect(settings.getByRole('checkbox')).toHaveCount(0);
@@ -36,7 +35,7 @@ test('the row opens the notification dialog, a choice is saved, and focus return
     .poll(async () => (await page.request.get('/api/notification-settings')).ok())
     .toBe(true);
   await page.reload();
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await openHeaderItem(page, 'Settings');
   await page.getByRole('button', { name: 'Notification settings' }).click();
   await expect(
     page.getByRole('dialog', { name: 'Notifications' }).getByRole('checkbox', { name: /^History additions/ }),

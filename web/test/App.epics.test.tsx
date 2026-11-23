@@ -14,6 +14,7 @@ import {
   makeTask,
 } from './fixtures';
 import { renderApp } from './renderApp';
+import { chooseHeaderItem } from './headerMenu';
 
 let backend: FakeBackend;
 
@@ -78,7 +79,7 @@ describe('the epic list in the app shell', () => {
     });
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Epics' }));
+    await chooseHeaderItem('Epics');
 
     const list = await screen.findByRole('list', { name: 'Epics in this project' });
     const rows = within(list).getAllByRole('listitem');
@@ -119,7 +120,7 @@ describe('the epic list in the app shell', () => {
     restart([], {});
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Epics' }));
+    await chooseHeaderItem('Epics');
     expect(await screen.findByText('No epics yet')).toBeTruthy();
     expect(within(screen.getByRole('main')).getByText('0 epics')).toBeTruthy();
   });
@@ -128,7 +129,7 @@ describe('the epic list in the app shell', () => {
     restart([epic('ALPHA', 'Alpha epic')], { ALPHA: counts(0) });
     const view = renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
-    await userEvent.click(screen.getByRole('button', { name: 'Epics' }));
+    await chooseHeaderItem('Epics');
     await screen.findByRole('list', { name: 'Epics in this project' });
     view.navigate(urlOf(PROJECT_B.id));
     await screen.findByRole('region', { name: 'Todo' });

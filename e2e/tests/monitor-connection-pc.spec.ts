@@ -6,6 +6,7 @@ import {
   startPhoneEntrance,
   type PhoneEntrance,
 } from '../helpers/monitor';
+import { openHeaderItem } from '../helpers/ui';
 
 // The PC side of the remote connection: the settings dialog hands over to the connection dialog,
 // the connected view shows the QR code and the passcode, and Reset token and Pause connection lead
@@ -32,7 +33,7 @@ const status = async (page: Page) =>
   ((await (await page.request.get(`${entrance.pcOrigin}/api/monitor-connections`)).json()) as { status: string }).status;
 
 async function openConnection(page: Page) {
-  await page.getByRole('button', { name: 'Settings' }).click();
+  await openHeaderItem(page, 'Settings');
   await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
   await page.getByRole('button', { name: 'Connection settings' }).click();
   // The settings dialog closes first: only the connection dialog is on the screen.
@@ -75,7 +76,7 @@ test('Reset token shows the setup without stopping, and closing the dialog keeps
   // Closing the dialog returns the focus to the settings button and leaves the connection on.
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Settings' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Menu' })).toBeFocused();
   expect(await status(page)).toBe('ready');
   await openConnection(page);
   await expect(page.getByRole('dialog', { name: 'Remote connection' }).getByText('Accepting connections')).toBeVisible();

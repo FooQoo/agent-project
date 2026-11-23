@@ -1,5 +1,5 @@
 import { openAskAi, fillRequest, requestField, sendRequest } from '../helpers/ask-ai';
-import { readBoardAfterReset, waitForDrop } from '../helpers/ui';
+import { openHeaderItem, openHeaderMenu, readBoardAfterReset, waitForDrop } from '../helpers/ui';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Locator, type Page, type TestInfo } from '../helpers/fixtures';
@@ -129,7 +129,7 @@ async function openWith(page: Page, script: () => void): Promise<void> {
 }
 
 async function openSettings(page: Page, name = 'Settings'): Promise<Locator> {
-  await page.getByRole('button', { name }).click();
+  await openHeaderItem(page, name);
   const dialog = page.getByRole('dialog', { name });
   await expect(dialog).toBeVisible();
   return dialog;
@@ -170,9 +170,9 @@ test('every one of the 24 themes applies at once, is saved, and survives a reloa
 }) => {
   await openFresh(page);
   await expectTheme(page, 'Light', 'Blue');
-  // The settings button sits at the right end of the header.
+  // The menu button, which holds Settings, sits at the right end of the header.
   const header = page.getByRole('banner');
-  const settingsBox = (await header.getByRole('button', { name: 'Settings', exact: true }).boundingBox())!;
+  const settingsBox = (await header.getByRole('button', { name: 'Menu', exact: true }).boundingBox())!;
   const headerBox = (await header.boundingBox())!;
   expect(settingsBox.x + settingsBox.width).toBeGreaterThan(headerBox.x + headerBox.width - 40);
   const dialog = await openSettings(page);
@@ -208,7 +208,7 @@ test('every one of the 24 themes applies at once, is saved, and survives a reloa
   await expectTheme(page, 'Dark', 'Pink');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Settings', exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
   await expect(lane(page, 'Todo')).toBeVisible();
   await expectTheme(page, 'Dark', 'Pink');
 
@@ -230,7 +230,7 @@ test('every one of the 24 themes applies at once, is saved, and survives a reloa
   expect(await page.evaluate((key) => localStorage.getItem(key), LOCALE_KEY)).toBe('ja');
   await expectTheme(page, 'Dark', 'Pink');
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('button', { name: '設定', exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'メニュー', exact: true })).toBeFocused();
 
   await page.reload();
   await expect(synced(page)).toHaveText(/^同期済み/);
@@ -415,7 +415,7 @@ test('the settings stay available while the board loads and when it cannot load'
   await dialog.getByRole('radio', { name: 'Dark Teal' }).click();
   await expectTheme(page, 'Dark', 'Teal', false);
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('button', { name: 'Settings', exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
 
   failing = true;
   release();
@@ -442,8 +442,10 @@ test('the settings stay available while the board loads and when it cannot load'
 
 test('the settings dialog takes the focus, keeps it inside, and gives it back', async ({ page }) => {
   await openFresh(page);
-  const settingsButton = page.getByRole('button', { name: 'Settings', exact: true });
+  const settingsButton = page.getByRole('button', { name: 'Menu', exact: true });
   await settingsButton.focus();
+  await page.keyboard.press('Enter');
+  await page.getByRole('menuitem', { name: 'Settings', exact: true }).focus();
   await page.keyboard.press('Enter');
   const dialog = page.getByRole('dialog', { name: 'Settings', exact: true });
   await expect(dialog).toBeVisible();
@@ -465,7 +467,7 @@ test('the settings dialog takes the focus, keeps it inside, and gives it back', 
   await expect(settingsButton).toBeFocused();
 
   // So does the close button.
-  await settingsButton.click();
+  await openHeaderItem(page, 'Settings');
   await expect(dialog).toBeVisible();
   await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(dialog).toHaveCount(0);
@@ -474,7 +476,7 @@ test('the settings dialog takes the focus, keeps it inside, and gives it back', 
   // The arrow keys move between the themes while holding the key (the group selects on it).
   // The group moves the focus on a timer after the key goes down, so the key is held until
   // the focus has moved: a fixed short press can end first on a slow machine and select nothing.
-  await settingsButton.click();
+  await openHeaderItem(page, 'Settings');
   await dialog.getByRole('radio', { name: 'Light Blue' }).focus();
   await page.keyboard.down('ArrowRight');
   await expect(dialog.getByRole('radio', { name: 'Light Sky' })).toBeFocused();

@@ -16,7 +16,7 @@ import {
   type Serve,
 } from '../helpers/agpj';
 import { setPreferences } from '../helpers/preferences';
-import { waitForSync } from '../helpers/ui';
+import { waitForSync, openHeaderItem } from '../helpers/ui';
 
 // Each epic keeps its details in EPIC.md. The real server leaves the files as they are, and the CLI, snapshot,
 // progress, hook, wait, API, and the page all use `document` and `documentPath`. Every scenario runs on its own
@@ -257,7 +257,7 @@ test('the page shows the epic details with its cards in order and the Markdown i
   await waitForSync(page);
 
   // The epic list: the empty document reads as an empty state.
-  await page.getByRole('button', { name: 'Epics' }).click();
+  await openHeaderItem(page, 'Epics');
   await page.getByRole('button', { name: /Gamma epic/ }).first().click();
   await expect(page.getByText('No epic details yet')).toBeVisible();
   await page.getByRole('button', { name: /Alpha epic/ }).first().click();
@@ -323,7 +323,7 @@ test('the Japanese page labels the epic details', async ({ page }) => {
   await expect(dialog).toBeVisible();
   await dialog.getByRole('button', { name: '閉じる', exact: true }).first().click();
 
-  await page.getByRole('button', { name: 'エピック' }).first().click();
+  await openHeaderItem(page, 'エピック');
   await page.getByRole('button', { name: /Gamma epic/ }).first().click();
   await expect(page.getByText('エピックの詳細はまだありません')).toBeVisible();
 });

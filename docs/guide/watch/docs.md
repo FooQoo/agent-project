@@ -4,7 +4,7 @@ title: Project docs
 
 # Project docs
 
-Each project has a `docs/` folder for its documents: strategy, specifications, designs, and notes. Open **Docs** in the board header to browse the folder and read a file. The dialog only shows the files; you write them in your own editor. The docs are separate from the board, so a change to a document never changes a task, an epic, or the board's history.
+Each project has a `docs/` folder for its documents: strategy, specifications, designs, and notes. Open **Docs** from the board header menu to browse the folder and read a file. The dialog only shows the files; you write them in your own editor. The docs are separate from the board, so a change to a document never changes a task, an epic, or the board's history.
 
 ::: info Public preview
 This feature is in public preview. Its behavior and specifications may change. See [Feature stages](../feature-stages#docs) for its current limitations.
@@ -12,7 +12,7 @@ This feature is in public preview. Its behavior and specifications may change. S
 
 ## Open the docs
 
-Choose **Docs** in the board header. The dialog shows the files on the left and the chosen file in the middle.
+Open the menu at the right end of the board header and choose **Docs**. The dialog shows the files on the left and the chosen file in the middle.
 
 ![The Docs dialog with a file chosen in the list, its front matter above the body, a Mermaid diagram, and a table](../../images/guide/docs.png){.screenshot}
 

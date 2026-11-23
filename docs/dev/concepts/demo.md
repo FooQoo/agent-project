@@ -70,7 +70,7 @@ A static site has no computer and no `agpj serve` to reach, so the demo hides th
 
 | Feature | Where it is hidden | Why |
 | --- | --- | --- |
-| Project Docs | `BoardWorkspace.tsx` passes no `onDocs`, so the header has no **Docs** button | Docs open files and folders on the computer. |
+| Project Docs | `BoardWorkspace.tsx` passes no `onDocs`, so the header menu has no **Docs** item | Docs open files and folders on the computer. |
 | Remote connection | `BoardSettings.tsx` leaves out the connection row and dialog | A phone connects to an `agpj serve`. |
 | Attachments | `EditorBody.tsx` and `AskAiDialog.tsx` offer no images panel and ignore pasted or dropped images | Nothing is saved, so there is nowhere to keep them. |
 | Saved language and theme | `app/entry/board.tsx` and `BoardSettings.tsx` skip `/api/preferences` | There is no server to keep them. The theme stays in the browser, as in the sample-data mode; the language follows the browser on each page load. |

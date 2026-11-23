@@ -197,7 +197,7 @@ Detailは、表示する画面がなくなってから5分キャッシュに残�
 利用者から見た動作は[予定バージョン](../../guide/watch/board.md#planned-versions)にあります。ここでは作りを説明します。コードは`web/src/features/versions/`にあり、`app/`と`pages/monitor/`が組み合わせます。
 
 - **タグ。** カードはバージョンのタグを、エピックのラベル（`renderEpic`）とは別の専用の`card__plan`スロットに、`renderVersion`で描きます。バージョンを持たないプロジェクトで予定のないタスクは、何も描きません。スマホのカードにはrender propの経路がないため、`MonitorScreen`が`PlanContext`（`planProject`が作るバージョンとリリースバージョン）を提供し、`MonitorTask`がそこからタグを読みます。コンテキストは環境が`planning`を指定したときだけ提供されるので、サンプルデータの画面にタグは出ません。スマホにバージョンを設定するフィールドはありません。
-- **ヘッダー。** `useBoardVersions`がPCカンバンのヘッダーの`versionSlot`、つまり`HeaderReleaseVersion`が配線した`ReleaseVersionMenu`を渡します。バージョンを選ぶと`PUT .../versions/release`を呼び、入力したバージョンを確定すると`POST .../versions`のあとに同じルートを呼びます。どちらもすぐにSummaryを読み直します。
+- **ヘッダー。** `Header`（`web/src/shared/ui/app-header/Header.tsx`）は、製品名、プロジェクトの切り替え、バージョンのスロット、Ask AIを保ち、`menu`を指定すると、Docs、Epics、Archive、Settingsを右端の一つのメニューボタンにまとめます（`headermenu.tsx`。共有のドロップダウンメニューを使います）。項目は`header__docs`、`header__epics`、`header__archive`、`header__settings`のクラスを持ち、タッチ画面では高さが44 px以上です。スマホ幅の画面は`menu`を指定しないので、今までどおりの設定ボタンのままです。`useBoardVersions`がPCカンバンのヘッダーの`versionSlot`、つまり`HeaderReleaseVersion`が配線した`ReleaseVersionMenu`を渡します。バージョンを選ぶと`PUT .../versions/release`を呼び、入力したバージョンを確定すると`POST .../versions`のあとに同じルートを呼びます。どちらもすぐにSummaryを読み直します。
 - **フィールドの取り決め。** 予定バージョンフィールドを載せるエディターは、`PlanFieldArgs`（`disabled`と`onPending`）を受け取る関数`renderPlan`を取ります。フィールドは変更を`PendingSave`（何も変えていないときは`null`）として報告します。`usePendingPlan`が`EditDialog`と`useEpicEditor`のためにそれを保持し、各エディターは自分の保存の最後の手順として実行します。この変更だけで保存は押せて未保存として数えますが、カードやエピックが下書きになることはなく、この変更だけで保存したエピックは書き換えません。`ActionDialog`がフィールドを渡すのはPCカンバンだけです。
 - **タスクのフィールド。** `PlannedVersionPicker`は、表示していた値を`expectedPlannedVersion`にして保存します。`planned_version_changed`のときは新しい値を表示し、カンバンの読み直しを求め、保存を拒否します。そのためエディターは失敗を報告し、選択が黙って書かれることはありません。表示している値が変わると、保留中の変更は新しい値のもとで作り直されるので、もう一度保存するのは明示的な上書きです。
 - **エピックのフィールド。** `EpicPlanField`は、1つのドロップダウン（ポップオーバー内のラジオ一覧。変更しない、リリースバージョン、各バージョン、未定）です。選ぶと、選んだ時点の選択を持つ保留中の変更を報告します。つなぎ込み側の`EpicPlan`が、保存の時点でエピックの完了していないタスクを数え、そのIDで`scope: 'all'`、`dryRun: false`のリクエストをエピックのルートに1回送ります。サーバーは、何を送っても完了済みとアーカイブ済みのタスクを飛ばします。リクエストが失敗するとその手順は失敗として扱われ、エディターはダイアログを開いたままエラーを表示します。
@@ -251,7 +251,7 @@ Detailは、表示する画面がなくなってから5分キャッシュに残�
 - ダイアログは`useDocsFollow`でファイルの変化に追従します。アプリは`subscribeDocs`を渡します。これは、ストリームのそのプロジェクトの`docs`の通知と、ストリームの再接続（`sync`）を呼び出しに変えるものです。呼び出しのたびに、ツリーを読み込み中の状態にせずに読み直します（`refresh`）。開いているファイルがツリーになければ`deleted`です。あれば`useDocument.refresh`で読み直し、`revision`が違うときだけ表示を置き換えて`updated`とします。通知は時刻付きでフッターの左（シェルの`footerStart`）に出し、そのファイルにだけ付きます。ドキュメントはAgent Projectのデータではないので、モーダルによる更新の保留を待ちません。
 - リンクでカンバンの画面が移動することはありません。Markdownの本文のリンクのクリックは`DocumentPane`が拾い、`.mdx`の本文のリンクはサンドボックスのページが`{type: 'link', href}`を送ります。`resolveDocsLink`（`features/docs/model/docsLink.ts`）が`href`をファイルのフォルダとツリーに照らして解決します。一覧にあるファイルはそのファイルを選び（フォルダへのリンクはその`README.md`）、`http`と`https`は`noopener,noreferrer`で新しいタブに開き、一覧にないファイルへの相対パスはフッターに「リンク先のファイルが見つかりません。」を出します。ページ内のアンカーとほかのスキームは何もしません。こうして選んだファイルは、`DocsFileTree`が上のフォルダを開いて表示位置までスクロールします。
 - 相対パスの画像は`resolveRelativeImage`（`shared/markdown/resolveRelativeImage.ts`）がファイルのフォルダを基準に解決し、画像のルートへつなぎます。自分の添付や安全でないスキームは、ここに届きません。
-- ヘッダーの**ドキュメント**は、カンバンにだけ表示します。カンバンは`app/`でコンテナをプロジェクトをキーにして組み立てるので、プロジェクトを切り替えると最初からになります。ダイアログは初めて使うときに読み込みます。
+- ヘッダーのメニューの**ドキュメント**は、カンバンにだけ表示します。カンバンは`app/`でコンテナをプロジェクトをキーにして組み立てるので、プロジェクトを切り替えると最初からになります。ダイアログは初めて使うときに読み込みます。
 
 ## プロジェクトをまたぐ読み込み
 

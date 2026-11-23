@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
 import { resetBoard, agpjOk, mainProject, projectId } from '../helpers/agpj';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
-import { readBoardAfterReset, waitForSync } from '../helpers/ui';
+import { readBoardAfterReset, waitForSync, openHeaderItem } from '../helpers/ui';
 
 // Headless Chromium hides scrollbars by default; the scroll cue needs the real ones.
 test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } });
@@ -165,18 +165,6 @@ test('1024px: the default width fits beside four lanes (each stays at least 200p
   for (const w of lanes) expect(w).toBeGreaterThanOrEqual(200);
 });
 
-test('the Docs button keeps its label from 1024px and shows its icon only below', async ({ page }) => {
-  await open(page, 1180);
-  const docs = page.getByRole('banner').getByRole('button', { name: 'Docs', exact: true });
-  const label = docs.getByText('Docs', { exact: true });
-  await expect(label).toBeVisible();
-  await page.setViewportSize({ width: 1024, height: 900 });
-  await expect(label).toBeVisible();
-  await page.setViewportSize({ width: 1023, height: 900 });
-  await expect(label).toBeHidden();
-  await expect(docs).toBeVisible();
-});
-
 test('1920px: the extra width goes to the lanes and the panel keeps its width', async ({ page }) => {
   await open(page, 1920);
   expect(await panelWidth(page)).toBe(360);
@@ -306,7 +294,7 @@ test('dragging keeps the selection and the archive confirmation and selects no t
 
 test('Japanese: the handle is named in Japanese', async ({ page }) => {
   await open(page, 1280);
-  await page.getByRole('button', { name: 'Settings' }).click();
+  await openHeaderItem(page, 'Settings');
   await page.getByRole('radio', { name: '日本語' }).click();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('separator', { name: 'タスクの詳細の幅を変更' })).toBeVisible();

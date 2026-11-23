@@ -1,15 +1,9 @@
 import { Suspense, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ArchiveIcon,
-  ArrowLeftIcon,
-  BookOpenIcon,
-  LayersIcon,
-  SettingsIcon,
-  SparklesIcon,
-} from 'lucide-react';
+import { ArrowLeftIcon, SettingsIcon, SparklesIcon } from 'lucide-react';
 import { Button, type ButtonSize } from '@/shared/ui/button';
 import { IconLabel } from '@/shared/ui/icon-label';
+import { HeaderMenu } from './headermenu';
 import type { Project, ProjectId } from '../../api/contracts';
 
 export type ViewMode = 'board' | 'archive' | 'epics';
@@ -41,7 +35,7 @@ export interface HeaderProps {
   onAdd?: () => void;
   onArchive?: () => void;
   onEpics?: () => void;
-  /** Opens the project's docs. Offered with Epics and Archive, on the board only. */
+  /** Opens the project's docs, from the menu. Offered with Epics and Archive, on the board only. */
   onDocs?: () => void;
   viewMode?: ViewMode;
   onBack?: () => void;
@@ -57,6 +51,11 @@ export interface HeaderProps {
   settingsSize?: ButtonSize;
   /** Shows the settings button. The passcode screen leaves it out: nothing can be saved there. */
   withSettings?: boolean;
+  /**
+   * Gathers Docs, Epics, Archive and Settings into one menu at the right end, as the PC board does.
+   * Without it the header keeps a plain settings button, as the phone screens do.
+   */
+  menu?: boolean;
 }
 
 export function Header({
@@ -76,6 +75,7 @@ export function Header({
   logoSrc = `${import.meta.env.BASE_URL}logo-white.png`,
   settingsSize = 'm',
   withSettings = true,
+  menu = false,
 }: HeaderProps) {
   const { t } = useTranslation();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -84,6 +84,7 @@ export function Header({
     settings?.preload?.().catch(() => {});
   }, [settings]);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   return (
     <header className="header">
@@ -131,50 +132,18 @@ export function Header({
             t('archive.back')
           )}
         </Button>
-      ) : canAdd ? (
-        <>
-          {onDocs && (
-            <Button
-              type="button"
-              variant="outline"
-              className="header__docs"
-              aria-label={t('docs.title')}
-              disabled={switchDisabled}
-              onClick={onDocs}
-            >
-              <IconLabel icon={BookOpenIcon}>
-                <span className="header__label">{t('docs.title')}</span>
-              </IconLabel>
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            className="header__epics"
-            aria-label={t('epics.title')}
-            disabled={switchDisabled}
-            onClick={onEpics}
-          >
-            <IconLabel icon={LayersIcon}>
-              <span className="header__label">{t('epics.title')}</span>
-            </IconLabel>
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="header__archive"
-            aria-label={t('archive.title')}
-            disabled={switchDisabled}
-            onClick={onArchive}
-          >
-            <IconLabel icon={ArchiveIcon}>
-              <span className="header__label">{t('archive.title')}</span>
-            </IconLabel>
-          </Button>
-        </>
       ) : null}
-      {withSettings && (
-        <>
+      {menu ? (
+        <HeaderMenu
+          triggerRef={menuButtonRef}
+          switchDisabled={switchDisabled}
+          onDocs={viewMode === 'board' && canAdd ? onDocs : undefined}
+          onEpics={viewMode === 'board' && canAdd ? onEpics : undefined}
+          onArchive={viewMode === 'board' && canAdd ? onArchive : undefined}
+          onSettings={withSettings ? () => setSettingsOpen(true) : undefined}
+        />
+      ) : (
+        withSettings && (
           <Button
             ref={settingsButtonRef}
             type="button"
@@ -188,14 +157,16 @@ export function Header({
           >
             <SettingsIcon aria-hidden="true" />
           </Button>
-          <Suspense fallback={null}>
-            {settings?.render({
-              open: settingsOpen,
-              onOpenChange: setSettingsOpen,
-              restoreFocusRef: settingsButtonRef,
-            })}
-          </Suspense>
-        </>
+        )
+      )}
+      {withSettings && (
+        <Suspense fallback={null}>
+          {settings?.render({
+            open: settingsOpen,
+            onOpenChange: setSettingsOpen,
+            restoreFocusRef: menu ? menuButtonRef : settingsButtonRef,
+          })}
+        </Suspense>
       )}
     </header>
   );

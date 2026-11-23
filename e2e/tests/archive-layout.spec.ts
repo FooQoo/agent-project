@@ -2,6 +2,7 @@ import { expect, test } from "../helpers/fixtures";
 import { writeFileSync } from "node:fs";
 import { mainProject, resetBoard } from "../helpers/agpj";
 import { resetPreferences, setPreferences } from "../helpers/preferences";
+import { openHeaderItem } from '../helpers/ui';
 
 test.beforeEach(() => resetPreferences());
 test.afterEach(() => resetPreferences());
@@ -61,7 +62,7 @@ for (const mode of ["light", "dark"] as const) {
 				});
 				await page.goto("/");
 				await expect(page.locator(".lane-header__archive")).toBeEnabled();
-				await page.locator(".header__archive").click();
+				await openHeaderItem(page, 'Archive');
 				const archive = page.locator(".list-pane");
 				const list = page.locator(".list-pane__rows");
 				const row = page.locator(".archive-row > button").first();
@@ -217,7 +218,7 @@ test("archive empty state matches the Pen guidance and shared detail placeholder
 	});
 	await page.goto("/");
 	await expect(page.getByRole("region", { name: "未着手" })).toBeVisible();
-	await page.locator(".header__archive").click();
+	await openHeaderItem(page, 'Archive');
 	await expect(page.locator(".list-pane__count")).toHaveText("0件");
 	await expect(page.locator(".list-pane__rows")).toHaveCount(0);
 	await expect(page.locator(".list-pane__empty svg")).toBeVisible();

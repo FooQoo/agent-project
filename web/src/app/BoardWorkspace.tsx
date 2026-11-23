@@ -105,6 +105,7 @@ export function BoardWorkspace({
     <>
       {stalePage ? <StalePageNotice /> : null}
       <Header
+        menu
         projects={
           projects.projects.length > 0 || model.view === 'no-projects' ? projects.projects : null
         }

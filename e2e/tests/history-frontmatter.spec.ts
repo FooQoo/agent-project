@@ -13,7 +13,7 @@ import {
 	workspace,
 } from '../helpers/agpj';
 import { removeMonitorHome, startPhoneEntrance, type PhoneEntrance } from '../helpers/monitor';
-import { waitForSync } from '../helpers/ui';
+import { waitForSync, openHeaderItem } from '../helpers/ui';
 import { putDraft } from '../helpers/drafts';
 import { answerDialog, fillAnswer, pressSend } from '../helpers/answer';
 import { closeMessages } from '../helpers/answer-flow';
@@ -289,7 +289,7 @@ test('auto-Done is recorded once, and archive/restore retain their history in th
 	const panel = details(page);
 	await panel.getByRole('button', { name: 'Archive task' }).click();
 	await panel.getByRole('group', { name: new RegExp(`Archive #${id}`) }).getByRole('button', { name: 'Archive', exact: true }).click();
-	await page.getByRole('banner').getByRole('button', { name: 'Archive', exact: true }).click();
+	await openHeaderItem(page, 'Archive');
 	const archived = page.locator('.archive-row > button').filter({ hasText: 'Automatic completion history' });
 	await expect(archived).toBeVisible();
 	await archived.click();

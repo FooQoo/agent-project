@@ -78,7 +78,6 @@ export function ReleaseVersionMenu({
           data-set={release !== null}
         >
           {release === null ? <FlagOffIcon aria-hidden="true" /> : <FlagIcon aria-hidden="true" />}
-          <span className="ver-head__label">{t('versions.header.button')}</span>
           <strong className="ver-head__value">{value}</strong>
           <ChevronDownIcon aria-hidden="true" />
         </Button>

@@ -70,7 +70,7 @@ Agent Projectは、サーバーが起動するたび、つまりページを読�
 
 | 機能 | 隠している場所 | 理由 |
 | --- | --- | --- |
-| プロジェクトのDocs | `BoardWorkspace.tsx`が`onDocs`を渡さないので、ヘッダーに**Docs**ボタンが出ない | Docsはコンピューター上のファイルやフォルダーを開くため。 |
+| プロジェクトのDocs | `BoardWorkspace.tsx`が`onDocs`を渡さないので、ヘッダーのメニューに**Docs**の項目が出ない | Docsはコンピューター上のファイルやフォルダーを開くため。 |
 | リモート接続 | `BoardSettings.tsx`が接続の行とダイアログを出さない | スマホは`agpj serve`に接続するため。 |
 | 添付 | `EditorBody.tsx`と`AskAiDialog.tsx`が画像の欄を出さず、貼り付けやドロップした画像を無視する | 何も保存しないので、置き場所がないため。 |
 | 言語とテーマの保存 | `app/entry/board.tsx`と`BoardSettings.tsx`が`/api/preferences`を使わない | 保存するサーバーがないため。テーマはサンプルデータモードと同じくブラウザの中に残し、言語はページを開くたびにブラウザに従う。 |

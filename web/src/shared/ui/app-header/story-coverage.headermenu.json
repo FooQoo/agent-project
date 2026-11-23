@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "owner": "U10",
+  "file": "shared/ui/app-header/headermenu.tsx",
+  "exports": [
+    {
+      "name": "HeaderMenu",
+      "stories": [
+        {
+          "id": "shared-ui-header--board",
+          "states": ["menu opened", "docs, epics, archive and settings enabled"],
+          "interaction": true
+        },
+        {
+          "id": "shared-ui-header--switch-disabled",
+          "states": ["card form open", "board destinations disabled"],
+          "interaction": true
+        },
+        {
+          "id": "shared-ui-header--board-not-ready",
+          "states": ["board not loaded", "settings only"],
+          "interaction": true
+        },
+        {
+          "id": "shared-ui-header--action-callbacks",
+          "states": ["docs", "epics", "archive", "choice calls its callback"],
+          "interaction": true
+        }
+      ]
+    }
+  ]
+}

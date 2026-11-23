@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '../helpers/fixtures';
 import { ensureProject, makeHome, projectId, removeHome, startServe, type Serve } from '../helpers/agpj';
+import { openHeaderItem } from '../helpers/ui';
 
 // The first-run guide runs in the browser: the request, the plan and the cards are drawn over the
 // board and never written to it, and the server only keeps whether the guide has been seen. Each test starts its
@@ -131,7 +132,7 @@ test('OB-04: the settings show the tutorial again, and ending a replay records n
 	await page.goto(url);
 	await expect(page.getByText('Try Agent Project')).toBeHidden();
 
-	await page.getByRole('button', { name: 'Settings' }).click();
+	await openHeaderItem(page, 'Settings');
 	await page.getByRole('button', { name: 'Try it' }).click();
 	await expect(page.getByText('Try Agent Project')).toBeVisible();
 

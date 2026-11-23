@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
 import { mainProject, resetBoard } from '../helpers/agpj';
-import { readBoardAfterReset } from '../helpers/ui';
+import { openHeaderMenu, readBoardAfterReset } from '../helpers/ui';
 import { answerButton, openListButton } from '../helpers/answer';
 import { openAskAi } from '../helpers/ask-ai';
 
@@ -48,7 +48,7 @@ test('the header, the band, the detail panel and the dialogs have finger-sized c
 }) => {
   const header = page.getByRole('banner');
   await expectFingerSized(header.getByRole('button', { name: 'Ask AI' }), 'Ask AI');
-  await expectFingerSized(header.getByRole('button', { name: 'Settings' }), 'Settings');
+  await expectFingerSized(header.getByRole('button', { name: 'Menu' }), 'Menu');
   await expectFingerSized(header.locator('.project-switcher'), 'project switcher');
   expect((await header.boundingBox())?.height).toBe(56);
 
@@ -61,7 +61,9 @@ test('the header, the band, the detail panel and the dialogs have finger-sized c
     expect((await tab.boundingBox())?.height).toBeGreaterThanOrEqual(43.5);
   }
 
-  await header.getByRole('button', { name: 'Settings' }).click();
+  const menu = await openHeaderMenu(page);
+  await expectFingerSized(menu.getByRole('menuitem').first(), 'menu item');
+  await menu.getByRole('menuitem', { name: 'Settings' }).click();
   const settings = page.getByRole('dialog', { name: 'Settings' });
   await expectFingerSized(settings.locator('.modal__close'), 'modal close');
   for (const tile of await settings.getByRole('radio').all()) {

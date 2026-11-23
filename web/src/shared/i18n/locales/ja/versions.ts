@@ -5,7 +5,6 @@ export const versionsJa = {
       release: 'リリースバージョン',
     },
     header: {
-      button: 'リリースバージョン',
       buttonValue: 'リリースバージョン: {{version}}',
       unset: '未設定',
       listLabel: 'このプロジェクトのバージョン',

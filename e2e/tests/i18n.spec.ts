@@ -3,7 +3,7 @@ import path from 'node:path';
 import { expect, test, type Page, type TestInfo } from '../helpers/fixtures';
 import { listTasks, mainHome, resetBoard, mainProject } from '../helpers/agpj';
 import { getPreferences, resetPreferences } from '../helpers/preferences';
-import { readBoardAfterReset } from '../helpers/ui';
+import { readBoardAfterReset, openHeaderItem } from '../helpers/ui';
 
 test.use({ locale: 'ja-JP' });
 
@@ -37,7 +37,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   await expect(lane(page, 'Todo')).toBeVisible();
   await expect(lane(page, 'Doing')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await openHeaderItem(page, 'Settings');
   const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
   const englishOption = settings.getByRole('radio', { name: 'English' });
   const japaneseOption = settings.getByRole('radio', { name: '日本語' });
@@ -102,7 +102,7 @@ test('starts in English in a Japanese browser, switches and persists without tra
   await expect(lane(page, '未着手')).toBeVisible();
   await expect(task(page, 12)).toContainText('回答待');
 
-  await page.getByRole('button', { name: '設定', exact: true }).click();
+  await openHeaderItem(page, '設定');
   await page.getByRole('radio', { name: 'English' }).click();
   await expect(page.getByRole('dialog', { name: 'Settings', exact: true })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -119,8 +119,10 @@ test('keyboard selection keeps an open archive confirmation and the selected tas
   await panel.getByRole('button', { name: 'Archive task' }).click();
   await expect(panel.getByText('Archive #12 "Restore a board from JSON"? You can restore it from the archive.')).toBeVisible();
 
-  const trigger = page.getByRole('button', { name: 'Settings', exact: true });
+  const trigger = page.getByRole('button', { name: 'Menu', exact: true });
   await trigger.focus();
+  await page.keyboard.press('Enter');
+  await page.getByRole('menuitem', { name: 'Settings', exact: true }).focus();
   await page.keyboard.press('Enter');
   const dialog = page.getByRole('dialog', { name: 'Settings', exact: true });
   await expect(dialog).toBeVisible();
@@ -136,7 +138,7 @@ test('keyboard selection keeps an open archive confirmation and the selected tas
   await expect(page.getByRole('dialog', { name: '設定', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
 
-  const japaneseTrigger = page.getByRole('button', { name: '設定', exact: true });
+  const japaneseTrigger = page.getByRole('button', { name: 'メニュー', exact: true });
   await expect(japaneseTrigger).toBeFocused();
   await expect(dialog).toHaveCount(0);
   await expect(task(page, 12)).toHaveAttribute('aria-current', 'true');
@@ -186,7 +188,7 @@ test('the settings dialog stays within the desktop viewports', async ({ page }, 
       })
       .toBe(true);
     const before = await board.boundingBox();
-    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await openHeaderItem(page, 'Settings');
 
     const dialog = page.getByRole('dialog', { name: 'Settings', exact: true });
     await expect(dialog).toBeVisible();

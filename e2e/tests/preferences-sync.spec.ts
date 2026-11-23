@@ -8,6 +8,7 @@ import {
   type PhoneEntrance,
 } from '../helpers/monitor';
 import { getPreferences, resetPreferences, setPreferences } from '../helpers/preferences';
+import { openHeaderItem } from '../helpers/ui';
 
 // The saved language and color theme belong to the PC and are shared by every screen. E-1 is the PC in two
 // browsers, E-2 is the PC page and the phone monitor open together, and E-3 is a phone that has never
@@ -45,8 +46,10 @@ test.afterEach(async () => {
   await resetPreferences(entrance.pcOrigin);
 });
 
-async function choose(page: Page, dialogName: string, option: string): Promise<void> {
-  await page.getByRole('button', { name: dialogName, exact: true }).click();
+/** `phone` opens the dialog with the settings button of the phone screen; the PC board has it in the header menu. */
+async function choose(page: Page, dialogName: string, option: string, phone = false): Promise<void> {
+  if (phone) await page.getByRole('button', { name: dialogName, exact: true }).click();
+  else await openHeaderItem(page, dialogName);
   const dialog = page.getByRole('dialog', { name: dialogName });
   await dialog.getByRole('radio', { name: option, exact: true }).click();
   await page.keyboard.press('Escape');
@@ -86,7 +89,7 @@ test('E-1: a language and theme chosen in one PC browser open the same in a brow
     expect(await b.evaluate(() => (window as unknown as Record<string, number>).__storageAtStart)).toBe(0);
     await expect(b.getByRole('contentinfo').getByRole('status')).toHaveText(/^同期済み/);
     await expectLook(b, 'ja', 'dark', 'teal');
-    await expect(b.getByRole('button', { name: '設定', exact: true })).toBeVisible();
+    await expect(b.getByRole('button', { name: 'メニュー', exact: true })).toBeVisible();
   } finally {
     await contextA.close();
     await contextB.close();
@@ -112,10 +115,10 @@ test('E-2: a change on the phone monitor reaches the PC page, and a change on th
     await phone.evaluate(() => { (window as unknown as Record<string, number>).__kept = 1; });
 
     // Phone to PC: the language, then the theme.
-    await choose(phone, 'Settings', '日本語');
+    await choose(phone, 'Settings', '日本語', true);
     await expect(html(phone)).toHaveAttribute('lang', 'ja');
     await expect(html(pc)).toHaveAttribute('lang', 'ja');
-    await choose(phone, '設定', 'ダーク・オレンジ');
+    await choose(phone, '設定', 'ダーク・オレンジ', true);
     await expectLook(pc, 'ja', 'dark', 'orange');
     expect(await getPreferences(entrance.pcOrigin)).toMatchObject({ locale: 'ja', theme: { mode: 'dark', accent: 'orange' } });
 

@@ -46,7 +46,7 @@ export const Open: Story = {
       view.getByRole('button', { name: 'Add this version to the project' }),
     ).toBeDisabled();
     await expect(view.getByRole('radio', { name: /v1\.8\.0/ })).toBeChecked();
-    await expect(view.getAllByText('Release version').length).toBeGreaterThan(1);
+    await expect(view.getByText('Release version')).toBeVisible();
   },
 };
 

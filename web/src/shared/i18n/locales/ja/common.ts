@@ -4,6 +4,9 @@ export const commonJa = {
     english: 'English',
     japanese: '日本語',
   },
+  headerMenu: {
+    label: 'メニュー',
+  },
   settings: {
     title: '設定',
     language: '言語',
