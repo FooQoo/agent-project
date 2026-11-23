@@ -186,6 +186,33 @@ fn ac3_nothing_changes_for_another_release_version_another_lane_or_a_second_done
     assert_eq!(f.release().as_deref(), Some("v1.10.0"));
 }
 
+#[test]
+fn ac3_only_the_first_completion_can_move_the_release_version() {
+    let f = fixture(None);
+    f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
+    f.store
+        .set_release_version(&f.project, Some("v1.8.0"), at(6))
+        .unwrap();
+    let id = f.card("v1.8.0");
+    // 1. Done with no newer version: the release version stays.
+    f.done(id);
+    assert_eq!(f.release().as_deref(), Some("v1.8.0"));
+    // 2. A newer version is listed.
+    f.store.add_version(&f.project, "v1.9.0", at(10)).unwrap();
+    // 3. The card is reopened and finished again.
+    f.store
+        .move_work_task_for_user(&f.project, id, Column::Todo, human("Reopen."), at(11))
+        .unwrap();
+    f.store
+        .move_work_task_for_user(&f.project, id, Column::Done, human("Again."), at(12))
+        .unwrap();
+    // 4. The release version is unchanged, and the second completion is still in the history.
+    assert_eq!(f.release().as_deref(), Some("v1.8.0"));
+    let reasons = f.reasons(id);
+    assert!(reasons.iter().any(|r| r == "Again."));
+    assert!(!reasons.iter().any(|r| r.contains("moved from")));
+}
+
 fn project_id(home: &std::path::Path) -> String {
     let projects: PathBuf = home.join("shared/projects");
     fs::read_dir(projects)

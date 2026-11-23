@@ -115,6 +115,7 @@ impl FileStore {
             simple_request: None,
             onboarding_sample: None,
             release_notes_version: None,
+            release_completed_at: None,
             planned_version: None,
             history: vec![transition_event(Transition {
                 language,

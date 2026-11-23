@@ -96,7 +96,7 @@ impl FileStore {
     /// is a release-work card and its version is the project's release version, move the
     /// release version to the nearest newer listed version and record that in the task's
     /// history. When no newer version is listed, the release version stays and the history
-    /// says so. Any other task is left alone.
+    /// says so. A task that is not a release-work card, or one that already completed once, is left alone.
     fn advance_release_for_done(
         &self,
         project: &ProjectId,
@@ -107,6 +107,12 @@ impl FileStore {
         let Some(version) = task.release_notes_version.clone() else {
             return Ok(None);
         };
+        // Only the card's first completion can move the release version, so a card that is
+        // reopened and finished again changes nothing, whatever versions are listed by then.
+        if task.release_completed_at.is_some() {
+            return Ok(None);
+        }
+        task.release_completed_at = Some(stamp(now));
         let shared = self.shared_dir();
         let mut file = reader::read_project_file(shared, project)?;
         let listed = listed_versions(project_dir);

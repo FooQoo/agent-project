@@ -50,6 +50,14 @@ pub struct TaskFile {
     /// version issued, so creating it again finds the card and issues no second one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub release_notes_version: Option<String>,
+    /// When the release-work card first reached Done. Only that first completion can move the
+    /// release version; a later Done never does.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "crate::clock::serde_opt_utc"
+    )]
+    pub release_completed_at: Option<DateTime<Utc>>,
     /// The version the task is planned for; `None` when it has no plan. It lives in the
     /// `plannedVersion` key of TASK.md, not in `task.json`.
     #[serde(default)]
@@ -121,6 +129,13 @@ pub struct TaskMetadata {
     /// See `TaskFile::release_notes_version`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub release_notes_version: Option<String>,
+    /// See `TaskFile::release_completed_at`.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "crate::clock::serde_opt_utc"
+    )]
+    pub release_completed_at: Option<DateTime<Utc>>,
     /// The planned version that an earlier build kept here. Read and ignored; never written
     /// again: it is the `plannedVersion` key of TASK.md.
     #[serde(default, skip_serializing)]
@@ -158,6 +173,7 @@ impl From<&TaskFile> for TaskMetadata {
             simple_request: task.simple_request.clone(),
             onboarding_sample: task.onboarding_sample.clone(),
             release_notes_version: task.release_notes_version.clone(),
+            release_completed_at: task.release_completed_at,
             planned_version: None,
             planned_version_changes: None,
         }
@@ -188,6 +204,7 @@ impl TaskMetadata {
             simple_request: self.simple_request,
             onboarding_sample: self.onboarding_sample,
             release_notes_version: self.release_notes_version,
+            release_completed_at: self.release_completed_at,
             planned_version: None,
             history,
         }
