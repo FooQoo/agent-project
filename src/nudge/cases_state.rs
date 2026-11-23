@@ -173,13 +173,13 @@ pub fn all() -> Vec<Case> {
 }
 
 #[test]
-fn the_stale_running_reminder_says_to_continue_and_never_to_pause() {
+fn the_stale_running_reminder_tells_an_idle_agent_to_pause() {
     let scenario = running_since(60);
     let findings = super::state_rules::stale_running(&scenario.facts());
     assert_eq!(findings.len(), 1);
     let text = format!("{:?}", findings[0]);
-    assert!(text.contains("continue the work"), "{text}");
+    assert!(text.contains("actually working on it, continue"), "{text}");
     assert!(text.contains("history add"), "{text}");
-    assert!(text.contains("<why it cannot resume>"), "{text}");
-    assert!(!text.contains("paused --actor ai"), "{text}");
+    assert!(text.contains("paused --actor ai --reason"), "{text}");
+    assert!(text.contains("<why you stopped>"), "{text}");
 }
