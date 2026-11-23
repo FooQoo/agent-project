@@ -16,6 +16,23 @@ pub(in crate::file_store::ops) fn active_connection_locked(
         .map(|c| c.id.clone()))
 }
 
+/// [`active_connection_locked`] for a resume: a connection that has shown no activity for
+/// [`STALE_RUN_SECONDS`] does not count, because the next stale-run sweep would pause the run again.
+pub(in crate::file_store::ops) fn fresh_connection_locked(
+    shared: &std::path::Path,
+    project_dir: &std::path::Path,
+    agent_id: &str,
+    now: DateTime<Utc>,
+) -> Result<Option<String>, AgpjError> {
+    let connections: ConnectionsFile = load(shared, &connections_path(project_dir))?;
+    let limit = Duration::seconds(STALE_RUN_SECONDS);
+    Ok(connections
+        .connections
+        .iter()
+        .find(|c| c.agent_id == agent_id && is_active(c) && now - c.last_activity_at <= limit)
+        .map(|c| c.id.clone()))
+}
+
 impl FileStore {
     /// Issue a one-time connection code for an agent. A plain code is refused while the agent
     /// has an active connection (`agent_busy`); a switch code replaces it when exchanged.

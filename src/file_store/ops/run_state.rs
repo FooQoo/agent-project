@@ -134,7 +134,12 @@ impl FileStore {
         let claims = verified
             .as_ref()
             .is_some_and(|verified| task.agent_id.as_deref() != Some(verified.agent_id.as_str()));
-        if task.agent_status == state && !claims && task.run_connection_id == run_connection {
+        // A request without a verified connection (the web UI) never changes the connection, so
+        // the same state is a no-op whatever connection the card is on.
+        if task.agent_status == state
+            && !claims
+            && (verified.is_none() || task.run_connection_id == run_connection)
+        {
             return Ok(Changed {
                 value: reader::read_task_locked(shared, project, id)?,
                 changed: false,

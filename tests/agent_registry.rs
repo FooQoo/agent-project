@@ -1196,3 +1196,145 @@ fn a_card_of_an_archived_agent_cannot_enter_doing_until_it_is_reassigned() {
         .move_work_task_for_user(&fx.project, id, Column::Doing, ctx(Actor::Human), t0())
         .unwrap();
 }
+
+#[test]
+fn session_end_tries_every_stored_secret_and_releases_the_live_connection() {
+    use sha2::{Digest, Sha256};
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    // The first connection is replaced by a switch; the live one runs a card.
+    let replaced = fx.connect("A-1", false, t0()).unwrap();
+    let live = fx.connect("A-1", true, t0()).unwrap();
+    let id = fx.doing_task();
+    fx.run(id, &live, t0()).unwrap();
+    let data_dir = fx._root.path();
+    // The Claude-key secret (tried first) is the replaced one; the resident key holds the live one.
+    keep_secret(data_dir, &fx.project, "session-1", &replaced);
+    let digest = Sha256::digest(b"res-1");
+    let hex: String = digest.iter().take(8).map(|b| format!("{b:02x}")).collect();
+    let dir = data_dir.join("connections").join(fx.project.as_str());
+    std::fs::write(dir.join(format!("resident_{hex}.secret")), &live).unwrap();
+
+    let unbound = tempfile::tempdir().unwrap();
+    let input = serde_json::json!({
+        "hook_event_name": "SessionEnd",
+        "session_id": "session-1",
+        "cwd": unbound.path(),
+    })
+    .to_string();
+    let mut child = std::process::Command::new(env!("CARGO_BIN_EXE_agpj"))
+        .env("AGPJ_AUTOSTART", "0")
+        .env("AGPJ_HOME", data_dir)
+        .env("AGPJ_RESIDENT_ID", "res-1")
+        .env_remove("AGPJ_CONNECTION_SECRET")
+        .current_dir(unbound.path())
+        .args(["--project", "Alpha", "hook", "--agent", "claude"])
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .unwrap();
+    use std::io::Write;
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(input.as_bytes())
+        .unwrap();
+    child.wait().unwrap();
+    let task = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(task.agent_status, RunState::Paused);
+    assert_eq!(task.run_connection_id, None);
+}
+
+#[test]
+fn a_secretless_request_for_the_state_a_connected_card_is_in_changes_nothing() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let secret = fx.connect("A-1", false, t0()).unwrap();
+    let id = fx.doing_task();
+    fx.run(id, &secret, t0()).unwrap();
+    let again = fx
+        .store
+        .set_agent_status(&fx.project, id, RunState::Running, ctx(Actor::Human), t0())
+        .unwrap();
+    assert!(!again.changed);
+    assert!(
+        fx.store
+            .task(&fx.project, id)
+            .unwrap()
+            .run_connection_id
+            .is_some()
+    );
+}
+
+#[test]
+fn an_answer_does_not_resume_a_card_on_a_stale_connection() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let secret = fx.connect("A-1", false, t0()).unwrap();
+    let id = fx.paused_on_an_answered_question(&secret);
+    // The connection shows no activity for longer than the stale limit.
+    let late = t0() + chrono::Duration::seconds(agent_project::file_store::STALE_RUN_SECONDS + 60);
+    fx.store
+        .accept_message(&fx.project, "Q-1", Actor::Ai, late)
+        .unwrap();
+    let task = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(task.agent_status, RunState::Paused);
+    assert!(!task.history.iter().any(|e| e.reason.starts_with("Resumed")));
+}
+
+#[test]
+fn disconnect_by_an_environment_secret_keeps_the_stored_secret_of_this_session() {
+    let home = tempfile::tempdir().unwrap();
+    let run = |session: &str, env: Option<&str>, args: &[&str]| {
+        let mut c = session_cmd(home.path(), session, args);
+        if let Some(env) = env {
+            c.env("AGPJ_CONNECTION_SECRET", env);
+        }
+        c.output().unwrap()
+    };
+    assert!(
+        run("s-own", None, &["project", "create", "Own"])
+            .status
+            .success()
+    );
+    let store = FileStore::open(&home.path().join("shared"));
+    let project = store.project_by_name("Own").unwrap().id;
+    store.register_agent(&project, "Screen", "", t0()).unwrap();
+    store.register_agent(&project, "CLI", "", t0()).unwrap();
+    let issue = |agent: &str| {
+        store
+            .issue_connect_code(&project, agent, false, Utc::now())
+            .unwrap()
+            .code
+    };
+    let own = run(
+        "s-own",
+        None,
+        &["--project", "Own", "connect", &issue("A-1")],
+    );
+    assert!(own.status.success(), "{own:?}");
+    let other = store
+        .exchange_connect_code(
+            &project,
+            &issue("A-2"),
+            ConnectionOrigin::External,
+            "claude-code",
+            "claude:2",
+            Utc::now(),
+        )
+        .unwrap()
+        .secret;
+    let out = run("s-own", Some(&other), &["--project", "Own", "disconnect"]);
+    assert!(out.status.success(), "{out:?}");
+    // The stored secret survived, so this session can still disconnect its own connection.
+    let again = run("s-own", None, &["--project", "Own", "disconnect"]);
+    assert!(again.status.success(), "{again:?}");
+}

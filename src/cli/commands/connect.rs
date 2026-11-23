@@ -103,7 +103,7 @@ pub fn disconnect(ctx: &mut Context) -> Result<Outcome, AgpjError> {
     let paused = ctx
         .files
         .disconnect_session(&project, &secret, ctx.clock.now())?;
-    connection_store::delete_secret(&data_dir, &project);
+    connection_store::delete_secret_if(&data_dir, &project, &secret);
     Ok(Outcome {
         changed: true,
         human: "Disconnected from the agent; its running tasks are waiting.\n".to_string(),

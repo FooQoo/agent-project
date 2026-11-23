@@ -43,11 +43,16 @@ pub(super) fn run(
     }
     let mut ended: Vec<crate::domain::ProjectId> = Vec::new();
     if let Some(meta) = meta {
-        let secret = keys
+        // Try every stored secret: one can belong to a replaced connection and be refused while
+        // another key holds the live one.
+        let mut secrets: Vec<String> = keys
             .iter()
-            .find_map(|key| super::connection_store::load_secret_for_key(data_dir, &meta.id, key))
-            .or_else(|| super::connection_store::load_secret(data_dir, &meta.id));
-        if let Some(secret) = secret {
+            .filter_map(|key| super::connection_store::load_secret_for_key(data_dir, &meta.id, key))
+            .collect();
+        if secrets.is_empty() {
+            secrets.extend(super::connection_store::load_secret(data_dir, &meta.id));
+        }
+        for secret in secrets {
             let _ = store.end_connection_session(&meta.id, &secret, now);
         }
         ended.push(meta.id);

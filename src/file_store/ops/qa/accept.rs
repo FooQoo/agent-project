@@ -221,14 +221,15 @@ impl FileStore {
                 continue;
             }
             // A task assigned to a registered agent resumes only on that agent's active
-            // connection, which can release it when the session ends. With none, it stays
+            // connection that is not stale, which can release it when the session ends. With none, it stays
             // paused and no resume is recorded; a project without agents resumes on its own.
             let connection = match task.agent_id.as_deref() {
                 Some(agent) => {
-                    match crate::file_store::ops::assignment::active_connection_locked(
+                    match crate::file_store::ops::assignment::fresh_connection_locked(
                         shared,
                         project_dir,
                         agent,
+                        at,
                     )? {
                         Some(connection) => Some(connection),
                         None => continue,

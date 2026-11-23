@@ -140,13 +140,14 @@ pub(crate) fn save_secret(
     Ok(())
 }
 
-/// Forget this process's stored secret for the project.
-pub(crate) fn delete_secret(data_dir: &Path, project: &ProjectId) {
-    let _ = std::fs::remove_file(secret_file(
-        data_dir,
-        project,
-        &SessionIdentity::from_env().key,
-    ));
+/// Forget this process's stored secret for the project, but only when it is `secret`: a
+/// `disconnect` that revoked another connection (named by `AGPJ_CONNECTION_SECRET`) must keep
+/// this session's own stored secret.
+pub(crate) fn delete_secret_if(data_dir: &Path, project: &ProjectId, secret: &str) {
+    let key = SessionIdentity::from_env().key;
+    if load_secret_for_key(data_dir, project, &key).as_deref() == Some(secret) {
+        let _ = std::fs::remove_file(secret_file(data_dir, project, &key));
+    }
 }
 
 /// An exclusive lock on this session's connection, held while it connects: the check that the

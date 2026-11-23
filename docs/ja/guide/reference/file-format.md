@@ -110,7 +110,7 @@ frontmatterのない`EPIC.md`は、全体が本文です。順序は、`epic edi
 
 frontmatterを読めないとき（不正なYAML、キーの欠落、IDの重複、空の`text`）、Agent Projectはファイル・項目・理由を問題として報告します。タスクは進捗を表示せず、全文を本文として表示します。Agent Projectがファイルを書き換えて直すことはありません。手で直せば、次の読み込みで通常どおり表示されます。
 
-`task.json`は`formatVersion: 3`、ほかのすべてのJSONファイルは`formatVersion: 1`を宣言します。ほかのバージョンのファイルは未対応で、Agent Projectは報告してファイルを変更せず、移行・フォールバック・削除・初期化も行いません。
+`task.json`は`formatVersion: 3`、`epic.json`は`formatVersion: 1`を宣言します（Backlogを使うエピックの`formatVersion: 2`も読み込みます）。ほかのすべてのJSONファイルは`formatVersion: 1`を宣言します。ほかのバージョンのファイルは未対応で、Agent Projectは報告してファイルを変更せず、移行・フォールバック・削除・初期化も行いません。
 
 ## 次に読む
 
