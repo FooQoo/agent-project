@@ -56,6 +56,8 @@ agboard stop
 mv ~/.agent-board ~/.agent-project
 ```
 
+これは `agpj` を初めて実行する前に行ってください。`~/.agent-project` がすでにあると、`mv` は古いフォルダーをその中に入れてしまいます。その場合は、先に `agpj stop` で止めてから、そのフォルダーを `~/.agent-project.new` などの名前に変えて退けておきます。
+
 Agent Project は保存済みのファイルを変換しません。起動する前に、移したフォルダーを手で書き換えてください。
 
 - `~/.agent-project/shared/workspace.json` の `"format": "agboard-files"` を `"format": "agpj-files"` に変えます。
