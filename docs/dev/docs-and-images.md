@@ -67,6 +67,20 @@ node e2e/scripts/compare-captures.mjs --captured /tmp/captures --apply    # copy
 - An MP4 is decoded by `ffmpeg` to one frame per second at 480 x 300. Identical frames are unchanged. Otherwise each frame is compared with the frames a second either side of it, and the video is changed only when more than a tenth of its frames differ in more than 0.3% of their pixels. A change smaller than that, such as a date in a card, is not noticed in a video; the screenshots show it.
 - `--against <dir>` compares with another `AGPJ_MEDIA_OUT` folder instead of the repository, which is how to check that two captures match.
 
+### Automatic retake on main
+
+The `retake-media` job in `.github/workflows/ci.yml` keeps the committed images and videos current without a manual retake. You still run the scripts above to review a change in a pull request; this job only follows `main`.
+
+- **When it runs.** Only on a push to `main`, after the Rust, web, coverage, and E2E jobs have all passed. It reuses the CLI binary that the E2E build job uploaded, so it does not build again. It never runs on a pull request.
+- **What it does.** It runs the three capture scripts into a temporary `AGPJ_MEDIA_OUT` folder and compares them with `compare-captures.mjs --image-tolerance 4`, which compares decoded pixels and not file bytes. When nothing visibly differs, the job ends and pushes nothing.
+- **Path guard.** When something differs, `--apply` copies the changed files into place. The job then lists every changed or new file and fails, without pushing, if any path is outside `docs/images/` and `docs/public/videos/`.
+- **The push.** The job asks for an installation token of the `agpj-images` GitHub App (`actions/create-github-app-token`, Contents: write only, from the secrets `AUTO_IMAGES_APP_ID` and `AUTO_IMAGES_APP_PRIVATE_KEY`), commits as the App, and pushes to `main`. The `main` ruleset lets this App bypass its pull request and status check rules, so it is the only exception to "never push directly to `main`" in [AGENTS.md](https://github.com/FooQoo/agent-project/blob/main/AGENTS.md). Before pushing, the job fetches `main`; if `main` has moved past the commit it captured, it stops without pushing and leaves the retake to the run for the newer commit. A rejected push is reported as a warning, not a failure.
+- **No race.** The job has its own concurrency group, `retake-media`, and never cancels a run in progress, so two retakes do not run at once.
+- **No loop.** A push with an App token starts CI again. The job is skipped when the actor is `agpj-images[bot]`. Even without that, the captures are deterministic (see above), so the retake of the bot's own commit finds no visible change and pushes nothing.
+- **Site publish.** Because the push uses the App token and not the workflow token, it starts `.github/workflows/docs.yml`, whose `push` trigger covers `docs/**`, so the site and its demo are rebuilt with the new images.
+
+The job captures on `ubuntu-latest`, so its fonts and rendering differ from a Mac. The first run after this job is added may replace many files; later runs differ only when the product changes.
+
 ## Move a page and keep its old URL
 
 Old guide URLs are published in the README, the plugin README, and other people's links, so a page that moves must keep answering at its old address. `docs/.vitepress/redirects.ts` holds the list of moved pages as pairs of an old path and a new path, without a leading slash and without an extension, for example `guide/use/board` and `guide/watch/board`. For each pair the build writes a small HTML page at the old path that forwards to the new page.
