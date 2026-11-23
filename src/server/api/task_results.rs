@@ -155,7 +155,7 @@ async fn add_result(
     images: Vec<AttachmentInput>,
 ) -> Result<crate::file_store::RecordedResult, crate::error::AgpjError> {
     with_request_files(state, headers, move |store| {
-        store.add_result(
+        store.add_result_as(
             &project_id,
             id,
             ResultInput {
@@ -173,6 +173,7 @@ async fn add_result(
                 plan: input.plan,
             },
             crate::clock::now(),
+            true,
         )
     })
     .await

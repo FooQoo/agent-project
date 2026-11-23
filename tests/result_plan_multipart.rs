@@ -115,3 +115,38 @@ fn an_image_part_without_its_metadata_entry_is_refused() {
     );
     assert_eq!(reply.status, 422);
 }
+
+#[test]
+fn a_person_can_deliver_a_plan_of_a_done_task_from_the_board() {
+    let home = tempfile::tempdir().unwrap();
+    demo_project(home.path());
+    add_task(home.path());
+    let pid = project_id(home.path());
+    let task = json_ok(home.path(), &["--project", "Demo", "ls", "--json"])["tasks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["id"].as_i64().unwrap())
+        .max()
+        .unwrap()
+        .to_string();
+    for step in [
+        &["start", task.as_str()][..],
+        &["mv", task.as_str(), "done", "--reason", "Finish"],
+    ] {
+        let mut args = vec!["--project", "Demo"];
+        args.extend_from_slice(step);
+        args.extend_from_slice(&["--actor", "ai"]);
+        let _ = agpj(home.path(), &args);
+    }
+    let server = Running::start(home.path());
+    let meta = json!({"plan": "RP-1", "summary": "Late screenshot"}).to_string();
+    let body = multipart("b", &[("metadata", meta.as_str())], &[]);
+    let reply = server.write_multipart(
+        "POST",
+        &format!("/api/projects/{pid}/tasks/{task}/results/multipart"),
+        body,
+        "b",
+    );
+    assert_eq!(reply.status, 201, "{}", reply.body);
+}
