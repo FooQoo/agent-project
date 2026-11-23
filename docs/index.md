@@ -28,7 +28,7 @@ landing:
   problem:
     eyebrow: Why Agent Project
     title: The question should not scroll past.
-    lead: In a terminal alone, the one question that needs you is buried in the log, and the plan and the conditions live only in the chat. With Agent Project, the plan and its progress stay on the Kanban board and the questions for you stay in Messages, so you can step away until the agent needs you.
+    lead: In a terminal alone, the one question that needs you is buried in the log, and the plan and the conditions live only in the chat. With Agent Project, the plan and its progress stay on the Kanban board and the questions for you stay in Messages, so until the agent needs you, your time is free for something else, such as thinking about your product's features and strategy.
     terminal:
       label: Only in the terminal
       caption: The question scrolls past in the middle of the log.
