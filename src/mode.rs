@@ -11,11 +11,14 @@
 
 use std::path::{Path, PathBuf};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 
+pub use crate::mode_schedule::{Effective, Schedule, Source};
+
 const FORMAT_VERSION: u32 = 1;
+
 const INTERNAL_DIR: &str = ".internal";
 const FILE_NAME: &str = "modes.json";
 
@@ -113,79 +116,88 @@ fn read_projects_strict(data_dir: &Path) -> std::io::Result<Map<String, Value>> 
     }
 }
 
-fn parse_entry(entry: &Value) -> Option<ProjectMode> {
-    let kind = entry
+fn parse_entry(entry: &Value) -> State {
+    let manual = entry
         .get("kind")
         .and_then(Value::as_str)
-        .and_then(ModeKind::parse)?;
-    let since = entry
-        .get("since")
-        .and_then(Value::as_str)
-        .and_then(|text| DateTime::parse_from_rfc3339(text).ok())
-        .map(|time| time.with_timezone(&Utc));
-    Some(ProjectMode { kind, since })
+        .and_then(ModeKind::parse)
+        .map(|kind| ProjectMode {
+            kind,
+            since: entry
+                .get("since")
+                .and_then(Value::as_str)
+                .and_then(|text| DateTime::parse_from_rfc3339(text).ok())
+                .map(|time| time.with_timezone(&Utc)),
+        });
+    let schedule = entry.get("schedule").and_then(Schedule::from_json);
+    State { manual, schedule }
 }
 
-/// The saved mode of a project. A missing, invalid, or unknown entry is sparring.
-pub fn load(data_dir: &Path, project: &str) -> ProjectMode {
+/// The saved state of a project. A missing, invalid, or unknown entry is sparring with no window.
+pub fn state(data_dir: &Path, project: &str) -> State {
     read_projects(data_dir)
         .get(project)
-        .and_then(parse_entry)
+        .map(parse_entry)
         .unwrap_or_default()
 }
 
-/// Every project that has a saved, valid mode entry, for the board's change stream.
-pub fn load_all(data_dir: &Path) -> std::collections::BTreeMap<String, ProjectMode> {
+/// The saved manual mode of a project (sparring when none is set).
+pub fn load(data_dir: &Path, project: &str) -> ProjectMode {
+    state(data_dir, project).manual.unwrap_or_default()
+}
+
+/// The JSON of every project that has an entry, as of `now`, for the board's change stream.
+pub fn api_json_all<Tz: TimeZone>(
+    data_dir: &Path,
+    now: &DateTime<Tz>,
+) -> std::collections::BTreeMap<String, Value> {
     read_projects(data_dir)
         .iter()
-        .filter_map(|(id, entry)| parse_entry(entry).map(|mode| (id.clone(), mode)))
+        .map(|(id, entry)| (id.clone(), parse_entry(entry).api_json(now.clone())))
         .collect()
 }
 
-impl ProjectMode {
-    /// The JSON the board's API and event stream carry: `{"mode": "sleep", "since": "…"}`.
-    pub fn api_json(&self) -> Value {
-        let mut body = json!({"mode": self.kind.as_str()});
-        if let Some(since) = self.since {
-            body["since"] = Value::String(crate::clock::format_utc(since));
-        }
-        body
-    }
+/// The mode in effect for a project now, on this machine's clock.
+pub fn effective(data_dir: &Path, project: &str) -> Effective {
+    state(data_dir, project).effective_at(Local::now())
 }
 
-/// The saved kind of a project.
+/// The kind in effect now: what the refusal of `message ask` checks.
 pub fn current(data_dir: &Path, project: &str) -> ModeKind {
-    load(data_dir, project).kind
+    effective(data_dir, project).kind
 }
 
-/// The project's saved mode when it is not sparring, for the `mode` of the progress table.
-pub fn non_default(shared: &Path, project: &str) -> Option<ModeKind> {
-    let kind = current(&data_dir_of(shared), project);
-    (kind != ModeKind::Sparring).then_some(kind)
+/// Fills the `mode`, `modeSource`, and `modeUntil` of the progress table while the project sleeps.
+/// All three are left out for sparring.
+pub fn fill_progress(table: &mut crate::progress::Progress, shared: &Path, project: &str) {
+    let effective = effective(&data_dir_of(shared), project);
+    if effective.kind == ModeKind::Sparring {
+        return;
+    }
+    table.mode = Some(effective.kind);
+    table.mode_source = Some(effective.source.as_str());
+    table.mode_until = effective.until.map(crate::clock::format_utc);
 }
 
-/// Save a project's mode. Sparring removes the entry. The file is replaced in one step.
-pub fn set(
+/// Read the file, let `change` edit the project's entry, and replace the file in one step. An
+/// entry with neither a manual mode nor a window is removed.
+fn update(
     data_dir: &Path,
     project: &str,
-    kind: ModeKind,
-    now: DateTime<Utc>,
-) -> std::io::Result<ProjectMode> {
+    change: impl FnOnce(&mut Map<String, Value>),
+) -> std::io::Result<()> {
     let mut projects = read_projects_strict(data_dir)?;
-    let mode = if kind == ModeKind::Sparring {
-        projects.remove(project);
-        ProjectMode::default()
+    let mut entry = projects
+        .get(project)
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    change(&mut entry);
+    if entry.contains_key("kind") || entry.contains_key("schedule") {
+        projects.insert(project.to_string(), Value::Object(entry));
     } else {
-        let since = now;
-        projects.insert(
-            project.to_string(),
-            json!({"kind": kind.as_str(), "since": crate::clock::format_utc(since)}),
-        );
-        ProjectMode {
-            kind,
-            since: Some(since),
-        }
-    };
+        projects.remove(project);
+    }
     let bytes = serde_json::to_vec_pretty(&json!({
         "formatVersion": FORMAT_VERSION,
         "projects": projects,
@@ -202,62 +214,54 @@ pub fn set(
     } else {
         crate::server::preferences::sync_dir(dir);
     }
-    result.map(|()| mode)
+    result
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use chrono::TimeZone;
-
-    #[test]
-    fn default_is_sparring_and_sleep_round_trips() {
-        let dir = tempfile::tempdir().unwrap();
-        let now = Utc.with_ymd_and_hms(2026, 11, 24, 1, 2, 3).unwrap();
-        assert_eq!(current(dir.path(), "p1"), ModeKind::Sparring);
-        let saved = set(dir.path(), "p1", ModeKind::Sleep, now).unwrap();
-        assert_eq!(saved.since, Some(now));
-        assert_eq!(load(dir.path(), "p1").kind, ModeKind::Sleep);
-        assert_eq!(current(dir.path(), "p2"), ModeKind::Sparring);
-        set(dir.path(), "p1", ModeKind::Sparring, now).unwrap();
-        assert_eq!(current(dir.path(), "p1"), ModeKind::Sparring);
-    }
-
-    #[test]
-    fn unknown_kind_and_broken_file_read_as_sparring() {
-        let dir = tempfile::tempdir().unwrap();
-        let internal = dir.path().join(INTERNAL_DIR);
-        std::fs::create_dir_all(&internal).unwrap();
-        std::fs::write(
-            internal.join(FILE_NAME),
-            r#"{"projects":{"p1":{"kind":"brainstorm"}}}"#,
-        )
-        .unwrap();
-        assert_eq!(current(dir.path(), "p1"), ModeKind::Sparring);
-        std::fs::write(internal.join(FILE_NAME), "not json").unwrap();
-        assert_eq!(current(dir.path(), "p1"), ModeKind::Sparring);
-    }
-}
-
-#[cfg(test)]
-mod strict_tests {
-    use super::*;
-
-    #[test]
-    fn set_keeps_an_unreadable_file_intact() {
-        let dir = tempfile::tempdir().unwrap();
-        let internal = dir.path().join(INTERNAL_DIR);
-        std::fs::create_dir_all(&internal).unwrap();
-        let file = internal.join(FILE_NAME);
-        for broken in ["not json", "[]", r#"{"projects":[]}"#] {
-            std::fs::write(&file, broken).unwrap();
-            let now = Utc::now();
-            assert!(set(dir.path(), "p1", ModeKind::Sleep, now).is_err());
-            assert_eq!(std::fs::read_to_string(&file).unwrap(), broken);
+/// Set the manual mode, keeping the daily window. Sparring with no window removes the entry; with
+/// a window it is kept, so the manual sparring wins over the schedule.
+pub fn set(
+    data_dir: &Path,
+    project: &str,
+    kind: ModeKind,
+    now: DateTime<Utc>,
+) -> std::io::Result<ProjectMode> {
+    let keep = kind != ModeKind::Sparring || state(data_dir, project).schedule.is_some();
+    update(data_dir, project, |entry| {
+        if keep {
+            entry.insert("kind".into(), json!(kind.as_str()));
+            entry.insert("since".into(), json!(crate::clock::format_utc(now)));
+        } else {
+            entry.remove("kind");
+            entry.remove("since");
         }
-        std::fs::remove_file(&file).unwrap();
-        std::fs::create_dir(&file).unwrap();
-        assert!(set(dir.path(), "p1", ModeKind::Sleep, Utc::now()).is_err());
-        assert!(file.is_dir());
-    }
+    })?;
+    Ok(if keep {
+        ProjectMode {
+            kind,
+            since: Some(now),
+        }
+    } else {
+        ProjectMode::default()
+    })
 }
+
+/// Forget the manual mode, so the daily window (if any) decides.
+pub fn clear_manual(data_dir: &Path, project: &str) -> std::io::Result<()> {
+    update(data_dir, project, |entry| {
+        entry.remove("kind");
+        entry.remove("since");
+    })
+}
+
+/// Save the daily window (enabled or not), keeping the manual mode.
+pub fn set_schedule(data_dir: &Path, project: &str, schedule: Schedule) -> std::io::Result<()> {
+    update(data_dir, project, |entry| {
+        entry.insert("schedule".into(), schedule.to_json());
+    })
+}
+
+mod state;
+#[cfg(test)]
+mod tests;
+
+pub use state::State;

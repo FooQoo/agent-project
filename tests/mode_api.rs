@@ -39,7 +39,10 @@ fn a_project_starts_in_sparring_and_a_save_is_read_back_and_kept() {
     let first = server.get(&path);
     assert_eq!(first.status, 200, "{}", first.body);
     assert_eq!(first.header("cache-control"), Some("no-store"));
-    assert_eq!(first.json(), json!({"mode": "sparring"}));
+    assert_eq!(
+        first.json(),
+        json!({"mode": "sparring", "modeSource": "manual"})
+    );
 
     let saved = put(&server, &id, &json!({"mode": "sleep"}));
     assert_eq!(saved.status, 200, "{}", saved.body);
@@ -50,7 +53,10 @@ fn a_project_starts_in_sparring_and_a_save_is_read_back_and_kept() {
     assert_eq!(mode::current(home.path(), &id), ModeKind::Sleep);
 
     let back = put(&server, &id, &json!({"mode": "sparring"}));
-    assert_eq!(back.json(), json!({"mode": "sparring"}));
+    assert_eq!(
+        back.json(),
+        json!({"mode": "sparring", "modeSource": "manual"})
+    );
     assert_eq!(mode::current(home.path(), &id), ModeKind::Sparring);
     server.stop();
 }
@@ -66,6 +72,10 @@ fn an_invalid_body_or_an_unknown_project_changes_nothing() {
         json!({"mode": "brainstorm"}),
         json!({"mode": "sleep", "extra": 1}),
         json!({"mode": 1}),
+        json!({"schedule": {"enabled": true, "start": "08:00", "end": "08:00"}}),
+        json!({"schedule": {"enabled": true, "start": "8:00", "end": "09:00"}}),
+        json!({"schedule": {"enabled": true, "start": "08:00"}}),
+        json!({"mode": "sleep", "schedule": {"enabled": false, "start": "08:00", "end": "09:00"}}),
     ] {
         let reply = put(&server, &id, &body);
         assert_eq!(reply.status, 422, "{body}: {}", reply.body);
@@ -146,5 +156,54 @@ fn a_change_made_by_another_process_is_sent_as_a_mode_event_and_never_changed() 
     }
     assert!(found.contains("\"mode\":\"sleep\""), "{found}");
     assert!(!found.contains("event: changed"), "{found}");
+    server.stop();
+}
+
+/// A window that surrounds the present moment, so the test does not depend on the time of day.
+fn window_around_now() -> serde_json::Value {
+    let now = chrono::Local::now();
+    let hour = chrono::Duration::hours(1);
+    json!({"schedule": {
+        "enabled": true,
+        "start": (now - hour).format("%H:%M").to_string(),
+        "end": (now + hour).format("%H:%M").to_string(),
+    }})
+}
+
+#[test]
+fn a_daily_window_puts_the_project_to_sleep_and_a_manual_change_in_it_holds() {
+    let home = tempfile::tempdir().unwrap();
+    demo_project(home.path());
+    let id = project_id(home.path());
+    let server = Running::start(home.path());
+    let saved = put(&server, &id, &window_around_now());
+    assert_eq!(saved.status, 200, "{}", saved.body);
+    let body = saved.json();
+    assert_eq!(body["mode"], "sleep");
+    assert_eq!(body["modeSource"], "schedule");
+    assert!(body["until"].is_string(), "{body}");
+    assert_eq!(body["schedule"]["enabled"], true);
+    assert_eq!(mode::current(home.path(), &id), ModeKind::Sleep);
+
+    // A manual sparring set inside the window wins until the window ends.
+    let manual = put(&server, &id, &json!({"mode": "sparring"})).json();
+    assert_eq!(
+        (manual["mode"].as_str(), manual["modeSource"].as_str()),
+        (Some("sparring"), Some("manual"))
+    );
+    assert_eq!(mode::current(home.path(), &id), ModeKind::Sparring);
+
+    // `auto` forgets it, so the schedule decides again.
+    let auto = put(&server, &id, &json!({"mode": "auto"})).json();
+    assert_eq!(auto["mode"], "sleep");
+    assert_eq!(auto["modeSource"], "schedule");
+    assert!(auto.get("manual").is_none());
+
+    // Turning the window off keeps its times and leaves sparring.
+    let mut off = window_around_now();
+    off["schedule"]["enabled"] = json!(false);
+    let reply = put(&server, &id, &off).json();
+    assert_eq!(reply["mode"], "sparring");
+    assert_eq!(reply["schedule"]["enabled"], false);
     server.stop();
 }

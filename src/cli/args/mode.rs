@@ -7,6 +7,15 @@ pub struct ModeArgs {
     /// The mode to switch to; omit it to show the current mode
     #[arg(value_enum)]
     pub mode: Option<ModeArg>,
+    /// With "schedule": when the daily sleep window starts (HH:MM, local time of this machine)
+    #[arg(long, value_name = "HH:MM")]
+    pub start: Option<String>,
+    /// With "schedule": when the daily sleep window ends (HH:MM); it may be earlier than the start
+    #[arg(long, value_name = "HH:MM")]
+    pub end: Option<String>,
+    /// With "schedule": turn the daily window off (the times are kept)
+    #[arg(long)]
+    pub off: bool,
 }
 
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
@@ -15,6 +24,10 @@ pub enum ModeArg {
     Sparring,
     /// Do not accept questions to the user; subagents decide
     Sleep,
+    /// Forget the manual mode, so the daily window decides
+    Auto,
+    /// Set the daily sleep window: --start HH:MM --end HH:MM, or --off
+    Schedule,
 }
 
 #[derive(Args, Debug)]

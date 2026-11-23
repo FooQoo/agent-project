@@ -252,7 +252,7 @@ fn progress_context(
     let snapshot = store.board(&meta.id).map_err(failed)?;
     let mut value = progress::build_with(&snapshot, store.shared_dir(), SystemClock.now(), include);
     value.locale = saved_locale(store.shared_dir());
-    value.mode = crate::mode::non_default(store.shared_dir(), meta.id.as_str());
+    crate::mode::fill_progress(&mut value, store.shared_dir(), meta.id.as_str());
     let json = serde_json::to_string(&value)
         .map_err(|error| Failure::new("board_unavailable", error.to_string()))?;
     progress_text(&json).map(|text| Some((text, meta.id)))
