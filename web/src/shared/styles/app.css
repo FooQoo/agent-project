@@ -185,6 +185,14 @@ ol {
   flex: 1;
 }
 
+/* Ask AI and the menu button sit side by side, so both take the m button height and one centre line. */
+.header__add,
+.header__menu {
+  align-self: center;
+  box-sizing: border-box;
+  height: var(--btn-m-h);
+}
+
 .header__add {
   flex: none;
   gap: 6px;
@@ -226,6 +234,18 @@ ol {
 .header-menu .menu__item[data-disabled] {
   opacity: 0.5;
   cursor: default;
+}
+
+/* The screen that is open: kept in the menu, not selectable, and marked rather than dimmed. */
+.header-menu .menu__item[data-current] {
+  background: var(--r-bg);
+  color: var(--r-accent);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.header-menu .menu__item[data-current] svg {
+  color: var(--r-accent);
 }
 
 @media (pointer: coarse) {

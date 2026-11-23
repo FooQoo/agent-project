@@ -13,7 +13,7 @@
         },
         {
           "id": "shared-ui-header--board-not-ready",
-          "states": ["board not loaded", "menu with settings only"],
+          "states": ["board not loaded", "menu with four items", "destinations disabled"],
           "interaction": true
         },
         {
@@ -23,13 +23,24 @@
         },
         {
           "id": "shared-ui-header--archive-view",
-          "states": ["archive", "back to board"],
+          "states": ["archive", "back to board", "archive marked current", "other items enabled"],
           "interaction": true
         },
         {
           "id": "shared-ui-header--epics-view",
-          "states": ["epics", "project name text", "back to board"],
-          "interaction": false
+          "states": [
+            "epics",
+            "project name text",
+            "back to board",
+            "epics marked current",
+            "docs choice calls its callback"
+          ],
+          "interaction": true
+        },
+        {
+          "id": "shared-ui-header--epics-switch-disabled",
+          "states": ["epics", "card form open", "destinations disabled", "settings enabled"],
+          "interaction": true
         },
         {
           "id": "shared-ui-header--no-project-list",
