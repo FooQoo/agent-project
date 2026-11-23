@@ -99,7 +99,7 @@ pub(super) async fn create_task(
                 actor: Actor::Human,
                 draft: input.draft,
             },
-            chrono::Utc::now(),
+            crate::clock::now(),
         )
     })
     .await
@@ -142,7 +142,7 @@ pub(super) async fn move_task(
                 from,
                 input.task_status,
                 ctx,
-                chrono::Utc::now(),
+                crate::clock::now(),
             ),
             Some(from) => store.move_work_task_for_user_from(
                 &project_id,
@@ -150,14 +150,14 @@ pub(super) async fn move_task(
                 from,
                 input.task_status,
                 ctx,
-                chrono::Utc::now(),
+                crate::clock::now(),
             ),
             None => store.move_work_task_for_user(
                 &project_id,
                 id,
                 input.task_status,
                 ctx,
-                chrono::Utc::now(),
+                crate::clock::now(),
             ),
         }
     })
@@ -250,7 +250,7 @@ pub(super) async fn set_agent_status(
                 actor: Actor::Human,
                 reason: input.reason,
             },
-            chrono::Utc::now(),
+            crate::clock::now(),
         )
     })
     .await

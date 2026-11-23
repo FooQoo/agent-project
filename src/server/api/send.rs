@@ -50,7 +50,13 @@ pub(super) async fn send_task(
         Err(response) => return *response,
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.send_task(&project_id, id, Actor::Human, input.ack, chrono::Utc::now())
+        store.send_task(
+            &project_id,
+            id,
+            Actor::Human,
+            input.ack,
+            crate::clock::now(),
+        )
     })
     .await;
     match result {
@@ -90,7 +96,7 @@ pub(super) async fn send_epic(
             Actor::Human,
             input.ack,
             "",
-            chrono::Utc::now(),
+            crate::clock::now(),
         )
     })
     .await;

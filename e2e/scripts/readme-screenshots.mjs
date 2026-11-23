@@ -3,14 +3,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { chromium, expect } from '@playwright/test';
 import { setPreferences } from '../helpers/preferences.mjs';
-import { cli, copy, project, repo, seed, seedProposal, settle, startServer, stop } from './lib/sample-board.mjs';
+import { browserArgs, cli, copy, freezeClock, project, repo, seed, seedProposal, settle, startServer, stop } from './lib/sample-board.mjs';
 
 // Build web/ and the CLI first. Only disposable sample data is used.
 // AGPJ_MEDIA_OUT points the images at another folder, so a check run does not touch the repository's files.
 const output = process.env.AGPJ_MEDIA_OUT ? path.resolve(process.env.AGPJ_MEDIA_OUT, 'readme') : path.join(repo, 'docs/images');
 mkdirSync(output, { recursive: true });
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: browserArgs });
 try {
   for (const locale of ['en', 'ja']) {
     const home = mkdtempSync(path.join(os.tmpdir(), 'agpj-readme-'));
@@ -30,7 +30,7 @@ try {
       expect(progress.project.id).toBe(id);
       expect(progress.epics.find((epic) => epic.id === 'LAUNCH').tasks.map((task) => task.id))
         .toEqual([4, 7, 5]);
-      context = await browser.newContext({ viewport: { width: 1600, height: 1000 }, timezoneId: 'UTC' });
+      context = await freezeClock(await browser.newContext({ viewport: { width: 1600, height: 1000 }, timezoneId: 'UTC' }));
       // The language and theme are saved on the board, as the settings screen does.
       await setPreferences(origin, { locale, theme: { mode: 'light', accent: 'blue' } });
       const page = await context.newPage();
@@ -56,7 +56,7 @@ try {
       await page.screenshot({ path: path.join(output, `epic${suffix}.png`) });
 
       // The remote entrance serves the same board app, so a tablet width (with touch, as on an iPad) shows the lanes side by side.
-      tabletContext = await browser.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true, timezoneId: 'UTC' });
+      tabletContext = await freezeClock(await browser.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true, timezoneId: 'UTC' }));
       const tablet = await tabletContext.newPage();
       tablet.on('pageerror', (error) => errors.push(error.message));
       // `open` shrinks the page to phone width; the tablet keeps its own width, so it unlocks the page itself.
@@ -71,7 +71,7 @@ try {
       await tablet.screenshot({ path: path.join(output, `tablet${suffix}.png`) });
 
       // The phone is a touch device of its own: a long press and a swipe are real touch events.
-      phoneContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, timezoneId: 'UTC' });
+      phoneContext = await freezeClock(await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, timezoneId: 'UTC' }));
       const phone = await phoneContext.newPage();
       phone.on('pageerror', (error) => errors.push(error.message));
       await server.open(phone, `${remote}/?project=${id}`);
@@ -136,7 +136,7 @@ try {
           panel.boundingBox(), phone.locator('.monitor-drawer__panels').boundingBox(),
         ]);
         return Math.abs(slide.x - viewport.x);
-      }).toBeLessThan(1);
+      }).toBeLessThan(0.01);
       await settle(phone);
       await phone.screenshot({ path: path.join(output, `mobile${suffix}.png`) });
       expect(errors).toEqual([]);

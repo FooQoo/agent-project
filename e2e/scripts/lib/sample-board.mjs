@@ -10,6 +10,21 @@ export const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 export const binary = process.env.AGPJ_E2E_BINARY ?? path.join(repo, 'target/debug/agpj');
 export const project = 'website-launch';
 
+// The one instant every capture treats as now, so two captures of the same commit show the same dates and times.
+// The CLI and the server read it from AGPJ_FIXED_NOW (they inherit this process's environment), and
+// `freezeClock` gives the browser the same time. Set it before any child process starts.
+export const FIXED_NOW = '2026-10-15T09:41:00Z';
+process.env.AGPJ_FIXED_NOW = FIXED_NOW;
+
+// Chromium flags that keep the rasterizer from varying: software rendering, no LCD text, no font hinting.
+export const browserArgs = ['--disable-gpu', '--disable-lcd-text', '--font-render-hinting=none'];
+
+/** Makes `Date.now()` and `new Date()` in every page of the context return FIXED_NOW; timers still run. */
+export async function freezeClock(context) {
+  await context.clock.setFixedTime(new Date(FIXED_NOW));
+  return context;
+}
+
 export const copy = {
   en: {
     design: 'Design and review', launch: 'Website launch',
@@ -146,11 +161,27 @@ export async function stop(server) {
 export async function settle(page) {
   await page.evaluate(async () => {
     await document.fonts.ready;
-    await Promise.all(document.getAnimations()
+    const running = document.getAnimations();
+    // A spinner repeats forever: hold it at its first frame, so every capture shows the same one.
+    for (const a of running.filter((x) => x.effect?.getComputedTiming().iterations === Infinity)) {
+      a.pause();
+      a.currentTime = 0;
+    }
+    await Promise.all(running
       .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
       .map((a) => a.finished.catch(() => undefined)));
   });
   await page.mouse.move(0, 0);
+  // Some motion lies outside the Web Animations API (requestAnimationFrame, the last frames of a fade). Wait until
+  // three screenshots in a row, 250 ms apart, match, so the one that is saved shows the finished state.
+  let previous = await page.screenshot();
+  let same = 0;
+  for (let attempt = 0; attempt < 40 && same < 2; attempt += 1) {
+    await page.waitForTimeout(250);
+    const current = await page.screenshot();
+    same = current.equals(previous) ? same + 1 : 0;
+    previous = current;
+  }
 }
 
 /**

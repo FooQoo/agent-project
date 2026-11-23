@@ -85,7 +85,7 @@ pub(super) async fn set_task_version(
             id,
             &choice,
             expected.as_ref().map(|value| value.as_deref()),
-            chrono::Utc::now(),
+            crate::clock::now(),
         )
     })
     .await;
@@ -176,7 +176,7 @@ pub(super) async fn set_epic_version(
             scope,
             &task_ids,
             dry_run,
-            chrono::Utc::now(),
+            crate::clock::now(),
         )
     })
     .await;

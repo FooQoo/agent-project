@@ -83,7 +83,7 @@ pub struct DeviceStore {
 }
 
 fn now_text() -> String {
-    chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+    crate::clock::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
 }
 
 fn random_hex(bytes: usize) -> std::io::Result<String> {
