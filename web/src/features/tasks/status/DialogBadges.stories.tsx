@@ -4,7 +4,7 @@ import type { ColumnName, RunState } from '../../../shared/api/contracts';
 import { RunStatusBadge, TaskStatusBadge } from './DialogBadges';
 
 const taskStatuses: ColumnName[] = ['todo', 'doing', 'done'];
-const runStatuses: RunState[] = ['idle', 'running', 'paused', 'ran', 'awaiting_answer'];
+const runStatuses: RunState[] = ['idle', 'running', 'paused'];
 const meta = {
   title: 'Task/Status/DialogBadges',
   parameters: { layout: 'centered' },
@@ -35,6 +35,7 @@ export const RunStatuses: Story = {
       {runStatuses.map((status) => (
         <RunStatusBadge key={status} status={status} />
       ))}
+      <RunStatusBadge status="paused" awaitingAnswer />
     </div>
   ),
   play: async ({ canvasElement }) => {
@@ -42,7 +43,6 @@ export const RunStatuses: Story = {
     await expect(view.getByText('Idle')).toBeInTheDocument();
     await expect(view.getByText('Running')).toBeInTheDocument();
     await expect(view.getByText('Paused')).toBeInTheDocument();
-    await expect(view.getByText('Has run')).toBeInTheDocument();
     await expect(view.getByText('Awaiting answer')).toBeInTheDocument();
   },
 };

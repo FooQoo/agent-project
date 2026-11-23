@@ -145,6 +145,7 @@ pub(crate) fn task_view(
         questions_error: questions.is_err(),
         question_ids: questions.unwrap_or_default(),
         open_question_ids: Vec::new(),
+        awaiting_answer: false,
         pending_request_id: None,
         pending_reason: None,
         pending_choices: Vec::new(),

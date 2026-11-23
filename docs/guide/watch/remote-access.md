@@ -8,7 +8,7 @@ Remote access opens the board from another device when you are away from your de
 
 ## What the monitor shows
 
-The monitor shows one project at a time. The address names it (`?project=`), and the project switcher in the header lists every project, as on the PC. The screen shows one lane at a time, Todo, Doing, or Done, and you move between them as described in [Switch lanes](#switch-lanes). A card shows its number, title, state, and the time of its last change; it does not repeat the project name, which the header already shows. AI-owned tasks show their agent state inline; tasks in Todo or Doing that are Awaiting answer show an **Answer the question** button, which opens an answer sheet from the bottom.
+The monitor shows one project at a time. The address names it (`?project=`), and the project switcher in the header lists every project, as on the PC. The screen shows one lane at a time, Todo, Doing, or Done, and you move between them as described in [Switch lanes](#switch-lanes). A card shows its number, title, state, and the time of its last change; it does not repeat the project name, which the header already shows. Tasks in Doing show their agent state inline; tasks that are Awaiting answer (in any lane) show an **Answer the question** button, which opens an answer sheet from the bottom.
 
 A bar at the bottom of the screen holds the main places, left to right: **Board**, **Messages**, **Ask**, **Archive**, and **Settings**. It stays clear of the home indicator. **Ask** is in the middle and a little stronger than the rest. Everything except **Board** opens a drawer that slides up over the board, and **Board** closes it.
 
@@ -40,7 +40,7 @@ Swipe the task back, or tap anywhere outside it, to close the buttons without a 
 
 **Archive** in the bottom bar opens **Archived tasks** as a drawer, newest first. Each task is drawn with the same card as in the lanes. Under it, the lane it returns to and the date it was archived. The drawer loads 50 tasks at a time and reads the next page as you scroll to the end of the list; a note under the last task says the list is complete, and a failed page shows a **Retry** button.
 
-To restore a task, swipe its card to the left. A **Restore** button appears on the right at once, with no need to choose the card first; press it and the task leaves the list and returns to the lane it was archived from, with the run state it was archived with (Idle or Has run; a task that has run and returns to Doing is Paused). It goes to the end of that lane. A tap outside the open card, or a tap on it, closes the button. A tap on a closed card does nothing. With a keyboard, focus a card and press Enter or the left arrow to open **Restore** and move focus to it; the right arrow closes it. If the restore fails, the row stays and the drawer says so.
+To restore a task, swipe its card to the left. A **Restore** button appears on the right at once, with no need to choose the card first; press it and the task leaves the list and returns to the lane it was archived from, as Idle. It goes to the end of that lane. A tap outside the open card, or a tap on it, closes the button. A tap on a closed card does nothing. With a keyboard, focus a card and press Enter or the left arrow to open **Restore** and move focus to it; the right arrow closes it. If the restore fails, the row stays and the drawer says so.
 
 ### Archive done tasks
 

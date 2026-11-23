@@ -8,7 +8,7 @@ use crate::domain::{Assignee, Column, RunState};
 use crate::progress::{Progress, ProgressTask};
 
 /// A running task with no history for this long may have stopped.
-pub const STALE_RUNNING_MINUTES: i64 = 30;
+pub use crate::progress::STALE_RUNNING_MINUTES;
 
 fn tasks(progress: &Progress) -> impl Iterator<Item = &ProgressTask> {
     progress
@@ -116,7 +116,7 @@ pub fn stale_running(facts: &Facts) -> Vec<Finding> {
             let idle = facts.now - t.last_activity_at?;
             (idle > limit).then(|| {
                 Finding::new(format!(
-                    "Task #{id} has been running for {minutes} minutes with no history entry: if the work stopped, set it to paused with `agpj state {id} paused --actor ai`; otherwise record only a decision that matters later with `agpj history add {id}`, and skip it when there is none.",
+                    "Task #{id} has been running for {minutes} minutes with no history entry: continue the work on it (check its PR and CI state and carry on; if you are blocked on a person, ask with `agpj message ask`, which pauses the task). If you truly cannot resume it, record why with `agpj history add {id} --reason \"<why it cannot resume>\"`.",
                     id = t.id,
                     minutes = idle.num_minutes()
                 ))
@@ -132,7 +132,12 @@ pub fn next_task(facts: &Facts) -> Vec<Finding> {
         return Vec::new();
     };
     let running = ai_tasks(progress).any(|t| t.agent_status == RunState::Running);
-    let Some(next) = progress.next_tasks.first().filter(|_| !running) else {
+    // A stalled task is surfaced by the stale-running reminder.
+    let next = progress
+        .next_tasks
+        .iter()
+        .find(|t| t.why != crate::progress::NextReason::Stalled);
+    let Some(next) = next.filter(|_| !running) else {
         return Vec::new();
     };
     vec![

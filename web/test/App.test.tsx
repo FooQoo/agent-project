@@ -133,9 +133,7 @@ describe('App', () => {
     setCurrent({
       ...current(),
       tasks: current().tasks.map((c) =>
-        c.id === 11
-          ? { ...c, agentStatus: 'awaiting_answer' as const, pendingReason: 'Waiting' }
-          : c,
+        c.id === 11 ? { ...c, awaitingAnswer: true, pendingReason: 'Waiting' } : c,
       ),
     });
     act(() => FakeEventSource.latest.changed(PROJECT_A.id));

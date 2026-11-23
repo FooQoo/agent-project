@@ -125,10 +125,11 @@ fn import_fixture(home: &Path, project: &str, file: &str) {
             ));
         }
         let state = task["agentStatus"].as_str().unwrap();
-        if state == "running" || state == "awaiting_answer" {
+        let waiting = task["awaitingAnswer"].as_bool() == Some(true);
+        if state == "running" || waiting {
             let reason = task["pendingReason"].as_str().unwrap_or("fixture");
             let request = common::decision_json(reason);
-            let args: Vec<&str> = if state == "awaiting_answer" {
+            let args: Vec<&str> = if waiting {
                 vec![
                     "message",
                     "ask",

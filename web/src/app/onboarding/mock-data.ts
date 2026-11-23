@@ -24,6 +24,7 @@ export function sampleTask(overrides: Partial<Task> & Pick<Task, 'id'>): Task {
     taskStatusChangedAt: RECENT_ISO,
     position: 1,
     agentStatus: 'idle',
+    awaitingAnswer: false,
     pendingReason: null,
     pendingRequestId: null,
     pendingChoices: [],
@@ -49,6 +50,7 @@ export const samples = {
     description: 'ガイド用のサンプルです。実際のAIは動きません。',
     taskStatus: 'todo',
     agentStatus: 'idle',
+    awaitingAnswer: false,
     assignee: 'ai',
     updatedAt: RECENT,
   }),
@@ -58,6 +60,7 @@ export const samples = {
     description: 'ガイド用のサンプルです。実際のAIは動きません。',
     taskStatus: 'todo',
     agentStatus: 'idle',
+    awaitingAnswer: false,
     assignee: 'ai',
     updatedAt: RECENT,
   }),
@@ -76,7 +79,8 @@ export const doneSample = {
 export const pendingSample = {
   ...samples.style,
   taskStatus: 'doing' as const,
-  agentStatus: 'awaiting_answer' as const,
+  agentStatus: 'paused' as const,
+  awaitingAnswer: true,
   pendingReason: '案内の文章は、どちらが読みやすいですか？',
   pendingRequestId: 'onboarding-sample-request',
   pendingChoices: [

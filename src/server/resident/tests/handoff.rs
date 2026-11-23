@@ -180,7 +180,7 @@ fn a_task_that_is_no_longer_running_is_dropped_from_the_retry_list() {
             id,
             RunState::Paused,
             ChangeContext {
-                actor: Actor::Ai,
+                actor: Actor::Human,
                 reason: "Taken over".into(),
             },
             chrono::Utc::now(),

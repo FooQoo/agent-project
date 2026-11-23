@@ -19,6 +19,7 @@ const task = {
   assignee: 'ai',
   taskStatus: 'done',
   agentStatus: 'idle',
+  awaitingAnswer: false,
   epic: null,
   draft: null,
   attachments: [],

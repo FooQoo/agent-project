@@ -139,6 +139,7 @@ function longMarkdownTask(tasks: Task[], description: string): Task {
     description,
     taskStatus: 'todo',
     agentStatus: 'idle',
+    awaitingAnswer: false,
     pendingReason: null,
     pendingRequestId: null,
     draft: null,
@@ -161,7 +162,14 @@ export function sampleBoards(seed: MockSeed): Record<string, MockBoard> {
       // Cards 11 and 13 also wait for an answer, so the Doing lane shows several pending cards at once.
       const extraPending = seed.demo ? undefined : EXTRA_PENDING[task.id];
       const pending: Task = extraPending
-        ? { ...withConditions, agentStatus: 'awaiting_answer', ...structuredClone(extraPending) }
+        ? {
+            ...withConditions,
+            // Asking pauses a card that is running in Doing.
+            agentStatus:
+              withConditions.agentStatus === 'running' ? 'paused' : withConditions.agentStatus,
+            awaitingAnswer: true,
+            ...structuredClone(extraPending),
+          }
         : withConditions;
       const inEpic: Task = SAMPLE_EPIC_TASKS.includes(task.id)
         ? { ...pending, epic: { id: epic.id, name: epic.name, color: epic.color } }

@@ -167,7 +167,7 @@ test('a Done task rejects agent edits while a person can still edit and show its
   await openBoard(page);
   // The agent reports the work: the card stays in Doing, paused.
   agpjOk(mainProject, ['state', '13', 'running', '--actor', 'ai', '--reason', 'Working.']);
-  agpjOk(mainProject, ['state', '13', 'paused', '--actor', 'ai', '--reason', 'Reported as finished.']);
+  agpjOk(mainProject, ['state', '13', 'paused', '--actor', 'human', '--reason', 'Reported as finished.']);
   expect(show(13)).toMatchObject({ taskStatus: 'doing', agentStatus: 'paused' });
   await expect(page.getByRole('region', { name: 'Doing' }).getByRole('button', { name: /^#13(?!\d)/ })).toBeVisible();
 
@@ -179,7 +179,7 @@ test('a Done task rejects agent edits while a person can still edit and show its
   const refused = agpj(mainProject, ['edit', '13', '--desc-file', writeBody(taskBody('Corrected after Done.'))]);
   expect(refused.code).not.toBe(0);
   expect(refused.stderr).toContain('task #13 is done and read-only for agents');
-  expect(show(13)).toMatchObject({ taskStatus: 'done', agentStatus: 'ran' });
+  expect(show(13)).toMatchObject({ taskStatus: 'done', agentStatus: 'idle' });
   await task(page, 13).click();
   await expect(details(page)).toContainText('Check the layout at 1280, 800, and 480 px.');
   await expect(details(page)).toContainText('Done');

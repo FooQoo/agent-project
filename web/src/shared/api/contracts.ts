@@ -1,5 +1,5 @@
 export type ColumnName = 'backlog' | 'todo' | 'doing' | 'done';
-export type RunState = 'idle' | 'running' | 'paused' | 'ran' | 'awaiting_answer';
+export type RunState = 'idle' | 'running' | 'paused';
 export type Assignee = 'ai' | 'human';
 export type Actor = 'ai' | 'human';
 /** Who still writes a card or epic: a person in the browser (an edit lock). */
@@ -118,6 +118,8 @@ export interface TaskSummary {
   taskStatusChangedAt: string;
   position: number;
   agentStatus: RunState;
+  /** The task refers to an open question; shown over the run state. Derived, never stored. */
+  awaitingAnswer: boolean;
   agentStatusChangedAt: string;
   pendingReason: string | null;
   pendingRequestId: string | null;
@@ -155,6 +157,8 @@ export interface Task {
   taskStatusChangedAt: string;
   position: number;
   agentStatus: RunState;
+  /** The task refers to an open question; shown over the run state. Derived, never stored. */
+  awaitingAnswer: boolean;
   pendingReason: string | null;
   pendingRequestId: string | null;
   pendingChoices: Choice[];

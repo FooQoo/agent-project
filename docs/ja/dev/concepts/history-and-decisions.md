@@ -9,22 +9,24 @@
 - メッセージは1件1ファイルで、`qa/Q-<n>/QA.md`に保存します。YAMLのfrontmatterとMarkdownの本文で構成します。依頼に添付した画像や、`message ask`の`images`で質問に付けた画像は`qa/Q-<n>/attachments/`に置きます。`ask`は先に質問のファイルを書き、そのあと用意しておいた画像フォルダを質問ごとに1回のrenameで移します。質問と依頼は`project.json`の`nextQuestionId`の1本の連番を共有し、番号は増えるだけです。
 - 質問は`from`、`to`、任意の`tasks`（質問の対象タスク）、任意で2〜10件の`choices`、任意の`recommended`、`reply`、`withdrawnAt`、`createdAt`を持ちます。本文が質問で、1〜5,000文字です。各選択肢は質問内で一意のID（`[A-Za-z0-9_-]`の1〜64文字）と1〜200文字のラベルを持ちます。`recommended`は選択肢のどれかを指します。
 - 依頼は`from`、`to`、`acceptedAt`、`withdrawnAt`、`createdAt`を持ちます。本文が依頼で、1〜20,000文字です。
-- `agpj message ask`は質問1件につき1ファイルを書き、1回に20件まで出せます。`--task <id>`または質問の`tasks`を指定すると、そのタスクのfrontmatterの`questions`に質問IDを足し、質問と選択肢を別々のブロックにした履歴を追加します。Runningのタスクは同じ保存でPausedになります。指定したタスクが存在しない、アーカイブ済み、下書き、またはAIの操作でDoneのときは、何も書きません。
+- `agpj message ask`は質問1件につき1ファイルを書き、1回に20件まで出せます。`--task <id>`または質問の`tasks`を指定すると、そのタスクのfrontmatterの`questions`に質問IDを足し、質問と選択肢を別々のブロックにした履歴を追加します。DoingにあるAIタスクがRunningなら、同じ保存でPausedになり、履歴にはプロダクトが作る、言語に合わせた定型の理由（`Waiting for the answers to Q-1.`、日本語では`Q-1 の回答を待ちます。`）を残します。指定したタスクが存在しない、アーカイブ済み、下書き、またはAIの操作でDoneのときは、何も書きません。
 - 回答は`{choice, text, via, at}`に、任意の`images`と任意の`acceptedAt`を加えた形です。回答の画像は、回答を保存する前に質問の`attachments/`へ書かれ、保存に失敗したときは取り除かれます。選択肢のある質問には`choice`か`text`（または両方）が必要で、メモだけの回答は`choice`が`null`の回答になります。選択肢のない質問には`text`が必要です。`text`は前後の空白を除いて1〜2,000文字です。未知の選択肢は`choice_unknown`です。回答には選択肢のID、`via`（ボードとリモートアクセスからは`ui`、チャットで受けた回答をエージェントが記録したときは`chat`、端末からは`cli`）、時刻を保存します。質問を参照しているアーカイブされていないタスクには、質問・選んだラベル・メモを別々のブロックにした履歴を追加します。Doneのタスクにも追加します。
 - 回答を書けるのは人だけで、1回だけです。回答済みの質問に答えると`question_answered`で失敗します。まとめて送った回答は、全部書くか何も書かないかのどちらかです。
 - 依頼は、エージェントが`agpj message accept`で受け付けます。`acceptedAt`を記録します。受け付けは1回だけで、2回目は`request_accepted`で失敗します。
 - エージェントは、回答済みの質問も`agpj message accept`で受け付けます。`reply.acceptedAt`を記録し、回答を受け取った状態にします。回答のない質問を受け付けると`question_open`、2回目は`answer_accepted`で失敗します。`agpj message ask`と`agpj message wait`は、質問が回答または取り下げで終わって待機が終わったとき、返した回答を受け付けます。エージェントがチャットから書いた回答（`via: chat`）は、書かれた時点で受け付け済みです。受け付けられるまでの回答は、進行表・Hook・`wait --until task`の`answers`に載ります。
 - 取り下げたメッセージには何も書きません。回答は`question_withdrawn`、受け付けは`request_withdrawn`で失敗します。質問を取り下げられるのはエージェントだけ（人は`ai_only`）、依頼を取り下げられるのは人だけ（エージェントは`human_only`）です。すでに回答または受け付けのあるメッセージは取り下げられません（`message_closed`）。すでに付いた回答は残ります。レーンの移動、アーカイブ、削除でメッセージが取り下げられることはありません。
-- `message link`と`message unlink`は、タスクの`questions`に参照を足したり外したりし、質問側の`tasks`も合わせて更新します。`TASK.md`の編集と同じ制限がかかり、履歴を追加します。
+- `message link`と`message unlink`は、タスクの`questions`に参照を足したり外したりし、質問側の`tasks`も合わせて更新します。`TASK.md`の編集と同じ制限がかかり、履歴を追加します。`link`でDoingのRunningのAIタスクを結び付けたときも、`ask`と同じく同じ保存でPausedにします。
 - メッセージの文は前後の空白を除き、CRLFと単独のCRをLFに正規化します。
 
 メッセージの状態は3つです。`withdrawnAt`があれば`withdrawn`、質問に回答がある、または依頼が受け付け済みなら`closed`（回答の受け付けは状態を変えません）、それ以外は`open`です。状態は保存せず、ファイルを読むときに導きます。APIとCLIでは、質問は`open`・`answered`・`withdrawn`、依頼は`open`・`accepted`・`withdrawn`と呼びます。絞り込みには`open`・`closed`・`withdrawn`・`all`を使えます。
 
 ### 人の判断待ち
 
-AIタスクが人の判断待ちになるのは、回答のない質問を参照しているとき、読めないメッセージのファイルを参照しているとき、またはfrontmatterの`questions`を読めないときです。取り下げた質問では待ちになりません。すべてのメッセージのファイルが読める状態で、存在しないメッセージを指す参照も待ちにはならず、`problems`に載せます。
+タスクが人の判断待ちになるのは（担当者もレーンも問いません）、回答のない質問を参照しているとき、読めないメッセージのファイルを参照しているとき、またはfrontmatterの`questions`を読めないときです。取り下げた質問では待ちになりません。すべてのメッセージのファイルが読める状態で、存在しないメッセージを指す参照も待ちにはならず、`problems`に載せます。
 
-`task.json`に保存するのは`idle`・`running`・`paused`・`ran`のどれかで、`awaiting_answer`は保存しません。未着手か進行中のAIタスクが判断待ちのときは、Summary、snapshot、`show`、進捗表、hookのどれも`agentStatus`を`awaiting_answer`として返し、`openQuestionIds`と、IDが最も小さい未回答の質問から`pendingReason`と`pendingChoices`を返します。判断待ちの間、AIによる`state <id> running`とDoneへの移動は`questions_unanswered`で失敗します。Pausedへの変更と人の移動は通します。Done、アーカイブ済み、人のタスクは保存した状態を表示し、参照は記録として残ります。
+判断待ちは稼働状態ではなく、導き出す印です。`task.json`に保存するのは`idle`・`running`・`paused`だけで、`awaiting_answer`は有効な値ではありません。タスクを返す読み手（Summary、snapshot、`show`、`ls`、進捗表、hook）はどれも、判断待ちの間に真になる真偽値`awaitingAnswer`を加え、`openQuestionIds`と、IDが最も小さい未回答の質問の`pendingRequestId`・`pendingReason`・`pendingChoices`を返します。この印が`agentStatus`を変えることはありません。アーカイブ済みのタスクは対象外（`awaitingAnswer`は偽）で、参照は記録として残ります。判断待ちの間、AIによる`state <id> running`とDoneへの移動は`questions_unanswered`で失敗します。人による一時停止と移動は通します。AIによるPausedへの変更は`human_only`で拒否します。
+
+自動再開。回答を受け取ると（AIによる`message accept`、または回答済みの結果を返す`message ask`と`message wait`）、その質問を参照し、Pausedで、下書きでなく、ほかに未回答の質問を参照していないDoingのAI担当のタスクは、同じ保存でRunningに戻ります。履歴には「Q-1 の回答を受け取ったので再開しました。」（英語では`Resumed after the answers to Q-1.`。IDが複数のときは「, 」で並べます）を残します。ほかの質問を待っているタスクはPausedのままです。
 
 ワークフロー情報を履歴の文章から推測することはありません。メッセージは`QA.md`から、参照はfrontmatterの`questions`から読むので、履歴を編集してもこれらは変わりません。
 

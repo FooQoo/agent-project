@@ -30,8 +30,7 @@ const epicVersion = (epic: Pick<Epic, 'body' | 'attachments'>) =>
  * with the request's ID and the first line of its reason as the title.
  */
 export function questionOf(task: Task): SummaryQuestion | null {
-  if (task.agentStatus !== 'awaiting_answer' || !task.pendingRequestId || task.archivedAt)
-    return null;
+  if (!task.awaitingAnswer || !task.pendingRequestId || task.archivedAt) return null;
   return {
     id: task.pendingRequestId,
     title: (task.pendingReason ?? '').split('\n')[0]?.slice(0, 200) ?? '',
@@ -56,6 +55,7 @@ export function summaryOfBoard(board: Board): Summary {
         title: task.title,
         taskStatus: task.taskStatus,
         agentStatus: task.agentStatus,
+        awaitingAnswer: task.awaitingAnswer,
         assignee: task.assignee,
         draft: task.draft,
         position: task.position,

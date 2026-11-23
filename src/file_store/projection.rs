@@ -40,6 +40,7 @@ pub struct TaskSummaryFields {
     pub planned_version: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+    pub awaiting_answer: bool,
     pub pending_request_id: Option<String>,
     pub pending_reason: Option<String>,
     pub pending_choices: Vec<Choice>,

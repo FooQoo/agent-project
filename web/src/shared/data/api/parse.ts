@@ -14,7 +14,7 @@ import type {
 import { bool, exact, fail, int, list, nullableStr, oneOf, str } from './guards';
 
 const STATUSES = ['backlog', 'todo', 'doing', 'done'] as const;
-const RUN_STATES = ['idle', 'running', 'paused', 'ran', 'awaiting_answer'] as const;
+const RUN_STATES = ['idle', 'running', 'paused'] as const;
 const ASSIGNEES = ['ai', 'human'] as const;
 const RESOURCES = ['task', 'epic', 'project', 'messages'] as const;
 const DRAFTS = ['human'] as const;
@@ -25,6 +25,7 @@ const TASK_FIELDS = [
   'title',
   'taskStatus',
   'agentStatus',
+  'awaitingAnswer',
   'assignee',
   'draft',
   'position',
@@ -51,6 +52,7 @@ function parseTask(value: unknown, path: string): SummaryTask {
     title: str(o.title, `${path}.title`),
     taskStatus: oneOf(o.taskStatus, `${path}.taskStatus`, STATUSES),
     agentStatus: oneOf(o.agentStatus, `${path}.agentStatus`, RUN_STATES),
+    awaitingAnswer: bool(o.awaitingAnswer, `${path}.awaitingAnswer`),
     assignee: oneOf(o.assignee, `${path}.assignee`, ASSIGNEES),
     draft: draft(o.draft, `${path}.draft`),
     position: int(o.position, `${path}.position`, Number.MIN_SAFE_INTEGER),

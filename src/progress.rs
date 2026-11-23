@@ -1,7 +1,7 @@
 //! The progress table: the tasks an agent can pick up, grouped by epic in wave order.
 //! `agpj progress` and the agent hook print this same table.
 //!
-//! A task is listed when it is in Todo or Doing and its agent status is not AwaitingAnswer. Done and
+//! A task is listed when it is in Todo or Doing and it does not wait for an answer. Done and
 //! archived tasks are never listed; human-assigned tasks and drafts are, so the agent skips them.
 //!
 //! Open requests, unaccepted answers, and tasks lacking a final result are always listed. With
@@ -21,7 +21,7 @@ mod types;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
-use crate::domain::{ChangeCursor, Column, ProjectMeta, RunState};
+use crate::domain::{ChangeCursor, Column, ProjectMeta};
 use crate::file_store::frontmatter;
 use crate::file_store::layout;
 use crate::file_store::model::{EpicView, TaskView};
@@ -85,7 +85,7 @@ pub use answers::{ProgressAnswer, unaccepted_answers};
 pub use count::Count;
 pub use final_result::{FinalResultMissing, final_result_missing};
 pub(crate) use next::gated_by_waves;
-pub use next::{MAX_NEXT_TASKS, NextReason, NextTask};
+pub use next::{MAX_NEXT_TASKS, NextReason, NextTask, STALE_RUNNING_MINUTES};
 pub use requests::{ProgressRequest, open_requests};
 use task_entry::task_of;
 pub use types::{EpicToClose, ProgressEpic, ProgressTask};
@@ -176,7 +176,7 @@ pub fn build_filtered(
         cursor: snapshot.cursor.clone(),
         locale: None,
         epics: groups,
-        next_tasks: next::next_tasks(&listed, snapshot, &project_dir, &|task| {
+        next_tasks: next::next_tasks(&listed, snapshot, &project_dir, fetched_at, &|task| {
             filter.is_none_or(|filter| filter.keeps(task.planned_version.as_deref()))
         }),
         unassigned: unassigned
@@ -270,13 +270,13 @@ fn is_sample(task: &TaskView) -> bool {
 
 fn is_listed(task: &TaskView) -> bool {
     matches!(task.task_status, Column::Todo | Column::Doing)
-        && task.agent_status != RunState::AwaitingAnswer
+        && !task.awaiting_answer
         && !is_sample(task)
 }
 
 fn is_waiting(task: &TaskView) -> bool {
     matches!(task.task_status, Column::Todo | Column::Doing)
-        && task.agent_status == RunState::AwaitingAnswer
+        && task.awaiting_answer
         && !is_sample(task)
 }
 

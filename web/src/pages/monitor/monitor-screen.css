@@ -149,7 +149,7 @@
   text-align: left;
   cursor: default;
 }
-.monitor-card[data-agent-status="awaiting_answer"] {
+.monitor-card[data-awaiting-answer="true"] {
   border-color: var(--r-pend-bd);
   background: var(--r-pend-bg);
 }

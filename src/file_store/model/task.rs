@@ -165,14 +165,8 @@ impl From<&TaskFile> for TaskMetadata {
 }
 
 impl TaskMetadata {
-    /// Join persisted metadata with validated TASK.md events for operations. An
-    /// `awaiting_answer` run state is never stored; one that is found reads as idle, because
-    /// waiting is derived from the questions.
+    /// Join persisted metadata with validated TASK.md events for operations.
     pub fn with_history(self, history: Vec<HistoryRecord>) -> TaskFile {
-        let agent_status = match self.agent_status {
-            RunState::AwaitingAnswer => RunState::Idle,
-            other => other,
-        };
         TaskFile {
             format_version: self.format_version,
             id: self.id,
@@ -180,7 +174,7 @@ impl TaskMetadata {
             assignee: self.assignee,
             epic_id: self.epic_id,
             task_status: self.task_status,
-            agent_status,
+            agent_status: self.agent_status,
             position: self.position,
             draft: self.draft,
             archived_at: self.archived_at,
@@ -227,7 +221,8 @@ pub struct TaskView {
     pub epic: Option<TaskEpic>,
     pub task_status: Column,
     pub position: i64,
-    /// The run state as shown: `awaiting_answer` while an AI task in Todo or Doing waits for a person.
+    /// The stored run state: idle, running, or paused (running and paused only for an AI task in
+    /// Doing). Waiting for an answer is the separate `awaiting_answer` flag.
     pub agent_status: RunState,
     pub draft: Option<Draft>,
     /// The question IDs in the `questions` frontmatter.
@@ -236,6 +231,9 @@ pub struct TaskView {
     pub questions_error: bool,
     /// The referenced questions that are still open, lowest number first.
     pub open_question_ids: Vec<String>,
+    /// The task refers to an open question (or its `questions` cannot be read), whatever its
+    /// assignee, lane, or run state; never true for an archived task.
+    pub awaiting_answer: bool,
     /// The request, question and choices of the first open question while the task waits.
     pub pending_request_id: Option<String>,
     pub pending_reason: Option<String>,

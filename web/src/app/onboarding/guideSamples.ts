@@ -108,6 +108,7 @@ export function sampleCards(locale: GuideLocale, phase: GuidePhase, at: string):
     taskStatusChangedAt: at,
     position: index + 1,
     agentStatus: 'idle',
+    awaitingAnswer: false,
     agentStatusChangedAt: at,
     pendingReason: null,
     pendingRequestId: null,
@@ -138,7 +139,7 @@ export function sampleCards(locale: GuideLocale, phase: GuidePhase, at: string):
         {
           // The person sent the first plan to Todo, where the agent asks before it starts.
           ...card(0, [false, false]),
-          agentStatus: 'awaiting_answer',
+          awaitingAnswer: true,
           pendingReason: text.question,
           pendingRequestId: QUESTION_ID,
           pendingChoices: text.choices,

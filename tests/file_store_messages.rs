@@ -654,16 +654,16 @@ fn a_task_waits_for_an_unanswered_question_and_for_nothing_else() {
     let task = f.task("Import");
     let request = f.send("Add a link.");
     let question = f.ask("Keep?", &[("keep", "Keep"), ("drop", "Drop")], &[task]);
-    let state = |f: &Fixture| f.store.task(&f.project, task).unwrap().agent_status;
-    assert_eq!(state(&f), RunState::AwaitingAnswer);
+    let waits = |f: &Fixture| f.store.task(&f.project, task).unwrap().awaiting_answer;
+    assert!(waits(&f));
 
     f.answer(&question, Some("keep"), None).unwrap();
-    assert_eq!(state(&f), RunState::Idle);
+    assert!(!waits(&f));
 
     let second = f.ask("Drop?", &[("yes", "Yes"), ("no", "No")], &[task]);
-    assert_eq!(state(&f), RunState::AwaitingAnswer);
+    assert!(waits(&f));
     f.withdraw(&second, Actor::Ai).unwrap();
-    assert_eq!(state(&f), RunState::Idle);
+    assert!(!waits(&f));
 
     // A request is not a question: a task cannot refer to one.
     let err = f
@@ -682,13 +682,13 @@ fn a_task_waits_for_an_unanswered_question_and_for_nothing_else() {
     // A question file that cannot be read keeps the task waiting.
     let third = f.ask("Ship?", &[("yes", "Yes"), ("no", "No")], &[task]);
     f.answer(&third, Some("yes"), None).unwrap();
-    assert_eq!(state(&f), RunState::Idle);
+    assert!(!waits(&f));
     fs::write(
         f.project_dir().join("qa").join(&third).join("QA.md"),
         "broken",
     )
     .unwrap();
-    assert_eq!(state(&f), RunState::AwaitingAnswer);
+    assert!(waits(&f));
 }
 
 #[test]
@@ -711,10 +711,7 @@ fn linking_keeps_the_question_and_the_task_in_step() {
         .unwrap();
     let both = format!("tasks:\n- {first}\n- {second}\n");
     assert!(f.file(&question).contains(&both), "{}", f.file(&question));
-    assert_eq!(
-        f.store.task(&f.project, second).unwrap().agent_status,
-        RunState::AwaitingAnswer
-    );
+    assert!(f.store.task(&f.project, second).unwrap().awaiting_answer);
     f.store
         .link_questions(
             &f.project,

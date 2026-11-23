@@ -68,7 +68,7 @@ impl FileStore {
         let japanese = format!(
             "{}での進捗を記録しました。エージェントは{}です。",
             task.task_status.label(),
-            super::history_event::agent_word_ja(task.agent_status)
+            task.agent_status.as_str()
         );
         let reason =
             super::reason_or_default(reason, language.text(&fallback, &japanese).to_owned())?;

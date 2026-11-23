@@ -35,7 +35,8 @@
       "position": 1,
       "assignee": "ai",
       "taskStatus": "doing",
-      "agentStatus": "awaiting_answer",
+      "agentStatus": "paused",
+      "awaitingAnswer": true,
       "pendingReason": "Which database should Beta use?",
       "pendingRequestId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       "pendingChoices": [

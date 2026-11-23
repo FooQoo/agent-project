@@ -42,6 +42,7 @@ pub fn render(table: &Progress) -> String {
         out.push_str("Next tasks\n");
         for task in &table.next_tasks {
             let why = match task.why {
+                progress::NextReason::Stalled => "stalled",
                 progress::NextReason::Resume => "resume",
                 progress::NextReason::NextInEpic => "next_in_epic",
             };
@@ -104,8 +105,6 @@ fn write_task(out: &mut String, task: &ProgressTask) {
         RunState::Idle => "idle",
         RunState::Running => "running",
         RunState::Paused => "paused",
-        RunState::Ran => "ran",
-        RunState::AwaitingAnswer => "awaiting_answer",
     };
     let draft = match task.draft {
         None => "",

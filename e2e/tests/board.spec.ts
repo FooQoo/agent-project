@@ -74,7 +74,7 @@ test('Doing tasks show Idle, Running, or Awaiting answer, and an awaiting-answer
   // Only Doing cards carry a run state.
   for (const name of ['Todo', 'Done'] as const) {
     const column = lane(page, name);
-    await expect(column.getByText(/^(Idle|Running|Paused|Has run|Awaiting answer)$/)).toHaveCount(0);
+    await expect(column.getByText(/^(Idle|Running|Paused|Awaiting answer)$/)).toHaveCount(0);
   }
 });
 

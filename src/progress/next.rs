@@ -4,10 +4,15 @@ use std::path::PathBuf;
 
 use serde::Serialize;
 
-use crate::domain::{Assignee, Column};
+use chrono::{DateTime, Duration, Utc};
+
+use crate::domain::{Assignee, Column, RunState};
 use crate::file_store::layout;
 use crate::file_store::model::TaskView;
 use crate::file_store::reader::ProjectSnapshot;
+
+/// A running task with no history for this long may have stopped; `nextTasks` lists it first.
+pub const STALE_RUNNING_MINUTES: i64 = 30;
 
 /// How many tasks `nextTasks` holds at most.
 pub const MAX_NEXT_TASKS: usize = 3;
@@ -16,7 +21,10 @@ pub const MAX_NEXT_TASKS: usize = 3;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NextReason {
-    /// In Doing with an Idle run state: stalled work to resume.
+    /// A running task in Doing with no history entry for `STALE_RUNNING_MINUTES`: continue it.
+    /// Listed before everything else.
+    Stalled,
+    /// In Doing, idle or paused, and not waiting for an answer: work to resume.
     Resume,
     /// In Todo with an Idle run state: the next ready task in its epic's order.
     NextInEpic,
@@ -32,6 +40,8 @@ pub struct NextTask {
     pub epic_id: Option<String>,
     pub task_path: PathBuf,
     pub why: NextReason,
+    /// The task's run state.
+    pub agent_status: RunState,
 }
 
 /// A Todo task of an epic that orders its tasks in waves is held back while a task
@@ -63,8 +73,25 @@ pub(super) fn next_tasks(
     listed: &[&TaskView],
     snapshot: &ProjectSnapshot,
     project_dir: &std::path::Path,
+    now: DateTime<Utc>,
     keep: &dyn Fn(&TaskView) -> bool,
 ) -> Vec<NextTask> {
+    let stalled: Vec<(&TaskView, NextReason)> = listed
+        .iter()
+        .filter(|task| {
+            task.assignee == Assignee::Ai
+                && task.task_status == Column::Doing
+                && task.agent_status == RunState::Running
+                && task.draft.is_none()
+                && task.archived_at.is_none()
+        })
+        .filter(|task| keep(task))
+        .filter(|task| {
+            let at = super::task_entry::task_of(task, project_dir).last_activity_at;
+            at.is_some_and(|at| now - at > Duration::minutes(STALE_RUNNING_MINUTES))
+        })
+        .map(|task| (*task, NextReason::Stalled))
+        .collect();
     let ready = |task: &&&TaskView| {
         task.assignee == Assignee::Ai
             && task.agent_status.can_start()
@@ -81,8 +108,9 @@ pub(super) fn next_tasks(
             .map(move |task| (*task, why))
             .collect::<Vec<_>>()
     };
-    pick(Column::Doing, NextReason::Resume)
+    stalled
         .into_iter()
+        .chain(pick(Column::Doing, NextReason::Resume))
         .chain(pick(Column::Todo, NextReason::NextInEpic))
         .take(MAX_NEXT_TASKS)
         .map(|(task, why)| NextTask {
@@ -91,6 +119,7 @@ pub(super) fn next_tasks(
             epic_id: task.epic_id.clone(),
             task_path: layout::task_md(&layout::task_dir(project_dir, task.id)),
             why,
+            agent_status: task.agent_status,
         })
         .collect()
 }

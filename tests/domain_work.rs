@@ -2,25 +2,11 @@ use agent_project::domain::{Assignee, Column, RunState, check_work_state, valida
 
 #[test]
 fn run_states_follow_the_table_for_each_owner_and_column() {
-    // An AI task runs and pauses in Doing, has run in Todo or Done, and waits for an answer in
-    // Todo or Doing. A person's task is only idle.
+    // Only an AI task in Doing runs or pauses; every other task is idle.
     let allowed = |assignee: Assignee, column: Column, state: RunState| {
-        state == RunState::Idle
-            || (assignee == Assignee::Ai
-                && match state {
-                    RunState::Running | RunState::Paused => column == Column::Doing,
-                    RunState::Ran => matches!(column, Column::Todo | Column::Done),
-                    RunState::AwaitingAnswer => matches!(column, Column::Todo | Column::Doing),
-                    RunState::Idle => true,
-                })
+        state == RunState::Idle || (assignee == Assignee::Ai && column == Column::Doing)
     };
-    let states = [
-        RunState::Idle,
-        RunState::Running,
-        RunState::Paused,
-        RunState::Ran,
-        RunState::AwaitingAnswer,
-    ];
+    let states = [RunState::Idle, RunState::Running, RunState::Paused];
     for assignee in [Assignee::Ai, Assignee::Human] {
         for column in [Column::Todo, Column::Doing, Column::Done] {
             for state in states {

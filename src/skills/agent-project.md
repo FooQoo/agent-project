@@ -60,20 +60,19 @@ When a request needs more than one task, run `agpj skills planning` before you r
 
 ## 5. Lanes and run states
 
-Lanes are `backlog`, `todo`, `doing`, and `done`. You never take work from `backlog`: only a person sends it to `todo`. Run states are `idle` (never run), `running`, `paused` (in Doing, the run stopped), `ran` (has run, now in Todo or Done), and `awaiting_answer` (waiting for an answer to an open question):
+Lanes are `backlog`, `todo`, `doing`, and `done`. You never take work from `backlog`: only a person sends it to `todo`. Run states are `idle`, `running`, and `paused` (in Doing, the run stopped):
 
 | Owner | Lane | Allowed run state |
 | --- | --- | --- |
-| `ai` | `doing` | `idle`, `running`, `paused`, `awaiting_answer` |
-| `ai` | `todo` | `idle`, `ran`, `awaiting_answer` |
-| `ai` | `done` | `idle`, `ran` |
+| `ai` | `doing` | `idle`, `running`, `paused` |
+| `ai` | `backlog`, `todo`, `done` | `idle` only |
 | `human` | any | `idle` only |
 
-- `running` means you are working on it. `awaiting_answer` means the task refers to a question that is still open. It is never set directly; it follows from the questions (section 7).
-- In Doing the only changes of `state` are `idle` to `running`, `running` to `paused`, and `paused` to `running`; anything else is refused. `ran` is never set directly either, and a task that has run never goes back to `idle`.
-- A real lane move keeps the questions, which belong to the project. A task that never ran stays `idle`. A task that has run (`running`, `paused`, or `ran`) becomes `paused` in Doing and `ran` in Todo or Done. Whether a task waits for an answer does not change this.
-- `running` is self-reported and is not reset automatically. Set it while actively working, set `paused` when active work stops, and ask with `message ask` when you need a user decision. A session starting or resuming alone does not make a task `running`.
-- Never report `running` or `paused` on a `human` task.
+- `running` means you are working on it. Waiting for an answer is not a run state: the task JSON has a separate boolean `awaitingAnswer`, true while the task refers to an open question (section 7). It never changes `agentStatus` and is never set directly.
+- In Doing the changes of `state` are `idle` to `running`, `running` to `paused`, and `paused` to `running`; anything else is refused. You cannot pause: `state <id> paused --actor ai` is refused with `human_only`, and so is moving a Doing task back to Todo. `ran` and `awaiting_answer` are not values.
+- A lane move into or out of Doing resets the run state to `idle`; a task moved into Doing starts `idle`. The questions, which belong to the project, are kept.
+- `running` is self-reported and is not reset automatically. Set it when you start. Never pause a task yourself. When you are blocked on a person, ask with `message ask`: the task pauses automatically, and returns to `running` automatically when you take in the last open answer (then follow "After an answer" in `agpj skills waiting`). A session starting or resuming alone does not make a task `running`.
+- Never report `running` or `paused` on a `human` task. A task that `nextTasks` or a reminder reports as stalled (`why: "stalled"`, `running` with no history for 30 minutes) is continued; if it truly cannot resume, record why with `agpj history add <id> --reason "<why it cannot resume>"`.
 - Every `mv` and `state` needs `--actor`, which controls permission. `--reason` is optional for lane and state changes (up to 10,000 characters); missing or blank reasons are generated from the current state. Never use `--actor human` unless the user explicitly gave that direction or you are recording their own chat answer (section 7).
 
 ## 6. Work loop
@@ -89,7 +88,7 @@ History keeps the decisions and grounds a reader needs later, not a log of every
 3. **Work and record.** State changes record themselves through their `--reason`; use `history add` only for a decision that changes no state but matters later. As soon as the first thing the requester can look at is ready, record it with `result add` and keep working (`agpj skills results`).
 4. **Check conditions.** Set an item's `done` to `true` only after verification succeeded. Keep the verification result in the task body and save it before the last completed condition. A running `agpj serve` completes an eligible AI task automatically; do not manually move a task to Done during the normal work loop.
 5. **Ask when blocked** (section 7). Do not wait idle: continue other independent work while the question is open.
-6. **Finish or interrupt.** Record a `result add <id> --final` for each task in `finalResultMissing`, the one change allowed on a Done task. The planned version (`edit --planned-version`, `--current-version`, `--unplanned`) is the other change allowed on a Done or archived task. Otherwise Done tasks are read-only for agents. If work stops before completion, record why.
+6. **Finish or interrupt.** Finish by moving the task to Done (automatic when its conditions are met); never move a Doing task back to Todo. Record a `result add <id> --final` for each task in `finalResultMissing`, the one change allowed on a Done task. The planned version (`edit --planned-version`, `--current-version`, `--unplanned`) is the other change allowed on a Done or archived task. Otherwise Done tasks are read-only for agents. If work stops before completion, record why with `history add`.
 7. **Close the epic** when all its tasks are done, except `BUG` and `ENHANCEMENT`, whose bodies stay fixed.
 
 Keep history reasons concise, in Markdown where it helps. An option value that starts with `-` (a Markdown list such as `- did X`) must be written `--reason="- did X"` with an equals sign, or passed with `--reason-file`; `--reason "- did X"` fails, and so does a forgotten value (`--reason --json`). The same holds for `--text`, `--desc`, `--summary`, `--title`, and `--link`; a whole `TASK.md` or `EPIC.md` starts with `---`, so give it with `--desc-file`, `--document-file`, or `-`. Put verification results in the TASK body, visual proof in image attachments, and never full test logs.
@@ -113,13 +112,13 @@ When a short request can be read more than one way, restate your reading before 
 
 Decide everything else yourself, such as technical choices with a reasonable default or anything easy to change later. Record such a decision only when it matters later, once: in the `--reason` of the `mv` or `state` when it changes state, otherwise with `history add`.
 
-Every question goes on the board with `message ask`, never only in chat. Permission ("may I...?"), a question ending a progress report, and confirming an action a subagent was denied are questions too. Before ending a turn, re-read your reply: if it still asks anything that waits on the user, put it on the board now. Each question is its own message (`Q-<n>`) and belongs to the project; the task shows as `awaiting_answer` while any question it refers to is open. Never answer a question yourself, and use `--actor human` only to record the user's own chat answer. If the board is unavailable, report the connection problem and leave dependent work blocked; do not ask only in the chat instead.
+Every question goes on the board with `message ask`, never only in chat. Permission ("may I...?"), a question ending a progress report, and confirming an action a subagent was denied are questions too. Before ending a turn, re-read your reply: if it still asks anything that waits on the user, put it on the board now. Each question is its own message (`Q-<n>`) and belongs to the project; the task has `awaitingAnswer: true` while any question it refers to is open. Never answer a question yourself, and use `--actor human` only to record the user's own chat answer. If the board is unavailable, report the connection problem and leave dependent work blocked; do not ask only in the chat instead.
 
 The question JSON, waiting for the answers, showing the question in the chat, recording a chat answer, and what to do after `timeout`: `agpj skills questions`. To open the board on the phone, run `agpj skills phone`.
 
 ## 8. Wait and resume
 
-When no work can proceed in the ordinary work loop, wait for a change with `agpj --project "<name>" wait --after "<cursor>" --json`, using the `cursor` of the latest snapshot. Never poll the board on a timer. After `wait` or `message ask` returns, read the complete snapshot and history, reconsider the plan in light of the answer, and resume with `state <id> running --actor ai --reason "<how the answer changes the work>"`. If the answer changes the scope or completion conditions, update `TASK.md` (and `EPIC.md`) before resuming. The error codes of a wait and the listener distinction: `agpj skills waiting`.
+When no work can proceed in the ordinary work loop, wait for a change with `agpj --project "<name>" wait --after "<cursor>" --json`, using the `cursor` of the latest snapshot. Never poll the board on a timer. When `wait --after` returns, check the snapshot for the answer you waited on: if an answer is there, read it and take it in with `message accept <id> --actor ai` before treating it as input or resuming. If the wait returned because of a project change and the answer is not there, re-check the snapshot for independent ready work and do it; wait again with the `cursor` of the latest snapshot only when none is left. Answers returned by `message ask` or `message wait` are already taken in. Once an answer is in, follow "After an answer" in `agpj skills waiting`. The error codes of a wait and the listener distinction: `agpj skills waiting`.
 
 ## 9. Drafts and archived tasks
 

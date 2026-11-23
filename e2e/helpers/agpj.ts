@@ -191,7 +191,8 @@ export interface TaskJson {
   taskStatus: 'backlog' | 'todo' | 'doing' | 'done';
   taskStatusChangedAt: string;
   assignee: 'ai' | 'human';
-  agentStatus: 'idle' | 'running' | 'paused' | 'ran' | 'awaiting_answer';
+  agentStatus: 'idle' | 'running' | 'paused';
+  awaitingAnswer: boolean;
   pendingReason: string | null;
   pendingRequestId: string | null;
   pendingChoices?: { id: string; label: string }[];
@@ -293,7 +294,9 @@ interface FixtureTask {
   assignee: 'ai' | 'human';
   taskStatus: 'backlog' | 'todo' | 'doing' | 'done';
   taskStatusChangedAt: string;
-  agentStatus: 'idle' | 'running' | 'paused' | 'ran' | 'awaiting_answer';
+  agentStatus: 'idle' | 'running' | 'paused';
+  /** The card refers to an open question; the seed writes one for it. */
+  awaitingAnswer?: boolean;
   pendingReason: string | null;
   pendingRequestId: string | null;
   pendingChoices?: { id: string; label: string }[];
@@ -308,7 +311,7 @@ interface Fixture {
   tasks: FixtureTask[];
 }
 
-/** The task.json and TASK.md of one fixture card, in the current file format. An awaiting_answer card refers to `question`. */
+/** The task.json and TASK.md of one fixture card, in the current file format. A card that awaits an answer refers to `question`. */
 function taskFilesFor(item: FixtureTask, question?: string): { task: Record<string, unknown>; markdown: string } {
   const history = item.history.map(({ at, reason }) => ({ at, reason }));
   const taskJson = {
@@ -319,8 +322,8 @@ function taskFilesFor(item: FixtureTask, question?: string): { task: Record<stri
     epicId: null,
     taskStatus: item.taskStatus,
     taskStatusChangedAt: item.taskStatusChangedAt,
-    // Waiting is derived from the open question the card refers to; a card that waits for an answer is stored as idle, a valid stored state that the open question turns into awaiting_answer.
-    agentStatus: item.agentStatus === 'awaiting_answer' ? 'idle' : item.agentStatus,
+    // Waiting is derived from the open question the card refers to and never stored.
+    agentStatus: item.agentStatus,
     position: item.position,
     draft: null,
     archivedAt: null,
@@ -332,7 +335,7 @@ function taskFilesFor(item: FixtureTask, question?: string): { task: Record<stri
   return { task: taskJson, markdown: taskMarkdown(item.description, history, question ? [question] : []) };
 }
 
-/** `qa/Q-<n>/QA.md` with one open question for an awaiting_answer fixture card: frontmatter, then the Markdown body. */
+/** `qa/Q-<n>/QA.md` with one open question for a fixture card that awaits an answer: frontmatter, then the Markdown body. */
 function questionMarkdownFor(item: FixtureTask): string {
   const choices = item.pendingChoices?.length ? item.pendingChoices : [{ id: 'a', label: 'Plan A' }, { id: 'b', label: 'Plan B' }];
   const lines = ['---', 'from: ai', 'to: human', `tasks: [${item.id}]`, 'choices:'];
@@ -359,7 +362,7 @@ export function seedProject(project: string, file: string, home: string = mainHo
     const dir = path.join(folder, 'tasks', String(item.id));
     mkdirSync(dir, { recursive: true });
     let question: string | undefined;
-    if (item.agentStatus === 'awaiting_answer') {
+    if (item.awaitingAnswer) {
       question = `Q-${nextQuestionId++}`;
       const questionDir = path.join(folder, 'qa', question);
       mkdirSync(questionDir, { recursive: true });

@@ -1,5 +1,5 @@
 //! Small renderers shared by CLI commands.
-use crate::domain::{Column, RunState};
+use crate::domain::Column;
 use crate::file_store::model::TaskView;
 use serde_json::Value;
 
@@ -89,10 +89,11 @@ pub fn task_value(task: &TaskView) -> Value {
     serde_json::to_value(task).expect("Agent Project tasks serialize")
 }
 
-pub fn state_text(state: RunState, reason: Option<&str>) -> String {
-    match (state, reason) {
-        (RunState::AwaitingAnswer, Some(reason)) => format!("awaiting_answer: {reason}"),
-        _ => state.as_str().to_string(),
+pub fn state_text(task: &TaskView) -> String {
+    match (task.awaiting_answer, task.pending_reason.as_deref()) {
+        (true, Some(reason)) => format!("awaiting_answer: {reason}"),
+        (true, None) => "awaiting_answer".to_string(),
+        _ => task.agent_status.as_str().to_string(),
     }
 }
 
@@ -123,10 +124,7 @@ pub fn ls_text(tasks: &[TaskView], columns: &[Column]) -> String {
                 out.push_str(&format!(" [plan {version}]"));
             }
             if task.assignee == crate::domain::Assignee::Ai && column == &Column::Doing {
-                out.push_str(&format!(
-                    " [{}]",
-                    state_text(task.agent_status, task.pending_reason.as_deref())
-                ));
+                out.push_str(&format!(" [{}]", state_text(task)));
             }
             out.push('\n');
         }
@@ -146,10 +144,7 @@ pub fn show_text(task: &TaskView) -> String {
         }
     );
     if task.assignee == crate::domain::Assignee::Ai && task.task_status == Column::Doing {
-        out.push_str(&format!(
-            "Agent status: {}\n",
-            state_text(task.agent_status, task.pending_reason.as_deref())
-        ));
+        out.push_str(&format!("Agent status: {}\n", state_text(task)));
     }
     if let Some(epic) = &task.epic_id {
         out.push_str(&format!("Epic: {epic}\n"));

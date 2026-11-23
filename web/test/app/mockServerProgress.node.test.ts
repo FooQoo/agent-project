@@ -130,6 +130,7 @@ describe('automatic Done', () => {
       taskStatus: 'done',
       taskStatusChangedAt: AT,
       agentStatus: 'idle',
+      awaitingAnswer: false,
       pendingRequestId: null,
       position: 3,
       updatedAt: AT,

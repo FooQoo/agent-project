@@ -522,7 +522,7 @@ test('the answer dialog takes the focus and gives it back', async ({ page }) => 
   }
   await page.keyboard.press('Escape');
   await expect(answer).toHaveCount(0);
-  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('awaiting_answer');
+  expect(listTasks(mainProject).find(({ id }) => id === 12)?.awaitingAnswer).toBe(true);
 });
 
 // ------------------------------------------------------------------ The language never changes the data
@@ -537,7 +537,7 @@ test('changing the language does not translate or alter what was entered', async
   await task(page, 12).click();
   await sendAnswer(page, 12, { choice: 'Keep compatibility (recommended)', text: 'Keep the database name.' });
   await closeMessages(page);
-  await expect(task(page, 12)).toContainText('Idle');
+  await expect(task(page, 12)).toContainText('Paused');
 
   const before = listTasks(mainProject);
   const dialog = await openSettings(page);
@@ -603,11 +603,11 @@ test('create, move with a reason, answer, archive, and live updates work with a 
   await sendAnswer(page, 12, { choice: 'Keep compatibility (recommended)', text: 'Replace the board after a backup.' });
   await closeMessages(page);
   await expect(answerButton(page, 12)).toHaveCount(0);
-  await expect(lane(page, 'Doing').getByRole('button', { name: /^#12 AI Idle Restore a board from JSON / })).toBeVisible();
+  await expect(lane(page, 'Doing').getByRole('button', { name: /^#12 AI Paused Restore a board from JSON / })).toBeVisible();
   await panel.getByRole('tab', { name: /^History/ }).click();
   await expect(panel.getByRole('listitem').first()).toContainText('Replace the board after a backup.');
   await expect(answerButton(page, 12)).toHaveCount(0);
-  expect(listTasks(mainProject).find(({ id }) => id === 12)).toMatchObject({ agentStatus: 'idle', pendingReason: null });
+  expect(listTasks(mainProject).find(({ id }) => id === 12)).toMatchObject({ agentStatus: 'paused', pendingReason: null });
 
   // Archive from the toolbar beside the tabs; Cancel keeps the card, Archive removes it from the board.
   await lane(page, 'Doing').getByRole('button', { name: new RegExp(`^#${fresh}(?!\\d)`) }).click();
@@ -735,11 +735,11 @@ test('a request that fails keeps what was typed, shows the reason, and can be se
   // The dialog says the question was answered elsewhere, and keeps the typed note.
   await expect(answer.getByRole('alert')).toContainText('This question was answered elsewhere or withdrawn.');
   await expect(answer).toContainText('Kept answer.');
-  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('awaiting_answer');
+  expect(listTasks(mainProject).find(({ id }) => id === 12)?.awaitingAnswer).toBe(true);
   answerFails = false;
   await send(page);
   await closeMessages(page);
-  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('idle');
+  expect(listTasks(mainProject).find(({ id }) => id === 12)?.agentStatus).toBe('paused');
 });
 
 test('an archive that fails keeps the task, the selection, and the confirmation', async ({ page }) => {

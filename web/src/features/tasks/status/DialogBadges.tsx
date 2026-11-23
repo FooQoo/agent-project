@@ -13,12 +13,18 @@ export function TaskStatusBadge({ status }: { status: ColumnName }) {
   );
 }
 
-export function RunStatusBadge({ status }: { status: RunState }) {
+export function RunStatusBadge({
+  status,
+  awaitingAnswer = false,
+}: {
+  status: RunState;
+  awaitingAnswer?: boolean;
+}) {
   const { t } = useTranslation();
   return (
     <Badge
       variant={
-        status === 'awaiting_answer'
+        awaitingAnswer
           ? 'pending'
           : status === 'running'
             ? 'secondary'
@@ -27,13 +33,12 @@ export function RunStatusBadge({ status }: { status: RunState }) {
               : 'muted'
       }
     >
-      {status === 'running' && (
+      {!awaitingAnswer && status === 'running' && (
         <LoaderIcon aria-hidden="true" className="text-[color:var(--r-text2)]" />
       )}
-      {status === 'awaiting_answer' && <PauseIcon aria-hidden="true" />}
-      {status === 'paused' && <ClockIcon aria-hidden="true" />}
-      {status === 'ran' && <CheckIcon aria-hidden="true" />}
-      {t(`runState.${status}`)}
+      {awaitingAnswer && <PauseIcon aria-hidden="true" />}
+      {!awaitingAnswer && status === 'paused' && <ClockIcon aria-hidden="true" />}
+      {t(awaitingAnswer ? 'runState.awaitingAnswer' : `runState.${status}`)}
     </Badge>
   );
 }

@@ -43,7 +43,7 @@ impl AgpjError {
                 column.label()
             ),
             AgpjError::InvalidStateForAssignee => {
-                "Only AI-owned tasks can be running, paused, or have run.".into()
+                "Only an AI-owned task in Doing can be running or paused.".into()
             }
             AgpjError::InvalidStateChange { .. } => {
                 "In Doing a task goes from idle to running, from running to paused, and from paused to running. Move the card to change the other states.".into()

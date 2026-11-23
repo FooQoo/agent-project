@@ -31,12 +31,13 @@ export function MonitorTask({
         ? task.createdAt
         : task.agentStatusChangedAt;
   // Keep the AI run state visible within active lanes; lane position and run state answer different questions.
-  const showsState = task.assignee === 'ai' && (section !== 'done' || task.agentStatus === 'ran');
-  const pending = showsState && task.agentStatus === 'awaiting_answer';
+  const showsState = task.assignee === 'ai' && (section !== 'done' || task.awaitingAnswer);
+  // Waiting for an answer is shown on any task that refers to an open question, human-owned ones included.
+  const pending = task.awaitingAnswer;
   const label = [
     `#${task.id}`,
     t(`monitor.status.${section}`),
-    showsState ? t(`runState.${task.agentStatus}`) : '',
+    pending ? t('runState.awaitingAnswer') : showsState ? t(`runState.${task.agentStatus}`) : '',
     task.title,
     pending ? task.pendingReason : '',
   ]
@@ -48,6 +49,7 @@ export function MonitorTask({
       aria-label={label}
       data-task-id={task.id}
       data-agent-status={showsState ? task.agentStatus : undefined}
+      data-awaiting-answer={pending ? 'true' : undefined}
     >
       <span className="monitor-card__top">
         {/* The guide's sample cards have no number of their own; the span keeps the row's layout. */}
@@ -56,7 +58,13 @@ export function MonitorTask({
           {task.taskStatus === 'backlog' && (task.openQuestionIds?.length ?? 0) > 0 && (
             <span className="card__open-question">{t('backlog.openQuestion')}</span>
           )}
-          {showsState && <StatusLabel kind="agent" status={task.agentStatus} />}
+          {(showsState || pending) && (
+            <StatusLabel
+              kind="agent"
+              status={task.agentStatus}
+              awaitingAnswer={task.awaitingAnswer}
+            />
+          )}
           <AcceptanceProgress task={task} />
         </span>
       </span>

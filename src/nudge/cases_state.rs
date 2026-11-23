@@ -147,6 +147,7 @@ pub fn all() -> Vec<Case> {
                     epic_id: None,
                     task_path: "p".into(),
                     why: crate::progress::NextReason::NextInEpic,
+                    agent_status: crate::domain::RunState::Idle,
                 });
             }),
         ),
@@ -164,8 +165,21 @@ pub fn all() -> Vec<Case> {
                     epic_id: None,
                     task_path: "p".into(),
                     why: crate::progress::NextReason::Resume,
+                    agent_status: crate::domain::RunState::Paused,
                 });
             }),
         ),
     ]
+}
+
+#[test]
+fn the_stale_running_reminder_says_to_continue_and_never_to_pause() {
+    let scenario = running_since(60);
+    let findings = super::state_rules::stale_running(&scenario.facts());
+    assert_eq!(findings.len(), 1);
+    let text = format!("{:?}", findings[0]);
+    assert!(text.contains("continue the work"), "{text}");
+    assert!(text.contains("history add"), "{text}");
+    assert!(text.contains("<why it cannot resume>"), "{text}");
+    assert!(!text.contains("paused --actor ai"), "{text}");
 }

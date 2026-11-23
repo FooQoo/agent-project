@@ -52,7 +52,7 @@ describe('Task', () => {
       id: 40,
       title: 'Keep this title as entered',
       taskStatus: 'doing',
-      agentStatus: 'awaiting_answer',
+      awaitingAnswer: true,
       pendingReason: 'Keep this waiting reason as entered',
       updatedAt: '2026-10-02T10:08:00Z',
     });
@@ -94,7 +94,7 @@ describe('Task', () => {
     const task = makeTask({
       id: 41,
       taskStatus: 'todo',
-      agentStatus: 'awaiting_answer',
+      awaitingAnswer: true,
       pendingRequestId: 'request-41',
       pendingReason: 'Choose a direction',
     });
@@ -125,7 +125,7 @@ describe('Task', () => {
     const task = makeTask({
       id: 43,
       taskStatus: 'todo',
-      agentStatus: 'awaiting_answer',
+      awaitingAnswer: true,
       pendingReason: 'Choose a direction',
       openQuestionIds: ['Q-1', 'Q-2'],
     });
@@ -148,7 +148,7 @@ describe('Task', () => {
     const task = makeTask({
       id: 42,
       taskStatus: 'doing',
-      agentStatus: 'awaiting_answer',
+      awaitingAnswer: true,
       pendingReason: 'Waiting for the request to be restored.',
       pendingRequestId: null,
     });
