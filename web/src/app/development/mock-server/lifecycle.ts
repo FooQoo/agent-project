@@ -58,6 +58,7 @@ export const lifecycleRoutes: Routes = (context, request) => {
       ...task,
       archivedAt: archiveMatch[2] === 'archive' ? context.now() : null,
       agentStatus: 'idle',
+      awaitingAnswer: false,
       pendingReason: null,
       pendingRequestId: null,
     };
@@ -118,7 +119,8 @@ function archiveDone(
       (item): Task => ({
         ...item,
         archivedAt,
-        agentStatus: item.agentStatus === 'idle' ? 'idle' : 'ran',
+        agentStatus: 'idle',
+        awaitingAnswer: false,
         pendingReason: null,
         pendingRequestId: null,
       }),
@@ -166,6 +168,7 @@ function createTask(
     taskStatusChangedAt: at,
     position: found.tasks.filter((item) => item.taskStatus === 'todo').length + 1,
     agentStatus: 'idle',
+    awaitingAnswer: false,
     pendingReason: null,
     pendingRequestId: null,
     pendingChoices: [],
@@ -212,9 +215,9 @@ function moveTask(
     ...task,
     taskStatus: target,
     taskStatusChangedAt: at,
+    // A lane change resets the run state, but an open question stays open and answerable.
     agentStatus: 'idle',
-    pendingReason: null,
-    pendingRequestId: null,
+    awaitingAnswer: task.awaitingAnswer && task.pendingRequestId !== null,
     updatedAt: at,
     agentStatusChangedAt: at,
     history: [...task.history, { at, reason }],

@@ -23,6 +23,7 @@ function card(id: number, lane: TaskSummary['taskStatus'], open: string[] = []):
     taskStatusChangedAt: '',
     position: id,
     agentStatus: 'idle',
+    awaitingAnswer: false,
     agentStatusChangedAt: '',
     pendingReason: null,
     pendingRequestId: null,

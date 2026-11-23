@@ -118,7 +118,7 @@ export function mockServerCases(): void {
       expect(summary.project.id).toBe(PROJECT);
       // The fixture cards and the long Markdown card.
       expect(summary.tasks.map((task) => task.id)).toEqual([8, 9, 11, 12, 13, 14, 15, 16, 17]);
-      expect(summary.tasks.find((task) => task.id === 11)?.agentStatus).toBe('awaiting_answer');
+      expect(summary.tasks.find((task) => task.id === 11)?.awaitingAnswer).toBe(true);
       expect(summary.tasks.find((task) => task.id === 12)?.acceptance).toEqual({
         done: 2,
         total: 2,
@@ -197,26 +197,52 @@ export function mockServerCases(): void {
       expect(events).toEqual([]);
     });
 
-    it('moves a card, records the reason and settles its request', () => {
+    it('moves a card and records the reason', () => {
       const { server, events } = start();
       const response = send(
         server,
-        post(`/api/projects/${PROJECT}/tasks/13/move`, { taskStatus: 'done', reason: 'Checked.' }),
+        post(`/api/projects/${PROJECT}/tasks/15/move`, { taskStatus: 'done', reason: 'Checked.' }),
       );
       expect(
         bodyOf<{ task: { taskStatus: string; agentStatus: string } }>(response).task,
       ).toMatchObject({
         taskStatus: 'done',
         agentStatus: 'idle',
+        awaitingAnswer: false,
       });
       expect(events[0]?.changes).toEqual([
-        { resource: 'task', id: 13, facets: ['summary', 'history', 'request'] },
+        { resource: 'task', id: 15, facets: ['summary', 'history'] },
       ]);
       const same = send(
         server,
-        post(`/api/projects/${PROJECT}/tasks/13/move`, { taskStatus: 'done' }),
+        post(`/api/projects/${PROJECT}/tasks/15/move`, { taskStatus: 'done' }),
       );
       expect(same.status).toBe(422);
+    });
+
+    it('keeps an open question answerable when its card changes lanes', () => {
+      const { server } = start();
+      const before = taskOf(server, 13);
+      expect(before).toMatchObject({ taskStatus: 'doing', awaitingAnswer: true });
+      const moved = send(
+        server,
+        post(`/api/projects/${PROJECT}/tasks/13/move`, { taskStatus: 'todo' }),
+      );
+      expect(bodyOf<{ task: Record<string, unknown> }>(moved).task).toMatchObject({
+        taskStatus: 'todo',
+        agentStatus: 'idle',
+        awaitingAnswer: true,
+        pendingRequestId: before.pendingRequestId,
+        pendingReason: before.pendingReason,
+      });
+      const answer = send(
+        server,
+        post(`/api/projects/${PROJECT}/messages/answers`, {
+          answers: [{ questionId: '13131313131313131313131313131313', choiceId: 'board' }],
+        }),
+      );
+      expect(answer.status).toBe(200);
+      expect(taskOf(server, 13)).toMatchObject({ taskStatus: 'todo', awaitingAnswer: false });
     });
 
     it('answers an open question, and refuses an unknown one', () => {

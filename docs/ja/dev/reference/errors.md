@@ -16,12 +16,12 @@
 | `no_current_version` | 現在の版がないプロジェクトで、`add`・`edit`・`ls`・`progress`に`--current-version`を付けた。何も保存しません。`version current VERSION`で設定するか、版の名前を指定します。ボードのAPIは422を返します。 | 1 | 422 |
 | `task_in_backlog` | エージェントの`mv`・`state`が、バックログのタスクを対象にした。バックログから出せるのは人だけです。 | 1 | 409 |
 | `send_with_open_questions` | 人の`mv <id> todo`・`epic send`・Webでの未着手への移動が、未回答の質問がある計画を、確認なし（`--force`、APIでは`ack: true`）で対象にした。何も保存せず、メッセージに質問のIDを示す。確認して送ったあとも質問は残り、回答があるまでタスクはAwaiting answerです。 | 1 | 409 |
-| `human_only` | エージェントが依頼の取り下げ、またはバックログのカードへの`mv <id> todo`・`epic send`・`mv ... backlog`を行おうとした。これを行えるのは人だけ。 | 1 | 403 |
+| `human_only` | エージェントが依頼の取り下げ、バックログのカードへの`mv <id> todo`・`epic send`・`mv ... backlog`、タスクの一時停止（`state <id> paused`、または`actor`が`ai`の`agent-status`。「pausing a task is for a person only.」）、DoingのタスクのTodoへの差し戻し（「moving a task from Doing back to Todo is for a person only.」）を行おうとした。これを行えるのは人だけ。 | 1 | 403 |
 | `task_not_draft` | 下書きでないタスクへのWebの編集。 | 1 | 409 |
 | `task_is_done` | DoneのタスクへのAIの変更。許可されるのは、最終の成果がまだないDoneのタスクへの最初の`result add --final`と、公開の記録（`result add --published`）です。 | 1 | 409 |
 | `acceptance_unmet` | 条件が未達成、またはfrontmatterが不正なタスクを、AIがDoneへ移そうとした。 | 2 | なし |
 | `invalid_state_for_column` | そのレーンで無効な稼働状態（例: 未着手でRunning）。 | 1 | 422 |
-| `invalid_state_change` | 許されない稼働状態の変更。Doingで許されるのは、IdleからRunning、RunningからPaused、PausedからRunningだけ（たとえばRunningからIdle、IdleからPausedは拒否します）。`ran`や`awaiting_answer`の設定は`invalid_value`で拒否します。 | 2 | 422 |
+| `invalid_state_change` | 許されない稼働状態の変更。Doingで許されるのは、IdleからRunning、RunningからPaused、PausedからRunningだけ（たとえばRunningからIdle、IdleからPausedは拒否します）。`idle`・`running`・`paused`以外の値（`ran`や`awaiting_answer`など）は`invalid_value`で拒否します。 | 2 | 422 |
 | `invalid_state_for_assignee` | 人のタスクにIdle以外の稼働状態を設定した。 | 2 | 422 |
 | `invalid_state_for_draft` | 稼働中のタスクを下書きにした。 | 1 | 409 |
 | `archive_targets_changed` | 確認を開いた後に、一括アーカイブの対象が移動または削除された。 | 1 | 409 |

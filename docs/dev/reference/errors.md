@@ -16,12 +16,12 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `task_in_backlog` | An agent's `mv` or `state` targets a Backlog task. Only a person moves it out of the Backlog. | 1 | 409 |
 | `send_with_open_questions` | A person's `mv <id> todo`, `epic send`, or Web move to Todo targets a plan with open questions and no confirmation (`--force`, or `ack: true` in the API). Nothing is saved; the message lists the question IDs. After a confirmed send the question stays and the task is Awaiting answer until it is answered. | 1 | 409 |
 | `epic_is_draft` | A CLI `epic edit`, or `epic edit --waves`, targets a person's draft epic; or a person sends an epic in a person's draft. | 1 | 409 |
-| `human_only` | An agent withdraws a request, or runs `mv <id> todo` on a Backlog card, `epic send`, or `mv ... backlog`. Only a person can. | 1 | 403 |
+| `human_only` | An agent withdraws a request, runs `mv <id> todo` on a Backlog card, `epic send`, or `mv ... backlog`, pauses a task (`state <id> paused`, or `agent-status` with `actor: "ai"`: "pausing a task is for a person only."), or moves a task from Doing back to Todo ("moving a task from Doing back to Todo is for a person only."). Only a person can. | 1 | 403 |
 | `task_not_draft` | A web edit targets a task that is not a draft. | 1 | 409 |
 | `task_is_done` | An AI change targets a Done task. Two changes are allowed: the first `result add --final` on a Done task with no final result, and a publication record (`result add --published`). | 1 | 409 |
 | `acceptance_unmet` | An AI moves a task to Done while a condition is unmet or the frontmatter is invalid. | 2 | n/a |
 | `invalid_state_for_column` | The run state is not valid in that lane (for example Running in Todo). | 1 | 422 |
-| `invalid_state_change` | A run-state change that is not allowed. In Doing only Idle to Running, Running to Paused, and Paused to Running are allowed (for example Running to Idle and Idle to Paused are refused). Setting `ran` or `awaiting_answer` is refused as `invalid_value`. | 2 | 422 |
+| `invalid_state_change` | A run-state change that is not allowed. In Doing only Idle to Running, Running to Paused, and Paused to Running are allowed (for example Running to Idle and Idle to Paused are refused). A value other than `idle`, `running`, or `paused`, such as `ran` or `awaiting_answer`, is refused as `invalid_value`. | 2 | 422 |
 | `invalid_state_for_assignee` | A human task is given a run state other than Idle. | 2 | 422 |
 | `invalid_state_for_draft` | A running task is made a draft. | 1 | 409 |
 | `archive_targets_changed` | A bulk archive target moved or was deleted since the confirmation opened. | 1 | 409 |

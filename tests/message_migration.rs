@@ -4,7 +4,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent_project::domain::{Actor, Assignee, Column, NewTask, ProjectId, RunState};
+use agent_project::domain::{Actor, Assignee, Column, NewTask, ProjectId};
 use agent_project::file_store::FileStore;
 use chrono::Utc;
 
@@ -172,7 +172,7 @@ fn only_unanswered_questions_move_to_the_new_files() {
     assert!(!b.questions_of(waits).contains("Q-2"));
     assert!(b.questions_of(both).contains("questions:\n- Q-3\n"));
     let waits_view = b.store.task(&b.project, waits).unwrap();
-    assert_eq!(waits_view.agent_status, RunState::AwaitingAnswer);
+    assert!(waits_view.awaiting_answer);
     assert_eq!(waits_view.open_question_ids, vec!["Q-1"]);
 
     // The numbers go on from the old counter, and the converted question can be answered.
@@ -204,11 +204,7 @@ fn a_task_that_only_referred_to_dropped_questions_is_not_pending() {
     // no longer waits for a question that no longer exists.
     b.store.board(&b.project).unwrap();
     let view_after = b.store.task(&b.project, id).unwrap();
-    assert_ne!(
-        view_after.agent_status,
-        RunState::AwaitingAnswer,
-        "{view:?}"
-    );
+    assert!(!view_after.awaiting_answer, "{view:?}");
     assert!(view_after.question_ids.is_empty());
     assert!(b.folders().is_empty());
 }
@@ -234,7 +230,7 @@ fn an_unanswered_start_approval_moves_its_ai_tasks_to_the_backlog() {
         assert_eq!(task.task_status, Column::Backlog, "#{id}");
         assert_eq!(task.draft, None, "#{id}");
         assert!(task.question_ids.is_empty());
-        assert_ne!(task.agent_status, RunState::AwaitingAnswer);
+        assert!(!task.awaiting_answer);
         assert!(
             task.history.last().unwrap().reason.contains("Backlog"),
             "{:?}",
@@ -246,7 +242,7 @@ fn an_unanswered_start_approval_moves_its_ai_tasks_to_the_backlog() {
         let task = b.store.task(&b.project, id).unwrap();
         assert_eq!(task.draft, None, "#{id}");
         assert!(task.question_ids.is_empty());
-        assert_ne!(task.agent_status, RunState::AwaitingAnswer);
+        assert!(!task.awaiting_answer);
     }
     // A person sends the plan to Todo.
     let result = b

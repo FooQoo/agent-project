@@ -182,7 +182,7 @@ fn a_running_and_idle_task_in_doing_keeps_its_lane_and_records_each_reason() {
             &fx.project,
             id,
             RunState::Paused,
-            ctx(Actor::Ai, "Report done"),
+            ctx(Actor::Human, "Report done"),
             later(),
         )
         .unwrap();
@@ -223,7 +223,7 @@ fn a_lane_move_keeps_the_open_question_and_a_person_can_move_a_waiting_task() {
         &[("a", "Plan A"), ("b", "Plan B")],
     );
     let waiting = fx.store.task(&fx.project, id).unwrap();
-    assert_eq!(waiting.agent_status, RunState::AwaitingAnswer);
+    assert!(waiting.awaiting_answer);
     assert_eq!(waiting.open_question_ids, vec!["Q-1".to_string()]);
     assert_eq!(waiting.pending_reason.as_deref(), Some("Which way?"));
 
@@ -366,20 +366,9 @@ fn running_is_refused_while_a_referenced_question_is_open() {
     );
     assert_eq!(fx.bytes(id), before);
 
-    let pending = fx
-        .store
-        .set_agent_status(
-            &fx.project,
-            id,
-            RunState::AwaitingAnswer,
-            ctx(Actor::Ai, "Wait"),
-            later(),
-        )
-        .unwrap_err();
-    assert!(
-        matches!(pending, AgpjError::InvalidValue { .. }),
-        "{pending:?}"
-    );
+    // Waiting is not a run state: `ran` and `awaiting_answer` are unknown values.
+    assert!("awaiting_answer".parse::<RunState>().is_err());
+    assert!("ran".parse::<RunState>().is_err());
 
     qa::answer(&fx.store, &fx.project, "Q-1", Some("a"), None);
     let resumed = fx

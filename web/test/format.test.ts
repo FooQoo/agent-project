@@ -18,7 +18,7 @@ const translate = ((key: string, options?: Record<string, unknown>): string => {
     'column.done': '完了',
     'runState.idle': '未稼働',
     'runState.running': '稼働中',
-    'runState.awaiting_answer': '回答待',
+    'runState.awaitingAnswer': '回答待',
   };
   return labels[key] ?? key;
 }) as unknown as TFunction;
@@ -78,7 +78,9 @@ describe('stateLabel', () => {
       'Running',
     );
     expect(
-      stateLabel(makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'awaiting_answer' })),
+      stateLabel(
+        makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'paused', awaitingAnswer: true }),
+      ),
     ).toBe('Awaiting answer');
   });
 
@@ -91,22 +93,23 @@ describe('stateLabel', () => {
     ).toBe('稼働中');
     expect(
       stateLabel(
-        makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'awaiting_answer' }),
+        makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'running', awaitingAnswer: true }),
         translate,
       ),
     ).toBe('回答待');
     expect(stateLabel(makeTask({ id: 1, taskStatus: 'todo' }), translate)).toBeNull();
   });
 
-  it('labels a task that has run in Todo and Done, and a Todo task that waits for an answer', () => {
-    expect(stateLabel(makeTask({ id: 1, taskStatus: 'todo', agentStatus: 'ran' }))).toBe('Has run');
-    expect(stateLabel(makeTask({ id: 1, taskStatus: 'done', agentStatus: 'ran' }))).toBe('Has run');
+  it('labels a task that waits for an answer in any lane, over its run state', () => {
     expect(stateLabel(makeTask({ id: 1, taskStatus: 'doing', agentStatus: 'paused' }))).toBe(
       'Paused',
     );
-    expect(
-      stateLabel(makeTask({ id: 1, taskStatus: 'todo', agentStatus: 'awaiting_answer' })),
-    ).toBe('Awaiting answer');
+    expect(stateLabel(makeTask({ id: 1, taskStatus: 'todo', awaitingAnswer: true }))).toBe(
+      'Awaiting answer',
+    );
+    expect(stateLabel(makeTask({ id: 1, taskStatus: 'done', awaitingAnswer: true }))).toBe(
+      'Awaiting answer',
+    );
   });
 
   it('returns null for tasks that are not in doing', () => {

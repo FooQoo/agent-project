@@ -51,15 +51,12 @@ impl FromStr for Column {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RunState {
-    /// Never run.
+    /// Not running: every task outside Doing, and an AI task in Doing that is not being worked.
     Idle,
+    /// An AI task in Doing that an agent is working on.
     Running,
-    /// In Doing, the run stopped; the task has run before.
+    /// An AI task in Doing whose work is held, for example while it waits for an answer.
     Paused,
-    /// A task that has run, now in Todo or Done.
-    Ran,
-    /// Waiting for an answer; derived from the open questions, never stored.
-    AwaitingAnswer,
 }
 
 impl RunState {
@@ -69,14 +66,12 @@ impl RunState {
             RunState::Idle => "idle",
             RunState::Running => "running",
             RunState::Paused => "paused",
-            RunState::Ran => "ran",
-            RunState::AwaitingAnswer => "awaiting_answer",
         }
     }
 
-    /// Whether an agent may take the task up: it never ran, ran before and waits, or paused.
+    /// Whether an agent may take the task up: it is idle or paused.
     pub fn can_start(&self) -> bool {
-        matches!(self, RunState::Idle | RunState::Paused | RunState::Ran)
+        matches!(self, RunState::Idle | RunState::Paused)
     }
 
     /// Capitalized display form (`Running`).
@@ -85,8 +80,6 @@ impl RunState {
             RunState::Idle => "Idle",
             RunState::Running => "Running",
             RunState::Paused => "Paused",
-            RunState::Ran => "Has run",
-            RunState::AwaitingAnswer => "Awaiting answer",
         }
     }
 }
@@ -99,8 +92,6 @@ impl FromStr for RunState {
             "idle" => Ok(RunState::Idle),
             "running" => Ok(RunState::Running),
             "paused" => Ok(RunState::Paused),
-            "ran" => Ok(RunState::Ran),
-            "awaiting_answer" => Ok(RunState::AwaitingAnswer),
             _ => Err(()),
         }
     }

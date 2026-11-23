@@ -91,7 +91,7 @@ fn agpj_requires_assignee_actor_and_reason_and_records_the_exchange() {
         .stdout
         .clone();
     let shown: Value = serde_json::from_slice(&shown).unwrap();
-    assert_eq!(shown["task"]["agentStatus"], "awaiting_answer");
+    assert_eq!(shown["task"]["awaitingAnswer"], true);
     invoke(
         home.path(),
         &[

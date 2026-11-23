@@ -66,6 +66,8 @@ pub struct SummaryTask {
     /// When the task was created.
     pub created_at: String,
     pub updated_at: String,
+    /// The task refers to an open question; any assignee, lane, or run state, never archived.
+    pub awaiting_answer: bool,
     pub pending_request_id: Option<String>,
     pub pending_reason: Option<String>,
     pub pending_choices: Vec<PendingChoice>,

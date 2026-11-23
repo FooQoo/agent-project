@@ -44,22 +44,14 @@ pub fn validate_work_reason(value: &str) -> Result<String, crate::error::AgpjErr
     Ok(trimmed.to_owned())
 }
 
-/// Which run states a task may take in a column. Idle is always allowed. Only an AI task
-/// can have another state: running and paused in Doing, has run in Todo or Done, and
-/// awaiting an answer (derived, never stored) in Todo or Doing. A person's task is only idle.
+/// Which run states a task may take in a column. Only an AI task in Doing can be running or
+/// paused; every other task is idle.
 pub fn check_work_state(
     assignee: Assignee,
     column: Column,
     state: RunState,
 ) -> Result<(), crate::error::AgpjError> {
-    let allowed = state == RunState::Idle
-        || (assignee == Assignee::Ai
-            && match state {
-                RunState::Idle => true,
-                RunState::Running | RunState::Paused => column == Column::Doing,
-                RunState::Ran => matches!(column, Column::Todo | Column::Done),
-                RunState::AwaitingAnswer => matches!(column, Column::Todo | Column::Doing),
-            });
+    let allowed = state == RunState::Idle || (assignee == Assignee::Ai && column == Column::Doing);
     if allowed {
         Ok(())
     } else {
@@ -80,17 +72,5 @@ pub fn check_state_change(from: RunState, to: RunState) -> Result<(), crate::err
         Ok(())
     } else {
         Err(crate::error::AgpjError::InvalidStateChange { from, to })
-    }
-}
-
-/// The stored run state after a task moves to `to`. A task that has run (stored running,
-/// paused, or ran) becomes paused in Doing and has run in Todo or Done; a task that never ran
-/// stays idle. Waiting for an answer is derived and not stored, so it never decides this.
-pub fn state_after_move(from: RunState, to: Column) -> RunState {
-    match (from, to) {
-        (RunState::Idle | RunState::AwaitingAnswer, _) => RunState::Idle,
-        (_, Column::Doing) => RunState::Paused,
-        (_, Column::Backlog) => RunState::Idle,
-        (_, _) => RunState::Ran,
     }
 }

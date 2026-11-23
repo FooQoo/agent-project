@@ -40,8 +40,8 @@ function move(home: string, project: string, id: number, lane: 'doing' | 'done',
   run(home, ['--project', project, 'mv', String(id), lane, '--actor', 'ai', '--reason', reason]);
 }
 
-function state(home: string, project: string, id: number, status: 'running' | 'awaiting_answer', reason: string): void {
-  const args = status === 'awaiting_answer'
+function state(home: string, project: string, id: number, status: 'running' | 'ask', reason: string): void {
+  const args = status === 'ask'
     ? ['message', 'ask', '--actor', 'ai', '--task', String(id), '--no-wait', '--questions-json', decisionJson(reason)]
     : ['state', String(id), status, '--actor', 'ai', '--reason', reason];
   run(home, ['--project', project, ...args]);
@@ -59,7 +59,7 @@ export function createMonitorHome(): string {
 
   const alphaPending = task(home, 'Alpha', 'Alpha pending review', 'Pending request body.');
   move(home, 'Alpha', alphaPending, 'doing', 'Start review');
-  state(home, 'Alpha', alphaPending, 'awaiting_answer', 'Waiting for the user review.');
+  state(home, 'Alpha', alphaPending, 'ask', 'Waiting for the user review.');
   const alphaRunning = [
     task(home, 'Alpha', 'Alpha running one', 'Running task one.'),
     task(home, 'Alpha', 'Alpha running two', 'Running task two.'),
@@ -104,7 +104,7 @@ export function createMonitorHome(): string {
 
   const betaPending = task(home, 'Beta', 'Beta pending review', 'Same-number project task.');
   move(home, 'Beta', betaPending, 'doing', 'Start review');
-  state(home, 'Beta', betaPending, 'awaiting_answer', 'Waiting for Beta input.');
+  state(home, 'Beta', betaPending, 'ask', 'Waiting for Beta input.');
   for (const [index, status] of (['running', 'done'] as const).entries()) {
     const id = task(home, 'Beta', `Beta ${status} #${index + 2}`, `Beta detail ${status}.`);
     move(home, 'Beta', id, 'doing', 'Start work');

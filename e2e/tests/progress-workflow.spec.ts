@@ -114,8 +114,8 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
         const result = await waitResult;
         throw new Error(`wait command exited ${result.code}: ${result.stderr}${result.stdout}`);
       }
-      return JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task.agentStatus;
-    }).toBe('awaiting_answer');
+      return JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task.awaitingAnswer;
+    }).toBe(true);
 
     // Completing the condition cannot auto-Done a card while it is waiting for a human answer.
     const taskWhilePending = readFileSync(taskFile, 'utf8');
@@ -124,7 +124,7 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
     expect(JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task.acceptance)
       .toEqual([{ id: 'AC-1', text: 'Release plan confirmed', done: true }]);
     expect(JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task)
-      .toMatchObject({ taskStatus: 'doing', agentStatus: 'awaiting_answer' });
+      .toMatchObject({ taskStatus: 'doing', awaitingAnswer: true });
 
     await page.goto(`${serve.url}?project=${projectId}`);
     // The file was edited behind the server's back: read the board again before the card is opened.
@@ -146,7 +146,7 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
     await expect.poll(() => JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task.taskStatus)
       .toBe('done');
     const shown = JSON.parse(agpjOk(project, ['show', String(publish), '--json'], home).stdout).task;
-    expect(shown).toMatchObject({ taskStatus: 'done', agentStatus: 'ran', pendingRequestId: null });
+    expect(shown).toMatchObject({ taskStatus: 'done', agentStatus: 'idle', pendingRequestId: null });
     expect(shown.acceptance).toEqual([{ id: 'AC-1', text: 'Release plan confirmed', done: true }]);
 
     const rejected = run(projectArgs(['edit', String(publish), '--title', 'AI changed Done']), home, work);

@@ -27,19 +27,16 @@ const STATE_LABELS = {
   idle: 'Idle',
   running: 'Running',
   paused: 'Paused',
-  ran: 'Has run',
-  awaiting_answer: 'Awaiting answer',
 } as const;
 
-/** The run state is shown for cards in Doing, and for a card that waits for an answer or has run. */
+const AWAITING_ANSWER_LABEL = 'Awaiting answer';
+
+/** The run state is shown for cards in Doing; a card that waits for an answer shows that instead. */
 export function stateLabel(task: TaskSummary, t?: TFunction): string | null {
-  // An AI card shows its run state in Doing; in Todo and Done only a question that waits for an answer
-  // or the fact that the task has run is worth a label.
-  const shows =
-    task.assignee === 'ai' &&
-    (task.taskStatus === 'doing' ||
-      task.agentStatus === 'awaiting_answer' ||
-      task.agentStatus === 'ran');
-  if (!shows) return null;
+  // An AI card shows its run state in Doing; elsewhere only a question that waits for an answer
+  // is worth a label, and that label takes precedence over the run state.
+  if (task.assignee !== 'ai') return null;
+  if (task.awaitingAnswer) return t ? t('runState.awaitingAnswer') : AWAITING_ANSWER_LABEL;
+  if (task.taskStatus !== 'doing') return null;
   return t ? t(`runState.${task.agentStatus}`) : STATE_LABELS[task.agentStatus];
 }

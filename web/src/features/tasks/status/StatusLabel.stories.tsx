@@ -31,16 +31,17 @@ export const AgentRunning: Story = { args: { kind: 'agent', status: 'running' } 
 
 export const AgentPaused: Story = { args: { kind: 'agent', status: 'paused' } };
 
-export const AgentRan: Story = { args: { kind: 'agent', status: 'ran' } };
-
-export const AgentAwaitingAnswer: Story = { args: { kind: 'agent', status: 'awaiting_answer' } };
+/** A task that waits for an answer shows that over its run state. */
+export const AgentAwaitingAnswer: Story = {
+  args: { kind: 'agent', status: 'idle', awaitingAnswer: true },
+};
 
 /** The monitor shows the agent states with its own words. */
 export const MonitorRunning: Story = { args: { kind: 'agent', status: 'running', monitor: true } };
 
 /** The monitor shows an agent that waits for an answer with its own wording and the pause icon. */
 export const MonitorAwaitingAnswer: Story = {
-  args: { kind: 'agent', status: 'awaiting_answer', monitor: true },
+  args: { kind: 'agent', status: 'idle', awaitingAnswer: true, monitor: true },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByText('Awaiting answer')).toBeInTheDocument();
   },

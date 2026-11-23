@@ -69,6 +69,7 @@ export function summaryOf(
       title: `t${t.id}`,
       taskStatus: 'todo',
       agentStatus: 'idle',
+      awaitingAnswer: false,
       assignee: 'ai',
       draft: null,
       position: 0,

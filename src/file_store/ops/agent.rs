@@ -16,8 +16,8 @@ use super::{
     task_waits, transition_event,
 };
 use crate::domain::{
-    Actor, Assignee, ChangeContext, Changed, Column, Draft, ProjectId, RunState,
-    check_state_change, check_work_state, state_after_move,
+    Actor, ChangeContext, Changed, Column, Draft, ProjectId, RunState, check_state_change,
+    check_work_state,
 };
 use crate::error::AgpjError;
 
@@ -178,6 +178,11 @@ impl FileStore {
                 return Err(AgpjError::QuestionsUnanswered { id });
             }
         }
+        if ctx.actor == Actor::Ai && task.task_status == Column::Doing && to == Column::Todo {
+            return Err(AgpjError::HumanOnly {
+                action: "moving a task from Doing back to Todo".into(),
+            });
+        }
         if task.task_status == to {
             return Ok(Changed {
                 value: reader::read_task_locked(shared, project, id)?,
@@ -186,11 +191,8 @@ impl FileStore {
         }
         let at = stamp(now);
         let position = lane_end(shared, project, to)?;
-        let next_state = if task.assignee == Assignee::Ai {
-            state_after_move(task.agent_status, to)
-        } else {
-            RunState::Idle
-        };
+        // Running and paused exist only in Doing, so a task that enters or leaves it is idle.
+        let next_state = RunState::Idle;
         let event = transition_event(Transition {
             language: self.history_language(project, &task)?,
             kind: HistoryKind::Lane,
@@ -229,10 +231,11 @@ impl FileStore {
         ctx: ChangeContext,
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgpjError> {
-        if matches!(state, RunState::AwaitingAnswer | RunState::Ran) {
-            return Err(AgpjError::InvalidValue {
-                field: "agentStatus".into(),
-                reason: "Set running or paused. Ask questions with message ask, and move the card to change the other states.".into(),
+        if ctx.actor == Actor::Ai && state == RunState::Paused {
+            // An agent never pauses itself: asking a question pauses the task, and a person
+            // may pause it.
+            return Err(AgpjError::HumanOnly {
+                action: "pausing a task".into(),
             });
         }
         let shared = self.shared_dir();

@@ -28,9 +28,6 @@ pub enum RunStateArg {
     Idle,
     Running,
     Paused,
-    Ran,
-    #[value(name = "awaiting_answer")]
-    AwaitingAnswer,
 }
 
 impl RunStateArg {
@@ -39,8 +36,6 @@ impl RunStateArg {
             RunStateArg::Idle => RunState::Idle,
             RunStateArg::Running => RunState::Running,
             RunStateArg::Paused => RunState::Paused,
-            RunStateArg::Ran => RunState::Ran,
-            RunStateArg::AwaitingAnswer => RunState::AwaitingAnswer,
         }
     }
 }

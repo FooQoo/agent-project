@@ -18,6 +18,7 @@
         "total": 8
       },
       "updatedAt": "2026-10-22T09:57:52Z",
+      "awaitingAnswer": false,
       "pendingRequestId": null,
       "pendingReason": null,
       "pendingChoices": [],
@@ -37,7 +38,7 @@
       "id": 303,
       "title": "Which transport should the stream use?",
       "taskStatus": "doing",
-      "agentStatus": "awaiting_answer",
+      "agentStatus": "idle",
       "assignee": "ai",
       "draft": null,
       "position": 2,
@@ -47,6 +48,7 @@
         "total": 0
       },
       "updatedAt": "2026-10-22T10:01:00Z",
+      "awaitingAnswer": true,
       "pendingRequestId": "req-7",
       "pendingReason": "Pick the transport.",
       "pendingChoices": [

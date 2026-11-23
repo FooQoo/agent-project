@@ -40,11 +40,6 @@
               "interaction": false
             },
             {
-              "id": "task-status-statuslabel--agent-ran",
-              "states": ["agent has run"],
-              "interaction": false
-            },
-            {
               "id": "task-status-statuslabel--agent-awaiting-answer",
               "states": ["agent awaiting answer"],
               "interaction": false
@@ -87,7 +82,7 @@
           "stories": [
             {
               "id": "task-status-dialogbadges--run-statuses",
-              "states": ["idle", "running", "paused", "ran", "awaiting_answer"],
+              "states": ["idle", "running", "paused"],
               "interaction": false
             }
           ]

@@ -203,7 +203,7 @@ describe('which project is shown', () => {
       id: 710,
       title: 'Restore a pending task',
       taskStatus: 'doing',
-      agentStatus: 'awaiting_answer',
+      awaitingAnswer: true,
       pendingReason: 'Waiting for an answer',
       pendingRequestId: 'request-710',
       description: 'Preserved description',
@@ -218,6 +218,7 @@ describe('which project is shown', () => {
         ...archived,
         archivedAt: null,
         agentStatus: 'idle' as const,
+        awaitingAnswer: false,
         pendingReason: null,
         pendingRequestId: null,
       };
@@ -739,7 +740,7 @@ describe('switching while a form is open', () => {
   });
 
   it('sends an answer to the open project with the question of the card', async () => {
-    const pendingA = fixtureBoard.tasks.find((task) => task.agentStatus === 'awaiting_answer');
+    const pendingA = fixtureBoard.tasks.find((task) => task.awaitingAnswer);
     expect(pendingA).toBeTruthy();
     renderApp(urlOf(PROJECT_A.id));
     await screen.findByRole('region', { name: 'Todo' });
@@ -759,7 +760,7 @@ describe('switching while a form is open', () => {
   });
 
   it('closes the list of messages when another project is opened', async () => {
-    const pendingA = fixtureBoard.tasks.find((task) => task.agentStatus === 'awaiting_answer');
+    const pendingA = fixtureBoard.tasks.find((task) => task.awaitingAnswer);
     backend.boards[PROJECT_B.id] = boardOf(
       PROJECT_B,
       [makeTask({ id: pendingA?.id ?? 12, title: 'Same number elsewhere' })],

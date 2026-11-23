@@ -203,6 +203,7 @@ export function TaskDetailView({
           <StatusLabel
             kind="agent"
             status={task.agentStatus}
+            awaitingAnswer={task.awaitingAnswer}
             monitor={statusLabels === 'monitor'}
           />
         )}

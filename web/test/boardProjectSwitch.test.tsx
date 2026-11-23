@@ -16,6 +16,7 @@ function backlogCard(id: number): TaskSummary {
     taskStatusChangedAt: '',
     position: id,
     agentStatus: 'idle',
+    awaitingAnswer: false,
     agentStatusChangedAt: '',
     pendingReason: null,
     pendingRequestId: null,

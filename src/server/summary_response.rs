@@ -97,6 +97,7 @@ pub(crate) fn summary_of(projection: &Projection) -> Summary {
                     planned_version: f.planned_version.clone(),
                     created_at: f.created_at.clone(),
                     updated_at: f.updated_at.clone(),
+                    awaiting_answer: f.awaiting_answer,
                     pending_request_id: f.pending_request_id.clone(),
                     pending_reason: f.pending_reason.clone(),
                     pending_choices: f

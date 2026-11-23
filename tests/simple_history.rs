@@ -180,9 +180,9 @@ fn invalid_answer_records_are_rejected_and_legacy_requests_are_ignored() {
     // The decision request of an earlier version is ignored: the task reads as idle, and the
     // next save drops the old fields.
     for patch in [
-        json!({"agentStatus":"awaiting_answer", "pendingRequestId":request_id, "pendingRequest":null}),
+        json!({"pendingRequestId":request_id, "pendingRequest":null}),
         json!({"pendingRequest":{"question":"Question?", "choices":[]}}),
-        json!({"agentStatus":"awaiting_answer", "pendingRequestId":request_id, "pendingRequest":{"question":" ", "choices":[], "history":[]}}),
+        json!({"pendingRequestId":request_id, "pendingRequest":{"question":" ", "choices":[], "history":[]}}),
     ] {
         let mut legacy = original.clone();
         for (key, value) in patch.as_object().unwrap() {

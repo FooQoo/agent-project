@@ -87,7 +87,7 @@ flowchart TD
     L --> Q{"Decision needed?"}
     Q -- yes --> PE["Ask with message ask (task is Awaiting answer)"]
     PE --> A["You answer on the task"]
-    A --> RE["Read the answer, resume with a reason"]
+    A --> RE["Answer accepted: task resumes, read the answer"]
     RE --> L
     Q -- no --> V["Verify and check conditions"]
     V --> DN["All conditions done: moves to Done automatically"]
@@ -98,9 +98,9 @@ flowchart TD
 1. **Choose.** Read `agpj progress --json` and select a ready AI-owned task, following its epic's saved task order. Read only the selected epic's `EPIC.md` and the task's `TASK.md`; use `show` when you need its history or an open question.
 2. **Start.** Move the task to Doing with a reason, then report Running. Review a user-owned task only when it affects the work.
 3. **Work and record.** Put the grounds for a move or state change in its `--reason`; that entry is the record. Add `history add` only for a decision that changes no state but matters later, such as keeping a card in Todo, with the grounds, the decision, and when known the condition for reconsidering. Reading the list needs no entry, and `result add` records itself. Keep the plan and concise verification results in the body; attach images when visual proof is useful.
-4. **Ask when blocked.** Ask with `message ask` when you need a decision; the task shows Awaiting answer until you answer (see [Decisions](./decisions)).
-5. **Resume.** After an answer, read the task and history, reconsider the plan, and resume with a reason.
-6. **Finish.** Mark acceptance conditions done only after verifying them. Eligible AI tasks move to Done automatically when all conditions are complete.
+4. **Ask when blocked.** Ask with `message ask` when you need a decision; the task shows Awaiting answer until you answer, and a Running task in Doing is paused automatically when the question is attached (see [Decisions](./decisions)). An agent never pauses a task itself.
+5. **Resume.** When the agent takes in the answer, a Paused AI task in Doing goes back to Running by itself, provided every question it refers to is answered; while another referenced question is open, it stays Paused. The agent then re-reads the task and continues only if it is still its to run: a pause or a move to another column by a person is respected, and the agent follows the task's current state. It reads the task and history and reconsiders the plan.
+6. **Finish.** Mark acceptance conditions done only after verifying them. Eligible AI tasks move to Done automatically when all conditions are complete. An agent never moves a Doing task back to Todo.
 7. **Wait.** If no work can proceed, wait for a change (see below).
 
 For the progress table, see [Epics and progress](../watch/epics).
@@ -158,7 +158,7 @@ A cursor has the format `f1:<project-id>:<version>`. Use the value that `snapsho
 - A server started in the background, by `wait`, a question that waits, or the hook, opens the project's board in your browser once, unless a board tab is already connected. See [Open the board in the browser](../reference/cli#open-the-board-in-the-browser) for when it does not, and for `agpj open`.
 - It follows the same project through a rename, so update the name in future commands and hooks. Changes to other projects do not end it. If the project is deleted, it fails with `project_not_found`.
 - `wait_timeout`, `board_unavailable`, `cursor_invalid`, and `project_not_found` are errors, never answers.
-- When `wait` returns, read the full snapshot and history, reconsider the user's reason, then resume or ask a follow-up question.
+- When `wait` returns, read the full snapshot and history, reconsider the user's reason, then continue or ask a follow-up question.
 
 ## Listen for the next task
 
@@ -168,9 +168,19 @@ You can keep one already-open Codex or Claude Code session working through AI ta
 agpj --project "My project" wait --until task --idle-timeout 300 --json
 ```
 
-The timeout is required and must be from 1 to 86,400 seconds; there is no default. A task already in Todo is returned immediately, so tasks created before listening are included. An AI task already in Doing is also eligible when its `agentStatus` is `idle` or `paused`. Before starting or resuming the listener, inspect AI tasks by `agentStatus`: if any task is `running` or `awaiting_answer`, resolve that work first. A Doing lane by itself does not block the listener. Each successful call returns one task. Finish or pause that task, then call `wait` again in the same session to take the next one. The selector follows the same order as the progress table: epics sorted by ID, each epic's saved waves and then task ID, followed by ungrouped tasks by ID. It selects only AI-owned Todo/Doing tasks with `agentStatus` of `idle`, `paused`, or `ran` that are non-draft and non-archived. It does not claim or edit the task; read its epic's `EPIC.md` when it has one, its body, attachments, and current state before deciding whether its work is approved and ready to start. A task created with `agpj add` is the same kind of task, and the listener can pick it up later.
+The timeout is required and must be from 1 to 86,400 seconds; there is no default. A task already in Todo is returned immediately, so tasks created before listening are included. An AI task already in Doing is also eligible when its `agentStatus` is `idle` or `paused`.
 
-Use the listener procedure of the agent-project skill (printed by `agpj skills listening`) for the full loop, including decisions waiting for an answer and recovery after a session is interrupted. An Awaiting answer task keeps the same session waiting for the answer; it is not another task to skip to, and its time does not count toward idle timeout. After the answer, read it and resume that task before listening again. A task the session paused itself stays eligible, so the session does not take it again until something about it changes: an answer, a change by a person, or new history. When the pause waits on a person, the session asks a question so that the task becomes Awaiting answer.
+Before starting or resuming the listener, inspect AI tasks by `agentStatus`: if any task is `running`, or has `awaitingAnswer` set while in Todo or Doing, resolve that work first (an AI task in Backlog or Done with an open question is left alone). A Running task that has had no history entry for 30 minutes is listed first in `nextTasks` as stalled; the agent continues it, or records why it cannot with `history add`. A Doing lane by itself does not block the listener.
+
+Each successful call returns one task. Finish that task, then call `wait` again in the same session to take the next one. The selector follows the same order as the progress table: epics sorted by ID, each epic's saved waves and then task ID, followed by ungrouped tasks by ID. It selects only AI-owned Todo/Doing tasks with `agentStatus` of `idle` or `paused` that do not wait for an answer and are non-draft and non-archived.
+
+It does not claim or edit the task. Read its epic's `EPIC.md` when it has one, its body, attachments, and current state before deciding whether its work is approved and ready to start. A task created with `agpj add` is the same kind of task, and the listener can pick it up later.
+
+Use the listener procedure of the agent-project skill (printed by `agpj skills listening`) for the full loop, including decisions waiting for an answer and recovery after a session is interrupted.
+
+When the task the session is working on in Todo or Doing is Awaiting answer, the session waits for that answer before taking another task, and the waiting time does not count toward idle timeout. An AI task in Backlog or Done with an open question is left alone, and the listener continues other work. When the answer is taken in, follow "After an answer" in `agpj skills waiting`: a Paused task in Doing goes back to Running by itself, and a task that a person paused or moved to another column keeps its current state. Only then does the session listen again.
+
+An agent cannot pause a task. When it is blocked on a person, it asks a question so that the task shows Awaiting answer; for any other cause it records why with `history add`.
 
 To keep a session on the board without typing the command, invoke the plugin's `wait` skill (`/agent-project:wait` in Claude Code). It follows the listener procedure with a 3600-second idle timeout when you give none, and starts the wait again after each `idle_timeout`, so the session stays attached until you interrupt it or an error stops it. It handles answers and requests before tasks.
 

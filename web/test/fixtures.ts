@@ -50,6 +50,7 @@ export function makeTask(overrides: Partial<Task> & Pick<Task, 'id'>): Task {
     taskStatusChangedAt: at,
     position: 1,
     agentStatus: 'idle',
+    awaitingAnswer: false,
     pendingReason: null,
     pendingRequestId: null,
     pendingChoices: [],

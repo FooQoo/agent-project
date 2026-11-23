@@ -188,10 +188,10 @@ test('an open task follows its move to another lane while its details stay open'
   await expect(task(page, 11)).toHaveAttribute('aria-current', 'true');
   await expect(panel.getByRole('heading', { level: 2 })).toHaveText('Implement task moves');
   await expect(panel).toContainText('Done');
-  // A task that has run shows Has run in Done.
-  await expect(panel.locator('.detail__meta .status-label--agent')).toHaveText('Has run');
+  // A done task shows no run state.
+  await expect(panel.locator('.detail__meta .status-label--agent')).toHaveCount(0);
   await panel.getByRole('tab', { name: /^History/ }).click();
-  await expect(panel.getByRole('listitem').first()).toContainText('Moved task from Doing to Done; agent has run.');
+  await expect(panel.getByRole('listitem').first()).toContainText('Moved task from Doing to Done; agent is idle.');
   await notReloaded(page);
 });
 
@@ -246,7 +246,7 @@ test('a user answer returns a pending task to idle and records the full answer i
   await sendAnswer(page, 12, { choice: 'Keep compatibility (recommended)', text: fullAnswer });
   await closeMessages(page);
 
-  await expect(lane(page, 'Doing').getByRole('button', { name: /^#12 AI Idle Restore a board from JSON / })).toBeVisible();
+  await expect(lane(page, 'Doing').getByRole('button', { name: /^#12 AI Paused Restore a board from JSON / })).toBeVisible();
   await expect(panel.getByRole('listitem').first().getByRole('img')).toHaveCount(0);
   await expect(panel.getByRole('listitem').first()).toContainText('Do not migrate or delete user data.');
   await expect(panel.getByRole('region', { name: 'The agent is waiting for your answer' })).toHaveCount(0);

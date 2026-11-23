@@ -34,6 +34,7 @@ export function TaskProgressRow({
         <StatusLabel
           kind={task.taskStatus === 'done' ? 'card' : 'agent'}
           status={task.taskStatus === 'done' ? 'done' : task.agentStatus}
+          awaitingAnswer={task.awaitingAnswer}
         />
       </div>
       <TaskCardContent

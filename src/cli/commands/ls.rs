@@ -17,6 +17,7 @@ fn keep(args: &LsArgs, filter: Option<&VersionFilter>, task: &TaskView) -> bool 
         && args
             .state
             .is_none_or(|s| task.agent_status == s.run_state())
+        && (!args.awaiting_answer || task.awaiting_answer)
         && args.epic.as_deref().is_none_or(|epic| {
             task.epic_id
                 .as_deref()

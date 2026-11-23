@@ -30,20 +30,9 @@ pub(super) struct Transition<'a> {
     pub at: DateTime<Utc>,
 }
 
-/// The English history clause for a run state: "agent is paused", but "agent has run" for `ran`.
+/// The English history clause for a run state: "agent is paused".
 pub(super) fn agent_clause(state: RunState) -> String {
-    match state {
-        RunState::Ran => "agent has run".to_owned(),
-        other => format!("agent is {}", other.as_str()),
-    }
-}
-
-/// The Japanese word for a run state in a history sentence; `ran` reads as 稼働済み.
-pub(super) fn agent_word_ja(state: RunState) -> &'static str {
-    match state {
-        RunState::Ran => "稼働済み",
-        other => other.as_str(),
-    }
+    format!("agent is {}", state.as_str())
 }
 
 pub(super) fn transition_event(t: Transition<'_>) -> Result<HistoryRecord, AgpjError> {
@@ -75,13 +64,13 @@ pub(super) fn transition_event(t: Transition<'_>) -> Result<HistoryRecord, AgpjE
         HistoryKind::Created => format!(
             "タスクを{}に作成しました。エージェントは{}です。",
             t.to_task.label(),
-            agent_word_ja(t.to_agent)
+            t.to_agent.as_str()
         ),
         HistoryKind::Lane => format!(
             "タスクを{}から{}に移動しました。エージェントは{}です。",
             t.from_task.unwrap_or(t.to_task).label(),
             t.to_task.label(),
-            agent_word_ja(t.to_agent)
+            t.to_agent.as_str()
         ),
         HistoryKind::Agent => format!(
             "{}でエージェントを{}から{}に変更しました。",

@@ -62,7 +62,7 @@ fn a_text_option_without_its_value_fails_instead_of_taking_the_next_flag() {
     let before = all_task_text(home.path());
     let cases: &[&[&str]] = &[
         &["history", "add", "1", "--reason", "--json"],
-        &["mv", "1", "todo", "--actor", "ai", "--reason", "--json"],
+        &["mv", "1", "todo", "--actor", "human", "--reason", "--json"],
         &[
             "state", "1", "running", "--actor", "ai", "--reason", "--json",
         ],
@@ -168,7 +168,7 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
             "1",
             "todo",
             "--actor",
-            "ai",
+            "human",
             "--reason",
             "-",
         ],

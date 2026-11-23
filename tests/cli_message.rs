@@ -84,7 +84,7 @@ fn one_ask_makes_one_message_for_each_question() {
 
     let task = json_ok(home.path(), &["--project", "Demo", "show", "1", "--json"]);
     assert_eq!(task["task"]["openQuestionIds"], json!(["Q-1", "Q-2"]));
-    assert_eq!(task["task"]["agentStatus"], "awaiting_answer");
+    assert_eq!(task["task"]["awaitingAnswer"], true);
 
     // The old command and its flags are gone.
     let (code, _, _) = agpj(home.path(), &["--project", "Demo", "qa", "ls"]);
@@ -395,7 +395,7 @@ fn link_and_unlink_change_what_a_task_waits_for() {
 
     let linked = msg_json(home.path(), &["link", "Q-1", "--task", "1"]);
     assert_eq!(linked["task"]["questionIds"], json!(["Q-1"]));
-    assert_eq!(task(home.path())["agentStatus"], "awaiting_answer");
+    assert_eq!(task(home.path())["awaitingAnswer"], true);
     let unlinked = msg_json(home.path(), &["unlink", "Q-1", "--task", "1"]);
     assert_eq!(unlinked["task"]["questionIds"], json!([]));
     assert_eq!(task(home.path())["agentStatus"], "idle");

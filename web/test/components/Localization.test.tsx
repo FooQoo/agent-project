@@ -32,7 +32,7 @@ describe('localized board content', () => {
     expect(screen.getByText('未稼働')).toBeTruthy();
     rerender(<StatusLabel kind="agent" status="running" />);
     expect(screen.getByText('稼働中')).toBeTruthy();
-    rerender(<StatusLabel kind="agent" status="awaiting_answer" />);
+    rerender(<StatusLabel kind="agent" status="paused" awaitingAnswer />);
     expect(screen.getByText('回答待')).toBeTruthy();
   });
 

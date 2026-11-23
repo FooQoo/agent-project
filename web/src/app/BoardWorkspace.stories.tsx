@@ -51,8 +51,9 @@ const makeBoardTask = (
   id: number,
   title: string,
   taskStatus: 'todo' | 'doing' | 'done',
-  agentStatus: 'idle' | 'running' | 'paused' | 'ran' | 'awaiting_answer' = 'idle',
+  agentStatus: 'idle' | 'running' | 'paused' = 'idle',
   pendingReason: string | null = null,
+  awaitingAnswer = false,
 ) =>
   makeTask({
     id,
@@ -65,6 +66,7 @@ const makeBoardTask = (
     updatedAt: timestamp,
     createdAt: timestamp,
     agentStatus,
+    awaitingAnswer,
     agentStatusChangedAt: timestamp,
     pendingReason,
     history,
@@ -75,13 +77,7 @@ const boardTasks = [
   makeBoardTask(15, 'Write the setup guide', 'todo'),
   makeBoardTask(16, 'Refine the empty board', 'todo'),
   makeBoardTask(11, 'Implement card moves', 'doing'),
-  makeBoardTask(
-    12,
-    'Restore a board from JSON',
-    'doing',
-    'awaiting_answer',
-    '置き換え方法の確認待ち',
-  ),
+  makeBoardTask(12, 'Restore a board from JSON', 'doing', 'paused', '置き換え方法の確認待ち', true),
   makeBoardTask(13, 'Check the board display', 'doing'),
   makeBoardTask(9, 'Return the card list as JSON', 'done'),
   selectedTask,
@@ -339,11 +335,18 @@ function makeMessageModel(empty = false): AppControllerModel {
     id: number,
     title: string,
     taskStatus: 'todo' | 'doing' | 'done',
-    agentStatus: 'idle' | 'awaiting_answer' = 'idle',
+    agentStatus: 'idle' | 'paused' = 'idle',
   ) => {
     const open = firstQuestionOfTask(messages, id);
     return {
-      ...makeBoardTask(id, title, taskStatus, open ? 'awaiting_answer' : agentStatus),
+      ...makeBoardTask(
+        id,
+        title,
+        taskStatus,
+        open && taskStatus === 'doing' ? 'paused' : agentStatus,
+        null,
+        open !== undefined,
+      ),
       openQuestionIds: open ? [open.id] : [],
       questionIds: open ? [open.id] : [],
     };

@@ -39,6 +39,7 @@ function taskOf(task: SummaryTask, epics: ReadonlyMap<string, EpicRef>): Task {
     taskStatusChangedAt: task.taskStatusChangedAt,
     position: task.position,
     agentStatus: task.agentStatus,
+    awaitingAnswer: task.awaitingAnswer,
     pendingReason: task.pendingReason,
     pendingRequestId: task.pendingRequestId,
     pendingChoices: task.pendingChoices,

@@ -76,11 +76,11 @@ The columns mean:
 | Doing | Work in progress. AI-owned tasks also show an agent state. |
 | Done | Completed work. |
 
-AI-owned tasks show one of five states: **Idle** (never run), **Running**, **Paused** (in Doing, the run stopped after the task had run), **Has run** (a task that has run, now in Todo or Done), or **Awaiting answer**. Cards and the task detail show these labels on the PC board and on the phone. On the PC board, a label shows on AI cards in Doing, and in Todo and Done only for Awaiting answer and Has run. On the phone, AI cards in Todo and Doing show their state, and Done cards show it when it is Has run.
+AI-owned tasks in Doing show one of three states: **Idle**, **Running**, or **Paused** (the run stopped). Tasks in Todo and Done, and tasks you own, show no state label. Cards and the task detail show these labels on the PC board and on the phone.
 
-Running means the agent is working; Awaiting answer means it needs your answer, which you give from the card's **Answer the question** button or from the list of the **Messages** band above the lanes (see [Decisions](../delegate/decisions)). Todo tasks can also be Awaiting answer when an agent asks a question before starting. User-owned tasks are always Idle.
+**Awaiting answer** is not a state but a mark: any task, whoever owns it and in any lane, shows it while it refers to an open question, and it replaces the state label. You answer from the card's **Answer the question** button or from the list of the **Messages** band above the lanes (see [Decisions](../delegate/decisions)). Running means the agent is working. When an agent asks a question about a Running task in Doing, the task is paused and the history records "Waiting for the answers to Q-1." It returns to Running by itself when the agent takes in the answers.
 
-Moving a task to another column keeps its open questions. A task that has never run stays Idle. A task that has run becomes Paused when you move it to Doing and Has run when you move it to Todo or Done; it never goes back to Idle. Every change and its reason stay in the history.
+Moving a task into Doing or out of Doing resets its state to Idle; reordering inside Doing keeps it. Moving a task keeps its open questions. Every change and its reason stay in the history.
 
 ## Change a task
 

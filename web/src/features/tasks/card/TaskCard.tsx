@@ -55,7 +55,7 @@ export function TaskCardContent({
   task,
   titleClassName = 'card__title',
   reasonClassName = 'card__reason',
-  showPendingReason = task.agentStatus === 'awaiting_answer',
+  showPendingReason = task.awaitingAnswer,
   titleActionDisabled,
   onTitleClick,
   children,
@@ -116,13 +116,13 @@ export function TaskCardView({
   cardRef,
   renderEpic,
   renderVersion,
-  showPendingReason = task.agentStatus === 'awaiting_answer',
+  showPendingReason = task.awaitingAnswer,
   selection,
   children,
 }: TaskCardViewProps) {
   const { t } = useTranslation();
   const showsState = stateLabel(task, t) !== null;
-  const pending = showsState && task.agentStatus === 'awaiting_answer';
+  const pending = showsState && task.awaitingAnswer;
   const className = [
     'card',
     pending ? 'card--pending' : '',
@@ -174,7 +174,13 @@ export function TaskCardView({
           )}
           <span className="card__spacer" />
           <span className="card__side">
-            {showsState && <StatusLabel kind="agent" status={task.agentStatus} />}
+            {showsState && (
+              <StatusLabel
+                kind="agent"
+                status={task.agentStatus}
+                awaitingAnswer={task.awaitingAnswer}
+              />
+            )}
             <AcceptanceProgress task={task} />
           </span>
         </span>
@@ -215,7 +221,7 @@ export function TaskCard({
 }: TaskCardProps) {
   const { t } = useTranslation();
   const showsState = stateLabel(task, t) !== null;
-  const pending = showsState && task.agentStatus === 'awaiting_answer';
+  const pending = showsState && task.awaitingAnswer;
   const showInlineAnswer = Boolean(projectId && onAnswer && pending && waitsOnQuestion(task));
   const { ref, isDragging } = useSortable({
     id: `card-${task.id}`,

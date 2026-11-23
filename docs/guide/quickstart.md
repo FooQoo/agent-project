@@ -129,7 +129,7 @@ When an agent needs a decision, it asks a question with choices:
 agpj --project "Quickstart" message ask --actor ai --task 1 --questions-json '{"questions":[{"body":"Should the guide also cover Windows?","choices":[{"id":"yes","label":"Yes, include Windows"},{"id":"no","label":"No, macOS only"}]}]}'
 ```
 
-This command waits for your answer, up to 10 minutes by default, through the server you started. (Without one, it would start a server in the background.) Task #1 shows **Awaiting answer** and the question with its two options. In the browser, choose an option, optionally write a note, and send the answer. The command prints the answer and ends, and the task returns to **Idle**.
+This command waits for your answer, up to 10 minutes by default, through the server you started. (Without one, it would start a server in the background.) Task #1 shows **Awaiting answer** and the question with its two options. In the browser, choose an option, optionally write a note, and send the answer. The command prints the answer and ends, and **Awaiting answer** goes away.
 
 The agent reads the answer in the task's history and resumes:
 
@@ -162,7 +162,7 @@ agpj --project "Quickstart" project rm
 
 - You ask with **Ask AI** or in the chat, and the agent proposes a plan; you do not write it.
 - You answer the questions, then the agent starts the plan itself; you do not approve the start.
-- Tasks move through **Todo → Doing → Done**, and agents report **Idle**, **Running**, **Paused**, **Has run**, or **Awaiting answer**.
+- Tasks move through **Todo → Doing → Done**, and agents in Doing report **Idle**, **Running**, or **Paused**, and a task that waits for you shows **Awaiting answer**.
 - Every change is recorded in the task's history with a reason.
 - An agent asks you a question with **Awaiting answer**, and you answer on the task.
 - When all acceptance conditions are done, an AI-owned task finishes by itself.
