@@ -168,7 +168,9 @@ export function MonitorScreen({
     stream,
     lastFetchedAt,
   });
-  const visible = selectMonitorTasks(tasks);
+  // Kept between renders: the lanes' overlay tells a newer read from the one it saw by identity, so a
+  // render that read nothing new must hand it the same arrays.
+  const visible = useMemo(() => selectMonitorTasks(tasks), [tasks]);
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
