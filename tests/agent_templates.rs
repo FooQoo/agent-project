@@ -142,7 +142,7 @@ fn the_skill_sends_an_unbound_folder_to_the_users_own_setup_run() {
 }
 
 #[test]
-fn the_skill_plans_first_and_leaves_the_sending_to_the_person() {
+fn the_skill_plans_first_and_sends_only_when_the_user_says_so() {
     let skill = &full_skill();
     // A request is accepted first, then becomes a plan on the board before any question.
     assert!(
@@ -153,13 +153,13 @@ fn the_skill_plans_first_and_leaves_the_sending_to_the_person() {
         skill.contains("put the plan in the Backlog") && skill.contains("--backlog"),
         "the Skill must register a plan-only request in the Backlog"
     );
-    // Questions that change the plan come after the plan is placed; a person sends it.
+    // Questions that change the plan come after the plan is placed; the send comes after.
     assert!(
         skill.contains("**Ask what you cannot settle.**")
-            && skill.contains("**Leave the sending to the person.**")
+            && skill.contains("**Send only when the user tells you to.**")
             && skill.find("**Ask what you cannot settle.**")
-                < skill.find("**Leave the sending to the person.**"),
-        "the Skill must ask before the person sends"
+                < skill.find("**Send only when the user tells you to.**"),
+        "the Skill must ask before it sends"
     );
     // Once the work runs, only four cases call the user.
     for case in [

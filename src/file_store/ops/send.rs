@@ -10,7 +10,7 @@ use std::path::Path;
 
 use chrono::{DateTime, Utc};
 
-use crate::domain::{Actor, Changed, Column, Draft, ProjectId};
+use crate::domain::{Actor, ChangeContext, Changed, Column, Draft, ProjectId};
 use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::history_language::HistoryLanguage;
@@ -132,7 +132,11 @@ impl FileStore {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let task = reader::read_task_strict(shared, project, id)?;
-        self.send_task_locked(project, &project_dir, task, actor, ack, "", now)
+        let ctx = ChangeContext {
+            actor,
+            reason: String::new(),
+        };
+        self.send_task_locked(project, &project_dir, task, &ctx, ack, now)
     }
 
     /// [`FileStore::send_task`] with the project lock held and the card read.
@@ -141,11 +145,11 @@ impl FileStore {
         project: &ProjectId,
         project_dir: &Path,
         mut task: TaskFile,
-        actor: Actor,
+        ctx: &ChangeContext,
         ack: bool,
-        note: &str,
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgpjError> {
+        let (actor, note) = (ctx.actor, ctx.reason.as_str());
         let shared = self.shared_dir();
         let id = task.id;
         if task.archived_at.is_some() {
@@ -175,6 +179,7 @@ impl FileStore {
     /// only `task_ids`. Nothing is sent when any of them cannot be: a card a
     /// person is editing, or an open question an agent or an unconfirmed person
     /// meets. A card that is not in the Backlog is left as it is.
+    #[allow(clippy::too_many_arguments)]
     pub fn send_epic(
         &self,
         project: &ProjectId,

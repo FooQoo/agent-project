@@ -137,20 +137,10 @@ impl FileStore {
             return Err(draft_refusal(id, draft));
         }
         if task.task_status == Column::Backlog && to != Column::Backlog {
-            // Only a send leaves the Backlog. A move to Todo is the send: the rules of
-            // `send_task_locked` (editing, open questions) apply, and it is the one
-            // function the Web UI's send route calls too. Doing and Done follow the same rules,
-            // then move like any card.
+            // Only a send leaves the Backlog: a move to Todo is the send (the one function the Web
+            // UI's send route calls too); Doing and Done follow its rules, then move like any card.
             if to == Column::Todo {
-                return self.send_task_locked(
-                    project,
-                    &project_dir,
-                    task,
-                    ctx.actor,
-                    ack,
-                    &ctx.reason,
-                    now,
-                );
+                return self.send_task_locked(project, &project_dir, task, &ctx, ack, now);
             }
             if ctx.actor != Actor::Human {
                 return Err(AgpjError::TaskInBacklog { id });
