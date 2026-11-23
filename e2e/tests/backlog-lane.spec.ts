@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "../helpers/fixtures";
 import { agpjOk, listTasks, mainProject, nextTaskId, resetBoard } from "../helpers/agpj";
 import { resetPreferences, setPreferences } from "../helpers/preferences";
@@ -79,9 +79,8 @@ test("the picked cards are grabbed together and dropped on the Todo lane", async
 	await backlog.getByRole("button", { name: "Select cards to send to Todo" }).click();
 	await backlog.getByRole("checkbox", { name: `Select #${a}` }).click();
 	await backlog.getByRole("checkbox", { name: `Select #${c}` }).click();
-	const source = await backlog.getByRole("button", { name: /Backlog plan 1/ }).boundingBox();
-	const target = await page.getByRole("region", { name: "Todo" }).boundingBox();
-	if (!source || !target) throw new Error("The lanes are not laid out.");
+	const source = await settledBox(backlog.getByRole("button", { name: /Backlog plan 1/ }));
+	const target = await settledBox(page.getByRole("region", { name: "Todo" }));
 	await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
 	await page.mouse.down();
 	await page.mouse.move(source.x + source.width / 2 + 20, source.y + source.height / 2 + 20, { steps: 5 });
@@ -90,11 +89,31 @@ test("the picked cards are grabbed together and dropped on the Todo lane", async
 	await expect.poll(() => [laneOf(a), laneOf(c)]).toEqual(["todo", "todo"]);
 });
 
+/**
+ * Measures an element a mouse is about to aim at: it waits until the element is visible and its box has stopped
+ * changing, because a lane that is still being laid out (the board just loaded, a scrollbar appearing) has no box
+ * or a box that moves.
+ */
+async function settledBox(locator: Locator) {
+	await expect(locator).toBeVisible();
+	let last = "";
+	await expect
+		.poll(async () => {
+			const now = JSON.stringify(await locator.boundingBox());
+			const still = now === last;
+			last = now;
+			return still;
+		})
+		.toBe(true);
+	const box = await locator.boundingBox();
+	if (!box) throw new Error("The lanes are not laid out.");
+	return box;
+}
+
 /** Drags the Backlog card named `name` onto the lane named `lane`, the way a person does with the mouse. */
 async function dragBacklogCardTo(page: Page, name: RegExp, lane: string) {
-	const source = await page.getByRole("region", { name: "Backlog" }).getByRole("button", { name }).boundingBox();
-	const target = await page.getByRole("region", { name: lane }).boundingBox();
-	if (!source || !target) throw new Error("The lanes are not laid out.");
+	const source = await settledBox(page.getByRole("region", { name: "Backlog" }).getByRole("button", { name }));
+	const target = await settledBox(page.getByRole("region", { name: lane }));
 	await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
 	await page.mouse.down();
 	await page.mouse.move(source.x + source.width / 2 + 20, source.y + source.height / 2 + 20, { steps: 5 });
@@ -197,9 +216,8 @@ test("a single Backlog card with an open question is dropped on Done only after 
 
 /** Drags the Todo card named `name` onto the Backlog lane and drops it. */
 async function dragTodoCardToBacklog(page: Page, name: RegExp) {
-	const source = await page.getByRole("region", { name: "Todo" }).getByRole("button", { name }).boundingBox();
-	const target = await page.getByRole("region", { name: "Backlog" }).boundingBox();
-	if (!source || !target) throw new Error("The lanes are not laid out.");
+	const source = await settledBox(page.getByRole("region", { name: "Todo" }).getByRole("button", { name }));
+	const target = await settledBox(page.getByRole("region", { name: "Backlog" }));
 	await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
 	await page.mouse.down();
 	await page.mouse.move(source.x + source.width / 2 + 20, source.y + source.height / 2 + 20, { steps: 5 });

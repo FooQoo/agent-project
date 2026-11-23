@@ -52,6 +52,12 @@ test('a link to a result with an image opens it directly, even from another proj
   // The phone was showing another project.
   await page.goto(`/?project=${beta}`);
   await expect(page).toHaveTitle('Beta - Agent Project');
+  // WebKit aborts a navigation that starts while the previous document still has module scripts loading, and
+  // reports it as "WebKit encountered an internal error". The title is set before the lazily imported chunks
+  // have all arrived, so wait for the load and for the network to go quiet. Networkidle is acceptable here:
+  // it is the only signal that the dynamic imports are done, and no navigation is waiting on it.
+  await page.waitForLoadState('load');
+  await page.waitForLoadState('networkidle');
 
   await page.goto(linkTo(alpha, 1, 2));
   await expect(page).toHaveTitle('Alpha - Agent Project');

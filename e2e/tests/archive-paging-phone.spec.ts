@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { expect, test, type Page } from '../helpers/fixtures';
+import { expect, test, type Locator, type Page } from '../helpers/fixtures';
 import { agpj, agpjCatalogOk, projectId, skipGuide, taskBody } from '../helpers/agpj';
 import { stubArchivePages } from '../helpers/archive-pages';
 import { startPhoneEntrance, type PhoneEntrance } from '../helpers/monitor';
@@ -48,6 +48,19 @@ const scrollToBottom = (page: Page) =>
     }
   });
 
+// The end notice is in the DOM as soon as the last page has arrived, which can be before the sheet has been
+// scrolled over the rows that page added. So the end is reached when the footer is there and the last row, #1,
+// is drawn; keep scrolling until both hold.
+const scrollToEnd = (page: Page, sheet: Locator) =>
+  expect
+    .poll(async () => {
+      await scrollToBottom(page);
+      const end = await sheet.getByTestId('archive-end').isVisible();
+      const lastRow = await sheet.locator('[data-archive-row]').last().getAttribute('data-archive-row');
+      return end && lastRow === '1';
+    })
+    .toBe(true);
+
 test('the phone archive sheet loads the next page as the list scrolls and ends after the last', async ({ page }) => {
   const reads = await stubArchivePages(page, { total: TOTAL });
   const sheet = await openSheet(page);
@@ -55,12 +68,7 @@ test('the phone archive sheet loads the next page as the list scrolls and ends a
   expect(await sheet.locator('[data-archive-row]').count()).toBeLessThan(50);
   expect(reads.map((read) => read.cursor)).toEqual([null]);
 
-  await expect
-    .poll(async () => {
-      await scrollToBottom(page);
-      return sheet.getByTestId('archive-end').isVisible();
-    })
-    .toBe(true);
+  await scrollToEnd(page, sheet);
   expect(reads.map((read) => read.cursor)).toEqual([null, '50', '100']);
   await expect(sheet.locator('[data-archive-row]').last()).toHaveAttribute('data-archive-row', '1');
   await page.screenshot({ path: test.info().outputPath('archive-paging-phone-end.png') });
@@ -82,11 +90,6 @@ test('a failed page shows a retry in the sheet and reads again only when it is p
   expect(reads.length).toBe(failedReads);
 
   await sheet.getByRole('button', { name: 'Retry' }).tap();
-  await expect
-    .poll(async () => {
-      await scrollToBottom(page);
-      return sheet.getByTestId('archive-end').isVisible();
-    })
-    .toBe(true);
+  await scrollToEnd(page, sheet);
   await expect(sheet.getByText('Could not load more archived tasks.')).toHaveCount(0);
 });
