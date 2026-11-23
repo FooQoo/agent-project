@@ -144,11 +144,11 @@ for (const width of [1024, 1280, 1920]) {
     expect(boxes[0].x).toBeLessThan(boxes[1].x);
     expect(boxes[1].x).toBeLessThan(boxes[2].x);
     expect(boxes[2].x).toBeLessThan(boxes[3].x);
-    for (const lane of boxes) expect(lane.width).toBeGreaterThanOrEqual(200);
+    for (const lane of boxes) expect(lane.width).toBeGreaterThanOrEqual(240);
     const panelBox = await box(panel(page));
     expect(panelBox.x + panelBox.width).toBe(width);
-    // At 1024px the four lanes scroll sideways inside the board, so only the wider windows show them all.
-    if (width >= 1280) expect(boxes[3].x + boxes[3].width).toBeLessThanOrEqual(panelBox.x);
+    // At 1024px the four lanes scroll sideways inside the board, so only windows of 1400px and wider show them all (four 240px lanes, the 360px panel, and the insets).
+    if (width >= 1400) expect(boxes[3].x + boxes[3].width).toBeLessThanOrEqual(panelBox.x);
     await expect(handle(page)).toBeVisible();
     await task(page, 8).click();
     await expect(panel(page).getByRole('button', { name: 'Close details' })).toBeVisible();
@@ -157,12 +157,12 @@ for (const width of [1024, 1280, 1920]) {
   });
 }
 
-test('1024px: the default width fits beside four lanes (each stays at least 200px)', async ({ page }) => {
+test('1024px: the default width fits beside four lanes (each stays at least 240px)', async ({ page }) => {
   await open(page, 1024);
-  // Four lanes of 200px do not fit beside the default width: the panel shrinks to its smallest width (344px) and the lanes scroll.
+  // Four lanes of 240px do not fit beside the default width: the panel shrinks to its smallest width (344px) and the lanes scroll.
   await expect.poll(() => panelWidth(page)).toBe(344);
   const lanes = await page.locator('.lane').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
-  for (const w of lanes) expect(w).toBeGreaterThanOrEqual(200);
+  for (const w of lanes) expect(w).toBeGreaterThanOrEqual(240);
 });
 
 test('1920px: the extra width goes to the lanes and the panel keeps its width', async ({ page }) => {
@@ -232,7 +232,7 @@ test('1280px: the handle is a vertical separator and the drag stops at the limit
   await dragBy(page, -2000);
   expect(await panelWidth(page)).toBe(560);
   const lanes = await page.locator('.lane').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
-  for (const w of lanes) expect(w).toBeGreaterThanOrEqual(200);
+  for (const w of lanes) expect(w).toBeGreaterThanOrEqual(240);
 
   await dragBy(page, 2000);
   expect(await panelWidth(page)).toBe(280);
