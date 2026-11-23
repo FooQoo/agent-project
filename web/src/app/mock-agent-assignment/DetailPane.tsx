@@ -36,14 +36,13 @@ function Body({
   onClose,
   onToggleCondition,
   statusLabels,
-  top,
+  extra,
 }: DetailPaneProps) {
   const summary = summaryOf(card, fixture.epics);
   const detail = useTaskDetail(PROJECT_ID, card.id);
   const epicDetail = useEpicDetail(PROJECT_ID, card.epicId);
   return (
     <div className="adetail">
-      {top}
       <TaskDetailView
         projectId={PROJECT_ID}
         task={summary}
@@ -60,7 +59,9 @@ function Body({
         renderEpicLabel={(epic) => (
           <EpicLabel epic={epic} className="card__epic" onClick={() => undefined} />
         )}
-      />
+      >
+        {extra}
+      </TaskDetailView>
     </div>
   );
 }
@@ -72,8 +73,8 @@ export interface DetailPaneProps {
   onTab: (tab: DetailTab) => void;
   onClose: () => void;
   onToggleCondition: (conditionId: string, done: boolean) => void;
-  /** The assignment section the mock adds above the product's detail. */
-  top?: ReactNode;
+  /** What the mock adds to the detail: the assignee's avatar and, on the epic tab, the bulk assign. */
+  extra?: ReactNode;
   statusLabels?: 'pc' | 'monitor';
 }
 

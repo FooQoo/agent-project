@@ -12,14 +12,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The board with the agent strip: each agent's name, state and open cards; the epics with unassigned cards. */
+/** The board with no agent list: each card carries only its agent's small avatar in the meta row. */
 export const Board: Story = {
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByRole('region', { name: /Agents|担当/ })).toBeVisible();
+    const canvas = within(canvasElement);
+    // The board holds no agent list and no bulk bar: agents are managed in Settings.
+    await expect(canvas.queryByRole('region', { name: /Agents|担当/ })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: /Manage agents|担当の設定/ })).toBeNull();
   },
 };
 
-/** A Doing card open in the existing detail panel, with the assignment section above it. */
+/** A Doing card open in the existing detail panel: the agent's avatar sits in the status row. */
 export const CardDetail: Story = {
   args: { initial: { openId: 28 } },
 };
@@ -39,17 +42,22 @@ export const AfterReassign: Story = {
   args: { initial: { openId: 28, done: 'reassign', to: 'A-1' } },
 };
 
-/** Bulk assign on an epic: only the unassigned cards change; the others stay with the reason. */
-export const EpicBulkConfirm: Story = {
-  args: { initial: { dialog: 'bulk', epicId: 'LOGIN-1', to: 'A-1' } },
+/** The epic tab of the detail: the epic's unassigned cards and the way to assign them (the only entry to bulk assign). */
+export const EpicTab: Story = {
+  args: { initial: { openId: 28, tab: 'epic' } },
 };
 
-/** After the bulk assign: the assigned cards are marked and the toast names them. */
+/** Bulk assign from the epic tab of the detail: only the unassigned cards change; the others stay with the reason. */
+export const EpicBulkConfirm: Story = {
+  args: { initial: { openId: 28, tab: 'epic', dialog: 'bulk', epicId: 'LOGIN-1', to: 'A-1' } },
+};
+
+/** After the bulk assign: the assigned cards carry the agent's avatar and the toast names them. */
 export const AfterBulk: Story = {
   args: { initial: { done: 'bulk', epicId: 'LOGIN-1', to: 'A-1', lane: 'backlog' } },
 };
 
-/** Settings > Agents: name, role, state and parent session of each agent; the three connection states. */
+/** Settings > Agents (opened from the settings button): name, role, state and parent session of each agent; the three connection states. */
 export const AgentsSettings: Story = {
   args: { initial: { dialog: 'agents' } },
 };

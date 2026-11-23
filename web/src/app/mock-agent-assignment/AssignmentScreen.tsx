@@ -1,12 +1,12 @@
 import { GaugeIcon } from 'lucide-react';
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { EpicLabel } from '../../features/epics/label/EpicLabel';
 import type { DetailTab } from '../../features/tasks/detail/DetailTabs';
 import { TaskCardView } from '../../features/tasks/card/TaskCard';
 import { Drawer } from '@/shared/ui/drawer';
-import { Header } from '../../shared/ui/app-header/Header';
+import { Header, type SettingsSlotState } from '../../shared/ui/app-header/Header';
 import '../../pages/monitor/components/monitor-lanes.css';
-import { AgentChip, AgentStrip, AssignSection } from './AgentParts';
+import { AssigneeButton, CardAgent, EpicAssignBar } from './AgentParts';
 import {
   type Fixture,
   type Lane,
@@ -16,6 +16,7 @@ import {
   buildFixture,
   countIn,
   summaryOf,
+  unassignedIn,
 } from './data';
 import { AgentsSurface } from './AgentsSurface';
 import { BulkSurface } from './BulkSurface';
@@ -36,13 +37,31 @@ import './assignment-mock.css';
 
 export type { DialogName, Initial } from './screen-state';
 
+/** Opens the agents surface when the product's settings button is pressed, then hands the press back. */
+function SettingsBridge({
+  open,
+  onOpenChange,
+  onOpenAgents,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onOpenAgents: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    onOpenAgents();
+    onOpenChange(false);
+  }, [open, onOpenAgents, onOpenChange]);
+  return null;
+}
+
 export interface AssignmentScreenProps {
   variant?: 'desktop' | 'phone';
   initial?: Initial;
 }
 
 /**
- * The agent-assignment mock: the board with an agent strip, the card detail with an assignment section,
+ * The agent-assignment mock: the board with the agent's avatar in each card, the card detail with the avatar in its status row,
  * the agents settings, the connection switch, the mid-way handover, and the epic bulk assign. Fixed data held
  * in memory; nothing is saved.
  */
@@ -110,12 +129,7 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
                 <EpicLabel epic={epic} className="card__epic" onClick={() => undefined} />
               )}
             >
-              <span className="amarks">
-                <AgentChip
-                  agent={agentOf(fixture.agents, c.agentId)}
-                  mark={c.fresh ? m.freshMark : undefined}
-                />
-              </span>
+              <CardAgent agent={agentOf(fixture.agents, c.agentId)} />
             </TaskCardView>
           </div>
         ))}
@@ -133,31 +147,30 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
         onClose={() => setOpenId(null)}
         statusLabels={statusLabels}
         onToggleCondition={() => undefined}
-        top={
-          <AssignSection
-            card={open}
-            agent={agentOf(fixture.agents, open.agentId)}
-            onChange={() => setDialog('reassign')}
-          />
+        extra={
+          <>
+            <AssigneeButton
+              agent={agentOf(fixture.agents, open.agentId)}
+              disabled={open.lane === 'done'}
+              onChange={() => setDialog('reassign')}
+            />
+            {tab === 'epic' && open.epicId && (
+              <EpicAssignBar
+                epicName={fixture.epics.find((e) => e.id === open.epicId)?.name ?? open.epicId}
+                unassigned={unassignedIn(cards, open.epicId).length}
+                onAssign={() => {
+                  setEpicId(open.epicId ?? epicId);
+                  setDialog('bulk');
+                }}
+              />
+            )}
+          </>
         }
       />
     );
 
   const noticeView = notice && (
     <NoticeView notice={notice} agents={fixture.agents} onDismiss={() => setNotice(null)} />
-  );
-
-  const strip = (
-    <AgentStrip
-      agents={fixture.agents}
-      cards={cards}
-      epics={fixture.epics}
-      onManage={() => setDialog('agents')}
-      onEpic={(id) => {
-        setEpicId(id);
-        setDialog('bulk');
-      }}
-    />
   );
 
   // The slot beside the project name where INTERACTION-MODES shows the project's mode.
@@ -167,6 +180,17 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
       {m.modeLabel}: <strong>{m.modeValue}</strong>
     </span>
   );
+
+  // Agents are managed in Settings only: the header's settings button opens the agents surface.
+  const settings = {
+    render: ({ open, onOpenChange }: SettingsSlotState) => (
+      <SettingsBridge
+        open={open}
+        onOpenChange={onOpenChange}
+        onOpenAgents={() => setDialog('agents')}
+      />
+    ),
+  };
 
   const switchTarget = agentOf(fixture.agents, switchAgent) ?? fixture.agents[0];
   const dialogs = (
@@ -223,8 +247,7 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
     <>
       {!phone ? (
         <div className="aapp">
-          <Header canAdd onAdd={() => {}} versionSlot={modeSlot} />
-          {strip}
+          <Header canAdd onAdd={() => {}} versionSlot={modeSlot} settings={settings} />
           <main className="aboard">
             <div className="aboard__row">
               <div className="board__lanes aboard__lanes">
@@ -252,8 +275,7 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
         </div>
       ) : (
         <main className="monitor-shell aphone">
-          <Header settingsSize="l" versionSlot={modeSlot} />
-          {strip}
+          <Header settingsSize="l" versionSlot={modeSlot} settings={settings} />
           <div className="lane-tabs atabs" role="tablist" aria-label="lanes">
             {LANES.map((name) => (
               <button

@@ -2,10 +2,10 @@ import { useTranslation } from 'react-i18next';
 
 /** The strings this mock adds. The shared locale files stay untouched. */
 const ja = {
-  backlog: 'Backlog',
-  todo: 'Todo',
-  doing: 'Doing',
-  done: 'Done',
+  backlog: 'バックログ',
+  todo: '未着手',
+  doing: '進行中',
+  done: '完了',
   laneEmpty: 'カードはありません',
   close: '閉じる',
   cancel: 'キャンセル',

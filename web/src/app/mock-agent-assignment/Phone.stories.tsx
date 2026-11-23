@@ -3,7 +3,7 @@ import { expect, within } from 'storybook/test';
 import { modalDocsParameters } from '../../../.storybook/support/modal-docs';
 import { AssignmentScreen } from './AssignmentScreen';
 
-// The phone side: lane tabs, the agent strip, and the same operations as bottom sheets. Connection codes are
+// The phone side: lane tabs with agent avatars in the cards, and the same operations as bottom sheets. Connection codes are
 // shown only on the PC, so the phone's agents sheet points there instead of offering the switch.
 const meta = {
   title: 'Mocks/AgentAssignment/Phone',
@@ -15,14 +15,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The Doing tab with the agent strip and each card's agent. */
+/** The Doing tab: each card carries only its agent's small avatar; no agent list on the board. */
 export const Board: Story = {
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getAllByRole('tab')).toHaveLength(4);
+    await expect(within(canvasElement).queryByRole('region', { name: /Agents|担当/ })).toBeNull();
   },
 };
 
-/** A Doing card in the detail drawer, with the assignment section above the existing detail. */
+/** A Doing card in the detail drawer: the agent's avatar sits in the status row. */
 export const CardDetail: Story = {
   args: { initial: { openId: 28 } },
 };
@@ -42,9 +43,14 @@ export const AfterReassign: Story = {
   args: { initial: { done: 'reassign', to: 'A-1' } },
 };
 
-/** Epic bulk assign as a sheet: the cards that change and the ones that stay. */
+/** The epic tab of the detail drawer: the epic's unassigned cards and the way to assign them. */
+export const EpicTab: Story = {
+  args: { initial: { openId: 28, tab: 'epic' } },
+};
+
+/** Epic bulk assign as a sheet, reached from the epic tab of the detail. */
 export const EpicBulkConfirm: Story = {
-  args: { initial: { dialog: 'bulk', epicId: 'LOGIN-1', to: 'A-1' } },
+  args: { initial: { openId: 28, tab: 'epic', dialog: 'bulk', epicId: 'LOGIN-1', to: 'A-1' } },
 };
 
 /** After the bulk assign on the Backlog tab. */

@@ -69,13 +69,6 @@
   box-shadow: 0 0 0 2px var(--r-accent-soft);
 }
 
-.amarks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 0 4px;
-}
-
 /* ---- Mode slot: only room for INTERACTION-MODES; the content is a placeholder. ---- */
 
 .amode {
@@ -110,45 +103,6 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
-}
-
-.achip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  max-width: 100%;
-  height: 26px;
-  padding: 0 8px 0 3px;
-  border: 1px solid var(--r-border);
-  border-radius: 999px;
-  background: var(--r-surface);
-  font-size: 12px;
-  color: var(--r-text);
-}
-
-.achip .aavatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-}
-
-.achip__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.achip__mark {
-  padding-left: 6px;
-  border-left: 1px solid var(--r-border);
-  color: var(--r-accent);
-}
-
-.achip--none {
-  padding: 0 10px;
-  border-style: dashed;
-  color: var(--r-muted);
 }
 
 .astate {
@@ -238,100 +192,12 @@
   text-decoration: line-through;
 }
 
-/* ---- Strip ---- */
-
-.astrip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  padding: 8px 24px 0;
-}
-
-.astrip__agents {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.astrip__agent {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 10px 0 4px;
-  border: 1px solid var(--r-border);
-  border-radius: 8px;
-  background: var(--r-surface);
-  font-size: 12px;
-  color: var(--r-text);
-}
-
-.astrip__name {
-  font-weight: 600;
-}
-
-.astrip__dot {
-  width: 8px;
-  height: 8px;
-  border: 1.5px solid var(--r-muted);
-  border-radius: 999px;
-}
-
-.astrip__dot[data-state="connected"] {
-  border-color: var(--r-accent);
-  background: var(--r-accent);
-}
-
-.astrip__dot[data-state="replaced"] {
-  border-color: var(--r-pend-tx);
-}
-
-.astrip__state {
-  color: var(--r-text2);
-}
-
-.astrip__count {
-  min-width: 18px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--r-lane);
-  color: var(--r-text2);
-  text-align: center;
-}
-
-.astrip__tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-left: auto;
-}
-
-.astrip__go {
-  color: var(--r-accent);
-}
-
 /* ---- Phone ---- */
 
 .aphone {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.aphone .astrip {
-  padding: 0;
-}
-
-.aphone .astrip__tools {
-  margin-left: 0;
-}
-
-.aphone .astrip__state {
-  display: none;
 }
 
 .lane-tabs.atabs {
@@ -376,39 +242,112 @@
   height: 100%;
 }
 
-/* ---- Assignment section in the detail ---- */
+/* ---- Assignee avatar in the detail, and the epic bulk bar ---- */
 
-.asection {
+.aassignee {
+  display: inline-flex;
+  align-items: center;
+}
+
+.aassignee__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.aassignee__btn:hover:not(:disabled),
+.aassignee__btn:focus-visible {
+  outline: 2px solid var(--r-accent);
+  outline-offset: 1px;
+}
+
+.aassignee__btn:disabled {
+  cursor: default;
+}
+
+.aavatar--empty {
+  background: transparent;
+  border: 1.5px dashed var(--r-muted);
+}
+
+.achip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 26px;
+  padding: 0 8px 0 3px;
+  border: 1px solid var(--r-border);
+  border-radius: 999px;
+  background: var(--r-surface);
+  font-size: 12px;
+  color: var(--r-text);
+}
+
+.achip .aavatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+}
+
+.achip__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.achip--none {
+  padding: 0 10px;
+  border-style: dashed;
+  color: var(--r-muted);
+}
+
+.acardagent {
+  display: inline-flex;
+  align-items: center;
+}
+
+.acardagent__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 96px;
+  font-size: 11px;
+  color: var(--r-text2);
+}
+
+.acardagent__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acardagent .aavatar,
+.aassignee .aavatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+.aepicbar {
   display: flex;
-  flex: none;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid var(--r-border);
   border-radius: 10px;
   background: var(--r-surface);
-}
-
-.asection__h {
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--r-muted);
-}
-
-.asection__meta,
-.asection__note {
-  font-size: 12px;
-  color: var(--r-muted);
-}
-
-.asection__none {
-  font-size: 13px;
-  color: var(--r-muted);
-}
-
-.asection > button {
-  align-self: flex-start;
+  color: var(--r-text2);
 }
 
 /* ---- Surfaces ---- */
@@ -895,24 +834,4 @@
 
 .anotice__text span {
   color: var(--r-text2);
-}
-
-/* The agent chip hugs the card above it. */
-.amarks {
-  margin-top: -6px;
-  margin-bottom: 6px;
-}
-
-/* Phone: the strip scrolls sideways instead of growing taller. */
-.aphone .astrip__agents,
-.aphone .astrip__tools {
-  flex-wrap: nowrap;
-  max-width: 100%;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.aphone .astrip__agent,
-.aphone .astrip__tools > button {
-  flex: none;
 }

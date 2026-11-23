@@ -1,14 +1,8 @@
-import { CircleDashedIcon, LinkIcon, ReplaceIcon, UserCogIcon } from 'lucide-react';
-import type { CSSProperties, ReactNode } from 'react';
+import { CircleDashedIcon, LinkIcon, ReplaceIcon } from 'lucide-react';
+import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/shared/ui/button';
-import {
-  type ConnectionState,
-  type MockAgent,
-  type MockCard,
-  type MockSession,
-  loadOf,
-  unassignedIn,
-} from './data';
+import type { ConnectionState, MockAgent, MockSession } from './data';
 import { type MockText, useMockText } from './text';
 import './assignment-mock.css';
 
@@ -41,19 +35,6 @@ export function StateBadge({ state }: { state: ConnectionState }) {
     <span className="astate" data-state={state}>
       <Icon aria-hidden="true" />
       {stateLabel(m, state)}
-    </span>
-  );
-}
-
-/** The agent on a card: initial and name. A card with no agent shows a dashed "Unassigned". */
-export function AgentChip({ agent, mark }: { agent: MockAgent | null; mark?: string }) {
-  const m = useMockText();
-  if (!agent) return <span className="achip achip--none">{m.unassigned}</span>;
-  return (
-    <span className="achip" data-agent={agent.id} data-state={agent.state}>
-      <Avatar agent={agent} />
-      <span className="achip__name">{agent.name}</span>
-      {mark && <span className="achip__mark">{mark}</span>}
     </span>
   );
 }
@@ -100,100 +81,120 @@ export function AgentIdentity({
   );
 }
 
-/** The row under the header: the agents with their state and open cards, and the epics with unassigned cards. */
-export function AgentStrip({
-  agents,
-  cards,
-  epics,
-  onManage,
-  onEpic,
+/**
+ * Puts its children inside a row the product's component draws, as the last item before the row's spacer
+ * (or at the end of the row). The product components have no slot for the mock's avatar, so the mock
+ * adds one into the real row instead of copying the component.
+ */
+export function RowSlot({
+  row,
+  beforeSelector,
+  className,
+  children,
 }: {
-  agents: readonly MockAgent[];
-  cards: readonly MockCard[];
-  epics: readonly { id: string; name: string }[];
-  onManage: () => void;
-  onEpic: (epicId: string) => void;
+  /** Finds the row from the card or the detail that holds the anchor. */
+  row: string;
+  beforeSelector?: string;
+  className?: string;
+  children: ReactNode;
 }) {
-  const m = useMockText();
+  const anchor = useRef<HTMLSpanElement>(null);
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const host = anchor.current?.parentElement?.querySelector(row);
+    if (!host) return;
+    const el = document.createElement('span');
+    el.className = className ?? '';
+    host.insertBefore(el, (beforeSelector && host.querySelector(beforeSelector)) || null);
+    setSlot(el);
+    return () => el.remove();
+  }, [row, beforeSelector, className]);
   return (
-    <div className="astrip" role="region" aria-label={m.stripLabel}>
-      <ul className="astrip__agents">
-        {agents.map((agent) => (
-          <li key={agent.id} className="astrip__agent" data-state={agent.state}>
-            <Avatar agent={agent} />
-            <span className="astrip__name">{agent.name}</span>
-            <span
-              className="astrip__dot"
-              data-state={agent.state}
-              title={stateLabel(m, agent.state)}
-            />
-            <span className="astrip__state">{stateLabel(m, agent.state)}</span>
-            <span className="astrip__count">{m.cardsOf(loadOf(cards, agent.id))}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="astrip__tools">
-        {epics.map((epic) => {
-          const n = unassignedIn(cards, epic.id).length;
-          return (
-            n > 0 && (
-              <Button
-                key={epic.id}
-                type="button"
-                size="s"
-                variant="outline"
-                onClick={() => onEpic(epic.id)}
-              >
-                {m.epicUnassigned(epic.name, n)}
-                <span className="astrip__go">{m.epicAssign}</span>
-              </Button>
-            )
-          );
-        })}
-        <Button type="button" size="s" variant="outline" onClick={onManage}>
-          <UserCogIcon aria-hidden="true" />
-          {m.stripManage}
-        </Button>
-      </div>
-    </div>
+    <>
+      <span hidden ref={anchor} />
+      {slot && createPortal(children, slot)}
+    </>
   );
 }
 
-/** The assignment block above the card detail: who holds the card and the way to change it. */
-export function AssignSection({
-  card,
+/** The agent's initial and name as a chip, for the dialogs that name an agent in a sentence. */
+export function AgentChip({ agent }: { agent: MockAgent | null }) {
+  const m = useMockText();
+  if (!agent) return <span className="achip achip--none">{m.unassigned}</span>;
+  return (
+    <span className="achip" data-agent={agent.id} data-state={agent.state}>
+      <Avatar agent={agent} />
+      <span className="achip__name">{agent.name}</span>
+    </span>
+  );
+}
+
+/**
+ * The agent on a card: its small avatar and short name in the card's meta row. A card with no agent
+ * shows nothing, and the connection state is left to Settings and the chooser.
+ */
+export function CardAgent({ agent }: { agent: MockAgent | null }) {
+  if (!agent) return null;
+  return (
+    <RowSlot row=".card__top" beforeSelector=".card__spacer" className="acardagent">
+      <span className="acardagent__chip" data-agent={agent.id}>
+        <Avatar agent={agent} />
+        <span className="acardagent__name">{agent.name}</span>
+      </span>
+    </RowSlot>
+  );
+}
+
+/** The detail's only assignment control: the assignee's avatar in the status row, which opens the chooser. */
+export function AssigneeButton({
   agent,
+  disabled,
   onChange,
 }: {
-  card: MockCard;
   agent: MockAgent | null;
+  disabled: boolean;
   onChange: () => void;
 }) {
   const m = useMockText();
-  const finished = card.lane === 'done';
   return (
-    <section className="asection" aria-label={m.assignSection}>
-      <h3 className="asection__h">{m.assignSection}</h3>
-      {agent ? (
-        <AgentIdentity
-          agent={agent}
-          extra={
-            <span className="asection__meta">
-              {m.assignGeneration(card.generation)}
-              {card.running && ` ・ ${m.assignRunning}`}
-            </span>
-          }
-        />
-      ) : (
-        <p className="asection__none">{m.unassigned}</p>
-      )}
-      {finished ? (
-        <p className="asection__note">{m.assignDoneNote}</p>
-      ) : (
-        <Button type="button" size="s" variant="outline" onClick={onChange}>
-          {agent ? m.assignChange : m.assignAssign}
-        </Button>
-      )}
-    </section>
+    <RowSlot row=".detail__meta" className="aassignee">
+      <button
+        type="button"
+        className="aassignee__btn"
+        disabled={disabled}
+        data-empty={agent ? undefined : true}
+        aria-label={agent ? `${m.assignChange}: ${agent.name}` : m.assignAssign}
+        title={agent ? agent.name : m.assignAssign}
+        onClick={onChange}
+      >
+        {agent ? (
+          <Avatar agent={agent} />
+        ) : (
+          <span className="aavatar aavatar--empty" aria-hidden="true" />
+        )}
+      </button>
+    </RowSlot>
+  );
+}
+
+/** On the epic tab: the epic's unassigned cards and the way to give them to one agent. */
+export function EpicAssignBar({
+  epicName,
+  unassigned,
+  onAssign,
+}: {
+  epicName: string;
+  unassigned: number;
+  onAssign: () => void;
+}) {
+  const m = useMockText();
+  if (unassigned === 0) return null;
+  return (
+    <div className="aepicbar">
+      <span>{m.epicUnassigned(epicName, unassigned)}</span>
+      <Button type="button" size="s" variant="outline" onClick={onAssign}>
+        {m.epicAssign}
+      </Button>
+    </div>
   );
 }
