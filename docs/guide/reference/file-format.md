@@ -110,7 +110,7 @@ An `EPIC.md` without frontmatter is entirely body text. Save the order from the 
 
 If the frontmatter cannot be read (invalid YAML, a missing key, a duplicate ID, an empty text), the board reports the file, the item, and the reason as a problem. The task then shows no progress and its text is shown in full as the body. The board never rewrites the file to fix it; fix it by hand and the next read shows it normally.
 
-Every JSON file declares `formatVersion: 1`. A file with any other version is unsupported: the board reports it and leaves it unchanged, with no migration, fallback, deletion, or reset.
+A `task.json` declares `formatVersion: 3`; every other JSON file declares `formatVersion: 1`. A file with any other version is unsupported: the board reports it and leaves it unchanged, with no migration, fallback, deletion, or reset.
 
 ## Next
 

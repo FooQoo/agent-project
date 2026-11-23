@@ -25,6 +25,7 @@ use super::{HistoryKind, Transition, lock_project, save_task, stamp, transition_
 use crate::domain::{Assignee, Column, ProjectId, RunState};
 use crate::error::AgpjError;
 
+pub(in crate::file_store::ops) use connect::active_connection_locked;
 pub use model::*;
 use model::{ConnectCode, ConnectionRecord, ConnectionsFile};
 pub(in crate::file_store::ops) use registry::has_live_agents_locked;

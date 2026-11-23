@@ -91,12 +91,31 @@ pub(crate) fn save_secret(
             .create(dir)
             .map_err(fail)?;
     }
+    // Written to a temporary file and renamed, so a failed write keeps the earlier secret.
+    let temporary = path.with_extension("secret.tmp");
     let mut file = std::fs::OpenOptions::new()
         .write(true)
         .create(true)
         .truncate(true)
         .mode(0o600)
-        .open(&path)
+        .open(&temporary)
         .map_err(fail)?;
-    file.write_all(secret.as_bytes()).map_err(fail)
+    let written = file
+        .write_all(secret.as_bytes())
+        .and_then(|()| file.sync_all());
+    drop(file);
+    if let Err(e) = written.and_then(|()| std::fs::rename(&temporary, &path)) {
+        let _ = std::fs::remove_file(&temporary);
+        return Err(fail(e));
+    }
+    Ok(())
+}
+
+/// Forget this process's stored secret for the project.
+pub(crate) fn delete_secret(data_dir: &Path, project: &ProjectId) {
+    let _ = std::fs::remove_file(secret_file(
+        data_dir,
+        project,
+        &SessionIdentity::from_env().key,
+    ));
 }

@@ -21,6 +21,29 @@ pub fn connect(ctx: &mut Context, args: &ConnectArgs) -> Result<Outcome, AgpjErr
             command: None,
         });
     }
+    let data_dir = ctx
+        .files
+        .shared_dir()
+        .parent()
+        .map(std::path::Path::to_path_buf)
+        .ok_or_else(|| AgpjError::BoardUnavailable {
+            reason: "The data folder cannot be found.".into(),
+        })?;
+    // One session holds one agent: a second connection would replace the stored secret of the
+    // first and leave it unreleasable.
+    if let Some(held) = connection_store::load_secret(&data_dir, &project)
+        && let Ok(verified) = ctx
+            .files
+            .verify_connection(&project, &held, ctx.clock.now())
+    {
+        return Err(AgpjError::InvalidArgument {
+            message: format!(
+                "This session is already connected to agent {}; run agpj disconnect first.",
+                verified.agent_id
+            ),
+            command: None,
+        });
+    }
     let identity = SessionIdentity::from_env();
     let origin = match identity.origin {
         Origin::Board => ConnectionOrigin::Board,
@@ -34,15 +57,14 @@ pub fn connect(ctx: &mut Context, args: &ConnectArgs) -> Result<Outcome, AgpjErr
         &identity.key,
         ctx.clock.now(),
     )?;
-    let data_dir = ctx
-        .files
-        .shared_dir()
-        .parent()
-        .map(std::path::Path::to_path_buf);
-    let data_dir = data_dir.ok_or_else(|| AgpjError::BoardUnavailable {
-        reason: "The data folder cannot be found.".into(),
-    })?;
-    connection_store::save_secret(&data_dir, &project, &connected.secret)?;
+    if let Err(e) = connection_store::save_secret(&data_dir, &project, &connected.secret) {
+        // The connection and its secret stand or fall together: with no secret to use it, the
+        // new connection would only keep the agent busy.
+        let _ = ctx
+            .files
+            .disconnect_session(&project, &connected.secret, ctx.clock.now());
+        return Err(e);
+    }
     Ok(Outcome {
         changed: true,
         human: format!(
@@ -50,6 +72,29 @@ pub fn connect(ctx: &mut Context, args: &ConnectArgs) -> Result<Outcome, AgpjErr
             connected.agent.id, connected.agent.name, connected.agent.role
         ),
         json: json!({"agent": connected.agent, "connection": connected.connection}),
+    })
+}
+
+pub fn disconnect(ctx: &mut Context) -> Result<Outcome, AgpjError> {
+    let project = ctx.project_id()?.clone();
+    let data_dir = ctx
+        .files
+        .shared_dir()
+        .parent()
+        .map(std::path::Path::to_path_buf)
+        .ok_or_else(|| AgpjError::BoardUnavailable {
+            reason: "The data folder cannot be found.".into(),
+        })?;
+    let secret =
+        connection_store::load_secret(&data_dir, &project).ok_or(AgpjError::NotConnected)?;
+    let paused = ctx
+        .files
+        .disconnect_session(&project, &secret, ctx.clock.now())?;
+    connection_store::delete_secret(&data_dir, &project);
+    Ok(Outcome {
+        changed: true,
+        human: "Disconnected from the agent; its running tasks are waiting.\n".to_string(),
+        json: json!({"paused": paused}),
     })
 }
 

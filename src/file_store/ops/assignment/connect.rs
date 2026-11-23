@@ -2,6 +2,20 @@
 
 use super::*;
 
+/// The ID of an agent's active connection, read under a project lock the caller holds.
+pub(in crate::file_store::ops) fn active_connection_locked(
+    shared: &std::path::Path,
+    project_dir: &std::path::Path,
+    agent_id: &str,
+) -> Result<Option<String>, AgpjError> {
+    let connections: ConnectionsFile = load(shared, &connections_path(project_dir))?;
+    Ok(connections
+        .connections
+        .iter()
+        .find(|c| c.agent_id == agent_id && is_active(c))
+        .map(|c| c.id.clone()))
+}
+
 impl FileStore {
     /// Issue a one-time connection code for an agent. A plain code is refused while the agent
     /// has an active connection (`agent_busy`); a switch code replaces it when exchanged.
@@ -166,6 +180,49 @@ impl FileStore {
             "The session ended; the task is waiting.",
             now,
         )
+    }
+
+    /// A session leaves its agent on purpose: its running tasks go back to waiting and the
+    /// connection is revoked without a replacement, so the agent is free again (a plain code
+    /// works, and an agent with nothing in Doing can be deleted).
+    pub fn disconnect_session(
+        &self,
+        project: &ProjectId,
+        secret: &str,
+        now: DateTime<Utc>,
+    ) -> Result<Vec<i64>, AgpjError> {
+        let shared = self.shared_dir();
+        let (dir, _lock) = lock_project(shared, project)?;
+        let now = stamp(now);
+        let verified = verify_locked(shared, &dir, secret, now)?;
+        let paused = self.pause_runs_locked(
+            project,
+            &dir,
+            |task| task.run_connection_id.as_deref() == Some(verified.connection_id.as_str()),
+            "The session disconnected from the agent; the task is waiting.",
+            now,
+        )?;
+        let mut connections: ConnectionsFile = load(shared, &connections_path(&dir))?;
+        if let Some(record) = connections
+            .connections
+            .iter_mut()
+            .find(|c| c.id == verified.connection_id)
+        {
+            record.revoked_at = Some(now);
+        }
+        save(shared, &connections_path(&dir), &connections)?;
+        Ok(paused)
+    }
+
+    /// The active connection of an agent, if it has one.
+    pub fn active_connection_of(
+        &self,
+        project: &ProjectId,
+        agent_id: &str,
+    ) -> Result<Option<String>, AgpjError> {
+        let shared = self.shared_dir();
+        let (dir, _lock) = lock_project(shared, project)?;
+        active_connection_locked(shared, &dir, agent_id)
     }
 
     /// Put running tasks back to waiting when the connection that set them running is gone

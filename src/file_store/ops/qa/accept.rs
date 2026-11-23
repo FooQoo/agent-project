@@ -234,6 +234,16 @@ impl FileStore {
                 at,
             })?);
             task.agent_status = RunState::Running;
+            // A task that runs on an agent's connection keeps a connection that can release it
+            // when the session ends; a project without agents has none to record.
+            task.run_connection_id = match task.agent_id.as_deref() {
+                Some(agent) => crate::file_store::ops::assignment::active_connection_locked(
+                    shared,
+                    project_dir,
+                    agent,
+                )?,
+                None => None,
+            };
             task.agent_status_changed_at = at;
             task.updated_at = at;
             save_task(shared, project_dir, &task)?;

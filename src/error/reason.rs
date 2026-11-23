@@ -77,7 +77,7 @@ impl AgpjError {
                 "Ask the user for a switch code (connect-code with switch), then use that code.".into()
             }
             AgpjError::AgentInUse { .. } => {
-                "Hand its Doing tasks to another agent and revoke its connection first.".into()
+                "Hand its Doing tasks to another agent, then have its session run agpj disconnect.".into()
             }
             AgpjError::AgentNotFound { .. } => "List the agents with agpj agent ls.".into(),
             AgpjError::AgentNameTaken { .. } => "Choose another name.".into(),

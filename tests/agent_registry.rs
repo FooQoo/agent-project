@@ -532,3 +532,71 @@ fn a_run_state_without_a_connection_is_refused_once_the_project_has_agents() {
         RunState::Paused
     );
 }
+
+#[test]
+fn disconnect_frees_the_agent_so_it_can_be_connected_again_and_deleted() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let secret = fx.connect("A-1", false, t0()).unwrap();
+    let id = fx.doing_task();
+    fx.run(id, &secret, t0()).unwrap();
+    let paused = fx
+        .store
+        .disconnect_session(&fx.project, &secret, t0())
+        .unwrap();
+    assert_eq!(paused, vec![id]);
+    assert_eq!(
+        fx.store.task(&fx.project, id).unwrap().agent_status,
+        RunState::Paused
+    );
+    // The secret is dead, a plain code works again, and with nothing in Doing the agent can go.
+    assert!(
+        fx.store
+            .verify_connection(&fx.project, &secret, t0())
+            .is_err()
+    );
+    assert!(
+        fx.store
+            .issue_connect_code(&fx.project, "A-1", false, t0())
+            .is_ok()
+    );
+}
+
+#[test]
+fn a_session_holds_one_agent_and_disconnect_lets_it_take_another() {
+    let home = tempfile::tempdir().unwrap();
+    let run = |args: &[&str]| {
+        std::process::Command::new(env!("CARGO_BIN_EXE_agpj"))
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_HOME", home.path())
+            .env("CLAUDE_CODE_SESSION_ID", "session-one")
+            .env_remove("AGPJ_CONNECTION_SECRET")
+            .current_dir(home.path())
+            .args(args)
+            .stdin(std::process::Stdio::null())
+            .output()
+            .unwrap()
+    };
+    assert!(run(&["project", "create", "Demo"]).status.success());
+    let store = FileStore::open(&home.path().join("shared"));
+    let project = store.project_by_name("Demo").unwrap().id;
+    store.register_agent(&project, "Screen", "", t0()).unwrap();
+    store.register_agent(&project, "CLI", "", t0()).unwrap();
+    let code = |agent: &str| {
+        store
+            .issue_connect_code(&project, agent, false, Utc::now())
+            .unwrap()
+            .code
+    };
+    let first = run(&["--project", "Demo", "connect", &code("A-1")]);
+    assert!(first.status.success(), "{first:?}");
+    // A second agent is refused while the first connection is held.
+    let second = run(&["--project", "Demo", "connect", &code("A-2")]);
+    assert!(!second.status.success());
+    assert!(String::from_utf8_lossy(&second.stderr).contains("disconnect"));
+    assert!(run(&["--project", "Demo", "disconnect"]).status.success());
+    let again = run(&["--project", "Demo", "connect", &code("A-2")]);
+    assert!(again.status.success(), "{again:?}");
+}

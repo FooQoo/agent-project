@@ -47,7 +47,7 @@ Set `AGPJ_HOME` to use another data folder. An empty value counts as unset. The 
         attachments/
 ```
 
-The files are plain Markdown and JSON. What each file must contain is described in [Markdown file format](../reference/file-format). A file whose `formatVersion` is not 1 is unsupported: the application reports it and leaves the file unchanged. It never migrates, falls back to, deletes, or resets old data.
+The files are plain Markdown and JSON. What each file must contain is described in [Markdown file format](../reference/file-format). A `task.json` must declare `formatVersion: 3` and every other JSON file `formatVersion: 1` (or 2 where a page says so); a file with any other version is unsupported: the application reports it and leaves the file unchanged. It never migrates, falls back to, deletes, or resets old data.
 
 The `.internal/` folder holds the app's own settings. `preferences.json` keeps the language and color theme you chose in **Settings**, and it applies to every browser on this PC and to remote access. The app writes this file, so do not edit it by hand. It is outside `shared/`, so it is not part of a project's files.
 

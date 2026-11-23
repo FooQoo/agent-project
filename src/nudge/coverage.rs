@@ -130,6 +130,10 @@ pub const COMMANDS: &[(&str, Cover)] = &[
         "connect",
         NoRule("a person hands the session a code; nothing to forget"),
     ),
+    (
+        "disconnect",
+        NoRule("the session leaves its agent on purpose; nothing to forget"),
+    ),
     ("agent ls", READ_ONLY),
     ("stop", NoRule("pauses the server by a person's choice")),
     ("update", NoRule("installation by a person")),

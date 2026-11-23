@@ -13,7 +13,7 @@ Use the browser to review and edit work, and `agpj` for agent updates and projec
 | Add a task | `add` |
 | Read a task or the board | `show`, `ls`, `snapshot` |
 | Move a task or report what an agent is doing | `mv`, `state` |
-| Join this session to an agent, or list the agents | `connect`, `agent ls` |
+| Join this session to an agent, leave it, or list the agents | `connect`, `disconnect`, `agent ls` |
 | Record a decision that matters later | `history add` |
 | Switch between sparring and sleep mode | `mode` |
 | Record a decision a subagent made in sleep mode | `decision add` |
@@ -41,6 +41,8 @@ agpj --project "My project" agent ls
 ```
 
 `connect` is refused while `AGPJ_CONNECTION_SECRET` is set (a session the board launched already has its connection). Otherwise it keeps the connection's secret in a file only you can read, tied to this session; the board keeps only its digest. Once the project has an agent, `state` works through the connection: a session that never connected gets `not_connected`, a session whose agent was switched to another session gets `connection_replaced`, a card of another agent gets `not_assignee`, and `--actor human` is `human_only` (a person acts in the board). A second session cannot take an agent over (`agent_busy`); the person issues a new code with `switch` and gives it to you. A free card that you set running becomes your agent's card.
+
+A session holds one agent: `connect` is refused while the session already holds an active connection. To leave the agent on purpose, run `agpj --project "My project" disconnect`. Its running tasks go back to waiting, the connection is revoked, the stored secret is deleted, and the agent is free again (a plain code connects it, and with nothing in Doing it can be deleted).
 
 When the session ends, the Claude Code `SessionEnd` hook puts its running tasks back to waiting (paused). A session that is killed sends no notice, so a running task whose connection shows no activity for 30 minutes is put back to waiting by the board.
 
