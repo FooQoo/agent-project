@@ -151,7 +151,7 @@ export function MonitorView(props: MonitorViewProps) {
     });
   return (
     <main className="monitor-shell">
-      <Header {...props.header} withSettings={false} />
+      <Header {...props.header} withSettings={false} logoOnly />
       {panel.target !== null && props.messagesApi && props.projectId && props.messages && (
         <MessagesSurface
           projectId={props.projectId}

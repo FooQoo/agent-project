@@ -7,7 +7,7 @@ import { waitForSync, openHeaderItem } from '../helpers/ui';
 
 // #646: planned versions on the PC board: the version filter in the header, the tag on a card, the planned
 // version in the task's edit dialog, and an epic's tasks planned together in the epic's edit dialog. The phone
-// shows the tag and sets nothing.
+// shows the tag, filters by version and lists a new version, but makes the shown version the release version.
 test.beforeEach(() => resetPreferences());
 test.afterEach(() => {
 	clearVersions();
@@ -175,8 +175,8 @@ test('the release version is unavailable in the task dialog while none is set', 
 	await expect(dialog.getByText('Unavailable: no release version is set')).toBeVisible();
 });
 
-test('the phone shows the planned version on its cards and offers nothing to set it', async ({ page }) => {
-	await seed('v1.8.0');
+test('the phone shows the planned version, filters by it, lists a new one and makes the shown one the release version', async ({ page }) => {
+	const cards = await seed('v1.8.0');
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto('/');
 	await page.getByRole('tab', { name: /Todo/ }).click();
@@ -186,9 +186,56 @@ test('the phone shows the planned version on its cards and offers nothing to set
 	await expect(meta.locator('.ver-tag')).toHaveCount(1);
 	const [metaTag, metaTime] = await Promise.all([meta.locator('.ver-tag').boundingBox(), meta.locator('.monitor-card__time').boundingBox()]);
 	expect(metaTag!.x + metaTag!.width).toBeLessThanOrEqual(metaTime!.x);
-	await expect(page.getByRole('button', { name: /^Version filter:/ })).toHaveCount(0);
+
+	// The top bar shows the logo alone, and the version filter starts on the release version.
+	await expect(page.locator('.header__app').getByText('Agent Project')).toHaveClass(/visually-hidden/);
+	await expect(page.locator('.header__logo img')).toBeVisible();
+	const filter = page.getByRole('button', { name: /^Version filter:/ });
+	await expect(filter).toHaveAccessibleName('Version filter: v1.8.0');
+	await expect(page.locator('.monitor-card', { hasText: 'Plan E dark theme' })).toHaveCount(0);
+	await expect(page.locator('.monitor-card', { hasText: 'Plan C session' })).toHaveCount(1);
+	const bar = await page.locator('.monitor-shell > .header').boundingBox();
+	const button = await filter.boundingBox();
+	expect(button!.x + button!.width).toBeLessThanOrEqual(bar!.x + bar!.width);
+
+	// The sheet lists a new version without changing the filter or the release version, and the release version is the one shown, so there is no release button.
+	await filter.click();
+	await page.getByLabel('New version').fill('v2.0.0');
+	await page.getByRole('button', { name: 'Add this version to the project' }).click();
+	await expect(page.getByRole('radio', { name: /^v2\.0\.0/ })).toBeVisible();
+	await expect(page.getByRole('radio', { name: /^v1\.8\.0/ }).locator('..')).toContainText('\u2605');
+	await expect(page.getByRole('button', { name: /the release version$/ })).toHaveCount(0);
+	await page.keyboard.press('Escape');
+	await expect(filter).toHaveAccessibleName('Version filter: v1.8.0');
+	expect(await releaseVersion()).toBe('v1.8.0');
+	await filter.click();
+
+	// All shows every version's cards again; the Backlog is never filtered.
+	await page.getByRole('radio', { name: 'All' }).click();
+	await expect(filter).toHaveAccessibleName('Version filter: All');
+	await expect(page.locator('.monitor-card', { hasText: 'Plan E dark theme' })).toHaveCount(1);
+	expect(cards.e).toBeGreaterThan(0);
+	expect(await releaseVersion()).toBe('v1.8.0');
+
+	// Filter by another version and make it the release version from the sheet's last button.
+	await filter.click();
+	await page.getByRole('radio', { name: /^v1\.9\.0/ }).click();
+	await expect(filter).toHaveAccessibleName('Version filter: v1.9.0');
+	expect(await releaseVersion()).toBe('v1.8.0');
+	await filter.click();
+	await page.getByRole('button', { name: 'Make the shown v1.9.0 the release version' }).click();
+	await expect.poll(releaseVersion).toBe('v1.9.0');
+	await expect(filter).toHaveAccessibleName('Version filter: v1.9.0');
+	await filter.click();
+	await expect(page.getByRole('radio', { name: /^v1\.9\.0/ }).locator('..')).toContainText('\u2605');
+	await expect(page.getByRole('button', { name: /the release version$/ })).toHaveCount(0);
+	await page.getByRole('radio', { name: 'All' }).click();
 	await page.locator('.monitor-card', { hasText: 'Plan A login screen' }).getByRole('button', { name: 'Plan A login screen' }).click();
 	await expect(page.getByText('Planned version')).toHaveCount(0);
-	// Nothing overflows sideways at this width.
-	expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+
+	// Nothing overflows sideways, at 320px too.
+	for (const width of [390, 320]) {
+		await page.setViewportSize({ width, height: 844 });
+		expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+	}
 });

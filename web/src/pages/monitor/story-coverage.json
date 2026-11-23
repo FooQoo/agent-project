@@ -109,6 +109,11 @@
               "id": "pages-monitor--connected-ask-ai-sheet",
               "states": ["Ask AI sheet from the band"],
               "interaction": true
+            },
+            {
+              "id": "pages-monitor--version-filter-sheet",
+              "states": ["logo-only top bar", "version filter sheet", "filtered lanes"],
+              "interaction": true
             }
           ]
         },

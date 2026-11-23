@@ -6,6 +6,7 @@ export const versionsEn = {
     },
     header: {
       buttonValue: 'Version filter: {{version}}',
+      sheetTitle: 'Version filter',
       all: 'All',
       makeRelease: 'Make the shown {{version}} the release version',
       listLabel: 'Versions of this project',

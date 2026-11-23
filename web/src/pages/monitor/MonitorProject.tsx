@@ -21,6 +21,9 @@ import type {
 import { AskAiSheet } from '../../features/messages/ask/AskAi';
 import { MonitorView } from './View';
 import { monitorFreshness } from './model/freshness';
+import { filterByVersion } from '../../features/versions/model/versionFilter';
+import { useVersionFilter } from '../../features/versions/model/useVersionFilter';
+import { HeaderReleaseVersion } from '../../features/versions/ui/HeaderReleaseVersion';
 import { selectMonitorTasks } from './model/select';
 import { monitorTasksOf } from './model/summary';
 import { planProject } from './model/planProject';
@@ -78,6 +81,8 @@ export interface MonitorProjectProps extends MonitorEnvironment {
   useBuildReload: BuildReloadHook;
   /** The project is gone: the screen is replaced by the error screen, which also ends the stream. */
   onNotFound(): void;
+  /** The header's project switcher and version slot, when the app offers them. */
+  header?: MonitorHeaderProps;
 }
 
 /**
@@ -159,7 +164,19 @@ export function MonitorScreen({
     if (data !== null) setLastFetchedAt(new Date().toISOString());
   }, [data]);
 
-  const tasks = useMemo(() => (data === null ? [] : monitorTasksOf(data)), [data]);
+  const allTasks = useMemo(() => (data === null ? [] : monitorTasksOf(data)), [data]);
+  // The version filter is this screen's own view, as on the PC board: it starts as the release
+  // version, keeps the unplanned cards, and never filters the Backlog.
+  const { filter, setFilter } = useVersionFilter(projectId, data?.project.releaseVersion ?? null);
+  const tasks = useMemo(() => {
+    const kept = new Set(
+      filterByVersion(
+        allTasks.map((entry) => entry.task),
+        filter,
+      ),
+    );
+    return allTasks.filter((entry) => kept.has(entry.task));
+  }, [allTasks, filter]);
   const freshness = monitorFreshness({
     state: summary.state,
     hasData: data !== null,
@@ -202,7 +219,12 @@ export function MonitorScreen({
     readResolvers,
     preferences,
     settings,
-    header,
+    header: header && {
+      ...header,
+      versionSlot: (
+        <HeaderReleaseVersion projectId={projectId} filter={filter} onFilter={setFilter} phone />
+      ),
+    },
     guideLink,
     statusSlot,
     resultLink,
@@ -226,7 +248,7 @@ export function MonitorScreen({
       {asking && (
         <AskAiSheet
           projectId={projectId}
-          tasks={tasks.map((entry) => entry.task)}
+          tasks={allTasks.map((entry) => entry.task)}
           closeGuard={askGuard}
           onClose={() => setAsking(false)}
           onSent={() => {

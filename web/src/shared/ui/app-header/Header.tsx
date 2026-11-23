@@ -56,6 +56,8 @@ export interface HeaderProps {
    * Without it the header keeps a plain settings button, as the phone screens do.
    */
   menu?: boolean;
+  /** Shows the logo alone: the service name stays for screen readers. The phone screens use it. */
+  logoOnly?: boolean;
 }
 
 export function Header({
@@ -76,6 +78,7 @@ export function Header({
   settingsSize = 'm',
   withSettings = true,
   menu = false,
+  logoOnly = false,
 }: HeaderProps) {
   const { t } = useTranslation();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -92,7 +95,7 @@ export function Header({
         <span className="header__logo">
           <img src={logoSrc} alt="" width="24" height="24" />
         </span>
-        <span>Agent Project</span>
+        <span className={logoOnly ? 'visually-hidden' : undefined}>Agent Project</span>
       </h1>
       {projects !== null && (
         <>
