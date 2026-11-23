@@ -195,6 +195,8 @@ async function record(browser, locale, tmp) {
     await expect(card(3)).toBeVisible();
     await installOverlay(page);
     await page.evaluate(async () => { await document.fonts.ready; });
+    // Keep a card selected so the detail panel has content.
+    await card(3).click();
     await page.mouse.move(size.width - 40, size.height - 120);
     await page.waitForTimeout(600);
     const start = (Date.now() - created) / 1000;
@@ -238,7 +240,11 @@ async function record(browser, locale, tmp) {
       await page.waitForTimeout(650);
     }
     await expect(task).toBeVisible();
-    await page.waitForTimeout(1600);
+    await page.waitForTimeout(800);
+    await moveTo(page, task);
+    await task.click();
+    await page.mouse.move(size.width - 40, size.height - 120, { steps: 20 });
+    await page.waitForTimeout(800);
 
     // 3. The agent asks what only you can decide, and you answer on the card.
     await caption(page, text.captions[2]);
