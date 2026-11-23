@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
 import { mainHome, mainProject, projectId, resetBoard } from '../helpers/agpj';
-import { waitForSync } from '../helpers/ui';
+import { waitForSync, openHeaderItem } from '../helpers/ui';
 
 // The project docs on the real page: open the dialog and choose a file, which is only shown; the
 // view follows changes on disk (an edit, a new file, a deletion); and the HTTP guards on the paths.
@@ -23,7 +23,7 @@ function seedDocs(): void {
 async function openDocs(page: Page) {
   await page.goto(`/?project=${projectId(mainProject)}`);
   await waitForSync(page);
-  await page.getByRole('button', { name: 'Docs' }).click();
+  await openHeaderItem(page, 'Docs');
   const dialog = page.getByRole('dialog', { name: /Docs/ });
   await expect(dialog).toBeVisible();
   return dialog;

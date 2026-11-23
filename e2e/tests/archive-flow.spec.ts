@@ -2,7 +2,7 @@ import { expect, test } from '../helpers/fixtures';
 import { writeFileSync } from 'node:fs';
 import { agpjOk, listTasks, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
 import { resetPreferences, setPreferences } from '../helpers/preferences';
-import { waitForSync } from '../helpers/ui';
+import { waitForSync, openHeaderItem } from '../helpers/ui';
 
 test.beforeEach(() => resetPreferences());
 test.afterEach(() => resetPreferences());
@@ -58,7 +58,7 @@ test('real archive detail preserves content, restores the lane, and permanently 
 	await expect(done.getByRole('button', { name: new RegExp(keepTitle) })).toHaveCount(0);
 	await expect.poll(() => listTasks(mainProject).some((task) => task.id === keepId)).toBe(false);
 
-	await page.locator('.header__archive').click();
+	await openHeaderItem(page, 'Archive');
 	const archivedRow = page.locator('.archive-row > button').filter({ hasText: keepTitle });
 	await expect(archivedRow).toBeVisible();
 	await archivedRow.click();
@@ -97,7 +97,7 @@ test('real archive detail preserves content, restores the lane, and permanently 
 	await page.getByRole('region', { name: '完了' }).getByRole('button', { name: new RegExp(deleteTitle) }).click();
 	await detail.getByRole('button', { name: 'タスクをアーカイブ' }).click();
 	await detail.getByRole('button', { name: 'アーカイブ', exact: true }).click();
-	await page.locator('.header__archive').click();
+	await openHeaderItem(page, 'Archive');
 	await page.locator('.archive-row > button').filter({ hasText: deleteTitle }).click();
 	await detail.getByRole('button', { name: 'タスクを削除' }).click();
 	await detail.getByRole('button', { name: '削除', exact: true }).click();

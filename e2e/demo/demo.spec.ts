@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { openHeaderItem, openHeaderMenu } from '../helpers/ui';
 
 // The browser demo as GitHub Pages publishes it: the documentation site with the demo build in
 // its demo/ folder. The board lives in the page, so every test starts from the sample data and
@@ -141,12 +142,12 @@ test.describe('in an English browser', () => {
     await expect(task(lane(page, 'Todo'), 15)).toBeVisible();
 
     // No project Docs: the demo has no files on a computer to open.
-    const header = page.getByRole('banner');
-    await expect(header.getByRole('button', { name: 'Settings' })).toBeVisible();
-    await expect(header.getByRole('button', { name: 'Docs' })).toHaveCount(0);
+    const menu = await openHeaderMenu(page);
+    await expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'Docs' })).toHaveCount(0);
 
     // No remote connection: there is no `agpj serve` for a phone to reach.
-    await header.getByRole('button', { name: 'Settings' }).click();
+    await menu.getByRole('menuitem', { name: 'Settings' }).click();
     const settings = page.getByRole('dialog', { name: 'Settings' });
     await expect(settings.getByRole('region', { name: 'Tutorial' })).toBeVisible();
     await expect(settings.getByText('Remote connection')).toHaveCount(0);
@@ -209,7 +210,7 @@ test.describe('in a Japanese browser', () => {
     await expect(panel.getByRole('checkbox', { name: '履歴に理由が残る' })).toBeVisible();
 
     // Switching to English changes the screens at once; the sample data keeps its words.
-    await page.getByRole('banner').getByRole('button', { name: '設定', exact: true }).click();
+    await openHeaderItem(page, '設定');
     const settings = page.getByRole('dialog', { name: '設定' });
     await settings.getByRole('radio', { name: 'English' }).click();
     await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();

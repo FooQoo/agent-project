@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from '../helpers/fixtures';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { repoRoot } from '../helpers/agpj';
+import { openHeaderItem } from '../helpers/ui';
 import {
   createMonitorHome,
   monitorProjectId,
@@ -36,7 +37,7 @@ test.afterAll(async () => {
 });
 
 async function openConnection(page: Page): Promise<Locator> {
-  await page.getByRole('button', { name: 'Settings' }).click();
+  await openHeaderItem(page, 'Settings');
   await page.getByRole('button', { name: 'Connection settings' }).click();
   const dialog = page.getByRole('dialog', { name: 'Remote connection' });
   await expect(dialog).toBeVisible();

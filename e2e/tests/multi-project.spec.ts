@@ -389,7 +389,7 @@ test.describe('two projects with the same task numbers', () => {
     await expect(switcher(page)).toBeFocused();
     // Tab leaves the menu closed and moves on.
     await page.keyboard.press('Tab');
-    // The header order is project, current version, Ask AI, Docs, Epics, Archive, Settings.
+    // The header order is project, current version, Ask AI, menu.
     await expect(page.getByRole('button', { name: /^Current version:/ })).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name: 'Ask AI', exact: true })).toBeFocused();
@@ -960,7 +960,7 @@ test.describe('long names and many projects', () => {
     const parts = [
       switcher(page),
       page.getByRole('button', { name: 'Ask AI' }),
-      page.getByRole('button', { name: 'Settings' }),
+      page.getByRole('button', { name: 'Menu' }),
     ];
     const boxes: { x: number; y: number; width: number; height: number }[] = [];
     for (const part of parts) {

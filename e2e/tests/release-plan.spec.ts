@@ -3,7 +3,7 @@ import { expect, test } from '../helpers/fixtures';
 import { agpjOk, mainProject, nextTaskId, resetBoard } from '../helpers/agpj';
 import { resetPreferences } from '../helpers/preferences';
 import { clearVersions, currentVersion, plannedVersions, planTask, seedVersions } from '../helpers/versions';
-import { waitForSync } from '../helpers/ui';
+import { waitForSync, openHeaderItem } from '../helpers/ui';
 
 // #646: planned versions on the PC board: the current version in the header, the tag on a card, the planned
 // version in the task's edit dialog, and an epic's tasks planned together in the epic's edit dialog. The phone
@@ -111,7 +111,7 @@ test('sets the current version from the header, plans a task and plans an epic i
 	await expect.poll(plannedVersions).toMatchObject({ [cards.b]: 'v1.9.0' });
 
 	// An epic's tasks are planned together in the epic's edit dialog: every task that is not done takes the version.
-	await page.getByRole('button', { name: 'Epics', exact: true }).click();
+	await openHeaderItem(page, 'Epics');
 	await page.getByRole('list', { name: 'Epics in this project' }).getByRole('listitem').filter({ hasText: 'Login work' }).getByRole('button').first().click();
 	await page.getByRole('button', { name: 'Edit epic', exact: true }).click();
 	const epicDialog = page.getByRole('dialog', { name: /Epic preview/ });

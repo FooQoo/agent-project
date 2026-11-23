@@ -19,7 +19,7 @@ const extra = {
     editorChecks: ['The steps are complete', 'A teammate followed the guide', 'The guide is published'],
     archived: ['Set up the repository', 'Choose the color palette', 'Write the first draft'],
     archive: { trigger: 'Archive completed tasks', bar: 'Archive the picked completed tasks', submit: /^Archive \(\d+\)$/, open: 'Archive', doneLane: 'Done' },
-    preview: 'Open full screen (task)', close: 'Close', settings: 'Settings',
+    preview: 'Open full screen (task)', close: 'Close', settings: 'Settings', menu: 'Menu',
     notificationRow: 'Notification settings', notificationDialog: 'Notifications',
     residentRow: 'Agent settings', residentDialog: 'Resident agent', residentWaiting: 'Waiting', residentStart: 'Start',
     askAi: 'Ask AI', promptLabel: 'What would you like done?',
@@ -38,7 +38,7 @@ const extra = {
     editorChecks: ['手順がそろっている', 'メンバーがガイドどおりに進められた', 'ガイドを公開している'],
     archived: ['リポジトリを準備する', '配色を決める', '最初の下書きを書く'],
     archive: { trigger: '完了タスクをアーカイブ', bar: '選んだ完了タスクをアーカイブする', submit: /^アーカイブ \(\d+\)$/, open: 'アーカイブ', doneLane: '完了' },
-    preview: '全画面で開く（タスク）', close: '閉じる', settings: '設定',
+    preview: '全画面で開く（タスク）', close: '閉じる', settings: '設定', menu: 'メニュー',
     notificationRow: '通知の設定', notificationDialog: '通知',
     residentRow: 'エージェントの設定', residentDialog: '常駐エージェント', residentWaiting: '待機中', residentStart: '起動',
     askAi: 'AI に依頼', promptLabel: '何をしてほしいですか？',
@@ -125,6 +125,12 @@ try {
       };
       const errors = [];
       const suffix = locale === 'ja' ? '.ja' : '';
+      // Docs, Epics, Archive and Settings are in the header's menu.
+      const openMenuItem = async (target, byClass = false) => {
+        await page.getByRole('banner').getByRole('button', { name: more.menu, exact: true }).click();
+        const item = byClass ? page.locator(`.header-menu ${target}`) : page.getByRole('menuitem', { name: target, exact: true });
+        await item.click();
+      };
       const shot = async (name, target, tab) => {
         await settle(tab);
         await target.screenshot({ path: path.join(output, `${name}${suffix}.png`) });
@@ -191,7 +197,7 @@ try {
       await expect(page.locator('html')).toHaveAttribute('data-mode', 'light');
 
       // settings: the language and theme choices.
-      await page.getByRole('button', { name: more.settings, exact: true }).click();
+      await openMenuItem(more.settings);
       const settings = page.getByRole('dialog', { name: more.settings });
       await expect(settings).toBeVisible();
       await expect(settings.getByRole('radio').first()).toBeVisible();
@@ -204,7 +210,7 @@ try {
       await shot('notification-settings', notifications, page);
       await page.keyboard.press('Escape');
       await expect(notifications).toHaveCount(0);
-      await page.getByRole('button', { name: more.settings, exact: true }).click();
+      await openMenuItem(more.settings);
       await expect(settings).toBeVisible();
       // resident-session: the dialog of a running session, opened from the Resident agent row of Settings.
       await settings.getByRole('button', { name: more.residentRow }).click();
@@ -239,13 +245,13 @@ try {
       await expect(confirm).toBeVisible();
       await confirm.getByRole('button', { name: more.archive.submit }).click();
       await expect(confirm).toHaveCount(0);
-      await page.locator('.header__archive').click();
+      await openMenuItem('.header__archive', true);
       await expect(page.locator('.archive-row > button')).toHaveCount(2 + more.archived.length);
       await shot('archive', page, page);
 
       // epic-list: every epic with its task counts, and the plan of one beside the list.
       await page.locator('.header__back').click();
-      await page.locator('.header__epics').click();
+      await openMenuItem('.header__epics', true);
       // The two default epics and the two sample epics.
       await expect(page.locator('.epic-row > button')).toHaveCount(5);
       await page.locator('.epic-row > button').filter({ hasText: 'LAUNCH' }).click();
@@ -254,7 +260,7 @@ try {
 
       // docs: the project's docs with a file chosen in the list, its front matter, a diagram and a table.
       await page.locator('.header__back').click();
-      await page.locator('.header__docs').click();
+      await openMenuItem('.header__docs', true);
       const docsDialog = page.getByRole('dialog', { name: more.docs });
       await expect(docsDialog).toBeVisible();
       await docsDialog.getByRole('treeitem', { name: more.docsFile }).click();

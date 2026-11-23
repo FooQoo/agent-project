@@ -87,3 +87,36 @@ export async function pasteMarkdown(editor: Locator, markdown: string): Promise<
     element.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
   }, markdown);
 }
+
+/**
+ * Opens the PC header's menu and returns it. Docs, Epics, Archive and Settings live in it, so a spec that
+ * used to click one of those header buttons opens the menu first.
+ */
+export async function openHeaderMenu(page: Page): Promise<Locator> {
+  await page.getByRole('banner').getByRole('button', { name: /^(Menu|メニュー)$/ }).click();
+  const menu = page.getByRole('menu');
+  await expect(menu).toBeVisible();
+  return menu;
+}
+
+const HEADER_ITEM_CLASS: Record<string, string> = {
+  Docs: 'docs',
+  ドキュメント: 'docs',
+  Epics: 'epics',
+  エピック: 'epics',
+  Archive: 'archive',
+  アーカイブ: 'archive',
+  Settings: 'settings',
+  設定: 'settings',
+};
+
+/**
+ * Chooses one item of the PC header's menu, by its English or Japanese name. The item is found by its stable
+ * `header__<name>` class, so the same call works in either language.
+ */
+export async function openHeaderItem(page: Page, name: string): Promise<void> {
+  const key = HEADER_ITEM_CLASS[name];
+  if (!key) throw new Error(`not a header menu item: ${name}`);
+  const menu = await openHeaderMenu(page);
+  await menu.locator(`.header__${key}`).click();
+}

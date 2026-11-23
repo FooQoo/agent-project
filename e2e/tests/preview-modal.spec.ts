@@ -3,7 +3,7 @@ import path from 'node:path';
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
 import { agpj, agpjOk, mainProject, nextTaskId, resetBoard, taskBody, workspace } from '../helpers/agpj';
 import { archiveTask, putDraft } from '../helpers/drafts';
-import { readBoardAfterReset, waitForSync } from '../helpers/ui';
+import { readBoardAfterReset, waitForSync, openHeaderItem } from '../helpers/ui';
 
 // The preview dialog of a task and of an epic on the real page and the real server: opening only reads, the
 // first change makes a draft the CLI refuses, a discard takes the draft back, a running task is read-only, and a
@@ -332,7 +332,7 @@ test('PM-6 the epic tab and the epic details open the epic preview; a draft epic
 
   // From the epic details: the pencil.
   await page.getByRole('button', { name: 'Close details' }).click();
-  await page.getByRole('button', { name: 'Epics', exact: true }).click();
+  await openHeaderItem(page, 'Epics');
   await page.getByRole('list', { name: 'Epics in this project' }).getByRole('listitem').filter({ hasText: 'Preview epic' }).getByRole('button').first().click();
   await page.getByRole('button', { name: 'Edit epic' }).click();
   await expect(epicDialog).toBeVisible();
@@ -388,7 +388,7 @@ test('PM-4 a task opened from the archive is read-only and never becomes a draft
   const id = addTask('Archived before opening');
   await archiveTask(id);
   await openBoard(page);
-  await page.locator('.header__archive').click();
+  await openHeaderItem(page, 'Archive');
   await page.locator('.archive-row > button').filter({ hasText: 'Archived before opening' }).click();
   await previewButton(page).click();
   const dialog = previewOf(page, id);

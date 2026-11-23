@@ -1,6 +1,7 @@
 import { expect, test } from "../helpers/fixtures";
 import { mainProject, resetBoard } from "../helpers/agpj";
 import { resetPreferences } from "../helpers/preferences";
+import { openHeaderItem } from '../helpers/ui';
 
 // #660: the archive list is ordered by archive time, newest first, on the PC screen. The phone's list is covered in monitor-lanes.spec.ts.
 test.beforeEach(() => resetPreferences());
@@ -44,7 +45,7 @@ test("the PC archive list shows the newest archive first", async ({ page }) => {
 	await stubArchive(page);
 	await page.setViewportSize({ width: 1280, height: 900 });
 	await page.goto("/");
-	await page.locator(".header__archive").click();
+	await openHeaderItem(page, 'Archive');
 	await expect(page.locator(".archive-row")).toHaveCount(archived.length);
 	const ids = await page.locator(".archive-row__id").allTextContents();
 	expect(ids).toEqual(expected.map((id) => `#${id}`));
