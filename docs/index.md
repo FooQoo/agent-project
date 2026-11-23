@@ -10,7 +10,7 @@ landing:
     done: Copied
   hero:
     title: "Big work moves on\nwithout you driving it."
-    lead: Agent Project helps you manage a project when you’re building a product on your own. Talk an idea through in your usual AI chat, then ask Codex or Claude Code to plan and run a test. Use the result to decide whether to keep going, change course, or set the idea aside.
+    lead: Agent Project lets you hand off substantial work to Codex or Claude Code when you’re building a product on your own. Your agent breaks the work into tasks, puts them in order, and sets acceptance conditions before starting. It asks for your input when a decision needs you. The Kanban board shows progress and how the results met those conditions.
     install: brew install fooqoo/tap/agpj
     primary: { text: Get started, link: /guide/getting-started }
     secondary: { text: GitHub, link: https://github.com/FooQoo/agent-project }

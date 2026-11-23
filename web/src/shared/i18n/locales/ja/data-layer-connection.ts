@@ -2,6 +2,6 @@
 // here and nowhere else, so parallel work never edits the same dictionary file.
 export const dataLayerConnectionJa = {
   dataLayerConnection: {
-    projectNeeded: 'ボードでプロジェクトを選ぶと、QRコードとURLが表示されます。',
+    projectNeeded: 'カンバンでプロジェクトを選ぶと、QRコードとURLが表示されます。',
   },
 } as const;

@@ -2,7 +2,7 @@ export const monitorJa = {
   monitor: {
     allProjects: 'All Projects',
     project: 'Project',
-    nav: { label: '主なナビゲーション', board: 'ボード', ask: '依頼' },
+    nav: { label: '主なナビゲーション', board: 'カンバン', ask: '依頼' },
     pull: { hint: 'ひっぱって更新', release: '指をはなして更新' },
     invalidSelection: '指定されたプロジェクトまたはタスクは現在表示できません。',
     summary: '作業の概要',
@@ -59,7 +59,7 @@ export const monitorJa = {
   },
   monitorConnection: {
     title: 'リモート接続',
-    intro: '外出先のスマホやタブレットからボードを開けます。',
+    intro: '外出先のスマホやタブレットからカンバンを開けます。',
     statusOff: '未接続',
     statusStopped: '一時停止中',
     stoppedTitle: '公開を一時停止しています。登録したスマホは残ります。',
@@ -129,7 +129,7 @@ export const monitorJa = {
       open: '登録済みのスマホ（{{count}}）',
       title: '登録済みのスマホ',
       back: '戻る',
-      body: 'ここにあるスマホは合言葉なしでボードを開けます。登録を解除するとすぐにサインアウトされ、再び合言葉が必要になります。',
+      body: 'ここにあるスマホは合言葉なしでカンバンを開けます。登録を解除するとすぐにサインアウトされ、再び合言葉が必要になります。',
       pausedNote: '公開を一時停止しています。再開すると、登録済みのスマホが戻ってきます。',
       empty: '登録済みのスマホはありません。合言葉を入力したスマホが登録されます。',
       registered: '登録 {{time}}',
@@ -170,7 +170,7 @@ export const monitorJa = {
       unreadable: '保存済みの設定を読み込めませんでした。保存し直してから続けてください。',
       startFailed: '接続を開始できませんでした。もう一度お試しください。',
       keychainUnavailable: 'このPCでは保存できません（都度入力）。',
-      unreachable: 'このPCのボードに接続できませんでした。もう一度お試しください。',
+      unreachable: 'このPCのAgent Projectに接続できませんでした。もう一度お試しください。',
       deviceNotFound: 'このスマホはすでに解除されています。',
     },
     failure: {

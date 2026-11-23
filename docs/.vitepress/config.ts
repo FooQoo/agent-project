@@ -35,7 +35,7 @@ const guideGroups: Group[] = [
     en: 'Watch and step in',
     ja: '見守って介入する',
     pages: [
-      { file: 'watch/board', en: 'The board', ja: 'ボード' },
+      { file: 'watch/board', en: 'The board', ja: 'カンバン' },
       { file: 'watch/remote-access', en: 'Remote access', ja: 'リモートアクセス' },
       { file: 'watch/epics', en: 'Epics and progress', ja: 'エピックと進行表' },
       { file: 'watch/editing', en: 'Editing and image attachments', ja: '編集と画像添付' },
@@ -190,7 +190,7 @@ export default withMermaid(
         label: '日本語',
         lang: 'ja',
         link: '/ja/',
-        description: 'ユーザーとAIが一緒に作業を進める共有ボード。',
+        description: '一人でプロダクトを育てる人が、計画から検証までエージェントに仕事を任せるためのツール。',
         themeConfig: {
           nav: [
             { text: 'ガイド', link: '/ja/guide/', activeMatch: '/ja/guide/' },

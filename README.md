@@ -8,7 +8,7 @@
 
 **Big work moves on without you driving it.**
 
-When you build a product on your own, you can talk an idea through in your usual AI chat. Once you know what you want to try, ask Codex or Claude Code to plan the work on the Agent Project board. Your agent works through the plan and checks the result against the agreed conditions. You can use what you learn to choose your next test, with less time spent managing each one.
+Agent Project lets you hand off substantial work to Codex or Claude Code when you’re building a product on your own. Your agent breaks the work into tasks, puts them in order, and sets acceptance conditions before starting. It asks for your input when a decision needs you. The Kanban board shows progress and how the results met those conditions.
 
 ```sh
 brew install fooqoo/tap/agpj
