@@ -10,7 +10,7 @@ landing:
     done: Copied
   hero:
     title: "Big work moves on\nwithout you driving it."
-    lead: Agent Project lets you hand off substantial work to Codex or Claude Code when you’re building a product on your own. Your agent breaks the work into tasks, puts them in order, and sets acceptance conditions before starting. It asks for your input when a decision needs you. The Kanban board shows progress and how the results met those conditions.
+    lead: Agent Project lets you hand off substantial work to Codex or Claude Code, from plan to verification, when you’re building a product on your own. The plan and its progress sit on the Kanban board, and the questions that need your decision arrive in Messages. With these two, the project moves without you watching over it.
     install: brew install fooqoo/tap/agpj
     primary: { text: Get started, link: /guide/getting-started }
     secondary: { text: GitHub, link: https://github.com/FooQoo/agent-project }
@@ -18,17 +18,17 @@ landing:
     videoLabel: "Demo: you send a request with Ask AI, the agent turns it into tasks and asks a question, you answer, and the agent works until the task is done"
   pm:
     eyebrow: Project management for agents
-    title: Agents run on their own when the board manages the project.
-    lead: A strong agent still loses its way in a long job. It wanders, stops, or calls the work done too early. The board gives it four things a project manager provides. Agent Project is for people building a product alone with Codex or Claude Code.
+    title: Agents run on their own when the project is managed for them.
+    lead: Agents are strong, but in a long job they still lose their way, stop, or call the work done before it is. So Agent Project gives the agent, as built-in rules, the four things a project manager would handle.
     items:
       - { icon: kanban, tone: todo, title: Break down and order, text: The goal becomes epics and tasks in order, and the progress table tells the agent what can move next. }
       - { icon: list-checks, tone: done, title: Decide what done means, text: Each task has acceptance conditions set before the work starts. It reaches Done on its own only when every condition is verified. }
       - { icon: message-circle, tone: doing, title: Ask before deciding, text: "When your intent is unclear, your preference decides, an action cannot be undone, or the work grows, the agent stops and asks you, with options." }
       - { icon: file-text, tone: pending, title: Keep what it did, text: History and results record what the agent did and decided, so the next session or agent starts from there. }
   problem:
-    eyebrow: Why a board
+    eyebrow: Why Agent Project
     title: The question should not scroll past.
-    lead: In a terminal alone, the one question that needs you is buried in the log, and the plan and the conditions live only in the chat. On the board they stand where you can see them, so you can step away until the agent needs you.
+    lead: In a terminal alone, the one question that needs you is buried in the log, and the plan and the conditions live only in the chat. With Agent Project, the plan and its progress stay on the Kanban board and the questions for you stay in Messages, so you can step away until the agent needs you.
     terminal:
       label: Only in the terminal
       caption: The question scrolls past in the middle of the log.
@@ -45,43 +45,48 @@ landing:
         - { text: built in 4.2s, sub: true }
         - { text: Edit docs/release-notes.md }
     board:
-      label: Shared on the board
+      label: With Agent Project
       caption: A waiting task and its question stand out in the lane.
-      alt: The board with a waiting task in Doing that shows the agent's question and its options
+      alt: The Kanban board with a waiting task in Doing that shows the agent's question and its options
     questions:
       - { title: What is stuck?, text: Waiting tasks change color and stand out in their lane. }
       - { title: What needs my answer?, text: The question and its options appear right on the task. }
       - { title: How far along is it?, text: Each task keeps its acceptance count and its history. }
   loop:
     eyebrow: How it goes
-    title: Ask AI to plan. Approve. Answer. Receive.
-    lead: Tell your agent what you want. It puts a plan on the board with acceptance conditions and asks what it cannot settle. Once you approve the start, it works in order, and you answer only when it stops for you. What comes back is checked against the conditions.
+    title: Ask AI to plan. Start it. Answer. Receive.
+    lead: Tell your agent what you want. It puts a plan in Backlog with acceptance conditions and asks what it cannot settle. When you move the plan to Todo, the agent starts working through it in order, and you answer only when it stops for you. What comes back is checked against the conditions.
     actors: { ai: AI, human: You, auto: Auto }
     lanes:
       - title: Plan
         steps:
           - { actor: human, title: Ask AI to plan, text: Tell your agent what you want, in plain words. }
-          - { actor: ai, title: Plan, text: Puts epics and tasks on the board, each with acceptance conditions, and asks the questions it cannot settle. }
+          - { actor: ai, title: Plan, text: Puts epics and tasks in Backlog, each with acceptance conditions, and asks the questions it cannot settle. }
       - title: Start
         steps:
-          - { actor: human, title: Approve the start, text: Answer the questions and send the plan to Todo. A task does not start while one of its questions is open. }
+          - { actor: human, title: Start it, text: Move the plan from Backlog to Todo, and the agent starts working. Until you do, the agent leaves the plan alone. }
       - title: Work
         steps:
           - { actor: ai, title: Work, text: "Works through the tasks in order. It stops only when your intent is unclear, your preference decides, an action cannot be undone, or the work grows." }
-          - { actor: human, title: Answer on the way, text: "Answer from the board, your phone, or the chat. The answer is recorded once, and the agent carries on." }
+          - { actor: human, title: Answer on the way, text: "Answer from Messages on your computer or your phone, or in the chat. The answer is recorded once, and the agent carries on." }
       - title: Result
         steps:
           - { actor: auto, title: Receive the result, text: A task moves to Done once every verified condition is met. What the agent did and decided stays in its history and results. }
   features:
-    eyebrow: Monitors for the work
-    title: Watch and step in from anywhere.
+    eyebrow: Two screens
+    title: Watch on the Kanban board. Answer in Messages.
     previewLabel: Public preview
     items:
       - image: board
-        title: The board
-        text: Watch the work move through Todo, Doing, and Done. Step in on a card without stopping the agent, and answer its questions right on the task.
-        link: { text: Using the board, link: /guide/watch/board }
-        alt: The desktop board with a question on its task, acceptance counts, and the detail panel
+        title: The Kanban board
+        text: The plan and the work sit in the Backlog, Todo, Doing, and Done lanes. You see at a glance how far it has come and which task is stuck, and a card opens to its acceptance conditions and history.
+        link: { text: Using the Kanban board, link: /guide/watch/board }
+        alt: The desktop Kanban board with a question on its task, acceptance counts, and the detail panel
+      - image: messages
+        title: Messages
+        text: The agent's questions and your requests gather in one place. Pick an option to answer, and the agent takes your answer and carries on.
+        link: { text: Decisions, link: /guide/delegate/decisions }
+        alt: The Messages list with tabs for the AI's questions, your requests, and the summary
       - image: epic
         title: Epics and progress
         text: An epic holds the plan and the order of its tasks. The progress table returns the work that can move next to your agent, and shows you how far the plan has come.
@@ -89,16 +94,16 @@ landing:
         alt: The epic editor with the task progress panel and the Markdown details
       - image: mobile
         title: Check from anywhere
-        text: Away from your desk, open the board on your phone or tablet, watch the work, and answer the agent. Add it to the Home Screen and it works like an app, and notifications such as new results reach your phone.
+        text: Away from your desk, open the Kanban board and Messages on your phone or tablet, watch the work, and answer the agent. Add it to the Home Screen and it works like an app, and notifications such as new results reach your phone.
         link: { text: Remote access, link: /guide/watch/remote-access }
-        tabletAlt: "The same board opened on a tablet: the Todo, Doing, and Done lanes side by side, with a waiting task and its Answer the question button"
+        tabletAlt: "The same Kanban board opened on a tablet: the Todo, Doing, and Done lanes side by side, with a waiting task and its Answer the question button"
         alts:
           - The remote access card list, with a waiting task and its Answer the question button
           - A question on remote access with a choice picked and the Send button
           - A task open in the bottom drawer of remote access, on its Conditions tab
       - image: docs
         title: Project docs
-        text: Open the design notes and specs in your project's docs/ folder right from the board.
+        text: Open the design notes and specs in your project's docs/ folder right from the Kanban board.
         link: { text: Project docs, link: /guide/watch/docs }
         preview: /guide/feature-stages#docs
         alt: The Docs dialog with a file list and a rendered Markdown document
@@ -134,12 +139,12 @@ landing:
       - { title: No account, text: No sign-up and no hosted service. }
   start:
     eyebrow: Get started
-    title: Three steps to an open board.
+    title: Start in three steps.
     lead: You need macOS 15 or later, Homebrew, and Claude Code or Codex.
     steps:
       - { title: Install, commands: [brew install fooqoo/tap/agpj] }
       - { title: Set up your agent and a project, commands: [agpj setup, 'agpj project create "My project"'] }
-      - { title: Open the board, commands: [agpj serve] }
+      - { title: Open the Kanban board, commands: [agpj serve] }
     note: "Some features, such as Docs and resident agents, are in public preview. See "
     noteLinks:
       - { text: Feature stages, link: /guide/feature-stages }
