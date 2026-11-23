@@ -57,6 +57,14 @@ fn write_new_task(
                 reason: defect.reason,
             }
         })?;
+        // Result plans without an ID get one before the file is written.
+        let body = frontmatter::normalize_result_plans(&body).map_err(|defect| {
+            AgpjError::FileInvalid {
+                file: format!("{label}/TASK.md"),
+                field: defect.field,
+                reason: defect.reason,
+            }
+        })?;
         // The plan lives in the TASK.md frontmatter, so a task created with one writes the key.
         let body =
             match task.planned_version.as_deref() {
@@ -182,6 +190,7 @@ impl FileStore {
             agent_id: None,
             assignment_generation: 1,
             run_connection_id: None,
+            release_completed_at: None,
             history: vec![transition_event(Transition {
                 language,
                 kind: HistoryKind::Created,

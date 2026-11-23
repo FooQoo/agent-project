@@ -12,6 +12,7 @@ import { monitorEn } from './locales/en/monitor';
 import { pushEn } from './locales/en/push';
 import { questionsEn } from './locales/en/questions';
 import { notificationsEn } from './locales/en/notifications';
+import { modeEn } from './locales/en/mode';
 import { residentEn } from './locales/en/resident';
 import { versionsEn } from './locales/en/versions';
 import { backlogJa } from './locales/ja/backlog';
@@ -28,6 +29,7 @@ import { monitorJa } from './locales/ja/monitor';
 import { pushJa } from './locales/ja/push';
 import { questionsJa } from './locales/ja/questions';
 import { notificationsJa } from './locales/ja/notifications';
+import { modeJa } from './locales/ja/mode';
 import { residentJa } from './locales/ja/resident';
 import { versionsJa } from './locales/ja/versions';
 
@@ -45,6 +47,7 @@ export const resources = {
       ...pushEn,
       ...questionsEn,
       ...notificationsEn,
+      ...modeEn,
       ...residentEn,
       ...versionsEn,
       ...dataLayerConnectionEn,
@@ -66,6 +69,7 @@ export const resources = {
       ...pushJa,
       ...questionsJa,
       ...notificationsJa,
+      ...modeJa,
       ...residentJa,
       ...versionsJa,
       ...dataLayerConnectionJa,

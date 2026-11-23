@@ -17,7 +17,9 @@ use crate::file_store::history::{ParseMode, parse_task};
 use crate::file_store::io;
 use crate::file_store::layout;
 use crate::file_store::lock::WriteLock;
-use crate::file_store::model::{EpicView, Problem, TaskEpic, TaskFile, TaskMetadata, TaskView};
+use crate::file_store::model::{
+    EpicView, Problem, ResultPlanView, TaskEpic, TaskFile, TaskMetadata, TaskView,
+};
 use crate::file_store::qa::{self, QaIndex};
 use crate::file_store::transaction;
 use crate::file_store::validate;
@@ -94,6 +96,7 @@ pub(crate) fn read_task_lenient(
                 .chain(&parsed.acceptance_defects)
                 .chain(&parsed.questions_defects)
                 .chain(&parsed.planned_version_defects)
+                .chain(&parsed.result_plans_defects)
                 .map(|d| Problem {
                     file: md_label.clone(),
                     field: d.field.clone(),
@@ -128,6 +131,19 @@ pub(crate) fn task_view(
     let updated_at = body_modified.map_or(task.updated_at, |m| m.max(task.updated_at));
     let parts = frontmatter::parse(&description);
     let questions = frontmatter::questions_of(&description);
+    let (result_plans, plan_defects) = frontmatter::result_plans_of(&description, true);
+    let result_plans = result_plans
+        .into_iter()
+        .map(|plan| ResultPlanView {
+            delivered_result_version: task
+                .results
+                .iter()
+                .filter(|r| r.plan_id.as_deref() == Some(plan.id.as_str()))
+                .map(|r| r.version)
+                .min(),
+            plan,
+        })
+        .collect();
     TaskView {
         id: task.id,
         title: task.title,
@@ -135,6 +151,8 @@ pub(crate) fn task_view(
         body: parts.body,
         acceptance: parts.acceptance,
         acceptance_error: !parts.defects.is_empty(),
+        result_plans,
+        result_plans_error: !plan_defects.is_empty(),
         assignee: task.assignee,
         epic_id: task.epic_id,
         epic: None,

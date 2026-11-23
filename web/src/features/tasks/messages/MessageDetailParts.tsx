@@ -1,8 +1,10 @@
 import { ArrowLeftIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { WriteError } from '@/shared/api/writeErrors';
+import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Spinner } from '@/shared/ui/spinner/Spinner';
+import { type BrainstormRef, brainstormLabel } from './model/messages';
 
 /** How a failed write is told: a conflict (409) is the question changing under the person. */
 export function failureKey(error: unknown): 'conflict' | 'gone' | 'failed' {
@@ -56,4 +58,16 @@ export function BlocksNote({ tasks }: { tasks: readonly number[] }) {
   const { t } = useTranslation();
   const ids = tasks.map((id) => `#${id}`).join(' ');
   return <p className="message-detail__blocks">{t('messages.detail.blocks', { tasks: ids })}</p>;
+}
+
+/** Which epic or task a brainstorm question is about, so each question names its target. */
+export function BrainstormBadge({ target }: { target: BrainstormRef }) {
+  const { t } = useTranslation();
+  return (
+    <p className="message-detail__brainstorm">
+      <Badge variant="muted">
+        {t('mode.brainstormBadge', { target: brainstormLabel(target) })}
+      </Badge>
+    </p>
+  );
 }

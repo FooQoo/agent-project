@@ -57,6 +57,23 @@ pub fn task_versions(task: &TaskView) -> DetailVersions {
         document.field(&item.text);
         document.field(if item.done { "done" } else { "open" });
     }
+    document.field(&task.result_plans.len().to_string());
+    for view in &task.result_plans {
+        let plan = &view.plan;
+        document.field(
+            &view
+                .delivered_result_version
+                .map_or_else(String::new, |v| v.to_string()),
+        );
+        document.field(&plan.id);
+        document.field(&plan.content);
+        document.field(&plan.condition);
+        document.field(if plan.is_final {
+            "final"
+        } else {
+            "intermediate"
+        });
+    }
     hash_attachments(&mut document, &task.attachments);
     DetailVersions {
         document: document.finish(),

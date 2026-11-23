@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { brainstormActionSlot, modeIndicatorSlot } from './modeSlot';
 import { MessageCenter } from '../features/tasks/messages/MessageCenter';
 import { messagesApi as productMessagesApi } from '../features/tasks/messages/api';
 import type { MessagesApi } from '../features/tasks/messages/model/messages';
@@ -113,6 +114,7 @@ export function BoardWorkspace({
         switchDisabled={operation !== null}
         projectSwitcher={projectSwitcher}
         versionSlot={planned.versionSlot}
+        statusSlot={modeIndicatorSlot(known ? activeId : null)}
         settings={boardSettingsSlot}
         canAdd={session.viewMode === 'board' && model.view === 'board'}
         viewMode={session.viewMode}
@@ -186,6 +188,10 @@ export function BoardWorkspace({
                 backlogCount={boardData?.epicTaskCounts[selectedEpic.id]?.backlog ?? 0}
                 onSendBacklog={() => actions.onSendEpic(selectedEpic.id)}
                 sendBusy={actions.sendBusy}
+                toolbarExtra={brainstormActionSlot(activeId, {
+                  type: 'epic',
+                  id: selectedEpic.id,
+                })}
               />
             )}
           </>
@@ -243,6 +249,14 @@ export function BoardWorkspace({
               onChanged={actions.onTaskChanged}
               onSend={(id) => actions.onMoveBacklog(id)}
               sendBusy={actions.sendBusy}
+              toolbarExtra={
+                !archiveVisible && selected !== null && !isMockTask
+                  ? brainstormActionSlot(known ? activeId : null, {
+                      type: 'task',
+                      id: String(selected.id),
+                    })
+                  : undefined
+              }
               archived={archiveVisible}
               operationSaving={operation?.saving ?? false}
               restoreFailed={Boolean(

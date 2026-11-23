@@ -60,10 +60,16 @@ pub struct Question {
     pub recommended: Option<String>,
     pub reply: Option<Reply>,
     pub withdrawn_at: Option<DateTime<Utc>>,
+    /// When the question was held (asked during sleep mode); `None` once released, or when it
+    /// was never held. A held question is not shown to the person and no task waits on it.
+    pub held_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     /// The launch ID of the board-launched session that asked it (`AGPJ_RESIDENT_ID`), when
     /// one did. The board uses it to push the answer back to that session.
     pub asked_by: Option<String>,
+    /// The epic or task of the brainstorm this question belongs to, when it was asked with
+    /// `--brainstorm`. It is not a task link: the target task does not wait on it.
+    pub brainstorm: Option<crate::mode::Target>,
 }
 
 /// A request a person sends an agent.
@@ -78,6 +84,7 @@ pub struct Request {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)] // a few messages at a time; boxing would touch every match
 pub enum Message {
     Question(Question),
     Request(Request),
@@ -86,6 +93,8 @@ pub enum Message {
 /// The state of a message, the same for both kinds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MessageState {
+    /// Asked during sleep mode and kept back until sleep ends. Only a question is held.
+    Held,
     Open,
     /// Answered (a question) or accepted (a request).
     Closed,
@@ -95,6 +104,7 @@ pub enum MessageState {
 impl MessageState {
     pub fn as_str(self) -> &'static str {
         match self {
+            MessageState::Held => "held",
             MessageState::Open => "open",
             MessageState::Closed => "closed",
             MessageState::Withdrawn => "withdrawn",
@@ -113,6 +123,8 @@ impl Question {
             MessageState::Withdrawn
         } else if self.reply.is_some() {
             MessageState::Closed
+        } else if self.held_at.is_some() {
+            MessageState::Held
         } else {
             MessageState::Open
         }

@@ -16,6 +16,8 @@ pub fn run(ctx: &Context, args: &ProgressCommandArgs) -> Result<Outcome, AgpjErr
     let filter = args
         .version
         .resolve(|| Ok(ctx.files.project_versions(project)?.release))?;
+    // The end of a sleep window is noticed here: held questions are delivered before the table.
+    let released = crate::mode::release_held(ctx.files.shared_dir(), project)?;
     let snapshot = ctx.files.board(project)?;
     let mut table = progress::build_filtered(
         &snapshot,
@@ -28,9 +30,13 @@ pub fn run(ctx: &Context, args: &ProgressCommandArgs) -> Result<Outcome, AgpjErr
         filter.as_ref(),
     );
     table.locale = crate::server::preferences::saved_locale(ctx.files.shared_dir());
-    table.mode = crate::mode::non_default(ctx.files.shared_dir(), ctx.project_id()?.as_str());
+    crate::mode::fill_progress(
+        &mut table,
+        ctx.files.shared_dir(),
+        ctx.project_id()?.as_str(),
+    );
     Ok(Outcome {
-        changed: false,
+        changed: !released.is_empty(),
         human: render(&table),
         json: json!(table),
     })

@@ -1,165 +1,19 @@
 //! `message ask` and `message wait`: one event per line, from `registered` to the end of the wait.
 
-use std::io::Write;
-
-use serde_json::{Value, json};
-
-use super::{answer_text, data_dir, input, notify};
-use crate::agent::message_wait::{Heartbeat, MessageWaitEnd, read_questions, wait_for_questions};
+use super::events::{Events, ids_of};
+use super::{data_dir, input, notify};
+use crate::agent::message_wait::{MessageWaitEnd, read_questions, wait_for_questions};
+use crate::cli::Context;
+use crate::cli::Env;
 use crate::cli::args::{MessageAskArgs, MessageWaitArgs};
 use crate::cli::run::fail;
-use crate::cli::{Context, Env, output};
 use crate::error::AgpjError;
-use crate::file_store::qa::{MessageState, Question, QuestionView};
+use crate::file_store::qa::MessageState;
 
 /// The exit code of a wait that ran out of time; the questions stay open.
 pub const EXIT_TIMEOUT: i32 = 5;
 /// The exit code of a wait that ended with a withdrawn question.
 pub const EXIT_WITHDRAWN: i32 = 6;
-
-/// Writes the events, as JSON Lines or as English sentences.
-struct Events<'a> {
-    out: &'a mut dyn Write,
-    json: bool,
-    /// The project folder, where the images of an answer are found. It is empty for the
-    /// events that print no answer.
-    project_dir: std::path::PathBuf,
-}
-
-fn ids_of(questions: &[Question]) -> Vec<&str> {
-    questions.iter().map(|q| q.id.as_str()).collect()
-}
-
-/// The answers as the end events print them.
-fn answers_of(questions: &[Question], project_dir: &std::path::Path) -> (Vec<Value>, Vec<String>) {
-    let mut values = Vec::new();
-    let mut lines = Vec::new();
-    for question in questions {
-        let view = QuestionView::of(question, Vec::new()).with_image_paths(project_dir);
-        let Some(reply) = &view.reply else { continue };
-        values.push(json!({
-            "id": view.id,
-            "choiceId": reply.choice_id,
-            "choiceLabel": reply.choice_label,
-            "text": reply.text,
-            "images": reply.images,
-            "imagePaths": reply.image_paths,
-            "via": reply.via,
-            "at": crate::clock::format_utc(reply.at),
-        }));
-        let mut line = format!("Answered {}: {}", view.id, answer_text(reply));
-        for path in &reply.image_paths {
-            line.push_str(&format!("\nImage: {}", path.display()));
-        }
-        lines.push(line);
-    }
-    (values, lines)
-}
-
-impl Events<'_> {
-    fn line(&mut self, value: Value, human: String) {
-        let text = if self.json {
-            format!("{}\n", output::render_json(&value))
-        } else {
-            format!("{human}\n")
-        };
-        let _ = self.out.write_all(text.as_bytes());
-        let _ = self.out.flush();
-    }
-
-    fn registered(&mut self, questions: &[Question], resumed: bool) {
-        let ids = ids_of(questions);
-        let listed: Vec<Value> = ids.iter().map(|id| json!({"id": id})).collect();
-        let count = ids.len();
-        let noun = if count == 1 { "question" } else { "questions" };
-        let human = if resumed {
-            format!("Waiting again for {}.", ids.join(", "))
-        } else {
-            format!("Asked {count} {noun}: {}.", ids.join(", "))
-        };
-        self.line(
-            json!({"type": "registered", "questions": listed, "resumed": resumed}),
-            human,
-        );
-    }
-
-    fn waiting(&mut self, ids: &[String], beat: Heartbeat) {
-        let left = match beat.remaining {
-            Some(seconds) if seconds >= 60 => format!(", {}m left", seconds / 60),
-            Some(seconds) => format!(", {seconds}s left"),
-            None => String::new(),
-        };
-        self.line(
-            json!({"type": "waiting", "ids": ids, "elapsed": beat.elapsed, "remaining": beat.remaining, "answered": beat.answered, "total": beat.total}),
-            format!(
-                "Waiting for answers: {} of {} answered{left}.",
-                beat.answered, beat.total
-            ),
-        );
-    }
-
-    /// The last line; returns the exit code.
-    fn end(&mut self, end: MessageWaitEnd) -> i32 {
-        match end {
-            MessageWaitEnd::Answered(questions) => {
-                let (answers, lines) = answers_of(&questions, &self.project_dir);
-                self.line(
-                    json!({"type": "answered", "ids": ids_of(&questions), "answers": answers}),
-                    lines.join("\n"),
-                );
-                0
-            }
-            MessageWaitEnd::Timeout(questions) => {
-                let answered = questions
-                    .iter()
-                    .filter(|q| q.state() == MessageState::Closed)
-                    .count();
-                let total = questions.len();
-                let open: Vec<&str> = questions
-                    .iter()
-                    .filter(|q| q.state() == MessageState::Open)
-                    .map(|q| q.id.as_str())
-                    .collect();
-                self.line(
-                    json!({"type": "timeout", "ids": ids_of(&questions), "answered": answered, "total": total}),
-                    format!(
-                        "Timed out: {answered} of {total} answered. The questions stay open; wait again with message wait {}.",
-                        open.join(" ")
-                    ),
-                );
-                EXIT_TIMEOUT
-            }
-            MessageWaitEnd::Withdrawn(questions) => {
-                let withdrawn: Vec<&str> = questions
-                    .iter()
-                    .filter(|q| q.state() == MessageState::Withdrawn)
-                    .map(|q| q.id.as_str())
-                    .collect();
-                let (answers, lines) = answers_of(&questions, &self.project_dir);
-                let mut human = lines;
-                human.push(format!("Withdrawn: {}.", withdrawn.join(", ")));
-                self.line(
-                    json!({"type": "withdrawn", "ids": withdrawn, "answers": answers}),
-                    human.join("\n"),
-                );
-                EXIT_WITHDRAWN
-            }
-        }
-    }
-
-    /// A failure after the questions were asked: they stay.
-    fn error(&mut self, error: &AgpjError, stderr: &mut dyn Write) -> i32 {
-        if self.json {
-            self.line(
-                json!({"type": "error", "error": {"code": error.code(), "message": error.message(), "reason": error.reason()}}),
-                String::new(),
-            );
-        } else {
-            let _ = stderr.write_all(crate::cli::errors::human(error).as_bytes());
-        }
-        error.exit_code()
-    }
-}
 
 /// A wait needs the server's event stream; it is checked before anything is
 /// saved. When it is not running and starting is allowed, it is started now,
@@ -229,29 +83,40 @@ pub(super) fn ask(ctx: &mut Context, env: &mut Env, args: &MessageAskArgs) -> i3
     let prepared = (|| {
         let project = ctx.project_id()?.clone();
         // In sleep mode nothing reaches the board, the notifications, or the chat.
-        if crate::mode::current(&data_dir(ctx.files.shared_dir()), project.as_str())
-            == crate::mode::ModeKind::Sleep
-        {
-            return Err(AgpjError::SleepMode);
-        }
-        let input = input::ask_input(&args.questions_json, args.actor.actor(), &args.tasks)?;
+        let (brainstorm, held) =
+            super::brainstorm::target_for_ask(ctx.files.shared_dir(), &project, args.brainstorm)?;
+        let mut input = input::ask_input(&args.questions_json, args.actor.actor(), &args.tasks)?;
+        input.brainstorm = brainstorm;
+        input.held = held;
         let timeout = input::timeout(args.timeout.as_deref())?;
-        if !args.no_wait {
+        // A held question is never waited for, so no server is needed.
+        if !args.no_wait && !held {
             ensure_serving(ctx)?;
         }
         let questions = ctx.files.ask_questions(&project, input, ctx.clock.now())?;
-        Ok::<_, AgpjError>((questions, timeout))
+        Ok::<_, AgpjError>((questions, timeout, held))
     })();
-    let (questions, timeout) = match prepared {
+    let (questions, timeout, held) = match prepared {
         Ok(found) => found,
         Err(error) => return fail(env, &error, ctx.json),
     };
-    Events {
+    let mut events = Events {
         out: &mut *env.stdout,
         json: ctx.json,
         project_dir: std::path::PathBuf::new(),
+    };
+    if held {
+        events.held(
+            &ids_of(&questions)
+                .iter()
+                .map(|id| id.to_string())
+                .collect::<Vec<_>>(),
+        );
+        // The board counts the held questions; nothing else learns of them.
+        notify(ctx, env);
+        return 0;
     }
-    .registered(&questions, false);
+    events.registered(&questions, false);
     // The page learns of the questions now, not after the answers.
     notify(ctx, env);
     if args.no_wait {
@@ -265,6 +130,7 @@ pub(super) fn wait(ctx: &mut Context, env: &mut Env, args: &MessageWaitArgs) -> 
     let prepared = (|| {
         let timeout = input::timeout(args.timeout.as_deref())?;
         let project = ctx.project_id()?.clone();
+        let _ = crate::mode::release_held(ctx.files.shared_dir(), &project);
         let questions = read_questions(ctx.files.shared_dir(), &project, &args.ids)?;
         // Questions that have ended need no server.
         if questions.iter().any(|q| q.state() == MessageState::Open) {
@@ -276,11 +142,21 @@ pub(super) fn wait(ctx: &mut Context, env: &mut Env, args: &MessageWaitArgs) -> 
         Ok(found) => found,
         Err(error) => return fail(env, &error, ctx.json),
     };
-    Events {
+    // A held question cannot be waited for: it is not open until sleep ends.
+    let held: Vec<String> = questions
+        .iter()
+        .filter(|q| q.state() == MessageState::Held)
+        .map(|q| q.id.clone())
+        .collect();
+    let mut events = Events {
         out: &mut *env.stdout,
         json: ctx.json,
         project_dir: std::path::PathBuf::new(),
+    };
+    if !held.is_empty() {
+        events.held(&held);
+        return 0;
     }
-    .registered(&questions, true);
+    events.registered(&questions, true);
     wait_and_print(ctx, env, &args.ids, timeout, args.heartbeat)
 }

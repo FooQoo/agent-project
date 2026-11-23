@@ -432,3 +432,7 @@
   justify-content: flex-end;
   gap: 10px;
 }
+
+.message-detail__brainstorm {
+  margin: 0 0 8px;
+}

@@ -56,8 +56,10 @@ impl Board {
             .ask_questions(
                 &self.id,
                 AskInput {
+                    held: false,
                     actor: Actor::Ai,
                     asked_by: asked_by.map(str::to_string),
+                    brainstorm: None,
                     questions: vec![AskQuestion {
                         body: body.into(),
                         choices: Vec::new(),

@@ -15,7 +15,7 @@ Use the browser to review and edit work, and `agpj` for agent updates and projec
 | Move a task or report what an agent is doing | `mv`, `state` |
 | Join this session to an agent, leave it, or list the agents | `connect`, `disconnect`, `agent ls` |
 | Record a decision that matters later | `history add` |
-| Switch between sparring and sleep mode | `mode` |
+| Switch between sparring, sleep, and brainstorm mode | `mode` |
 | Record a decision a subagent made in sleep mode | `decision add` |
 | Change a task's text | `edit` |
 | Plan tasks for a release | `version`, `edit --planned-version`, `epic plan` |
@@ -93,8 +93,12 @@ agpj --project "My project" result add 1 --summary "Top page capture" --file top
 agpj --project "My project" result add 1 --summary "All screens of the mock" --file 01.png --file 02.png --file 03.png --actor ai
 agpj --project "My project" result add 1 --summary "Finished and checked" --final --actor ai
 agpj --project "My project" result add 1 --published v1.0.0 --link https://example.com/releases/v1.0.0 --summary "Released" --actor ai
+agpj --project "My project" result add 1 --plan RP-2 --summary "The endpoint answers its first request" --link https://example.com/demo --actor ai
+agpj --project "My project" result add 1 --plan RP-3 --actor ai
 agpj --project "My project" result ls 1
 ```
+
+`--plan RP-<n>` delivers a result against one of the task's [result plans](../../dev/reference/files.md#result-plans), in any order and without retyping the plan: the title defaults to the plan's content (`--title` overrides it), `--summary` may be left out and then reads as the plan's content, and the result carries the plan's ID as `planId`. A plan counts as delivered while a saved result carries its ID, and `show --json` returns that as `deliveredResultVersion` on each plan (`null` while undelivered). A final plan makes the result final without `--final`; `--final` with an intermediate plan fails with `invalid_value`, and `--final` without `--plan` works as before. An unknown plan ID, or one of another task, fails with `result_plan_not_found`. A plan is delivered by one result: delivering it again with different content fails with `result_plan_delivered`, while repeating the same delivery (recognized as below, with the plan part of it) is safe. `--plan` cannot be combined with `--published`. Intermediate plans that are not delivered never block work or automatic Done, and the `finalResultMissing` guidance is unchanged.
 
 Each result gets the next version number of the task (1, 2, and so on). Recording one changes neither the column nor the run state, and adds one history entry. Repeating the same delivery is safe: the command finds the result it already recorded, reports `created: false`, and writes nothing. Without `--key` the delivery is recognized by its content (kind, summary, link, and the image's bytes); give `--key <key>` to name it yourself. Reusing a key for different content fails with `invalid_value`. Without `--title`, the title is the first sentence of the summary, cut to 80 characters (the last one is `…` when it was cut); the title is part of what makes a delivery the same one, so repeating a delivery with another title is a different result unless you pass the same `--key` (which then fails with `invalid_value`). The summary and the link are 1 to 2,000 characters, and a task keeps up to 100 results. An AI cannot record a result on a person's draft, an archived task, or a Done task, except that repeating a result that was already recorded succeeds. `--published VERSION` records a publication: it needs `--link`, cannot be combined with `--final`, validates the version name like `version add`, and starts the summary with a `Published: VERSION` line. It is the one result a Done task takes, even when the task already has a final result, from an AI or a person.
 ### Finish a task
@@ -113,7 +117,7 @@ It ends with `answered` (exit 0), `timeout` (exit 5, the questions stay open), o
 
 ## Sleep mode {#sleep-mode}
 
-`mode` shows or switches the project's mode. Sparring is the default: the agent listens and asks you on the board. Sleep mode stops the questions.
+`mode` shows or switches the project's mode. Sparring is the default: the agent listens and asks you on the board. In sleep mode questions are held until sleep ends.
 
 ```sh
 agpj --project "My project" mode            # show the current mode
@@ -121,7 +125,38 @@ agpj --project "My project" mode sleep      # stop questions to you
 agpj --project "My project" mode sparring   # back to the default
 ```
 
-In sleep mode `message ask` is refused with `sleep_mode`, and nothing reaches the board, the notifications, or the chat. The agent has a subagent decide, continues with the conclusion, and records it on the task:
+A daily window puts the project to sleep by itself. Times are `HH:MM` on this computer's clock; an end earlier than the start crosses midnight.
+
+```sh
+agpj --project "My project" mode schedule --start 23:00 --end 08:00   # set and turn on the window
+agpj --project "My project" mode schedule --off                        # turn it off (the times are kept)
+agpj --project "My project" mode auto                                  # forget the manual mode; the window decides
+```
+
+A manual mode wins while it is set. One set during a window holds until that window ends, and then the schedule takes over again; one set outside a window holds until the next window starts (with no window, until you change it). `mode` shows the mode in effect, where it comes from (`manual` or `schedule`, with `until` when the mode ends: the window's end, or for a manual mode the end of its hold), and the window. `message ask` and `agpj progress` use the same resolution; the progress table adds `modeSource` and `modeUntil` next to `mode`.
+
+
+### Brainstorm mode {#brainstorm-mode}
+
+Brainstorm mode asks the agent to question you about one epic or one task. Start it with the target, a task number or an epic ID, and end it by returning to sparring:
+
+```sh
+agpj --project "My project" mode brainstorm --target INTERACTION-MODES   # an epic
+agpj --project "My project" mode brainstorm --target 12                  # a task
+agpj --project "My project" mode sparring                                # end it
+```
+
+`--target` is required, and it is accepted only with `brainstorm`. A target that does not exist is refused, and so is an archived task. Starting a brainstorm also sends the agent a request, "Start brainstorming on ...", so an agent that is listening with `wait` begins at once. The progress table then shows `mode: "brainstorm"` and `modeTarget`, and `mode` prints the target.
+
+The agent asks its questions with `--brainstorm`. They are not linked to a task, so the target task keeps running:
+
+```sh
+agpj --project "My project" message ask --actor ai --brainstorm --questions-json '{"questions":[{"body":"Who reads this page first?"}]}'
+```
+
+`message ask --brainstorm` is refused with `brainstorm_not_active` once the mode is no longer brainstorm. Questions without `--brainstorm` are ordinary and are still accepted. Sleep always wins: when a sleep window starts, the mode becomes sleep and every `message ask` is held, with or without `--brainstorm`.
+
+In sleep mode `message ask` is not refused: it stores the questions as held and prints `Held 2 questions: Q-5, Q-6.` (`{"type": "held", "questions": [{"id": "Q-5"}, {"id": "Q-6"}]}` with `--json`) at once, even without `--no-wait`. A held question does not reach the board, the notifications, or the chat, and its tasks keep working. `agpj message withdraw <id> --actor ai` withdraws one, and `agpj message wait` on a held question returns at once. When sleep ends, by `agpj mode sparring` or the end of the daily window, `agpj mode` prints `Released 2 held questions: Q-5, Q-6.` and they behave like ordinary open questions. The agent has a subagent decide what it can, continues with the conclusion, and records it on the task:
 
 ```sh
 agpj --project "My project" decision add 1 \
@@ -143,7 +178,7 @@ agpj --project "My project" edit 1 --desc-file task.md
 
 Descriptions allow up to 50,000 characters and epic details (`EPIC.md`) up to 100,000, and the file must follow the [Markdown file format](./file-format). Use `--desc -` to read a description from standard input.
 
-`edit --desc-file` replaces the body and acceptance conditions and keeps the latest history and the question references (`questions`) from `TASK.md`; `history` and `questions` in the input file are ignored, so a task that refers to an open question stays Awaiting answer. Use `message link` and `message unlink` to change the references. Moves, state changes, and other operations from the CLI or the UI append history to `TASK.md`, and `show`, `snapshot`, and the browser read that same history.
+`edit --desc-file` replaces the body, the acceptance conditions, and the result plans (`resultPlans`: what the task will deliver and the condition for delivering it; see [Result plans](../../dev/reference/files.md#result-plans)), and keeps the latest history and the question references (`questions`) from `TASK.md`; `history` and `questions` in the input file are ignored, so a task that refers to an open question stays Awaiting answer. Use `message link` and `message unlink` to change the references. Moves, state changes, and other operations from the CLI or the UI append history to `TASK.md`, and `show`, `snapshot`, and the browser read that same history.
 
 ## Edit epic details
 
@@ -212,7 +247,7 @@ agpj --project "My project" version release --clear
 agpj --project "My project" version ls --json
 ```
 
-A project's versions are the `*.md` files directly inside `docs/release/` of its [Docs](../watch/docs), listed newest first (`v1.10.0` before `v1.9.0`; `TEMPLATE.md` is the release template and is never a version). `version add VERSION` creates `docs/release/VERSION.md` as a copy of `docs/release/TEMPLATE.md` (a standard release-note template is written there first when it is missing) and never overwrites an existing file, so a version that already has its file is already listed. It also puts one card in the Backlog, owned by the AI, titled `Write the release notes for VERSION` (in Japanese when the board language is Japanese) and planned for VERSION, for writing those notes: the work starts only after a person sends it to Todo, and adding the same version again issues no second card. Adding a version does not change the release version. You can also add a version by creating the file yourself. `version release VERSION` lists the version the same way when it is not listed yet and makes it current. Without an argument it shows the release version. If the release version's file is deleted later, the project reads as having no release version until the file returns. Changing the release version moves no task: a task stores the version name it was given.
+A project's versions are the `*.md` files directly inside `docs/release/` of its [Docs](../watch/docs), listed newest first (`v1.10.0` before `v1.9.0`; `TEMPLATE.md` is the release template and is never a version). `version add VERSION` creates `docs/release/VERSION.md` as a copy of `docs/release/TEMPLATE.md` (a standard release-note template is written there first when it is missing) and never overwrites an existing file, so a version that already has its file is already listed. It also puts one release-work card in the Backlog, owned by the AI, titled `Release VERSION` (`VERSION をリリースする` when the board language is Japanese) and planned for VERSION. Its to-do lists writing the release notes in `docs/release/VERSION.md` from the template and doing the release work itself (publishing the release and confirming that it reached users): the work starts only after a person sends it to Todo, and adding the same version again issues no second card. When that card reaches Done, by any path, and VERSION is the release version, the release version moves to the nearest newer listed version and the card's history says so (`Release version moved from v2.1.0 to v2.2.0.`). When no newer version is listed, the release version stays, and the history says so. Nothing changes when the release version is another version, when the card moves to a lane other than Done, or when the card is already Done. Only the first time the card reaches Done can move the release version: if you reopen the card and finish it again, the release version stays, even when a newer version has been listed since. Adding a version does not change the release version. You can also add a version by creating the file yourself. `version release VERSION` lists the version the same way when it is not listed yet and makes it current. Without an argument it shows the release version. If the release version's file is deleted later, the project reads as having no release version until the file returns. Changing the release version moves no task: a task stores the version name it was given.
 
 ### Generate a release document {#generate-a-release-document}
 

@@ -175,6 +175,12 @@ impl FileStore {
                 MessageState::Closed => done.push(question.id.clone()),
                 MessageState::Withdrawn => withdrawn.push(question.id.clone()),
                 MessageState::Open => {}
+                // Nobody can answer a question that was not shown yet.
+                MessageState::Held => {
+                    return Err(AgpjError::MessageNotFound {
+                        id: question.id.clone(),
+                    });
+                }
             }
             let attachments = qa::attachments_dir(&qa::message_dir(&project_dir, &question.id));
             // An answer never replaces an image the question already holds: a clash is renamed.

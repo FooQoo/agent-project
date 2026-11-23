@@ -4,6 +4,8 @@
 //! with an exit code of their own: 0 answered, 5 timeout, 6 withdrawn.
 
 mod answer;
+mod brainstorm;
+mod events;
 mod input;
 mod read;
 mod request;
@@ -33,6 +35,15 @@ pub fn execute(cli: &Cli, env: &mut Env, args: &MessageArgs) -> i32 {
     };
     if let Ok(project) = ctx.project_id() {
         crate::agent::session_touch::touch_from_env(&data_dir(ctx.files.shared_dir()), project);
+    }
+    // The end of a sleep window is noticed here, so held questions are delivered when an agent
+    // next works with the messages (a manual switch and the board's stream release them too).
+    if !matches!(&args.command, MessageCommand::Ask(_))
+        && let Ok(project) = ctx.project_id()
+        && crate::mode::release_held(ctx.files.shared_dir(), project)
+            .is_ok_and(|ids| !ids.is_empty())
+    {
+        notify(&ctx, env);
     }
     let result = match &args.command {
         MessageCommand::Ask(ask) => return stream::ask(&mut ctx, env, ask),

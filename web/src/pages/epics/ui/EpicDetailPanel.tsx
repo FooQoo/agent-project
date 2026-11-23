@@ -1,7 +1,7 @@
 import { PencilIcon, SendIcon, Trash2Icon } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import '../../../shared/styles/backlog.css';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useEpicDetail } from '../../../shared/data/react';
 import { useTranslation } from 'react-i18next';
 import type { Epic, ProjectId } from '../../../shared/api/contracts';
@@ -33,6 +33,8 @@ export interface EpicDetailPanelProps {
   /** Sends them to Todo in one save; the app confirms a warning and shows the result. */
   onSendBacklog?: () => void;
   sendBusy?: boolean;
+  /** An action the app adds to the toolbar (Brainstorm). */
+  toolbarExtra?: ReactNode;
 }
 
 /** The detail column while no epic is selected: the same empty state the archive shows. */
@@ -57,6 +59,7 @@ export function EpicDetailPanel({
   backlogCount = 0,
   onSendBacklog,
   sendBusy,
+  toolbarExtra,
 }: EpicDetailPanelProps) {
   const { t } = useTranslation();
   const [confirming, setConfirming] = useState(false);
@@ -176,6 +179,7 @@ export function EpicDetailPanel({
       <h2 className="detail__title" id="epic-detail-title">
         {epic.name}
       </h2>
+      {toolbarExtra}
       {backlogCount > 0 && onSendBacklog && (
         <section
           className="backlog-detail backlog-detail--epic"

@@ -48,6 +48,17 @@ pub enum AgpjError {
     TaskNotFound {
         id: i64,
     },
+    /// `result add --plan` names a plan the task does not have.
+    ResultPlanNotFound {
+        id: i64,
+        plan: String,
+    },
+    /// `result add --plan` names a plan that a saved result already delivers.
+    ResultPlanDelivered {
+        id: i64,
+        plan: String,
+        version: u32,
+    },
     TaskArchived {
         id: i64,
     },
@@ -93,8 +104,8 @@ pub enum AgpjError {
         from: RunState,
         to: RunState,
     },
-    /// The project is in sleep mode: questions to the user are not accepted.
-    SleepMode,
+    /// `message ask --brainstorm` while the project is not in brainstorm mode.
+    BrainstormNotActive,
     /// The task is a draft: agents and the CLI cannot change it.
     TaskIsDraft {
         id: i64,

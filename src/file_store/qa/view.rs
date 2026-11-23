@@ -10,6 +10,8 @@ use crate::file_store::model::Choice;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum QuestionStatus {
+    /// Asked during sleep mode; delivered when sleep ends.
+    Held,
     Open,
     Answered,
     Withdrawn,
@@ -18,6 +20,7 @@ pub enum QuestionStatus {
 impl QuestionStatus {
     pub fn as_str(self) -> &'static str {
         match self {
+            QuestionStatus::Held => "held",
             QuestionStatus::Open => "open",
             QuestionStatus::Answered => "answered",
             QuestionStatus::Withdrawn => "withdrawn",
@@ -78,6 +81,8 @@ pub struct QuestionView {
     pub recommended_choice_id: Option<String>,
     /// The board-launched session that asked it, when one did.
     pub asked_by: Option<String>,
+    /// The brainstorm target the question was asked about, or null.
+    pub brainstorm: Option<crate::mode::Target>,
     pub reply: Option<ReplyView>,
     pub status: QuestionStatus,
     /// The unarchived tasks whose `questions` name this question, in ID order.
@@ -116,10 +121,13 @@ impl QuestionView {
             choices: question.choices.clone(),
             recommended_choice_id: question.recommended.clone(),
             asked_by: question.asked_by.clone(),
+            brainstorm: question.brainstorm.clone(),
             status: if question.withdrawn_at.is_some() {
                 QuestionStatus::Withdrawn
             } else if question.reply.is_some() {
                 QuestionStatus::Answered
+            } else if question.held_at.is_some() {
+                QuestionStatus::Held
             } else {
                 QuestionStatus::Open
             },
@@ -211,6 +219,7 @@ impl MessageView {
     pub fn state(&self) -> &'static str {
         match self {
             MessageView::Question(q) => match q.status {
+                QuestionStatus::Held => "held",
                 QuestionStatus::Open => "open",
                 QuestionStatus::Answered => "closed",
                 QuestionStatus::Withdrawn => "withdrawn",

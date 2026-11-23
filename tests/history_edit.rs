@@ -38,6 +38,7 @@ fn body_only_draft_edit_uses_latest_markdown_acceptance_and_history() {
                     text: "Keep the latest condition".into(),
                     done: false,
                 }]),
+                ..Default::default()
             },
             now,
         )
@@ -73,6 +74,7 @@ fn body_only_draft_edit_uses_latest_markdown_acceptance_and_history() {
             TaskTextParts {
                 body: Some("Edited body while the draft was open.\n"),
                 acceptance: None,
+                ..Default::default()
             },
             false,
             now + chrono::Duration::seconds(2),
@@ -218,6 +220,7 @@ fn rejected_finalize_keeps_the_draft_body_and_history_unchanged() {
             TaskTextParts {
                 body: Some("This must not be saved.\n"),
                 acceptance: Some(&invalid_acceptance),
+                ..Default::default()
             },
             true,
             now + chrono::Duration::seconds(1),

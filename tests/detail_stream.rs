@@ -296,6 +296,7 @@ fn pc_a_stream_in_progress_keeps_one_version_and_never_blocks_a_write() {
             TaskTextParts {
                 body: Some(&big),
                 acceptance: None,
+                ..Default::default()
             },
             chrono::Utc::now(),
         )
@@ -322,6 +323,7 @@ fn pc_a_stream_in_progress_keeps_one_version_and_never_blocks_a_write() {
             TaskTextParts {
                 body: Some("Replaced while streaming.\n"),
                 acceptance: None,
+                ..Default::default()
             },
             chrono::Utc::now(),
         )
@@ -387,6 +389,7 @@ fn pc_a_client_that_leaves_early_does_not_hurt_the_server() {
             TaskTextParts {
                 body: Some(&big),
                 acceptance: None,
+                ..Default::default()
             },
             chrono::Utc::now(),
         )

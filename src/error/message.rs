@@ -16,6 +16,14 @@ impl AgpjError {
                 format!("project \"{name}\" already exists.")
             }
             AgpjError::TaskNotFound { id } => format!("task #{id} not found."),
+            AgpjError::ResultPlanNotFound { id, plan } => {
+                format!("task #{id} has no result plan {plan}.")
+            }
+            AgpjError::ResultPlanDelivered { id, plan, version } => {
+                format!(
+                    "result plan {plan} of task #{id} is already delivered by result v{version}."
+                )
+            }
             AgpjError::TaskArchived { id } => format!("task #{id} is archived."),
             AgpjError::TaskNotArchived { id } => format!("task #{id} is not archived."),
             AgpjError::NoReleaseVersion => "the project has no release version.".into(),
@@ -38,8 +46,9 @@ impl AgpjError {
                     to.as_str()
                 )
             }
-            AgpjError::SleepMode => {
-                "the project is in sleep mode, so questions to the user are not accepted.".into()
+            AgpjError::BrainstormNotActive => {
+                "the project is not in brainstorm mode, so brainstorm questions are not accepted."
+                    .into()
             }
             AgpjError::TaskIsDraft { id } => {
                 format!("task #{id} is a draft and read-only for agents.")

@@ -117,6 +117,7 @@ export function createPcAdapter(): PcAdapter {
         tell({ type: 'sync' });
       });
       source.addEventListener('preferences', (event) => handlers.onPreferences?.(event));
+      source.addEventListener('mode', (event) => handlers.onMode?.(event));
       source.addEventListener('docs', (event) => {
         let projectId: string | null = null;
         try {

@@ -55,6 +55,7 @@ use reader::ProjectSnapshot;
 pub struct TaskTextParts<'a> {
     pub body: Option<&'a str>,
     pub acceptance: Option<&'a [frontmatter::AcceptanceItem]>,
+    pub result_plans: Option<&'a [frontmatter::ResultPlan]>,
 }
 
 /// How a saved draft ends: `target` is the draft it leaves (`None` keeps it, `Some(None)`

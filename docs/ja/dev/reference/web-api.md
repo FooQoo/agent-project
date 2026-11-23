@@ -14,9 +14,9 @@ ngrokの入口は、カンバンのページと以下のルートを同じパス
 | --- | --- |
 | `GET /` | 書き込み用トークンを`meta[name=agpj-token]`に埋め込んだHTML。 |
 | `GET /api/projects` | `projects`（id・name・createdAt）と`catalogVersion`。タスクは含まない。0件でも200。 |
-| `POST /api/projects/{projectId}/tasks` | title・body・acceptance・assigneeと任意の`draft: "human"`から未着手・Idleのタスクを作る（`"ai"`は422 `invalid_value`）。サーバーがfrontmatterを組み立てて検証する。201。 |
+| `POST /api/projects/{projectId}/tasks` | title・body・acceptance・`resultPlans`・assigneeと任意の`draft: "human"`から未着手・Idleのタスクを作る（`"ai"`は422 `invalid_value`）。サーバーがfrontmatterを組み立てて検証する。201。 |
 | `POST /api/projects/{projectId}/tasks/multipart` | 画像付きの通常タスク、または依頼本文・任意のエピック・画像をまとめた簡易依頼タスクを作る。下記を参照。 |
-| `PATCH /api/projects/{projectId}/tasks/{id}` | **下書き**のタスクのtitle・body・acceptanceと任意の`finalize: true`を更新する。`draft`は`"human"`または`null`で、それ以外の値は、以前のバージョンの`"ai"`も含めて拒否する（multipartフォームも同じ）。bodyだけならfrontmatterを、acceptanceだけなら本文を保つ。`description`と`body`の同時指定は422 `invalid_value`。後から保存した内容が優先される。下書きでなければ409 `task_not_draft`。 |
+| `PATCH /api/projects/{projectId}/tasks/{id}` | **下書き**のタスクのtitle・body・acceptance・`resultPlans`と任意の`finalize: true`を更新する。`draft`は`"human"`または`null`で、それ以外の値は、以前のバージョンの`"ai"`も含めて拒否する（multipartフォームも同じ）。bodyだけならfrontmatterを、acceptanceだけなら本文を保つ。`description`と`body`の同時指定は422 `invalid_value`。後から保存した内容が優先される。下書きでなければ409 `task_not_draft`。 |
 | `PUT /api/projects/{projectId}/tasks/{id}/draft` | `draft`（必須）を設定する。`"human"`で人の下書きにし、`null`で確定する。それ以外の値は、`"ai"`も含めて拒否し、何も書き込まない。`discard: true`（`null`と一緒の場合だけ）を付けると、確定せずに下書きを取り消し、履歴に`Discarded draft changes.`を残す。Runningのタスクは409 `invalid_state_for_draft`。 |
 | `POST /api/projects/{projectId}/tasks/{id}/send` | `{"ack"?: bool}`。人として、バックログのタスクを未着手の末尾へ送り、`{task, changed}`を返す。すでにバックログを出ているタスクは`changed: false`で何も書かないので、再試行しても安全。未回答の質問がある計画は、`ack: true`を付けるまで409 `send_with_open_questions`。人の下書きは409 `task_is_draft`、アーカイブ済みは409 `task_archived`。履歴に`A person sent the task to Todo.`を残す。CLIに送信のコマンドはなく、`agpj mv <id> todo --actor human [--force]`が同じ関数で同じ規則を適用する。 |
 | `POST /api/projects/{projectId}/epics/{epicId}/send` | `{"taskIds"?: [int], "ack"?: bool}`。人として、エピックのバックログのタスク（または`taskIds`だけ）を、全部成功か何も変えないかの一回の保存で送り、`{epic, sent, changed}`を返す。`sent`は移したタスクIDです。エピックの未完了のカードでない`taskId`は422 `invalid_value`。未回答の質問があれば`ack: true`が必要（409 `send_with_open_questions`）。人の下書きのエピックは409 `epic_is_draft`、下書きのタスクは409 `task_is_draft`。 |
@@ -42,7 +42,7 @@ ngrokの入口は、カンバンのページと以下のルートを同じパス
 | `POST /api/projects/{projectId}/messages/{messageId}/withdraw` | 人が依頼を取り下げ、`{request}`を返す。質問は403 `ai_only`、受け付け済みの依頼は409 `message_closed`、すでに取り下げた依頼は409 `request_withdrawn`。依頼や回答の受け付けにエンドポイントはなく、CLIだけが行う。 |
 | `DELETE /api/projects/{projectId}/tasks/{id}` | アーカイブ済みのタスクだけを削除する。それ以外は409 `task_not_archived`。204、すでにないときは404。 |
 | `GET …/tasks/{id}/results` | タスクの成果を古いものから返します。`{taskId, results}`で、各成果のフィールド（`title`を含む）は[成果](./files.md#results)のとおりです。読み取り専用で、存在しないタスクは404 `task_not_found`です。成果は、APIが返すすべてのタスクオブジェクトの`results`配列にも入ります。SummaryとDetailのストリームには載せません。 |
-| `POST …/tasks/{id}/results` | タスクのバージョンへの公開を記録します。APIが追加する唯一の成果です。JSON本文は`{published, link, summary, title?, key?}`で、`published`はバージョン名（`version add`と同じ規則で検証）、`link`は必須で、ほかのフィールドは422/400です。要約の先頭に`Published: <published>`の行が付き、種別は途中（progress）になります。最終成果の有無にかかわらずDoneのタスクが受け付けますが、アーカイブ済み（`task_archived`）と下書き（`task_is_draft`）は受け付けません。201で`{task, result, created}`を返し、同じ記録（同じ`key`、既定では同じ内容）がすでにあるときは`created: false`で200です。 |
+| `POST …/tasks/{id}/results` | タスクのバージョンへの公開の記録、または成果の予定を届ける配信を記録します。画像は追加できません（画像は`result add --file`を使います）。JSON本文は`{summary, title?, key?, link?, final?, plan?, published?}`で、ほかのフィールドは422/400です。`published`（バージョン名。`version add`と同じ規則で検証）があると公開の記録になり、`link`は必須、`final`と`plan`は拒否され、要約の先頭に`Published: <published>`の行が付き、種別は途中（progress）になります。`plan`（`RP-<n>`。このタスクの予定）があると、`result add --plan`と同じにその予定を届けます。`summary`は省略でき、省くと予定の内容が要約になり、タイトルの既定も予定の内容で、最終成果の予定なら成果も最終になり、中間成果の予定に`final: true`を付けると422 `invalid_value`です。存在しない予定は404 `result_plan_not_found`、保存済みの成果がすでに届けている予定は409 `result_plan_delivered`です。タスクのオブジェクトは、`resultPlans`の各予定に`deliveredResultVersion`を持ちます。最終成果の有無にかかわらずDoneのタスクが受け付けますが、アーカイブ済み（`task_archived`）と下書き（`task_is_draft`）は受け付けません。201で`{task, result, created}`を返し、同じ記録（同じ`key`、既定では同じ内容）がすでにあるときは`created: false`で200です。 |
 | `…/tasks/{id}/attachments`、`…/attachments/{attachmentId}` | タスクの画像（GET・POST・DELETE）。ProjectId・タスクID・添付IDで照合する。 |
 | `GET`・`POST /api/projects/{projectId}/epics` | エピックの一覧と作成（id・name・color・draft・documentまたはbody）。`acceptance`の入力は受け付けない。201。 |
 | `GET`・`PATCH`・`DELETE /api/projects/{projectId}/epics/{epicId}` | 取得、またはname・color・draft・documentまたはbody・作業順（`waves`、タスクIDのリストのリスト）の更新。本文と未知のメタデータを保つ。下書きのエピックを拒否するのはCLIだけで、この更新は拒否しない。`draft: null`で人の下書きを解除する。エピックには履歴がないので、何も記録しない。`EPIC.md`→`epic.json`の順に保存する。`DELETE`は204を返す。そのエピックを名指ししているタスク（アーカイブ済みを含む）が一つでもあれば、409 `epic_in_use`で拒否する。 |
@@ -62,6 +62,8 @@ ngrokの入口は、カンバンのページと以下のルートを同じパス
 | `GET /api/events` | SSE。購読後にカンバンのビルドIDを含む`ready`（`{"build":"<16桁の16進数>"}`）、変更されたリソースを運ぶ`changed`（[変更イベント](#変更イベント)を参照）、保存した言語やテーマが変わったときに`preferences`（`GET /api/preferences`と同じJSON）、15秒ごとに接続維持のコメント。 |
 | `GET /api/preferences` | 保存済みの言語とカラーテーマ。`locale`・`theme`（`mode`・`accent`）・`revision`。ファイルがない、または読めない場合は既定値。キャッシュしない。[表示設定](#表示設定)を参照。 |
 | `PUT /api/preferences` | JSONの本文で`locale`・`theme`・両方のいずれかを保存し、`GET`と同じ形を、`revision`を1増やして返す。未知の項目と不正な値は422 `invalid_preferences`、書き込みの失敗は500 `preferences_unavailable`。拒否・失敗のときは保存済みの値を変えない。 |
+| `GET /api/projects/{projectId}/mode` | いま効いているプロジェクトのやり取りのモード。`mode`（`sparring`、`sleep`、`brainstorm`のいずれか）、`modeSource`（`manual`または`schedule`）、`since`（手動のモードを設定した時刻）、`until`（毎日の時間帯がスリープにしているときの、その終わり）、`target`（モードが壁打ちのときだけ。`{type, id}`）、`manual`（手動で設定したモードがあれば）、`schedule`（保存されていれば`{enabled, start, end}`）。保存されたモードがないプロジェクトは`{"mode": "sparring", "modeSource": "manual"}`と読む。キャッシュしない。存在しないプロジェクトは404 `project_not_found`。[プロジェクトのモード](#プロジェクトのモード)を参照。 |
+| `PUT /api/projects/{projectId}/mode` | `{"mode": "sparring"}`、`{"mode": "sleep"}`、`{"mode": "auto"}`（手動のモードを忘れ、スケジュールに決めさせる）、`{"mode": "brainstorm", "target": {"type": "epic" | "task", "id": "<エピックIDかタスク番号>"}}`（この2項目ちょうど。対象を確かめ、モードを保存し、壁打ちを始めるようエージェントへ依頼を送る。`agpj mode brainstorm --target`と同じ。存在しないエピックは404 `epic_not_found`、存在しないタスクは404 `task_not_found`、アーカイブ済みは409 `task_archived`、タスクの対象の`id`が数字でないときは422 `invalid_value`）、`{"schedule": {"enabled": true, "start": "23:00", "end": "08:00"}}`（異なる2つの`HH:MM`）のうちちょうど1つを保存し、`GET`と同じ形を返す。それ以外の本文は422 `invalid_mode`、書き込みの失敗は500 `mode_unavailable`。 |
 | `GET /api/projects/{projectId}/summaries`<br>`POST /api/projects/{projectId}/summaries/{summaryId}/dismiss` | プロジェクトの定期サマリーを新しい順に返す経路と、1件を片付ける経路。[定期サマリー](#定期サマリー)を参照。 |
 | `GET /api/notification-settings` | スマホに届ける通知の種類。`kinds`・`summary`・`revision`。ファイルがない、または読めない場合は既定値。キャッシュしない。[通知設定](#通知設定)を参照。 |
 | `PUT /api/notification-settings` | JSONの本文で`kinds`グループ、`summary`グループ、またはその両方を保存し、`GET`と同じ形を、`revision`を1増やして返す。不正な本文は422 `invalid_notification_settings`、書き込みの失敗は500 `notification_settings_unavailable`。 |
@@ -279,6 +281,12 @@ versionはすべて不透明な文字列で、解析済みデータの内容ハ�
 保存に成功すると保存した内容を返し、開いているイベントストリームすべてに`preferences`イベントを送ります。対象は`/api/events`です。イベントのデータは`GET`と同じJSONです。PCの`PUT`は、ほかのPCの書き込みと同じ書き込みの保護（Host・Origin・`Sec-Fetch-Site: same-origin`・`X-Agpj-Token`）を通ります。ngrokの入口を通す`PUT`は、回答と同じくsessionとCSRFトークンが必要です。
 
 JSONとして読めない本文は、ほかの書き込みと同じく400です。`locale`と`theme`のどちらもない本文、それ以外の項目を含む本文、許可されない値は422 `invalid_preferences`です。revisionの確認はなく、後から保存した内容が優先されます。
+
+### プロジェクトのモード
+
+`GET`と`PUT /api/projects/{projectId}/mode`は、プロジェクトのやり取りのモードを読み書きします。`agpj mode`が`<データ領域>/.internal/modes.json`に書くのと同じ項目です（[スリープモード](../concepts/agents.md#sleep-mode)を参照）。ローカルのリスナーが提供し、ngrokの入口は同じ組をsessionの背後で提供します（[入口のルート](./remote-routes.md)を参照）。`PUT`はほかのPCの書き込みと同じ書き込みガードを通り、入口ではsessionとCSRFトークンが必要です。本文の項目はちょうど1つ（上の表を参照）で、未知の項目や値は422 `invalid_mode`、壊れたJSONは400、最後の保存が勝ちます。壁打ちの`PUT`はCLIと同じ`start_brainstorm`を使います（[壁打ちモード](../concepts/agents.md#brainstorm-mode)を参照）。どの形にも合わない本文は、`target`のない壁打ちも含めて422 `invalid_mode`です。モードが壁打ちのあいだ、`mode`イベントにも同じ`target`が入ります。いま効いているモードがスリープのあいだは、`GET`の本文、`PUT`の返事、`mode`イベントに、保留中の質問の数`heldCount`も入ります。スリープを抜ける`PUT`は先に保留中の質問を解放し、ボードのメッセージ一覧は保留中の質問を隠します。
+
+CLIは別のプロセスでモードを変えるので、`/api/events`は開いているストリームごとに、保存されたモードを1秒に1回比べ、そのストリームが最後に見た内容と違うときに`mode`イベントを送ります。データは`{"projects": {"<projectId>": {…GETと同じJSON…}}}`で、変わったプロジェクトだけを含みます。比べるときに時計も見るので、毎日の時間帯の開始と終了は、ファイルが変わらなくても知らせます。項目が消えたプロジェクトは組手です。接続時点の状態は送りません。`mode`イベントは`changed`になることはなく、ボードの`seq`とバージョンは動きません。`PUT`の保存も、ほかの開いているページに同じ形で届きます。再接続のあと、ボードは表示しているモードを読み直します。
 
 ### 通知設定
 

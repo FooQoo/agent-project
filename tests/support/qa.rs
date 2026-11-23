@@ -28,8 +28,10 @@ pub fn ask(
         .ask_questions(
             project,
             AskInput {
+                held: false,
                 actor: Actor::Ai,
                 asked_by: None,
+                brainstorm: None,
                 questions: vec![AskQuestion {
                     body: body.into(),
                     choices: choices(options),
@@ -80,8 +82,10 @@ pub fn ask_choices(
         .ask_questions(
             project,
             AskInput {
+                held: false,
                 actor: Actor::Ai,
                 asked_by: None,
+                brainstorm: None,
                 questions: vec![AskQuestion {
                     body: body.into(),
                     choices,

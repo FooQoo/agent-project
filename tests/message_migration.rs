@@ -265,8 +265,10 @@ fn the_conversion_runs_once_and_a_write_triggers_it_too() {
         .ask_questions(
             &b.project,
             agent_project::file_store::AskInput {
+                held: false,
                 actor: Actor::Ai,
                 asked_by: None,
+                brainstorm: None,
                 questions: vec![agent_project::file_store::AskQuestion {
                     body: "One more?".into(),
                     choices: Vec::new(),

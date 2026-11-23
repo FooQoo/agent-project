@@ -82,7 +82,7 @@ pub enum Command {
     History(HistoryArgs),
     /// Record a decision that a subagent made in the user's place
     Decision(DecisionArgs),
-    /// Show or switch the mode: sparring (default) or sleep
+    /// Show or switch the mode: sparring (default), sleep, or brainstorm
     Mode(ModeArgs),
     /// Ask the user questions, wait for the answers, and handle requests from the user
     Message(MessageArgs),

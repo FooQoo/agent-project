@@ -38,6 +38,12 @@ pub struct AskInput {
     pub actor: Actor,
     /// The board-launched session that asks (`AGPJ_RESIDENT_ID`), recorded on each question.
     pub asked_by: Option<String>,
+    /// The brainstorm target the questions are about (`message ask --brainstorm`). It is not a
+    /// task link.
+    pub brainstorm: Option<crate::mode::Target>,
+    /// Sleep mode: store the questions as held. A held question is not shown to the person,
+    /// no task waits on it, and a running task is not paused; it is released when sleep ends.
+    pub held: bool,
     pub questions: Vec<AskQuestion>,
     /// Tasks that wait on every question.
     pub tasks: Vec<i64>,
@@ -78,8 +84,10 @@ fn normalize(input: &AskInput) -> Result<Vec<Question>, AgpjError> {
             recommended: asked.recommended_choice_id.clone(),
             reply: None,
             withdrawn_at: None,
+            held_at: None,
             created_at: chrono::DateTime::<Utc>::UNIX_EPOCH,
             asked_by: input.asked_by.clone(),
+            brainstorm: input.brainstorm.clone(),
         };
         if let Some(d) = question_defect(&question) {
             return Err(invalid(format!("questions[{index}].{}", d.field), d.reason));
@@ -154,6 +162,9 @@ impl FileStore {
         let at = stamp(now);
         for question in &mut questions {
             question.created_at = at;
+            if input.held {
+                question.held_at = Some(at);
+            }
         }
         let mut changes = Vec::new();
         for question in &questions {
@@ -184,6 +195,9 @@ impl FileStore {
                 if !ids.contains(&question.id) {
                     ids.push(question.id.clone());
                 }
+                if input.held {
+                    continue;
+                }
                 let options = options_line(&question.choices);
                 let english = format!(
                     "Asked a question ({}):\n\n{}\n\nOptions: {options}",
@@ -198,7 +212,7 @@ impl FileStore {
                     reason: language.text(&english, &japanese).to_owned(),
                 });
             }
-            if task.agent_status == RunState::Running {
+            if !input.held && task.agent_status == RunState::Running {
                 let listed = indices
                     .iter()
                     .map(|i| questions[*i].id.as_str())

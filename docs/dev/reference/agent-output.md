@@ -66,7 +66,11 @@ The JSON that agents receive. The pieces are explained in [Agent integration](..
 - The paths appear only in local CLI and hook output, never in remote JSON.
 - The earlier `planPath` field is no longer produced or accepted. See the [data guide](../../guide/operations/data.md).
 
-The table also carries `"mode": "sleep"` while the project is in sleep mode. The key is absent in the default sparring mode, so an agent reads a missing `mode` as sparring. The mode is saved per project in the data area (`.internal/modes.json`), not in the shared project files, and `agpj mode` and `agpj progress` read it without a server. See [Sleep mode](../concepts/agents.md#sleep-mode).
+The table also carries `"mode": "sleep"` or `"mode": "brainstorm"` while the project is in that mode. The key is absent in the default sparring mode, so an agent reads a missing `mode` as sparring. The mode is saved per project in the data area (`.internal/modes.json`), not in the shared project files, and `agpj mode` and `agpj progress` read it without a server. See [Sleep mode](../concepts/agents.md#sleep-mode).
+
+While the project sleeps the table also carries `modeSource` (`manual` or `schedule`) and, when the daily window holds it asleep, `modeUntil` (when the window ends, UTC). All three are absent for sparring. The window and how a manual mode overrides it are in [Sleep mode](../concepts/agents.md#sleep-mode).
+
+In brainstorm mode the table carries `"mode": "brainstorm"`, `"modeSource": "manual"`, and `"modeTarget": {"type": "epic" | "task", "id": "<EPIC-ID or task number>"}`, and `modeUntil` when the next sleep window will end the hold. `modeTarget` is present only in brainstorm. See [Brainstorm mode](../concepts/agents.md#brainstorm-mode).
 
 ## Hook output
 
@@ -179,6 +183,7 @@ With `--json`, `message ask` and `message wait` write one JSON object per line. 
 | `type` | Fields | When |
 | --- | --- | --- |
 | `registered` | `questions` (`id`), `resumed` | First. `resumed` is `true` for `message wait`. With `--no-wait` it is the only line, and the command exits 0. |
+| `held` | `questions` (`id`) | Only line, instead of `registered`, when the project is in sleep mode: the questions are stored as held, nothing reaches the person, and the command exits 0 at once (also for `message wait` on a held question). The questions are delivered when sleep ends; withdraw one with `message withdraw`. |
 | `waiting` | `ids`, `elapsed`, `remaining` (`null` without a timeout), `answered`, `total` | Every `--heartbeat` seconds. It comes from a timer and never reads the board. |
 | `answered` | `ids`, `answers` (`id`, `choiceId`, `choiceLabel`, `text`, `images`, `imagePaths`, `via`, `at`) | Last, once no question is open. Exit 0. |
 | `timeout` | `ids`, `answered`, `total` | Last, when `--timeout` passes first. The questions stay open. Exit 5. |

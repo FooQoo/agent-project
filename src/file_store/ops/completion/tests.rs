@@ -5,21 +5,21 @@ use chrono::{TimeZone, Utc};
 use crate::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
 use crate::file_store::FileStore;
 
-fn at(day: u32) -> chrono::DateTime<Utc> {
+pub(super) fn at(day: u32) -> chrono::DateTime<Utc> {
     Utc.with_ymd_and_hms(2026, 10, day, 0, 0, 0).unwrap()
 }
 
-const OPEN: &str = "---\nacceptance:\n  - id: AC-1\n    text: First\n    done: true\n  - id: AC-2\n    text: Second\n    done: false\n---\n\nWork.\n";
-const COMPLETE: &str = "---\nacceptance:\n  - id: AC-1\n    text: First\n    done: true\n  - id: AC-2\n    text: Second\n    done: true\n---\n\nWork.\n";
+pub(super) const OPEN: &str = "---\nacceptance:\n  - id: AC-1\n    text: First\n    done: true\n  - id: AC-2\n    text: Second\n    done: false\n---\n\nWork.\n";
+pub(super) const COMPLETE: &str = "---\nacceptance:\n  - id: AC-1\n    text: First\n    done: true\n  - id: AC-2\n    text: Second\n    done: true\n---\n\nWork.\n";
 
-struct Fixture {
+pub(super) struct Fixture {
     _root: tempfile::TempDir,
-    store: FileStore,
-    project: ProjectId,
+    pub(super) store: FileStore,
+    pub(super) project: ProjectId,
 }
 
 impl Fixture {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         let root = tempfile::tempdir().unwrap();
         let store = FileStore::open(&root.path().join("shared"));
         let project = store.create_project("Alpha", at(1)).unwrap().id;
@@ -74,7 +74,7 @@ impl Fixture {
             .join("TASK.md")
     }
 
-    fn replace_description(&self, id: i64, description: &str) {
+    pub(super) fn replace_description(&self, id: i64, description: &str) {
         let path = self.path(id);
         let current = std::fs::read_to_string(&path).unwrap();
         let stored = super::super::super::history::parse_task(
@@ -190,8 +190,10 @@ fn pending_is_left_alone_then_answered_task_is_reconsidered() {
         .ask_questions(
             &f.project,
             crate::file_store::AskInput {
+                held: false,
                 actor: Actor::Ai,
                 asked_by: None,
+                brainstorm: None,
                 questions: vec![crate::file_store::AskQuestion {
                     body: "Question".into(),
                     choices: vec![

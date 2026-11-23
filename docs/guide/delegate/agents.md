@@ -147,9 +147,17 @@ The agent uses `--no-wait` only when you explicitly ask it to register a questio
 
 ### Sleep mode {#sleep-mode}
 
-When you go away on purpose, switch the project to sleep mode (`agpj mode sleep`). In sleep mode the agent does not ask you anything: `message ask` is refused, so no question reaches the board, your notifications, or the chat. The agent has a subagent decide, based on the existing code, the project's docs, and the answers you gave to earlier questions, and then continues with the conclusion without waiting. Work that only you can do, such as a check on a real device, is left undone; the agent notes in the task history that you need to complete it and why, and moves on to other work.
+You can also switch the mode from the board: see [Mode](../watch/board#mode).
+
+When you go away on purpose, switch the project to sleep mode (`agpj mode sleep`). In sleep mode the agent does not bother you: the questions it would ask are decided by a subagent. The agent holds a question only when it truly needs you. A held question is not shown on the board, not notified, and not sent to the chat, and the task it belongs to does not wait for it. The board shows how many questions are held next to the mode. When sleep ends, whether you switch the mode or the daily window ends, all held questions reach you at once, in the order they were held, and behave like ordinary questions. The agent can withdraw a held question it no longer needs, and a withdrawn one is never delivered. The agent has a subagent decide, based on the existing code, the project's docs, and the answers you gave to earlier questions, and then continues with the conclusion without waiting. Work that only you can do, such as a check on a real device, is left undone; the agent notes in the task history that you need to complete it and why, and moves on to other work.
 
 When you come back, the task's history shows each decision: what the question was, what was chosen, who decided (`subagent:NAME`), why, and what it rests on (code, documents, or past questions such as `Q-12`). If you disagree, tell the agent and it changes course. `agpj mode sparring` returns to the default, where the agent listens and asks you again. The commands are in [Sleep mode](../reference/cli#sleep-mode).
+
+### Brainstorm mode {#brainstorm-mode}
+
+When you want to think an epic or a task through, switch the project to brainstorm mode with a target (`agpj mode brainstorm --target <epic-id|task-number>`). The agent reads the epic or the task and what is already decided, and asks you one question at a time about the biggest gap: the purpose, the reader, the constraints, the alternatives, or the risks. The questions arrive on the board like any other question, and the task you chose keeps running, because a brainstorm question does not pause it. The agent follows up on each answer and records a decision you reach in the task's history or the epic's document.
+
+End the brainstorm with `agpj mode sparring`, and the agent goes back to listening. Questions about ordinary work are still accepted while you brainstorm. If the project goes to sleep, for example when a sleep window starts, the brainstorm ends and the agent stops asking. The commands are in [Brainstorm mode](../reference/cli#brainstorm-mode).
 
 ## Wait for changes
 

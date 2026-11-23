@@ -15,7 +15,7 @@ title: CLIリファレンス
 | タスクを移す、エージェントの状態を報告する | `mv`、`state` |
 | このセッションをエージェントに接続する、離れる、エージェントを一覧する | `connect`、`disconnect`、`agent ls` |
 | 後で効く判断を記録する | `history add` |
-| 組手とスリープを切り替える | `mode` |
+| 組手・スリープ・壁打ちを切り替える | `mode` |
 | スリープ中にサブエージェントが下した判断を記録する | `decision add` |
 | タスクの本文を編集する | `edit` |
 | タスクをリリースに割り当てる | `version`、`edit --planned-version`、`epic plan` |
@@ -93,8 +93,12 @@ agpj --project "My project" result add 1 --summary "Top page capture" --file top
 agpj --project "My project" result add 1 --summary "All screens of the mock" --file 01.png --file 02.png --file 03.png --actor ai
 agpj --project "My project" result add 1 --summary "Finished and checked" --final --actor ai
 agpj --project "My project" result add 1 --published v1.0.0 --link https://example.com/releases/v1.0.0 --summary "Released" --actor ai
+agpj --project "My project" result add 1 --plan RP-2 --summary "The endpoint answers its first request" --link https://example.com/demo --actor ai
+agpj --project "My project" result add 1 --plan RP-3 --actor ai
 agpj --project "My project" result ls 1
 ```
+
+`--plan RP-<n>`を付けると、タスクの[成果の予定](../../dev/reference/files.md#result-plans)のどれかに対する成果として届けます。順番は問わず、予定を書き写す必要もありません。タイトルの既定は予定の内容（`--title`で上書き）、`--summary`は省くと予定の内容が要約になり、成果には予定のIDが`planId`として付きます。予定は、そのIDを持つ成果が保存されている間「届け済み」とみなし、`show --json`が各予定の`deliveredResultVersion`として返します（未届けの間は`null`）。最終成果の予定は`--final`なしでも最終の成果になります。中間成果の予定に`--final`を付けると`invalid_value`で失敗し、`--plan`なしの`--final`はこれまでどおりです。存在しない予定のIDや別のタスクの予定は`result_plan_not_found`で失敗します。1つの予定を届ける成果は1件で、内容を変えて届け直すと`result_plan_delivered`で失敗し、同じ配信の再送（下の判定に予定も含みます）は安全です。`--plan`と`--published`は同時に使えません。届けていない中間成果の予定が作業や自動Doneを止めることはなく、`finalResultMissing`の案内も変わりません。
 
 成果には、タスクごとに次のバージョン番号（1、2、……）が付きます。記録しても列と稼働状態は変わらず、履歴が1件増えます。同じ成果を繰り返し送っても安全です。すでに記録した成果を見つけて`created: false`を返し、何も書きません。`--key`を省くと、内容（種別・要約・リンク・画像のバイト列）で同じ成果かを判断します。`--key <key>`で自分で名前を付けることもでき、別の内容に同じキーを使うと`invalid_value`で失敗します。`--title`を省くと、タイトルは要約の最初の1文を80文字までに切ったものになります（切ったときは最後が`…`）。タイトルは同じ成果かどうかの判断にも含まれるため、別のタイトルで送り直すと、同じ`--key`を使わない限り別の成果になります（同じ`--key`では`invalid_value`で失敗します）。要約とリンクは1〜2,000文字、1つのタスクに残せる成果は100件までです。AIは、人の下書き・アーカイブ済み・完了のタスクには成果を記録できません。ただし、すでに記録した成果の再送は成功します。`--published バージョン名`は公開の記録です。`--link`が必須で、`--final`とは併用できず、バージョン名は`version add`と同じ規則で検証され、要約の先頭に`Published: バージョン名`の行が付きます。Doneのタスクが受け付ける唯一の成果で、最終成果がすでにあっても、AIでも人でも追加できます。
 
@@ -114,7 +118,7 @@ agpj --project "My project" message ask --actor ai --task 1 --questions-json - -
 
 ## スリープモード {#sleep-mode}
 
-`mode`はプロジェクトのモードを表示・切り替えます。既定は組手（`sparring`）で、エージェントは待ち受けて、ボードであなたに質問します。スリープ（`sleep`）にすると質問が止まります。
+`mode`はプロジェクトのモードを表示・切り替えます。既定は組手（`sparring`）で、エージェントは待ち受けて、ボードであなたに質問します。スリープ（`sleep`）にすると、質問はスリープが解けるまで保留されます。
 
 ```sh
 agpj --project "My project" mode            # 現在のモードを表示
@@ -122,7 +126,38 @@ agpj --project "My project" mode sleep      # あなたへの質問を止める
 agpj --project "My project" mode sparring   # 既定に戻す
 ```
 
-スリープ中の`message ask`は`sleep_mode`で拒否され、ボード・通知・チャットのどこにも届きません。エージェントはサブエージェントに判断させ、その結論で進め、タスクに記録します。
+毎日の時間帯を決めておくと、自動でスリープになります。時刻はこのコンピューターの時計の`HH:MM`で、終了が開始より前なら日をまたぎます。
+
+```sh
+agpj --project "My project" mode schedule --start 23:00 --end 08:00   # 時間帯を決めてオンにする
+agpj --project "My project" mode schedule --off                        # オフにする（時刻は残る）
+agpj --project "My project" mode auto                                  # 手動のモードを忘れ、時間帯に決めさせる
+```
+
+手動のモードは、設定されているあいだ優先されます。時間帯のあいだに設定したものはその時間帯が終わるまで続き、終わるとスケジュールがまた決めます。時間帯の外で設定したものは、次の時間帯が始まるまで続きます（時間帯がなければ変えるまで）。`mode`は、いま効いているモード、その出どころ（`manual`か`schedule`。モードが終わる時刻の`until`も。時間帯の終わり、手動のモードならその保持の終わり）、時間帯を示します。`message ask`と`agpj progress`も同じ決め方を使い、進行表は`mode`の隣に`modeSource`と`modeUntil`を加えます。
+
+
+### 壁打ちモード {#brainstorm-mode}
+
+壁打ちモードでは、1つのエピックか1つのタスクについて、エージェントがあなたに質問します。対象（タスク番号かエピックID）を付けて始め、組手に戻して終わります。
+
+```sh
+agpj --project "My project" mode brainstorm --target INTERACTION-MODES   # エピック
+agpj --project "My project" mode brainstorm --target 12                  # タスク
+agpj --project "My project" mode sparring                                # 終わる
+```
+
+`--target`は必須で、`brainstorm`のときだけ使えます。存在しない対象と、アーカイブ済みのタスクは拒否されます。壁打ちを始めると、エージェントへ「Start brainstorming on ...」という依頼も送るので、`wait`で待ち受けているエージェントはすぐに始めます。進行表には`mode: "brainstorm"`と`modeTarget`が入り、`mode`コマンドも対象を表示します。
+
+エージェントは`--brainstorm`を付けて質問します。タスクには紐付かないので、対象のタスクは動き続けます。
+
+```sh
+agpj --project "My project" message ask --actor ai --brainstorm --questions-json '{"questions":[{"body":"Who reads this page first?"}]}'
+```
+
+モードが壁打ちでなくなると、`message ask --brainstorm`は`brainstorm_not_active`で拒否されます。`--brainstorm`のない質問は通常の質問で、そのまま受け付けます。スリープが常に優先されます。スリープの時間帯が始まるとモードはスリープになり、`--brainstorm`の有無にかかわらず、すべての`message ask`が保留されます。
+
+スリープ中の`message ask`は拒否されません。質問を保留として保存し、`--no-wait`がなくてもすぐに`Held 2 questions: Q-5, Q-6.`（`--json`では`{"type": "held", "questions": [{"id": "Q-5"}, {"id": "Q-6"}]}`）を出力します。保留中の質問はボード・通知・チャットのどこにも届かず、紐付くタスクは作業を続けます。`agpj message withdraw <id> --actor ai`で取り下げられ、保留中の質問への`agpj message wait`もすぐに戻ります。`agpj mode sparring`や毎日の時間帯の終わりでスリープが解けると、`agpj mode`が`Released 2 held questions: Q-5, Q-6.`を出力し、質問は通常の未回答の質問として扱われます。エージェントは、判断できることはサブエージェントに判断させ、その結論で進め、タスクに記録します。
 
 ```sh
 agpj --project "My project" decision add 1 \
@@ -143,7 +178,7 @@ agpj --project "My project" edit 1 --desc-file task.md
 
 説明は50,000文字まで、エピックの詳細（`EPIC.md`）は100,000文字まで使えます。ファイルは[Markdownファイルの形式](./file-format)に従う必要があります。標準入力から説明を読むには、`--desc -`を使います。
 
-`edit --desc-file`は、本文と完了条件を置き換え、`TASK.md`の最新の履歴と質問への参照（`questions`）を保ちます。入力ファイルの`history`と`questions`は無視されるため、未回答の質問を参照しているタスクは回答待のままです。参照を変えるには`message link`・`message unlink`を使います。CLIや画面からの移動・状態の変更などの操作は、`TASK.md`に履歴を追加し、`show`・`snapshot`・ブラウザは同じ履歴を読みます。
+`edit --desc-file`は、本文・完了条件・成果の予定（`resultPlans`。タスクが届けるものと、その条件）を置き換え、`TASK.md`の最新の履歴と質問への参照（`questions`）を保ちます。入力ファイルの`history`と`questions`は無視されるため、未回答の質問を参照しているタスクは回答待のままです。参照を変えるには`message link`・`message unlink`を使います。CLIや画面からの移動・状態の変更などの操作は、`TASK.md`に履歴を追加し、`show`・`snapshot`・ブラウザは同じ履歴を読みます。
 
 ## エピックの詳細を編集する
 
@@ -212,7 +247,7 @@ agpj --project "My project" version release --clear
 agpj --project "My project" version ls --json
 ```
 
-プロジェクトのバージョンは、その[ドキュメント](../watch/docs)の`docs/release/`直下にある`*.md`ファイルで、新しいものから並びます（`v1.10.0`は`v1.9.0`より前。`TEMPLATE.md`はリリースのテンプレートで、バージョンにはなりません）。`version add VERSION`は`docs/release/TEMPLATE.md`をコピーして`docs/release/VERSION.md`を作り（テンプレートがなければ、標準のリリースノートのテンプレートを先に書きます）、既存のファイルは上書きしません。すでにファイルがあるバージョンは、一覧にあるものとして扱います。あわせて、そのリリースノートを書くための、担当がAIのカードをBacklogに1枚作ります（タイトルは`Write the release notes for VERSION`。表示言語が日本語なら日本語）で、予定のバージョンはそのバージョンです。人がTodoに送ってから着手し、同じバージョンをもう一度追加しても2枚目は作りません。バージョンを追加してもリリースバージョンは変わりません。ファイルを自分で作ってもバージョンを追加できます。`version release VERSION`は、まだ一覧にないバージョンを同じ方法で載せたうえでリリースバージョンにします。引数なしではリリースバージョンを表示します。あとでリリースバージョンのファイルを削除すると、ファイルが戻るまで、プロジェクトはリリースバージョンがないものとして読みます。リリースバージョンを変えてもタスクは動きません。タスクは割り当てられたバージョンの名前を保存しています。
+プロジェクトのバージョンは、その[ドキュメント](../watch/docs)の`docs/release/`直下にある`*.md`ファイルで、新しいものから並びます（`v1.10.0`は`v1.9.0`より前。`TEMPLATE.md`はリリースのテンプレートで、バージョンにはなりません）。`version add VERSION`は`docs/release/TEMPLATE.md`をコピーして`docs/release/VERSION.md`を作り（テンプレートがなければ、標準のリリースノートのテンプレートを先に書きます）、既存のファイルは上書きしません。すでにファイルがあるバージョンは、一覧にあるものとして扱います。あわせて、そのリリース作業のカードを、担当がAIでBacklogに1枚作ります。タイトルは`Release VERSION`（表示言語が日本語なら`VERSION をリリースする`）で、予定のバージョンはそのバージョンです。やることには、テンプレートをもとに`docs/release/VERSION.md`のリリースノートを書くことと、リリース作業そのもの（リリースを公開し、利用者に届いたことを確かめる）が並びます。人がTodoに送ってから着手し、同じバージョンをもう一度追加しても2枚目は作りません。このカードがどの経路でもDoneになり、VERSIONがリリースバージョンのときは、リリースバージョンが登録済みの版のうちいちばん近い新しい版へ進み、カードの履歴に残ります（`Release version moved from v2.1.0 to v2.2.0.`、日本語では`リリース版を v2.1.0 から v2.2.0 に進めました。`）。より新しい版がなければリリースバージョンは変わらず、そのことも履歴に残ります。リリースバージョンが別の版のとき、Done以外のレーンへ動かすとき、すでにDoneのカードのときは何も変わりません。リリースバージョンが動くのは、カードが最初にDoneになったときだけです。カードを戻してもう一度Doneにしても、その間に新しい版を登録していても、リリースバージョンは変わりません。バージョンを追加してもリリースバージョンは変わりません。ファイルを自分で作ってもバージョンを追加できます。`version release VERSION`は、まだ一覧にないバージョンを同じ方法で載せたうえでリリースバージョンにします。引数なしではリリースバージョンを表示します。あとでリリースバージョンのファイルを削除すると、ファイルが戻るまで、プロジェクトはリリースバージョンがないものとして読みます。リリースバージョンを変えてもタスクは動きません。タスクは割り当てられたバージョンの名前を保存しています。
 
 ### リリースドキュメントを生成する {#generate-a-release-document}
 

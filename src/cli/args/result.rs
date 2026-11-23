@@ -37,8 +37,11 @@ pub struct ResultAddArgs {
     #[arg(long, value_name = "TEXT")]
     pub title: Option<String>,
     /// Short text that says what the requester can look at (1 to 2000 characters)
-    #[arg(long, value_name = "TEXT")]
-    pub summary: String,
+    #[arg(long, value_name = "TEXT", required_unless_present = "plan")]
+    pub summary: Option<String>,
+    /// Deliver this result against a result plan of the task (such as RP-2); its content is the default summary and title, and a final plan makes the result final
+    #[arg(long, value_name = "RP-N", conflicts_with = "published")]
+    pub plan: Option<String>,
     /// Image of the result (PNG, JPEG, WebP, or GIF), stored as an attachment of the task; repeat it to put several images (up to 20, in order) on one result
     #[arg(long, value_name = "PATH")]
     pub file: Vec<PathBuf>,

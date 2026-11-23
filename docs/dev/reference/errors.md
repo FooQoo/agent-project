@@ -11,8 +11,10 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `task_not_found` | The task ID does not exist in the project. | 3 | 404 |
 | `task_archived` | A write targets an archived task. | 1 | 409 |
 | `task_not_archived` | A delete or restore targets a task that is not archived. | 1 | 409 |
+| `result_plan_not_found` | `result add --plan` (or the API's `plan`) names a plan ID the task does not have: an unknown ID, or the ID of another task's plan. Nothing is written. | 3 | 404 |
+| `result_plan_delivered` | `result add --plan` names a plan that a saved result already delivers, and the delivery is not a repeat of that result. Nothing is written; the message names the delivering result's version. | 1 | 409 |
 | `task_is_draft` | An AI `edit`, `history add`, `mv`, or `state` targets a person's draft (`human`); or a person's `mv` to Todo, `epic send`, or send from the board targets one. The `reason` says to wait for the user to finalize it. | 1 | 409 |
-| `sleep_mode` | `message ask` while the project is in sleep mode. Nothing is saved, notified, or shown in the chat. The `reason` tells the agent to have a subagent decide, continue with its conclusion, and record it with `decision add`. | 1 | none (CLI only) |
+| `brainstorm_not_active` | `message ask --brainstorm` while the mode in effect is not brainstorm, for example after the user ended it with `agpj mode sparring`. Nothing is saved. The `reason` tells the agent to stop asking brainstorm questions and check `mode` in the progress table. | 1 | none (CLI only) |
 | `no_release_version` | `add`, `edit`, `ls`, or `progress` with `--release-version` runs in a project that has no release version. Nothing is saved. Set one with `version release VERSION`, or name a version. The board API answers 422. | 1 | 422 |
 | `task_in_backlog` | An agent's `mv` or `state` targets a Backlog task. `mv` to Doing or Done is refused for an agent; it leaves the Backlog only by a send to Todo. | 1 | 409 |
 | `send_with_open_questions` | A person's `mv <id> todo`, `epic send`, or Web move to Todo targets a plan with open questions and no confirmation (`--force`, or `ack: true` in the API). Nothing is saved; the message lists the question IDs. After a confirmed send the question stays and the task is Awaiting answer until it is answered. | 1 | 409 |
@@ -154,6 +156,15 @@ These are returned by the `/api/preferences` route (see [Web API](./web-api.md#d
 | `invalid_preferences` | The body has an unknown field, a value that is not allowed, or neither `locale` nor `theme`. Nothing is saved. | n/a | 422 |
 | `preferences_unavailable` | The preferences file could not be written. The saved value is unchanged. | n/a | 500 |
 
+
+## Project mode
+
+These are returned by the `/api/projects/{projectId}/mode` route (see [Web API](./web-api.md#project-mode)). They are not CLI errors, so they have no exit code. A modes file that cannot be read is not an error: the project reads as sparring.
+
+| Code | When | Exit | HTTP |
+| --- | --- | --- | --- |
+| `invalid_mode` | The body is not exactly one of `{"mode": "sparring" \| "sleep" \| "auto"}`, `{"mode": "brainstorm", "target": {"type", "id"}}`, or a `{"schedule": {enabled, start, end}}` with two different `HH:MM` times. Nothing is saved. | n/a | 422 |
+| `mode_unavailable` | The modes file could not be written. The saved mode is unchanged. | n/a | 500 |
 
 ## Phone notification settings
 

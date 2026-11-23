@@ -3,7 +3,7 @@
 
 use serde_yaml_ng::{Mapping, Value};
 
-use super::frontmatter::{self, AcceptanceItem, Split};
+use super::frontmatter::{self, AcceptanceItem, ResultPlan, Split};
 use super::model::HistoryRecord;
 use super::validate::{self, Defect};
 
@@ -23,11 +23,14 @@ pub struct ParsedTask {
     pub questions: Vec<String>,
     /// The `plannedVersion` as written; `None` when absent or unreadable.
     pub planned_version: Option<String>,
+    /// The `resultPlans` of the file, empty when absent or when the list has a defect.
+    pub result_plans: Vec<ResultPlan>,
     pub history: Vec<HistoryRecord>,
     pub frontmatter_defects: Vec<Defect>,
     pub acceptance_defects: Vec<Defect>,
     pub questions_defects: Vec<Defect>,
     pub planned_version_defects: Vec<Defect>,
+    pub result_plans_defects: Vec<Defect>,
     pub history_defects: Vec<Defect>,
 }
 
@@ -39,6 +42,7 @@ impl ParsedTask {
             .chain(&self.acceptance_defects)
             .chain(&self.questions_defects)
             .chain(&self.planned_version_defects)
+            .chain(&self.result_plans_defects)
             .chain(&self.history_defects)
             .cloned()
             .collect()
@@ -61,11 +65,13 @@ pub fn parse_task(text: &str, mode: ParseMode) -> ParsedTask {
         acceptance: acceptance.acceptance,
         questions: Vec::new(),
         planned_version: None,
+        result_plans: Vec::new(),
         history: Vec::new(),
         frontmatter_defects: Vec::new(),
         acceptance_defects: Vec::new(),
         questions_defects: Vec::new(),
         planned_version_defects: Vec::new(),
+        result_plans_defects: Vec::new(),
         history_defects: Vec::new(),
     };
     match frontmatter::questions_of(text) {
@@ -76,6 +82,9 @@ pub fn parse_task(text: &str, mode: ParseMode) -> ParsedTask {
         Ok(name) => parsed.planned_version = name,
         Err(d) => parsed.planned_version_defects.push(d),
     }
+    let (plans, plan_defects) = frontmatter::result_plans_of(text, mode == ParseMode::Stored);
+    parsed.result_plans = plans;
+    parsed.result_plans_defects = plan_defects;
     for d in acceptance.defects {
         if d.field == "frontmatter" {
             parsed.frontmatter_defects.push(d);

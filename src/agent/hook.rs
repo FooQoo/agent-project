@@ -4,6 +4,9 @@
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
+use super::hook_output::error_context;
+pub(crate) use super::hook_output::output;
+
 use crate::{
     clock::{Clock, SystemClock},
     domain::{ProjectId, validate_project_name},
@@ -18,8 +21,8 @@ const MAX_PROGRESS_BYTES: usize = 256 * 1024;
 
 /// Why no snapshot could be produced. Shown to the agent as `AGPJ_ERROR`.
 pub(super) struct Failure {
-    code: &'static str,
-    reason: String,
+    pub(super) code: &'static str,
+    pub(super) reason: String,
 }
 
 impl Failure {
@@ -260,10 +263,12 @@ fn progress_context(
             None => return Ok(None),
         }
     };
+    // The end of a sleep window is noticed here; the file watcher tells the board.
+    let _ = crate::mode::release_held(store.shared_dir(), &meta.id);
     let snapshot = store.board(&meta.id).map_err(failed)?;
     let mut value = progress::build_with(&snapshot, store.shared_dir(), SystemClock.now(), include);
     value.locale = saved_locale(store.shared_dir());
-    value.mode = crate::mode::non_default(store.shared_dir(), meta.id.as_str());
+    crate::mode::fill_progress(&mut value, store.shared_dir(), meta.id.as_str());
     let json = serde_json::to_string(&value)
         .map_err(|error| Failure::new("board_unavailable", error.to_string()))?;
     progress_text(&json).map(|text| Some((text, meta.id)))
@@ -282,19 +287,6 @@ fn progress_text(json: &str) -> Result<String, Failure> {
         ));
     }
     Ok(format!("AGPJ_PROGRESS\n{json}"))
-}
-
-fn error_context(failure: &Failure) -> String {
-    let body = serde_json::json!({"code": failure.code, "reason": failure.reason});
-    format!(
-        "AGPJ_ERROR\n{body}\nDo not make board-dependent changes until a complete progress table is available."
-    )
-}
-
-/// The hook's JSON for `event` with `context` as the agent's added context.
-pub(crate) fn output(event: &str, context: &str) -> String {
-    serde_json::json!({"hookSpecificOutput":{"hookEventName":event,"additionalContext":context}})
-        .to_string()
 }
 
 #[cfg(test)]

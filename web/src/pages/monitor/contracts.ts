@@ -68,7 +68,12 @@ export interface MonitorWrites {
 /** The project switcher the header shows when the app lets the person change project. */
 export type MonitorHeaderProps = Pick<
   HeaderProps,
-  'projects' | 'activeProjectId' | 'projectSwitcher' | 'switchDisabled' | 'versionSlot'
+  | 'projects'
+  | 'activeProjectId'
+  | 'projectSwitcher'
+  | 'switchDisabled'
+  | 'versionSlot'
+  | 'statusSlot'
 >;
 
 export interface MonitorViewProps {

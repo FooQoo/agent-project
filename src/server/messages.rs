@@ -52,6 +52,10 @@ pub(crate) async fn message_response(shared: PathBuf, raw_project: String, id: S
         Err(error) => return agpj_error_response(&error),
     };
     match on_files(shared, move |store| store.message(&project, &id)).await {
+        // A held question is not shown to the person until sleep ends.
+        Ok(held) if held.state() == "held" => agpj_error_response(&AgpjError::MessageNotFound {
+            id: held.id().to_owned(),
+        }),
         Ok(MessageView::Question(question)) => {
             json_response(StatusCode::OK, &serde_json::json!({ "question": question }))
         }
@@ -101,6 +105,7 @@ pub(crate) async fn list_response(
         Ok(messages) => {
             let mut picked: Vec<MessageView> = messages
                 .into_iter()
+                .filter(|m| m.state() != "held")
                 .filter(|m| status.is_none_or(|s| m.state() == s))
                 .filter(|m| {
                     kind.is_none_or(|k| match m {

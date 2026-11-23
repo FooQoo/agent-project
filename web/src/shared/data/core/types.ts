@@ -44,6 +44,8 @@ export interface EventHandlers {
   onReady?(build: string): void;
   /** The `preferences` event; the app applies it. */
   onPreferences?(payload: unknown): void;
+  /** The `mode` event: projects whose interaction mode changed; the app applies it. */
+  onMode?(payload: unknown): void;
 }
 
 /** The one place the data layer talks to a server: the PC and the monitor each have an adapter. */

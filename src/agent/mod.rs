@@ -1,5 +1,6 @@
 pub(crate) mod connection_store;
 pub mod hook;
+mod hook_output;
 pub mod message_wait;
 pub(crate) mod session_end;
 pub(crate) mod session_identity;

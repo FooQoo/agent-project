@@ -299,6 +299,7 @@ fn versions_follow_the_content_and_ignore_other_fields() {
             TaskTextParts {
                 body: Some("Changed.\n"),
                 acceptance: None,
+                ..Default::default()
             },
             at(6),
         )
@@ -323,6 +324,7 @@ fn the_events_are_a_copy_that_later_changes_do_not_reach() {
             TaskTextParts {
                 body: Some("Replaced text.\n"),
                 acceptance: None,
+                ..Default::default()
             },
             at(7),
         )
@@ -377,6 +379,7 @@ fn a_block_lists_the_images_it_refers_to_with_their_size() {
             TaskTextParts {
                 body: Some(&body),
                 acceptance: None,
+                ..Default::default()
             },
             at(8),
         )
@@ -433,6 +436,7 @@ fn acceptance_conditions_follow_the_blocks_with_their_full_text() {
             TaskTextParts {
                 body: None,
                 acceptance: Some(&items),
+                ..Default::default()
             },
             at(9),
         )

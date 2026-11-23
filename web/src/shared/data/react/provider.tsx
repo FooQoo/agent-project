@@ -25,6 +25,7 @@ export function DataProvider({ children, core: given, ...options }: DataProvider
         queryClient,
         onReady: (build) => latest.current.onReady?.(build),
         onPreferences: (payload) => latest.current.onPreferences?.(payload),
+        onMode: (payload) => latest.current.onMode?.(payload),
         onConnectionState: (state) => latest.current.onConnectionState?.(state),
       }),
     [given, adapter, visibility, queryClient],

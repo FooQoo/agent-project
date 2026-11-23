@@ -15,8 +15,11 @@ test.beforeEach(async ({ page }) => {
 test('the row opens the notification dialog, a choice is saved, and focus returns to Settings', async ({ page }) => {
   await openHeaderItem(page, 'Settings');
   const settings = page.getByRole('dialog', { name: 'Settings' });
-  // The settings list has the row, not the checkboxes.
-  await expect(settings.getByRole('checkbox')).toHaveCount(0);
+  // The settings list has the row, not the notification checkboxes. (The Mode section has its own
+  // schedule checkbox, so only the notification choices are counted.)
+  await expect(
+    settings.getByRole('checkbox', { name: /^(Results|Questions that need|History additions)/ }),
+  ).toHaveCount(0);
   await settings.getByRole('button', { name: 'Notification settings' }).click();
   await expect(settings).toHaveCount(0);
 

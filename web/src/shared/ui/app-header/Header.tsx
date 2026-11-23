@@ -43,6 +43,8 @@ export interface HeaderProps {
   projectSwitcher?: ReactNode;
   /** The project's release-version menu, shown right of the project's name on the board. */
   versionSlot?: ReactNode;
+  /** A status chip right of the spacer, such as the sleep mode indicator. */
+  statusSlot?: ReactNode;
   /** The settings dialog; without it the settings button opens nothing. */
   settings?: HeaderSettings;
   /** The logo the header shows; the board's own logo file by default. */
@@ -73,6 +75,7 @@ export function Header({
   onBack = () => {},
   projectSwitcher = null,
   versionSlot = null,
+  statusSlot = null,
   settings,
   logoSrc = `${import.meta.env.BASE_URL}logo-white.png`,
   settingsSize = 'm',
@@ -116,6 +119,7 @@ export function Header({
         </>
       )}
       <span className="header__spacer" aria-hidden="true" />
+      {statusSlot}
       {viewMode === 'board' && canAdd && (
         <Button type="button" className="header__add" disabled={switchDisabled} onClick={onAdd}>
           <IconLabel icon={SparklesIcon}>{t('askAi.button')}</IconLabel>

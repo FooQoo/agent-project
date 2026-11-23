@@ -37,6 +37,7 @@ pub(crate) fn error_response(
 pub(crate) fn agpj_error_response(error: &AgpjError) -> Response {
     let status = match error {
         AgpjError::TaskNotFound { .. }
+        | AgpjError::ResultPlanNotFound { .. }
         | AgpjError::ProjectNotFound { .. }
         | AgpjError::AttachmentNotFound { .. }
         | AgpjError::EpicNotFound { .. }
@@ -62,6 +63,7 @@ pub(crate) fn agpj_error_response(error: &AgpjError) -> Response {
         | AgpjError::RequestWithdrawn { .. }
         | AgpjError::TaskStatusChanged { .. }
         | AgpjError::PlannedVersionChanged { .. }
+        | AgpjError::ResultPlanDelivered { .. }
         | AgpjError::TaskIsDraft { .. }
         | AgpjError::TaskInBacklog { .. }
         | AgpjError::EpicIsDraft { .. }

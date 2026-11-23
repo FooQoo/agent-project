@@ -202,6 +202,9 @@ test('the task grips never take keyboard focus', async ({ page }) => {
   }
   await page.keyboard.press('Tab');
   await expect(details(page).getByRole('button', { name: 'Close details' })).toBeFocused();
+  // The Brainstorm action sits under the title, between the close button and the tabs.
+  await page.keyboard.press('Tab');
+  await expect(details(page).getByRole('button', { name: 'Brainstorm #8' })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(details(page).getByRole('tab', { name: 'Description' })).toBeFocused();
 
@@ -212,8 +215,8 @@ test('the task grips never take keyboard focus', async ({ page }) => {
       .map((element) => (element.textContent ?? '').trim().slice(0, 3) || element.getAttribute('aria-label')),
   );
   // Header actions (switcher, Ask AI, the menu), the release version, the band's two counts and its button, eight
-  // cards, the Pending card's answer button, Archive completed tasks, four detail controls.
-  expect(focusable).toHaveLength(3 + 1 + 3 + 8 + 1 + 1 + 4);
+  // cards, the Pending card's answer button, Archive completed tasks, five detail controls (with Brainstorm).
+  expect(focusable).toHaveLength(3 + 1 + 3 + 8 + 1 + 1 + 5);
   expect(await page.locator('.grip').evaluateAll((elements) => elements.every((element) => (element as HTMLElement).tabIndex < 0))).toBe(true);
 });
 

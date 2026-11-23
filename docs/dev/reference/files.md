@@ -12,6 +12,7 @@ A task is one unit of work on the board. A task's state lives in `task.json`; it
 | `title` | 1 to 100 characters after trimming, one line. |
 | `description` | The whole `TASK.md`, frontmatter included. Only the body counts toward its 50,000-character limit. CRLF is normalized to LF. |
 | `body` | `description` without frontmatter: GitHub Flavored Markdown with no required headings. The task template recommends `Background`, `What to do`, `Approach`, and `Verification results` headings, but nothing validates them. |
+| `resultPlans`, `resultPlansError` | The planned results from frontmatter (empty when invalid), and whether `resultPlans` is invalid. See [Result plans](#result-plans). |
 | `acceptance`, `acceptanceError` | The acceptance items from frontmatter (empty when invalid), and whether `acceptance` or the YAML syntax is invalid. |
 | `assignee` | `ai` or `human`. Set at creation and fixed afterwards. |
 | `epicId` | An EPIC-ID in the same project, or `null`. |
@@ -139,6 +140,45 @@ history:
 ---
 ```
 
+### Result plans {#result-plans}
+
+A task can state at planning time what it will deliver and when. Each plan is an item of the top-level `resultPlans` list of `TASK.md`, kept apart from `acceptance`: a plan says what is delivered and under which condition it should be delivered, while an acceptance condition says what makes the task complete.
+
+```yaml
+---
+acceptance:
+  - id: AC-1
+    text: The report covers every endpoint
+    done: false
+resultPlans:
+  - id: RP-1
+    content: A screenshot of the new layout
+    condition: When the layout is fixed
+    final: false
+  - id: RP-2
+    content: The working endpoint
+    condition: When the endpoint answers its first request
+    final: false
+  - id: RP-3
+    content: The finished report
+    condition: When every acceptance condition is met
+    final: true
+history: []
+---
+```
+
+| Field | Rule |
+| --- | --- |
+| `id` | `RP-<n>`: a positive number without a leading zero, unique in the task. Input may leave it out and the store assigns the next free number above every `RP-` number in the list; an ID that is written never changes, so a plan keeps its ID after the task starts and is read again. A stored file without an ID is a problem on that file. |
+| `content` | What will be delivered. 1 to 2,000 characters after trimming; an empty text is an input error. |
+| `condition` | When it should be delivered, in natural language. 1 to 2,000 characters after trimming; an empty text is an input error. |
+| `final` | `true` for the final result, `false` or absent for an intermediate result. At most one plan is final. |
+
+- Plans are optional. A task with no `resultPlans` key, `null`, or `[]` has none, and an existing task or result reads and writes as before. A task may have no intermediate plan, many, or only a final one. The list has at most 50 plans, and the list order is only the order they were written in: it is not a delivery order or a step order.
+- Plans are written with the task: the file given to `add --desc-file` and to `edit --desc-file` may hold `resultPlans`, and the web API takes a `resultPlans` array on `POST …/tasks` and on the body-fields form of `PATCH …/tasks/{id}`. Plans without an ID get one in the same save. `edit --desc-file` replaces the whole list, like `acceptance`: keep the IDs of the plans that stay, and a plan left out is removed. The permissions of editing a task apply unchanged: a person's draft, a Done task, and an archived task refuse the same writes.
+- Every other write (a move, a state change, a result, a history entry, a title edit) keeps `resultPlans` as it is, in its place in front of `history`. A task that is started keeps the same IDs, content, and conditions.
+- A `resultPlans` that cannot be read (not a list, a plan that is not a mapping or has an unknown key, a missing or empty text, a bad or repeated ID, two final plans) is reported as a problem of the file, with the field `resultPlans[<index>].<key>`. The task then reads with `resultPlans: []` and `resultPlansError: true`, the same way an unreadable `acceptance` does, and the other fields are unaffected.
+
 ### Planned versions {#planned-versions}
 
 The versions of a project are files, and the version of a task is a key of its `TASK.md`. Both the board and the CLI (`version`, `edit --planned-version`, `epic plan`) write them through the file store, and a person can write them by hand.
@@ -147,7 +187,8 @@ The versions of a project are files, and the version of a task is a key of its `
 - **The template.** `docs/release/TEMPLATE.md` is the release-note template. When it is missing, adding a version first writes a standard one: an opening sentence to replace, then `## Changes`, `## Fixes`, `## Breaking changes`, and `## Required update steps`, each holding `None.`. An existing template is read as it is and never rewritten, so a project can edit it.
 - **The generated document.** `release doc` and `POST …/release-doc` write the generated block of a version into `docs/release/<version>.md`, between the lines `<!-- agpj:generated:start -->` and `<!-- agpj:generated:end -->`, and keep every other byte of the file. A file without markers gets the block appended; a file with damaged markers is refused (`release_doc_refused`). A new project has an empty `docs/release/` folder, and an existing project gets it when a version is first added or generated. See [Generate a release document](../../guide/reference/cli.md#generate-a-release-document).
 - **Adding.** `version add`, `POST …/versions`, and setting a release version that is not listed yet create `docs/release/<version>.md` as a copy of the template, and `docs/release/` when it is missing. Each file is written whole to a hidden temporary file and linked into place, so it appears complete or not at all and never overwrites an existing one: a version that already has its file is already listed and the call answers `changed: false`. The file's content is not board data, so the same file holds the release document. Adding a version does not change the release version.
-- **The release-notes card.** The same operation issues one Backlog card, assigned to the AI, titled `Write the release notes for <version>` (`<version> のリリースノートを作成する` when the board language is Japanese). Its `plannedVersion` is that same version, so the card is planned for the release it documents (the creation history entry records the card as created; no separate planned-version entry is added). Its body names `docs/release/<version>.md` and the template and says that the work starts only after a person sends it to Todo. The card carries `releaseNotesVersion: "<version>"` in `task.json`. Before it creates a card, the operation looks for any card, archived ones included, with that key, so adding the same version again, or retrying after a failure, issues no second card. The file is created first and the card second, both under the project's write lock: if the card cannot be created, the version stays listed and adding it again issues the card. Setting a release version issues the card only when it also creates the file. A card whose `task.json` cannot be read is skipped, so it never blocks adding a version.
+- **The release-work card.** The same operation issues one Backlog card, assigned to the AI, titled `Release <version>` (`<version> をリリースする` when the board language is Japanese). Its `plannedVersion` is that same version, so the card is planned for the release it documents (the creation history entry records the card as created; no separate planned-version entry is added). Its body lists two to-dos: writing the release notes in `docs/release/<version>.md` from the template, and the release work itself (publishing the release and confirming that it reached users); it also says that the work starts only after a person sends it to Todo. The card carries `releaseNotesVersion: "<version>"` in `task.json`. Before it creates a card, the operation looks for any card, archived ones included, with that key, so adding the same version again, or retrying after a failure, issues no second card. The file is created first and the card second, both under the project's write lock: if the card cannot be created, the version stays listed and adding it again issues the card. Setting a release version issues the card only when it also creates the file. A card whose `task.json` cannot be read is skipped, so it never blocks adding a version.
+- **The release version advances when the card is Done.** When a card carrying `releaseNotesVersion` reaches Done, by any path (the CLI, the web API, or the automatic Done of met acceptance conditions), and that version is the project's release version, the release version moves to the nearest newer listed version, in the order of the version list. The advance runs in the same write lock as the move and saves `project.json` before the card, and the card's history records `Release version moved from <old> to <new>.` (`リリース版を <old> から <new> に進めました。` in Japanese). When no newer version is listed, the release version stays and the history records `Release version stays at <version>: no newer version is listed.` Nothing happens, and nothing is recorded, when the release version is another version, when the card moves to a lane other than Done, or when the card is already Done. Only the card's first completion can move the release version: that completion writes `releaseCompletedAt` in `task.json` (even when nothing advances), and a card that is reopened and finished again changes nothing, whatever versions are listed by then.
 - **The release version.** `project.json` may hold `releaseVersion`, a version name, `null`, or nothing. There is no `versions` list in `project.json`; a leftover `versions` field of an earlier build is read and ignored, and it is not written again. A release version must name a listed version when it is set through the CLI or the API. If its file is removed later, the project keeps the stored name but reads as having no release version: `version ls`, the web API, and the Summary report `releaseVersion: null`, `--release-version` fails with `no_release_version`, and the `current` choice is refused. Nothing is cleared, so adding the file again brings the release version back.
 - **A version name** is 1 to 64 characters with no whitespace or control characters, no file-name characters (`/ \ : * ? " < > |`), and no leading dot, because it is also a file name. It is kept and compared exactly, so `v1.8.0` and `1.8.0` are two versions. No format such as semver is required.
 - **A task's plan.** `TASK.md` frontmatter may hold a top-level `plannedVersion: v1.8.0`. An absent key, `null`, and a blank value mean unplanned. `task.json` holds no plan; leftover `plannedVersion` and `plannedVersionChanges` fields of an earlier build are read and ignored. A person can add, change, or remove the key by hand, and the board and the CLI show the edit like any other `TASK.md` change. A hand-written name that is not listed still loads and is shown as written; only the CLI and API writes check the name against the list. A value that is not a string, such as a number or a list, is a problem on that file (field `plannedVersion`), the same way an unreadable `acceptance` is, and the task reads as unplanned. Quote a name that looks like a number (`"1.8"`).
@@ -181,7 +222,10 @@ A result is something the requester can look at, delivered by an agent with `agp
 | `attachmentId` | Optional. The ID of the image of a result that has exactly one image, in the task's `attachments`; the file is read from the attachment route. A result with one image is written with this field so that older versions still read the file. |
 | `attachmentIds` | Optional. The IDs of the images of a result that has two or more, in the order the agent gave them, up to 20. Readers take the images from `attachmentIds` when it is present and otherwise from `attachmentId`, so data written with one image keeps working. An image a result uses by either field cannot be deleted. |
 | `link` | Optional. A URL or a storage location of the main artifact, 1 to 2,000 characters on one line. It is stored as given; Agent Project never opens it. |
+| `planId` | Optional. The ID (`RP-<n>`) of the [result plan](#result-plans) this result delivers (`result add --plan`); absent for a result recorded without a plan. It is the only place the link is stored. |
 | `at` | UTC time the result was recorded. Together with `title` it lets the server list the results recorded in a period without reading `summary`. |
+
+A plan counts as delivered while a saved result carries its `planId`; nothing is stored in the plan itself, and `show --json` and the API return it as `deliveredResultVersion` on each plan: the `version` of the result that delivers it, or `null` while it is undelivered. A plan is delivered by at most one result: a second, different result against it is refused with `result_plan_delivered`, and repeating the same delivery finds the first one. Editing the plans afterwards does not change a stored `planId`.
 
 Recording a result changes neither `taskStatus` nor `agentStatus`. Under one project lock it writes the images (if any, in order), then saves `task.json` and `TASK.md` together with one history entry. If an image is refused or the save fails, the image files written so far are removed and no entry exists, so a failed save is never something to deliver. If the key already exists with the same content, nothing is written and the existing entry is returned. A task holds at most 100 results.
 
@@ -210,6 +254,7 @@ choices:
   - { id: keep, label: Keep them }
 recommended: keep
 askedBy: resident-3f9a1c0e5b7d2a46
+brainstorm: { type: epic, id: INTERACTION-MODES }
 reply:
   choice: keep
   images:
@@ -242,6 +287,7 @@ Add a dark theme to the settings screen.
 | body | The text. A question is 1 to 5,000 characters; a request is 1 to 20,000 characters. |
 | `createdAt` | When the message was created. |
 | `withdrawnAt` | `null` or when it was withdrawn. A message with a reply or an acceptance is not withdrawn. |
+| `heldAt` | Questions only; left out unless set. When the question was asked during sleep mode and held back. It is removed when sleep ends and the question is released. |
 
 Fields of a question:
 
@@ -251,6 +297,7 @@ Fields of a question:
 | `choices` | Optional. 2 to 10 items with an ID unique in the question (1 to 64 characters of `[A-Za-z0-9_-]`) and a label of 1 to 200 characters. Without choices, the question is answered with text. |
 | `recommended` | Optional. One choice ID. |
 | `askedBy` | Optional. The launch ID (`AGPJ_RESIDENT_ID`) of the board-launched session that asked the question; `message ask` writes it when the variable is set. The board uses it to push the answer back to that session. A question an external session asks has none. |
+| `brainstorm` | Optional. `{type, id}` (`type` is `epic` or `task`; `id` is the epic ID or the task number): the target of the brainstorm the question belongs to. `message ask --brainstorm` writes it. It is not a task link: the target task does not wait on the question, and `tasks` is not set by it. A question that was not asked for a brainstorm has none. See [Brainstorm mode](../concepts/agents.md#brainstorm-mode). |
 | `reply` | `null` until answered. `choice` is never set when the question has no choices, and with choices at least one of `choice` and `text` is set; `text` is 1 to 2,000 characters and required when there are no choices; `images` is optional (omitted when empty): up to 20 plain file names of the pictures the person attached, stored in the question's `attachments/` next to the pictures of the question itself; `via` is `ui`, `chat`, or `cli`; `at` is when it was recorded. `acceptedAt` is optional: absent or `null` until an agent takes the answer in, then when it did. |
 
 Fields of a request:
@@ -259,7 +306,7 @@ Fields of a request:
 | --- | --- |
 | `acceptedAt` | `null` until an agent accepts it, then when it was accepted. |
 
-The state is not stored. A message is withdrawn when `withdrawnAt` is set, closed when its question has a `reply` or its request is accepted, and open otherwise. The CLI and API report a question's status as `open`, `answered`, or `withdrawn`, and a request's as `open`, `accepted`, or `withdrawn`; the filter words shared by both are `open`, `closed`, and `withdrawn`.
+The state is not stored. A message is withdrawn when `withdrawnAt` is set, closed when its question has a `reply` or its request is accepted, held when a question has `heldAt` (and no reply), and open otherwise. The CLI and API report a question's status as `held`, `open`, `answered`, or `withdrawn`, and a request's as `open`, `accepted`, or `withdrawn`; the filter words shared by both are `open`, `closed`, and `withdrawn`.
 
 A reply is written once, by a person, and an acceptance once, by an agent. That holds for a request's `acceptedAt` and for a reply's `acceptedAt` alike. An answer a person gave in the chat and an agent recorded for them (`via: chat`) is written already accepted. Nothing is written after a withdrawal. The tasks that refer to a question (`referencedBy`) are found from the tasks' `questions`, not from this file.
 
@@ -460,7 +507,7 @@ The file holds no secret. A project that no longer exists, or has no bound folde
 
 ## Task JSON and snapshots
 
-The CLI, web API, and hook share one camelCase task representation: the `task.json` metadata (including `results`, always present as an array) plus `history`, `description`, `body`, `acceptance`, `acceptanceError`, the displayed `updatedAt`, and `epic` (`{id, name, color}` or `null`). The derived fields are `agentStatus` (the stored run state, never replaced by waiting); `awaitingAnswer` (a boolean, true while the task refers to an open question or its `questions` frontmatter cannot be read, for any assignee and lane, and false for an archived task); `questionIds` (the task's `questions`), `questionsError` (whether that frontmatter is invalid), and `openQuestionIds`; and `pendingRequestId`, `pendingReason`, and `pendingChoices`, taken from the open question with the smallest ID while `awaitingAnswer` is true (otherwise `null` and empty). `pendingRequestId` holds that question's ID, such as `Q-12`, which is what the board sends when it answers. `requestAnswers` never appears in history.
+The CLI, web API, and hook share one camelCase task representation: the `task.json` metadata (including `results`, always present as an array) plus `history`, `description`, `body`, `acceptance`, `acceptanceError`, the displayed `updatedAt`, `resultPlans` and `resultPlansError`, and `epic` (`{id, name, color}` or `null`). The derived fields are `agentStatus` (the stored run state, never replaced by waiting); `awaitingAnswer` (a boolean, true while the task refers to an open question or its `questions` frontmatter cannot be read, for any assignee and lane, and false for an archived task); `questionIds` (the task's `questions`), `questionsError` (whether that frontmatter is invalid), and `openQuestionIds`; and `pendingRequestId`, `pendingReason`, and `pendingChoices`, taken from the open question with the smallest ID while `awaitingAnswer` is true (otherwise `null` and empty). `pendingRequestId` holds that question's ID, such as `Q-12`, which is what the board sends when it answers. `requestAnswers` never appears in history.
 
 - A snapshot returns `project`, `version`, `cursor`, `epics`, `tasks` (each with full history), and `problems` from a single read. The CLI snapshot also includes `nextTaskId`; CLI snapshots, the hook, and `wait` include `fetchedAt`.
 - The project list returns `projects` (id, name, createdAt) and `catalogVersion`, without tasks.
@@ -472,7 +519,7 @@ The CLI, web API, and hook share one camelCase task representation: the `task.js
 
 - `shared/.internal/onboarding.json`: `{ "formatVersion": 2, "status": "unseen" | "completed" | "skipped" }`. Version 1 files from earlier releases are read as `completed`, `skipped`, or `unseen` and rewritten once. See [saving and recovery](../concepts/saving-and-recovery.md).
 - `tasks/<id>/task.json` `onboardingSample`: `{ "runId": "<32 lowercase hex>", "ordinal": 1 | 2 }`. Written only by earlier releases, on their guide's sample cards. Nothing writes it now; it is still read and kept as it is.
-- `tasks/<id>/task.json` `releaseNotesVersion`: a version name. Written only on the Backlog card that creating that version issues for writing its release notes; absent on every other card. It is how a second add of the version finds the card and issues no second one.
+- `tasks/<id>/task.json` `releaseNotesVersion`: a version name. Written only on the Backlog card that creating that version issues for the release work; absent on every other card. It is the key that finds this card when the same version is added again, so no second card is made, and the key that decides whether finishing the card advances the release version. `releaseCompletedAt` (a timestamp) is written on the card's first Done and keeps later completions from moving the release version.
 
 ## Files that setup writes {#agent-settings}
 

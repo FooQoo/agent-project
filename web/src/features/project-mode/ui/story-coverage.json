@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "owner": "U10",
+  "files": [
+    {
+      "file": "features/project-mode/ui/ModeSection.tsx",
+      "exports": [
+        {
+          "name": "ModeSection",
+          "stories": [
+            {
+              "id": "projectmode-modesection--sparring",
+              "states": ["sparring selected", "sparring note"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--sleep",
+              "states": ["sleep selected", "sleep note"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--choose",
+              "states": ["choosing an option asks the parent to save"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--unknown",
+              "states": ["mode unknown, switch disabled"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--save-failed",
+              "states": ["save error"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--by-schedule",
+              "states": ["asleep by the schedule until the end", "schedule on, times shown"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--manual-over-schedule",
+              "states": ["manual note", "follow the schedule button"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--turn-on-schedule",
+              "states": ["turning the window on saves it"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--brainstorm",
+              "states": [
+                "brainstorm target named",
+                "neither option selected",
+                "end brainstorm button"
+              ],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modesection--brainstorm-choose-sleep",
+              "states": ["choosing sleep while brainstorming"],
+              "interaction": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "features/project-mode/ui/ModeIndicator.tsx",
+      "exports": [
+        {
+          "name": "ModeIndicatorView",
+          "stories": [
+            {
+              "id": "projectmode-modeindicator--asleep",
+              "states": ["sleep chip"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modeindicator--asleep-with-held-questions",
+              "states": ["sleep chip with the held count"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modeindicator--sparring",
+              "states": ["no chip in sparring"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modeindicator--asleep-by-schedule",
+              "states": ["chip with the window end"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modeindicator--brainstorm",
+              "states": ["brainstorm chip with target", "end button"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-modeindicator--brainstorm-narrow",
+              "states": ["narrow header, target cut with ellipsis"],
+              "interaction": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "features/project-mode/ui/BrainstormAction.tsx",
+      "exports": [
+        {
+          "name": "BrainstormActionView",
+          "stories": [
+            {
+              "id": "projectmode-brainstormaction--idle",
+              "states": ["start on this target"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-brainstormaction--active",
+              "states": ["brainstorming this target", "end button"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-brainstormaction--other-target",
+              "states": ["another target brainstormed, start enabled"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-brainstormaction--asleep",
+              "states": ["disabled in sleep mode with the reason"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-brainstormaction--unknown",
+              "states": ["mode unknown, disabled"],
+              "interaction": true
+            },
+            {
+              "id": "projectmode-brainstormaction--failed",
+              "states": ["start failed alert"],
+              "interaction": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
