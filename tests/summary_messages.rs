@@ -228,7 +228,7 @@ fn an_epic_send_is_a_warning_while_a_question_about_its_cards_has_no_answer() {
     let q = f.ask("About two", &[two], 6);
     let warned = f
         .store
-        .send_epic(&f.project, &epic, None, Actor::Human, false, at(7))
+        .send_epic(&f.project, &epic, None, Actor::Human, false, "", at(7))
         .unwrap_err();
     assert!(
         matches!(&warned, AgpjError::SendWithOpenQuestions { ids } if ids.as_slice() == std::slice::from_ref(&q))
@@ -241,7 +241,7 @@ fn an_epic_send_is_a_warning_while_a_question_about_its_cards_has_no_answer() {
     f.answer(&q, 8);
     let sent = f
         .store
-        .send_epic(&f.project, &epic, None, Actor::Human, false, at(9))
+        .send_epic(&f.project, &epic, None, Actor::Human, false, "", at(9))
         .unwrap();
     assert_eq!(sent.value.sent, vec![one, two]);
 }

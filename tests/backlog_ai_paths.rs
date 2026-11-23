@@ -127,16 +127,11 @@ fn an_ai_cannot_take_a_card_out_of_the_backlog_by_any_command() {
     let plan = f.plan("Plan");
     let other = f.plan("Other");
 
-    for to in [Column::Todo, Column::Doing, Column::Done] {
+    for to in [Column::Doing, Column::Done] {
         let moved = f
             .store
             .move_work_task(&f.project, plan, to, ai("go"), now());
-        let code = if to == Column::Todo {
-            "human_only"
-        } else {
-            "task_in_backlog"
-        };
-        assert_eq!(moved.unwrap_err().code(), code, "{to:?}");
+        assert_eq!(moved.unwrap_err().code(), "task_in_backlog", "{to:?}");
     }
     for state in [RunState::Running, RunState::Idle] {
         let set = f
@@ -144,6 +139,7 @@ fn an_ai_cannot_take_a_card_out_of_the_backlog_by_any_command() {
             .set_agent_status(&f.project, plan, state, ai("go"), now());
         assert_eq!(set.unwrap_err().code(), "task_in_backlog", "{state:?}");
     }
+    // An agent cannot confirm a warning.
     let sent = f.store.send_task(&f.project, plan, Actor::Ai, true, now());
     assert_eq!(sent.unwrap_err().code(), "human_only");
     assert_eq!(f.lane(plan), Column::Backlog);

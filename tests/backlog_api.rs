@@ -48,31 +48,45 @@ fn creating_in_the_backlog_and_sending_to_todo_are_different_operations() {
     );
     assert_eq!(execute["task"]["taskStatus"], "todo");
 
-    // The agent cannot take it out of the Backlog by `mv`.
-    for args in [
-        vec![
-            "mv", "1", "todo", "--actor", "ai", "--reason", "go", "--json",
+    // The agent cannot start it from the Backlog: only a send leaves it.
+    let (code, name) = json_error(
+        home.path(),
+        &[
+            "--project",
+            "Demo",
+            "mv",
+            "1",
+            "doing",
+            "--actor",
+            "ai",
+            "--reason",
+            "go",
+            "--json",
         ],
-        vec![
-            "mv", "1", "doing", "--actor", "ai", "--reason", "go", "--json",
-        ],
-    ] {
-        let mut all = vec!["--project", "Demo"];
-        let to_todo = args[2] == "todo";
-        all.extend(args);
-        let (code, name) = json_error(home.path(), &all);
-        assert_eq!(code, 1);
-        let expected = if to_todo {
-            "human_only"
-        } else {
-            "task_in_backlog"
-        };
-        assert_eq!(name, expected);
-    }
+    );
+    assert_eq!((code, name.as_str()), (1, "task_in_backlog"));
 
-    // A person sends it; the card is at the end of Todo.
-    let sent = run(home.path(), &["mv", "1", "todo", "--actor", "human"]);
+    // The agent sends it when the user told it to, and the history says so.
+    let sent = run(
+        home.path(),
+        &[
+            "mv",
+            "1",
+            "todo",
+            "--actor",
+            "ai",
+            "--reason",
+            "The user said to start it",
+        ],
+    );
     assert_eq!(sent["task"]["taskStatus"], "todo");
+    let history = sent["task"]["history"].as_array().unwrap();
+    let reason = history.last().unwrap()["reason"].as_str().unwrap();
+    assert!(
+        reason.contains("An agent sent the task to Todo."),
+        "{reason}"
+    );
+    assert!(reason.contains("The user said to start it"), "{reason}");
 }
 
 #[test]

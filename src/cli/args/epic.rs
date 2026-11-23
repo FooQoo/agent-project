@@ -38,7 +38,7 @@ pub enum EpicCommand {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Sends the Backlog cards of the epic to Todo in one save: all of them, or only those named by --tasks. Only a person sends (an agent is refused with human_only). If any card cannot be sent, none is: a card a person is editing (task_is_draft), or an open question (send_with_open_questions until the person confirms with --force). Cards that are not in the Backlog stay as they are.\n\nExamples:\n  agpj --project demo epic send FILE-SHARE --actor human\n  agpj --project demo epic send FILE-SHARE --actor human --tasks 12,13 --force"
+    after_help = "Sends the Backlog cards of the epic to Todo in one save: all of them, or only those named by --tasks. A person sends from the board or the CLI; an agent sends only when the user told it to, and says so in --reason. If any card cannot be sent, none is: a card a person is editing (task_is_draft), or an open question (send_with_open_questions until a person confirms with --force; an agent cannot). Cards that are not in the Backlog stay as they are.\n\nExamples:\n  agpj --project demo epic send FILE-SHARE --actor human\n  agpj --project demo epic send FILE-SHARE --actor human --tasks 12,13 --force\n  agpj --project demo epic send FILE-SHARE --actor ai --reason \"The user said to start the plan\""
 )]
 pub struct EpicSendArgs {
     /// The epic's EPIC-ID
@@ -52,6 +52,12 @@ pub struct EpicSendArgs {
     /// Send even though a question about a card is open
     #[arg(long)]
     pub force: bool,
+    /// Optional explanation; for an agent, say the user told it to send
+    #[arg(long, value_name = "TEXT", group = "reason_source")]
+    pub reason: Option<String>,
+    /// Read the explanation from a UTF-8 file
+    #[arg(long, value_name = "PATH", group = "reason_source")]
+    pub reason_file: Option<std::path::PathBuf>,
 }
 
 #[derive(Args, Debug)]

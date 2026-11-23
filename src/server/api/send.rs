@@ -89,6 +89,7 @@ pub(super) async fn send_epic(
             input.task_ids.as_deref(),
             Actor::Human,
             input.ack,
+            "",
             chrono::Utc::now(),
         )
     })
