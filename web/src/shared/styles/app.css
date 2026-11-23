@@ -333,6 +333,15 @@ ol {
   }
 }
 
+/* A touch screen (a tablet in landscape) has no room for four 200px lanes beside the detail panel: keep the lanes
+   readable at 240px and scroll the rest sideways; the padding at the end keeps the last lane clear. */
+@media (pointer: coarse) {
+  .board__lanes {
+    grid-template-columns: repeat(4, minmax(240px, 1fr));
+    overflow-x: auto;
+  }
+}
+
 .board--with-band {
   display: flex;
   flex-direction: column;

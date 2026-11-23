@@ -351,3 +351,22 @@ test('evidence screenshots at 1280x900', async ({ page }, testInfo) => {
   await page.mouse.move(300, 860);
   await page.screenshot({ path: testInfo.outputPath('panel-widened.png') });
 });
+
+test.describe('touch screen', () => {
+  test.use({ hasTouch: true });
+
+  test('1024px: the lanes are 240px wide and the lanes area scrolls sideways', async ({ page }) => {
+    await open(page, 1024, 768);
+    expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true);
+    const widths = await page.locator('.lane').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().width)));
+    expect(widths).toEqual([240, 240, 240, 240]);
+    const lanes = await page.locator('.board__lanes').evaluate((el) => {
+      el.scrollLeft = el.scrollWidth;
+      const last = document.querySelector('.lane:last-child')!.getBoundingClientRect();
+      return { overflow: getComputedStyle(el).overflowX, scrolls: el.scrollWidth > el.clientWidth, gap: el.getBoundingClientRect().right - last.right };
+    });
+    expect(lanes.overflow).toBe('auto');
+    expect(lanes.scrolls).toBe(true);
+    expect(Math.round(lanes.gap)).toBe(24);
+  });
+});

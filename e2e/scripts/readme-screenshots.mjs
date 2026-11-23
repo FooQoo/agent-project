@@ -55,8 +55,8 @@ try {
       await settle(page);
       await page.screenshot({ path: path.join(output, `epic${suffix}.png`) });
 
-      // The remote entrance serves the same board app, so a tablet width shows the lanes side by side.
-      tabletContext = await browser.newContext({ viewport: { width: 1024, height: 768 }, timezoneId: 'UTC' });
+      // The remote entrance serves the same board app, so a tablet width (with touch, as on an iPad) shows the lanes side by side.
+      tabletContext = await browser.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true, timezoneId: 'UTC' });
       const tablet = await tabletContext.newPage();
       tablet.on('pageerror', (error) => errors.push(error.message));
       // `open` shrinks the page to phone width; the tablet keeps its own width, so it unlocks the page itself.
