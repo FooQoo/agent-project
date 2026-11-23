@@ -193,7 +193,7 @@ fn update(
     .map(|_| ())
 }
 
-/// Like `update`, but `change` may refuse; a refusal saves nothing and is the inner error.
+/// Like `update`, but `change` may refuse (nothing is saved).
 fn update_with<E>(
     data_dir: &Path,
     project: &str,
@@ -235,32 +235,32 @@ fn update_with<E>(
     result.map(|()| Ok(()))
 }
 
-/// Set the manual mode, keeping the daily window. Sparring with no window removes the entry; with
-/// a window it is kept, so the manual sparring wins over the schedule.
+/// Set the manual mode, keeping the window. Sparring is kept only if the locked entry has one.
 pub fn set(
     data_dir: &Path,
     project: &str,
     kind: ModeKind,
     now: DateTime<Utc>,
 ) -> std::io::Result<ProjectMode> {
-    let keep = kind != ModeKind::Sparring || state(data_dir, project).schedule.is_some();
+    let mut saved = ProjectMode::default();
     update(data_dir, project, |entry| {
-        if keep {
+        if kind != ModeKind::Sparring
+            || entry
+                .get("schedule")
+                .is_some_and(|s| Schedule::from_json(s).is_some())
+        {
             entry.insert("kind".into(), json!(kind.as_str()));
             entry.insert("since".into(), json!(crate::clock::format_utc(now)));
+            saved = ProjectMode {
+                kind,
+                since: Some(now),
+            };
         } else {
             entry.remove("kind");
             entry.remove("since");
         }
     })?;
-    Ok(if keep {
-        ProjectMode {
-            kind,
-            since: Some(now),
-        }
-    } else {
-        ProjectMode::default()
-    })
+    Ok(saved)
 }
 
 /// Forget the manual mode, so the daily window (if any) decides.
