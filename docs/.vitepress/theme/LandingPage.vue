@@ -801,28 +801,19 @@ onMounted(() => {
   font-size: 14px;
 }
 .lp-question-shot {
-  overflow-x: auto;
+  overflow: hidden;
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   background: var(--lp-lane);
 }
-/* On a phone the dialog keeps a readable size and scrolls sideways, starting at the question. */
+/* The whole PC dialog at every width, cropped below the memo field, like the board crop above. */
 .lp-question-pane {
   overflow: hidden;
-  width: 680px;
   aspect-ratio: 2240 / 1060;
 }
 .lp-question-pane img {
   display: block;
   width: 100%;
-}
-@media (min-width: 640px) {
-  .lp-question-shot {
-    overflow: hidden;
-  }
-  .lp-question-pane {
-    width: 100%;
-  }
 }
 @media (min-width: 960px) {
   .lp-compare {
