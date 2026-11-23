@@ -29,14 +29,14 @@ The redirect is client-side only, so the built HTML of every page stays the same
 
 Keep diagrams focused on one flow. Flowcharts and sequence diagrams retain their label size; diagrams wider than the article scroll within their frame. Use a left-to-right flow for system diagrams, and split large diagrams by purpose. The site tests check label size and catch unparsed bold markers in rendered prose. Tables keep a readable minimum column width and scroll horizontally within the article; prose inside cells can still wrap.
 
-Regenerate the guide screenshots and the demo videos with the scripts below. Both need the web UI and CLI [built](./getting-started/setup.md#build) first, and the Playwright browser from [Verification](./getting-started/pull-request.md#verification).
+The guide screenshots, the README images, and the demo videos are retaken automatically by CI on `main` (see [Automatic retake on main](#automatic-retake-on-main)). Nobody retakes them locally, and a pull request does not commit them: the captures from CI on Linux are the canonical ones, and a Mac renders fonts differently. The scripts below are the ones CI runs. Run one only to investigate a capture problem, never to commit its output. They need the web UI and CLI [built](./getting-started/setup.md#build) first, and the Playwright browser from [Verification](./getting-started/pull-request.md#verification).
 
 ```sh
 node e2e/scripts/docs-screenshots.mjs   # docs/images/guide/*.png (26 images, English and Japanese)
 node e2e/scripts/demo-video.mjs         # docs/public/videos/ (also needs ffmpeg)
 ```
 
-Both scripts use disposable data in a temporary `AGPJ_HOME` and their own loopback ports, so your saved board and port 7420 are untouched. Review the generated images and videos before committing them.
+Both scripts use disposable data in a temporary `AGPJ_HOME` and their own loopback ports, so your saved board and port 7420 are untouched. Do not commit images or videos generated on your machine.
 
 ### Deterministic captures
 
@@ -69,7 +69,7 @@ node e2e/scripts/compare-captures.mjs --captured /tmp/captures --apply    # copy
 
 ### Automatic retake on main
 
-The `retake-media` job in `.github/workflows/ci.yml` keeps the committed images and videos current without a manual retake. You still run the scripts above to review a change in a pull request; this job only follows `main`.
+The `retake-media` job in `.github/workflows/ci.yml` keeps the committed images and videos current without a manual retake. Nobody retakes images or videos locally or in a pull request; this job is the only place they are retaken, and it follows `main`.
 
 - **When it runs.** Only on a push to `main`, after the Rust, web, coverage, and E2E jobs have all passed. It reuses the CLI binary that the E2E build job uploaded, so it does not build again. It never runs on a pull request.
 - **What it does.** It runs the three capture scripts into a temporary `AGPJ_MEDIA_OUT` folder and compares them with `compare-captures.mjs --image-tolerance 4`, which compares decoded pixels and not file bytes. When nothing visibly differs, the job ends and pushes nothing.
@@ -79,7 +79,7 @@ The `retake-media` job in `.github/workflows/ci.yml` keeps the committed images 
 - **No loop.** A push with an App token starts CI again. The job is skipped when the actor is `agpj-images[bot]`. Even without that, the captures are deterministic (see above), so the retake of the bot's own commit finds no visible change and pushes nothing.
 - **Site publish.** Because the push uses the App token and not the workflow token, it starts `.github/workflows/docs.yml`, whose `push` trigger covers `docs/**`, so the site and its demo are rebuilt with the new images.
 
-The job captures on `ubuntu-latest`, so its fonts and rendering differ from a Mac. The first run after this job is added may replace many files; later runs differ only when the product changes.
+The job captures on `ubuntu-latest`, so its fonts and rendering differ from a Mac, and these captures are canonical. The first run after this job is added may replace many files; later runs differ only when the product changes.
 
 ## Move a page and keep its old URL
 
@@ -117,7 +117,7 @@ Use Storybook to isolate a component state or compose a full page with the same 
 
 ## README screenshots
 
-After [building the web UI and CLI](./getting-started/setup.md#build), regenerate the README images:
+CI retakes the README images on `main` (see [Automatic retake on main](#automatic-retake-on-main)); do not commit images captured on your machine. To investigate a capture problem, [build the web UI and CLI](./getting-started/setup.md#build) and run the script CI uses:
 
 ```sh
 pnpm --dir e2e install --frozen-lockfile
@@ -127,4 +127,4 @@ node e2e/scripts/readme-screenshots.mjs
 
 The script creates disposable projects in temporary `AGPJ_HOME` directories, starts its own servers on available loopback ports, and captures the desktop board, the epic progress panel, the board at a tablet width (1024 x 768, behind the remote entrance), and four phone screens (the Doing lane with its tabs, a chosen card slid open to show its buttons, a question with a choice picked, and the bottom drawer) in English and Japanese. It never uses your saved board or port 7420. The browser renders the built UI against the real API; images are not mockups. It checks the four detail tabs, the task editor's folded conditions panel, and browser errors, and removes its temporary data afterwards.
 
-Review all fourteen images in `docs/images/` before committing them, and keep the sample text free of personal data. Screenshots do not replace the regression suite or phone keyboard checks. The guide images in `docs/images/guide/` (26 files) come from the separate script above; review them too when you regenerate them.
+The fourteen images in `docs/images/` are committed by CI. Keep the sample text free of personal data. Screenshots do not replace the regression suite or phone keyboard checks. The guide images in `docs/images/guide/` (26 files) come from the separate script above and are also retaken by CI.
