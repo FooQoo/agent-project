@@ -30,7 +30,7 @@ pub struct InitArgs {}
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agpj --project demo add \"Write the setup guide\" --assignee ai --actor ai\n  agpj --project demo add \"Fix the login bug\" --assignee ai --actor ai --current-version\n  agpj --project demo add \"Fix the login bug\" --desc \"Users cannot sign in on Safari\" --assignee ai --actor ai\n  agpj --project demo add \"Plan the release\" --desc-file notes.txt --assignee ai --actor ai\n  echo \"Details\" | agpj --project demo add \"Write the docs\" --desc - --assignee ai --actor ai"
+    after_help = "Examples:\n  agpj --project demo add \"Write the setup guide\" --assignee ai --actor ai\n  agpj --project demo add \"Fix the login bug\" --assignee ai --actor ai --release-version\n  agpj --project demo add \"Fix the login bug\" --desc \"Users cannot sign in on Safari\" --assignee ai --actor ai\n  agpj --project demo add \"Plan the release\" --desc-file notes.txt --assignee ai --actor ai\n  echo \"Details\" | agpj --project demo add \"Write the docs\" --desc - --assignee ai --actor ai"
 )]
 pub struct AddArgs {
     /// Title of the task (1 to 100 characters, one line)
@@ -55,7 +55,7 @@ pub struct AddArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "A task a person is drafting (draft: human) is read-only for agents: edit fails with task_is_draft (exit code 1) and changes nothing. Wait for the user to finalize it, then try again. A task you created with --backlog waits in the Backlog: you can edit it, and only a person sends it to Todo.\n\nExamples:\n  agpj --project demo edit 15 --planned-version v1.9.0\n  agpj --project demo edit 15 --current-version\n  agpj --project demo edit 15 --unplanned\n  agpj --project demo edit 15 --title \"Write the install guide\"\n  agpj --project demo edit 15 --desc \"Steps for macOS and Linux\"\n  agpj --project demo edit 15 --desc \"\""
+    after_help = "A task a person is drafting (draft: human) is read-only for agents: edit fails with task_is_draft (exit code 1) and changes nothing. Wait for the user to finalize it, then try again. A task you created with --backlog waits in the Backlog: you can edit it, and only a person sends it to Todo.\n\nExamples:\n  agpj --project demo edit 15 --planned-version v1.9.0\n  agpj --project demo edit 15 --release-version\n  agpj --project demo edit 15 --unplanned\n  agpj --project demo edit 15 --title \"Write the install guide\"\n  agpj --project demo edit 15 --desc \"Steps for macOS and Linux\"\n  agpj --project demo edit 15 --desc \"\""
 )]
 pub struct EditArgs {
     /// ID of the task
@@ -120,7 +120,7 @@ pub struct RmArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Examples:\n  agpj --project demo ls\n  agpj --project demo ls --column doing\n  agpj --project demo ls --awaiting-answer --json\n  agpj --project demo ls --current-version\n  agpj --project demo ls --version v1.8.0 --epic FILE-SHARE --json\n  agpj --project demo ls --unplanned\n  agpj ls --all-projects\n  agpj ls --all-projects --awaiting-answer --json"
+    after_help = "Examples:\n  agpj --project demo ls\n  agpj --project demo ls --column doing\n  agpj --project demo ls --awaiting-answer --json\n  agpj --project demo ls --release-version\n  agpj --project demo ls --version v1.8.0 --epic FILE-SHARE --json\n  agpj --project demo ls --unplanned\n  agpj ls --all-projects\n  agpj ls --all-projects --awaiting-answer --json"
 )]
 pub struct LsArgs {
     /// List the tasks of every project, read-only; do not give --project

@@ -29,7 +29,7 @@ Besides reads, the server handles the writes a visitor can make:
 
 - creating, editing, and moving cards, and reordering them within a lane
 - answering a question
-- listing versions, setting the current version, planning a task, and planning an epic, with and without `dryRun` (`versions.ts`; the routes `versions`, `versions/current`, `tasks/{id}/planned-version`, and `epics/{id}/planned-version`)
+- listing versions, setting the release version, planning a task, and planning an epic, with and without `dryRun` (`versions.ts`; the routes `versions`, `versions/release`, `tasks/{id}/planned-version`, and `epics/{id}/planned-version`)
 - checking an acceptance condition, followed by the automatic Done that the server's watcher performs for an AI task whose conditions are all met (`completion.ts`)
 
 Each change is reported to subscribers in the shape of the SSE `changed` event, so the screens update as they would against a real server.

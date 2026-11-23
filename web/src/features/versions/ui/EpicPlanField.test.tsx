@@ -15,14 +15,14 @@ const result: EpicVersionResult = {
   dryRun: false,
 };
 
-function field(current: string | null = 'v1.8.0', versions = ['v1.8.0', 'v1.9.0']) {
+function field(release: string | null = 'v1.8.0', versions = ['v1.8.0', 'v1.9.0']) {
   let pending: PendingSave | null = null;
   const onPending = vi.fn((next: PendingSave | null) => {
     pending = next;
   });
   const apply = vi.fn(async () => result);
   render(
-    <EpicPlanField current={current} versions={versions} apply={apply} onPending={onPending} />,
+    <EpicPlanField release={release} versions={versions} apply={apply} onPending={onPending} />,
   );
   return { apply, pending: () => pending as PendingSave | null };
 }
@@ -51,34 +51,34 @@ describe('the planned version of an epic, in its editor', () => {
     expect(apply).toHaveBeenCalledWith({ choice: 'named', version: 'v1.9.0' });
   });
 
-  it('offers current, none, and the versions newest first', async () => {
+  it('offers release, none, and the versions newest first', async () => {
     const { apply, pending } = field('v1.8.0', ['v1.8.0', 'v1.9.0', 'v1.10.0']);
     fireEvent.click(screen.getByRole('button', { name: /Planned version of the epic/ }));
     const names = screen.getAllByRole('radio').map((r) => r.parentElement?.textContent);
     expect(names).toEqual([
       'No change',
-      'Current (v1.8.0)',
+      'Release version (v1.8.0)',
       'v1.10.0',
       'v1.9.0',
       'Leave unplanned',
     ]);
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
-    pick(/^Current/);
+    pick(/^Release version/);
     await waitFor(() => expect(pending()).not.toBeNull());
     await pending()?.();
-    expect(apply).toHaveBeenLastCalledWith({ choice: 'current' });
+    expect(apply).toHaveBeenLastCalledWith({ choice: 'release' });
     pick('Leave unplanned');
     await waitFor(() => expect(pending()).not.toBeNull());
     await pending()?.();
     expect(apply).toHaveBeenLastCalledWith({ choice: 'unset' });
   });
 
-  it('disables current while none is set', () => {
+  it('disables release while none is set', () => {
     field(null);
     fireEvent.click(screen.getByRole('button', { name: /Planned version of the epic/ }));
-    expect((screen.getByRole('radio', { name: /^Current/ }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
+    expect(
+      (screen.getByRole('radio', { name: /^Release version/ }) as HTMLButtonElement).disabled,
+    ).toBe(true);
   });
 
   it('takes the change back when "No change" is chosen again', async () => {
@@ -94,7 +94,7 @@ describe('the planned version of an epic, in its editor', () => {
     const apply = vi.fn(async () => result);
     render(
       <EpicPlanField
-        current={null}
+        release={null}
         versions={['c:none', '__keep__']}
         apply={apply}
         onPending={(p) => {
@@ -112,7 +112,7 @@ describe('the planned version of an epic, in its editor', () => {
     let pending: PendingSave | null = null;
     render(
       <EpicPlanField
-        current={null}
+        release={null}
         versions={['v1']}
         apply={vi.fn(async () => {
           throw new Error('no');

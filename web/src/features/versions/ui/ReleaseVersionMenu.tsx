@@ -11,37 +11,37 @@ import './versions.css';
 
 const NONE = '__none__';
 
-export interface CurrentVersionMenuProps {
+export interface ReleaseVersionMenuProps {
   versions: readonly string[];
-  /** The project's current version; `null` when none is set. */
-  current: string | null;
-  /** Makes a listed version current, or clears the current version with `null`. */
+  /** The project's release version; `null` when none is set. */
+  release: string | null;
+  /** Makes a listed version the release version, or clears the release version with `null`. */
   onSelect: (version: string | null) => Promise<unknown>;
-  /** Lists a new version. It does not become current: only choosing it from the list does that. */
+  /** Lists a new version. It does not become the release version: only choosing it from the list does that. */
   onAdd: (name: string) => Promise<unknown>;
   disabled?: boolean;
 }
 
 /**
- * The project's current version, in the header beside the project's name. It opens a list of the
- * project's versions, newest first: choosing one makes it current. The top row is a text field:
- * typing a version and confirming only lists it; the current version changes when one is chosen
- * from the list. "No current version" is the state a project starts in.
+ * The project's release version, in the header beside the project's name. It opens a list of the
+ * project's versions, newest first: choosing one makes it the release version. The top row is a text field:
+ * typing a version and confirming only lists it; the release version changes when one is chosen
+ * from the list. "No release version" is the state a project starts in.
  */
-export function CurrentVersionMenu({
+export function ReleaseVersionMenu({
   versions,
-  current,
+  release,
   onSelect,
   onAdd,
   disabled = false,
-}: CurrentVersionMenuProps) {
+}: ReleaseVersionMenuProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const listed = sortVersions(
-    current !== null && !versions.includes(current) ? [...versions, current] : versions,
+    release !== null && !versions.includes(release) ? [...versions, release] : versions,
   );
 
   const run = async (change: () => Promise<unknown>, done: () => void) => {
@@ -59,7 +59,7 @@ export function CurrentVersionMenu({
   };
 
   const name = draft.trim();
-  const value = current ?? t('versions.header.unset');
+  const value = release ?? t('versions.header.unset');
   return (
     <Popover
       open={open}
@@ -75,9 +75,9 @@ export function CurrentVersionMenu({
           className="ver-head"
           disabled={disabled}
           aria-label={t('versions.header.buttonValue', { version: value })}
-          data-set={current !== null}
+          data-set={release !== null}
         >
-          {current === null ? <FlagOffIcon aria-hidden="true" /> : <FlagIcon aria-hidden="true" />}
+          {release === null ? <FlagOffIcon aria-hidden="true" /> : <FlagIcon aria-hidden="true" />}
           <span className="ver-head__label">{t('versions.header.button')}</span>
           <strong className="ver-head__value">{value}</strong>
           <ChevronDownIcon aria-hidden="true" />
@@ -115,7 +115,7 @@ export function CurrentVersionMenu({
           </Button>
         </form>
         <RadioGroup
-          value={current ?? NONE}
+          value={release ?? NONE}
           onValueChange={(next) =>
             void run(
               () => onSelect(next === NONE ? null : next),
@@ -130,12 +130,12 @@ export function CurrentVersionMenu({
             <OptionRow
               key={version}
               value={version}
-              checked={current === version}
+              checked={release === version}
               label={version}
-              mark={current === version ? t('versions.header.markCurrent') : undefined}
+              mark={release === version ? t('versions.header.markRelease') : undefined}
             />
           ))}
-          <OptionRow value={NONE} checked={current === null} label={t('versions.header.none')} />
+          <OptionRow value={NONE} checked={release === null} label={t('versions.header.none')} />
         </RadioGroup>
         {failed && (
           <p className="ver-error" role="alert">

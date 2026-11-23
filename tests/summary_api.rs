@@ -128,7 +128,7 @@ fn check_summary(body: &str, project: &ProjectId) -> Summary {
     );
     assert_eq!(
         keys(&value["project"]),
-        set(&["id", "name", "versions", "currentVersion"])
+        set(&["id", "name", "versions", "releaseVersion"])
     );
     for task in value["tasks"].as_array().unwrap() {
         assert_eq!(

@@ -84,17 +84,17 @@ Images are referenced in the Markdown as `attachment:<attachment-id>`, and the i
 
 On the PC board, a task's planned version is edited in its preview dialog (**Open full screen** in the task's details). The **Planned version** field is in the right column, under the epic. The choices are:
 
-- **Make it current (vX)**, which saves the name of the project's current version on the task. It is disabled, with a note, while the project has no current version.
+- **Make it the release version (vX)**, which saves the name of the project's release version on the task. It is disabled, with a note, while the project has no release version.
 - One of the project's other versions.
 - **Leave unplanned**.
 
-Only this task changes; the project's current version stays as it is. The choice is saved with the dialog's **Save**, which is enabled when only this field changed. It does not make the task a draft. The field is not shown for a task that is running or archived.
+Only this task changes; the project's release version stays as it is. The choice is saved with the dialog's **Save**, which is enabled when only this field changed. It does not make the task a draft. The field is not shown for a task that is running or archived.
 
 The save carries the planned version the field showed. If the task was planned differently in the meantime, for example from the CLI, nothing is overwritten: the field says that another change set the version first, the board is read again, and your choice is not saved. Choose again and save to replace it.
 
-### Set the current version {#current-version}
+### Set the release version {#release-version}
 
-The project's current version is changed in the **Current version** menu in the header, right of the project's name, and changes no task. Choose a version of the list to make it current, **No current version** to clear it, or type a new version in the top row and choose the check button to add it to the project. Adding a version does not make it current: choose it from the list for that. The list shows the newest version first. See [Planned versions on the board](./board#planned-versions).
+The project's release version is changed in the **Release version** menu in the header, right of the project's name, and changes no task. Choose a version of the list to make it the release version, **No release version** to clear it, or type a new version in the top row and choose the check button to add it to the project. Adding a version does not make it current: choose it from the list for that. The list shows the newest version first. See [Planned versions on the board](./board#planned-versions).
 
 ## Edit the files directly
 

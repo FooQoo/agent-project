@@ -32,7 +32,7 @@ pub enum EpicCommand {
     Rm(EpicIdArgs),
     /// Send the Backlog cards of an epic to Todo
     Send(EpicSendArgs),
-    /// Plan the cards of an epic for a version, the current version, or none
+    /// Plan the cards of an epic for a version, the release version, or none
     Plan(EpicPlanArgs),
 }
 
@@ -56,7 +56,7 @@ pub struct EpicSendArgs {
 
 #[derive(Args, Debug)]
 #[command(
-    after_help = "Sets the planned version of the epic's cards, each saved on its own: a failure part way leaves the earlier cards changed, and running the command again finishes the rest. Archived cards, Done cards, and cards a person is drafting are skipped, because they shipped or are not the agent's to change. With --only-unplanned, a card that already has a planned version is skipped as well. The result counts the changed, unchanged (already had the version), and skipped cards, and names them.\n\nExamples:\n  agpj --project demo epic plan FILE-SHARE --planned-version v1.9.0\n  agpj --project demo epic plan FILE-SHARE --current-version --only-unplanned\n  agpj --project demo epic plan FILE-SHARE --unplanned"
+    after_help = "Sets the planned version of the epic's cards, each saved on its own: a failure part way leaves the earlier cards changed, and running the command again finishes the rest. Archived cards, Done cards, and cards a person is drafting are skipped, because they shipped or are not the agent's to change. With --only-unplanned, a card that already has a planned version is skipped as well. The result counts the changed, unchanged (already had the version), and skipped cards, and names them.\n\nExamples:\n  agpj --project demo epic plan FILE-SHARE --planned-version v1.9.0\n  agpj --project demo epic plan FILE-SHARE --release-version --only-unplanned\n  agpj --project demo epic plan FILE-SHARE --unplanned"
 )]
 pub struct EpicPlanArgs {
     /// The epic's EPIC-ID

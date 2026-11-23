@@ -1,10 +1,10 @@
 /*
- * Styles of the planned-version parts: the tag on a card, the header's current-version menu, and the
+ * Styles of the planned-version parts: the tag on a card, the header's release-version menu, and the
  * planned-version fields of the task and epic editors. They use the product's tokens and add only
  * what these parts need.
  */
 
-/* ---- The header's current-version menu ---- */
+/* ---- The header's release-version menu ---- */
 
 .header__version {
   display: flex;
@@ -85,13 +85,18 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  height: 22px;
-  padding: 0 8px;
+  min-height: 22px;
+  max-width: 100%;
+  padding: 2px 8px;
   border: 1px solid var(--r-border);
-  border-radius: 999px;
+  border-radius: 11px;
   font-size: 11px;
   font-weight: 600;
   color: var(--r-text2);
+}
+
+/* The version name stays whole; the mark wraps below it when the card is too narrow. */
+.ver-tag > span:not(.ver-tag__mark) {
   white-space: nowrap;
 }
 
@@ -101,7 +106,7 @@
   flex: none;
 }
 
-.ver-tag[data-kind="current"] {
+.ver-tag[data-kind="release"] {
   border-color: var(--r-accent);
   background: var(--r-accent-soft);
   color: var(--r-text);
@@ -114,6 +119,8 @@
 }
 
 .ver-tag__mark {
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding-left: 6px;
   border-left: 1px solid var(--r-accent);
   font-size: 10px;

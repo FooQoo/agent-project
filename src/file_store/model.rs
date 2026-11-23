@@ -47,10 +47,10 @@ pub struct ProjectFile {
     /// again: the versions are the files in `docs/release/`.
     #[serde(default, skip_serializing)]
     pub versions: Option<serde_json::Value>,
-    /// The project's current version; `null` or absent when none is set. It names a file in
-    /// `docs/release/`; while that file is missing the project has no current version.
+    /// The project's release version; `null` or absent when none is set. It names a file in
+    /// `docs/release/`; while that file is missing the project has no release version.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub current_version: Option<String>,
+    pub release_version: Option<String>,
 }
 
 fn first_question_id() -> i64 {

@@ -1,24 +1,24 @@
 import type { ProjectId } from '../../../shared/api/contracts';
-import { addVersion, setCurrentVersion } from '../api/versions';
+import { addVersion, setReleaseVersion } from '../api/versions';
 import { useProjectVersions } from '../model/useProjectVersions';
-import { CurrentVersionMenu } from './CurrentVersionMenu';
+import { ReleaseVersionMenu } from './ReleaseVersionMenu';
 
-/** The header's current-version menu of a project, wired to the version routes. */
-export function HeaderCurrentVersion({
+/** The header's release-version menu of a project, wired to the version routes. */
+export function HeaderReleaseVersion({
   projectId,
   disabled,
 }: {
   projectId: ProjectId;
   disabled?: boolean;
 }) {
-  const { versions, current, refresh } = useProjectVersions(projectId);
+  const { versions, release, refresh } = useProjectVersions(projectId);
   return (
-    <CurrentVersionMenu
+    <ReleaseVersionMenu
       versions={versions}
-      current={current}
+      release={release}
       disabled={disabled}
       onSelect={async (version) => {
-        await setCurrentVersion(projectId, version);
+        await setReleaseVersion(projectId, version);
         await refresh();
       }}
       onAdd={async (name) => {

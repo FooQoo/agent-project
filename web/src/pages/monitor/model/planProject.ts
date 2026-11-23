@@ -8,5 +8,5 @@ import type { Summary } from '../../../shared/data/api';
  */
 export function planProject(enabled: boolean, summary: Summary | null): PlanProject | null {
   if (!enabled || summary === null) return null;
-  return { versions: summary.project.versions, current: summary.project.currentVersion };
+  return { versions: summary.project.versions, release: summary.project.releaseVersion };
 }

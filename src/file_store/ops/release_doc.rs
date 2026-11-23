@@ -11,7 +11,7 @@ use crate::domain::{ProjectId, validate_version_name};
 use crate::error::AgpjError;
 use crate::file_store::history_language::HistoryLanguage;
 use crate::file_store::release_doc::{self, SpliceError};
-use crate::file_store::releases::{create_release_file, effective_current, listed_versions};
+use crate::file_store::releases::{create_release_file, effective_release, listed_versions};
 use crate::file_store::{FileStore, io, layout, reader};
 
 /// The outcome of generating a release document.
@@ -34,8 +34,8 @@ pub struct ReleaseDoc {
 }
 
 impl FileStore {
-    /// Generate the release document of a version. `Current` is the project's current version
-    /// and fails with `no_current_version` when there is none; nothing is written then. A named
+    /// Generate the release document of a version. `Release` is the project's release version
+    /// and fails with `no_release_version` when there is none; nothing is written then. A named
     /// version that is not listed yet is listed first, like `version add` does.
     ///
     /// Only the block between the markers is written. A file without markers keeps its text and
@@ -51,15 +51,15 @@ impl FileStore {
         let (project_dir, _lock) = lock_project(shared, project)?;
         let listed = listed_versions(&project_dir);
         let version = match choice {
-            VersionChoice::Current => {
+            VersionChoice::Release => {
                 let file = reader::read_project_file(shared, project)?;
-                effective_current(&listed, file.current_version.as_deref())
-                    .ok_or(AgpjError::NoCurrentVersion)?
+                effective_release(&listed, file.release_version.as_deref())
+                    .ok_or(AgpjError::NoReleaseVersion)?
             }
             VersionChoice::Named(name) => validate_version_name(name)?,
             VersionChoice::Unset => {
                 return Err(AgpjError::InvalidArgument {
-                    message: "Name a version or use the current version.".into(),
+                    message: "Name a version or use the release version.".into(),
                     command: None,
                 });
             }

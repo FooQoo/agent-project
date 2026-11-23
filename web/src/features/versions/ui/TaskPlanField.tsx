@@ -16,7 +16,7 @@ export function TaskPlanField({
   disabled,
   onPending,
 }: PlanFieldArgs & { projectId: ProjectId; taskId: number; known?: string | null }) {
-  const { versions, current, tasks, refresh } = useProjectVersions(projectId);
+  const { versions, release, tasks, refresh } = useProjectVersions(projectId);
   // An archived task is not in the Summary: the version the dialog opened with stands in for it,
   // and a save replaces it with the version the server stored.
   const [saved, setSaved] = useState<string | null | undefined>(undefined);
@@ -34,7 +34,7 @@ export function TaskPlanField({
     <PlannedVersionPicker
       taskId={taskId}
       planned={planned}
-      current={current}
+      release={release}
       versions={versions}
       disabled={disabled}
       onSave={save}

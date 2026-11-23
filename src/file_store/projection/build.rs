@@ -211,7 +211,7 @@ pub fn project(shared: &Path, snapshot: &ProjectSnapshot) -> Projection {
         &qa_hash,
         &project_id,
         &snapshot.project.name,
-        (&snapshot.versions, &snapshot.current_version),
+        (&snapshot.versions, &snapshot.release_version),
         tasks
             .iter()
             .filter(|task| !task.archived)
@@ -244,7 +244,7 @@ pub fn project(shared: &Path, snapshot: &ProjectSnapshot) -> Projection {
         project_id,
         project_name: snapshot.project.name.clone(),
         versions: snapshot.versions.clone(),
-        current_version: snapshot.current_version.clone(),
+        release_version: snapshot.release_version.clone(),
         version,
         tasks,
         epics,

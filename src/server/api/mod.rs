@@ -61,7 +61,7 @@ use task_edit::*;
 use task_multipart::*;
 use tasks::*;
 use version_plan::{set_epic_version, set_task_version};
-use versions::{add_version, generate_release_doc, get_versions, set_current_version};
+use versions::{add_version, generate_release_doc, get_versions, set_release_version};
 
 const MAX_MULTIPART_BODY: usize = 52 * 1024 * 1024;
 
@@ -214,8 +214,8 @@ fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<
             get(get_versions).post(add_version),
         )
         .route(
-            "/api/projects/{project_id}/versions/current",
-            put(set_current_version),
+            "/api/projects/{project_id}/versions/release",
+            put(set_release_version),
         )
         .route(
             "/api/projects/{project_id}/release-doc",

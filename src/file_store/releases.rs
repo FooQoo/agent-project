@@ -30,9 +30,9 @@ pub fn listed_versions(project_dir: &Path) -> Vec<String> {
     versions
 }
 
-/// The stored current version when it is still listed, else `None`. The project file keeps the
-/// stored name, so listing the file again brings the current version back.
-pub fn effective_current(listed: &[String], stored: Option<&str>) -> Option<String> {
+/// The stored release version when it is still listed, else `None`. The project file keeps the
+/// stored name, so listing the file again brings the release version back.
+pub fn effective_release(listed: &[String], stored: Option<&str>) -> Option<String> {
     stored
         .filter(|name| listed.iter().any(|v| v == name))
         .map(str::to_owned)

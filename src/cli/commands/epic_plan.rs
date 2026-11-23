@@ -14,7 +14,7 @@ use crate::file_store::validate::EpicId;
 pub fn run(ctx: &mut Context, args: &EpicPlanArgs) -> Result<Outcome, AgpjError> {
     let Some(choice) = args.plan.choice()? else {
         return Err(AgpjError::InvalidArgument {
-            message: "epic plan needs one of --planned-version, --current-version, or --unplanned."
+            message: "epic plan needs one of --planned-version, --release-version, or --unplanned."
                 .to_string(),
             command: Some("epic".to_string()),
         });

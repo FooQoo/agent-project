@@ -28,10 +28,10 @@ impl Cli {
                     command: Some(command.to_string()),
                 });
             }
-            // Each project has its own current version, so no one version stands for all.
-            (Command::Ls(args), None) if args.all_projects && args.version.current_version => {
+            // Each project has its own release version, so no one version stands for all.
+            (Command::Ls(args), None) if args.all_projects && args.version.release_version => {
                 return Err(AgpjError::InvalidArgument {
-                    message: "ls --all-projects does not take --current-version.".to_string(),
+                    message: "ls --all-projects does not take --release-version.".to_string(),
                     command: Some(command.to_string()),
                 });
             }
@@ -106,7 +106,7 @@ impl Cli {
                     && args.plan.choice()?.is_none() =>
             {
                 Err(AgpjError::InvalidArgument {
-                    message: "nothing to change; give --title, --desc, --desc-file, --epic, --clear-epic, --planned-version, --current-version, or --unplanned.".to_string(),
+                    message: "nothing to change; give --title, --desc, --desc-file, --epic, --clear-epic, --planned-version, --release-version, or --unplanned.".to_string(),
                     command: Some("edit".to_string()),
                 })
             }

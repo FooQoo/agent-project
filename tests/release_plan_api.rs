@@ -1,4 +1,4 @@
-//! The web API for planned versions: the project's versions and current version, one task's
+//! The web API for planned versions: the project's versions and release version, one task's
 //! planned version, and an epic-wide change with its preview. Every test uses a temporary data
 //! area; servers listen on port 0.
 
@@ -112,7 +112,7 @@ fn versions_are_listed_added_and_set_current_with_non_ascii_names() {
     assert_eq!(empty.status, 200);
     assert_eq!(
         empty.json(),
-        json!({"versions": [], "currentVersion": null})
+        json!({"versions": [], "releaseVersion": null})
     );
 
     let added = board.call("POST", "/versions", json!({"name": "v1.8.0"}));
@@ -128,18 +128,18 @@ fn versions_are_listed_added_and_set_current_with_non_ascii_names() {
     let japanese = board.call("POST", "/versions", json!({"name": "第2版"}));
     assert_eq!(japanese.status, 200, "{}", japanese.body);
 
-    let current = board.call("PUT", "/versions/current", json!({"version": "第2版"}));
-    assert_eq!(current.status, 200, "{}", current.body);
-    assert_eq!(current.json()["currentVersion"], "第2版");
+    let release = board.call("PUT", "/versions/release", json!({"version": "第2版"}));
+    assert_eq!(release.status, 200, "{}", release.body);
+    assert_eq!(release.json()["releaseVersion"], "第2版");
     let read = board.server.get(&format!("{}/versions", board.base)).json();
     assert_eq!(read["versions"], json!(["第2版", "v1.8.0"]));
-    assert_eq!(read["currentVersion"], "第2版");
+    assert_eq!(read["releaseVersion"], "第2版");
 
-    // A version that is not listed is listed when it becomes current.
-    let unlisted = board.call("PUT", "/versions/current", json!({"version": "v2.0.0"}));
+    // A version that is not listed is listed when it becomes the release version.
+    let unlisted = board.call("PUT", "/versions/release", json!({"version": "v2.0.0"}));
     assert_eq!(unlisted.json()["versions"].as_array().unwrap().len(), 3);
-    let cleared = board.call("PUT", "/versions/current", json!({"version": null}));
-    assert_eq!(cleared.json()["currentVersion"], Value::Null);
+    let cleared = board.call("PUT", "/versions/release", json!({"version": null}));
+    assert_eq!(cleared.json()["releaseVersion"], Value::Null);
 
     for bad in [json!({"name": "has space"}), json!({"name": ""})] {
         let reply = board.call("POST", "/versions", bad);
@@ -155,12 +155,12 @@ fn the_summary_carries_planned_versions_and_the_project_versions() {
     let board = Board::new();
     assert_eq!(board.summary_task(1)["plannedVersion"], Value::Null);
     board.call("POST", "/versions", json!({"name": "v1.8.0"}));
-    board.call("PUT", "/versions/current", json!({"version": "v1.8.0"}));
+    board.call("PUT", "/versions/release", json!({"version": "v1.8.0"}));
     board.plan(1, "v1.8.0");
 
     let summary = board.server.get(&format!("{}/summary", board.base)).json();
     assert_eq!(summary["project"]["versions"], json!(["v1.8.0"]));
-    assert_eq!(summary["project"]["currentVersion"], "v1.8.0");
+    assert_eq!(summary["project"]["releaseVersion"], "v1.8.0");
     assert_eq!(board.summary_task(1)["plannedVersion"], "v1.8.0");
     assert_eq!(board.summary_task(2)["plannedVersion"], Value::Null);
 }
@@ -175,23 +175,23 @@ fn a_change_of_versions_changes_the_summary_so_open_boards_refresh() {
         before, listed,
         "adding a version changes the summary version"
     );
-    board.call("PUT", "/versions/current", json!({"version": "v1.8.0"}));
-    let current = board.server.get(&format!("{}/summary", board.base)).json()["version"].clone();
-    assert_ne!(listed, current, "setting the current version changes it");
+    board.call("PUT", "/versions/release", json!({"version": "v1.8.0"}));
+    let release = board.server.get(&format!("{}/summary", board.base)).json()["version"].clone();
+    assert_ne!(listed, release, "setting the release version changes it");
     board.plan(1, "v1.8.0");
     let planned = board.server.get(&format!("{}/summary", board.base)).json()["version"].clone();
-    assert_ne!(current, planned, "planning a task changes it");
+    assert_ne!(release, planned, "planning a task changes it");
 }
 
 #[test]
-fn a_task_is_planned_for_a_named_version_the_current_one_or_none() {
+fn a_task_is_planned_for_a_named_version_the_release_version_or_none() {
     let board = Board::new();
     board.call("POST", "/versions", json!({"name": "v1.8.0"}));
 
     let no_current = board.call(
         "PUT",
         "/tasks/1/planned-version",
-        json!({"choice": "current"}),
+        json!({"choice": "release"}),
     );
     assert_eq!(no_current.status, 422, "{}", no_current.body);
     let unknown = board.call(
@@ -214,15 +214,15 @@ fn a_task_is_planned_for_a_named_version_the_current_one_or_none() {
     assert_eq!(stray.status, 422, "{}", stray.body);
     assert_eq!(board.summary_task(1)["plannedVersion"], Value::Null);
 
-    board.call("PUT", "/versions/current", json!({"version": "v1.8.0"}));
-    let current = board.call(
+    board.call("PUT", "/versions/release", json!({"version": "v1.8.0"}));
+    let release = board.call(
         "PUT",
         "/tasks/1/planned-version",
-        json!({"choice": "current"}),
+        json!({"choice": "release"}),
     );
-    assert_eq!(current.status, 200, "{}", current.body);
-    assert_eq!(current.json()["changed"], true);
-    assert_eq!(current.json()["task"]["plannedVersion"], "v1.8.0");
+    assert_eq!(release.status, 200, "{}", release.body);
+    assert_eq!(release.json()["changed"], true);
+    assert_eq!(release.json()["task"]["plannedVersion"], "v1.8.0");
     let same = board.call(
         "PUT",
         "/tasks/1/planned-version",
@@ -250,7 +250,7 @@ fn a_task_is_planned_for_a_named_version_the_current_one_or_none() {
 }
 
 #[test]
-fn a_stale_expectation_is_a_conflict_that_names_the_current_version() {
+fn a_stale_expectation_is_a_conflict_that_names_the_release_version() {
     let board = Board::new();
     board.call("POST", "/versions", json!({"name": "v1"}));
     board.call("POST", "/versions", json!({"name": "v2"}));
@@ -308,7 +308,7 @@ fn an_epic_change_previews_then_applies_only_the_checked_tasks() {
     let board = Board::new();
     board.call("POST", "/versions", json!({"name": "v1"}));
     board.call("POST", "/versions", json!({"name": "v2"}));
-    board.call("PUT", "/versions/current", json!({"version": "v2"}));
+    board.call("PUT", "/versions/release", json!({"version": "v2"}));
     board.plan(2, "v1");
     // Task 3 is Done: a shipped version is not rewritten.
     let moved = board.call("POST", "/tasks/3/move", json!({"taskStatus": "done"}));
@@ -319,7 +319,7 @@ fn an_epic_change_previews_then_applies_only_the_checked_tasks() {
 
     let request = |scope: &str, ids: Value, dry_run: bool| {
         json!({
-            "choice": "current",
+            "choice": "release",
             "scope": scope,
             "taskIds": ids,
             "dryRun": dry_run,
@@ -412,7 +412,7 @@ fn an_epic_change_refuses_bad_requests_before_writing() {
     let no_current = board.call(
         "POST",
         "/epics/PLAN/planned-version",
-        json!({"choice": "current", "scope": "all", "taskIds": [1]}),
+        json!({"choice": "release", "scope": "all", "taskIds": [1]}),
     );
     assert_eq!(no_current.status, 422, "{}", no_current.body);
     let unknown_version = board.call(

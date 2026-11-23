@@ -13,7 +13,7 @@ import {
 
 // The versions of a project and the planned version of its tasks, as `agpj serve` answers them.
 
-const BASE = /^\/api\/projects\/([^/]+)\/(versions|versions\/current)$/;
+const BASE = /^\/api\/projects\/([^/]+)\/(versions|versions\/release)$/;
 const TASK = /^\/api\/projects\/([^/]+)\/tasks\/(\d+)\/planned-version$/;
 const EPIC = /^\/api\/projects\/([^/]+)\/epics\/([^/]+)\/planned-version$/;
 
@@ -23,27 +23,27 @@ const newestFirst = (versions: string[]) =>
 
 const invalid = (reason: string) => error(422, 'validation', 'invalid version.', reason);
 
-type Choice = { choice: 'named'; version: string } | { choice: 'current' } | { choice: 'unset' };
+type Choice = { choice: 'named'; version: string } | { choice: 'release' } | { choice: 'unset' };
 
 /** The version a choice names for this project; `undefined` when the choice cannot be applied. */
 function resolve(
   input: Record<string, unknown>,
   versions: string[],
-  current: string | null,
+  release: string | null,
 ): { version: string | null } | { problem: string } {
   const choice = input.choice as Choice['choice'] | undefined;
   if (choice === 'unset') return { version: null };
-  if (choice === 'current')
-    return current === null
-      ? { problem: 'The project has no current version.' }
-      : { version: current };
+  if (choice === 'release')
+    return release === null
+      ? { problem: 'The project has no release version.' }
+      : { version: release };
   if (choice === 'named') {
     const version = input.version;
     if (typeof version !== 'string' || !versions.includes(version))
       return { problem: 'The version is not listed in the project.' };
     return { version };
   }
-  return { problem: 'Send choice as named, current or unset.' };
+  return { problem: 'Send choice as named, release or unset.' };
 }
 
 export const versionRoutes: Routes = (context, request) => {
@@ -60,7 +60,7 @@ export const versionRoutes: Routes = (context, request) => {
     if (!found) return projectNotFound();
     return json(200, {
       versions: newestFirst(found.project.versions ?? []),
-      currentVersion: found.project.currentVersion ?? null,
+      releaseVersion: found.project.releaseVersion ?? null,
     });
   }
   const writes =
@@ -73,8 +73,8 @@ export const versionRoutes: Routes = (context, request) => {
   const input = parseBody(request.body);
   if (!input) return invalidJson();
   const versions = found.project.versions ?? [];
-  const current = found.project.currentVersion ?? null;
-  const settings = (next: { versions?: string[]; currentVersion?: string | null }) =>
+  const release = found.project.releaseVersion ?? null;
+  const settings = (next: { versions?: string[]; releaseVersion?: string | null }) =>
     context.commit(projectId, { ...found, project: { ...found.project, ...next } }, [
       { resource: 'project', id: projectId, facets: ['summary'] },
     ]);
@@ -86,20 +86,20 @@ export const versionRoutes: Routes = (context, request) => {
     if (changed) settings({ versions: [...versions, name] });
     return json(200, {
       versions: newestFirst(changed ? [...versions, name] : versions),
-      currentVersion: current,
+      releaseVersion: release,
       changed,
     });
   }
   if (base) {
-    // PUT /versions/current
+    // PUT /versions/release
     const version = input.version;
     if (version !== null && typeof version !== 'string')
       return invalid('Send version as a name or null.');
     const listed =
       version === null || versions.includes(version) ? versions : [...versions, version];
-    const changed = version !== current;
-    if (changed || listed !== versions) settings({ versions: listed, currentVersion: version });
-    return json(200, { versions: newestFirst(listed), currentVersion: version, changed });
+    const changed = version !== release;
+    if (changed || listed !== versions) settings({ versions: listed, releaseVersion: version });
+    return json(200, { versions: newestFirst(listed), releaseVersion: version, changed });
   }
 
   if (task) {
@@ -107,7 +107,7 @@ export const versionRoutes: Routes = (context, request) => {
     const item = found.tasks.find((entry) => entry.id === id);
     if (!item)
       return error(404, 'task_not_found', `task #${id} not found.`, `No task has ID ${id}.`);
-    const resolved = resolve(input, versions, current);
+    const resolved = resolve(input, versions, release);
     if ('problem' in resolved) return invalid(resolved.problem);
     const now = item.plannedVersion ?? null;
     if ('expectedPlannedVersion' in input && (input.expectedPlannedVersion ?? null) !== now)
@@ -127,7 +127,7 @@ export const versionRoutes: Routes = (context, request) => {
 
   // POST /epics/{id}/planned-version
   const epicId = decodeURIComponent(epic?.[2] ?? '');
-  const resolved = resolve(input, versions, current);
+  const resolved = resolve(input, versions, release);
   if ('problem' in resolved) return invalid(resolved.problem);
   const scope = input.scope === 'all' ? 'all' : 'unplanned-only';
   const ids = Array.isArray(input.taskIds)

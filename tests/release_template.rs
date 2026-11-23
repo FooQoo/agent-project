@@ -147,7 +147,7 @@ fn ac1_an_existing_version_file_is_not_overwritten_by_add_or_current() {
     let again = f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
     assert_eq!(again.value.versions, ["v1.8.0"]);
     f.store
-        .set_current_version(&f.project, Some("v1.8.0"), at(6))
+        .set_release_version(&f.project, Some("v1.8.0"), at(6))
         .unwrap();
     assert_eq!(
         fs::read_to_string(f.release().join("v1.8.0.md")).unwrap(),
@@ -240,32 +240,32 @@ fn ac2_a_task_in_the_way_does_not_block_the_add() {
 }
 
 #[test]
-fn ac3_setting_a_new_current_version_issues_one_card_and_adding_keeps_current_unset() {
+fn ac3_setting_a_new_release_version_issues_one_card_and_adding_keeps_release_unset() {
     let f = fixture();
     f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
-    assert_eq!(f.store.project_versions(&f.project).unwrap().current, None);
-    assert!(!f.project_json().contains("currentVersion"));
+    assert_eq!(f.store.project_versions(&f.project).unwrap().release, None);
+    assert!(!f.project_json().contains("releaseVersion"));
 
     f.store
-        .set_current_version(&f.project, Some("v1.9.0"), at(6))
+        .set_release_version(&f.project, Some("v1.9.0"), at(6))
         .unwrap();
     assert_eq!(f.tasks().len(), 2);
     f.store
-        .set_current_version(&f.project, Some("v1.9.0"), at(7))
+        .set_release_version(&f.project, Some("v1.9.0"), at(7))
         .unwrap();
     assert_eq!(f.tasks().len(), 2);
-    // Adding a newer version leaves the current one alone.
+    // Adding a newer version leaves the release version alone.
     f.store.add_version(&f.project, "v2.0.0", at(8)).unwrap();
     let versions = f.store.project_versions(&f.project).unwrap();
-    assert_eq!(versions.current.as_deref(), Some("v1.9.0"));
+    assert_eq!(versions.release.as_deref(), Some("v1.9.0"));
     assert_eq!(versions.versions, ["v2.0.0", "v1.9.0", "v1.8.0"]);
 }
 
 #[test]
-fn ac3_setting_the_current_version_keeps_the_task_counter() {
+fn ac3_setting_the_release_version_keeps_the_task_counter() {
     let f = fixture();
     f.store
-        .set_current_version(&f.project, Some("v1.8.0"), at(5))
+        .set_release_version(&f.project, Some("v1.8.0"), at(5))
         .unwrap();
     let next = f
         .store

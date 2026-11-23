@@ -1,8 +1,8 @@
-//! `version ls|add|current`: the project's versions and its current version.
+//! `version ls|add|release`: the project's versions and its release version.
 
 use serde_json::json;
 
-use crate::cli::args::{VersionAddArgs, VersionArgs, VersionCommand, VersionCurrentArgs};
+use crate::cli::args::{VersionAddArgs, VersionArgs, VersionCommand, VersionReleaseArgs};
 use crate::cli::{Context, Outcome};
 use crate::error::AgpjError;
 use crate::file_store::ProjectVersions;
@@ -14,7 +14,7 @@ pub fn run(ctx: &mut Context, args: &VersionArgs) -> Result<Outcome, AgpjError> 
             Ok(outcome(false, listing(&versions), &versions))
         }
         VersionCommand::Add(args) => add(ctx, args),
-        VersionCommand::Current(args) => current(ctx, args),
+        VersionCommand::Release(args) => release(ctx, args),
     }
 }
 
@@ -30,24 +30,24 @@ fn add(ctx: &mut Context, args: &VersionAddArgs) -> Result<Outcome, AgpjError> {
     Ok(outcome(result.changed, text, &result.value))
 }
 
-fn current(ctx: &mut Context, args: &VersionCurrentArgs) -> Result<Outcome, AgpjError> {
+fn release(ctx: &mut Context, args: &VersionReleaseArgs) -> Result<Outcome, AgpjError> {
     let project = ctx.project_id()?.clone();
     if args.version.is_none() && !args.clear {
         let versions = ctx.files.project_versions(&project)?;
-        let text = match &versions.current {
-            Some(current) => format!("Current version: {current}\n"),
-            None => "No current version.\n".to_string(),
+        let text = match &versions.release {
+            Some(release) => format!("Release version: {release}\n"),
+            None => "No release version.\n".to_string(),
         };
         return Ok(outcome(false, text, &versions));
     }
     let result =
         ctx.files
-            .set_current_version(&project, args.version.as_deref(), ctx.clock.now())?;
-    let text = match (&result.value.current, result.changed) {
-        (Some(current), true) => format!("Current version is now {current}.\n"),
-        (Some(current), false) => format!("Current version is already {current}.\n"),
-        (None, true) => "Cleared the current version.\n".to_string(),
-        (None, false) => "There is no current version.\n".to_string(),
+            .set_release_version(&project, args.version.as_deref(), ctx.clock.now())?;
+    let text = match (&result.value.release, result.changed) {
+        (Some(release), true) => format!("Release version is now {release}.\n"),
+        (Some(release), false) => format!("Release version is already {release}.\n"),
+        (None, true) => "Cleared the release version.\n".to_string(),
+        (None, false) => "There is no release version.\n".to_string(),
     };
     Ok(outcome(result.changed, text, &result.value))
 }
@@ -58,8 +58,8 @@ fn listing(versions: &ProjectVersions) -> String {
     }
     let mut out = String::new();
     for version in &versions.versions {
-        let mark = if versions.current.as_deref() == Some(version) {
-            " (current)"
+        let mark = if versions.release.as_deref() == Some(version) {
+            " (release)"
         } else {
             ""
         };
@@ -68,7 +68,7 @@ fn listing(versions: &ProjectVersions) -> String {
     out
 }
 
-/// `versions` lists every version in the order they were added; `currentVersion` is `null`
+/// `versions` lists every version in the order they were added; `releaseVersion` is `null`
 /// when none is set.
 fn outcome(changed: bool, human: String, versions: &ProjectVersions) -> Outcome {
     Outcome {
@@ -76,7 +76,7 @@ fn outcome(changed: bool, human: String, versions: &ProjectVersions) -> Outcome 
         human,
         json: json!({
             "versions": versions.versions,
-            "currentVersion": versions.current,
+            "releaseVersion": versions.release,
         }),
     }
 }

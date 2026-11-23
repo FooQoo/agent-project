@@ -1,4 +1,4 @@
-//! Project versions (the files of `docs/release/`), the current version, and the planned version
+//! Project versions (the files of `docs/release/`), the release version, and the planned version
 //! of tasks (the `plannedVersion` key of TASK.md) with its history entries, on the shared files.
 
 use std::fs;
@@ -118,17 +118,17 @@ fn two_projects_keep_the_same_version_name_independently() {
     );
     f.store.add_version(&other, "v1.8.0", at(5)).unwrap();
     f.store
-        .set_current_version(&other, Some("v1.8.0"), at(5))
+        .set_release_version(&other, Some("v1.8.0"), at(5))
         .unwrap();
 
     let alpha = f.store.project_versions(&f.project).unwrap();
     assert_eq!(alpha.versions, ["v1.8.0"]);
-    assert_eq!(alpha.current, None);
+    assert_eq!(alpha.release, None);
     let beta = f.store.project_versions(&other).unwrap();
-    assert_eq!(beta.current.as_deref(), Some("v1.8.0"));
+    assert_eq!(beta.release.as_deref(), Some("v1.8.0"));
 
     // Clearing in one project leaves the other.
-    f.store.set_current_version(&other, None, at(5)).unwrap();
+    f.store.set_release_version(&other, None, at(5)).unwrap();
     assert_eq!(
         f.store.project_versions(&f.project).unwrap().versions,
         ["v1.8.0"]
@@ -144,7 +144,7 @@ fn files_without_the_fields_load_and_a_task_never_gets_a_version_by_itself() {
     let f = fixture();
     let task = f.task("Plain", Assignee::Ai);
     let text = String::from_utf8(f.project_json(&f.project)).unwrap();
-    assert!(!text.contains("versions") && !text.contains("currentVersion"));
+    assert!(!text.contains("versions") && !text.contains("releaseVersion"));
     let json_before = f.task_json(task.id);
     let md_before = f.task_md(task.id);
     assert!(
@@ -153,23 +153,23 @@ fn files_without_the_fields_load_and_a_task_never_gets_a_version_by_itself() {
             .contains("plannedVersion")
     );
 
-    // Unset on a task with no plan, and clearing a missing current version, change nothing.
+    // Unset on a task with no plan, and clearing a missing release version, change nothing.
     let (view, changed) = f.set(task.id, VersionChoice::Unset, 5);
     assert!(!changed);
     assert_eq!(view.planned_version, None);
     assert!(
         !f.store
-            .set_current_version(&f.project, None, at(5))
+            .set_release_version(&f.project, None, at(5))
             .unwrap()
             .changed
     );
     assert_eq!(f.task_json(task.id), json_before);
     assert_eq!(f.task_md(task.id), md_before);
 
-    // A current version on the project does not give the task one, and a later write that
+    // A release version on the project does not give the task one, and a later write that
     // rewrites the task keeps it free of the fields.
     f.store
-        .set_current_version(&f.project, Some("v1.8.0"), at(5))
+        .set_release_version(&f.project, Some("v1.8.0"), at(5))
         .unwrap();
     f.store
         .add_history(&f.project, task.id, Some("note"), at(5))
@@ -182,16 +182,16 @@ fn files_without_the_fields_load_and_a_task_never_gets_a_version_by_itself() {
     assert!(!text.contains("plannedVersion"));
     assert!(f.store.snapshot(&f.project).unwrap().problems.is_empty());
 
-    // Clearing the current version again returns project.json to its legacy shape.
+    // Clearing the release version again returns project.json to its legacy shape.
     f.store
-        .set_current_version(&f.project, None, at(5))
+        .set_release_version(&f.project, None, at(5))
         .unwrap();
     let text = String::from_utf8(f.project_json(&f.project)).unwrap();
-    assert!(!text.contains("currentVersion"));
+    assert!(!text.contains("releaseVersion"));
 }
 
 #[test]
-fn the_current_version_is_stored_as_a_concrete_name_and_later_switches_do_not_move_tasks() {
+fn the_release_version_is_stored_as_a_concrete_name_and_later_switches_do_not_move_tasks() {
     let f = fixture();
     let task = f.task("Plan", Assignee::Ai);
     assert!(
@@ -199,17 +199,17 @@ fn the_current_version_is_stored_as_a_concrete_name_and_later_switches_do_not_mo
             .set_task_planned_version(
                 &f.project,
                 task.id,
-                &VersionChoice::Current,
+                &VersionChoice::Release,
                 Actor::Human,
                 at(5)
             )
             .is_err(),
-        "there is no current version yet"
+        "there is no release version yet"
     );
     f.store
-        .set_current_version(&f.project, Some("v1.8.0"), at(5))
+        .set_release_version(&f.project, Some("v1.8.0"), at(5))
         .unwrap();
-    let (view, changed) = f.set(task.id, VersionChoice::Current, 5);
+    let (view, changed) = f.set(task.id, VersionChoice::Release, 5);
     assert!(changed);
     assert_eq!(view.planned_version.as_deref(), Some("v1.8.0"));
     let md = String::from_utf8(f.task_md(task.id)).unwrap();
@@ -218,10 +218,10 @@ fn the_current_version_is_stored_as_a_concrete_name_and_later_switches_do_not_mo
     assert!(stored.get("plannedVersion").is_none());
 
     f.store
-        .set_current_version(&f.project, Some("v1.9.0"), at(5))
+        .set_release_version(&f.project, Some("v1.9.0"), at(5))
         .unwrap();
     f.store
-        .set_current_version(&f.project, None, at(5))
+        .set_release_version(&f.project, None, at(5))
         .unwrap();
     assert_eq!(
         f.store
@@ -231,16 +231,16 @@ fn the_current_version_is_stored_as_a_concrete_name_and_later_switches_do_not_mo
             .as_deref(),
         Some("v1.8.0")
     );
-    // The versions stay listed after the current one is cleared.
+    // The versions stay listed after the release version is cleared.
     assert_eq!(
         f.store.project_versions(&f.project).unwrap().versions,
         ["v1.9.0", "v1.8.0"]
     );
 
     f.store
-        .set_current_version(&f.project, Some("v1.9.0"), at(5))
+        .set_release_version(&f.project, Some("v1.9.0"), at(5))
         .unwrap();
-    let (view, changed) = f.set(task.id, VersionChoice::Current, 6);
+    let (view, changed) = f.set(task.id, VersionChoice::Release, 6);
     assert!(changed);
     assert_eq!(view.planned_version.as_deref(), Some("v1.9.0"));
 }
@@ -261,7 +261,7 @@ fn a_version_must_be_listed_and_named_validly() {
         );
         assert!(
             f.store
-                .set_current_version(&f.project, Some(bad), at(5))
+                .set_release_version(&f.project, Some(bad), at(5))
                 .is_err()
         );
     }
@@ -479,11 +479,11 @@ fn an_epic_can_hold_mixed_versions_and_a_bulk_set_reports_what_changed() {
             Some("v1.9.0".into())
         ]
     );
-    // Setting the current version for the whole epic resolves it once.
+    // Setting the release version for the whole epic resolves it once.
     f.store
-        .set_current_version(&f.project, Some("v1.9.0"), at(5))
+        .set_release_version(&f.project, Some("v1.9.0"), at(5))
         .unwrap();
-    let all = run(&VersionChoice::Current, 9);
+    let all = run(&VersionChoice::Release, 9);
     assert_eq!(all.changed, [a.id, b.id]);
     assert_eq!(all.unchanged, [c.id]);
     let cleared = run(&VersionChoice::Unset, 10);

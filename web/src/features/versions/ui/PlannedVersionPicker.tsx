@@ -9,13 +9,13 @@ import './versions.css';
 
 // Controls and versions have disjoint values, so a version may be named anything.
 const NONE = 'c:none';
-const CURRENT = 'c:current';
+const RELEASE = 'c:release';
 
 export interface PlannedVersionPickerProps {
   taskId: number;
   /** The planned version the page shows; `null` when none. */
   planned: string | null;
-  current: string | null;
+  release: string | null;
   versions: readonly string[];
   disabled?: boolean;
   /**
@@ -30,21 +30,21 @@ export interface PlannedVersionPickerProps {
 }
 
 /** What the saved state looks like among the rows. */
-function savedKey(planned: string | null, current: string | null): string {
+function savedKey(planned: string | null, release: string | null): string {
   if (planned === null) return NONE;
-  return planned === current ? CURRENT : `v:${planned}`;
+  return planned === release ? RELEASE : `v:${planned}`;
 }
 
 export function choiceOf(key: string): VersionChoice {
   if (key === NONE) return { choice: 'unset' };
-  if (key === CURRENT) return { choice: 'current' };
+  if (key === RELEASE) return { choice: 'release' };
   return { choice: 'named', version: key.slice(2) };
 }
 
 type Notice = { kind: 'failed' } | { kind: 'conflict'; version: string | null };
 
 /**
- * The planned version of one task, inside the task's editor: the current version (saving its name),
+ * The planned version of one task, inside the task's editor: the release version (saving its name),
  * a version of the list, or none. The choice is saved with the editor, over the value this shows.
  * When the task changed meanwhile the save is refused, the newer value is reported and the board is
  * read again; the choice is never written silently, and the person decides again.
@@ -52,7 +52,7 @@ type Notice = { kind: 'failed' } | { kind: 'conflict'; version: string | null };
 export function PlannedVersionPicker({
   taskId,
   planned,
-  current,
+  release,
   versions,
   disabled = false,
   onSave,
@@ -62,10 +62,10 @@ export function PlannedVersionPicker({
   const { t } = useTranslation();
   const [pick, setPick] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
-  const saved = savedKey(planned, current);
+  const saved = savedKey(planned, release);
   const value = pick ?? saved;
-  const others = sortVersions(versions.filter((version) => version !== current));
-  const listed = planned !== null && planned !== current && !others.includes(planned);
+  const others = sortVersions(versions.filter((version) => version !== release));
+  const listed = planned !== null && planned !== release && !others.includes(planned);
   const rows = listed ? [...others, planned] : others;
 
   // The pending change saves over the value the person saw when choosing. When the task changed
@@ -107,9 +107,9 @@ export function PlannedVersionPicker({
         {t('versions.detail.title')}
       </h3>
       <p className="ver-note">
-        {current === null
+        {release === null
           ? t('versions.detail.noteUnset')
-          : t('versions.detail.note', { version: current })}
+          : t('versions.detail.note', { version: release })}
       </p>
       <RadioGroup
         value={value}
@@ -119,18 +119,18 @@ export function PlannedVersionPicker({
         aria-labelledby={titleId}
       >
         <OptionRow
-          value={CURRENT}
-          checked={value === CURRENT}
-          disabled={current === null}
+          value={RELEASE}
+          checked={value === RELEASE}
+          disabled={release === null}
           label={
-            current === null
-              ? t('versions.detail.currentUnset')
-              : t('versions.detail.current', { version: current })
+            release === null
+              ? t('versions.detail.releaseUnset')
+              : t('versions.detail.release', { version: release })
           }
           hint={
-            current === null
-              ? t('versions.detail.currentUnsetHint')
-              : t('versions.detail.currentHint')
+            release === null
+              ? t('versions.detail.releaseUnsetHint')
+              : t('versions.detail.releaseHint')
           }
         />
         {rows.map((version) => (

@@ -16,7 +16,7 @@ export function EpicPlan({
   disabled,
   onPending,
 }: PlanFieldArgs & { projectId: ProjectId; epicId: string }) {
-  const { versions, current, tasks, refresh } = useProjectVersions(projectId);
+  const { versions, release, tasks, refresh } = useProjectVersions(projectId);
   const open = useMemo(
     () =>
       tasks.filter((task) => task.epicId === epicId && task.taskStatus !== 'done').map((t) => t.id),
@@ -26,7 +26,7 @@ export function EpicPlan({
   openRef.current = open;
   return (
     <EpicPlanField
-      current={current}
+      release={release}
       versions={versions}
       disabled={disabled}
       apply={async (choice) => {

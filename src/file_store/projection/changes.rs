@@ -92,7 +92,7 @@ pub(crate) fn project_change(id: &ProjectId, facet: Facet) -> ChangeSet {
 
 /// The changes of a project that was read: its tasks and epics against the earlier projection,
 /// and the project itself when it is new, was unreadable before, or has a new name, list of
-/// versions, or current version.
+/// versions, or release version.
 pub(crate) fn ready_changes(
     old: Option<&Projection>,
     new: &Projection,
@@ -110,7 +110,7 @@ pub(crate) fn ready_changes(
             if was_invalid
                 || old.project_name != new.project_name
                 || old.versions != new.versions
-                || old.current_version != new.current_version
+                || old.release_version != new.release_version
             {
                 changes.insert(0, project);
             }

@@ -72,12 +72,12 @@ pub fn check_project(file: &ProjectFile, folder_id: &str) -> Vec<Defect> {
     if file.next_task_id < 1 {
         out.push(defect("nextTaskId", "The next task ID starts at 1."));
     }
-    if let Some(current) = &file.current_version
+    if let Some(current) = &file.release_version
         && validate_version_name(current).is_err()
     {
         out.push(defect(
-            "currentVersion",
-            "The current version is not a valid name.",
+            "releaseVersion",
+            "The release version is not a valid name.",
         ));
     }
     out
