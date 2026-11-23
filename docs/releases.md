@@ -1,6 +1,6 @@
 # Release notes
 
-What changed in each published version of Agent Board, newest first. Each version also has a [GitHub Release](https://github.com/FooQoo/agent-board/releases) with its downloads.
+What changed in each published version of Agent Project, formerly Agent Board, newest first. Each version also has a [GitHub Release](https://github.com/FooQoo/agent-project/releases) with its downloads.
 
 ## v1.7.0
 

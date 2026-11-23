@@ -1,6 +1,6 @@
 # リリースノート
 
-Agent Boardの公開版ごとの変更点です。新しい版から順に並べています。各版のダウンロードは、[GitHub Release](https://github.com/FooQoo/agent-board/releases)にあります。
+Agent Project（旧Agent Board）の公開版ごとの変更点です。新しい版から順に並べています。各版のダウンロードは、[GitHub Release](https://github.com/FooQoo/agent-project/releases)にあります。
 
 ## v1.7.0
 

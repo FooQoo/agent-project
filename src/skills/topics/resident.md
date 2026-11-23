@@ -13,9 +13,9 @@ Nobody watches a board-launched session. It runs headless with automatic approva
 
 Only a session the board launched follows this part.
 
-1. Resolve the project as the main Skill describes (`agpj skills`), read the complete project snapshot, and inspect every AI task's `agentStatus`. Resolve work that is `running` or has `awaitingAnswer` first, as `agpj skills listening` describes for a resumed session. Then end your turn. Do not start a wait: the board sends the next message when it has work.
+1. Resolve the project as the main Skill describes (`agpj skills`), read the complete project snapshot, and inspect every AI task's `agentStatus`. Resolve work that is `running` first, as `agpj skills listening` describes for a resumed session. A task you are working on that has `awaitingAnswer` stays pending: do not wait for it, and end your turn; the board sends the answer as a later message. An AI task in Backlog or Done with an open question is not selected and never blocks other work. Then end your turn. Do not start a wait: the board sends the next message when it has work.
 2. A message that starts with "Agent Project has work for you" carries one JSON object, of the same shape `wait --until task --json` returns. Handle it as follows, then end your turn:
-   - `"kind":"answers"`: answers to questions you asked. Read each with `message show <id>`, act on it, and take it in with `message accept <id> --actor ai`.
+   - `"kind":"answers"`: answers to questions you asked. Read each with `message show <id>`, act on it, and take it in with `message accept <id> --actor ai`; then follow "After an answer" in `agpj skills waiting`.
    - `"kind":"requests"`: open requests. Read each with `message show <id>`, take it with `message accept <id> --actor ai`, and plan it as `agpj skills planning` describes. If `message accept` says another session already took it, drop it.
    - `"kind":"task"`: a ready task. Work it as `agpj skills listening` describes under "Process one returned task".
 3. The board never sends a message while you are working, so the next one arrives after your turn ends. A turn that ends with the item still open (for example a request you did not accept) is sent again after a delay, and the board gives up after three tries, so finish what you were given or say on the board why you cannot.
@@ -31,7 +31,7 @@ Only a session a person opened and told to stay on the board follows this part a
 ### Start
 
 1. Resolve the project as the main Skill describes (`agpj skills`). Never broaden the session to other projects. If the folder is not bound (`folder_unbound`), report it and stop; there is nobody to retry for you.
-2. Read the complete project snapshot and inspect every AI task's `agentStatus`. Resolve work that is `running` or has `awaitingAnswer` before waiting, as `agpj skills listening` describes for a resumed session.
+2. Read the complete project snapshot and inspect every AI task's `agentStatus`. Resolve work that is `running` or, for the task you are working on in Todo or Doing, has `awaitingAnswer` before waiting (an AI task in Backlog or Done with an open question is not selected and never blocks other work), as `agpj skills listening` describes for a resumed session.
 
 ### The loop
 
@@ -63,9 +63,9 @@ Run the next wait before long optional work, such as a final summary. Stop only 
 
 A session the board launched asks with `message ask --no-wait`, records that the task waits for the answer, and ends its turn; the answer arrives as an `answers` message. The rest of this section is for a session that waits for itself.
 
-When a task needs a decision that is a person's (one of the four cases in the main Skill), register it with `message ask --task <id> ...` and do not wait on it with the foreground command. Use `--no-wait`, record that the task is waiting for the answer, and go back to the loop. The answer comes back from `wait --until task` as an `answers` result; take it in, then re-read the task: it returns to `running` automatically only when no other question it refers to is open, so continue it only if it resumed. A task with an open question is awaiting an answer and is never returned, so the session keeps working on other tasks while it waits. Never block the whole session on one question, and never leave the loop to wait on one.
+When a task needs a decision that is a person's (one of the four cases in the main Skill), register it with `message ask --task <id> ...` and do not wait on it with the foreground command. Use `--no-wait`, record that the task is waiting for the answer, and go back to the loop. The answer comes back from `wait --until task` as an `answers` result; take it in, then follow "After an answer" in `agpj skills waiting`. A task with an open question is awaiting an answer and is never returned, so the session keeps working on other tasks while it waits. Never block the whole session on one question, and never leave the loop to wait on one.
 
 ## Errors
 
 - `local_network_denied`, `board_unavailable`, malformed project data, a mismatched server, `project_not_found`, and invalid arguments are errors, not an empty board. Report the error and its recovery step, then stop. The board sees the session end and decides whether to start it again.
-- If the wait is interrupted, fetch a fresh snapshot, inspect every AI task by `agentStatus`, resolve `running` or `awaitingAnswer` work, and start the loop again.
+- If the wait is interrupted, fetch a fresh snapshot, inspect every AI task by `agentStatus`, resolve `running` work and `awaitingAnswer` work in Todo or Doing, and start the loop again.
