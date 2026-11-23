@@ -8,7 +8,7 @@
       "name": "agent-project",
       "source": "./plugins/agent-project",
       "description": "The Agent Project Skill and the Hook that shows the progress table.",
-      "version": "1.7.0"
+      "version": "2.0.0"
     }
   ]
 }
