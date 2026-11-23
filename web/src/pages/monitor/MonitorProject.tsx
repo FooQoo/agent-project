@@ -81,6 +81,8 @@ export interface MonitorProjectProps extends MonitorEnvironment {
   useBuildReload: BuildReloadHook;
   /** The project is gone: the screen is replaced by the error screen, which also ends the stream. */
   onNotFound(): void;
+  /** The header's project switcher and version slot, when the app offers them. */
+  header?: MonitorHeaderProps;
 }
 
 /**
