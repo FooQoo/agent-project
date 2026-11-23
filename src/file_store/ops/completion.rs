@@ -7,7 +7,7 @@ use super::super::frontmatter;
 use super::super::qa::QaIndex;
 use super::super::reader;
 use super::HistoryKind;
-use super::{Transition, lane_end, lock_project, save_task, stamp, transition_event};
+use super::{Transition, lane_end, lock_project, stamp, transition_event};
 use crate::domain::{Column, ProjectId, RunState};
 use crate::error::AgpjError;
 
@@ -100,12 +100,14 @@ impl FileStore {
             task.position = position;
             task.updated_at = at;
             task.history.push(event);
-            save_task(shared, &project_dir, &task)?;
+            self.save_done_task(project, &project_dir, &mut task, now)?;
             changed = true;
         }
         Ok(changed)
     }
 }
 
+#[cfg(test)]
+mod release_tests;
 #[cfg(test)]
 mod tests;

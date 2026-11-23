@@ -210,7 +210,11 @@ impl FileStore {
         task.agent_status = next_state;
         task.updated_at = at;
         task.history.push(event);
-        save_task(shared, &project_dir, &task)?;
+        if to == Column::Done {
+            self.save_done_task(project, &project_dir, &mut task, now)?;
+        } else {
+            save_task(shared, &project_dir, &task)?;
+        }
         Ok(Changed {
             value: reader::read_task_locked(shared, project, id)?,
             changed: true,

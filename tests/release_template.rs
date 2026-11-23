@@ -162,7 +162,7 @@ fn ac2_one_backlog_card_is_issued_for_a_new_version() {
     let tasks = f.tasks();
     assert_eq!(tasks.len(), 1);
     let task = &tasks[0];
-    assert_eq!(task.title, "Write the release notes for v1.8.0");
+    assert_eq!(task.title, "Release v1.8.0");
     assert_eq!(task.assignee, Assignee::Ai);
     assert_eq!(task.task_status, Column::Backlog);
     assert_eq!(task.planned_version.as_deref(), Some("v1.8.0"));
@@ -176,7 +176,7 @@ fn ac2_one_backlog_card_is_issued_for_a_new_version() {
 fn ac2_the_card_follows_the_board_language() {
     let f = fixture_with(Some(HistoryLanguage::Japanese));
     f.store.add_version(&f.project, "v1.8.0", at(5)).unwrap();
-    assert_eq!(f.tasks()[0].title, "v1.8.0 のリリースノートを作成する");
+    assert_eq!(f.tasks()[0].title, "v1.8.0 をリリースする");
 }
 
 #[test]
