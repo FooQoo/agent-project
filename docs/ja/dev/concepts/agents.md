@@ -49,7 +49,7 @@ Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登�
 
 モードの効果は3つです。
 
-- **進行表。** `agpj progress`とHookは、表に`mode: "sleep"`を足し、組手ではキーを出しません。エージェントは表を読むたびにモードを知ります（[進行表](../reference/agent-output.md#progress-table)を参照）。
+- **進行表。** `agpj progress`とHookは、表に`mode: "sleep"`を足し、組手ではキーを出しません。エージェントは表を読むたびにモードを知ります（[進行表](../reference/agent-output.md#進行表)を参照）。
 - **保留。** `message ask`は、何かを保存する前にモードを確かめます。スリープ中は質問を保留として保存します。各`QA.md`に`heldAt`が入ります（`Question::held_at`、状態は`MessageState::Held`、表示上の状態は`held`）。保留中の質問にも本物の`Q-<n>`番号が付き、ほかの質問と同じくプロジェクトのロック下で書かれ、タスクの`questions`にも載りますが、`Open`ではありません。`QaIndex::is_waiting`と`open_among`は無視するので、`awaitingAnswer`になるタスクはなく、実行中のタスクは止まらず、タスクの履歴にも何も加わりません。ボードのメッセージ一覧と詳細は保留中の質問を隠し（`GET …/messages`は`held`を除き、`GET …/messages/{id}`は404）、通知もされず、回答は`message_not_found`で拒否します。`message ask`は、ID付きの`held`イベントを1行出し、`--no-wait`の有無にかかわらずすぐに終了コード0で戻り、サーバーも起動しません。保留中の質問への`message wait`も同じイベントを出して0で戻ります。`message withdraw`は保留中の質問にも使え、タスクは見ていないので履歴には何も加えません。`message ls --status all`と`message show`は、エージェントには`status: "held"`として見せます。
 - **解放。** `mode::release_held`は、いま効いているモードがスリープのあいだは何もしません。そうでなければ`FileStore::release_held_questions`を呼び、プロジェクトのロック下で、保留中のすべての質問の`heldAt`を1回の書き込みで消し、その質問を参照する未アーカイブのタスクごとに「質問しました」の履歴を加え、実行中のタスクは通常の質問と同じく一時停止にします。2回目の呼び出しは保留中の質問を見つけないので、解放は1回だけ起きます。毎日の時間帯の終わりは遅れて気づく作りなので、読む側すべてが呼びます。`agpj mode`、`agpj progress`、フック、`ask`以外のすべての`message`サブコマンド、ボードの`PUT …/mode`、プロジェクトのモードがスリープからそれ以外に変わったときに解放するボードの`mode`イベントのループです。
 - **記録。** `agpj decision add <id> --question --choice --reason --decided-by subagent:NAME --basis ...`（`FileStore::add_decision`）は、`add_history`を通して通常の履歴を1件書きます。下書き・アーカイブ・Doneのガードも同じです。`Decided in sleep mode by <who>. Question: ... Choice: ... Reason: ... Basis: ...`で、履歴が日本語のボードでは日本語の形になります。`--basis`は必須なので、判断の根拠にしたコード・ドキュメント・過去の質問が必ず履歴に残ります。
@@ -63,7 +63,7 @@ Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登�
 壁打ちは3つ目のモードです。利用者が1つのエピックか1つのタスク（対象）を選び、エージェントがそれを掘り下げる質問をします。ほかのモードと同じ`modes.json`のエントリに、`kind: "brainstorm"`と`target: {"type": "epic" | "task", "id": "<エピックIDかタスク番号>"}`として保存します。kindが壁打ちで有効な`target`がないエントリは、組手として読みます。コードは`src/mode/`にあり、`store.rs`がファイルの読み込みとロック下での置き換え、`target.rs`が対象の解釈と確認、`brainstorm.rs`が壁打ちの開始、`progress_fields.rs`が進行表のモードの項目を担います。
 
 - **開始。** `agpj mode brainstorm --target <エピックID|タスク番号>`、または`target`付きの`PUT /api/projects/{id}/mode`（[プロジェクトのモード](../reference/web-api.md#プロジェクトのモード)を参照）が`start_brainstorm`を呼びます。数字だけの対象はタスク、それ以外はエピックで、IDは正規化します（エピックIDは大文字、タスク番号は先頭のゼロなし）。対象があるか確かめ、なければ`task_not_found`、`task_archived`、`epic_not_found`で失敗します。次にモードを保存し、そのあとで、利用者からエージェントへの依頼を1件送ります。「Start brainstorming on epic X」または「Start brainstorming on task #N」です。この依頼が待ち受け中の`agpj wait`を起こすので、利用者が何も打たなくてもエージェントが始められます。モードを先に保存するため、起きたエージェントはすでに壁打ちと読みます。組手・スリープ・時間帯の挙動は変わりません。
-- **進行表。** モードが壁打ちのあいだ、`agpj progress`とHookは`mode: "brainstorm"`と`modeTarget: {"type", "id"}`を足します（[進行表](../reference/agent-output.md#progress-table)を参照）。
+- **進行表。** モードが壁打ちのあいだ、`agpj progress`とHookは`mode: "brainstorm"`と`modeTarget: {"type", "id"}`を足します（[進行表](../reference/agent-output.md#進行表)を参照）。
 - **質問。** `message ask --brainstorm`は、質問を壁打ちの質問として印を付けます。先にスリープを確かめるので、スリープが常に優先され、壁打ちの対象なしで質問を保留します。いま効いているモードが壁打ちでなければ`brainstorm_not_active`で失敗し、何も保存しません。壁打ちなら対象がまだあるかを確かめ、各質問の`QA.md`のフロントマターに`brainstorm: {type, id}`を保存します。壁打ちの質問はタスクに紐付かないので、対象のタスクは止まりません。`--brainstorm`なしの質問は通常の質問で、どのモードでも受け付けます（スリープでは保留します）。
 - **終了。** `agpj mode sparring`か`auto`、または次のスリープの時間帯で終わります。ほかの手動のモードと同じく、次のスリープの時間帯が始まるまで続きます。終了後に届いた「Start brainstorming ...」の依頼は、`message accept`で受け取るだけにします。
 
@@ -73,7 +73,7 @@ Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登�
 
 忘れごとのルール（nudge）は、エージェントが忘れやすいことを思い出させます。登録簿は1つ、`src/nudge/rules.rs`の`RULES`で、エージェントに知らせる2つの場面に使われます。作業中は[進行表](../reference/agent-output.md#進行表)の`reminders`、ターンの終わりはStopフックのチェックリストです。ルールは、次のフィールドを持つ1つの項目です。
 
-リマインダーとStopチェックリストの文言は、プロジェクトの言語、つまり進行表の`locale`（[進行表](../reference/agent-output.md#progress-table)を参照）に従います。`"ja"`のときは日本語、`locale`がないときやそれ以外の値のときは、従来どおりの英語です。ルールは`Facts::lang`（`src/nudge/lang.rs`）で文を選ぶので、新しいルールは両方の言語で書きます。変わるのは文だけで、`rule`と`kind`の値、`NG:`と`[ ]`の印、コマンド、オプション、ID、ファイル名、JSONのキーはそのままです。Hookの失敗時の文（`AGPJ_ERROR`）は、プロジェクトの言語を読めないことがあるため、英語のままです。
+リマインダーとStopチェックリストの文言は、プロジェクトの言語、つまり進行表の`locale`（[進行表](../reference/agent-output.md#進行表)を参照）に従います。`"ja"`のときは日本語、`locale`がないときやそれ以外の値のときは、従来どおりの英語です。ルールは`Facts::lang`（`src/nudge/lang.rs`）で文を選ぶので、新しいルールは両方の言語で書きます。変わるのは文だけで、`rule`と`kind`の値、`NG:`と`[ ]`の印、コマンド、オプション、ID、ファイル名、JSONのキーはそのままです。Hookの失敗時の文（`AGPJ_ERROR`）は、プロジェクトの言語を読めないことがあるため、英語のままです。
 
 | フィールド | 値 |
 | --- | --- |
