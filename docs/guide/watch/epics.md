@@ -32,7 +32,7 @@ The agent skill treats these two IDs as ongoing classification epics with fixed 
 
 ## Browse all epics
 
-Open **Epics** in the header to see every epic in the project, in ID order, including epics with no tasks and epics whose tasks are all done. Each row shows the number of tasks in each state: Backlog, Todo, Doing, Done, and Archived. Archived tasks count only as archived, so the five numbers add up to the total at the top right of the row.
+Open **Epics** from the header menu to see every epic in the project, in ID order, including epics with no tasks and epics whose tasks are all done. Each row shows the number of tasks in each state: Backlog, Todo, Doing, Done, and Archived. Archived tasks count only as archived, so the five numbers add up to the total at the top right of the row.
 
 ![Epic list showing each epic's task counts, with the details of the selected epic beside it](../../images/guide/epic-list.png){.screenshot}
 
