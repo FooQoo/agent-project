@@ -51,27 +51,16 @@ pub fn connect(ctx: &mut Context, args: &ConnectArgs) -> Result<Outcome, AgpjErr
         Origin::Board => ConnectionOrigin::Board,
         Origin::External => ConnectionOrigin::External,
     };
-    let connected = ctx.files.exchange_connect_code(
+    // The secret is stored before the connection becomes active; a failed store changes nothing.
+    let connected = ctx.files.exchange_connect_code_storing(
         &project,
         &args.code,
         origin,
         identity.tool.as_str(),
         &identity.key,
         ctx.clock.now(),
+        |secret| connection_store::save_secret(&data_dir, &project, secret),
     )?;
-    if let Err(e) = connection_store::save_secret(&data_dir, &project, &connected.secret) {
-        // The connection and its secret stand or fall together: with no secret to use it, the
-        // new connection would only keep the agent busy.
-        return Err(recover_unsaved(
-            e,
-            &format!("{} ({})", connected.agent.id, connected.agent.name),
-            || {
-                ctx.files
-                    .disconnect_session(&project, &connected.secret, ctx.clock.now())
-                    .map(|_| ())
-            },
-        ));
-    }
     Ok(Outcome {
         changed: true,
         human: format!(
@@ -81,31 +70,6 @@ pub fn connect(ctx: &mut Context, args: &ConnectArgs) -> Result<Outcome, AgpjErr
         json: json!({"agent": connected.agent, "connection": connected.connection}),
     })
 }
-
-/// The secret of a new connection could not be stored: revoke the connection, retrying a few
-/// times. When it cannot be revoked either, say so, so that it is never reported as connected.
-fn recover_unsaved(
-    saved: AgpjError,
-    agent: &str,
-    mut revoke: impl FnMut() -> Result<(), AgpjError>,
-) -> AgpjError {
-    for attempt in 0..REVOKE_ATTEMPTS {
-        if revoke().is_ok() {
-            return saved;
-        }
-        if attempt + 1 < REVOKE_ATTEMPTS {
-            std::thread::sleep(std::time::Duration::from_millis(200));
-        }
-    }
-    AgpjError::InvalidArgument {
-        message: format!(
-            "The secret could not be stored and the new connection to agent {agent} could not be revoked, so it was left active but this session cannot use it. Ask the user to issue a switch code for the agent in the board, then run agpj connect again. ({saved})"
-        ),
-        command: None,
-    }
-}
-
-const REVOKE_ATTEMPTS: u32 = 3;
 
 pub fn disconnect(ctx: &mut Context) -> Result<Outcome, AgpjError> {
     let project = ctx.project_id()?.clone();
@@ -157,48 +121,5 @@ pub fn agent(ctx: &mut Context, args: &AgentArgs) -> Result<Outcome, AgpjError> 
                 json: json!({"agents": agents}),
             })
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn saved() -> AgpjError {
-        AgpjError::InvalidArgument {
-            message: "disk full".into(),
-            command: None,
-        }
-    }
-
-    #[test]
-    fn a_failed_revoke_is_retried_and_then_reported_as_left_active() {
-        let mut calls = 0;
-        let failed = recover_unsaved(saved(), "A-1", || {
-            calls += 1;
-            Err(AgpjError::NotConnected)
-        });
-        assert_eq!(calls, REVOKE_ATTEMPTS);
-        let text = failed.to_string();
-        assert!(
-            text.contains("left active") && text.contains("disk full"),
-            "{text}"
-        );
-    }
-
-    #[test]
-    fn a_revoke_that_works_on_a_retry_reports_only_the_save_failure() {
-        let mut calls = 0;
-        let failed = recover_unsaved(saved(), "A-1", || {
-            calls += 1;
-            if calls < 2 {
-                Err(AgpjError::NotConnected)
-            } else {
-                Ok(())
-            }
-        });
-        assert_eq!(calls, 2);
-        assert!(failed.to_string().contains("disk full"));
-        assert!(!failed.to_string().contains("left active"));
     }
 }

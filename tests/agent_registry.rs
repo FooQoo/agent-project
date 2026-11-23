@@ -780,3 +780,46 @@ fn connect_and_disconnect_racing_leave_a_consistent_state() {
         );
     }
 }
+
+#[test]
+fn a_failed_secret_save_leaves_the_code_valid_and_no_active_connection() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let code = fx
+        .store
+        .issue_connect_code(&fx.project, "A-1", false, t0())
+        .unwrap();
+    let failed = fx.store.exchange_connect_code_storing(
+        &fx.project,
+        &code.code,
+        ConnectionOrigin::External,
+        "claude-code",
+        "claude:1",
+        t0(),
+        |_| Err(AgpjError::NotConnected),
+    );
+    assert!(matches!(failed, Err(AgpjError::NotConnected)));
+    let agents = fx.store.list_agents(&fx.project).unwrap();
+    assert!(agents[0].connection.is_none());
+    // The code was not consumed, so the same code connects once the secret can be kept.
+    let mut kept = String::new();
+    let ok = fx
+        .store
+        .exchange_connect_code_storing(
+            &fx.project,
+            &code.code,
+            ConnectionOrigin::External,
+            "claude-code",
+            "claude:1",
+            t0(),
+            |secret| {
+                kept = secret.to_string();
+                Ok(())
+            },
+        )
+        .unwrap();
+    assert_eq!(ok.secret, kept);
+    assert!(fx.store.verify_connection(&fx.project, &kept, t0()).is_ok());
+}

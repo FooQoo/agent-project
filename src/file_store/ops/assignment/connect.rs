@@ -77,6 +77,26 @@ impl FileStore {
         session_label: &str,
         now: DateTime<Utc>,
     ) -> Result<Connected, AgpjError> {
+        self.exchange_connect_code_storing(project, code, origin, tool, session_label, now, |_| {
+            Ok(())
+        })
+    }
+
+    /// [`FileStore::exchange_connect_code`] that hands the new secret to `store_secret` under
+    /// the project lock before anything is saved. When it fails, nothing changes: the code stays
+    /// valid, no connection becomes active, and the earlier state is untouched. The connection
+    /// turns active only in the save after the secret is safely kept.
+    #[allow(clippy::too_many_arguments)]
+    pub fn exchange_connect_code_storing(
+        &self,
+        project: &ProjectId,
+        code: &str,
+        origin: ConnectionOrigin,
+        tool: &str,
+        session_label: &str,
+        now: DateTime<Utc>,
+        store_secret: impl FnOnce(&str) -> Result<(), AgpjError>,
+    ) -> Result<Connected, AgpjError> {
         let shared = self.shared_dir();
         let (dir, _lock) = lock_project(shared, project)?;
         let now = stamp(now);
@@ -129,6 +149,7 @@ impl FileStore {
             replaced_by: None,
         };
         connections.connections.push(record.clone());
+        store_secret(&secret)?;
         // The tasks go back to waiting first: if the save below fails, the old connection is
         // still the live one and nothing runs on a connection that was meant to be replaced.
         for old in &replaced {
