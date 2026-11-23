@@ -67,7 +67,7 @@ export function AgentsSurface({
                 extra={
                   <>
                     <span className="alist__meta">
-                      {agent.id} ・ {m.cardsOf(loadOf(cards, agent.id))}
+                      {m.agentMeta(agent.id, loadOf(cards, agent.id))}
                     </span>
                     {agent.replacedSession && (
                       <span className="alist__prev">

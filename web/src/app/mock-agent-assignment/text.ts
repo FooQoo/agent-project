@@ -19,6 +19,7 @@ const ja = {
   unassigned: '未割り当て',
   unassignedCards: (n: number) => `未割り当て ${n} 枚`,
   cardsOf: (n: number) => `${n} 枚`,
+  agentMeta: (id: string, n: number) => `ID ${id} ・ 担当 ${n} 枚`,
   epicAssign: '割り当て…',
   epicUnassigned: (name: string, n: number) => `${name}: 未割り当て ${n} 枚`,
   // connection states
@@ -133,6 +134,7 @@ const en: typeof ja = {
   unassigned: 'Unassigned',
   unassignedCards: (n) => `${n} unassigned`,
   cardsOf: (n) => `${n}`,
+  agentMeta: (id, n) => `ID ${id} ・ ${n} cards`,
   epicAssign: 'Assign…',
   epicUnassigned: (name, n) => `${name}: ${n} unassigned`,
   stateConnected: 'Connected',
