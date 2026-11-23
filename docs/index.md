@@ -47,7 +47,7 @@ landing:
     board:
       label: With Agent Project
       caption: A waiting task shows how many questions need your answer.
-      alt: The Kanban board with a waiting task in Doing that shows the agent's question and its options
+      alt: The Kanban board with a waiting task in the Doing lane that shows its count of unanswered questions
     question:
       caption: Opening it shows the question, its options, and a place for a note.
       alt: The Messages dialog with the agent's question about how to publish the website, two options, and a note field
