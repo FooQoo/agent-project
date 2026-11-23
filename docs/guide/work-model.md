@@ -135,9 +135,9 @@ Vercel Board and Backlog.md are also places where people and agents share work, 
 | **Asking a person** | The agent asks on the board and waits for your answer. | Agents can wait for replies from people or other agents. | Not described; the README describes review checkpoints for the spec, the plan, and the code. |
 | **Done** | Automatic: all acceptance conditions are done and no question is open. | An agent marks the task complete. | Tasks move through statuses, with a configurable final status; the README does not describe an automatic check. |
 | **History for another session** | Every task keeps a history of what was done and why. | A thread keeps the conversation and updates, and an event log records each change. | Not described. |
-| **How you use it** | A web board, a CLI, and a skill for agents; the plugin covers Claude Code and Codex. | The `vercel board` CLI, a JavaScript SDK, and a skill; Slack and GitHub sync. | A CLI, a terminal board, a local web board, and an optional MCP connector. |
+| **How you use it** | A web board, a CLI, and a skill for agents; the plugin covers Claude Code and Codex. | The `vercel board` CLI, a JavaScript SDK, and a skill; sync with Slack, GitHub, and Linear. | A CLI, a terminal board, a local web board, and an optional MCP connector. |
 
-These columns compare each product as its public documentation describes it; "not described" means the pages do not say, not that the feature is absent. Vercel Board is experimental and may change. The products also fit different needs: Vercel Board suits agent swarms that coordinate on a team's Vercel account, and Backlog.md suits a task list that lives in the repository. Agent Project's column is the first after the labels: its guarantees are enforced by the tool rather than agreed in convention.
+These columns compare each product as its public documentation describes it; "not described" means the pages do not say, not that the feature is absent. Vercel Board is experimental and may change. The products also fit different needs: Vercel Board suits agent swarms that coordinate on a team's Vercel account, and Backlog.md suits a task list that lives in the repository. What sets Agent Project apart is that its guarantees are enforced by the tool rather than agreed in convention.
 
 ## Next
 
