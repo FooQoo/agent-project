@@ -1,7 +1,34 @@
-/** How the agent works with the user in a project. Sparring is the default. */
-export type ModeKind = 'sparring' | 'sleep';
+/**
+ * How the agent works with the user in a project. Sparring is the default. Brainstorm asks about
+ * one epic or task, so it needs a target and is started from that card or epic, not chosen here.
+ */
+export type ModeKind = 'sparring' | 'sleep' | 'brainstorm';
 
-export const MODE_KINDS: readonly ModeKind[] = ['sparring', 'sleep'];
+/** The modes the settings switch offers: brainstorm is started from its target. */
+export type ChoosableMode = 'sparring' | 'sleep';
+
+export const MODE_KINDS: readonly ChoosableMode[] = ['sparring', 'sleep'];
+
+/** The epic or the task a brainstorm is about; a task's `id` is its number as text. */
+export interface BrainstormTarget {
+  type: 'epic' | 'task';
+  id: string;
+}
+
+/** How a target is named: `#680` for a task, the ID for an epic. */
+export function targetLabel(target: BrainstormTarget): string {
+  return target.type === 'task' ? `#${target.id}` : target.id;
+}
+
+export const sameTarget = (a: BrainstormTarget | null, b: BrainstormTarget): boolean =>
+  a !== null && a.type === b.type && a.id === b.id;
+
+export function parseTarget(value: unknown): BrainstormTarget | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const { type, id } = value as Record<string, unknown>;
+  if ((type !== 'epic' && type !== 'task') || typeof id !== 'string' || id === '') return null;
+  return { type, id };
+}
 
 /** The saved mode of a project, as `GET`/`PUT /api/projects/{id}/mode` and the `mode` event send it. */
 export interface ProjectMode {
@@ -17,6 +44,8 @@ export interface ProjectMode {
   manual: ModeKind | null;
   /** The daily sleep window, in the local time of the machine that runs the server. */
   schedule: Schedule | null;
+  /** The epic or task being brainstormed; set exactly while `mode` is `brainstorm`. */
+  target: BrainstormTarget | null;
 }
 
 export type ModeSource = 'manual' | 'schedule';
@@ -37,6 +66,7 @@ export const SPARRING: ProjectMode = {
   until: null,
   manual: null,
   schedule: null,
+  target: null,
 };
 
 const TIME = /^\d{2}:\d{2}$/;
@@ -51,14 +81,25 @@ function parseSchedule(value: unknown): Schedule | null {
 }
 
 export function isModeKind(value: unknown): value is ModeKind {
+  return value === 'sparring' || value === 'sleep' || value === 'brainstorm';
+}
+
+/** A mode the settings switch offers (and the API accepts without a target). */
+export function isChoosableMode(value: unknown): value is ChoosableMode {
   return typeof value === 'string' && (MODE_KINDS as readonly string[]).includes(value);
 }
 
 /** Checks the shape the server sends. Anything else is null, never a partial value. */
 export function parseProjectMode(value: unknown): ProjectMode | null {
   if (typeof value !== 'object' || value === null) return null;
-  const { mode, modeSource, since, until, manual, schedule } = value as Record<string, unknown>;
+  const { mode, modeSource, since, until, manual, schedule, target } = value as Record<
+    string,
+    unknown
+  >;
   if (!isModeKind(mode)) return null;
+  const parsedTarget = parseTarget(target);
+  // A brainstorm without a target is not one the page can show.
+  if (mode === 'brainstorm' && parsedTarget === null) return null;
   return {
     mode,
     modeSource: modeSource === 'schedule' ? 'schedule' : 'manual',
@@ -66,6 +107,7 @@ export function parseProjectMode(value: unknown): ProjectMode | null {
     until: typeof until === 'string' ? until : null,
     manual: isModeKind(manual) ? manual : null,
     schedule: parseSchedule(schedule),
+    target: mode === 'brainstorm' ? parsedTarget : null,
   };
 }
 

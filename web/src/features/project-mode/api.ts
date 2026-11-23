@@ -1,5 +1,11 @@
 import { authHeaders } from '../../shared/api/http';
-import { parseProjectMode, type ModeKind, type ProjectMode, type Schedule } from './model';
+import {
+  parseProjectMode,
+  type BrainstormTarget,
+  type ChoosableMode,
+  type ProjectMode,
+  type Schedule,
+} from './model';
 
 const url = (projectId: string) => `/api/projects/${projectId}/mode`;
 
@@ -31,8 +37,14 @@ export async function loadMode(projectId: string, fetcher: typeof fetch = fetch)
   return parse(response);
 }
 
-/** What a save changes: the manual mode (`auto` forgets it), or the daily window. */
-export type ModeChange = { mode: ModeKind | 'auto' } | { schedule: Schedule };
+/**
+ * What a save changes: the manual mode (`auto` forgets it), a brainstorm on one target, or the
+ * daily window.
+ */
+export type ModeChange =
+  | { mode: ChoosableMode | 'auto' }
+  | { mode: 'brainstorm'; target: BrainstormTarget }
+  | { schedule: Schedule };
 
 /** Saves one change and returns the saved state. */
 export async function saveMode(
@@ -57,3 +69,14 @@ export async function saveMode(
   }
   return parse(response);
 }
+
+/** Starts brainstorming one epic or task, or moves the brainstorm to it. */
+export const startBrainstorm = (
+  projectId: string,
+  target: BrainstormTarget,
+  fetcher: typeof fetch = fetch,
+) => saveMode(projectId, { mode: 'brainstorm', target }, fetcher);
+
+/** Ends the brainstorm: the project goes back to sparring. */
+export const endBrainstorm = (projectId: string, fetcher: typeof fetch = fetch) =>
+  saveMode(projectId, { mode: 'sparring' }, fetcher);

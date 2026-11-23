@@ -1,10 +1,9 @@
 import { ArchiveRestoreIcon } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWrite } from '../../../shared/data/react/use-write';
 import { setAcceptance } from '../api/edit';
 import { noOperations, type OperationControls } from '../../../shared/lib/operations/operations';
-import type { ReactNode } from 'react';
 import type { EpicRef, Problem, ProjectId, TaskSummary } from '../../../shared/api/contracts';
 import { useEpicDetail, useTaskDetail } from '../../../shared/data/react';
 import { DeleteButton } from '../delete/DeleteButton';
@@ -63,6 +62,7 @@ export interface DetailPanelProps {
   sendBusy?: boolean;
   /** A link to the results as a whole (no version): the panel opens its results tab. */
   focusResults?: boolean;
+  toolbarExtra?: ReactNode;
 }
 
 export function DetailPanel({
@@ -92,6 +92,7 @@ export function DetailPanel({
   onSend,
   sendBusy,
   focusResults = false,
+  toolbarExtra,
 }: DetailPanelProps) {
   const { t } = useTranslation();
   if (task === null || projectId === null) {
@@ -134,6 +135,7 @@ export function DetailPanel({
       onSend={onSend}
       sendBusy={sendBusy}
       focusResults={focusResults}
+      toolbarExtra={toolbarExtra}
     />
   );
 }
@@ -174,6 +176,7 @@ function DetailBody({
   onSend,
   sendBusy,
   focusResults = false,
+  toolbarExtra,
 }: DetailBodyProps) {
   const { t } = useTranslation();
   const [tab, setTab] = useLinkedTab(focusResultVersion, focusResults, focusHistory);
@@ -187,7 +190,6 @@ function DetailBody({
   // choose what they show.
   const detail = useTaskDetail(projectId, task.id);
   const epicDetail = useEpicDetail(projectId, task.epic?.id ?? null);
-
   // The open confirmation is an operation: the project cannot change until it is done or cancelled.
   useEffect(() => {
     if (!confirming) return;
@@ -283,6 +285,7 @@ function DetailBody({
       problems={problems}
       attachmentUrl={attachmentUrl}
     >
+      {!archived && toolbarExtra}
       {task.taskStatus === 'backlog' && !archived && (
         <BacklogBanner busy={sendBusy} onSend={onSend ? () => onSend(task.id) : undefined} />
       )}

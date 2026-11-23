@@ -1,7 +1,15 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SPARRING } from './model';
-import { applyModeEvent, refreshModes, resetModes, setProjectMode, useProjectMode } from './store';
+import {
+  applyModeEvent,
+  endBrainstormOn,
+  refreshModes,
+  resetModes,
+  setProjectMode,
+  startBrainstormOn,
+  useProjectMode,
+} from './store';
 
 afterEach(() => {
   resetModes();
@@ -97,5 +105,62 @@ describe('useProjectMode', () => {
       pending[1]?.(Response.json({ mode: 'sleep' }));
     });
     expect(result.current?.mode).toBe('sleep');
+  });
+});
+
+describe('brainstorm actions', () => {
+  const target = { type: 'task', id: '680' } as const;
+
+  it('starts a brainstorm with the target and shows what the server saved', async () => {
+    const fetcher = vi.fn(async (_url: string, init?: RequestInit) => {
+      expect(init?.method).toBe('PUT');
+      expect(JSON.parse(String(init?.body))).toEqual({ mode: 'brainstorm', target });
+      return Response.json({ mode: 'brainstorm', manual: 'brainstorm', target });
+    });
+    vi.stubGlobal('fetch', fetcher);
+    setProjectMode('p6', SPARRING);
+    const { result } = renderHook(() => useProjectMode('p6'));
+    await act(async () => {
+      await startBrainstormOn('p6', target);
+    });
+    expect(result.current?.mode).toBe('brainstorm');
+    expect(result.current?.target).toEqual(target);
+  });
+
+  it('ends it by saving sparring', async () => {
+    const fetcher = vi.fn(async (_url: string, init?: RequestInit) => {
+      expect(JSON.parse(String(init?.body))).toEqual({ mode: 'sparring' });
+      return Response.json({ mode: 'sparring', manual: 'sparring' });
+    });
+    vi.stubGlobal('fetch', fetcher);
+    setProjectMode('p7', { ...SPARRING, mode: 'brainstorm', target });
+    const { result } = renderHook(() => useProjectMode('p7'));
+    await act(async () => {
+      await endBrainstormOn('p7');
+    });
+    expect(result.current?.mode).toBe('sparring');
+    expect(result.current?.target).toBeNull();
+  });
+
+  it('throws on a refusal and leaves the mode as it was', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{}', { status: 409 })),
+    );
+    setProjectMode('p8', SPARRING);
+    const { result } = renderHook(() => useProjectMode('p8'));
+    await expect(startBrainstormOn('p8', target)).rejects.toMatchObject({ status: 409 });
+    expect(result.current).toEqual(SPARRING);
+  });
+
+  it('follows a brainstorm that the CLI starts', () => {
+    setProjectMode('p9', SPARRING);
+    const { result } = renderHook(() => useProjectMode('p9'));
+    act(() => {
+      applyModeEvent({
+        data: JSON.stringify({ projects: { p9: { mode: 'brainstorm', target } } }),
+      });
+    });
+    expect(result.current?.target).toEqual(target);
   });
 });

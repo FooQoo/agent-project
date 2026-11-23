@@ -1,4 +1,4 @@
-// モード切り替え（設定の行とヘッダーのスリープ表示）。
+// モード切り替え（設定の行、ヘッダーのモード表示、壁打ちの操作）。
 export const modeJa = {
   mode: {
     heading: 'モード',
@@ -16,6 +16,20 @@ export const modeJa = {
       '手動の設定です。いまの時間帯が終わるまで、時間帯の外で設定したなら次の時間帯が始まるまで、そのままです。',
     followSchedule: 'スケジュールに従う',
     until: '{{time}} まで',
+    brainstorm: '壁打ち',
+    brainstorming: '壁打ち中',
+    brainstormTarget: '壁打ち: {{target}}',
+    brainstormChip: '壁打ち: {{target}}',
+    brainstormTitle: '壁打ちモード: エージェントが {{target}} を深めるための質問をします。',
+    brainstormOn: '壁打ち中: {{target}}',
+    brainstormNote:
+      'エージェントが {{target}} を深めるために、質問を1つずつします。組手かスリープを選ぶと終わります。',
+    endBrainstorm: '壁打ちを終える',
+    endBrainstormShort: '終える',
+    brainstormUnavailableAsleep: 'スリープ中は壁打ちできません。',
+    brainstormError:
+      '壁打ちを始められませんでした。カードやエピックが残っているか確認してください。',
+    brainstormBadge: '壁打ち: {{target}}',
     saveError: 'モードを保存できませんでした。元のままです。',
     indicatorTitle: 'スリープ中: エージェントは質問せず、あなたの代わりに判断します。',
   },

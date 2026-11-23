@@ -11,7 +11,13 @@ import { Surface } from '@/shared/ui/surface/Surface';
 import { DecisionAnswerFields } from '../answer/DecisionAnswerFields';
 import { DecisionQuestion } from '../answer/DecisionQuestion';
 import type { DecisionAnswerView } from '../answer/decisionAnswerView';
-import { BackButton, BlocksNote, DetailState, failureKey } from './MessageDetailParts';
+import {
+  BackButton,
+  BlocksNote,
+  BrainstormBadge,
+  DetailState,
+  failureKey,
+} from './MessageDetailParts';
 import { MessageList } from './MessageRows';
 import {
   canSendAnswer,
@@ -219,6 +225,7 @@ export function MessagesSurface({
     body = (
       <div className="message-detail">
         {back}
+        {detail.brainstorm && <BrainstormBadge target={detail.brainstorm} />}
         <p className="message-detail__blocks">{t('messages.detail.answerNote')}</p>
         <DecisionQuestion
           question={detail.body}
@@ -241,6 +248,7 @@ export function MessagesSurface({
       <div className="decision-panel message-detail message-detail--panel">
         <div className="decision-panel__question message-detail__question">
           {back}
+          {detail.brainstorm && <BrainstormBadge target={detail.brainstorm} />}
           {blocks}
           <DecisionQuestion
             question={detail.body}

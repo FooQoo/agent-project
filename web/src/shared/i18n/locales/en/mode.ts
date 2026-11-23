@@ -1,4 +1,4 @@
-// The mode switch of the settings and the header's sleep indicator.
+// The mode switch of the settings, the header's mode indicator, and the Brainstorm action.
 export const modeEn = {
   mode: {
     heading: 'Mode',
@@ -17,6 +17,20 @@ export const modeEn = {
       'Set by hand: it holds until the current window ends, or until the next one starts when it was set outside a window.',
     followSchedule: 'Follow the schedule',
     until: 'until {{time}}',
+    brainstorm: 'Brainstorm',
+    brainstorming: 'Brainstorming',
+    brainstormTarget: 'Brainstorm {{target}}',
+    brainstormChip: 'Brainstorm: {{target}}',
+    brainstormTitle: 'Brainstorm mode: the agent asks questions to deepen {{target}}.',
+    brainstormOn: 'Brainstorming {{target}}',
+    brainstormNote:
+      'The agent asks you questions one at a time to deepen {{target}}. Choosing Sparring or Sleep ends it.',
+    endBrainstorm: 'End brainstorm',
+    endBrainstormShort: 'End',
+    brainstormUnavailableAsleep: 'Brainstorming is unavailable in sleep mode.',
+    brainstormError:
+      'Brainstorming could not be started. Check that the card or epic still exists.',
+    brainstormBadge: 'Brainstorm: {{target}}',
     saveError: 'The mode could not be saved. It stays as it was.',
     indicatorTitle: 'Sleep mode: the agent does not ask questions and decides in your place.',
   },
