@@ -52,7 +52,7 @@ CLIの振る舞いは`tests/acceptance_cli.rs`で試験しています。`an_age
 このテストファイルだけを実行するには、次のコマンドを使います。
 
 ```sh
-TZ=UTC cargo test --test acceptance_cli
+cargo test --test acceptance_cli
 ```
 
 ## 5. テストを先に書いて、規則を変える
@@ -61,7 +61,7 @@ TZ=UTC cargo test --test acceptance_cli
 
 1. `tests/acceptance_cli.rs`に失敗するテストを書きます（人がタスクを移すテストをコピーして、期待を変えます）。
 2. `move_work_task`の条件を変えます。Webサーバーが同じ関数を呼ぶので、一か所の変更がCLIとWeb APIの両方に反映されます。
-3. `TZ=UTC cargo test --test acceptance_cli`を実行し、続けて全体を実行します。
+3. `cargo test --test acceptance_cli`を実行し、続けて全体を実行します。
 4. 規則を説明しているページを更新します。この規則は[履歴と判断依頼](../concepts/history-and-decisions.md#完了条件と自動done)にあり、日本語訳は`docs/ja/dev/`にあります。
 
 この変更を実際に行う必要はありません。ここでは、変更箇所をたどる順序を把握してください。**コマンド → `file_store`の共通の規則 → エラーコード → テスト → ドキュメント。** Agent Projectのほとんどの変更は、この順に進みます。

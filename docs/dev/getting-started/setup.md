@@ -94,7 +94,7 @@ Storybook shows UI parts and complete pages with synthetic data. Its toolbar swi
 just storybook
 pnpm --dir web build-storybook
 pnpm --dir web typecheck:storybook
-TZ=UTC pnpm --dir web test:storybook
+pnpm --dir web test:storybook
 ```
 
 - `storybook` starts the dev server at `http://127.0.0.1:8610/`.

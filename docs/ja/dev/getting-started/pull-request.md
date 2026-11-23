@@ -35,12 +35,12 @@ pnpm --dir web build               # cargo buildの前に必要
 cargo build
 cargo fmt --all -- --check
 cargo clippy --all-targets -- -D warnings
-TZ=UTC cargo nextest run
+cargo nextest run
 pnpm --dir web typecheck
 pnpm --dir web check
-TZ=UTC pnpm --dir web test
+pnpm --dir web test
 pnpm --dir web typecheck:storybook
-TZ=UTC pnpm --dir web test:storybook
+pnpm --dir web test:storybook
 pnpm --dir web build-storybook
 ```
 
@@ -64,11 +64,11 @@ CodeRabbit が指摘するのは、バグを中心に、マージの前に直す
 
 マージする前に、RustとWebのジョブが成功していることを確かめます。アプリの動作に関わる変更では、手元で`pnpm --dir e2e test`も実行します。E2Eのジョブが失敗したときは、失敗したシャードのトレースが`e2e-results-<シャード>`という成果物として実行結果に添付されます。
 
-Rustのテストは[cargo-nextest](https://nexte.st/)で実行します（`cargo install cargo-nextest --locked`でインストールします）。テストはそれぞれ別のプロセスで動き、`.config/nextest.toml`の設定で、2分を超えたテストは止まります。`TZ=UTC cargo test`も使えますが、テストバイナリごとに1つのプロセスでまとめて動き、時間の上限もありません。
+Rustのテストは[cargo-nextest](https://nexte.st/)で実行します（`cargo install cargo-nextest --locked`でインストールします）。テストはそれぞれ別のプロセスで動き、`.config/nextest.toml`の設定で、2分を超えたテストは止まります。`cargo test`も使えますが、テストバイナリごとに1つのプロセスでまとめて動き、時間の上限もありません。
 
 テストの規則:
 
-- 表示時刻を固定するため、`TZ=UTC`を設定します。
+- マシンのタイムゾーンに依存させないため、`TZ`を付ける必要はありません。Webのテストは UTC で動きます（`web/vite.config.ts`と`web/vitest.storybook.config.ts`で設定し、Storyではブラウザのタイムゾーンも UTC にします）。Rustのローカル時刻のテストは、タイムゾーンを引数に取る関数を通して確かめます。
 - 既定のデータ領域は使いません。各テストが`AGPJ_HOME`を一時ディレクトリに設定します。
 - `agpj`のバイナリを実行するテストは`AGPJ_AUTOSTART=0`を設定し、待つコマンドやHookが勝手にサーバーを起動しないようにします。あわせて`AGPJ_OPEN_BROWSER=0`を設定し、何もブラウザーを開かないようにします。Playwrightの設定は、スイート全体にこの二つを設定します。自動起動そのものの試験は`AGPJ_AUTOSTART`を設定せず、`AGPJ_AUTOSTART_PORT=0`を設定し、起動したサーバーをすべて止めます。`setup remote`や`show remote`を実行する試験は`AGPJ_KEYCHAIN=none`を設定し、OSのキーチェーンを読み書きしないようにします。ボードを開く処理の試験は、`tests/open_board.rs`のように`AGPJ_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。本物のブラウザーを開く試験はありません。
 - `agpj serve`を起動するテストは`AGPJ_WATCH=poll`を設定します。テスト内で起動するサーバーは`server::run_until_in`と`WatchMode::Poll`で起動します。プラットフォームのファイルイベントを使うのは`tests/file_watch.rs`だけです。

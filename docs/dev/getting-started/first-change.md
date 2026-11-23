@@ -52,7 +52,7 @@ The CLI behavior is tested in `tests/acceptance_cli.rs`. Find `an_agent_cannot_m
 Run just that file:
 
 ```sh
-TZ=UTC cargo test --test acceptance_cli
+cargo test --test acceptance_cli
 ```
 
 ## 5. Change the rule, test first
@@ -61,7 +61,7 @@ Suppose a person also had to confirm Done when conditions are unmet. A real chan
 
 1. Write a failing test in `tests/acceptance_cli.rs` (copy the test for a person moving a task and change its expectation).
 2. Change the condition in `move_work_task`. Because the web server calls the same function, one change covers both entry points.
-3. Run `TZ=UTC cargo test --test acceptance_cli`, then the whole suite.
+3. Run `cargo test --test acceptance_cli`, then the whole suite.
 4. Update the page that describes the rule. This one is in [History and decisions](../concepts/history-and-decisions.md#acceptance-conditions-and-automatic-done), and its Japanese translation in `docs/ja/dev/`.
 
 You do not need to make this change; the point is the path: **command → shared rule in `file_store` → error code → test → documentation.** Almost every change in Agent Project follows it.

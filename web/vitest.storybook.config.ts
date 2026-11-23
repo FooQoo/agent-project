@@ -10,10 +10,13 @@ const root = fileURLToPath(new URL('.', import.meta.url));
 // The synthetic images for Stories, served from the root as Storybook serves them.
 const storyStatic = `${root}.storybook/static`;
 
+// Stories that show local times run in UTC whatever the machine's zone is.
+if (process.env.VITEST) process.env.TZ = 'UTC';
+
 const browser = (name: string) => ({
   enabled: true,
   headless: true,
-  provider: playwright(),
+  provider: playwright({ contextOptions: { timezoneId: 'UTC' } }),
   instances: [{ browser: 'chromium' as const, name }],
 });
 

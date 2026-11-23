@@ -60,5 +60,5 @@ Find the symptom, read the cause, and do what the last column says. Error codes 
 | `cargo build` stops with `Run "pnpm --dir web build" first.` | The Rust build embeds the web UI, which is not built. | Run `pnpm --dir web install` and `pnpm --dir web build`, then build again. |
 | A change does not show up through a hook | Hooks run the installed `agpj`, not your working tree. | Reinstall with `cargo install --path . --locked --force`. See [Set up and run](./getting-started/setup.md#install-from-source). |
 | A test failed on port 7420 or touched my board | A test used the default port or data area. | Tests must set `AGPJ_HOME` to a temporary directory and use an available port or port 0. |
-| Times in a test differ by machine | The time zone is not fixed. | Run tests with `TZ=UTC`. |
+| Times in a test differ by machine | A test reads the machine's time zone. | Format through a function that takes the zone, as `src/clock.rs` does. The web tests are already fixed to UTC. |
 | `pnpm --dir docs build` reports a dead link | A page moved or a heading changed. | Fix the link; the build fails on dead links by design. |
