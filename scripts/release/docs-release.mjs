@@ -16,7 +16,7 @@
 //   --none (default)  no release: the header shows no version
 //
 // Only releases with draft=false and prerelease=false and a vMAJOR.MINOR.PATCH
-// tag of v2.0.0 or later count. The version in Cargo.toml is never read.
+// tag count. The version in Cargo.toml is never read.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -25,8 +25,6 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEFAULT_REPO = 'FooQoo/agent-project';
 const TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
-// The release notes start at v2.0.0; earlier releases are neither checked nor shown.
-const MIN_MAJOR = 2;
 
 // The release notes are written in English and carry these headings.
 const HEADINGS = ['## Changes', '## Fixes', '## Breaking changes', '## Required update steps'];
@@ -71,10 +69,9 @@ async function fetchReleases(options) {
 // The review copies in releases/*.md stand in for published releases in a fixture preview.
 function fixtureReleases(options) {
   const dir = path.join(repoRoot, 'releases');
-  if (!fs.existsSync(dir)) return [];
   return fs
     .readdirSync(dir)
-    .filter((name) => /^v\d+\.\d+\.\d+\.md$/.test(name) && Number(name.slice(1).split('.')[0]) >= MIN_MAJOR)
+    .filter((name) => /^v\d+\.\d+\.\d+\.md$/.test(name))
     .map((name) => {
       const tag = name.replace(/\.md$/, '');
       return {
@@ -99,13 +96,13 @@ function checkNotes(body, tag) {
   }
 }
 
-// Keeps only published, semver releases of v2.0.0 or later, validates them, and sorts newest first.
+// Keeps only published, semver releases, validates them, and sorts newest first.
 export function validate(releases, options) {
   const valid = [];
   for (const release of releases) {
     if (release.draft || release.prerelease) continue;
     const match = TAG.exec(String(release.tag_name));
-    if (!match || Number(match[1]) < MIN_MAJOR) continue;
+    if (!match) continue;
     const tag = release.tag_name;
     const prefix = `https://github.com/${options.repo}/releases/`;
     if (typeof release.html_url !== 'string' || !release.html_url.startsWith(prefix)) {

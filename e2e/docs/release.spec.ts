@@ -68,17 +68,15 @@ test.describe('docs-release script', () => {
     const out = tmp();
     expect(run(['--fixture'], out).status).toBe(0);
     const header = JSON.parse(fs.readFileSync(path.join(out, '.vitepress', 'release.json'), 'utf8'));
-    // Only v2.0.0 and later count; with no such review copy the state stays unpublished.
-    const dir = path.join(repoRoot, 'releases');
-    const newest = (fs.existsSync(dir) ? fs.readdirSync(dir) : [])
+    expect(header.state).toBe('fixture');
+    const newest = fs
+      .readdirSync(path.join(repoRoot, 'releases'))
       .map((name) => /^v(\d+)\.(\d+)\.(\d+)\.md$/.exec(name))
       .filter((m): m is RegExpExecArray => m !== null)
       .map((m) => m.slice(1).map(Number))
-      .filter((parts) => parts[0] >= 2)
       .sort((a, b) => b[0] - a[0] || b[1] - a[1] || b[2] - a[2])[0]
-      ?.join('.');
-    expect(header.state).toBe(newest ? 'fixture' : 'unpublished');
-    expect(header.version).toBe(newest ?? null);
+      .join('.');
+    expect(header.version).toBe(newest);
     expect(fs.existsSync(path.join(out, 'releases.md'))).toBe(false);
   });
 
@@ -88,11 +86,10 @@ test.describe('docs-release script', () => {
     fs.writeFileSync(
       file,
       JSON.stringify([
-        release('v1.9.0'),
-        release('v2.0.0'),
-        release('v2.10.0'),
-        release('v2.2.0'),
-        release('v3.0.0-rc1'),
+        release('v1.0.0'),
+        release('v1.10.0'),
+        release('v1.2.0'),
+        release('v2.0.0-rc1'),
         release('v3.0.0', { draft: true }),
         release('v4.0.0', { prerelease: true }),
         release('nightly'),
@@ -102,26 +99,17 @@ test.describe('docs-release script', () => {
     const header = JSON.parse(fs.readFileSync(path.join(out, '.vitepress', 'release.json'), 'utf8'));
     expect(header).toEqual({
       state: 'published',
-      version: '2.10.0',
-      url: 'https://github.com/FooQoo/agent-project/releases/tag/v2.10.0',
+      version: '1.10.0',
+      url: 'https://github.com/FooQoo/agent-project/releases/tag/v1.10.0',
     });
     const cargo = /^version = "(.*)"$/m.exec(readRepoFile('Cargo.toml'))![1];
-    if (cargo !== '2.10.0') expect(header.version).not.toBe(cargo);
-  });
-
-  test('releases before v2.0.0 are ignored, even when their notes are malformed', () => {
-    const out = tmp();
-    const file = path.join(out, 'api.json');
-    fs.writeFileSync(file, JSON.stringify([release('v1.7.0', { body: 'No headings.' })]));
-    expect(run(['--releases-json', file], out).status).toBe(0);
-    const header = JSON.parse(fs.readFileSync(path.join(out, '.vitepress', 'release.json'), 'utf8'));
-    expect(header).toEqual({ state: 'unpublished', version: null, url: null });
+    if (cargo !== '1.10.0') expect(header.version).not.toBe(cargo);
   });
 
   test('a release without one of the headings stops the script and writes nothing', () => {
     const out = tmp();
     const file = path.join(out, 'api.json');
-    fs.writeFileSync(file, JSON.stringify([release('v2.0.0', { body: body().replace('## Fixes', '### Fixes') })]));
+    fs.writeFileSync(file, JSON.stringify([release('v1.0.0', { body: body().replace('## Fixes', '### Fixes') })]));
     const result = run(['--releases-json', file], out);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('no "## Fixes" heading');
@@ -132,7 +120,7 @@ test.describe('docs-release script', () => {
   test('a heading that appears twice stops the script', () => {
     const out = tmp();
     const file = path.join(out, 'api.json');
-    fs.writeFileSync(file, JSON.stringify([release('v2.0.0', { body: `${body()}\n## Changes\n- Again.\n` })]));
+    fs.writeFileSync(file, JSON.stringify([release('v1.0.0', { body: `${body()}\n## Changes\n- Again.\n` })]));
     const result = run(['--releases-json', file], out);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('"## Changes" appears 2 times');
@@ -141,7 +129,7 @@ test.describe('docs-release script', () => {
   test('a release of another repository is refused', () => {
     const out = tmp();
     const file = path.join(out, 'api.json');
-    fs.writeFileSync(file, JSON.stringify([release('v2.0.0', { html_url: 'https://example.com/releases/v2.0.0' })]));
+    fs.writeFileSync(file, JSON.stringify([release('v1.0.0', { html_url: 'https://example.com/releases/v1.0.0' })]));
     expect(run(['--releases-json', file], out).status).toBe(1);
   });
 
@@ -183,13 +171,14 @@ for (const lang of langs) {
     await expect(page.locator('.VPNavBarMenu').getByRole('link', { name: /^v\d/ })).toHaveCount(0);
   });
 
-  test(`the release notes page (${lang}) opens from the nav`, async ({ page }) => {
+  test(`the release notes page (${lang}) opens from the nav and lists v1.0.0`, async ({ page }) => {
     const label = lang === 'en' ? 'Release notes' : 'リリースノート';
     await page.goto(`${prefix}guide/`);
     const link = page.locator('.VPNavBarMenu').getByRole('link', { name: label, exact: true });
     await expect(link).toHaveAttribute('href', `${siteBase}${prefix}releases`);
     await link.click();
     await expect(page.locator('.vp-doc h1')).toHaveText(label);
+    await expect(page.locator('.vp-doc h2[id="v1-0-0"]')).toHaveCount(1);
     const headings = lang === 'en'
       ? ['Changes', 'Fixes', 'Breaking changes', 'Required update steps']
       : ['変更点', '不具合修正', '互換性に影響する変更', '必要な更新操作'];
@@ -204,7 +193,7 @@ test('the English and Japanese release notes list the same versions in the same 
     [...readRepoFile('docs', ...(lang === 'ja' ? ['ja'] : []), 'releases.md').matchAll(/^## (v\d+\.\d+\.\d+)$/gm)].map(
       (m) => m[1],
     );
-  expect(versions('en').every((v) => Number(v.slice(1).split('.')[0]) >= 2)).toBe(true);
+  expect(versions('en')).toContain('v1.0.0');
   expect(versions('ja')).toEqual(versions('en'));
 });
 
