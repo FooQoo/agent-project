@@ -100,7 +100,7 @@ waves:
 
 ```json
 {
-  "formatVersion": 1,
+  "formatVersion": 3,
   "id": 1,
   "title": "Implement the answer UI",
   "assignee": "ai",
@@ -115,11 +115,14 @@ waves:
   "updatedAt": "2026-10-10T00:00:00Z",
   "agentStatusChangedAt": "2026-10-10T00:00:00Z",
   "taskStatusChangedAt": "2026-10-10T00:00:00Z",
-  "attachments": []
+  "attachments": [],
+  "agentId": null,
+  "assignmentGeneration": 1,
+  "runConnectionId": null
 }
 ```
 
-- `results`は、成果が1件以上あるタスクにだけ書きます。成果の仕組みができる前のファイルはそのままで、`results: []`として読みます。形式バージョンは1のままです。
+- `results`は、成果が1件以上あるタスクにだけ書きます。成果の仕組みができる前のファイルはそのままで、`results: []`として読みます。タスクの形式バージョンは3です。
 - `requestAnswers`の各項目は`{requestId, actor, choiceId, choiceLabel, text, at}`です。`choiceId`と`choiceLabel`は両方`null`か両方設定、`text`は`null`か有効な回答で、選択と文の少なくとも一方があります。
 - 以前のバージョンが書いた`pendingRequestId`と`pendingRequest`は、読むときに無視し、次の保存では書きません。
 - 過去の簡易依頼タスクには`simpleRequest`メタデータが残っている場合があります。互換性のため読み込みますが、新規タスクでは保存せず、再送の判定にも使いません。

@@ -56,6 +56,22 @@ pub(crate) fn load_secret_for_key(
     (!text.is_empty()).then(|| text.to_string())
 }
 
+/// Every project that holds a stored secret for the session with this key, with that secret.
+/// A session that connected with `--project` from an unbound folder has no binding to find it by.
+pub(crate) fn stored_secrets_for_key(data_dir: &Path, key: &str) -> Vec<(ProjectId, String)> {
+    let Ok(entries) = std::fs::read_dir(data_dir.join("connections")) else {
+        return Vec::new();
+    };
+    entries
+        .flatten()
+        .filter_map(|entry| {
+            let project = entry.file_name().to_str()?.parse::<ProjectId>().ok()?;
+            let secret = load_secret_for_key(data_dir, &project, key)?;
+            Some((project, secret))
+        })
+        .collect()
+}
+
 /// Store the secret for this process's session, readable by the user only.
 pub(crate) fn save_secret(
     data_dir: &Path,

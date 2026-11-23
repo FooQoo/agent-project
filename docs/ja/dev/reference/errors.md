@@ -78,7 +78,7 @@
 | `invalid_value` | 値が規則（長さ、形式など）に違反している。 | 2 | 422 |
 | `confirmation_required` | 削除に、端末での人のy/Nが必要。 | 1 | なし |
 | `file_invalid` | 共有ファイルが壊れている、または形式に違反している。 | 1 | 422 |
-| `format_unsupported` | 共有ファイルの`formatVersion`が1でも2でもない（メッセージは「Only formatVersion 2 is supported」）。 | 1 | 500 |
+| `format_unsupported` | 共有ファイルの`formatVersion`が未対応である。`task.json`は3でなければならず、それ以前のタスクファイルは変換せずに拒否する。ほかの共有ファイルは1か2を受け付ける（メッセージは「Only formatVersion 2 is supported」）。 | 1 | 500 |
 | `file_unreadable` | 共有ファイルを読めない。 | 1 | 500 |
 | `file_error` | 共有ファイルを書けない、またはジャーナルを復旧できない。 | 1 | 500 |
 | `database_busy` | プロジェクトの書き込みロックが5秒以内に空かなかった。 | 1 | 503 |

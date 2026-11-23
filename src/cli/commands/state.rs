@@ -43,7 +43,7 @@ pub fn run(ctx: &mut Context, args: &StateArgs) -> Result<Outcome, AgpjError> {
             ctx.clock.now(),
         )?
     } else {
-        ctx.files.set_agent_status(
+        ctx.files.set_agent_status_unconnected(
             project_id,
             args.id,
             state,

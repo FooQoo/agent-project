@@ -22,23 +22,34 @@ pub(super) fn run(
         };
         store.project_by_name(&name).ok()
     } else {
-        let Ok(cwd) = hook_folder(cwd) else {
-            return;
-        };
-        store
-            .resolve_binding(&cwd)
+        hook_folder(cwd)
             .ok()
-            .flatten()
+            .and_then(|cwd| store.resolve_binding(&cwd).ok().flatten())
             .map(|r| r.project)
     };
-    let (Some(meta), Some(data_dir)) = (meta, shared.parent()) else {
+    let Some(data_dir) = shared.parent() else {
         return;
     };
-    let secret = session_id
-        .map(super::session_identity::claude_key)
-        .and_then(|key| super::connection_store::load_secret_for_key(data_dir, &meta.id, &key))
-        .or_else(|| super::connection_store::load_secret(data_dir, &meta.id));
-    if let Some(secret) = secret {
-        let _ = store.end_connection_session(&meta.id, &secret, SystemClock.now());
+    let now = SystemClock.now();
+    let key = session_id.map(super::session_identity::claude_key);
+    let mut ended: Vec<crate::domain::ProjectId> = Vec::new();
+    if let Some(meta) = meta {
+        let secret = key
+            .as_deref()
+            .and_then(|key| super::connection_store::load_secret_for_key(data_dir, &meta.id, key))
+            .or_else(|| super::connection_store::load_secret(data_dir, &meta.id));
+        if let Some(secret) = secret {
+            let _ = store.end_connection_session(&meta.id, &secret, now);
+        }
+        ended.push(meta.id);
+    }
+    // The folder may be unbound, or bound to another project than the one the session
+    // connected to with `--project`: release every project that holds this session's secret.
+    if let Some(key) = key.as_deref() {
+        for (project, secret) in super::connection_store::stored_secrets_for_key(data_dir, key) {
+            if !ended.contains(&project) {
+                let _ = store.end_connection_session(&project, &secret, now);
+            }
+        }
     }
 }

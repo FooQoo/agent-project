@@ -30,7 +30,22 @@ impl FileStore {
         ctx: ChangeContext,
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgpjError> {
-        self.set_agent_status_inner(project, id, state, ctx, now, None)
+        self.set_agent_status_guarded(project, id, state, ctx, now, None, false)
+    }
+
+    /// [`FileStore::set_agent_status`] for a command line with no connection secret. The check
+    /// that the project has no live agent runs under the same project lock as the save, so an
+    /// agent registered meanwhile cannot be bypassed: an AI actor then gets `NotConnected`.
+    /// A person's change (the web UI) is allowed either way.
+    pub fn set_agent_status_unconnected(
+        &self,
+        project: &ProjectId,
+        id: i64,
+        state: RunState,
+        ctx: ChangeContext,
+        now: DateTime<Utc>,
+    ) -> Result<Changed<TaskView>, AgpjError> {
+        self.set_agent_status_guarded(project, id, state, ctx, now, None, true)
     }
 
     /// [`FileStore::set_agent_status`] for a session that acts through its connection. The secret
@@ -46,10 +61,11 @@ impl FileStore {
         secret: &str,
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgpjError> {
-        self.set_agent_status_inner(project, id, state, ctx, now, Some(secret))
+        self.set_agent_status_guarded(project, id, state, ctx, now, Some(secret), false)
     }
 
-    fn set_agent_status_inner(
+    #[allow(clippy::too_many_arguments)]
+    fn set_agent_status_guarded(
         &self,
         project: &ProjectId,
         id: i64,
@@ -57,9 +73,17 @@ impl FileStore {
         ctx: ChangeContext,
         now: DateTime<Utc>,
         secret: Option<&str>,
+        refuse_when_agents: bool,
     ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
+        if refuse_when_agents
+            && secret.is_none()
+            && ctx.actor == Actor::Ai
+            && super::assignment::has_live_agents_locked(shared, &project_dir)?
+        {
+            return Err(AgpjError::NotConnected);
+        }
         let verified = secret
             .map(|secret| {
                 super::assignment::verify_locked(shared, &project_dir, secret, stamp(now))

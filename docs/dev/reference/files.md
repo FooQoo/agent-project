@@ -100,7 +100,7 @@ A `task.json` looks like this:
 
 ```json
 {
-  "formatVersion": 1,
+  "formatVersion": 3,
   "id": 1,
   "title": "Implement the answer UI",
   "assignee": "ai",
@@ -115,11 +115,14 @@ A `task.json` looks like this:
   "updatedAt": "2026-10-10T00:00:00Z",
   "agentStatusChangedAt": "2026-10-10T00:00:00Z",
   "taskStatusChangedAt": "2026-10-10T00:00:00Z",
-  "attachments": []
+  "attachments": [],
+  "agentId": null,
+  "assignmentGeneration": 1,
+  "runConnectionId": null
 }
 ```
 
-- `results` is written only when the task has at least one result, so a file from before results existed is unchanged and reads as `results: []`. The format version stays 1.
+- `results` is written only when the task has at least one result, so a file from before results existed is unchanged and reads as `results: []`. The task format version is 3.
 - Each `requestAnswers` item is `{requestId, actor, choiceId, choiceLabel, text, at}`. `choiceId` and `choiceLabel` are both `null` or both set; `text` is `null` or a valid answer; at least one of choice or text is present.
 - `pendingRequestId` and `pendingRequest`, written by earlier versions, are ignored when read and are not written on the next save.
 - Older short-request tasks may contain `simpleRequest` metadata. It remains readable for compatibility but new tasks do not write or use it to detect repeats.

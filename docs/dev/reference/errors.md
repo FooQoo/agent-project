@@ -78,7 +78,7 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `invalid_value` | A value breaks a rule (length, format, and so on). | 2 | 422 |
 | `confirmation_required` | A deletion needs a human y/N in a terminal. | 1 | n/a |
 | `file_invalid` | A shared file is malformed or breaks the format. | 1 | 422 |
-| `format_unsupported` | A shared file has a `formatVersion` other than 1 or 2 (the message says "Only formatVersion 2 is supported"). | 1 | 500 |
+| `format_unsupported` | A shared file has an unsupported `formatVersion`. A `task.json` must be version 3, and an earlier task file is rejected without conversion; other shared files accept version 1 or 2 (the message says "Only formatVersion 2 is supported"). | 1 | 500 |
 | `file_unreadable` | A shared file cannot be read. | 1 | 500 |
 | `file_error` | A shared file cannot be written, or a journal cannot be recovered. | 1 | 500 |
 | `database_busy` | The project write lock was not free within 5 seconds. | 1 | 503 |

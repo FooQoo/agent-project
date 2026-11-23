@@ -1,6 +1,19 @@
 //! Registering, renaming, and deleting agents.
 
 use super::*;
+use std::path::Path;
+
+/// Whether the project has a live agent, read under a project lock the caller already holds.
+pub(in crate::file_store::ops) fn has_live_agents_locked(
+    shared: &Path,
+    project_dir: &Path,
+) -> Result<bool, AgpjError> {
+    let agents: AgentsFile = load(shared, &agents_path(project_dir))?;
+    Ok(agents
+        .agents
+        .iter()
+        .any(|agent| agent.archived_at.is_none()))
+}
 
 impl FileStore {
     /// Whether the project has a live agent. Connections are required once a person has
