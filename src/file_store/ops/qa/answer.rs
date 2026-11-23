@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 
 use super::super::{lock_project, stamp};
 use super::answer_images::{free_names, place_images, remove_placed};
+use super::history_images::qualify_attachment_refs;
 use super::read::views_locked;
 use super::send::{RequestImage, checked_images};
 use super::{broken_file_error, message_change, referrers};
@@ -251,8 +252,15 @@ impl FileStore {
                     continue;
                 }
                 let reply = next.reply.as_ref().expect("an answered question");
-                let english = history_text(next, reply, false);
-                let japanese = history_text(next, reply, true);
+                // The history entry has no attachments folder of its own, so the body's
+                // images name their question.
+                let folder = qa::attachments_dir(&qa::message_dir(project_dir, &next.id));
+                let mut shown = next.clone();
+                shown.body = qualify_attachment_refs(&next.body, &next.id, |name| {
+                    folder.join(name).is_file()
+                });
+                let english = history_text(&shown, reply, false);
+                let japanese = history_text(&shown, reply, true);
                 referrer.task.history.push(HistoryRecord {
                     at,
                     reason: language.text(&english, &japanese).to_owned(),

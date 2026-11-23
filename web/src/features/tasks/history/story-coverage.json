@@ -30,6 +30,11 @@
           "id": "task-history-historytimeline--markdown-reason",
           "states": ["heading, table, code, and image in a reason"],
           "interaction": true
+        },
+        {
+          "id": "task-history-historytimeline--question-image",
+          "states": ["images copied from two questions with one name"],
+          "interaction": true
         }
       ]
     }

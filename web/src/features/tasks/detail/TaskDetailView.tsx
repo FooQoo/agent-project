@@ -6,6 +6,7 @@ import { stateLabel } from '../model/format';
 import type { EpicRef, Problem, ProjectId, TaskSummary } from '../../../shared/api/contracts';
 import type { SectionSnapshot } from '../../../shared/data/core';
 import { AssigneeLabel } from '../assignee/AssigneeLabel';
+import { resolveHistoryImage } from '../../../shared/api/messageAttachment';
 import { HistoryTimeline } from '../history/HistoryTimeline';
 import { StatusLabel } from '../status/StatusLabel';
 import { BodyDocumentView } from './BodyDocumentView';
@@ -163,7 +164,13 @@ export function TaskDetailView({
       case 'history':
         return (
           <DetailSectionView snapshot={history} onRetry={() => onRetryHistory?.()}>
-            {(data) => <HistoryTimeline events={data.items} resolveAttachment={attachmentUrl} />}
+            {(data) => (
+              <HistoryTimeline
+                events={data.items}
+                resolveAttachment={attachmentUrl}
+                resolveImage={(src) => resolveHistoryImage(projectId, src)}
+              />
+            )}
           </DetailSectionView>
         );
       case 'acceptance':
