@@ -192,6 +192,7 @@ fn pending_is_left_alone_then_answered_task_is_reconsidered() {
             crate::file_store::AskInput {
                 actor: Actor::Ai,
                 asked_by: None,
+                brainstorm: None,
                 questions: vec![crate::file_store::AskQuestion {
                     body: "Question".into(),
                     choices: vec![

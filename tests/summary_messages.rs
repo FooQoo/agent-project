@@ -92,6 +92,7 @@ impl Fx {
                 AskInput {
                     actor: Actor::Ai,
                     asked_by: None,
+                    brainstorm: None,
                     questions: vec![AskQuestion {
                         body: body.into(),
                         choices: Vec::new(),

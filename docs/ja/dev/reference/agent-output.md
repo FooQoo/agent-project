@@ -66,9 +66,11 @@
 - パスはローカルのCLIとHookの出力にだけ現れ、リモート向けのJSONには出ません。
 - 以前の`planPath`は出力されなくなりました。[データとバックアップ](../../guide/operations/data.md)のEPIC.mdへの移行の節を参照してください。
 
-プロジェクトがスリープモードのあいだ、進行表には`"mode": "sleep"`も入ります。既定の組手では、このキーはありません。エージェントは`mode`がなければ組手として読みます。モードはプロジェクトごとに、共有のプロジェクトファイルではなくデータ領域（`.internal/modes.json`）に保存され、`agpj mode`と`agpj progress`はサーバーなしで読みます。[スリープモード](../concepts/agents.md#sleep-mode)を参照してください。
+プロジェクトがスリープモードや壁打ちモードのあいだ、進行表には`"mode": "sleep"`か`"mode": "brainstorm"`も入ります。既定の組手では、このキーはありません。エージェントは`mode`がなければ組手として読みます。モードはプロジェクトごとに、共有のプロジェクトファイルではなくデータ領域（`.internal/modes.json`）に保存され、`agpj mode`と`agpj progress`はサーバーなしで読みます。[スリープモード](../concepts/agents.md#sleep-mode)を参照してください。
 
 スリープのあいだ、表は`modeSource`（`manual`か`schedule`）と、毎日の時間帯がスリープにしているときの`modeUntil`（時間帯の終わり、UTC）も持ちます。3つとも、組手では出ません。時間帯と、手動のモードによる上書きは[スリープモード](../concepts/agents.md#sleep-mode)にあります。
+
+壁打ちのあいだ、表には`"mode": "brainstorm"`、`"modeSource": "manual"`、`"modeTarget": {"type": "epic" | "task", "id": "<エピックIDかタスク番号>"}`が入ります。次のスリープの時間帯が手動の壁打ちを終わらせる場合は、`modeUntil`も入ります。`modeTarget`は壁打ちのときだけ出ます。[壁打ちモード](../concepts/agents.md#brainstorm-mode)を参照。
 
 ## Hookの出力
 

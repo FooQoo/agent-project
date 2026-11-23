@@ -64,6 +64,9 @@ pub struct Question {
     /// The launch ID of the board-launched session that asked it (`AGPJ_RESIDENT_ID`), when
     /// one did. The board uses it to push the answer back to that session.
     pub asked_by: Option<String>,
+    /// The epic or task of the brainstorm this question belongs to, when it was asked with
+    /// `--brainstorm`. It is not a task link: the target task does not wait on it.
+    pub brainstorm: Option<crate::mode::Target>,
 }
 
 /// A request a person sends an agent.
@@ -78,6 +81,7 @@ pub struct Request {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)] // a few messages at a time; boxing would touch every match
 pub enum Message {
     Question(Question),
     Request(Request),

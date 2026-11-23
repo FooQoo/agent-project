@@ -198,6 +198,7 @@ choices:
   - { id: keep, label: 残す }
 recommended: keep
 askedBy: resident-3f9a1c0e5b7d2a46
+brainstorm: { type: epic, id: INTERACTION-MODES }
 reply:
   choice: keep
   images:
@@ -239,6 +240,7 @@ createdAt: 2026-11-14T03:00:00Z
 | `choices` | 省略できます。2〜10個。選択肢のIDは質問内で一意（1〜64文字の`[A-Za-z0-9_-]`）、ラベルは1〜200文字です。選択肢がなければ、テキストで答えます。 |
 | `recommended` | 省略できます。選択肢のIDを1つ指定します。 |
 | `askedBy` | 省略できます。質問を出した、Agent Projectが起動したセッションの起動ID（`AGPJ_RESIDENT_ID`）です。変数が設定されているとき、`message ask`が書きます。Agent Projectはこれを使って、回答をそのセッションへ押し込みます。外部のセッションが出した質問にはありません。 |
+| `brainstorm` | 省略可。`{type, id}`（`type`は`epic`か`task`、`id`はエピックIDかタスク番号）。質問が属する壁打ちの対象です。`message ask --brainstorm`が書きます。タスクとの紐付けではないので、対象のタスクはこの質問を待たず、`tasks`も設定されません。壁打ちのために聞いた質問でなければありません。[壁打ちモード](../concepts/agents.md#brainstorm-mode)を参照。 |
 | `reply` | 回答があるまでは`null`。`choice`は質問に選択肢がないときは入らず、選択肢があるときは`choice`と`text`の少なくとも一方が入ります。`text`は1〜2,000文字で、選択肢がなければ必須です。`images`は任意（空なら省略）で、回答に添えた画像の平易なファイル名を最大20件並べます。画像は質問の`attachments/`に、質問自身の画像と並んで保存されます。`via`は`ui`・`chat`・`cli`、`at`は記録した時刻です。`acceptedAt`は任意で、AIが回答を受け取るまでは省略または`null`、受け取るとその時刻です。 |
 
 依頼の項目です。

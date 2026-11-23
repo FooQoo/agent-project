@@ -16,6 +16,9 @@ pub struct ModeArgs {
     /// With "schedule": turn the daily window off (the times are kept)
     #[arg(long)]
     pub off: bool,
+    /// With "brainstorm": the task number or the epic ID to brainstorm on
+    #[arg(long, value_name = "TARGET")]
+    pub target: Option<String>,
 }
 
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
@@ -24,6 +27,8 @@ pub enum ModeArg {
     Sparring,
     /// Do not accept questions to the user; subagents decide
     Sleep,
+    /// Ask the user questions that deepen one epic or task: --target <TASK-NUMBER or EPIC-ID>
+    Brainstorm,
     /// Forget the manual mode, so the daily window decides
     Auto,
     /// Set the daily sleep window: --start HH:MM --end HH:MM, or --off

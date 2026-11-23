@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use crate::cli::args::{ModeArg, ModeArgs};
 use crate::cli::{Context, Outcome};
 use crate::error::AgpjError;
-use crate::mode::{self, ModeKind, Schedule, Source};
+use crate::mode::{self, ModeKind, Schedule, Source, Target};
 use crate::mode_schedule::{format_time, parse_time};
 
 fn write_failed(error: std::io::Error) -> AgpjError {
@@ -53,7 +53,8 @@ fn next_schedule(args: &ModeArgs, saved: Option<Schedule>) -> Result<Schedule, A
 }
 
 pub fn run(ctx: &mut Context, args: &ModeArgs) -> Result<Outcome, AgpjError> {
-    let project = ctx.project_id()?.to_string();
+    let project_id = ctx.project_id()?.clone();
+    let project = project_id.to_string();
     let data_dir = mode::data_dir_of(ctx.files.shared_dir());
     let flags = args.start.is_some() || args.end.is_some() || args.off;
     if flags && args.mode != Some(ModeArg::Schedule) {
@@ -61,6 +62,9 @@ pub fn run(ctx: &mut Context, args: &ModeArgs) -> Result<Outcome, AgpjError> {
             "mode",
             "--start, --end, and --off go with \"mode schedule\".",
         ));
+    }
+    if args.target.is_some() && args.mode != Some(ModeArg::Brainstorm) {
+        return Err(invalid("mode", "--target goes with \"mode brainstorm\"."));
     }
     let changed = args.mode.is_some();
     match args.mode {
@@ -72,6 +76,16 @@ pub fn run(ctx: &mut Context, args: &ModeArgs) -> Result<Outcome, AgpjError> {
                 ModeKind::Sparring
             };
             mode::set(&data_dir, &project, kind, ctx.clock.now()).map_err(write_failed)?;
+        }
+        Some(ModeArg::Brainstorm) => {
+            let Some(text) = &args.target else {
+                return Err(invalid(
+                    "target",
+                    "Give --target with a task number or an epic ID for \"mode brainstorm\".",
+                ));
+            };
+            let target = Target::parse(text);
+            mode::start_brainstorm(ctx.files.shared_dir(), &project_id, target, ctx.clock.now())?;
         }
         Some(ModeArg::Auto) => mode::clear_manual(&data_dir, &project).map_err(write_failed)?,
         Some(ModeArg::Schedule) => {
@@ -92,6 +106,15 @@ pub fn run(ctx: &mut Context, args: &ModeArgs) -> Result<Outcome, AgpjError> {
         (ModeKind::Sparring, _) => {
             "Mode: sparring. Listen with \"agpj wait\" and ask the user with \"message ask\".\n"
                 .to_string()
+        }
+        (ModeKind::Brainstorm, _) => {
+            let label = state
+                .target_at(now)
+                .map(|target| target.label())
+                .unwrap_or_default();
+            format!(
+                "Mode: brainstorm on {label}. Read it and ask one deepening question at a time with \"agpj message ask --brainstorm\"; see \"agpj skills brainstorm\".\n"
+            )
         }
         (ModeKind::Sleep, Source::Manual) => {
             "Mode: sleep. Questions to the user are refused; have a subagent decide and record it with \"agpj decision add\".\n"
@@ -118,7 +141,7 @@ pub fn run(ctx: &mut Context, args: &ModeArgs) -> Result<Outcome, AgpjError> {
     let mut mode_json =
         json!({"kind": effective.kind.as_str(), "source": effective.source.as_str()});
     let api = state.api_json(now);
-    for key in ["since", "until"] {
+    for key in ["since", "until", "target"] {
         if let Some(value) = api.get(key) {
             mode_json[key] = value.clone();
         }

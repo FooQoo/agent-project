@@ -50,6 +50,8 @@ struct QuestionFront {
     recommended: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     asked_by: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    brainstorm: Option<crate::mode::Target>,
     #[serde(default)]
     reply: Option<ReplyFront>,
     #[serde(default, with = "crate::clock::serde_opt_utc")]
@@ -117,6 +119,7 @@ pub fn parse_message(id: &str, text: &str) -> Result<Message, Defect> {
                 withdrawn_at: f.withdrawn_at,
                 created_at: f.created_at,
                 asked_by: f.asked_by,
+                brainstorm: f.brainstorm,
             }))
         }
         Some("human") => {
@@ -150,6 +153,7 @@ pub fn render_message(message: &Message) -> Result<String, Defect> {
                 choices: q.choices.clone(),
                 recommended: q.recommended.clone(),
                 asked_by: q.asked_by.clone(),
+                brainstorm: q.brainstorm.clone(),
                 reply: q.reply.as_ref().map(|r| ReplyFront {
                     choice: r.choice.clone(),
                     text: r.text.clone(),
@@ -224,6 +228,7 @@ mod tests {
             withdrawn_at: None,
             created_at: at,
             asked_by: Some("r1".into()),
+            brainstorm: None,
         };
         let written = render_message(&Message::Question(q.clone())).unwrap();
         assert!(written.contains("via: cli") && !written.contains("choice:"));

@@ -1,5 +1,5 @@
-//! `GET` and `PUT /api/projects/{id}/mode`: the interaction mode of a project (sparring or
-//! sleep), saved in the app's internal area by `crate::mode`. The write guard in `api` checks
+//! `GET` and `PUT /api/projects/{id}/mode`: the interaction mode of a project (sparring,
+//! sleep, or brainstorm on an epic or a task), saved in the app's internal area by `crate::mode`. The write guard in `api` checks
 //! each `PUT` first, and the ngrok entrance serves the same pair behind its session and CSRF
 //! token. The board's other streams learn of a change from the `mode` event of `/api/events`.
 
@@ -11,7 +11,7 @@ use axum::http::StatusCode;
 use axum::response::Response;
 use axum::routing::get;
 
-use crate::mode::{self, ModeKind, Schedule};
+use crate::mode::{self, ModeKind, Schedule, Target};
 use crate::server::AppState;
 use crate::server::request::ApiJson;
 use crate::server::response::{agpj_error_response, error_response, json_response};
@@ -50,7 +50,25 @@ async fn put_mode(
         Err(response) => return *response,
     };
     let data_dir = mode::data_dir_of(&state.shared);
-    let saved = match parse_change(&body) {
+    let change = parse_change(&body);
+    if let Some(Change::Brainstorm(target)) = &change {
+        // Check the target, save the mode, and wake a waiting agent: the same as the CLI.
+        let project_id = match parse_project_id(&project) {
+            Ok(project_id) => project_id,
+            Err(error) => return agpj_error_response(&error),
+        };
+        return match mode::start_brainstorm(
+            &state.shared,
+            &project_id,
+            target.clone(),
+            chrono::Utc::now(),
+        ) {
+            Ok(_) => json_response(StatusCode::OK, &current_json(&state, &id)),
+            Err(error) => agpj_error_response(&error),
+        };
+    }
+    let saved = match change {
+        Some(Change::Brainstorm(_)) => unreachable!("handled above"),
         Some(Change::Mode(kind)) => mode::set(&data_dir, &id, kind, chrono::Utc::now()).map(drop),
         Some(Change::Auto) => mode::clear_manual(&data_dir, &id),
         Some(Change::Schedule(schedule)) => mode::set_schedule(&data_dir, &id, schedule),
@@ -59,7 +77,7 @@ async fn put_mode(
                 StatusCode::UNPROCESSABLE_ENTITY,
                 "invalid_mode",
                 "mode is invalid.",
-                "The body must be {\"mode\": \"sparring\" | \"sleep\" | \"auto\"} or {\"schedule\": {\"enabled\": true, \"start\": \"23:00\", \"end\": \"08:00\"}}.",
+                "The body must be {\"mode\": \"sparring\" | \"sleep\" | \"auto\"}, {\"mode\": \"brainstorm\", \"target\": {\"type\": \"epic\" | \"task\", \"id\": \"<EPIC-ID or task number>\"}}, or {\"schedule\": {\"enabled\": true, \"start\": \"23:00\", \"end\": \"08:00\"}}.",
             );
         }
     };
@@ -78,16 +96,24 @@ enum Change {
     Mode(ModeKind),
     Auto,
     Schedule(Schedule),
+    Brainstorm(Target),
 }
 
 /// Exactly one field: `mode` (`sparring`, `sleep`, or `auto` to follow the schedule again), or a
-/// `schedule` of two different `HH:MM` times.
+/// `schedule` of two different `HH:MM` times. Brainstorm takes two: `mode` and a `target`.
 fn parse_change(body: &serde_json::Value) -> Option<Change> {
-    let fields = body.as_object().filter(|fields| fields.len() == 1)?;
+    let fields = body.as_object()?;
+    if fields.get("mode").and_then(|mode| mode.as_str()) == Some("brainstorm") {
+        let target = serde_json::from_value(fields.get("target")?.clone()).ok()?;
+        return (fields.len() == 2).then_some(Change::Brainstorm(target));
+    }
+    let fields = Some(fields).filter(|fields| fields.len() == 1)?;
     if let Some(text) = fields.get("mode") {
         return match text.as_str()? {
             "auto" => Some(Change::Auto),
-            other => ModeKind::parse(other).map(Change::Mode),
+            other => ModeKind::parse(other)
+                .filter(|kind| *kind != ModeKind::Brainstorm)
+                .map(Change::Mode),
         };
     }
     Schedule::from_json(fields.get("schedule")?).map(Change::Schedule)

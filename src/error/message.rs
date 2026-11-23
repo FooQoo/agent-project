@@ -41,6 +41,10 @@ impl AgpjError {
             AgpjError::SleepMode => {
                 "the project is in sleep mode, so questions to the user are not accepted.".into()
             }
+            AgpjError::BrainstormNotActive => {
+                "the project is not in brainstorm mode, so brainstorm questions are not accepted."
+                    .into()
+            }
             AgpjError::TaskIsDraft { id } => {
                 format!("task #{id} is a draft and read-only for agents.")
             }

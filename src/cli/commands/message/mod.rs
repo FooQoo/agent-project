@@ -4,6 +4,7 @@
 //! with an exit code of their own: 0 answered, 5 timeout, 6 withdrawn.
 
 mod answer;
+mod brainstorm;
 mod input;
 mod read;
 mod request;

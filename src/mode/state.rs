@@ -3,14 +3,16 @@
 use chrono::{DateTime, TimeZone, Utc};
 use serde_json::{Value, json};
 
-use super::ProjectMode;
+use super::{ModeKind, ProjectMode, Target};
 use crate::mode_schedule::{Effective, Schedule, Source, resolve};
 
 /// What a project has saved: the manual mode and the daily window, either of which may be absent.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct State {
     pub manual: Option<ProjectMode>,
     pub schedule: Option<Schedule>,
+    /// The brainstorm target; set exactly when `manual` is brainstorm.
+    pub target: Option<Target>,
 }
 
 impl State {
@@ -23,10 +25,18 @@ impl State {
         resolve(manual, self.schedule.as_ref(), now)
     }
 
+    /// The brainstorm target while the mode in effect is a manual brainstorm.
+    pub fn target_at<Tz: TimeZone>(&self, now: DateTime<Tz>) -> Option<Target> {
+        let effective = self.effective_at(now);
+        (effective.kind == ModeKind::Brainstorm && effective.source == Source::Manual)
+            .then(|| self.target.clone())
+            .flatten()
+    }
+
     /// The JSON the board's API and event stream carry. `manual` is what was set by hand, so the
     /// board can offer to follow the schedule again.
     pub fn api_json<Tz: TimeZone>(&self, now: DateTime<Tz>) -> Value {
-        let effective = self.effective_at(now);
+        let effective = self.effective_at(now.clone());
         let mut body = json!({
             "mode": effective.kind.as_str(),
             "modeSource": effective.source.as_str(),
@@ -40,6 +50,9 @@ impl State {
         }
         if let Some(until) = effective.until {
             body["until"] = format(until);
+        }
+        if let Some(target) = self.target_at(now) {
+            body["target"] = json!(target);
         }
         if let Some(manual) = self.manual {
             body["manual"] = json!(manual.kind.as_str());

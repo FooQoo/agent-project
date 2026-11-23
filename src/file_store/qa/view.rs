@@ -78,6 +78,8 @@ pub struct QuestionView {
     pub recommended_choice_id: Option<String>,
     /// The board-launched session that asked it, when one did.
     pub asked_by: Option<String>,
+    /// The brainstorm target the question was asked about, or null.
+    pub brainstorm: Option<crate::mode::Target>,
     pub reply: Option<ReplyView>,
     pub status: QuestionStatus,
     /// The unarchived tasks whose `questions` name this question, in ID order.
@@ -116,6 +118,7 @@ impl QuestionView {
             choices: question.choices.clone(),
             recommended_choice_id: question.recommended.clone(),
             asked_by: question.asked_by.clone(),
+            brainstorm: question.brainstorm.clone(),
             status: if question.withdrawn_at.is_some() {
                 QuestionStatus::Withdrawn
             } else if question.reply.is_some() {
