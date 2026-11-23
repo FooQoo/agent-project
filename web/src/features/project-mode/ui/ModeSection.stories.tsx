@@ -104,3 +104,32 @@ export const TurnOnSchedule: Story = {
     await expect(args.onSaveSchedule).toHaveBeenCalledWith(SCHEDULE);
   },
 };
+
+const brainstorming: ProjectMode = {
+  ...SPARRING,
+  mode: 'brainstorm',
+  manual: 'brainstorm',
+  target: { type: 'task', id: '680' },
+};
+
+/** Brainstorm: neither option is selected, the target is named, and End returns to sparring. */
+export const Brainstorm: Story = {
+  args: { mode: brainstorming, onEndBrainstorm: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('radio', { name: 'Sparring' })).not.toBeChecked();
+    await expect(canvas.getByRole('radio', { name: 'Sleep' })).not.toBeChecked();
+    await expect(canvas.getByText('Brainstorming #680')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'End brainstorm' }));
+    await expect(args.onEndBrainstorm).toHaveBeenCalled();
+  },
+};
+
+/** Choosing Sleep while brainstorming asks the parent to save it, which ends the brainstorm. */
+export const BrainstormChooseSleep: Story = {
+  args: { mode: brainstorming, onEndBrainstorm: fn() },
+  play: async ({ canvasElement, args }) => {
+    await userEvent.click(within(canvasElement).getByRole('radio', { name: 'Sleep' }));
+    await expect(args.onChoose).toHaveBeenCalledWith('sleep');
+  },
+};

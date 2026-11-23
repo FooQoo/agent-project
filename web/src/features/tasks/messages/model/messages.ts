@@ -71,6 +71,24 @@ export function canSendAnswer(
 
 export type MessageStatus = 'open' | 'answered' | 'accepted' | 'withdrawn';
 
+/** The epic or task a brainstorm question is about. */
+export interface BrainstormRef {
+  type: 'epic' | 'task';
+  /** The epic ID, or the task number as text. */
+  id: string;
+}
+
+/** The target as the badge names it: `#680` for a task, the ID for an epic. */
+export const brainstormLabel = (target: BrainstormRef): string =>
+  target.type === 'task' ? `#${target.id}` : target.id;
+
+function brainstormOf(value: unknown): BrainstormRef | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const { type, id } = value as Record<string, unknown>;
+  if ((type !== 'epic' && type !== 'task') || typeof id !== 'string' || id === '') return null;
+  return { type, id };
+}
+
 /** The answer of a question, as the opened question shows it once it is sent. */
 export interface MessageReply {
   choiceLabel: string | null;
@@ -93,6 +111,8 @@ export interface MessageDetail {
   referencedBy: number[];
   /** The answer of an answered question; absent or null otherwise. */
   reply?: MessageReply | null;
+  /** The epic or task a brainstorm question is about; null for an ordinary question. */
+  brainstorm?: BrainstormRef | null;
 }
 
 function replyOf(value: unknown): MessageReply | null {
@@ -134,6 +154,7 @@ export function parseMessageDetail(value: unknown): MessageDetail {
       ? (body.referencedBy as unknown[]).filter((id): id is number => typeof id === 'number')
       : [],
     reply: replyOf(body.reply),
+    brainstorm: brainstormOf(body.brainstorm),
   };
 }
 

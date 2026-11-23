@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { loadMode } from './api';
-import { parseModeEvent, SPARRING, type ProjectMode } from './model';
+import { endBrainstorm, loadMode, startBrainstorm } from './api';
+import { type BrainstormTarget, parseModeEvent, SPARRING, type ProjectMode } from './model';
 
 /**
  * The modes the page knows, by project. The server holds the saved value; this is a copy that the
@@ -43,6 +43,16 @@ function emit() {
 export function setProjectMode(projectId: string, mode: ProjectMode) {
   put(projectId, mode);
   emit();
+}
+
+/** Starts (or moves) the brainstorm and shows what the server saved. A failure is thrown. */
+export async function startBrainstormOn(projectId: string, target: BrainstormTarget) {
+  setProjectMode(projectId, await startBrainstorm(projectId, target));
+}
+
+/** Ends the brainstorm (back to sparring) and shows what the server saved. A failure is thrown. */
+export async function endBrainstormOn(projectId: string) {
+  setProjectMode(projectId, await endBrainstorm(projectId));
 }
 
 /** Applies a `mode` event of the board's stream (a `MessageEvent`, or its data). */

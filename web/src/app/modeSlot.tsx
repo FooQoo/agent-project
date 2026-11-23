@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { BrainstormAction } from '../features/project-mode/ui/BrainstormAction';
+import type { BrainstormTarget } from '../features/project-mode/model';
 import { ModeIndicator } from '../features/project-mode/ui/ModeIndicator';
 import { ConnectedModeSection } from '../features/project-mode/ui/ModeSection';
 import { isProjectId } from './model/projectSession';
@@ -18,4 +20,14 @@ export function modeIndicatorSlot(projectId: string | null): ReactNode {
 /** The mode switch of the settings, for the PC and the phone alike. Reachable through the remote entrance too. */
 export function ModeSettingsSection({ projectId }: { projectId: string | null }) {
   return modeAvailable(projectId) ? <ConnectedModeSection projectId={projectId} /> : null;
+}
+
+/** The Brainstorm action of a card or an epic; absent where there is no server to ask. */
+export function brainstormActionSlot(
+  projectId: string | null,
+  target: BrainstormTarget,
+): ReactNode {
+  return modeAvailable(projectId) ? (
+    <BrainstormAction projectId={projectId} target={target} />
+  ) : undefined;
 }

@@ -6,17 +6,20 @@ import { Button } from '@/shared/ui/button';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { Input } from '@/shared/ui/input';
 import { saveMode, type ModeChange } from '../api';
+import { IconLabel } from '@/shared/ui/icon-label';
+import { MessagesSquareIcon, XIcon } from 'lucide-react';
 import {
+  type ChoosableMode,
   DEFAULT_SCHEDULE,
-  isModeKind,
+  isChoosableMode,
   MODE_KINDS,
   SPARRING,
-  type ModeKind,
+  targetLabel,
   type ProjectMode,
   type Schedule,
 } from '../model';
 import { formatUntil } from '../time';
-import { setProjectMode, useProjectMode } from '../store';
+import { endBrainstormOn, setProjectMode, useProjectMode } from '../store';
 import './mode.css';
 
 /** The switch and its note, with no data of its own: the connected one below feeds it. */
@@ -25,6 +28,7 @@ export function ModeSection({
   disabled = false,
   failed = false,
   onChoose,
+  onEndBrainstorm,
   onFollowSchedule,
   onSaveSchedule,
 }: {
@@ -32,7 +36,10 @@ export function ModeSection({
   mode: ProjectMode | null;
   disabled?: boolean;
   failed?: boolean;
-  onChoose: (kind: ModeKind) => void;
+  /** Sparring or sleep was chosen; while a brainstorm runs, choosing either ends it. */
+  onChoose: (kind: ChoosableMode) => void;
+  /** Ends the brainstorm (back to sparring); without it a brainstorm shows no End button. */
+  onEndBrainstorm?: () => void;
   /** Forget the manual mode, so the daily window decides. */
   onFollowSchedule?: () => void;
   onSaveSchedule?: (schedule: Schedule) => void;
@@ -60,10 +67,11 @@ export function ModeSection({
         className="segmented"
         data-mode-group=""
         aria-labelledby={headingId}
-        value={kind}
+        // A brainstorm is none of the two options: neither is selected while it runs.
+        value={kind === 'brainstorm' ? '' : kind}
         disabled={disabled || mode === null}
         onValueChange={(value) => {
-          if (isModeKind(value)) onChoose(value);
+          if (isChoosableMode(value)) onChoose(value);
         }}
       >
         {MODE_KINDS.map((value) => (
@@ -75,8 +83,29 @@ export function ModeSection({
       <p className="settings__note">
         {bySchedule && mode?.until
           ? t('mode.byScheduleUntil', { time: formatUntil(mode.until, i18n.language) })
-          : t(kind === 'sleep' ? 'mode.sleepNote' : 'mode.sparringNote')}
+          : kind === 'brainstorm' && mode?.target
+            ? t('mode.brainstormNote', { target: targetLabel(mode.target) })
+            : t(kind === 'sleep' ? 'mode.sleepNote' : 'mode.sparringNote')}
       </p>
+      {kind === 'brainstorm' && mode?.target ? (
+        <div className="mode-brainstorm" data-mode-brainstorm="">
+          <span className="mode-brainstorm__state">
+            <MessagesSquareIcon aria-hidden="true" />
+            {t('mode.brainstormOn', { target: targetLabel(mode.target) })}
+          </span>
+          {onEndBrainstorm ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="m"
+              disabled={disabled}
+              onClick={onEndBrainstorm}
+            >
+              <IconLabel icon={XIcon}>{t('mode.endBrainstorm')}</IconLabel>
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       {onSaveSchedule ? (
         <div className="mode-schedule" data-mode-schedule="">
           <label className="mode-schedule__toggle" htmlFor={scheduleId}>
@@ -157,6 +186,17 @@ export function ConnectedModeSection({ projectId }: { projectId: string }) {
       failed={failed}
       onChoose={(kind) => {
         if (kind !== mode?.mode || mode.modeSource !== 'manual') save({ mode: kind });
+      }}
+      onEndBrainstorm={() => {
+        setSaving(true);
+        setFailed(false);
+        endBrainstormOn(projectId).then(
+          () => setSaving(false),
+          () => {
+            setFailed(true);
+            setSaving(false);
+          },
+        );
       }}
       onFollowSchedule={() => save({ mode: 'auto' })}
       onSaveSchedule={(schedule) => save({ schedule })}

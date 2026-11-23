@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { SPARRING } from '../model';
 import { ModeIndicatorView } from './ModeIndicator';
 
@@ -34,5 +34,40 @@ export const AsleepBySchedule: Story = {
   },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByText(/^until /)).toBeInTheDocument();
+  },
+};
+
+const brainstorming = {
+  ...SPARRING,
+  mode: 'brainstorm',
+  manual: 'brainstorm',
+  target: { type: 'epic', id: 'INTERACTION-MODES' },
+} as const;
+
+/** Brainstorming: the chip names the target and the End button ends it. */
+export const Brainstorm: Story = {
+  args: { mode: brainstorming, onEndBrainstorm: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('status')).toHaveTextContent('Brainstorm: INTERACTION-MODES');
+    await userEvent.click(canvas.getByRole('button', { name: 'End brainstorm' }));
+    await expect(args.onEndBrainstorm).toHaveBeenCalled();
+  },
+};
+
+/** A narrow header: the long target is cut with an ellipsis and the End button stays. */
+export const BrainstormNarrow: Story = {
+  args: { mode: brainstorming, onEndBrainstorm: fn() },
+  decorators: [
+    (Story) => (
+      <div style={{ width: 180, display: 'flex' }}>
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('button', { name: 'End brainstorm' }),
+    ).toBeVisible();
   },
 };
