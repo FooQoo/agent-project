@@ -76,7 +76,7 @@ The columns mean:
 | Doing | Work in progress. AI-owned tasks also show an agent state. |
 | Done | Completed work. |
 
-AI-owned tasks in Doing show one of three states: **Idle**, **Running**, or **Paused** (the run stopped). Tasks in Todo and Done, and tasks you own, show no state label unless they are awaiting an answer. Cards and the task detail show these labels on the PC board and on the phone.
+AI-owned tasks in Doing show one of three states: **Idle**, **Running**, or **Paused** (the run stopped). Tasks in Todo and Done, and tasks you own, show no state label unless they are awaiting an answer. Cards and the task detail show these labels on the PC board and on the phone. Next to its number, every card shows who owns it, on the PC board and on the phone: a robot icon for an AI task and a person icon for yours.
 
 **Awaiting answer** is not a state but a mark: any task, whoever owns it and in any lane, shows it while it refers to an open question, and it replaces the state label. You answer from the card's **Answer the question** button or from the list of the **Messages** band above the lanes (see [Decisions](../delegate/decisions)). Running means the agent is working. When an agent asks a question about a Running task in Doing, the task is paused and the history records "Waiting for the answers to Q-1." It returns to Running by itself when the agent takes in the answers.
 
