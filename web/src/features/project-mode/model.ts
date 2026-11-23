@@ -46,6 +46,8 @@ export interface ProjectMode {
   schedule: Schedule | null;
   /** The epic or task being brainstormed; set exactly while `mode` is `brainstorm`. */
   target: BrainstormTarget | null;
+  /** How many questions the agent holds while asleep; they are delivered when sleep ends. */
+  heldCount: number;
 }
 
 export type ModeSource = 'manual' | 'schedule';
@@ -67,6 +69,7 @@ export const SPARRING: ProjectMode = {
   manual: null,
   schedule: null,
   target: null,
+  heldCount: 0,
 };
 
 const TIME = /^\d{2}:\d{2}$/;
@@ -92,7 +95,7 @@ export function isChoosableMode(value: unknown): value is ChoosableMode {
 /** Checks the shape the server sends. Anything else is null, never a partial value. */
 export function parseProjectMode(value: unknown): ProjectMode | null {
   if (typeof value !== 'object' || value === null) return null;
-  const { mode, modeSource, since, until, manual, schedule, target } = value as Record<
+  const { mode, modeSource, since, until, manual, schedule, target, heldCount } = value as Record<
     string,
     unknown
   >;
@@ -108,6 +111,13 @@ export function parseProjectMode(value: unknown): ProjectMode | null {
     manual: isModeKind(manual) ? manual : null,
     schedule: parseSchedule(schedule),
     target: mode === 'brainstorm' ? parsedTarget : null,
+    heldCount:
+      mode === 'sleep' &&
+      typeof heldCount === 'number' &&
+      Number.isInteger(heldCount) &&
+      heldCount > 0
+        ? heldCount
+        : 0,
   };
 }
 

@@ -4,8 +4,9 @@ use common::{agpj, demo_project, json_error, json_ok};
 
 const QUESTION: &str = r#"{"questions":[{"body":"Keep or delete?"}]}"#;
 
-fn ask(home: &std::path::Path) -> (i32, String) {
-    json_error(
+/// Asks during sleep: the question is held, not refused.
+fn ask_held(home: &std::path::Path) -> String {
+    let held = json_ok(
         home,
         &[
             "--project",
@@ -19,12 +20,15 @@ fn ask(home: &std::path::Path) -> (i32, String) {
             "--no-wait",
             "--questions-json",
             QUESTION,
+            "--json",
         ],
-    )
+    );
+    assert_eq!(held["type"], "held", "{held}");
+    held["questions"][0]["id"].as_str().unwrap().to_string()
 }
 
 #[test]
-fn sleep_mode_refuses_questions_and_shows_in_progress_until_sparring_returns() {
+fn sleep_mode_holds_questions_and_shows_in_progress_until_sparring_returns() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
     let shown = json_ok(home.path(), &["--project", "Demo", "mode", "--json"]);
@@ -41,13 +45,24 @@ fn sleep_mode_refuses_questions_and_shows_in_progress_until_sparring_returns() {
     let progress = json_ok(home.path(), &["--project", "Demo", "progress", "--json"]);
     assert_eq!(progress["mode"], "sleep");
 
-    let (_, code) = ask(home.path());
-    assert_eq!(code, "sleep_mode");
+    let id = ask_held(home.path());
     let questions = json_ok(
         home.path(),
-        &["--project", "Demo", "message", "ls", "--json"],
+        &[
+            "--project",
+            "Demo",
+            "message",
+            "ls",
+            "--status",
+            "all",
+            "--json",
+        ],
     );
-    assert!(questions.to_string().find("Keep or delete?").is_none());
+    assert_eq!(questions["messages"][0]["id"], id);
+    assert_eq!(questions["messages"][0]["status"], "held");
+    // The task keeps going: a held question does not make it wait for the user.
+    let task = json_ok(home.path(), &["--project", "Demo", "show", "1", "--json"]);
+    assert_eq!(task["task"]["awaitingAnswer"], false, "{task}");
 
     json_ok(
         home.path(),
@@ -179,8 +194,7 @@ fn a_daily_window_sleeps_by_the_schedule_and_a_manual_mode_overrides_it() {
     assert_eq!(progress["mode"], "sleep");
     assert_eq!(progress["modeSource"], "schedule");
     assert!(progress["modeUntil"].is_string());
-    let (_, code) = ask(home.path());
-    assert_eq!(code, "sleep_mode");
+    ask_held(home.path());
 
     // Sparring set by hand inside the window holds; `auto` gives the window back.
     assert_eq!(run(&["mode", "sparring"])["mode"]["kind"], "sparring");

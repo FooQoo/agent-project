@@ -82,7 +82,10 @@ async fn put_mode(
         }
     };
     match saved {
-        Ok(()) => json_response(StatusCode::OK, &current_json(&state, &id)),
+        Ok(()) => {
+            release_after_change(&state, &project);
+            json_response(StatusCode::OK, &current_json(&state, &id))
+        }
         Err(_) => error_response(
             StatusCode::INTERNAL_SERVER_ERROR,
             "mode_unavailable",
@@ -119,8 +122,21 @@ fn parse_change(body: &serde_json::Value) -> Option<Change> {
     Schedule::from_json(fields.get("schedule")?).map(Change::Schedule)
 }
 
+/// Leaving sleep delivers the held questions all at once, before the answer goes back.
+fn release_after_change(state: &AppState, project: &str) {
+    if let Ok(project_id) = parse_project_id(project) {
+        let _ = mode::release_held(&state.shared, &project_id);
+    }
+}
+
 fn current_json(state: &AppState, id: &str) -> serde_json::Value {
-    mode::state(&mode::data_dir_of(&state.shared), id).api_json(chrono::Local::now())
+    let now = chrono::Local::now();
+    let saved = mode::state(&mode::data_dir_of(&state.shared), id);
+    let mut body = saved.api_json(now);
+    if saved.effective_at(now).kind == ModeKind::Sleep {
+        body["heldCount"] = serde_json::json!(mode::held_count(&state.shared, id));
+    }
+    body
 }
 
 /// The route of the project's mode, served with the other saved settings.

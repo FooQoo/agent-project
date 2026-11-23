@@ -15,8 +15,7 @@
 | `result_plan_not_found` | `result add --plan`（またはAPIの`plan`）が、タスクにない予定のIDを指定した。存在しないIDや、別のタスクの予定のID。何も書きません。 | 3 | 404 |
 | `result_plan_delivered` | `result add --plan`が、保存済みの成果がすでに届けている予定を指定し、その配信がその成果の再送ではない。何も書かず、メッセージに届けた成果のバージョンを示します。 | 1 | 409 |
 | `task_is_draft` | AIの`edit`・`history add`・`mv`・`state`が人の下書き（`human`）を対象にした。または人の`mv`による未着手への移動・`epic send`・カンバンからの送信が下書きを対象にした。`reason`は、ユーザーが確定するのを待つよう案内します。 | 1 | 409 |
-| `sleep_mode` | プロジェクトがスリープモードのときの`message ask`。何も保存・通知・チャット表示されない。`reason`は、サブエージェントに判断させ、その結論で進め、`decision add`で記録するよう案内する。 | 1 | なし（CLIのみ） |
-| `brainstorm_not_active` | 現在のモードが壁打ちではないときの`message ask --brainstorm`（たとえば利用者が`agpj mode sparring`で壁打ちを終えたあと）。何も保存されない。`reason`は、壁打ちの質問をやめ、進行表の`mode`を確かめるよう案内する。スリープを先に確かめるので、スリープ中のエラーは`sleep_mode`になる。 | 1 | なし（CLIのみ） |
+| `brainstorm_not_active` | 現在のモードが壁打ちではないときの`message ask --brainstorm`（たとえば利用者が`agpj mode sparring`で壁打ちを終えたあと）。何も保存されない。`reason`は、壁打ちの質問をやめ、進行表の`mode`を確かめるよう案内する。 | 1 | なし（CLIのみ） |
 | `no_release_version` | リリースバージョンがないプロジェクトで、`add`・`edit`・`ls`・`progress`に`--release-version`を付けた。何も保存しません。`version release VERSION`で設定するか、バージョンの名前を指定します。サーバーのAPIは422を返します。 | 1 | 422 |
 | `task_in_backlog` | エージェントの`mv`・`state`が、バックログのタスクを対象にした。エージェントのDoingやDoneへの移動は拒否され、バックログを出るのは未着手への送信だけです。 | 1 | 409 |
 | `send_with_open_questions` | 人の`mv <id> todo`・`epic send`・Webでの未着手への移動が、未回答の質問がある計画を、確認なし（`--force`、APIでは`ack: true`）で対象にした。何も保存せず、メッセージに質問のIDを示す。確認して送ったあとも質問は残り、回答があるまでタスクはAwaiting answerです。 | 1 | 409 |

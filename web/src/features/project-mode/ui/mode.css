@@ -29,6 +29,11 @@
   font-weight: 400;
 }
 
+.mode-indicator__held {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .mode-schedule {
   display: flex;
   flex-direction: column;

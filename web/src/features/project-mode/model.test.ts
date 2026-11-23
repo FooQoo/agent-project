@@ -88,3 +88,13 @@ describe('targetLabel and sameTarget', () => {
     expect(sameTarget(null, task)).toBe(false);
   });
 });
+
+describe('held questions', () => {
+  it('reads the held count only while asleep', () => {
+    const base = { mode: 'sleep', modeSource: 'manual', heldCount: 3 };
+    expect(parseProjectMode(base)?.heldCount).toBe(3);
+    expect(parseProjectMode({ ...base, mode: 'sparring' })?.heldCount).toBe(0);
+    expect(parseProjectMode({ ...base, heldCount: -1 })?.heldCount).toBe(0);
+    expect(parseProjectMode({ ...base, heldCount: 'x' })?.heldCount).toBe(0);
+  });
+});

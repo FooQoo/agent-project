@@ -46,9 +46,6 @@ impl AgpjError {
                     to.as_str()
                 )
             }
-            AgpjError::SleepMode => {
-                "the project is in sleep mode, so questions to the user are not accepted.".into()
-            }
             AgpjError::BrainstormNotActive => {
                 "the project is not in brainstorm mode, so brainstorm questions are not accepted."
                     .into()

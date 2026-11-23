@@ -280,7 +280,7 @@ JSONとして読めない本文は、ほかの書き込みと同じく400です�
 
 ### プロジェクトのモード
 
-`GET`と`PUT /api/projects/{projectId}/mode`は、プロジェクトのやり取りのモードを読み書きします。`agpj mode`が`<データ領域>/.internal/modes.json`に書くのと同じ項目です（[スリープモード](../concepts/agents.md#sleep-mode)を参照）。ローカルのリスナーが提供し、ngrokの入口は同じ組をsessionの背後で提供します（[入口のルート](./remote-routes.md)を参照）。`PUT`はほかのPCの書き込みと同じ書き込みガードを通り、入口ではsessionとCSRFトークンが必要です。本文の項目はちょうど1つ（上の表を参照）で、未知の項目や値は422 `invalid_mode`、壊れたJSONは400、最後の保存が勝ちます。壁打ちの`PUT`はCLIと同じ`start_brainstorm`を使います（[壁打ちモード](../concepts/agents.md#brainstorm-mode)を参照）。どの形にも合わない本文は、`target`のない壁打ちも含めて422 `invalid_mode`です。モードが壁打ちのあいだ、`mode`イベントにも同じ`target`が入ります。
+`GET`と`PUT /api/projects/{projectId}/mode`は、プロジェクトのやり取りのモードを読み書きします。`agpj mode`が`<データ領域>/.internal/modes.json`に書くのと同じ項目です（[スリープモード](../concepts/agents.md#sleep-mode)を参照）。ローカルのリスナーが提供し、ngrokの入口は同じ組をsessionの背後で提供します（[入口のルート](./remote-routes.md)を参照）。`PUT`はほかのPCの書き込みと同じ書き込みガードを通り、入口ではsessionとCSRFトークンが必要です。本文の項目はちょうど1つ（上の表を参照）で、未知の項目や値は422 `invalid_mode`、壊れたJSONは400、最後の保存が勝ちます。壁打ちの`PUT`はCLIと同じ`start_brainstorm`を使います（[壁打ちモード](../concepts/agents.md#brainstorm-mode)を参照）。どの形にも合わない本文は、`target`のない壁打ちも含めて422 `invalid_mode`です。モードが壁打ちのあいだ、`mode`イベントにも同じ`target`が入ります。いま効いているモードがスリープのあいだは、`GET`の本文、`PUT`の返事、`mode`イベントに、保留中の質問の数`heldCount`も入ります。スリープを抜ける`PUT`は先に保留中の質問を解放し、ボードのメッセージ一覧は保留中の質問を隠します。
 
 CLIは別のプロセスでモードを変えるので、`/api/events`は開いているストリームごとに、保存されたモードを1秒に1回比べ、そのストリームが最後に見た内容と違うときに`mode`イベントを送ります。データは`{"projects": {"<projectId>": {…GETと同じJSON…}}}`で、変わったプロジェクトだけを含みます。比べるときに時計も見るので、毎日の時間帯の開始と終了は、ファイルが変わらなくても知らせます。項目が消えたプロジェクトは組手です。接続時点の状態は送りません。`mode`イベントは`changed`になることはなく、ボードの`seq`とバージョンは動きません。`PUT`の保存も、ほかの開いているページに同じ形で届きます。再接続のあと、ボードは表示しているモードを読み直します。
 

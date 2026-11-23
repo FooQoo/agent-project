@@ -56,6 +56,12 @@ struct QuestionFront {
     reply: Option<ReplyFront>,
     #[serde(default, with = "crate::clock::serde_opt_utc")]
     withdrawn_at: Option<DateTime<Utc>>,
+    #[serde(
+        default,
+        with = "crate::clock::serde_opt_utc",
+        skip_serializing_if = "Option::is_none"
+    )]
+    held_at: Option<DateTime<Utc>>,
     #[serde(with = "crate::clock::serde_utc")]
     created_at: DateTime<Utc>,
 }
@@ -117,6 +123,7 @@ pub fn parse_message(id: &str, text: &str) -> Result<Message, Defect> {
                     accepted_at: r.accepted_at,
                 }),
                 withdrawn_at: f.withdrawn_at,
+                held_at: f.held_at,
                 created_at: f.created_at,
                 asked_by: f.asked_by,
                 brainstorm: f.brainstorm,
@@ -163,6 +170,7 @@ pub fn render_message(message: &Message) -> Result<String, Defect> {
                     accepted_at: r.accepted_at,
                 }),
                 withdrawn_at: q.withdrawn_at,
+                held_at: q.held_at,
                 created_at: q.created_at,
             }),
             &q.body,
@@ -226,6 +234,7 @@ mod tests {
                 accepted_at: Some(at),
             }),
             withdrawn_at: None,
+            held_at: None,
             created_at: at,
             asked_by: Some("r1".into()),
             brainstorm: None,

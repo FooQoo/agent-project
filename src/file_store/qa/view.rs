@@ -10,6 +10,8 @@ use crate::file_store::model::Choice;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum QuestionStatus {
+    /// Asked during sleep mode; delivered when sleep ends.
+    Held,
     Open,
     Answered,
     Withdrawn,
@@ -18,6 +20,7 @@ pub enum QuestionStatus {
 impl QuestionStatus {
     pub fn as_str(self) -> &'static str {
         match self {
+            QuestionStatus::Held => "held",
             QuestionStatus::Open => "open",
             QuestionStatus::Answered => "answered",
             QuestionStatus::Withdrawn => "withdrawn",
@@ -123,6 +126,8 @@ impl QuestionView {
                 QuestionStatus::Withdrawn
             } else if question.reply.is_some() {
                 QuestionStatus::Answered
+            } else if question.held_at.is_some() {
+                QuestionStatus::Held
             } else {
                 QuestionStatus::Open
             },
@@ -214,6 +219,7 @@ impl MessageView {
     pub fn state(&self) -> &'static str {
         match self {
             MessageView::Question(q) => match q.status {
+                QuestionStatus::Held => "held",
                 QuestionStatus::Open => "open",
                 QuestionStatus::Answered => "closed",
                 QuestionStatus::Withdrawn => "withdrawn",

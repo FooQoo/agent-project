@@ -99,6 +99,8 @@ pub fn run(ctx: &mut Context, args: &ModeArgs) -> Result<Outcome, AgpjError> {
             .map_err(write_failed)??;
         }
     }
+    // Leaving sleep delivers the held questions all at once; a window that ended is noticed here.
+    let released = mode::release_held(ctx.files.shared_dir(), &project_id)?;
     let state = mode::state(&data_dir, &project);
     let now = chrono::Local::now();
     let effective = state.effective_at(now);
@@ -117,7 +119,7 @@ pub fn run(ctx: &mut Context, args: &ModeArgs) -> Result<Outcome, AgpjError> {
             )
         }
         (ModeKind::Sleep, Source::Manual) => {
-            "Mode: sleep. Questions to the user are refused; have a subagent decide and record it with \"agpj decision add\".\n"
+            "Mode: sleep. Questions to the user are held until sleep ends; have a subagent decide and record it with \"agpj decision add\".\n"
                 .to_string()
         }
         (ModeKind::Sleep, Source::Schedule) => {
@@ -126,10 +128,28 @@ pub fn run(ctx: &mut Context, args: &ModeArgs) -> Result<Outcome, AgpjError> {
                 .map(|time| format_time(time.with_timezone(&chrono::Local).time()))
                 .unwrap_or_default();
             format!(
-                "Mode: sleep, by the schedule until {until}. Questions to the user are refused; have a subagent decide and record it with \"agpj decision add\".\n"
+                "Mode: sleep, by the schedule until {until}. Questions to the user are held until sleep ends; have a subagent decide and record it with \"agpj decision add\".\n"
             )
         }
     };
+    if !released.is_empty() {
+        human.push_str(&format!(
+            "Released {} held {}: {}. They now wait for the user.\n",
+            released.len(),
+            if released.len() == 1 {
+                "question"
+            } else {
+                "questions"
+            },
+            released.join(", ")
+        ));
+    }
+    if effective.kind == ModeKind::Sleep {
+        let held = mode::held_count(ctx.files.shared_dir(), &project);
+        if held > 0 {
+            human.push_str(&format!("Held questions: {held}.\n"));
+        }
+    }
     if let Some(schedule) = state.schedule {
         human.push_str(&format!(
             "Schedule: {}-{} ({}).\n",
@@ -146,8 +166,11 @@ pub fn run(ctx: &mut Context, args: &ModeArgs) -> Result<Outcome, AgpjError> {
             mode_json[key] = value.clone();
         }
     }
+    if !released.is_empty() {
+        mode_json["released"] = json!(released);
+    }
     Ok(Outcome {
-        changed,
+        changed: changed || !released.is_empty(),
         human,
         json: json!({
             "mode": mode_json,

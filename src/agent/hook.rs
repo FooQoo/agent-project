@@ -249,6 +249,8 @@ fn progress_context(
             None => return Ok(None),
         }
     };
+    // The end of a sleep window is noticed here; the file watcher tells the board.
+    let _ = crate::mode::release_held(store.shared_dir(), &meta.id);
     let snapshot = store.board(&meta.id).map_err(failed)?;
     let mut value = progress::build_with(&snapshot, store.shared_dir(), SystemClock.now(), include);
     value.locale = saved_locale(store.shared_dir());

@@ -102,7 +102,7 @@ agpj --project "My project" message ask --actor ai --task 1 --questions-json - -
 
 ## スリープモード {#sleep-mode}
 
-`mode`はプロジェクトのモードを表示・切り替えます。既定は組手（`sparring`）で、エージェントは待ち受けて、ボードであなたに質問します。スリープ（`sleep`）にすると質問が止まります。
+`mode`はプロジェクトのモードを表示・切り替えます。既定は組手（`sparring`）で、エージェントは待ち受けて、ボードであなたに質問します。スリープ（`sleep`）にすると、質問はスリープが解けるまで保留されます。
 
 ```sh
 agpj --project "My project" mode            # 現在のモードを表示
@@ -139,9 +139,9 @@ agpj --project "My project" mode sparring                                # 終�
 agpj --project "My project" message ask --actor ai --brainstorm --questions-json '{"questions":[{"body":"Who reads this page first?"}]}'
 ```
 
-モードが壁打ちでなくなると、`message ask --brainstorm`は`brainstorm_not_active`で拒否されます。`--brainstorm`のない質問は通常の質問で、そのまま受け付けます。スリープが常に優先されます。スリープの時間帯が始まるとモードはスリープになり、すべての`message ask`が`sleep_mode`で拒否されます。
+モードが壁打ちでなくなると、`message ask --brainstorm`は`brainstorm_not_active`で拒否されます。`--brainstorm`のない質問は通常の質問で、そのまま受け付けます。スリープが常に優先されます。スリープの時間帯が始まるとモードはスリープになり、`--brainstorm`の有無にかかわらず、すべての`message ask`が保留されます。
 
-スリープ中の`message ask`は`sleep_mode`で拒否され、ボード・通知・チャットのどこにも届きません。エージェントはサブエージェントに判断させ、その結論で進め、タスクに記録します。
+スリープ中の`message ask`は拒否されません。質問を保留として保存し、`--no-wait`がなくてもすぐに`Held 2 questions: Q-5, Q-6.`（`--json`では`{"type": "held", "questions": [{"id": "Q-5"}, {"id": "Q-6"}]}`）を出力します。保留中の質問はボード・通知・チャットのどこにも届かず、紐付くタスクは作業を続けます。`agpj message withdraw <id> --actor ai`で取り下げられ、保留中の質問への`agpj message wait`もすぐに戻ります。`agpj mode sparring`や毎日の時間帯の終わりでスリープが解けると、`agpj mode`が`Released 2 held questions: Q-5, Q-6.`を出力し、質問は通常の未回答の質問として扱われます。エージェントは、判断できることはサブエージェントに判断させ、その結論で進め、タスクに記録します。
 
 ```sh
 agpj --project "My project" decision add 1 \

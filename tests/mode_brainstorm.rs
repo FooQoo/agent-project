@@ -170,10 +170,11 @@ fn brainstorm_questions_are_stored_with_the_target_and_refused_outside_brainstor
     brainstorms(&messages, &mut found);
     assert_eq!(found.len(), 1);
 
-    // Sleep wins.
+    // Sleep wins: even a brainstorm question is held, with no brainstorm target.
     mode(home.path(), &["sleep"]);
-    let (_, _, err) = ask(home.path(), true);
-    assert_eq!(error_code(&err), "sleep_mode");
+    let (code, out, err) = ask(home.path(), true);
+    assert_eq!(code, 0, "{err}");
+    assert!(out.contains("held"), "{out}");
     mode(home.path(), &["sparring"]);
     let (_, _, err) = ask(home.path(), true);
     assert_eq!(error_code(&err), "brainstorm_not_active");

@@ -16,6 +16,8 @@ pub fn run(ctx: &Context, args: &ProgressCommandArgs) -> Result<Outcome, AgpjErr
     let filter = args
         .version
         .resolve(|| Ok(ctx.files.project_versions(project)?.release))?;
+    // The end of a sleep window is noticed here: held questions are delivered before the table.
+    let released = crate::mode::release_held(ctx.files.shared_dir(), project)?;
     let snapshot = ctx.files.board(project)?;
     let mut table = progress::build_filtered(
         &snapshot,
@@ -34,7 +36,7 @@ pub fn run(ctx: &Context, args: &ProgressCommandArgs) -> Result<Outcome, AgpjErr
         ctx.project_id()?.as_str(),
     );
     Ok(Outcome {
-        changed: false,
+        changed: !released.is_empty(),
         human: render(&table),
         json: json!(table),
     })

@@ -12,6 +12,7 @@ mod ask;
 mod link;
 mod migrate;
 mod read;
+mod release;
 mod send;
 mod withdraw;
 

@@ -60,6 +60,14 @@ export function ModeIndicatorView({
           {t('mode.until', { time: formatUntil(mode.until, i18n.language) })}
         </span>
       ) : null}
+      {mode.heldCount > 0 ? (
+        <span
+          className="mode-indicator__held"
+          title={t('mode.heldTitle', { count: mode.heldCount })}
+        >
+          {t('mode.held', { count: mode.heldCount })}
+        </span>
+      ) : null}
       <span className="visually-hidden">{t('mode.indicatorTitle')}</span>
     </span>
   );

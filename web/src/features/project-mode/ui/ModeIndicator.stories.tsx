@@ -19,6 +19,14 @@ export const Asleep: Story = {
   },
 };
 
+/** Asleep with held questions: the chip counts them. */
+export const AsleepWithHeldQuestions: Story = {
+  args: { mode: { ...SPARRING, mode: 'sleep', since: '2026-11-24T01:00:00Z', heldCount: 2 } },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText('2 questions held')).toBeVisible();
+  },
+};
+
 /** Sparring is the default and shows nothing. */
 export const Sparring: Story = {
   args: { mode: SPARRING },

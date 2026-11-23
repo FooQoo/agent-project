@@ -32,6 +32,11 @@ export const modeEn = {
       'Brainstorming could not be started. Check that the card or epic still exists.',
     brainstormBadge: 'Brainstorm: {{target}}',
     saveError: 'The mode could not be saved. It stays as it was.',
-    indicatorTitle: 'Sleep mode: the agent does not ask questions and decides in your place.',
+    indicatorTitle:
+      'Sleep mode: the agent decides in your place and holds questions until sleep ends.',
+    held_one: '{{count}} question held',
+    held_other: '{{count}} questions held',
+    heldTitle_one: '{{count}} question is held. It reaches you when sleep ends.',
+    heldTitle_other: '{{count}} questions are held. They reach you all at once when sleep ends.',
   },
 };

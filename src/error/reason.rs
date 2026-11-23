@@ -56,7 +56,6 @@ impl AgpjError {
                 "In Doing a task goes from idle to running, from running to paused, and from paused to running. Move the card to change the other states.".into()
             }
             AgpjError::BrainstormNotActive => "The user ended the brainstorm. Stop asking brainstorm questions and return to the normal work; check `mode` in `agpj progress --json`.".into(),
-            AgpjError::SleepMode => "Do not wait for the user. Ask a subagent to decide: give it the question, the choices, the constraints, and where the code, the project docs, and the past questions are. Continue with its conclusion, and record it with \"agpj decision add <id> --question ... --choice ... --reason ... --decided-by subagent:NAME --basis ...\". The user turns sleep mode off with \"agpj mode sparring\" or in the web UI.".into(),
             AgpjError::TaskIsDraft { .. } => {
                 "Wait for the user to finalize it, then try again.".into()
             }

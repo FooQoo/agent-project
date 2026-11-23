@@ -48,15 +48,17 @@ impl FileStore {
             MessageState::Closed => {
                 return Err(AgpjError::MessageClosed { id: id.to_owned() });
             }
-            MessageState::Open => {}
+            MessageState::Open | MessageState::Held => {}
         }
+        let was_held = message.state() == MessageState::Held;
         let at = stamp(now);
         match &mut message {
             Message::Question(q) => q.withdrawn_at = Some(at),
             Message::Request(r) => r.withdrawn_at = Some(at),
         }
         let mut changes = vec![message_change(&project_dir, &message, false)?];
-        if matches!(message, Message::Question(_)) {
+        // A held question never reached the tasks' history, so withdrawing it adds nothing.
+        if matches!(message, Message::Question(_)) && !was_held {
             let ids = [id.to_owned()];
             for mut referrer in referrers(shared, project, &project_dir, &ids)? {
                 if referrer.task.archived_at.is_some() {
