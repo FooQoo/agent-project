@@ -108,13 +108,14 @@ impl FileStore {
             .connections
             .iter()
             .any(|c| c.agent_id == id && is_active(c));
-        let holds_work = reader::task_ids(&dir)?.into_iter().any(|task_id| {
-            reader::read_task_strict(shared, project, task_id).is_ok_and(|task| {
-                task.agent_id.as_deref() == Some(id)
-                    && task.task_status == Column::Doing
-                    && task.archived_at.is_none()
-            })
-        });
+        // A task that cannot be read might be this agent's Doing card, so it stops the deletion.
+        let mut holds_work = false;
+        for task_id in reader::task_ids(&dir)? {
+            let task = reader::read_task_strict(shared, project, task_id)?;
+            holds_work |= task.agent_id.as_deref() == Some(id)
+                && task.task_status == Column::Doing
+                && task.archived_at.is_none();
+        }
         if busy || holds_work {
             return Err(AgpjError::AgentInUse { agent: id.into() });
         }

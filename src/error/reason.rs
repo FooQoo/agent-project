@@ -62,7 +62,7 @@ impl AgpjError {
                     .into()
             }
             AgpjError::NotConnected => {
-                "Ask the user for a connection code in the web UI, then run agpj connect <code>."
+                "Get a one-time connection code from the user, then run agpj connect <code>."
                     .into()
             }
             AgpjError::ConnectionReplaced => {
@@ -73,7 +73,7 @@ impl AgpjError {
                 "Pick a task of your own agent or an unassigned one.".into()
             }
             AgpjError::AgentBusy { .. } => {
-                "Ask the user to switch the connection in the web UI, then use the new code.".into()
+                "Ask the user for a switch code (connect-code with switch), then use that code.".into()
             }
             AgpjError::AgentInUse { .. } => {
                 "Hand its Doing tasks to another agent and revoke its connection first.".into()

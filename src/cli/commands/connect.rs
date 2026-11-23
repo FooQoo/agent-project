@@ -13,6 +13,14 @@ use crate::server::sessions::Origin;
 
 pub fn connect(ctx: &mut Context, args: &ConnectArgs) -> Result<Outcome, AgpjError> {
     let project = ctx.project_id()?.clone();
+    // The environment secret wins over the stored one, so a new connection would be ignored.
+    if std::env::var(crate::agent::connection_store::SECRET_ENV).is_ok_and(|v| !v.trim().is_empty())
+    {
+        return Err(AgpjError::InvalidArgument {
+            message: "AGPJ_CONNECTION_SECRET is set, so this session already has its connection; unset it to connect with a code.".into(),
+            command: None,
+        });
+    }
     let identity = SessionIdentity::from_env();
     let origin = match identity.origin {
         Origin::Board => ConnectionOrigin::Board,

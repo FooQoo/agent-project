@@ -16,8 +16,20 @@ pub(super) fn release_stale_runs(state: &Arc<AppState>) {
             let _ = tokio::task::spawn_blocking(move || {
                 let store = crate::file_store::FileStore::open(&shared);
                 let now = crate::clock::Clock::now(&crate::clock::SystemClock);
-                for meta in store.projects().unwrap_or_default() {
-                    let _ = store.release_stale_runs(&meta.id, now);
+                // Read the folder names, not the catalog: one defective project.json must not
+                // stop the cleanup of the others.
+                let names = std::fs::read_dir(crate::file_store::layout::projects_dir(&shared))
+                    .into_iter()
+                    .flatten()
+                    .flatten()
+                    .filter_map(|entry| entry.file_name().into_string().ok());
+                for name in names {
+                    let Ok(id) = name.parse::<crate::domain::ProjectId>() else {
+                        continue;
+                    };
+                    if let Err(error) = store.release_stale_runs(&id, now) {
+                        eprintln!("Stale runs of project {name} were not released: {error}");
+                    }
                 }
             })
             .await;

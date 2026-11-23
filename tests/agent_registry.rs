@@ -358,3 +358,48 @@ fn a_task_json_without_the_new_fields_is_not_read() {
     std::fs::write(&path, text).unwrap();
     assert!(fx.store.task(&fx.project, id).is_err());
 }
+
+#[test]
+fn an_unreadable_task_stops_the_deletion_of_an_agent() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let id = fx.doing_task();
+    let path = fx
+        ._root
+        .path()
+        .join("shared/projects")
+        .join(fx.project.as_str())
+        .join("tasks")
+        .join(id.to_string())
+        .join("task.json");
+    std::fs::write(&path, "{").unwrap();
+    assert!(fx.store.archive_agent(&fx.project, "A-1", t0()).is_err());
+    assert!(
+        fx.store
+            .issue_connect_code(&fx.project, "A-1", false, t0())
+            .is_ok()
+    );
+}
+
+#[test]
+fn connect_is_refused_while_the_environment_already_carries_a_secret() {
+    let home = tempfile::tempdir().unwrap();
+    let run = |args: &[&str], env: bool| {
+        let mut cmd = std::process::Command::new(env!("CARGO_BIN_EXE_agpj"));
+        cmd.env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_HOME", home.path())
+            .current_dir(home.path())
+            .args(args)
+            .stdin(std::process::Stdio::null());
+        if env {
+            cmd.env("AGPJ_CONNECTION_SECRET", "agpjc_x");
+        }
+        cmd.output().unwrap()
+    };
+    assert!(run(&["project", "create", "Demo"], false).status.success());
+    let out = run(&["--project", "Demo", "connect", "ABCD2345"], true);
+    assert!(!out.status.success());
+    assert!(String::from_utf8_lossy(&out.stderr).contains("AGPJ_CONNECTION_SECRET"));
+}
