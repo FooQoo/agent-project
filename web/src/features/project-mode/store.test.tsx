@@ -89,11 +89,11 @@ describe('useProjectMode', () => {
       refreshModes();
     });
     await act(async () => {
-      pending[0](Response.json({ mode: 'sparring' }));
+      pending[0]?.(Response.json({ mode: 'sparring' }));
     });
     expect(result.current).toBeNull();
     await act(async () => {
-      pending[1](Response.json({ mode: 'sleep' }));
+      pending[1]?.(Response.json({ mode: 'sleep' }));
     });
     expect(result.current?.mode).toBe('sleep');
   });
