@@ -124,12 +124,26 @@ test('a plain click on a result opens it in the page, and a modified click is le
     if (frame === page.mainFrame()) navigations.push(frame.url());
   });
 
-  // Control-click is not taken over: the page does not change, and the browser opens the link itself.
-  const popup = page.context().waitForEvent('page');
+  // Control-click is not taken over: the page does not change and the click is left to the browser. The browser's
+  // own action is not run: the tab it opens reports no address yet when its page event arrives, and Chromium does
+  // not always open it at all. A listener that runs after the page's own handlers sees whether the click was
+  // already handled, and cancels it so that no tab opens.
+  await page.evaluate(() => {
+    const seen: { defaultPrevented: boolean; ctrl: boolean }[] = [];
+    (window as unknown as { __modified: typeof seen }).__modified = seen;
+    document.addEventListener(
+      'click',
+      (event) => {
+        seen.push({ defaultPrevented: event.defaultPrevented, ctrl: event.ctrlKey || event.metaKey });
+        event.preventDefault();
+      },
+      { once: true },
+    );
+  });
   await linked.click({ modifiers: ['ControlOrMeta'] });
-  const opened = await popup;
-  expect(new URL(opened.url()).searchParams.get('task') ?? new URL(opened.url(), page.url()).searchParams.get('task')).toBe('552');
-  await opened.close();
+  expect(await page.evaluate(() => (window as unknown as { __modified: unknown }).__modified)).toEqual([{ defaultPrevented: false, ctrl: true }]);
+  await expect(linked).toHaveAttribute('href', /task=552&result=2$/);
+  expect(new URL(page.url()).searchParams.get('task')).toBeNull();
   await expect(list).toBeVisible();
 
   await linked.click();

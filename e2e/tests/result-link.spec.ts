@@ -48,10 +48,15 @@ test.afterAll(async () => {
 
 const linkTo = (project: string, task: number, version: number) => `/?project=${project}&task=${task}&result=${version}`;
 
-test('a link to a result with an image opens it directly, even from another project', async ({ page }) => {
-  // The phone was showing another project.
-  await page.goto(`/?project=${beta}`);
-  await expect(page).toHaveTitle('Beta - Agent Project');
+test('a link to a result with an image opens it directly, even from another project', async ({ page, context }) => {
+  // The phone was showing another project. It is shown in a tab that is then closed, not in this page: WebKit
+  // aborts a navigation that starts while the previous document still has module scripts loading, and reports
+  // it as "WebKit encountered an internal error". A closed tab leaves nothing in flight, and the choice of
+  // project stays in the browser's storage for the page that follows.
+  const earlier = await context.newPage();
+  await earlier.goto(`/?project=${beta}`);
+  await expect(earlier).toHaveTitle('Beta - Agent Project');
+  await earlier.close();
 
   await page.goto(linkTo(alpha, 1, 2));
   await expect(page).toHaveTitle('Alpha - Agent Project');
