@@ -8,7 +8,7 @@ Agent Board は Agent Project になり、コマンドは `agpj` に変わりま
 
 ### 変更点
 
-- **Agent Board は Agent Project になりました。** コマンドは `agpj` で、`brew install fooqoo/tap/agpj` でインストールします。データフォルダーは `~/.agent-project`、環境変数は `AGPJ_` で始まり、エージェントのプラグインは `agent-project` です。ボード、スマホの画面、ホーム画面のアプリ、通知の表示も Agent Project になりました。`brew install fooqoo/tap/agboard` では、最後の Agent Board である v1.7.0 がそのまま入ります。
+- **Agent Board は Agent Project になりました。** コマンドは `agpj` で、`brew install fooqoo/tap/agpj` でインストールします。データフォルダーは `~/.agent-project`、環境変数は `AGPJ_` で始まり、エージェントのプラグインは `agent-project` です。カンバン、スマホの画面、ホーム画面のアプリ、通知の表示も Agent Project になりました。`brew install fooqoo/tap/agboard` では、最後の Agent Board である v1.7.0 がそのまま入ります。
 - **バージョンごとに作業を計画できます。** PC のヘッダーの **カレントバージョン** のメニューか `agpj version add` でバージョンを作り、カレントバージョンの設定と解除もそこか `agpj version current` で行います。新しいバージョンには、`docs/release/TEMPLATE.md` から写した `docs/release/<version>.md` と、そのバージョンのリリースノートを頼むバックログのカードが用意されます。
 - **タスクに予定バージョンを付けられます。** タスクの編集ダイアログ、エピックの全タスクにまとめて付けるエピックの編集ダイアログ、`agpj add` や `agpj edit`（`--planned-version`、`--current-version`、`--unplanned`）、または `TASK.md` の `plannedVersion` の手書きで付けます。変更はすべてタスクの履歴に残ります。カードには日付の隣にバージョンが表示され、`agpj ls` と `agpj progress` では 1 つのバージョンのタスクだけに絞れます。
 - **完了した作業のバージョンも変えられます。** 予定バージョンは、完了したタスクやアーカイブしたタスクでも、あなたと AI が変更できる唯一の項目です。
