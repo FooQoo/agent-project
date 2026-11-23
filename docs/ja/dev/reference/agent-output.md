@@ -50,7 +50,7 @@
 ```
 
 - 既定では、人の判断待ちでない未着手と進行中のタスクだけが載ります。タスクはエピックごとに`waves`の順で並び、エピックのないタスクは`unassigned`に入ります。
-- 各タスクには割り当て先のバージョンを示す`plannedVersion`が付きます。割り当てがなければ省かれます。`progress --version VERSION`、`--current-version`、`--unplanned`（hookには付きません）を付けると、`epics`・`unassigned`・`nextTasks`・`finalResultMissing`・`awaitingAnswer`・`done`を1つのバージョンのタスクに絞ります。絞り込みは隠すだけです。着手できるかどうかはボード全体で先に決めるため、前のタスクが隠れても`nextTasks`にタスクが加わることはなく、絞り込みに合う着手可能なタスクの先頭3件が入ります。タスクがなくなったエピックは省かれ、`requests`・`answers`・`epicsToClose`・`reminders`は絞り込みません。
+- 各タスクには割り当て先のバージョンを示す`plannedVersion`が付きます。割り当てがなければ省かれます。`progress --version VERSION`、`--current-version`、`--unplanned`（hookには付きません）を付けると、`epics`・`unassigned`・`nextTasks`・`finalResultMissing`・`awaitingAnswer`・`done`を1つのバージョンのタスクに絞ります。絞り込みは隠すだけです。着手できるかどうかはカンバン全体で先に決めるため、前のタスクが隠れても`nextTasks`にタスクが加わることはなく、絞り込みに合う着手可能なタスクの先頭3件が入ります。タスクがなくなったエピックは省かれ、`requests`・`answers`・`epicsToClose`・`reminders`は絞り込みません。
 - `nextTasks`は常に含まれ、今すぐ着手できるAI担当のタスクを最大3件並べます。各要素は`{ "id", "title", "epicId", "taskPath", "agentStatus", "why" }`で、エピックのないタスクの`epicId`は`null`、`agentStatus`は`idle`・`running`・`paused`のどれかです。`why`は安定した値で、DoingのRunningのAI担当のタスクで30分（`STALE_RUNNING_MINUTES`）履歴が増えていないものは`stalled`、IdleまたはPausedのDoingのタスクで未回答の質問を待っていないものは`resume`（回答のあとの再開。自動再開があるのでまれです）、Idleの未着手タスクは`next_in_epic`です。`stalled`が先、次にそのほかのDoing、最後に未着手で、それぞれの中は進行表の順（エピックは表の順、エピック内は`waves`の順、エピックのないタスクは最後）です。バックログのタスク、人の下書き、回答待（`awaitingAnswer`が真）のタスクと、止まっていないRunningのタスク、人が担当のタスク、Doneやアーカイブのタスクも載らず、該当がなければ空配列です。同じエピックの前のウェーブに、アーカイブされておらずDoneでないタスクが残っている間は、その未着手のタスクは載りません。同じウェーブのタスクはまとめて載ります。それ以外の依存関係は`EPIC.md`の文章で書かれ、評価されないため、エージェントは着手前にエピックの文書を読みます。
 - `progress`と`hook`に`--include-awaiting-answer`と`--include-done COUNT`を付けると、表に`awaitingAnswer`配列と`done`配列が加わります。`awaitingAnswer`は、`awaitingAnswer`の印が真のAI担当の未着手・進行中のタスクをID順に並べ（待っているタスクはここだけに載り、エピックのグループにも`nextTasks`にも載りません）、それぞれに、IDが最も小さい未回答の質問を200文字までにした`question`が付きます。`done`は直近に完了したタスクを新しい順に`COUNT`件並べ、対象は未着手または進行中のタスクがまだあるエピックに限ります。オプションがなければどちらのフィールドもありません。
 - 進行表、`show`、`ls`、snapshot、hookのsnapshotのタスクはすべて、`openQuestionIds`と`pendingRequestId`・`pendingReason`・`pendingChoices`の隣に真偽値`awaitingAnswer`を持ちます。担当者やレーンを問わず、待っているタスクなら真で、`agentStatus`（`idle`・`running`・`paused`）を置き換えることはありません。`agpj ls --awaiting-answer`は待っているタスクだけを一覧にし、`ls --state`が取るのは`idle`・`running`・`paused`です。
@@ -74,10 +74,10 @@
 { "hookSpecificOutput": { "hookEventName": "PostToolUse", "additionalContext": "AGPJ_PROGRESS\n{…}" } }
 ```
 
-- `additionalContext`には、成功時は`AGPJ_PROGRESS`と進行表のJSONが入ります。失敗時は`AGPJ_ERROR`に続き、`code`と理由、ボードに依存する変更を止めるよう促す注意文が入ります。
+- `additionalContext`には、成功時は`AGPJ_PROGRESS`と進行表のJSONが入ります。失敗時は`AGPJ_ERROR`に続き、`code`と理由、カンバンに依存する変更を止めるよう促す注意文が入ります。
 - `AGPJ_ERROR`のコード: `bound_project_missing`・`project_not_found`・`board_unavailable`・`context_too_large`・`invalid_hook_input`（JSONが不正、または`cwd`が文字列でない、絶対パスでない）・`hook_cwd_unavailable`（`cwd`が存在しない、または読めない）。`folder_unbound`は、Hookの出力ではなくなりました。
 - **静かなスキップ。** フォルダの登録情報が正常で、`cwd`が読め、一致する登録がないとき、Hookはstdoutにもstderrにも出力せず、終了コード0で終わります。そのため、GlobalのHookが、プロジェクトのないフォルダでの作業を妨げることはありません。[Hookのスキップとエラー](../concepts/agents.md#hookのスキップとエラー)を参照してください。
-- **Stop。** StopイベントではHookは何も出力しません。ターンの終わりにルールが項目（ボードにない質問、記録されていない成果）を出したときだけ、一度`{ "decision": "block", "reason": "..." }`を出します。理由はチェックリストで、確定した違反は`Found:`の下に`- NG: ...`、エージェントが判断する項目は`Check:`の下に`- [ ] ...`で並びます。[Stop](../concepts/agents.md)を参照してください。
+- **Stop。** StopイベントではHookは何も出力しません。ターンの終わりにルールが項目（カンバンにない質問、記録されていない成果）を出したときだけ、一度`{ "decision": "block", "reason": "..." }`を出します。理由はチェックリストで、確定した違反は`Found:`の下に`- NG: ...`、エージェントが判断する項目は`Check:`の下に`- [ ] ...`で並びます。[Stop](../concepts/agents.md)を参照してください。
 - 表を加えるとき、サーバーが動いていなければ、Hookは裏で起動もします。出力は変わらず、失敗は`serve.log`に残ります。
 - 上限: 表は256 KiB、一回の実行は10秒。入力は大きさにかかわらず読み、使うのは`hook_event_name`と`cwd`だけです。表が上限を超えると`context_too_large`を報告し、切り詰めて成功とすることはありません。
 
@@ -117,7 +117,7 @@ taskの項目を省略した例です。
 
 ## open
 
-`agpj open --json`は、サーバーが動いていなければ起動し（`AGPJ_AUTOSTART=0`のときを除く）、登録されたプロジェクトか指定したプロジェクトのボードを開いて、オブジェクトを一つ出します。
+`agpj open --json`は、サーバーが動いていなければ起動し（`AGPJ_AUTOSTART=0`のときを除く）、登録されたプロジェクトか指定したプロジェクトのカンバンを開いて、オブジェクトを一つ出します。
 
 ```json
 {"url":"http://127.0.0.1:7420/?project=<id>","projectId":"<id>","opened":true}
@@ -133,7 +133,7 @@ taskの項目を省略した例です。
 {"status":"ready","url":"https://<name>.ngrok-free.app/?project=<id>","entrance":"https://<name>.ngrok-free.app","passcode":"2418","project":{"id":"<id>","name":"<name>"},"enabled":true,"domain":"example.ngrok-free.dev","tokenSaved":true,"keychainAvailable":true}
 ```
 
-`url`は指定したプロジェクトのボードを開くアドレスで、`entrance`はプロジェクトを含まないアドレスです。指定したプロジェクトがなければ`project_not_found`です。`show <id>`は、これまでどおりタスクを表示します。`show`がタスクIDの代わりに受け付ける語は`remote`だけです。
+`url`は指定したプロジェクトのカンバンを開くアドレスで、`entrance`はプロジェクトを含まないアドレスです。指定したプロジェクトがなければ`project_not_found`です。`show <id>`は、これまでどおりタスクを表示します。`show`がタスクIDの代わりに受け付ける語は`remote`だけです。
 
 それ以外のときは、標準出力には何も出さず、終了コード1と`remote_unavailable`で終わります。サーバーが動いていないか、接続が`ready`ではない場合です。エラーにはアドレスも合言葉も含まれません。サーバーはこの情報をローカルのアドレスにだけ返すので、合言葉はこのコンピューターの前にいる人にだけ届き、トンネルは通りません。[エラーコード](./errors.md#サーバーと待機)を参照してください。
 
@@ -177,7 +177,7 @@ taskの項目を省略した例です。
 | `type` | フィールド | 出るとき |
 | --- | --- | --- |
 | `registered` | `questions`（`id`）・`resumed` | 最初。`message wait`では`resumed`が`true`。`--no-wait`ではこの1行だけを書き、終了コード0で終わる。 |
-| `waiting` | `ids`・`elapsed`・`remaining`（期限なしなら`null`）・`answered`・`total` | `--heartbeat`秒ごと。タイマーから出し、ボードは読まない。 |
+| `waiting` | `ids`・`elapsed`・`remaining`（期限なしなら`null`）・`answered`・`total` | `--heartbeat`秒ごと。タイマーから出し、Agent Projectは読まない。 |
 | `answered` | `ids`・`answers`（`id`・`choiceId`・`choiceLabel`・`text`・`images`・`imagePaths`・`via`・`at`） | 最後。未回答の質問がなくなったとき。終了コード0。 |
 | `timeout` | `ids`・`answered`・`total` | 最後。先に`--timeout`が過ぎたとき。質問は未回答のまま。終了コード5。 |
 | `withdrawn` | `ids`（取り下げられた質問）・`answers` | 最後。未回答の質問がなくなり、その中に取り下げられたものがあったとき。終了コード6。 |
@@ -196,7 +196,7 @@ taskの項目を省略した例です。
 | `message accept` | 依頼なら`{request}`、回答済みの質問なら`{question}`。質問のテキスト出力は`Accepted the answer of Q-12.`です。 |
 | `message withdraw` | 取り下げたものに応じて`{question}`または`{request}`。 |
 
-質問は`id`・`type`・`from`・`to`・`body`・`tasks`・`choices`・`recommendedChoiceId`・`reply`（`choiceId`・`choiceLabel`・`text`・`images`・`imagePaths`・`via`・`at`・`acceptedAt`、なければ`null`）・`status`・`referencedBy`・`createdAt`・`withdrawnAt`を持ちます。`images`は人が回答に添えた画像のファイル名、`imagePaths`はその絶対パスで、エージェントはこれを開けます。`imagePaths`はCLIの出力と進捗の表にだけあり、ボードのルートには出ません。`message show`・`message ask`・`message wait`のテキスト出力は、画像ごとに`Image: <path>`の行を1つ出します。`reply`の`acceptedAt`は常にあり、AIが回答を受け取るまでは`null`、受け取るとタイムスタンプです。`message show`は、受け取り済みの回答に`Accepted at …`の行を出します。依頼は`id`・`type`・`from`・`to`・`body`・`status`・`acceptedAt`・`withdrawnAt`・`createdAt`を持ちます。状態の意味は[メッセージ](./files.md#メッセージ)を参照してください。
+質問は`id`・`type`・`from`・`to`・`body`・`tasks`・`choices`・`recommendedChoiceId`・`reply`（`choiceId`・`choiceLabel`・`text`・`images`・`imagePaths`・`via`・`at`・`acceptedAt`、なければ`null`）・`status`・`referencedBy`・`createdAt`・`withdrawnAt`を持ちます。`images`は人が回答に添えた画像のファイル名、`imagePaths`はその絶対パスで、エージェントはこれを開けます。`imagePaths`はCLIの出力と進捗の表にだけあり、サーバーのルートには出ません。`message show`・`message ask`・`message wait`のテキスト出力は、画像ごとに`Image: <path>`の行を1つ出します。`reply`の`acceptedAt`は常にあり、AIが回答を受け取るまでは`null`、受け取るとタイムスタンプです。`message show`は、受け取り済みの回答に`Accepted at …`の行を出します。依頼は`id`・`type`・`from`・`to`・`body`・`status`・`acceptedAt`・`withdrawnAt`・`createdAt`を持ちます。状態の意味は[メッセージ](./files.md#メッセージ)を参照してください。
 
 `message ask`と`message wait`は、質問が回答または取り下げで終わって待機が終わったとき、返した回答を受け取ります。タイムアウトでは何も受け取りません。エージェントがチャットから人の代わりに記録した回答（`message answer --via chat`）は、受け付け済みで書かれます。したがって`message accept`が必要なのは、Hook・進行表・`wait --until task`で見た回答だけです。
 

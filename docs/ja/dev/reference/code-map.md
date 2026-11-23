@@ -15,7 +15,7 @@
 | `agent` | Hookと`wait`。 |
 | `autostart` | コマンドが必要とするときに共有のサーバーを起動する。確認、`autostart.lock`、切り離した`serve --auto`の子プロセス（`spawn`）、`autostart.paused`の目印。 |
 | `progress` | `agpj progress`とHookが共有する進行表を組み立てる。 |
-| `interact` | 人による確認（端末の判定、y/N入力）、通知のクライアント、ボードのページをブラウザーで開く処理（`browser`：ボードのアドレス、開かない場合の判定、OSごとに開くプログラム）。 |
+| `interact` | 人による確認（端末の判定、y/N入力）、通知のクライアント、カンバンのページをブラウザーで開く処理（`browser`：カンバンのアドレス、開かない場合の判定、OSごとに開くプログラム）。 |
 | `setup` | Agent Projectプラグインを導入・更新し、データ領域へのエージェントのアクセスを準備する。 |
 | `paths`<br>`lifecycle`<br>`clock`<br>`error` | データ領域の解決、`serve`のロック、UTCの時刻、`AgpjError`（コード・終了コード・message・reason）。 |
 
@@ -49,15 +49,15 @@
 
 | モジュール | 責務 |
 | --- | --- |
-| `api/` | ボードのルーター（`router`と、ローカルのガードとローカル専用の経路を外したngrokの入口用の`remote_router`）、Hostのガードと書き込みのガード（`guards`）、ルートごとにまとめたハンドラ（ページ、プロジェクト、タスク、タスクの編集、人による完了条件のチェック（`task_acceptance`）、multipart、アーカイブ、タスクの画像、エピック、エピックの画像、プロジェクトのドキュメントの`docs/`（`tree`・`file_get`・`assets`・`open`）、リモート接続の`monitor_connections`）。 |
+| `api/` | サーバーのルーター（`router`と、ローカルのガードとローカル専用の経路を外したngrokの入口用の`remote_router`）、Hostのガードと書き込みのガード（`guards`）、ルートごとにまとめたハンドラ（ページ、プロジェクト、タスク、タスクの編集、人による完了条件のチェック（`task_acceptance`）、multipart、アーカイブ、タスクの画像、エピック、エピックの画像、プロジェクトのドキュメントの`docs/`（`tree`・`file_get`・`assets`・`open`）、リモート接続の`monitor_connections`）。 |
 | `monitor_connection/` | ngrokのリモート接続。監督役と状態（`lifecycle`・`restore`・`start`・`run`）、保存する設定（`config`。コマンドラインからの保存は`src/remote_settings.rs`を通ります）、トークンと安全な保管場所への保存（`token`・`keychain`）、公開アドレスの契約と、Traffic Policyなしで開くngrokのエンドポイント（`contracts/`）、ngrokのセッション（`backend`）、モニターの前段の入口の検査（`router`・`entry`と、合言葉のunlockを扱うその`session`の経路）。 |
 | `notification_settings/` | スマホに届ける通知の種類。内部領域の`notification-settings.json`（`NotificationSettingsStore`）、種類・サマリーの間隔・既定値の定義、`/api/notification-settings`の`GET`・`PUT`の処理。 |
 | `preferences/` | 保存した言語とカラーテーマ。内部領域の`preferences.json`（`PreferencesStore`）、`/api/preferences`の`GET`・`PUT`の処理、変更の通知。 |
 | `monitor_auth/` | 入口のアプリsessionとCSRFトークン（`session`）、4桁の合言葉と間違いの回数の制限（`passcode`）、そのヘッダーの検査（`guard`）、Cookie名や12時間の上限などの定数（`contracts`）。 |
 | `guard` | ローカルの書き込みに対するHost・Origin・Sec-Fetch-Site・トークンの確認。 |
 | `response`<br>`request` | JSONのエラー本文、`AgpjError`からHTTPステータスへの対応、そのほかの共有の応答と、失敗時にそのエラー本文を返すJSONの本文。 |
-| `store`<br>`qa`<br>`acceptance` | すべてのルーターが使う、ブロッキングのファイルアクセス・索引・URLのIDと、メッセージの読み出し、回答の保存、依頼の送信と取り下げ（`messages.rs`。ボードのハンドラーは`api/messages.rs`）、人による完了条件1件の設定。 |
-| `web_assets` | 埋め込んだボードのスクリプトとスタイルシート、ビルドID、キャッシュできるgzipまたは非圧縮の応答。 |
+| `store`<br>`qa`<br>`acceptance` | すべてのルーターが使う、ブロッキングのファイルアクセス・索引・URLのIDと、メッセージの読み出し、回答の保存、依頼の送信と取り下げ（`messages.rs`。サーバーのハンドラーは`api/messages.rs`）、人による完了条件1件の設定。 |
+| `web_assets` | 埋め込んだカンバンのスクリプトとスタイルシート、ビルドID、キャッシュできるgzipまたは非圧縮の応答。 |
 | `contracts/` | データ層の通信の型。Summary、DetailのNDJSONの各行、`changed`イベント。`tests/fixtures/data-layer/`の例が形を固定します。 |
 | `launch`<br>`bind`<br>`idle` | サーバー一つの起動と終了（`launch`）。待ち受けと、その失敗の意味、ポートを使っているもの、空きポートへの切り替え（`bind`）。自動のサーバーで「使われている」とみなすものと、使われないときの停止（`idle`）。 |
 | `change_feed.rs` | このサーバーの実行で変更の組に番号（`seq`、実行ごとの`instanceId`）を付け、まだ送っていないイベントを保持する。遅れすぎたストリームには`resync`を送る。 |
@@ -69,7 +69,7 @@
 - `web/`: Viteのアプリです。`web/src/`のソースは`app/`・`pages/`・`features/`・`shared/`に分けています（[Webコードの置き場所](../concepts/server-and-ui.md#webコードの置き場所)）。
 - `src/domain/markdown_blocks.rs`: 本文をトップレベルのMarkdownブロックに分けます。I/Oは行いません。
 - `web/src/shared/data/`: データ層です。`api/`は契約の型とDetailの解析、`core/`はReactに依存しないコード（クエリクライアントとそのキー、SummaryとDetailの読み取り、変更フィード、変更のスケジューラー、表示の保留）、`react/`は画面が使うフックを置きます。`useSummary`・`useTaskDetail`・`useEpicDetail`のほか、そのほかの読み取りの`useReadQuery`と、書き込みの`useWrite`があります。[データの読み取りと更新](../concepts/server-and-ui.md#データの読み取りと更新)を参照してください。
-- `web/src/shared/lib/gesture/sortableDrag.ts`: カードをグループにまたがって並べ替える一覧（ボードのレーンと、エピック編集画面のウェーブ）が共有する、ドラッグ操作と落とし先の判定です。`cardSensors`（`cardActivationConstraints`と`GRIP_CLASS`を含む）は、カード全体をドラッグ対象にし、グリップへのタッチはすぐに、ほかへのタッチは短く押したままにしてからドラッグを始めるので、スワイプのスクロールは妨げられません。`dropPlacement`は、終わったドラッグを、グループ、そのグループのほかの項目の中での位置、動かなかったかどうかとして読みます。並べ替えの項目は`useSortable({ group })`で、落とし先の領域は`data.group`でグループを示します。
+- `web/src/shared/lib/gesture/sortableDrag.ts`: カードをグループにまたがって並べ替える一覧（カンバンのレーンと、エピック編集画面のウェーブ）が共有する、ドラッグ操作と落とし先の判定です。`cardSensors`（`cardActivationConstraints`と`GRIP_CLASS`を含む）は、カード全体をドラッグ対象にし、グリップへのタッチはすぐに、ほかへのタッチは短く押したままにしてからドラッグを始めるので、スワイプのスクロールは妨げられません。`dropPlacement`は、終わったドラッグを、グループ、そのグループのほかの項目の中での位置、動かなかったかどうかとして読みます。並べ替えの項目は`useSortable({ group })`で、落とし先の領域は`data.group`でグループを示します。
 - `web/src/features/epics/editor/`: エピックのダイアログです。`waveModel.ts`はウェーブの純粋な操作（`normalizeWaves`、`moveTask`、`moveWave`、`waveStatuses`）、`EpicProgressList.tsx`はドラッグの範囲と落としたときの処理、`WaveRow.tsx`は1つのウェーブ（見出し、ハンドル、カードの行）、`WaveTask.tsx`は1枚のカード、`useEpicEditor.ts`は`waves`を保存する編集の状態を持ちます。[作業順序を決める](../../guide/watch/epics.md)を参照してください。
 - `web/src/shared/markdown/`: Markdownの描画部です。`MarkdownBlocks`は本文のブロックを描き、大きい本文を仮想化します（`VirtualMarkdown.tsx`）。`collectImages.ts`は1つの本文にある画像を並べ、`EnlargedImages.tsx`はそれらをまたいで拡大表示を開きます。
 - `web/src/shared/ui/lightbox/`: 画像や図の拡大表示です。`Lightbox`はダイアログの枠（図にも使います）、`ImageViewer`はスワイプで切り替えるビューア（スライドは`ZoomSlide`で、`useImageZoom`と`web/src/shared/lib/gesture/pinchZoom.ts`が拡大縮小を担います）、`ImageLightbox`はその2つを組み合わせたものです。スタイルは`web/src/shared/styles/lightbox.css`にあります。
@@ -93,18 +93,18 @@
 - `src/plugin_hash.rs`、`src/setup/auto_update.rs`、`src/setup/auto_update/`: プラグインの内容のハッシュ（`build.rs`が計算）と、Hookの自動更新、そのロックと記録。`tests/plugin_auto_update.rs`と`tests/skills_command.rs`がテストします。
 - `tests/setup.rs`と`tests/setup_plugin.rs`: 偽のエージェントのコマンド（`tests/support/fake_agents.rs`）を相手にしたsetupとupdateのテスト。`tests/plugin_layout.rs`は、マーケットプレイスとプラグインのファイルと、そのバージョンを確かめます。
 - `src/cli/commands/message/`と`src/cli/args/message.rs`: `agpj message`の各コマンド、そのJSON入力（`input.rs`）、`message ask`と`message wait`のJSON Linesのイベント（`stream.rs`）。待機そのものは、共通の待機エンジンの上に作った`src/agent/message_wait.rs`です。
-- `web/src/features/tasks/messages/`: メッセージの一覧。`model/messages.ts`はタブ・件数・`canSendAnswer`、`api.ts`はメッセージの読み出しと回答・取り下げの送信、`MessageBand.tsx`は件数を示す帯（PCのボードとスマホ画面で共通）、`MessageCenter.tsx`は帯と一覧をつなぎ、`MessageRows.tsx`は行を描き、`MessagesSurface.tsx`は一覧・質問・依頼をモーダルまたは下からのシートで表示します。`web/src/features/tasks/answer/`は質問と回答の欄（`DecisionQuestion`・`DecisionAnswerFields`）を描き、`web/src/app/model/useMessagesController.ts`は一覧をPCのボードにつなぎます。
+- `web/src/features/tasks/messages/`: メッセージの一覧。`model/messages.ts`はタブ・件数・`canSendAnswer`、`api.ts`はメッセージの読み出しと回答・取り下げの送信、`MessageBand.tsx`は件数を示す帯（PCのカンバンとスマホ画面で共通）、`MessageCenter.tsx`は帯と一覧をつなぎ、`MessageRows.tsx`は行を描き、`MessagesSurface.tsx`は一覧・質問・依頼をモーダルまたは下からのシートで表示します。`web/src/features/tasks/answer/`は質問と回答の欄（`DecisionQuestion`・`DecisionAnswerFields`）を描き、`web/src/app/model/useMessagesController.ts`は一覧をPCのカンバンにつなぎます。
 - `web/src/features/messages/ask/`: **AIに依頼**の入力画面（`AskAiDialog.tsx`、`AskAiToolbar.tsx`）と、multipartの依頼を組み立てる`sendRequest.ts`。
-- ボード（`pages/board/ui/Lane.tsx`）とスマホのモニター（`pages/monitor/components/MonitorLanes.tsx`）は、バックログを最初のレーンとして描きます。選択モードと未着手へ送る操作は`web/src/features/backlog/`にあります。
+- カンバン（`pages/board/ui/Lane.tsx`）とスマホのモニター（`pages/monitor/components/MonitorLanes.tsx`）は、バックログを最初のレーンとして描きます。選択モードと未着手へ送る操作は`web/src/features/backlog/`にあります。
 - `web/src/pages/monitor/`: スマホ幅の画面です。`View.tsx`がヘッダー、レーンのタブ、レーン、下部のバー（`components/PhoneNav.tsx`と`components/PhoneNavBar.tsx`）を組み立てます。`components/LaneTabs.tsx`は件数付きのタブ、`components/MonitorLanes.tsx`は指に追従するレーンのカルーセル（`hooks/useLaneCarousel.ts`。`hooks/useLaneOverscroll.ts`は完了レーンを越える左スワイプをアーカイブの選択の開始として読み、レーンを指に付けて動かします。`components/BulkArchiveTile.tsx`はそのとき現れるアイコンです）、`components/SwipeableCard.tsx`と`hooks/useCardGesture.ts`はカードの長押しで選ぶ動きとスライドして開く動き（`web/src/shared/lib/gesture/useSideSwipe.ts`の上に作っています）、`components/MonitorLaneDialogs.tsx`は1枚のカードのアーカイブの確認を持ち、アーカイブ一覧も開きます。`components/ArchiveListSheet.tsx`と`components/ArchiveSwipeRow.tsx`がその一覧で（各行はレーンの`MonitorTask`カードを`.swipe-card`に入れたもので、左スワイプですぐに復元ボタンを開く）、`hooks/useArchiveSheet.ts`は一覧が開いている間だけアーカイブを読みます。`model/lanes.ts`はレーンの並びとスワイプで出るボタンを持ち、`hooks/useLaneOverlay.ts`はこのスマホが保存した内容を次の読み取りまで画面に残します。`components/MonitorLanesScreen.tsx`は同じ部品をStorybook用に組み立てます。`web/src/shared/viewport/stableHeight.ts`はソフトウェアキーボードが開いている間のページの高さを保ちます。
 - `scripts/release/`と`.github/workflows/release.yml`: リリースのアーカイブ、署名、公証、Formula（[リリースをビルドする](../getting-started/setup.md#build-release)を参照）。
 
 ### プロジェクトのドキュメント
 
 - `src/docs/`: パス、読み込み、READMEの文面（`templates/README.en.md`・`templates/README.ja.md`）。
-- `src/server/api/docs/`: ボードのルーターにある4つのルート。
-- `src/server/push_delivery/`: ボードの変更のWeb Push配信（`events.rs`: 変更の前後でタスクが示す内容を比較し、タスクごとに通知を1件に選ぶ、`message.rs`: 文面とリンク、`webpush.rs`: RFC 8291の暗号化とRFC 8292の署名、`transport.rs`: `PushTransport`トレイトと`reqwest`による実装、`ledger.rs`: `.internal/push-ledger.json`、`deliver.rs`: 送信と再試行、`runtime.rs`: 変更フィードを追うタスク、`summary.rs`・`summary/run.rs`: 定期サマリーのスケジュールと通知）。サマリー自体は`src/file_store/notify.rs`が保存し（`notify/stock.rs`が書き込みのたびに新しい10件を残して残りを削除済みにする）、`src/server/api/summaries.rs`が提供します。[Web Pushの配信](../concepts/notifications.md#web-pushの配信)を参照。
-- `src/server/resident/`: 画面を持たないClaude CodeとCodexのセッションの起動処理です。これらのCLIを知っている唯一のコードです（`cli.rs`は名前、ログインの確認、モデル、引数、環境の除去、`mod.rs`は起動処理、停止、シャットダウン、`driver/`は`AgentDriver`トレイトとその出来事、`ClaudeDriver`（双方向のstream-json）、`CodexDriver`（`codex app-server`のJSON-RPC。やり取りは`codex_parse.rs`と`codex_inbound.rs`）、`spawn.rs`はドライバーを通したセッションの起動、出来事の読み取り、pusherの実行、`push/`はpushモード（`mod.rs`はpusherの状態とボードを1回見ること、`decide.rs`は何を送るかと再試行の方針）、`board.rs`はボードの場所、変更時のpusherの起こし方、セッション一覧に出る起動したセッション、`supervisor.rs`と`watch.rs`は再起動、不健全の確認、サーバー起動時の自動起動、`health.rs`はAPIが返す健全性、`autostart.rs`は`.internal/resident-autostart.json`）。ルートは`src/server/api/sessions.rs`にあります。
+- `src/server/api/docs/`: サーバーのルーターにある4つのルート。
+- `src/server/push_delivery/`: カンバンの変更のWeb Push配信（`events.rs`: 変更の前後でタスクが示す内容を比較し、タスクごとに通知を1件に選ぶ、`message.rs`: 文面とリンク、`webpush.rs`: RFC 8291の暗号化とRFC 8292の署名、`transport.rs`: `PushTransport`トレイトと`reqwest`による実装、`ledger.rs`: `.internal/push-ledger.json`、`deliver.rs`: 送信と再試行、`runtime.rs`: 変更フィードを追うタスク、`summary.rs`・`summary/run.rs`: 定期サマリーのスケジュールと通知）。サマリー自体は`src/file_store/notify.rs`が保存し（`notify/stock.rs`が書き込みのたびに新しい10件を残して残りを削除済みにする）、`src/server/api/summaries.rs`が提供します。[Web Pushの配信](../concepts/notifications.md#web-pushの配信)を参照。
+- `src/server/resident/`: 画面を持たないClaude CodeとCodexのセッションの起動処理です。これらのCLIを知っている唯一のコードです（`cli.rs`は名前、ログインの確認、モデル、引数、環境の除去、`mod.rs`は起動処理、停止、シャットダウン、`driver/`は`AgentDriver`トレイトとその出来事、`ClaudeDriver`（双方向のstream-json）、`CodexDriver`（`codex app-server`のJSON-RPC。やり取りは`codex_parse.rs`と`codex_inbound.rs`）、`spawn.rs`はドライバーを通したセッションの起動、出来事の読み取り、pusherの実行、`push/`はpushモード（`mod.rs`はpusherの状態とカンバンを1回見ること、`decide.rs`は何を送るかと再試行の方針）、`board.rs`はカンバンの場所、変更時のpusherの起こし方、セッション一覧に出る起動したセッション、`supervisor.rs`と`watch.rs`は再起動、不健全の確認、サーバー起動時の自動起動、`health.rs`はAPIが返す健全性、`autostart.rs`は`.internal/resident-autostart.json`）。ルートは`src/server/api/sessions.rs`にあります。
 - `src/server/sessions/`、`src/server/api/sessions.rs`、`src/agent/session_identity.rs`、`src/agent/session_touch.rs`: 張り付いたエージェントセッションのメモリ上の登録、その読み取りルートとtouchルート、コマンドが自分のセッションを名乗る方法、全コマンドとフックが送るベストエフォートの報告。
 - `src/file_store/project.rs`: 新しいプロジェクトと一緒に`docs/`を作る処理（`create_project_with_docs`）と、起動時に補う処理（`ensure_docs_dirs`）。
 - `web/src/features/resident-sessions/`: 常駐エージェントのダイアログ、設定画面の行、フッターの表示。`api.ts`はセッションのルートのクライアント、`state.ts`は`health`オブジェクトからバッジの状態（`working`・`waiting`・`restarting`・`stopped`・`failed`）を求め、`useResidentSession.ts`はセッションのルートを、クエリで一定間隔に読み、`useResidentController.ts`はダイアログの選択・起動・停止・自動起動を扱い、`ui/`がダイアログ（`ResidentView.tsx`・`ResidentDialog.tsx`）、行、表示を描きます。それらをどこに出すかは`web/src/app/residentSlot.tsx`が決めます。利用者に見える内容は[常駐エージェントのガイド](../../guide/delegate/resident-session.md)を参照してください。
@@ -127,7 +127,7 @@
 
 ### ブラウザのデモ
 
-- `web/src/app/development/mock-server/`: Node APIを使わないサンプルデータのサーバー。サンプルデータモード、デモ、単体テスト、Storybookで共有します。`sampleJa.ts`はサンプルのボードの日本語の文です。
+- `web/src/app/development/mock-server/`: Node APIを使わないサンプルデータのサーバー。サンプルデータモード、デモ、単体テスト、Storybookで共有します。`sampleJa.ts`はサンプルのカンバンの日本語の文です。
 - `web/src/app/development/mocks/`: サンプルデータサーバーを包むMSWハンドラ（`handlers.ts`、`request.ts`）。デモ、サンプルデータモード、単体テスト、Storybookで共有します（[モックハンドラ](../getting-started/setup.md#モックハンドラ)を参照）。`start.ts`がページの中でデモまたはサンプルデータモードを開始し、`browser.ts`がそのService Workerを起動し、`locale.ts`が始めの言語を判定します。
 - `web/mock-browser.ts`: `demo`モードと`mock`モードのViteプラグイン。サンプルデータを仮想モジュールとして渡し、ワーカーのスクリプトを配信または書き出し、ページのプレースホルダーを埋めます。
 - `web/demo-build.ts`: `demo`モードのベースパスと出力フォルダ。
@@ -139,7 +139,7 @@
 - `web/src/features/versions/model/`: Summaryから読むプロジェクトのバージョン（`useProjectVersions.ts`）。
 - `web/src/features/versions/ui/`: カードのタグ、ヘッダーのカレントバージョンメニュー（`CurrentVersionMenu.tsx`、配線は`HeaderCurrentVersion.tsx`）、タスクの予定バージョンフィールド（`PlannedVersionPicker.tsx`、配線は`TaskPlanField.tsx`）、エピックのフィールド（`EpicPlanField.tsx`、配線は`EpicPlan.tsx`）、選択肢の行、スマホの`PlanContext.tsx`。
 - `web/src/shared/ui/editor/planField.ts`と`usePendingPlan.ts`: エディターと予定バージョンフィールドの取り決め。
-- `web/src/app/useBoardVersions.tsx`: PCボードのカードのタグとヘッダーのスロット。
+- `web/src/app/useBoardVersions.tsx`: PCカンバンのカードのタグとヘッダーのスロット。
 - `web/src/pages/monitor/model/planProject.ts`: スマホのカードがタグを読むバージョン。
 - `web/src/app/development/mock-server/versions.ts`: サンプルデータサーバーのバージョンのルート。
 - `e2e/tests/release-plan.spec.ts`: エンドツーエンドのテスト。

@@ -70,7 +70,7 @@ Rustのテストは[cargo-nextest](https://nexte.st/)で実行します（`cargo
 
 - マシンのタイムゾーンに依存させないため、`TZ`を付ける必要はありません。Webのテストは UTC で動きます（`web/vite.config.ts`と`web/vitest.storybook.config.ts`で設定し、Storyではブラウザのタイムゾーンも UTC にします）。Rustのローカル時刻のテストは、タイムゾーンを引数に取る関数を通して確かめます。
 - 既定のデータ領域は使いません。各テストが`AGPJ_HOME`を一時ディレクトリに設定します。
-- `agpj`のバイナリを実行するテストは`AGPJ_AUTOSTART=0`を設定し、待つコマンドやHookが勝手にサーバーを起動しないようにします。あわせて`AGPJ_OPEN_BROWSER=0`を設定し、何もブラウザーを開かないようにします。Playwrightの設定は、スイート全体にこの二つを設定します。自動起動そのものの試験は`AGPJ_AUTOSTART`を設定せず、`AGPJ_AUTOSTART_PORT=0`を設定し、起動したサーバーをすべて止めます。`setup remote`や`show remote`を実行する試験は`AGPJ_KEYCHAIN=none`を設定し、OSのキーチェーンを読み書きしないようにします。ボードを開く処理の試験は、`tests/open_board.rs`のように`AGPJ_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。本物のブラウザーを開く試験はありません。
+- `agpj`のバイナリを実行するテストは`AGPJ_AUTOSTART=0`を設定し、待つコマンドやHookが勝手にサーバーを起動しないようにします。あわせて`AGPJ_OPEN_BROWSER=0`を設定し、何もブラウザーを開かないようにします。Playwrightの設定は、スイート全体にこの二つを設定します。自動起動そのものの試験は`AGPJ_AUTOSTART`を設定せず、`AGPJ_AUTOSTART_PORT=0`を設定し、起動したサーバーをすべて止めます。`setup remote`や`show remote`を実行する試験は`AGPJ_KEYCHAIN=none`を設定し、OSのキーチェーンを読み書きしないようにします。カンバンを開く処理の試験は、`tests/open_board.rs`のように`AGPJ_BROWSER_OPENER`をアドレスを記録するスクリプトに向けます。本物のブラウザーを開く試験はありません。
 - `agpj serve`を起動するテストは`AGPJ_WATCH=poll`を設定します。テスト内で起動するサーバーは`server::run_until_in`と`WatchMode::Poll`で起動します。プラットフォームのファイルイベントを使うのは`tests/file_watch.rs`だけです。
 - `agpj serve`は`127.0.0.1`だけで待ち受けます。ポート7420は使わず、空いているポートかポート0を使い、接続先には`localhost`ではなく`http://127.0.0.1:<port>/`を使います。
 - テストは今の製品の振る舞いを確かめます。機能を削るときはそのテストも一緒に消し、削ったルート・項目・画面がなくなったことを確かめるテストは足しません。
@@ -82,7 +82,7 @@ Playwrightのテストは`e2e/`にあります。初回は`pnpm --dir e2e instal
 アプリのテストは、複数のPlaywrightワーカーでテストファイルを並行して実行します。
 
 - ワーカーごとに、一時的なデータ領域と、ポート0で起動した`agpj serve`を1つずつ持ちます。固定のポートは使わないため、2つのチェックアウトで同時に実行できます。
-- ワーカー数の既定値はCPU数の半分です。変えるときは`AGPJ_E2E_WORKERS`を設定するか、`--workers`を指定します。1つのファイルのテストは同じワーカーのボードを共有するため、1つのワーカーで順に実行されます。
+- ワーカー数の既定値はCPU数の半分です。変えるときは`AGPJ_E2E_WORKERS`を設定するか、`--workers`を指定します。1つのファイルのテストは同じワーカーのカンバンを共有するため、1つのワーカーで順に実行されます。
 - 別の`agpj`バイナリを使うときは`AGPJ_E2E_BINARY`を指定します。`AGPJ_E2E_PREBUILT=1`（CIで使います）を設定すると、グローバルセットアップはビルドをせず、`AGPJ_E2E_BINARY`と`AGPJ_E2E_PHONE_BACKEND`が既存のファイルを指していることを求めます。`AGPJ_E2E_HOME`と`AGPJ_E2E_MAIN_URL`はワーカーのフィクスチャが設定するので、自分では設定しません。
 - 結果とトレースは、システムの一時ディレクトリにある`agent-project-e2e-results-<チェックアウト>`に、チェックアウトごとに保存されます。
 
@@ -91,4 +91,4 @@ Playwrightのテストは`e2e/`にあります。初回は`pnpm --dir e2e instal
 - `test`と`expect`は`@playwright/test`ではなく`e2e/helpers/fixtures`から読み込みます。こうすると、ワーカーのサーバーとその`baseURL`を使います。
 - `mainUrl()`、`mainOrigin()`、`mainHome()`は、ファイルの読み込み時ではなく、テストかフックの中で呼びます。
 - 専用のサーバーが必要なテストは`startServe(home)`で起動し、返り値からポートを読みます。同じポートを渡すと、そのポートで再起動します。Playwrightは`beforeAll`より先に`baseURL`を決めるので、`states.spec.ts`のように、先に必要になった方からサーバーを起動します。`startImageServer()`の画像サーバーもポート0を使います。
-- `resetBoard`は、ワーカーのサーバーが元に戻したボードを表示するまで待ちます。そのため、直後に開いたページはフィクスチャの内容を読み込みます。
+- `resetBoard`は、ワーカーのサーバーが元に戻したカンバンを表示するまで待ちます。そのため、直後に開いたページはフィクスチャの内容を読み込みます。
