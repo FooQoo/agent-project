@@ -40,6 +40,30 @@ fn running_since(minutes: i64) -> Scenario {
     })
 }
 
+/// A table whose last lane move was `minutes` ago, with the table's only task in Doing.
+fn doing_after(minutes: i64, running: bool, human: bool) -> Scenario {
+    with(|p| {
+        doing(p, running);
+        if human {
+            task(p).assignee = crate::domain::Assignee::Human;
+        }
+        p.last_lane_move_at = Some(Utc::now() - Duration::minutes(minutes));
+    })
+}
+
+/// A table whose last lane move was an hour ago, Doing is all running, and the only task is in
+/// Todo with the given owner.
+fn todo_only(human: bool) -> Scenario {
+    with(|p| {
+        let t = task(p);
+        t.task_status = Column::Todo;
+        if human {
+            t.assignee = crate::domain::Assignee::Human;
+        }
+        p.last_lane_move_at = Some(Utc::now() - Duration::minutes(60));
+    })
+}
+
 fn final_with(done: usize, has_final: bool) -> Scenario {
     with(|p| {
         doing(p, true);
@@ -136,6 +160,66 @@ pub fn all() -> Vec<Case> {
             with(|p| doing(p, false)),
         ),
         case(
+            "lane-review",
+            "an idle Doing card and no move for an hour",
+            true,
+            doing_after(60, false, false),
+        ),
+        case(
+            "lane-review",
+            "a human card in Doing and no move for an hour",
+            true,
+            doing_after(60, true, true),
+        ),
+        case(
+            "lane-review",
+            "a move within 30 minutes",
+            false,
+            doing_after(5, false, false),
+        ),
+        case(
+            "lane-review",
+            "every Doing card is running",
+            false,
+            doing_after(60, true, false),
+        ),
+        case(
+            "lane-review",
+            "an AI card in Todo, nothing parked in Doing, and no move for an hour",
+            true,
+            todo_only(false),
+        ),
+        case(
+            "lane-review",
+            "only a human card in Todo and no move for an hour",
+            false,
+            todo_only(true),
+        ),
+        case(
+            "lane-review",
+            "an AI card in Todo and a move within 30 minutes",
+            false,
+            with(|p| p.last_lane_move_at = Some(Utc::now() - Duration::minutes(5))),
+        ),
+        case(
+            "lane-review",
+            "only a Backlog card",
+            false,
+            with(|p| {
+                task(p).task_status = Column::Backlog;
+                p.last_lane_move_at = Some(Utc::now() - Duration::minutes(60));
+            }),
+        ),
+        case(
+            "lane-review",
+            "no lane move recorded",
+            false,
+            with(|p| {
+                doing(p, false);
+                p.last_lane_move_at = None;
+            }),
+        ),
+        case(
             "next-task",
             "a next task and nothing running",
             true,
@@ -182,4 +266,33 @@ fn the_stale_running_reminder_says_to_continue_and_never_to_pause() {
     assert!(text.contains("history add"), "{text}");
     assert!(text.contains("<why it cannot resume>"), "{text}");
     assert!(!text.contains("paused --actor ai"), "{text}");
+}
+
+#[test]
+fn the_lane_review_reminder_lists_the_cards_and_the_choices() {
+    let scenario = doing_after(60, false, false);
+    let id = scenario.progress.as_ref().unwrap().unassigned[0].id;
+    let findings = super::state_rules::lane_review(&scenario.facts());
+    assert_eq!(findings.len(), 1);
+    let text = &findings[0].text;
+    assert!(text.contains(&format!("#{id}")), "{text}");
+    assert!(text.contains("Resume"), "{text}");
+    assert!(text.contains("message ask"), "{text}");
+    assert!(text.contains("Todo"), "{text}");
+    assert!(text.contains("confirm"), "{text}");
+}
+
+#[test]
+fn the_lane_review_reminder_covers_todo_with_its_own_guidance() {
+    let scenario = todo_only(false);
+    let id = scenario.progress.as_ref().unwrap().unassigned[0].id;
+    let findings = super::state_rules::lane_review(&scenario.facts());
+    assert_eq!(findings.len(), 1);
+    let text = &findings[0].text;
+    assert!(
+        text.contains(&format!("Todo holds AI cards: #{id}")),
+        "{text}"
+    );
+    assert!(text.contains("history add"), "{text}");
+    assert!(!text.contains("Doing holds"), "{text}");
 }

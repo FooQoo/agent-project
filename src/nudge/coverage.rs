@@ -89,7 +89,7 @@ pub const COMMANDS: &[(&str, Cover)] = &[
         "message withdraw",
         NoRule("closes a question; nothing to forget"),
     ),
-    ("mv", Rules(&["history", "start-task"])),
+    ("mv", Rules(&["history", "start-task", "lane-review"])),
     ("open", NoRule("opens the board in a browser")),
     ("progress", READ_ONLY),
     ("project bind", NoRule("project administration by a person")),
