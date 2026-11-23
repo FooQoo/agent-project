@@ -6,6 +6,7 @@ export const versionsJa = {
     },
     header: {
       buttonValue: 'バージョンの絞り込み: {{version}}',
+      sheetTitle: 'バージョンの絞り込み',
       all: 'すべて',
       makeRelease: '表示中の {{version}} をリリースバージョンにする',
       listLabel: 'このプロジェクトのバージョン',

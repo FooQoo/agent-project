@@ -52,7 +52,7 @@ export default function MobileBoard({
   if (!known || !isProjectId(activeId))
     return (
       <main className="monitor-shell">
-        <Header {...header} settingsSize="l" />
+        <Header {...header} settingsSize="l" logoOnly />
         {model.message !== null && <BoardMessage kind={model.message} onRetry={model.retry} />}
       </main>
     );

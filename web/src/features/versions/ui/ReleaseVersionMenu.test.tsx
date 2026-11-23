@@ -128,3 +128,35 @@ describe('the version filter in the header', () => {
     expect((await screen.findByRole('alert')).textContent).toContain('Could not change');
   });
 });
+
+describe('the version filter on the phone', () => {
+  function phone(filter: string | null = 'v1.8.0') {
+    const onFilter = vi.fn();
+    const onAdd = vi.fn(async () => undefined);
+    render(
+      <ReleaseVersionMenu
+        kind="sheet"
+        versions={['v1.8.0', 'v1.9.0']}
+        release="v1.8.0"
+        filter={filter}
+        onFilter={onFilter}
+        onAdd={onAdd}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Version filter/ }));
+    return { onFilter, onAdd };
+  }
+
+  it('opens a sheet that filters, lists a new version, marks the release version and cannot change it', async () => {
+    const { onFilter, onAdd } = phone('v1.9.0');
+    expect(
+      (await screen.findByRole('radio', { name: /v1\.8\.0/ })).parentElement?.textContent,
+    ).toContain('★');
+    expect(screen.queryByRole('button', { name: /release version/i })).toBeNull();
+    fireEvent.change(screen.getByLabelText('New version'), { target: { value: 'v2.0.0' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add this version to the project' }));
+    await waitFor(() => expect(onAdd).toHaveBeenCalledWith('v2.0.0'));
+    fireEvent.click(screen.getByRole('radio', { name: 'All' }));
+    expect(onFilter).toHaveBeenCalledWith(null);
+  });
+});

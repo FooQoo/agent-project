@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useVersionFilter } from '../features/versions/model/useVersionFilter';
 import { filterByVersion } from '../features/versions/model/versionFilter';
 import { HeaderReleaseVersion } from '../features/versions/ui/HeaderReleaseVersion';
 import { VersionTag, showsVersionTag } from '../features/versions/ui/VersionTag';
@@ -17,11 +17,7 @@ export function useBoardVersions(model: AppControllerModel) {
   // A sample board of a Story may predate the version fields.
   const versions = boardData?.project?.versions ?? NO_VERSIONS;
   const release = boardData?.project?.releaseVersion ?? null;
-  // The filter is this screen's own state: it starts as the project's release version (or All) until a choice is made.
-  const [chosen, setChosen] = useState<{ project: string | null; version: string | null } | null>(
-    null,
-  );
-  const filter = chosen !== null && chosen.project === activeId ? chosen.version : release;
+  const { filter, setFilter } = useVersionFilter(activeId, release);
   const filterTasks = (tasks: TaskSummary[]) => filterByVersion(tasks, filter);
   const renderVersion = (task: TaskSummary) =>
     showsVersionTag(task.plannedVersion ?? null, { versions, release }) ? (
@@ -32,7 +28,7 @@ export function useBoardVersions(model: AppControllerModel) {
       <HeaderReleaseVersion
         projectId={activeId}
         filter={filter}
-        onFilter={(version) => setChosen({ project: activeId, version })}
+        onFilter={setFilter}
         disabled={model.session.operation !== null}
       />
     ) : null;

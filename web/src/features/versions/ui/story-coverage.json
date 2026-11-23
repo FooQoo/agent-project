@@ -75,6 +75,11 @@
               "interaction": true
             },
             {
+              "id": "versions-releaseversionmenu--phone-sheet",
+              "states": ["sheet open", "no release button", "release version star"],
+              "interaction": true
+            },
+            {
               "id": "versions-releaseversionmenu--typing-a-new-version",
               "states": ["type a new version", "confirm"],
               "interaction": true

@@ -262,3 +262,31 @@
   max-width: calc(100vw - 24px);
   padding: 8px;
 }
+
+/* ---- The phone's version filter ---- */
+
+/* In the phone's top bar the button is drawn like the project selector beside it: 32px tall with a 44px target. */
+.monitor-shell > .header .header__version {
+  flex: 0 1 auto;
+}
+
+.monitor-shell > .header .ver-head {
+  position: relative;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+  gap: 4px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.monitor-shell > .header .ver-head::after {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
+}
+
+.ver-head-sheet .ver-head-list {
+  max-height: none;
+}

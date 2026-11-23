@@ -10,6 +10,7 @@ import { withMonitorFixtureData } from './fixture-provider';
 import { MonitorProject } from './MonitorProject';
 import { createMonitorFixture, createMonitorFixtureProps } from './mock';
 import { createMonitorFixtureAdapter } from './mock-adapter';
+import { ProjectSwitcher } from '../../features/projects/switcher/ProjectSwitcher';
 import { MonitorView } from './View';
 
 const meta = {
@@ -63,6 +64,41 @@ function ConnectedProjectStory() {
       }}
       useBuildReload={() => undefined}
       onNotFound={() => undefined}
+    />
+  );
+}
+
+/** The phone's top bar with a version filter: tasks 1 and 2 are planned for two versions, and the project's release version is v1.8.0. */
+function VersionFilterStory() {
+  const [{ fixture, adapter }] = useState(() => {
+    const value = createMonitorFixture();
+    value.summary.project.versions = ['v1.8.0', 'v1.9.0'];
+    value.summary.project.releaseVersion = 'v1.8.0';
+    const [first, second] = value.summary.tasks;
+    if (first) first.plannedVersion = 'v1.8.0';
+    if (second) second.plannedVersion = 'v1.9.0';
+    return { fixture: value, adapter: createMonitorFixtureAdapter(value) };
+  });
+  const projects = [{ id: fixture.projectId, name: fixture.projectName, createdAt: '2026-11-01' }];
+  return (
+    <MonitorProject
+      projectId={fixture.projectId}
+      adapter={adapter}
+      readResolvers={unconnectedMonitorReadResolvers}
+      messagesApi={sampleMessagesApi('en')}
+      useBuildReload={() => undefined}
+      onNotFound={() => undefined}
+      header={{
+        projects,
+        activeProjectId: fixture.projectId,
+        projectSwitcher: (
+          <ProjectSwitcher
+            projects={projects}
+            activeProjectId={fixture.projectId}
+            onSelect={() => undefined}
+          />
+        ),
+      }}
     />
   );
 }
@@ -194,6 +230,35 @@ export const ConnectedProject: StoryObj<typeof ConnectedProjectStory> = {
 };
 
 const body = () => within(document.body);
+
+/**
+ * The top bar shows the logo alone and a version filter that starts on the release version. Its
+ * sheet filters and lists versions but offers no way to change the release version, and the Backlog
+ * and unplanned cards stay when a version is chosen.
+ */
+export const VersionFilterSheet: StoryObj<typeof VersionFilterStory> = {
+  render: () => <VersionFilterStory />,
+  globals: { locale: 'en', viewport: { value: 'mobile1' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const filter = await canvas.findByRole('button', { name: 'Version filter: v1.8.0' });
+    await expect(filter).toBeVisible();
+    // The service name is only for screen readers.
+    await expect(canvasElement.querySelector('.header__app .visually-hidden')).not.toBeNull();
+    await userEvent.click(await canvas.findByRole('tab', { name: /Todo/ }));
+    await expect(await canvas.findByRole('button', { name: 'Todo work item 1' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Todo work item 2' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Todo work item 4' })).toBeVisible();
+
+    await userEvent.click(filter);
+    await expect(await body().findByLabelText('New version')).toBeVisible();
+    await expect(body().getByRole('radio', { name: /v1\.8\.0/ })).toBeChecked();
+    await expect(body().queryByRole('button', { name: /release version/i })).toBeNull();
+    await userEvent.click(body().getByRole('radio', { name: 'All' }));
+    await expect(await canvas.findByRole('button', { name: 'Version filter: All' })).toBeVisible();
+    await expect(await canvas.findByRole('button', { name: 'Todo work item 2' })).toBeVisible();
+  },
+};
 
 /** The bar's Ask item reaches the screen's callback. */
 export const BarAskAi: StoryObj<typeof WiredPhoneStory> = {

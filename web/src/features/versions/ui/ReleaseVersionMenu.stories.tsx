@@ -71,3 +71,20 @@ export const TypingANewVersion: Story = {
     await expect(args.onFilter).not.toHaveBeenCalled();
   },
 };
+
+/** The phone's bottom sheet: it filters and lists versions, marks the release version, and has no release button. */
+export const PhoneSheet: Story = {
+  args: { kind: 'sheet', filter: 'v2.0.0', onMakeRelease: undefined },
+  globals: { viewport: { value: 'mobile1' } },
+  play: async ({ args, canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: /Version filter/ }));
+    const view = page();
+    await expect(await view.findByLabelText('New version')).toBeVisible();
+    await expect(view.getByRole('radio', { name: /v1\.8\.0/ }).parentElement).toHaveTextContent(
+      '\u2605',
+    );
+    await expect(view.queryByRole('button', { name: /release version/i })).toBeNull();
+    await userEvent.click(view.getByRole('radio', { name: /v1\.9\.0/ }));
+    await waitFor(() => expect(args.onFilter).toHaveBeenCalledWith('v1.9.0'));
+  },
+};
