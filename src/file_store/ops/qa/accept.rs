@@ -71,7 +71,7 @@ impl FileStore {
                     MessageState::Closed => {
                         return Err(AgpjError::RequestAccepted { id: id.to_owned() });
                     }
-                    MessageState::Open => {}
+                    MessageState::Open | MessageState::Held => {}
                 }
                 request.accepted_at = Some(stamp(now));
                 Message::Request(request)
@@ -83,7 +83,7 @@ impl FileStore {
                             ids: vec![id.to_owned()],
                         });
                     }
-                    MessageState::Open => {
+                    MessageState::Open | MessageState::Held => {
                         return Err(AgpjError::QuestionOpen { id: id.to_owned() });
                     }
                     MessageState::Closed => {}

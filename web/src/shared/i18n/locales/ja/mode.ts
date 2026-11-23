@@ -31,6 +31,11 @@ export const modeJa = {
       '壁打ちを始められませんでした。カードやエピックが残っているか確認してください。',
     brainstormBadge: '壁打ち: {{target}}',
     saveError: 'モードを保存できませんでした。元のままです。',
-    indicatorTitle: 'スリープ中: エージェントは質問せず、あなたの代わりに判断します。',
+    indicatorTitle:
+      'スリープ中: エージェントはあなたの代わりに判断し、質問はスリープが解けるまで保留します。',
+    held_one: '保留中の質問 {{count}} 件',
+    held_other: '保留中の質問 {{count}} 件',
+    heldTitle_one: '保留中の質問が {{count}} 件あります。スリープが解けると届きます。',
+    heldTitle_other: '保留中の質問が {{count}} 件あります。スリープが解けるとまとめて届きます。',
   },
 };

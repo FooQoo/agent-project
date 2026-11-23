@@ -231,6 +231,7 @@ Add a dark theme to the settings screen.
 | body | The text. A question is 1 to 5,000 characters; a request is 1 to 20,000 characters. |
 | `createdAt` | When the message was created. |
 | `withdrawnAt` | `null` or when it was withdrawn. A message with a reply or an acceptance is not withdrawn. |
+| `heldAt` | Questions only; left out unless set. When the question was asked during sleep mode and held back. It is removed when sleep ends and the question is released. |
 
 Fields of a question:
 
@@ -249,7 +250,7 @@ Fields of a request:
 | --- | --- |
 | `acceptedAt` | `null` until an agent accepts it, then when it was accepted. |
 
-The state is not stored. A message is withdrawn when `withdrawnAt` is set, closed when its question has a `reply` or its request is accepted, and open otherwise. The CLI and API report a question's status as `open`, `answered`, or `withdrawn`, and a request's as `open`, `accepted`, or `withdrawn`; the filter words shared by both are `open`, `closed`, and `withdrawn`.
+The state is not stored. A message is withdrawn when `withdrawnAt` is set, closed when its question has a `reply` or its request is accepted, held when a question has `heldAt` (and no reply), and open otherwise. The CLI and API report a question's status as `held`, `open`, `answered`, or `withdrawn`, and a request's as `open`, `accepted`, or `withdrawn`; the filter words shared by both are `open`, `closed`, and `withdrawn`.
 
 A reply is written once, by a person, and an acceptance once, by an agent. That holds for a request's `acceptedAt` and for a reply's `acceptedAt` alike. An answer a person gave in the chat and an agent recorded for them (`via: chat`) is written already accepted. Nothing is written after a withdrawal. The tasks that refer to a question (`referencedBy`) are found from the tasks' `questions`, not from this file.
 

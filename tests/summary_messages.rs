@@ -90,6 +90,7 @@ impl Fx {
             .ask_questions(
                 &self.project,
                 AskInput {
+                    held: false,
                     actor: Actor::Ai,
                     asked_by: None,
                     brainstorm: None,

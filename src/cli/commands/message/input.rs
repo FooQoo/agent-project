@@ -80,6 +80,7 @@ pub(super) fn ask_input(value: &str, actor: Actor, tasks: &[i64]) -> Result<AskI
             ),
         })?;
     Ok(AskInput {
+        held: false,
         actor,
         // A board-launched session is told apart by the launch ID the launcher gave it.
         asked_by: std::env::var("AGPJ_RESIDENT_ID")

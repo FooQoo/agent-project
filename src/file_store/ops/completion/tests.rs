@@ -190,6 +190,7 @@ fn pending_is_left_alone_then_answered_task_is_reconsidered() {
         .ask_questions(
             &f.project,
             crate::file_store::AskInput {
+                held: false,
                 actor: Actor::Ai,
                 asked_by: None,
                 brainstorm: None,

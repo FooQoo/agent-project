@@ -183,6 +183,7 @@ With `--json`, `message ask` and `message wait` write one JSON object per line. 
 | `type` | Fields | When |
 | --- | --- | --- |
 | `registered` | `questions` (`id`), `resumed` | First. `resumed` is `true` for `message wait`. With `--no-wait` it is the only line, and the command exits 0. |
+| `held` | `questions` (`id`) | Only line, instead of `registered`, when the project is in sleep mode: the questions are stored as held, nothing reaches the person, and the command exits 0 at once (also for `message wait` on a held question). The questions are delivered when sleep ends; withdraw one with `message withdraw`. |
 | `waiting` | `ids`, `elapsed`, `remaining` (`null` without a timeout), `answered`, `total` | Every `--heartbeat` seconds. It comes from a timer and never reads the board. |
 | `answered` | `ids`, `answers` (`id`, `choiceId`, `choiceLabel`, `text`, `images`, `imagePaths`, `via`, `at`) | Last, once no question is open. Exit 0. |
 | `timeout` | `ids`, `answered`, `total` | Last, when `--timeout` passes first. The questions stay open. Exit 5. |

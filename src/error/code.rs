@@ -24,7 +24,6 @@ impl AgpjError {
             AgpjError::InvalidStateForColumn { .. } => "invalid_state_for_column",
             AgpjError::InvalidStateForAssignee => "invalid_state_for_assignee",
             AgpjError::InvalidStateChange { .. } => "invalid_state_change",
-            AgpjError::SleepMode => "sleep_mode",
             AgpjError::BrainstormNotActive => "brainstorm_not_active",
             AgpjError::TaskIsDraft { .. } => "task_is_draft",
             AgpjError::TaskInBacklog { .. } => "task_in_backlog",

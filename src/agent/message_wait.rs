@@ -94,7 +94,7 @@ pub fn wait_for_questions(
         let waiting = wait_until(shared, &reader, deadline, |questions: &Vec<Question>| {
             let count = |state: MessageState| questions.iter().filter(|q| q.state() == state).count();
             counts.set((count(MessageState::Closed), questions.len()));
-            Ok(if count(MessageState::Open) > 0 {
+            Ok(if count(MessageState::Open) + count(MessageState::Held) > 0 {
                 Evaluation::Continue
             } else if count(MessageState::Withdrawn) > 0 {
                 Evaluation::Ready(MessageWaitEnd::Withdrawn(questions.clone()))

@@ -20,6 +20,7 @@ use serde_json::{Value, json};
 
 pub use crate::mode_schedule::{Effective, Schedule, Source};
 pub use brainstorm::start_brainstorm;
+pub use held::{held_count, held_ids, release_held};
 pub use progress_fields::ProgressMode;
 pub use target::{Target, TargetKind, check as check_target};
 
@@ -254,6 +255,7 @@ pub fn change_schedule<E>(
 }
 
 mod brainstorm;
+mod held;
 mod progress_fields;
 mod state;
 mod store;

@@ -183,6 +183,7 @@ taskの項目を省略した例です。
 | `type` | フィールド | 出るとき |
 | --- | --- | --- |
 | `registered` | `questions`（`id`）・`resumed` | 最初。`message wait`では`resumed`が`true`。`--no-wait`ではこの1行だけを書き、終了コード0で終わる。 |
+| `held` | `questions`（`id`） | スリープモードのとき、`registered`の代わりに出る唯一の行。質問は保留として保存され、人には何も届かず、コマンドはすぐに終了コード0で終わります（保留中の質問への`message wait`も同じ）。質問はスリープが解けたときに届きます。取り下げるには`message withdraw`を使います。 |
 | `waiting` | `ids`・`elapsed`・`remaining`（期限なしなら`null`）・`answered`・`total` | `--heartbeat`秒ごと。タイマーから出し、Agent Projectは読まない。 |
 | `answered` | `ids`・`answers`（`id`・`choiceId`・`choiceLabel`・`text`・`images`・`imagePaths`・`via`・`at`） | 最後。未回答の質問がなくなったとき。終了コード0。 |
 | `timeout` | `ids`・`answered`・`total` | 最後。先に`--timeout`が過ぎたとき。質問は未回答のまま。終了コード5。 |

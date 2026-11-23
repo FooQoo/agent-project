@@ -26,6 +26,6 @@ agpj --project "<name>" message ask --actor ai --brainstorm --questions-json '{"
 
 The user ends the brainstorm with `agpj mode sparring` or on the board (`agpj mode auto` returns to the schedule, or to sparring). Then `mode` is no longer `brainstorm`: stop asking brainstorm questions at once and go back to `agpj wait`. `message ask --brainstorm` is refused with `brainstorm_not_active` once the mode has ended: stop, do not retry, and check `mode` in the progress table. A request "Start brainstorming ..." that arrives after the mode has ended is only accepted: `agpj message accept <id> --actor ai`.
 
-Sleep always wins. When a sleep window starts, the mode becomes `sleep`: `message ask` is refused with `sleep_mode`, so ask nothing and follow `agpj skills sleep`.
+Sleep always wins. When a sleep window starts, the mode becomes `sleep`: `message ask` only holds questions until sleep ends, so ask nothing that a subagent can decide and follow `agpj skills sleep`.
 
 Questions asked without `--brainstorm` stay ordinary questions and are accepted in brainstorm mode, so work questions still reach the user.

@@ -117,10 +117,28 @@ const MODE_POLL: Duration = Duration::from_secs(1);
 /// clock, so the start and end of a daily window are announced although no file changed. Nothing is
 /// sent for the state at connection time: the board reads it with `GET`.
 fn mode_events(data_dir: std::path::PathBuf) -> impl Stream<Item = Result<Event, Infallible>> {
+    let shared = data_dir.join("shared");
     let mut known = crate::mode::api_json_all(&data_dir, &chrono::Local::now());
     tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(MODE_POLL)).filter_map(
         move |_| {
-            let now = crate::mode::api_json_all(&data_dir, &chrono::Local::now());
+            let mut now = crate::mode::api_json_all(&data_dir, &chrono::Local::now());
+            // A project that left sleep (the daily window ended, or the entry is gone) gets its
+            // held questions delivered; one that is asleep reports how many it holds.
+            for (id, before) in &known {
+                let was_asleep = before["mode"] == "sleep";
+                let asleep = now.get(id).is_some_and(|state| state["mode"] == "sleep");
+                if was_asleep
+                    && !asleep
+                    && let Ok(project) = id.parse()
+                {
+                    let _ = crate::mode::release_held(&shared, &project);
+                }
+            }
+            for (id, state) in now.iter_mut() {
+                if state["mode"] == "sleep" {
+                    state["heldCount"] = serde_json::json!(crate::mode::held_count(&shared, id));
+                }
+            }
             let mut changed = serde_json::Map::new();
             for (id, state) in &now {
                 if known.get(id) != Some(state) {

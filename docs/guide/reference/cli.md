@@ -97,7 +97,7 @@ It ends with `answered` (exit 0), `timeout` (exit 5, the questions stay open), o
 
 ## Sleep mode {#sleep-mode}
 
-`mode` shows or switches the project's mode. Sparring is the default: the agent listens and asks you on the board. Sleep mode stops the questions.
+`mode` shows or switches the project's mode. Sparring is the default: the agent listens and asks you on the board. In sleep mode questions are held until sleep ends.
 
 ```sh
 agpj --project "My project" mode            # show the current mode
@@ -134,9 +134,9 @@ The agent asks its questions with `--brainstorm`. They are not linked to a task,
 agpj --project "My project" message ask --actor ai --brainstorm --questions-json '{"questions":[{"body":"Who reads this page first?"}]}'
 ```
 
-`message ask --brainstorm` is refused with `brainstorm_not_active` once the mode is no longer brainstorm. Questions without `--brainstorm` are ordinary and are still accepted. Sleep always wins: when a sleep window starts, the mode becomes sleep and every `message ask` is refused with `sleep_mode`.
+`message ask --brainstorm` is refused with `brainstorm_not_active` once the mode is no longer brainstorm. Questions without `--brainstorm` are ordinary and are still accepted. Sleep always wins: when a sleep window starts, the mode becomes sleep and every `message ask` is held, with or without `--brainstorm`.
 
-In sleep mode `message ask` is refused with `sleep_mode`, and nothing reaches the board, the notifications, or the chat. The agent has a subagent decide, continues with the conclusion, and records it on the task:
+In sleep mode `message ask` is not refused: it stores the questions as held and prints `Held 2 questions: Q-5, Q-6.` (`{"type": "held", "questions": [{"id": "Q-5"}, {"id": "Q-6"}]}` with `--json`) at once, even without `--no-wait`. A held question does not reach the board, the notifications, or the chat, and its tasks keep working. `agpj message withdraw <id> --actor ai` withdraws one, and `agpj message wait` on a held question returns at once. When sleep ends, by `agpj mode sparring` or the end of the daily window, `agpj mode` prints `Released 2 held questions: Q-5, Q-6.` and they behave like ordinary open questions. The agent has a subagent decide what it can, continues with the conclusion, and records it on the task:
 
 ```sh
 agpj --project "My project" decision add 1 \

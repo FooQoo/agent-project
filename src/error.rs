@@ -93,8 +93,6 @@ pub enum AgpjError {
         from: RunState,
         to: RunState,
     },
-    /// The project is in sleep mode: questions to the user are not accepted.
-    SleepMode,
     /// `message ask --brainstorm` while the project is not in brainstorm mode.
     BrainstormNotActive,
     /// The task is a draft: agents and the CLI cannot change it.

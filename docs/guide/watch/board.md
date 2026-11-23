@@ -189,7 +189,7 @@ The dialog has a language switch and a grid of themes: one row of 12 light color
 
 ### Mode {#mode}
 
-The settings dialog has a **Mode** switch for the project on the board, with two options: **Sparring** and **Sleep**. Both options are the same size. A third state, **Brainstorm**, appears only while you brainstorm (see [Brainstorm](#brainstorm)). Sparring is the default: the agent listens and asks you on the board when it needs an answer. Sleep stops the questions: the agent keeps working and decides in your place, and each decision is recorded on the task's history (see [Sleep mode](../delegate/agents#sleep-mode)).
+The settings dialog has a **Mode** switch for the project on the board, with two options: **Sparring** and **Sleep**. Both options are the same size. A third state, **Brainstorm**, appears only while you brainstorm (see [Brainstorm](#brainstorm)). Sparring is the default: the agent listens and asks you on the board when it needs an answer. Sleep holds the questions back: the agent keeps working and decides in your place, the header shows how many questions are held, and they all reach you at once when sleep ends, and each decision is recorded on the task's history (see [Sleep mode](../delegate/agents#sleep-mode)).
 
 While the project is asleep, a **Sleep** chip with a moon icon shows in the header, on the PC and on the phone, so you notice it. The switch and the chip follow `agpj mode`: when the agent or you change the mode with the command, an open board shows it within a few seconds, without a reload. The mode belongs to you, not to the project's shared files, and is saved per project on this computer. A phone that opened the board through the remote entrance can switch it too.
 
