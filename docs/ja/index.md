@@ -10,7 +10,7 @@ landing:
     done: コピーしました
   hero:
     title: "人が回さなくても、\n大きな仕事が進む。"
-    lead: Agent Projectは、CodexやClaude Codeに足りないプロジェクトマネジメントを、ボードで与えます。AIに計画を頼み、開始を承認し、途中の質問に答えるだけ。AIは目標をタスクに分け、何をもって完了とするかを先に決め、自分だけで決めてはいけないことだけをあなたに聞き、完了条件に照らして確かめた結果を持ち帰ります。
+    lead: Agent Projectは、一人でプロダクトを育てる人のためのプロジェクト管理ツールです。いつものAIとのチャットで試したい案を選んだら、計画から検証までをCodexやClaude Codeに任せられます。結果を見て、そのまま進めるか、やり方を変えるか、今回は見送るかを決められます。
     install: brew install fooqoo/tap/agpj
     primary: { text: はじめる, link: /ja/guide/getting-started }
     secondary: { text: GitHub, link: https://github.com/FooQoo/agent-project }

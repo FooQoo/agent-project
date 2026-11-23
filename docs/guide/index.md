@@ -53,6 +53,12 @@ flowchart LR
 
 [Quickstart](./quickstart) takes you through this once, and [Working with agents](./delegate/agents) describes it in full.
 
+### Trying an idea before you commit to it
+
+Suppose you're considering combining two signup screens. After talking it through with Claude, ask your agent to make a clickable mockup with the existing fields and attach screenshots of both layouts at phone width. Those are the acceptance conditions for this task.
+
+Open the mockup. If the longer form pushes the submit button out of sight, you might keep the two screens and try removing an optional field next. The comparison gives you enough to make that call before spending time on a full implementation.
+
 ## Watching and answering
 
 The board is one monitor for the work. A monitor is not watch-only: your phone, the chat, and the CLI show the same work, take the same answers, and let you step in. Wherever you look from, there are two ways to take part.

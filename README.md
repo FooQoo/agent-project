@@ -8,7 +8,7 @@
 
 **Big work moves on without you driving it.**
 
-Agent Project gives Codex and Claude Code the project management they lack. Ask AI to plan the work, approve the start, and answer the questions it raises along the way. It breaks the goal into tasks, decides up front what done means, asks you only what it must not decide alone, and brings back results checked against those conditions.
+When you build a product on your own, you can talk an idea through in your usual AI chat. Once you know what you want to try, ask Codex or Claude Code to plan the work on the Agent Project board. Your agent works through the plan and checks the result against the agreed conditions. You can use what you learn to choose your next test, with less time spent managing each one.
 
 ```sh
 brew install fooqoo/tap/agpj
