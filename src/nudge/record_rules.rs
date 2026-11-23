@@ -3,7 +3,7 @@
 
 use super::commands::{contains_sequence, runs_agpj, tokens};
 use super::rules::{has_running_ai_task, is_pr_create};
-use super::{Call, Facts, Finding};
+use super::{Call, Facts, Finding, Lang};
 use crate::domain::{Assignee, Column};
 use crate::progress::ProgressTask;
 
@@ -20,9 +20,10 @@ pub(super) fn history(facts: &Facts) -> Vec<Finding> {
     {
         return Vec::new();
     }
-    vec![Finding::new(
+    vec![Finding::new(facts.lang.pick(
         "Record a decision that matters later once: this turn made a commit, ran tests, pushed, or opened a pull request and recorded nothing. A decision that changes state belongs in the `--reason` of `mv` or `state`; one that does not, such as keeping a card in Todo, goes in `agpj history add` with the grounds, the decision, and when known the condition for reconsidering. Skip it when there is no such decision.",
-    )]
+        "後で効いてくる判断は、そのとき一度だけ記録してください。このターンではコミット、テスト、プッシュ、プルリクエストの作成のいずれかを行いましたが、ボードには何も記録されていません。状態を変える判断は `mv` や `state` の `--reason` に書きます。状態を変えない判断(たとえばカードを Todo に留める)は、根拠、判断、見直す条件が分かればその条件を添えて、`agpj history add` に書きます。そのような判断がなければ、記録は不要です。",
+    ))]
 }
 
 /// The turn merged a pull request while an AI task in Doing still has open
@@ -33,12 +34,18 @@ pub(super) fn conditions_after_merge(facts: &Facts) -> Vec<Finding> {
     }
     open_doing_tasks(facts)
         .map(|task| {
-            Finding::new(format!(
-                "You merged a pull request while task #{id} has {open} of {total} conditions open: once the merge verified the work, record the verification in the task body and set its conditions done (the pull request is not linked to a task, so check which tasks it covers).",
-                id = task.id,
-                open = task.acceptance.total - task.acceptance.done,
-                total = task.acceptance.total,
-            ))
+            let open = task.acceptance.total - task.acceptance.done;
+            let total = task.acceptance.total;
+            Finding::new(match facts.lang {
+                Lang::En => format!(
+                    "You merged a pull request while task #{id} has {open} of {total} conditions open: once the merge verified the work, record the verification in the task body and set its conditions done (the pull request is not linked to a task, so check which tasks it covers).",
+                    id = task.id,
+                ),
+                Lang::Ja => format!(
+                    "プルリクエストをマージしましたが、タスク #{id} は {total} 件中 {open} 件の条件が未完了です。マージで作業が検証できたなら、検証内容をタスク本文に記録し、条件を完了にしてください(プルリクエストはタスクに紐づいていないので、どのタスクが対象か確かめてください)。",
+                    id = task.id,
+                ),
+            })
             .task(task.id)
         })
         .collect()
@@ -54,9 +61,10 @@ pub(super) fn start_task(facts: &Facts) -> Vec<Finding> {
     {
         return Vec::new();
     }
-    vec![Finding::new(
+    vec![Finding::new(facts.lang.pick(
         "You edited files but no AI task is in Doing and Running: start the task on the board (`agpj mv <id> doing`, `agpj state <id> running`) or create one.",
-    )]
+        "ファイルを編集しましたが、Doing かつ Running の AI タスクがありません。ボードでタスクを着手するか(`agpj mv <id> doing`、`agpj state <id> running`)、新しく作成してください。",
+    ))]
 }
 
 fn is_progress(call: &Call) -> bool {

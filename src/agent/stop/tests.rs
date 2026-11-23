@@ -69,3 +69,55 @@ fn an_active_stop_hook_never_blocks() {
     assert!(run(&input(false), &shared, &project).is_some());
     assert!(run(&input(true), &shared, &project).is_none());
 }
+
+fn ja(mut progress: crate::progress::Progress) -> crate::progress::Progress {
+    progress.locale = Some("ja".into());
+    progress
+}
+
+#[test]
+fn a_japanese_project_gets_the_checklist_in_japanese() {
+    let scenario = Scenario::turn(
+        "マージしますか?",
+        vec![call("gh pr create --title x")],
+        Some(ja(progress_with(true, &[3]))),
+    );
+    let reason = reason(&decide_for(&scenario).unwrap());
+    assert!(reason.starts_with("Agent Project のターン終了チェックリスト。"));
+    let found = reason.find("\n見つかったこと:\n").unwrap();
+    let check = reason.find("\n確認すること:\n").unwrap();
+    assert!(found < check);
+    let (found_part, check_part) = (&reason[found..check], &reason[check..]);
+    assert!(found_part.contains("- NG: タスク #3 は受け入れ条件がすべて満たされています"));
+    assert!(found_part.contains("`agpj result add 3 --final ...`"));
+    assert!(found_part.contains("- NG: このターンでプルリクエストを作成しました"));
+    assert!(check_part.contains("- [ ] この質問はユーザーの回答を待つものですか"));
+    assert!(check_part.contains("`agpj message ask`"));
+    assert!(!reason.contains("Found:") && !reason.contains("Check:"));
+}
+
+#[test]
+fn commands_stay_verbatim_in_every_japanese_rule_text() {
+    let no_wait = Scenario::turn(
+        "Q-1 を起票しました。",
+        vec![call("agpj message ask --no-wait --title x")],
+        Some(ja(progress_with(false, &[]))),
+    );
+    let r = reason(&decide_for(&no_wait).unwrap());
+    assert!(r.contains("`agpj message wait <Q-id>`"));
+    let edited = Scenario::turn(
+        "終わりました。",
+        vec![crate::nudge::test_support::write_call("/work/src/a.rs")],
+        Some(ja(progress_with(false, &[]))),
+    );
+    let r = reason(&decide_for(&edited).unwrap());
+    assert!(r.contains("`agpj mv <id> doing`") && r.contains("`agpj state <id> running`"));
+}
+
+#[test]
+fn english_stays_the_default_without_a_locale() {
+    let scenario = Scenario::turn("Done.", vec![], Some(progress_with(false, &[4])));
+    let r = reason(&decide_for(&scenario).unwrap());
+    assert!(r.starts_with("Agent Project turn-end checklist."));
+    assert!(r.contains("- NG: Task #4 has all conditions met"));
+}

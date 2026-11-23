@@ -73,6 +73,8 @@ The skill topic `agpj skills brainstorm` (`src/skills/topics/brainstorm.md`) tel
 
 A nudge reminds an agent of something it tends to forget. One registry, `RULES` in `src/nudge/rules.rs`, feeds both places an agent is reminded: the `reminders` of the [progress table](../reference/agent-output.md#progress-table) while it works, and the Stop hook's checklist at the end of a turn. A rule is one entry with these fields:
 
+The text of every reminder and of the Stop checklist follows the project's language: the `locale` of the progress table (see [progress table](../reference/agent-output.md#progress-table)). With `"ja"` the sentences are Japanese; with no `locale`, or any other value, they are English, exactly as before. A rule picks its sentence with `Facts::lang` (`src/nudge/lang.rs`), so a new rule gives both languages. Only the sentences change: the `rule` and `kind` values, the `NG:` and `[ ]` marks, commands, options, IDs, file names, and JSON keys stay as they are. The error text of a hook failure (`AGPJ_ERROR`) stays English, because it is written when the project's language may not be readable.
+
 | Field | Values |
 | --- | --- |
 | `id` | A stable kebab-case name. It is the `rule` of every reminder the rule gives. |

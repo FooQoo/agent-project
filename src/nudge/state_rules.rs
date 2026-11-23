@@ -3,7 +3,7 @@
 
 use chrono::Duration;
 
-use super::{Facts, Finding};
+use super::{Facts, Finding, Lang};
 use crate::domain::{Assignee, Column, RunState};
 use crate::progress::{Progress, ProgressTask};
 
@@ -34,11 +34,18 @@ pub fn answer(facts: &Facts) -> Vec<Finding> {
         .answers
         .iter()
         .map(|a| {
-            Finding::new(format!(
-                "Answer {id} (\"{title}\") is not taken in yet: read it with `agpj message show {id}`, act on it, then run `agpj message accept {id}`.",
-                id = a.id,
-                title = a.title
-            ))
+            Finding::new(match facts.lang {
+                Lang::En => format!(
+                    "Answer {id} (\"{title}\") is not taken in yet: read it with `agpj message show {id}`, act on it, then run `agpj message accept {id}`.",
+                    id = a.id,
+                    title = a.title
+                ),
+                Lang::Ja => format!(
+                    "回答 {id}(「{title}」)をまだ取り込んでいません。`agpj message show {id}` で読み、内容に沿って対応してから、`agpj message accept {id}` を実行してください。",
+                    id = a.id,
+                    title = a.title
+                ),
+            })
             .message(a.id.clone())
         })
         .collect()
@@ -53,11 +60,18 @@ pub fn request(facts: &Facts) -> Vec<Finding> {
         .requests
         .iter()
         .map(|r| {
-            Finding::new(format!(
-                "Request {id} (\"{title}\") is open: read it with `agpj message show {id}`, accept it with `agpj message accept {id}`, and plan it.",
-                id = r.id,
-                title = r.title
-            ))
+            Finding::new(match facts.lang {
+                Lang::En => format!(
+                    "Request {id} (\"{title}\") is open: read it with `agpj message show {id}`, accept it with `agpj message accept {id}`, and plan it.",
+                    id = r.id,
+                    title = r.title
+                ),
+                Lang::Ja => format!(
+                    "依頼 {id}(「{title}」)が未対応です。`agpj message show {id}` で読み、`agpj message accept {id}` で受け付けて、計画を立ててください。",
+                    id = r.id,
+                    title = r.title
+                ),
+            })
             .message(r.id.clone())
         })
         .collect()
@@ -77,12 +91,20 @@ pub fn conditions(facts: &Facts) -> Vec<Finding> {
                 && t.acceptance.done < t.acceptance.total
         })
         .map(|t| {
-            Finding::new(format!(
-                "Task #{id} has a final result but {done} of {total} acceptance conditions are done: record the verification and set the conditions done in its TASK.md.",
-                id = t.id,
-                done = t.acceptance.done,
-                total = t.acceptance.total
-            ))
+            Finding::new(match facts.lang {
+                Lang::En => format!(
+                    "Task #{id} has a final result but {done} of {total} acceptance conditions are done: record the verification and set the conditions done in its TASK.md.",
+                    id = t.id,
+                    done = t.acceptance.done,
+                    total = t.acceptance.total
+                ),
+                Lang::Ja => format!(
+                    "タスク #{id} は最終成果がありますが、受け入れ条件は {total} 件中 {done} 件しか完了していません。検証内容を記録し、TASK.md の条件を完了にしてください。",
+                    id = t.id,
+                    done = t.acceptance.done,
+                    total = t.acceptance.total
+                ),
+            })
             .task(t.id)
         })
         .collect()
@@ -97,11 +119,18 @@ pub fn epic_close(facts: &Facts) -> Vec<Finding> {
         .epics_to_close
         .iter()
         .map(|e| {
-            Finding::new(format!(
-                "Epic {id} has every task Done but unchecked reference conditions in its EPIC.md ({path}): verify them and record the outcome.",
-                id = e.id,
-                path = e.document_path.display()
-            ))
+            Finding::new(match facts.lang {
+                Lang::En => format!(
+                    "Epic {id} has every task Done but unchecked reference conditions in its EPIC.md ({path}): verify them and record the outcome.",
+                    id = e.id,
+                    path = e.document_path.display()
+                ),
+                Lang::Ja => format!(
+                    "エピック {id} はすべてのタスクが Done ですが、EPIC.md({path})に未チェックの参照条件が残っています。確認して、結果を記録してください。",
+                    id = e.id,
+                    path = e.document_path.display()
+                ),
+            })
             .epic(e.id.clone())
         })
         .collect()
@@ -118,11 +147,18 @@ pub fn stale_running(facts: &Facts) -> Vec<Finding> {
         .filter_map(|t| {
             let idle = facts.now - t.last_activity_at?;
             (idle > limit).then(|| {
-                Finding::new(format!(
-                    "Task #{id} has been running for {minutes} minutes with no history entry: if you are actually working on it, continue (check its PR and CI state, and record progress with `agpj history add {id} --reason \"<progress>\"`; if you are blocked on a person, ask with `agpj message ask`, which pauses the task). If you are not working on it, pause it with `agpj state {id} paused --actor ai --reason \"<why you stopped>\"`.",
-                    id = t.id,
-                    minutes = idle.num_minutes()
-                ))
+                Finding::new(match facts.lang {
+                    Lang::En => format!(
+                        "Task #{id} has been running for {minutes} minutes with no history entry: if you are actually working on it, continue (check its PR and CI state, and record progress with `agpj history add {id} --reason \"<progress>\"`; if you are blocked on a person, ask with `agpj message ask`, which pauses the task). If you are not working on it, pause it with `agpj state {id} paused --actor ai --reason \"<why you stopped>\"`.",
+                        id = t.id,
+                        minutes = idle.num_minutes()
+                    ),
+                    Lang::Ja => format!(
+                        "タスク #{id} は {minutes} 分間、履歴の記録がないまま実行中です。実際に作業しているなら続けてください(PR と CI の状態を確かめ、`agpj history add {id} --reason \"<進捗>\"` で進捗を記録します。人の判断待ちなら、`agpj message ask` で質問すると、タスクは一時停止になります)。作業していないなら、`agpj state {id} paused --actor ai --reason \"<止めた理由>\"` で一時停止にしてください。",
+                        id = t.id,
+                        minutes = idle.num_minutes()
+                    ),
+                })
                 .task(t.id)
             })
         })
@@ -163,20 +199,42 @@ pub fn lane_review(facts: &Facts) -> Vec<Finding> {
     if parked.is_empty() && queued.is_empty() {
         return Vec::new();
     }
-    let mut text = format!(
-        "No card has moved between lanes for {LANE_REVIEW_MINUTES} minutes. Review the board."
-    );
+    let ja = facts.lang == Lang::Ja;
+    let mut text = if ja {
+        format!(
+            "{LANE_REVIEW_MINUTES} 分間、どのカードもレーン間を移動していません。ボードを見直してください。"
+        )
+    } else {
+        format!(
+            "No card has moved between lanes for {LANE_REVIEW_MINUTES} minutes. Review the board."
+        )
+    };
     if !parked.is_empty() {
-        text.push_str(&format!(
-            " Doing holds cards nothing is working on: {parked}. Resume the ones that can continue; for a card that is waiting its turn (for example, for a release), ask the person with `agpj message ask` whether to send it back to Todo (an agent cannot move Doing to Todo); for a card whose completion conditions are met, confirm its completion."
-        ));
+        text.push_str(&if ja {
+            format!(
+                " Doing に、誰も作業していないカードがあります: {parked}。続けられるものは再開してください。順番待ちのカード(たとえばリリース待ち)は、`agpj message ask` で Todo に戻してよいか本人に確認してください(エージェントは Doing から Todo へ移せません)。完了条件を満たしているカードは、完了を確認してください。"
+            )
+        } else {
+            format!(
+                " Doing holds cards nothing is working on: {parked}. Resume the ones that can continue; for a card that is waiting its turn (for example, for a release), ask the person with `agpj message ask` whether to send it back to Todo (an agent cannot move Doing to Todo); for a card whose completion conditions are met, confirm its completion."
+            )
+        });
     }
     if !queued.is_empty() {
-        text.push_str(&format!(
-            " Todo holds AI cards: {queued}. Start the ones that are ready, following the work loop and the epic order; a card that is waiting its turn (for example, for a release) stays in Todo, with the reason recorded by `agpj history add` if it is not recorded yet."
-        ));
+        text.push_str(&if ja {
+            format!(
+                " Todo に AI のカードがあります: {queued}。準備ができているものは、作業ループとエピックの順序に従って着手してください。順番待ちのカード(たとえばリリース待ち)は Todo に残し、理由がまだ記録されていなければ `agpj history add` で記録してください。"
+            )
+        } else {
+            format!(
+                " Todo holds AI cards: {queued}. Start the ones that are ready, following the work loop and the epic order; a card that is waiting its turn (for example, for a release) stays in Todo, with the reason recorded by `agpj history add` if it is not recorded yet."
+            )
+        });
     }
-    text.push_str(" Recording the decision with `agpj history add` keeps a card out of this reminder until the next lane move.");
+    text.push_str(facts.lang.pick(
+        " Recording the decision with `agpj history add` keeps a card out of this reminder until the next lane move.",
+        " 判断を `agpj history add` で記録すると、次にレーン間の移動があるまで、そのカードはこの通知に出なくなります。",
+    ));
     vec![Finding::new(text)]
 }
 
@@ -195,10 +253,16 @@ pub fn next_task(facts: &Facts) -> Vec<Finding> {
         return Vec::new();
     };
     vec![
-        Finding::new(format!(
-            "No AI task is running and task #{id} is next: pick it up (read its epic and `TASK.md`, then `mv <id> doing --actor ai` and `state <id> running --actor ai`; a plan in the Backlog is never next).",
-            id = next.id
-        ))
+        Finding::new(match facts.lang {
+            Lang::En => format!(
+                "No AI task is running and task #{id} is next: pick it up (read its epic and `TASK.md`, then `mv <id> doing --actor ai` and `state <id> running --actor ai`; a plan in the Backlog is never next).",
+                id = next.id
+            ),
+            Lang::Ja => format!(
+                "実行中の AI タスクがなく、次はタスク #{id} です。着手してください(エピックと `TASK.md` を読み、`mv <id> doing --actor ai` と `state <id> running --actor ai` を実行します。Backlog の計画が次になることはありません)。",
+                id = next.id
+            ),
+        })
         .task(next.id),
     ]
 }

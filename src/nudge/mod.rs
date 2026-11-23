@@ -9,6 +9,7 @@
 //! `docs/dev/concepts/agents.md`.
 
 mod commands;
+mod lang;
 mod question_rules;
 mod record_rules;
 mod rules;
@@ -42,6 +43,7 @@ use serde::Serialize;
 use crate::progress::Progress;
 
 pub use commands::{ends_with_question, runs_agpj};
+pub use lang::Lang;
 pub use rules::RULES;
 pub use turn::{Call, Turn, read_turn};
 
@@ -158,6 +160,8 @@ pub struct Facts<'a> {
     /// The reply text from the Stop input, when it has one.
     pub message: Option<&'a str>,
     pub now: DateTime<Utc>,
+    /// The language of the sentences the rules write: the project's locale.
+    pub lang: Lang,
 }
 
 impl<'a> Facts<'a> {
@@ -221,6 +225,7 @@ pub fn state_reminders(progress: &Progress, now: DateTime<Utc>) -> Vec<Reminder>
         turn: None,
         message: None,
         now,
+        lang: Lang::from_locale(progress.locale.as_deref()),
     };
     reminders(&facts, rules::RULES, |rule| {
         rule.source == Source::State && rule.when.in_table()
