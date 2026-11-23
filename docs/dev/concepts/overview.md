@@ -2,11 +2,11 @@
 
 Start here. This page gives you the mental model: what Agent Project is for, what runs, where the data lives, and how one change travels from an agent to the browser. The other concept pages go deeper into each part.
 
-## The agent's runtime and the shared workspace
+## The agent's runtime and the project around it
 
 An AI agent such as Claude Code or Codex runs inside its own runtime: the tools it can call, the context it holds, and the loop that drives it. That runtime decides how the agent works inside one session. It does not decide what the work is, when it is finished, or when to ask a person, and it does not outlive the session.
 
-Agent Project is a **shared workspace** on top of it, where the agent plans and reports and a person answers. It keeps the plan, the acceptance conditions that say when a task is finished, the questions that stop the agent until a person answers, and the history that lets the next session continue. These live in files, outside any one agent, so a different agent or a new session can pick the work up where the last one stopped.
+Agent Project is the **project management** layer on top of it, shared by the agent and a person: the agent plans and reports, and the person answers. It keeps the plan, the acceptance conditions that say when a task is finished, the questions that stop the agent until a person answers, and the history that lets the next session continue. These live in files, outside any one agent, so a different agent or a new session can pick the work up where the last one stopped.
 
 ```mermaid
 flowchart LR
