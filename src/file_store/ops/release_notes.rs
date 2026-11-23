@@ -8,11 +8,11 @@ use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::history_language::HistoryLanguage;
 use crate::file_store::layout;
-use crate::file_store::model::{HistoryRecord, TaskFile, TaskMetadata};
+use crate::file_store::model::{HistoryRecord, ProjectFile, TaskFile, TaskMetadata};
 use crate::file_store::reader;
 use crate::file_store::releases::{effective_release, listed_versions};
 
-use super::{reason_or_default, save_project, stamp};
+use super::{reason_or_default, save_project, save_task, stamp};
 
 impl FileStore {
     /// Issue the Backlog release-work card of `name`, unless a card carrying
@@ -72,20 +72,40 @@ impl FileStore {
         Ok(true)
     }
 
-    /// Called under the project's write lock just before `task` is saved as Done. When the task
-    /// is a release-work card and its version is the project's release version, move the
-    /// release version to the nearest newer listed version and record that in the task's
-    /// history. When no newer version is listed, the release version stays and the history
-    /// says so. Any other task is left alone.
-    pub(super) fn advance_release_for_done(
+    /// Save `task` as Done, advancing the release version first when it applies. Under the
+    /// project's write lock. When saving the card fails, the release version is put back, so
+    /// the card and the release version change together or not at all, and a retry advances.
+    pub(super) fn save_done_task(
         &self,
         project: &ProjectId,
         project_dir: &std::path::Path,
         task: &mut TaskFile,
         now: DateTime<Utc>,
     ) -> Result<(), AgpjError> {
+        let previous = self.advance_release_for_done(project, project_dir, task, now)?;
+        if let Err(error) = save_task(self.shared_dir(), project_dir, task) {
+            if let Some(previous) = previous {
+                let _ = save_project(self.shared_dir(), project_dir, &previous);
+            }
+            return Err(error);
+        }
+        Ok(())
+    }
+
+    /// Called under the project's write lock just before `task` is saved as Done. When the task
+    /// is a release-work card and its version is the project's release version, move the
+    /// release version to the nearest newer listed version and record that in the task's
+    /// history. When no newer version is listed, the release version stays and the history
+    /// says so. Any other task is left alone.
+    fn advance_release_for_done(
+        &self,
+        project: &ProjectId,
+        project_dir: &std::path::Path,
+        task: &mut TaskFile,
+        now: DateTime<Utc>,
+    ) -> Result<Option<ProjectFile>, AgpjError> {
         let Some(version) = task.release_notes_version.clone() else {
-            return Ok(());
+            return Ok(None);
         };
         let shared = self.shared_dir();
         let mut file = reader::read_project_file(shared, project)?;
@@ -93,7 +113,7 @@ impl FileStore {
         if effective_release(&listed, file.release_version.as_deref()).as_deref()
             != Some(version.as_str())
         {
-            return Ok(());
+            return Ok(None);
         }
         let next = listed
             .iter()
@@ -113,7 +133,9 @@ impl FileStore {
                 ),
             ),
         };
+        let mut previous = None;
         if let Some(next) = next {
+            previous = Some(file.clone());
             file.release_version = Some(next);
             save_project(shared, project_dir, &file)?;
         }
@@ -122,6 +144,6 @@ impl FileStore {
             at: stamp(now),
             reason,
         });
-        Ok(())
+        Ok(previous)
     }
 }
