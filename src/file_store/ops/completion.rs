@@ -100,6 +100,7 @@ impl FileStore {
             task.position = position;
             task.updated_at = at;
             task.history.push(event);
+            self.advance_release_for_done(project, &project_dir, &mut task, now)?;
             save_task(shared, &project_dir, &task)?;
             changed = true;
         }
@@ -107,5 +108,7 @@ impl FileStore {
     }
 }
 
+#[cfg(test)]
+mod release_tests;
 #[cfg(test)]
 mod tests;
