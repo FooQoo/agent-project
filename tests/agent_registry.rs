@@ -403,3 +403,124 @@ fn connect_is_refused_while_the_environment_already_carries_a_secret() {
     assert!(!out.status.success());
     assert!(String::from_utf8_lossy(&out.stderr).contains("AGPJ_CONNECTION_SECRET"));
 }
+
+/// Store `secret` where a session with this Claude session ID keeps it for `project`.
+fn keep_secret(data_dir: &std::path::Path, project: &ProjectId, session_id: &str, secret: &str) {
+    use sha2::{Digest, Sha256};
+    let digest = Sha256::digest(session_id.as_bytes());
+    let hex: String = digest.iter().take(8).map(|b| format!("{b:02x}")).collect();
+    let dir = data_dir.join("connections").join(project.as_str());
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join(format!("claude_{hex}.secret")), secret).unwrap();
+}
+
+#[test]
+fn session_end_releases_runs_in_every_project_holding_the_secret_from_an_unbound_folder() {
+    let fx = fx();
+    let beta = fx.store.create_project("Beta", t0()).unwrap().id;
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    fx.store.register_agent(&beta, "Server", "", t0()).unwrap();
+    let alpha_secret = fx.connect("A-1", false, t0()).unwrap();
+    let alpha_task = fx.doing_task();
+    fx.run(alpha_task, &alpha_secret, t0()).unwrap();
+    let code = fx
+        .store
+        .issue_connect_code(&beta, "A-1", false, t0())
+        .unwrap();
+    let beta_secret = fx
+        .store
+        .exchange_connect_code(
+            &beta,
+            &code.code,
+            ConnectionOrigin::External,
+            "claude-code",
+            "claude:1",
+            t0(),
+        )
+        .unwrap()
+        .secret;
+    let beta_task = fx
+        .store
+        .create_task(
+            &beta,
+            NewTask {
+                title: "work".into(),
+                description: String::new(),
+                assignee: Assignee::Ai,
+                actor: Actor::Human,
+                draft: None,
+            },
+            t0(),
+        )
+        .unwrap()
+        .id;
+    fx.store
+        .move_work_task_for_user(&beta, beta_task, Column::Doing, ctx(Actor::Human), t0())
+        .unwrap();
+    fx.store
+        .set_agent_status_connected(
+            &beta,
+            beta_task,
+            RunState::Running,
+            ctx(Actor::Ai),
+            &beta_secret,
+            t0(),
+        )
+        .unwrap();
+
+    let data_dir = fx._root.path();
+    keep_secret(data_dir, &fx.project, "session-1", &alpha_secret);
+    keep_secret(data_dir, &beta, "session-1", &beta_secret);
+    // The hook runs in a folder bound to no project and names none.
+    let unbound = tempfile::tempdir().unwrap();
+    let input = serde_json::json!({
+        "hook_event_name": "SessionEnd",
+        "session_id": "session-1",
+        "cwd": unbound.path(),
+    })
+    .to_string();
+    let out = agent_project::agent::hook::run(
+        "claude",
+        &mut std::io::Cursor::new(input.into_bytes()),
+        &data_dir.join("shared"),
+        None,
+    );
+    assert!(out.is_none());
+    for (project, id) in [(&fx.project, alpha_task), (&beta, beta_task)] {
+        let task = fx.store.task(project, id).unwrap();
+        assert_eq!(task.agent_status, RunState::Paused);
+        assert_eq!(task.run_connection_id, None);
+    }
+}
+
+#[test]
+fn a_run_state_without_a_connection_is_refused_once_the_project_has_agents() {
+    let fx = fx();
+    let id = fx.doing_task();
+    // No agents yet: the plain rules apply.
+    assert!(
+        fx.store
+            .set_agent_status_unconnected(&fx.project, id, RunState::Running, ctx(Actor::Ai), t0())
+            .is_ok()
+    );
+    fx.store
+        .set_agent_status_unconnected(&fx.project, id, RunState::Paused, ctx(Actor::Ai), t0())
+        .unwrap();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let refused = fx.store.set_agent_status_unconnected(
+        &fx.project,
+        id,
+        RunState::Running,
+        ctx(Actor::Ai),
+        t0(),
+    );
+    assert!(matches!(refused, Err(AgpjError::NotConnected)));
+    assert_eq!(
+        fx.store.task(&fx.project, id).unwrap().agent_status,
+        RunState::Paused
+    );
+}
