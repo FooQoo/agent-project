@@ -19,7 +19,7 @@ landing:
   pm:
     eyebrow: Project management for agents
     title: Agents run on their own when the project is managed for them.
-    lead: Agents are strong, but in a long job they still lose their way, stop, or call the work done before it is. So Agent Project gives the agent, as built-in rules, the four things a project manager would handle.
+    lead: Agents are strong, but in a long job they still lose their way, stop, or call the work done before it is. So Agent Project gives the agent four rules for carrying a long job through to the end.
     items:
       - { icon: kanban, tone: todo, title: Break down and order, text: The goal becomes epics and tasks in order, and the progress table tells the agent what can move next. }
       - { icon: list-checks, tone: done, title: Decide what done means, text: Each task has acceptance conditions set before the work starts. It reaches Done on its own only when every condition is verified. }
@@ -103,7 +103,7 @@ landing:
           - A task open in the bottom drawer of remote access, on its Conditions tab
       - image: docs
         title: Project docs
-        text: Open the design notes and specs in your project's docs/ folder right from the Kanban board.
+        text: Open the design notes and specs in your project's docs/ folder right from the Kanban board. Releases keep their own record too. Each version gets a release document that lists the work planned for it, the work verified, and the work left.
         link: { text: Project docs, link: /guide/watch/docs }
         preview: /guide/feature-stages#docs
         alt: The Docs dialog with a file list and a rendered Markdown document
