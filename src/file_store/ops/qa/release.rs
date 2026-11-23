@@ -3,12 +3,13 @@
 use chrono::{DateTime, Utc};
 
 use super::super::{HistoryKind, Transition, lock_project, stamp, transition_event};
+use super::history_images::qualify_attachment_refs;
 use super::{message_change, options_line, referrers};
 use crate::domain::{ProjectId, RunState};
 use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::model::HistoryRecord;
-use crate::file_store::qa::{Message, MessageState, Question, message_ids, read_message};
+use crate::file_store::qa::{self, Message, MessageState, Question, message_ids, read_message};
 use crate::file_store::transaction::save_batch_locked;
 
 impl FileStore {
@@ -59,13 +60,17 @@ impl FileStore {
             let language = self.history_language(project, &referrer.task)?;
             for question in &mine {
                 let options = options_line(&question.choices);
+                let folder = qa::attachments_dir(&qa::message_dir(&project_dir, &question.id));
+                let body = qualify_attachment_refs(&question.body, &question.id, |name| {
+                    folder.join(name).is_file()
+                });
                 let english = format!(
-                    "Asked a question ({}):\n\n{}\n\nOptions: {options}",
-                    question.id, question.body
+                    "Asked a question ({}):\n\n{body}\n\nOptions: {options}",
+                    question.id
                 );
                 let japanese = format!(
-                    "質問しました（{}）:\n\n{}\n\n選択肢: {options}",
-                    question.id, question.body
+                    "質問しました（{}）:\n\n{body}\n\n選択肢: {options}",
+                    question.id
                 );
                 referrer.task.history.push(HistoryRecord {
                     at,

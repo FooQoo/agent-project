@@ -54,6 +54,15 @@ describe('resolveHistoryImage', () => {
     );
   });
 
+  it.each(['_a.png', '-a.png', 'a_b-c.d.webp', 'a'.repeat(100)])(
+    'accepts the plain name %s',
+    (name) => {
+      expect(resolveHistoryImage(project, `attachments/Q-1/${name}`)).toBe(
+        `/api/projects/${project}/messages/Q-1/attachments/${name}`,
+      );
+    },
+  );
+
   it.each([
     `${'https:'}//e.test/a.png`,
     'attachments/screen.png',

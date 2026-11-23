@@ -29,7 +29,8 @@ export function resolveMessageImage(
 }
 
 const QUESTION_ID = /^Q-[1-9][0-9]*$/;
-const PLAIN_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
+// As the server: 1 to 100 of letters, digits, `.`, `_`, `-`, and no leading dot.
+const PLAIN_NAME = /^(?!\.)[A-Za-z0-9._-]{1,100}$/;
 
 /**
  * The URL for an image reference in a history entry, which is written

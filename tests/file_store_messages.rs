@@ -917,3 +917,48 @@ fn a_question_copied_into_history_keeps_which_question_an_image_came_from() {
         h.reason.contains("Answered a question") && h.reason.contains("attachments/Q-1/layout.png")
     }));
 }
+
+#[test]
+fn a_released_held_question_keeps_which_question_an_image_came_from() {
+    let f = fixture();
+    let task = f.task("Wait for a decision");
+    f.store
+        .ask_questions(
+            &f.project,
+            AskInput {
+                held: true,
+                actor: Actor::Ai,
+                asked_by: None,
+                brainstorm: None,
+                questions: vec![AskQuestion {
+                    body: "Held ![](attachments/layout.png) ![](attachments/gone.png)".into(),
+                    choices: Vec::new(),
+                    recommended_choice_id: None,
+                    tasks: Vec::new(),
+                    images: vec![RequestImage {
+                        name: "layout.png".into(),
+                        bytes: PNG.to_vec(),
+                    }],
+                }],
+                tasks: vec![task],
+            },
+            Utc::now(),
+        )
+        .unwrap();
+    assert!(
+        f.store
+            .task(&f.project, task)
+            .unwrap()
+            .history
+            .iter()
+            .all(|h| !h.reason.contains("Held"))
+    );
+    f.store
+        .release_held_questions(&f.project, Utc::now())
+        .unwrap();
+    let history = f.store.task(&f.project, task).unwrap().history;
+    assert!(history.iter().any(|h| {
+        h.reason.contains("![](attachments/Q-1/layout.png)")
+            && h.reason.contains("![](attachments/gone.png)")
+    }));
+}
