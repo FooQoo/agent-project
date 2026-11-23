@@ -7,6 +7,7 @@ use std::sync::Arc;
 use axum::Router;
 use axum::routing::{get, post, put};
 
+use super::agents::issue_connect_code;
 use super::docs::open_docs_path;
 use super::sessions::{
     launch_session, session_log, session_models, set_autostart, stop_session, touch_session,
@@ -17,6 +18,10 @@ use crate::server::AppState;
 pub(super) fn routes() -> Router<Arc<AppState>> {
     monitor_connections::routes()
         .route("/api/notify", post(notify))
+        .route(
+            "/api/projects/{project_id}/agents/{agent_id}/connect-code",
+            post(issue_connect_code),
+        )
         .route(
             "/api/projects/{project_id}/sessions/touch",
             post(touch_session),

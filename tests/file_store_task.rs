@@ -111,7 +111,7 @@ fn a_task_without_a_body_gets_the_template_headings_and_a_created_event() {
         "Created task in Todo with agent idle."
     );
     let metadata: serde_json::Value = serde_json::from_slice(&fx.task_bytes(1)).unwrap();
-    assert_eq!(metadata["formatVersion"], 1);
+    assert_eq!(metadata["formatVersion"], 3);
     assert!(metadata.get("history").is_none());
     assert_eq!(fx.history(1)[0].as_object().unwrap().len(), 2);
     assert_eq!(fx.next_task_id(), 2);
@@ -532,7 +532,7 @@ fn a_task_file_of_another_format_version_is_left_out_and_not_converted() {
     fx.create("one");
     let path = fx.task_dir(1).join("task.json");
     let mut json = fx.raw_task(1);
-    json["formatVersion"] = serde_json::json!(3);
+    json["formatVersion"] = serde_json::json!(4);
     json["history"] = fx.history(1);
     let text = serde_json::to_string_pretty(&json).unwrap();
     fs::write(&path, &text).unwrap();

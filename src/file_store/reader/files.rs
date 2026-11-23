@@ -48,7 +48,24 @@ fn parse_entity<T: DeserializeOwned>(bytes: &[u8], label: &str) -> Result<T, Agp
 }
 
 pub(super) fn parse_task_metadata(bytes: &[u8], label: &str) -> Result<TaskMetadata, AgpjError> {
-    parse_entity(bytes, label)
+    let value: Value = serde_json::from_slice(bytes).map_err(|e| AgpjError::FileInvalid {
+        file: label.to_string(),
+        field: String::new(),
+        reason: format!("The JSON is malformed: {e}."),
+    })?;
+    validate::check_format_version_expected(
+        &value,
+        label,
+        crate::file_store::layout::TASK_FORMAT_VERSION,
+    )?;
+    serde_json::from_value(value).map_err(|e| {
+        let message = e.to_string();
+        AgpjError::FileInvalid {
+            file: label.to_string(),
+            field: message.split('`').nth(1).unwrap_or("").to_string(),
+            reason: message,
+        }
+    })
 }
 
 /// Parse an `epic.json`: its format versions are handled here.

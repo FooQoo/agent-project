@@ -13,6 +13,7 @@ Use the browser to review and edit work, and `agpj` for agent updates and projec
 | Add a task | `add` |
 | Read a task or the board | `show`, `ls`, `snapshot` |
 | Move a task or report what an agent is doing | `mv`, `state` |
+| Join this session to an agent, or list the agents | `connect`, `agent ls` |
 | Record a decision that matters later | `history add` |
 | Change a task's text | `edit` |
 | Plan tasks for a release | `version`, `edit --planned-version`, `epic plan` |
@@ -27,6 +28,19 @@ Use the browser to review and edit work, and `agpj` for agent updates and projec
 | Run the server and the hook | `serve`, `stop`, `hook` |
 | Install and update the Agent Project plugin | `setup`, `update` |
 | Delete things (people only) | `rm`, `project rm`, `epic rm`, `init` |
+
+## Connect a session to an agent {#connect-a-session-to-an-agent}
+
+A person registers agents (a name and a one-line role) and starts a connection in the board. The board shows a one-time code that works for ten minutes. The session exchanges it:
+
+```bash
+agpj --project "My project" connect K7M2QX9P
+agpj --project "My project" agent ls
+```
+
+`connect` keeps the connection's secret in a file only you can read, tied to this session; the board keeps only its digest. Once the project has an agent, `state` works through the connection: a session that never connected gets `not_connected`, a session whose agent was switched to another session gets `connection_replaced`, a card of another agent gets `not_assignee`, and `--actor human` is `human_only` (a person acts in the board). A second session cannot take an agent over (`agent_busy`); the person chooses Switch in the board and gives you a new code. A free card that you set running becomes your agent's card.
+
+When the session ends, the Claude Code `SessionEnd` hook puts its running tasks back to waiting (paused). A session that is killed sends no notice, so a running task whose connection shows no activity for 30 minutes is put back to waiting by the board.
 
 ## Add and inspect tasks
 

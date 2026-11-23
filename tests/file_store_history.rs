@@ -106,13 +106,13 @@ fn malformed_yaml_and_unclosed_frontmatter_keep_body_and_never_compose() {
 
 #[test]
 fn metadata_serialization_does_not_contain_history_and_join_is_lossless() {
-    let task: TaskFile = serde_json::from_value(serde_json::json!({"formatVersion":1,"id":1,"title":"Test","assignee":"ai","epicId":null,"taskStatus":"todo","agentStatus":"idle","position":1,"draft":null,"archivedAt":null,"requestAnswers":[],"createdAt":"2026-10-14T00:00:00Z","updatedAt":"2026-10-14T00:00:00Z","agentStatusChangedAt":"2026-10-14T00:00:00Z","taskStatusChangedAt":"2026-10-14T00:00:00Z","attachments":[],"history":[created()]})).unwrap();
+    let task: TaskFile = serde_json::from_value(serde_json::json!({"formatVersion":3,"agentId":null,"assignmentGeneration":1,"runConnectionId":null,"id":1,"title":"Test","assignee":"ai","epicId":null,"taskStatus":"todo","agentStatus":"idle","position":1,"draft":null,"archivedAt":null,"requestAnswers":[],"createdAt":"2026-10-14T00:00:00Z","updatedAt":"2026-10-14T00:00:00Z","agentStatusChangedAt":"2026-10-14T00:00:00Z","taskStatusChangedAt":"2026-10-14T00:00:00Z","attachments":[],"history":[created()]})).unwrap();
     let metadata = TaskMetadata::from(&task);
     let value = serde_json::to_value(&metadata).unwrap();
-    assert_eq!(value["formatVersion"], 1);
+    assert_eq!(value["formatVersion"], 3);
     assert!(value.get("history").is_none());
     let mut expected = task.clone();
-    expected.format_version = 1;
+    expected.format_version = 3;
     assert_eq!(metadata.with_history(task.history), expected);
 }
 

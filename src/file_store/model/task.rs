@@ -54,6 +54,13 @@ pub struct TaskFile {
     /// `plannedVersion` key of TASK.md, not in `task.json`.
     #[serde(default)]
     pub planned_version: Option<String>,
+    /// The agent (`A-<n>`) that owns the task; `None` for an unassigned card and for every card
+    /// of a person.
+    pub agent_id: Option<String>,
+    /// Counts up from 1 at every claim, assignment, and handover.
+    pub assignment_generation: u32,
+    /// The connection that set the task running; `None` while it is not running.
+    pub run_connection_id: Option<String>,
     pub history: Vec<HistoryRecord>,
 }
 
@@ -128,6 +135,12 @@ pub struct TaskMetadata {
     /// The changes of that field. Read and ignored; never written again.
     #[serde(default, skip_serializing)]
     pub planned_version_changes: Option<serde_json::Value>,
+    /// See `TaskFile::agent_id`. Always written, `null` when there is none.
+    pub agent_id: Option<String>,
+    /// See `TaskFile::assignment_generation`.
+    pub assignment_generation: u32,
+    /// See `TaskFile::run_connection_id`.
+    pub run_connection_id: Option<String>,
 }
 
 impl From<&TaskFile> for TaskMetadata {
@@ -160,6 +173,9 @@ impl From<&TaskFile> for TaskMetadata {
             release_notes_version: task.release_notes_version.clone(),
             planned_version: None,
             planned_version_changes: None,
+            agent_id: task.agent_id.clone(),
+            assignment_generation: task.assignment_generation,
+            run_connection_id: task.run_connection_id.clone(),
         }
     }
 }
@@ -189,6 +205,9 @@ impl TaskMetadata {
             onboarding_sample: self.onboarding_sample,
             release_notes_version: self.release_notes_version,
             planned_version: None,
+            agent_id: self.agent_id,
+            assignment_generation: self.assignment_generation,
+            run_connection_id: self.run_connection_id,
             history,
         }
     }
@@ -257,5 +276,11 @@ pub struct TaskView {
     /// The `plannedVersion` of TASK.md, shown as written; absent when the task has no plan.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub planned_version: Option<String>,
+    /// The agent (`A-<n>`) that owns the task; `None` when nobody does.
+    pub agent_id: Option<String>,
+    /// Counts up at every claim and assignment.
+    pub assignment_generation: u32,
+    /// The connection that set the task running; `None` while it is not running.
+    pub run_connection_id: Option<String>,
     pub history: Vec<HistoryRecord>,
 }

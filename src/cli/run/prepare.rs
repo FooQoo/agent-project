@@ -30,9 +30,11 @@ fn access(command: &Command) -> Access {
     match command {
         // The list of every project reads the catalog and names no project.
         Command::Ls(args) if args.all_projects => Access::ReadCatalog,
-        Command::Ls(_) | Command::Show(_) | Command::Snapshot(_) | Command::Workspace(_) => {
-            Access::ReadProject
-        }
+        Command::Ls(_)
+        | Command::Show(_)
+        | Command::Snapshot(_)
+        | Command::Workspace(_)
+        | Command::Agent(_) => Access::ReadProject,
         Command::Epic(args) => match args.command {
             EpicCommand::Ls | EpicCommand::Show(_) => Access::ReadProject,
             EpicCommand::Add(_)
@@ -70,6 +72,7 @@ fn access(command: &Command) -> Access {
         | Command::Edit(_)
         | Command::Mv(_)
         | Command::State(_)
+        | Command::Connect(_)
         | Command::History(_)
         | Command::Rm(_) => Access::ChangeProject,
         Command::Progress(_) | Command::Open(_) => Access::ReadBoundProject,
@@ -142,6 +145,8 @@ fn dispatch(ctx: &mut Context, command: &Command) -> Result<Outcome, AgpjError> 
         Command::Edit(args) => commands::edit::run(ctx, args),
         Command::Mv(args) => commands::mv::run(ctx, args),
         Command::State(args) => commands::state::run(ctx, args),
+        Command::Connect(args) => commands::connect::connect(ctx, args),
+        Command::Agent(args) => commands::connect::agent(ctx, args),
         Command::History(args) => commands::history::run(ctx, args),
         Command::Rm(args) => commands::rm::run(ctx, args),
         Command::Ls(args) => commands::ls::run(ctx, args),

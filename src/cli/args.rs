@@ -9,6 +9,7 @@ mod help;
 mod history;
 mod message;
 mod project;
+mod registry;
 mod release;
 mod result;
 mod task;
@@ -22,6 +23,7 @@ pub use self::epic::*;
 pub use self::history::*;
 pub use self::message::*;
 pub use self::project::*;
+pub use self::registry::*;
 pub use self::release::*;
 pub use self::result::*;
 pub use self::task::*;
@@ -68,6 +70,10 @@ pub enum Command {
     Mv(MvArgs),
     /// Report a task's run state: idle or running
     State(StateArgs),
+    /// Join this session to an agent with a connection code from the board
+    Connect(ConnectArgs),
+    /// List the project's agents
+    Agent(AgentArgs),
     /// Append a work note to a task history
     History(HistoryArgs),
     /// Ask the user questions, wait for the answers, and handle requests from the user
@@ -126,6 +132,8 @@ impl Command {
             Command::Edit(_) => "edit",
             Command::Mv(_) => "mv",
             Command::State(_) => "state",
+            Command::Connect(_) => "connect",
+            Command::Agent(_) => "agent",
             Command::History(_) => "history",
             Command::Message(_) => "message",
             Command::Rm(_) => "rm",

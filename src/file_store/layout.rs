@@ -19,14 +19,13 @@ pub const FORMAT_VERSION: u32 = 1;
 /// `backlog` lane. Earlier versions cannot read such a file.
 pub const BACKLOG_FORMAT_VERSION: u32 = 2;
 
-/// The version a task or epic file is written with: the version it was read
-/// with, raised to `BACKLOG_FORMAT_VERSION` when it uses the Backlog.
-pub fn entity_format_version(current: u32, uses_backlog: bool) -> u32 {
-    if uses_backlog {
-        BACKLOG_FORMAT_VERSION.max(current)
-    } else {
-        current.max(FORMAT_VERSION)
-    }
+/// The `formatVersion` of `task.json`: it holds the agent, the assignment generation, and the
+/// running connection. Earlier versions are `format_unsupported`; nothing is converted.
+pub const TASK_FORMAT_VERSION: u32 = 3;
+
+/// The version a task file is written with: always [`TASK_FORMAT_VERSION`].
+pub fn entity_format_version(_current: u32, _uses_backlog: bool) -> u32 {
+    TASK_FORMAT_VERSION
 }
 
 pub fn workspace_file(shared: &Path) -> PathBuf {

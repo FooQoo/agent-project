@@ -68,7 +68,7 @@ Agent Projectが保存するすべてのファイルを、項目と例ととも�
 ```
 
 - JSONはUTF-8・camelCase・2スペースのインデントで、末尾に改行を一つ付けます。未知の項目は拒否します。
-- `workspace.json`は`{"format":"agpj-files","formatVersion":1}`です。`project.json`は`formatVersion: 1`です。バックログを使う`task.json`・`epic.json`は`formatVersion: 2`、通常のカードのファイルは`formatVersion: 1`のままで、どちらも読めます。それ以外のバージョンは`format_unsupported`を報告し、変更せずに残します。以前のバージョンの`agpj`はバージョン2のファイルを読めません。古いAI下書きは一度だけ自動で変換します（[保存と復旧](../concepts/saving-and-recovery.md#形式のバージョンとdraftの値)を参照）。
+- `workspace.json`は`{"format":"agpj-files","formatVersion":1}`です。`project.json`は`formatVersion: 1`です。`task.json`は`formatVersion: 3`です（[エージェントと接続](#agents-and-connections)を参照）。バックログを使う`epic.json`は`formatVersion: 2`、ほかのエピックのファイルは`formatVersion: 1`のままで、どちらも読めます。それ以外のバージョンは`format_unsupported`を報告し、変更せずに残します。以前のバージョンの`agpj`はバージョン2のファイルを読めません。古いAI下書きは一度だけ自動で変換します（[保存と復旧](../concepts/saving-and-recovery.md#形式のバージョンとdraftの値)を参照）。
 - `.`で始まる名前は正本ではありません。`README.md`はフォルダと編集の規則の案内で、製品が作成時に書きます。
 - 画像は所有者の`assets/`に置きます。本文からは`assets/<attachment-id>.<ext>`（または旧形式の`attachment:<id>`）で画像を参照します。画像はPNG・JPEG・WebP・GIFで、1件10 MiBまで、所有者ごとに20件・合計50 MiBまでです。
 - `bindings.json`と`serve.json`はそのマシンだけで使うファイルです。`serve.json`は、CLIに通知先を、`wait`に接続先を教えます。トークンは含みません。`agpj stop`もこのファイルからサーバーを見つけます。
@@ -181,6 +181,15 @@ history:
 | `at` | 成果を記録したUTC時刻。 |
 
 成果を記録しても、`taskStatus`と`agentStatus`は変わりません。プロジェクトのロックの下で、画像があれば順に先に書き、そのあと`task.json`と`TASK.md`を、履歴1件と一緒に保存します。画像が拒否されたときや保存に失敗したときは、それまでに書いた画像ファイルを消し、項目も残らないため、失敗した保存が届ける対象になることはありません。同じキーが同じ内容ですでにあるときは、何も書かず、既存の項目を返します。1つのタスクに残せる成果は100件までです。
+
+
+### エージェントと接続 {#agents-and-connections}
+
+`task.json`は`formatVersion: 3`です。上の項目に加えて、`agentId`（`null`、またはカードを持つエージェントの`A-<n>`。人のカードでは常に`null`）、`assignmentGeneration`（1から始まり、取得や割り当てのたびに増える整数）、`runConnectionId`（タスクを稼働中にした接続。そうでなければ`null`）を持ちます。ほかのバージョンは`format_unsupported`で、変換はしません。
+
+`<project>/agents.json`は`{formatVersion: 1, nextAgentId, agents: [{id, name, role, createdAt, archivedAt}]}`です。ID（`A-1`、`A-2`…）は変わらず再利用もしないので、改名や役割の編集をしても、カードの`agentId`はそのまま残ります。有効な名前は重複できず、50文字までです。役割は100文字までの1行です。エージェントを削除すると`archivedAt`が入ります。
+
+`<project>/.internal/connections.json`は`{formatVersion: 1, codes, connections}`です。コードには、8文字のコードのダイジェスト、エージェント、切り替えかどうか、期限（10分）だけを置きます。接続は`id`（`C-<hex>`）、`agentId`、`secretDigest`、`origin`（`external`か`board`）、`tool`、`sessionLabel`、`issuedAt`、`lastActivityAt`、`revokedAt`、`replacedBy`を持ちます。秘密値そのものは共有ファイルに書きません。セッションは`<データフォルダ>/connections/<プロジェクトID>/<セッション鍵>.secret`（権限0600）に保存するか、`AGPJ_CONNECTION_SECRET`で受け取ります。
 
 ## メッセージ
 

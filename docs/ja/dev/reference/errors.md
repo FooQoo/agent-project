@@ -17,6 +17,14 @@
 | `task_in_backlog` | エージェントの`mv`・`state`が、バックログのタスクを対象にした。エージェントのDoingやDoneへの移動は拒否され、バックログを出るのは未着手への送信だけです。 | 1 | 409 |
 | `send_with_open_questions` | 人の`mv <id> todo`・`epic send`・Webでの未着手への移動が、未回答の質問がある計画を、確認なし（`--force`、APIでは`ack: true`）で対象にした。何も保存せず、メッセージに質問のIDを示す。確認して送ったあとも質問は残り、回答があるまでタスクはAwaiting answerです。 | 1 | 409 |
 | `human_only` | エージェントが依頼の取り下げ、未回答の質問がある送信の確認（`--force`）、`mv ... backlog`、DoingのタスクのTodoへの差し戻し（「moving a task from Doing back to Todo is for a person only.」）を行おうとした。これを行えるのは人だけ。 | 1 | 403 |
+| `not_connected` | セッションがエージェントに接続していません。`agpj connect`を実行していないか、秘密値が不明です。プロジェクトにエージェントがあるとき、実行状態の変更には接続が要ります。 | 1 | 403 |
+| `connection_replaced` | ユーザーがエージェントを別のセッションに切り替えたため、接続が失効しています。 | 1 | 403 |
+| `not_assignee` | タスクが別のエージェントまたは人のものです。 | 1 | 403 |
+| `agent_busy` | エージェントに有効な接続がすでにあります。置き換えられるのは、ユーザーが「切り替え」で出したコードだけです。 | 1 | 409 |
+| `agent_in_use` | エージェントにDoingのタスクか有効な接続が残っているため、削除できません。 | 1 | 409 |
+| `agent_not_found` | このIDの有効なエージェントがありません。 | 1 | 404 |
+| `agent_name_taken` | プロジェクトの別の有効なエージェントが同じ名前です。 | 1 | 409 |
+| `connect_code_invalid` | 接続コードが不明、使用済み、または10分を過ぎています。 | 1 | 400 |
 | `task_not_draft` | 下書きでないタスクへのWebの編集。 | 1 | 409 |
 | `task_is_done` | DoneのタスクへのAIの変更。許可されるのは、最終の成果がまだないDoneのタスクへの最初の`result add --final`と、公開の記録（`result add --published`）です。 | 1 | 409 |
 | `acceptance_unmet` | 条件が未達成、またはfrontmatterが不正なタスクを、AIがDoneへ移そうとした。 | 2 | なし |

@@ -19,13 +19,38 @@ pub fn run(ctx: &mut Context, args: &StateArgs) -> Result<Outcome, AgpjError> {
         .transpose()?
         .unwrap_or_default();
     let project_id = ctx.project_id()?;
-    let result = ctx.files.set_agent_status(
-        project_id,
-        args.id,
-        state,
-        ChangeContext { actor, reason },
-        ctx.clock.now(),
-    )?;
+    // The claimed actor decides nothing. Once the user has registered an agent, a run state is
+    // set through the session's connection, and `--actor human` is a person's word at a
+    // terminal: a person acts in the web UI. A project with no agents keeps the plain rules.
+    let result = if ctx.files.has_agents(project_id)? {
+        if actor == crate::domain::Actor::Human {
+            return Err(AgpjError::HumanOnly {
+                action: "Changing a run state from the command line as a person".into(),
+            });
+        }
+        let secret = ctx
+            .files
+            .shared_dir()
+            .parent()
+            .and_then(|data_dir| crate::agent::connection_store::load_secret(data_dir, project_id))
+            .ok_or(AgpjError::NotConnected)?;
+        ctx.files.set_agent_status_connected(
+            project_id,
+            args.id,
+            state,
+            ChangeContext { actor, reason },
+            &secret,
+            ctx.clock.now(),
+        )?
+    } else {
+        ctx.files.set_agent_status(
+            project_id,
+            args.id,
+            state,
+            ChangeContext { actor, reason },
+            ctx.clock.now(),
+        )?
+    };
     let human = if result.changed {
         format!("#{} agent status is now {}.\n", args.id, state.as_str())
     } else {

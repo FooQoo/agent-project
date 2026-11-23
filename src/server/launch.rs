@@ -1,5 +1,4 @@
-//! Starting one server for a data directory, running it, and ending it: on a
-//! signal, or, for a server the CLI started by itself, after it went unused.
+//! Starting one server for a data directory, running it, and ending it (on a signal, or when unused).
 
 use std::future::Future;
 use std::net::SocketAddr;
@@ -193,6 +192,7 @@ pub(crate) fn run<F: Future<Output = ()>>(
             switch_to_manual_on_signal(auto.clone(), serve_path.clone(), pid);
             count_changes_as_use(&state);
         }
+        super::stale_runs::release_stale_runs(&state);
         paths::write_serve_info_in(
             &data_dir,
             &ServeInfo {

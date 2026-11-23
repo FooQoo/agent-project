@@ -17,7 +17,7 @@ use crate::{
 const MAX_PROGRESS_BYTES: usize = 256 * 1024;
 
 /// Why no snapshot could be produced. Shown to the agent as `AGPJ_ERROR`.
-struct Failure {
+pub(super) struct Failure {
     code: &'static str,
     reason: String,
 }
@@ -95,6 +95,8 @@ struct HookInput {
     hook_event_name: Option<serde_json::Value>,
     #[serde(default)]
     cwd: Option<serde_json::Value>,
+    #[serde(default)]
+    session_id: Option<String>,
     #[serde(flatten)]
     stop: super::stop::StopFields,
 }
@@ -138,6 +140,15 @@ fn hook_output(
         .unwrap_or("");
     if event == "Stop" && matches!(agent, "claude" | "codex") {
         return super::stop::run_hook(shared, project, input.cwd.as_ref(), &input.stop);
+    }
+    if event == "SessionEnd" && agent == "claude" {
+        super::session_end::run(
+            shared,
+            project,
+            input.cwd.as_ref(),
+            input.session_id.as_deref(),
+        );
+        return None;
     }
     let allowed = match agent {
         "claude" => matches!(event, "PostToolUse" | "PostToolUseFailure" | "SessionStart"),
@@ -191,7 +202,7 @@ pub(super) fn folder_or_none(cwd: Option<&serde_json::Value>) -> Option<PathBuf>
 /// The folder the hook runs for: a non-empty absolute `cwd` from the input, or
 /// the process folder when the input gives none (missing, null, or empty). A
 /// value that cannot be used is reported, never taken for "no folder".
-fn hook_folder(input_cwd: Option<&serde_json::Value>) -> Result<PathBuf, Failure> {
+pub(super) fn hook_folder(input_cwd: Option<&serde_json::Value>) -> Result<PathBuf, Failure> {
     let unavailable = |what: String| Failure::new("hook_cwd_unavailable", what);
     let given = match input_cwd {
         None | Some(serde_json::Value::Null) => None,

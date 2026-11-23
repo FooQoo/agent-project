@@ -109,6 +109,32 @@ pub enum AgpjError {
     SendWithOpenQuestions {
         ids: Vec<String>,
     },
+    /// The session has no connection to an agent: it never connected, or its secret is unknown.
+    NotConnected,
+    /// The connection was revoked or replaced by another one.
+    ConnectionReplaced,
+    /// The task belongs to another agent, to nobody, or to a person.
+    NotAssignee {
+        id: i64,
+    },
+    /// The agent already has an active connection; the user must switch it.
+    AgentBusy {
+        agent: String,
+    },
+    /// The agent still has a Doing task or an active connection.
+    AgentInUse {
+        agent: String,
+    },
+    /// No agent has this ID.
+    AgentNotFound {
+        agent: String,
+    },
+    /// Another agent of the project has this name.
+    AgentNameTaken {
+        name: String,
+    },
+    /// The connection code is unknown, used, or expired.
+    ConnectCodeInvalid,
     /// An agent asked for something only a person may do.
     HumanOnly {
         action: String,

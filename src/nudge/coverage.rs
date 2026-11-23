@@ -121,6 +121,11 @@ pub const COMMANDS: &[(&str, Cover)] = &[
     ("skills", READ_ONLY),
     ("snapshot", READ_ONLY),
     ("state", Rules(&["stale-running"])),
+    (
+        "connect",
+        NoRule("a person hands the session a code; nothing to forget"),
+    ),
+    ("agent ls", READ_ONLY),
     ("stop", NoRule("pauses the server by a person's choice")),
     ("update", NoRule("installation by a person")),
     ("version add", NoRule("lists a version; nothing to forget")),

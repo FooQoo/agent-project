@@ -9,6 +9,7 @@
 mod acceptance_check;
 mod agent;
 mod agent_stopped;
+mod assignment;
 
 mod attachment;
 mod completion;
@@ -19,6 +20,7 @@ mod qa;
 mod release_doc;
 mod release_notes;
 mod request_create;
+mod run_state;
 mod save;
 mod send;
 mod task;
@@ -27,6 +29,9 @@ mod version;
 mod version_names;
 mod version_plan;
 
+pub use assignment::{
+    AgentView, Connected, ConnectionOrigin, ConnectionView, IssuedCode, STALE_RUN_SECONDS, Verified,
+};
 pub(in crate::file_store) use qa::migrate_legacy_locked;
 use qa::task_waits;
 pub use qa::{Accepted, AnswerItem, AskInput, AskQuestion, RequestImage, SendRequestInput};

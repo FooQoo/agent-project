@@ -1,0 +1,360 @@
+//! Agents, connections, and the run state tied to a connection (AC-1 to AC-4 of the agent
+//! registry): names and roles keep the ID, a code gives one connection, a second parent never
+//! takes an agent over, and a running task returns to waiting when its connection ends or goes
+//! quiet.
+
+use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
+use agent_project::error::AgpjError;
+use agent_project::file_store::{ConnectionOrigin, FileStore, STALE_RUN_SECONDS};
+use chrono::{DateTime, Duration, TimeZone, Utc};
+
+fn t0() -> DateTime<Utc> {
+    Utc.with_ymd_and_hms(2026, 11, 24, 9, 0, 0).unwrap()
+}
+
+fn ctx(actor: Actor) -> ChangeContext {
+    ChangeContext {
+        actor,
+        reason: String::new(),
+    }
+}
+
+struct Fx {
+    _root: tempfile::TempDir,
+    store: FileStore,
+    project: ProjectId,
+}
+
+fn fx() -> Fx {
+    let root = tempfile::tempdir().unwrap();
+    let store = FileStore::open(&root.path().join("shared"));
+    let project = store.create_project("Alpha", t0()).unwrap().id;
+    Fx {
+        _root: root,
+        store,
+        project,
+    }
+}
+
+impl Fx {
+    fn doing_task(&self) -> i64 {
+        let id = self
+            .store
+            .create_task(
+                &self.project,
+                NewTask {
+                    title: "work".into(),
+                    description: String::new(),
+                    assignee: Assignee::Ai,
+                    actor: Actor::Human,
+                    draft: None,
+                },
+                t0(),
+            )
+            .unwrap()
+            .id;
+        self.store
+            .move_work_task_for_user(&self.project, id, Column::Doing, ctx(Actor::Human), t0())
+            .unwrap();
+        id
+    }
+
+    fn connect(&self, agent: &str, switch: bool, at: DateTime<Utc>) -> Result<String, AgpjError> {
+        let code = self
+            .store
+            .issue_connect_code(&self.project, agent, switch, at)?;
+        let connected = self.store.exchange_connect_code(
+            &self.project,
+            &code.code,
+            ConnectionOrigin::External,
+            "claude-code",
+            "claude:1",
+            at,
+        )?;
+        Ok(connected.secret)
+    }
+
+    fn run(&self, id: i64, secret: &str, at: DateTime<Utc>) -> Result<(), AgpjError> {
+        self.store
+            .set_agent_status_connected(
+                &self.project,
+                id,
+                RunState::Running,
+                ctx(Actor::Ai),
+                secret,
+                at,
+            )
+            .map(|_| ())
+    }
+}
+
+#[test]
+fn a_rename_and_a_role_edit_keep_the_agent_id_on_cards() {
+    let fx = fx();
+    let agent = fx
+        .store
+        .register_agent(&fx.project, "Screen", "Builds the screens", t0())
+        .unwrap();
+    assert_eq!(agent.id, "A-1");
+    let id = fx.doing_task();
+    fx.store
+        .assign_task_agent(&fx.project, id, Some("A-1"), t0())
+        .unwrap();
+    let renamed = fx
+        .store
+        .update_agent(&fx.project, "A-1", Some("Screens"), Some("UI work"))
+        .unwrap();
+    assert_eq!(
+        (renamed.id.as_str(), renamed.name.as_str()),
+        ("A-1", "Screens")
+    );
+    let task = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(task.agent_id.as_deref(), Some("A-1"));
+    // The number is never reused, and a live name is unique.
+    assert!(matches!(
+        fx.store.register_agent(&fx.project, "Screens", "", t0()),
+        Err(AgpjError::AgentNameTaken { .. })
+    ));
+    assert_eq!(
+        fx.store
+            .register_agent(&fx.project, "CLI", "", t0())
+            .unwrap()
+            .id,
+        "A-2"
+    );
+}
+
+#[test]
+fn a_connection_runs_a_free_card_and_claims_it() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let secret = fx.connect("A-1", false, t0()).unwrap();
+    let id = fx.doing_task();
+    fx.run(id, &secret, t0()).unwrap();
+    let task = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(task.agent_status, RunState::Running);
+    assert_eq!(task.agent_id.as_deref(), Some("A-1"));
+    assert!(task.run_connection_id.is_some());
+    assert_eq!(task.assignment_generation, 2);
+}
+
+#[test]
+fn a_claimed_name_a_made_up_secret_and_a_human_claim_grant_nothing() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    fx.store
+        .register_agent(&fx.project, "CLI", "", t0())
+        .unwrap();
+    let screen = fx.connect("A-1", false, t0()).unwrap();
+    let cli = fx.connect("A-2", false, t0()).unwrap();
+    let id = fx.doing_task();
+    fx.run(id, &screen, t0()).unwrap();
+    let before = fx.store.task(&fx.project, id).unwrap();
+    // Another agent's connection cannot touch the card.
+    assert!(matches!(
+        fx.run(id, &cli, t0()),
+        Err(AgpjError::NotAssignee { .. })
+    ));
+    // A secret nobody issued is not a connection, whatever the session says it is.
+    assert!(matches!(
+        fx.run(id, "agpjc_0000", t0()),
+        Err(AgpjError::NotConnected)
+    ));
+    assert!(matches!(fx.run(id, "", t0()), Err(AgpjError::NotConnected)));
+    assert_eq!(fx.store.task(&fx.project, id).unwrap(), before);
+}
+
+#[test]
+fn a_second_parent_does_not_take_over_until_the_user_switches() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let first = fx.connect("A-1", false, t0()).unwrap();
+    let id = fx.doing_task();
+    fx.run(id, &first, t0()).unwrap();
+    // A plain code is not even issued while the agent is connected.
+    assert!(matches!(
+        fx.store.issue_connect_code(&fx.project, "A-1", false, t0()),
+        Err(AgpjError::AgentBusy { .. })
+    ));
+    // The first connection still works.
+    fx.store
+        .set_agent_status_connected(
+            &fx.project,
+            id,
+            RunState::Paused,
+            ctx(Actor::Ai),
+            &first,
+            t0(),
+        )
+        .unwrap();
+    // The user switches: the new code replaces the connection and the old one is refused.
+    fx.run(id, &first, t0()).unwrap();
+    let second = fx.connect("A-1", true, t0()).unwrap();
+    assert_ne!(first, second);
+    assert!(matches!(
+        fx.run(id, &first, t0()),
+        Err(AgpjError::ConnectionReplaced)
+    ));
+    let task = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(
+        task.agent_status,
+        RunState::Paused,
+        "the old run was released"
+    );
+    fx.run(id, &second, t0()).unwrap();
+}
+
+#[test]
+fn a_code_works_once_and_expires() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let code = fx
+        .store
+        .issue_connect_code(&fx.project, "A-1", false, t0())
+        .unwrap();
+    let late = t0() + Duration::minutes(11);
+    assert!(matches!(
+        fx.store.exchange_connect_code(
+            &fx.project,
+            &code.code,
+            ConnectionOrigin::External,
+            "codex",
+            "k",
+            late
+        ),
+        Err(AgpjError::ConnectCodeInvalid)
+    ));
+    let code = fx
+        .store
+        .issue_connect_code(&fx.project, "A-1", false, t0())
+        .unwrap();
+    let args = (ConnectionOrigin::External, "codex", "k");
+    fx.store
+        .exchange_connect_code(&fx.project, &code.code, args.0, args.1, args.2, t0())
+        .unwrap();
+    assert!(matches!(
+        fx.store
+            .exchange_connect_code(&fx.project, &code.code, args.0, args.1, args.2, t0()),
+        Err(AgpjError::ConnectCodeInvalid)
+    ));
+}
+
+#[test]
+fn ending_the_session_returns_the_running_task_to_waiting() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let secret = fx.connect("A-1", false, t0()).unwrap();
+    let id = fx.doing_task();
+    fx.run(id, &secret, t0()).unwrap();
+    let ended = fx
+        .store
+        .end_connection_session(&fx.project, &secret, t0())
+        .unwrap();
+    assert_eq!(ended, vec![id]);
+    let task = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(task.agent_status, RunState::Paused);
+    assert_eq!(task.run_connection_id, None);
+    assert_eq!(task.task_status, Column::Doing);
+}
+
+#[test]
+fn a_session_that_never_reports_back_counts_as_waiting_after_a_fixed_time() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let secret = fx.connect("A-1", false, t0()).unwrap();
+    let id = fx.doing_task();
+    fx.run(id, &secret, t0()).unwrap();
+    let almost = t0() + Duration::seconds(STALE_RUN_SECONDS - 60);
+    assert!(
+        fx.store
+            .release_stale_runs(&fx.project, almost)
+            .unwrap()
+            .is_empty()
+    );
+    let quiet = t0() + Duration::seconds(STALE_RUN_SECONDS + 60);
+    assert_eq!(
+        fx.store.release_stale_runs(&fx.project, quiet).unwrap(),
+        vec![id]
+    );
+    assert_eq!(
+        fx.store.task(&fx.project, id).unwrap().agent_status,
+        RunState::Paused
+    );
+}
+
+#[test]
+fn activity_keeps_a_running_task_running() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let secret = fx.connect("A-1", false, t0()).unwrap();
+    let id = fx.doing_task();
+    fx.run(id, &secret, t0()).unwrap();
+    let later = t0() + Duration::seconds(STALE_RUN_SECONDS - 60);
+    // Any command of the session records activity.
+    fx.store
+        .verify_connection(&fx.project, &secret, later)
+        .unwrap();
+    let check = later + Duration::seconds(STALE_RUN_SECONDS - 60);
+    assert!(
+        fx.store
+            .release_stale_runs(&fx.project, check)
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn an_agent_with_a_doing_card_or_a_connection_cannot_be_deleted() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let secret = fx.connect("A-1", false, t0()).unwrap();
+    assert!(matches!(
+        fx.store.archive_agent(&fx.project, "A-1", t0()),
+        Err(AgpjError::AgentInUse { .. })
+    ));
+    // After the user switches it away and nothing is Doing, an unconnected agent can go.
+    fx.store
+        .register_agent(&fx.project, "CLI", "", t0())
+        .unwrap();
+    fx.store.archive_agent(&fx.project, "A-2", t0()).unwrap();
+    let _ = secret;
+    assert!(matches!(
+        fx.store.issue_connect_code(&fx.project, "A-2", false, t0()),
+        Err(AgpjError::AgentNotFound { .. })
+    ));
+}
+
+#[test]
+fn a_task_json_without_the_new_fields_is_not_read() {
+    let fx = fx();
+    let id = fx.doing_task();
+    let path = fx
+        ._root
+        .path()
+        .join("shared/projects")
+        .join(fx.project.as_str())
+        .join("tasks")
+        .join(id.to_string())
+        .join("task.json");
+    let text = std::fs::read_to_string(&path)
+        .unwrap()
+        .replace("\"formatVersion\": 3", "\"formatVersion\": 2");
+    std::fs::write(&path, text).unwrap();
+    assert!(fx.store.task(&fx.project, id).is_err());
+}

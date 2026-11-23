@@ -28,7 +28,7 @@
 
 Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登録済みの祖先からプロジェクトを識別します。セッションIDは使わず、登録がないときに全プロジェクトを選ぶことも、最も近い登録が壊れているときに親へ戻ることもありません。保存した言語が英語以外のときは、返答の言語の手がかりとして、`preferences.json`から直接読んだ値（`src/server/preferences/`の`saved_locale`）を、一覧の最上位の`locale`に載せます。一覧は`hookSpecificOutput.additionalContext`に`AGPJ_PROGRESS`のJSONとして返し、失敗したときは`bound_project_missing`などの`AGPJ_ERROR`を返します。登録がまったくないフォルダはエラーではありません。[Hookのスキップとエラー](#hookのスキップとエラー)を参照してください。
 
-- **Claude Code。** プラグインの`hooks/claude.json`が、プロジェクト名を固定せずに`agpj hook --agent claude`をSessionStart（`startup`、`resume`、`clear`、`compact`）、PostToolUse、PostToolUseFailure、Stopに登録します。汎用スキルのfrontmatterのHookは使いません。
+- **Claude Code。** プラグインの`hooks/claude.json`が、プロジェクト名を固定せずに`agpj hook --agent claude`をSessionStart（`startup`、`resume`、`clear`、`compact`）、PostToolUse、PostToolUseFailure、SessionEnd（そのセッションの稼働中のタスクを稼働待に戻します）、Stopに登録します。汎用スキルのfrontmatterのHookは使いません。
 - **Codex。** プラグインの`hooks/codex.json`が、`agpj hook --agent codex`をSessionStart、PostToolUse、Stopに登録します。Codexはプラグインのhookを、信頼されたものだけ実行します。信頼の設定は`agpj setup`と`agpj update`が行います（[setupとupdate](#setupとupdate)を参照）。
 - **上限。** 一覧は256 KiB、一回の実行は10秒が上限です。Codexの`additionalContextLimit`は0にし、Hookが自分の上限を守ります。超えたら`context_too_large`を報告し、切り詰めて成功として報告することはありません。一覧を作れない、または入力を読めないときは、Hookがそれを伝え、元のツールの結果を保ちます。
 - **入力。** Hookは、大きさにかかわらず入力を最後まで読み、使うのは`hook_event_name`と`cwd`（Stopでは加えて`stop_hook_active`、`last_assistant_message`、`transcript_path`）だけです。エージェントはPostToolUseのたびにツールの結果をまるごと送るので、画像を読んだあとや長いコマンドの出力のあとは入力が大きくなります。ツールの入力と結果は読み飛ばし、残したり渡したりしません。
@@ -89,7 +89,15 @@ Hookは、入力の`cwd`（なければプロセスのcwd）に最も近い登�
 
 `agpj`のすべてのコマンドと、進行表のすべてのトップレベルのフィールドは、`src/nudge/coverage.rs`に載っていて、それが作るものを見張るルール、または`NoRule("理由")`に対応付けられています。テストは両方の一覧をコード（clapのコマンド定義と、シリアライズした進行表）から導くので、コマンドやフィールドを足すと、判断するまでテストが失敗します。新しい機能は、エージェントが忘れうるもの（出すべき質問、書くべき記録、整えるべき状態）を作るでしょうか。作るなら、上のとおりルールを足します。作らないなら、理由つきで`NoRule`を記録します。`planned: #NNN`の形の理由は、ルールを足すタスクを示します。
 
-## 変更を待つ
+## エージェントと接続 {#agents-and-connections}
+
+エージェントは人が登録する役割（`agents.json`）で、接続はそれを動かしている親セッションです。ファイルと項目は[エージェントと接続](../reference/files.md#agents-and-connections)に、利用者の操作は[CLIガイド](../../guide/reference/cli.md#connect-a-session-to-an-agent)にあります。
+
+- 人がWeb UIでエージェントを登録し、一度きりの接続コードを出します（コードのルートはローカルの入口だけです）。`agpj connect <コード>`がプロジェクトのロックの下で交換します。コードを使い切り、秘密値を一度だけ返し、保存するのはそのダイジェストだけです。通常のコードは有効な接続を置き換えません（`agent_busy`）。「切り替え」で出したコードは、同じ交換のなかで旧接続を失効させ、その稼働中のタスクを稼働待に戻します。
+- 秘密値は、ボードが起動したセッションでは`AGPJ_CONNECTION_SECRET`から、それ以外ではセッション鍵の名前のファイルから見つけます。鍵はエージェント自身のセッション変数から作るので、別名、でたらめなセッションID、`--actor human`では秘密値が見つからず、権限も得られません。
+- プロジェクトにエージェントがあると、`state`は`FileStore::set_agent_status_connected`を通ります。ロックの下で、何かを読み書きする前に秘密値を確かめ、別のエージェントのカードは`not_assignee`、空きのカードは稼働中にした最初の接続のものになります（世代が増えます）。`state ... running`は`runConnectionId`を保存します。
+- 稼働中のタスクは、セッションが終わったとき（Claude Codeの`SessionEnd`フック。`src/agent/session_end.rs`）、接続が置き換えられたとき、接続の活動が`STALE_RUN_SECONDS`（30分）ないときに、稼働待（paused）へ戻ります。サーバーは1分ごとに見回り（`src/server/stale_runs.rs`）、接続を使うコマンドは、活動を30秒に一度までの間隔で記録します。
+- すべての書き込み経路での取得と排他、担当の引き継ぎ、設定画面は別の作業です。この部分は、登録、接続、稼働状態との結び付きを提供します。
 
 `agpj wait --after <cursor>`は、プロジェクトが変わるまで待ちます。
 

@@ -77,6 +77,11 @@ impl SessionIdentity {
     }
 }
 
+/// The key of a Claude Code session whose own ID is `session_id`.
+pub(crate) fn claude_key(session_id: &str) -> String {
+    key_of("claude", session_id)
+}
+
 /// `<source>:<first 16 hex digits of the SHA-256 of the value>`.
 fn key_of(source: &str, value: &str) -> String {
     let digest = Sha256::digest(value.as_bytes());

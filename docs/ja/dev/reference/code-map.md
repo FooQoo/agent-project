@@ -112,6 +112,11 @@
 - `web/src/shared/markdown/frontmatter.ts`と`resolveRelativeImage.ts`: ダイアログが使う、フロントマターの分離と相対パスの画像の解決。
 - `tests/docs_*.rs`: ルート、読み込み、README、サンドボックス、ngrokの入口のRustの試験。
 
+### エージェントと接続
+
+- `src/file_store/ops/assignment/`: 登録と接続（`model.rs`: 記録とビュー、`store.rs`: 読み書きと`verify_locked`、`registry.rs`: 登録・改名・削除、`connect.rs`: コード・交換・セッションの終了・稼働中の見回り、`assign.rs`: タスクをエージェントに渡す）。`src/file_store/ops/run_state.rs`は実行状態を設定し、プロジェクトにエージェントがあるときは接続を通します。
+- `src/agent/connection_store.rs`はセッションの秘密値を保管し、`src/agent/session_end.rs`は`SessionEnd`フックを扱い、`src/server/stale_runs.rs`は活動のない接続を見回り、`src/server/api/agents.rs`はルート、`src/cli/commands/connect.rs`は`connect`と`agent ls`です。
+
 ### 初回の案内
 
 - `src/file_store/onboarding_state.rs`: 状態ファイル。案内を見たかどうかだけを記録します。

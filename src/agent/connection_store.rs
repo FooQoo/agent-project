@@ -1,0 +1,86 @@
+//! Where a session keeps the secret of its connection.
+//!
+//! `agpj connect` exchanges a connection code for a secret and stores it here, next to the
+//! session's key, in a file only the user can read. Every later `agpj` command of the same session
+//! finds it again. A session the board launched gets its secret in `AGPJ_CONNECTION_SECRET`
+//! instead. The secret is never printed and never written to a shared file.
+
+use std::io::Write;
+use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
+use std::path::{Path, PathBuf};
+
+use super::session_identity::SessionIdentity;
+use crate::domain::ProjectId;
+use crate::error::AgpjError;
+
+/// The environment variable that carries the secret of a session the board launched.
+pub(crate) const SECRET_ENV: &str = "AGPJ_CONNECTION_SECRET";
+
+fn secret_file(data_dir: &Path, project: &ProjectId, key: &str) -> PathBuf {
+    let name: String = key
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    data_dir
+        .join("connections")
+        .join(project.as_str())
+        .join(format!("{name}.secret"))
+}
+
+/// The secret of this process's session: the environment first, then the stored file.
+pub(crate) fn load_secret(data_dir: &Path, project: &ProjectId) -> Option<String> {
+    if let Some(secret) = std::env::var(SECRET_ENV)
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+    {
+        return Some(secret);
+    }
+    load_secret_for_key(data_dir, project, &SessionIdentity::from_env().key)
+}
+
+/// The stored secret of the session with this key.
+pub(crate) fn load_secret_for_key(
+    data_dir: &Path,
+    project: &ProjectId,
+    key: &str,
+) -> Option<String> {
+    let text = std::fs::read_to_string(secret_file(data_dir, project, key)).ok()?;
+    let text = text.trim();
+    (!text.is_empty()).then(|| text.to_string())
+}
+
+/// Store the secret for this process's session, readable by the user only.
+pub(crate) fn save_secret(
+    data_dir: &Path,
+    project: &ProjectId,
+    secret: &str,
+) -> Result<(), AgpjError> {
+    let path = secret_file(data_dir, project, &SessionIdentity::from_env().key);
+    let fail = |e: std::io::Error| AgpjError::FileError {
+        action: crate::error::FileAction::Write,
+        file: "connections".into(),
+        reason: format!("The connection secret could not be stored: {e}."),
+    };
+    if let Some(dir) = path.parent() {
+        std::fs::DirBuilder::new()
+            .recursive(true)
+            .mode(0o700)
+            .create(dir)
+            .map_err(fail)?;
+    }
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .mode(0o600)
+        .open(&path)
+        .map_err(fail)?;
+    file.write_all(secret.as_bytes()).map_err(fail)
+}

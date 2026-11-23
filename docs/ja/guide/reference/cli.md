@@ -13,6 +13,7 @@ title: CLIリファレンス
 | タスクを追加する | `add` |
 | タスクやプロジェクトの情報を読む | `show`、`ls`、`snapshot` |
 | タスクを移す、エージェントの状態を報告する | `mv`、`state` |
+| このセッションをエージェントに接続する、エージェントを一覧する | `connect`、`agent ls` |
 | 後で効く判断を記録する | `history add` |
 | タスクの本文を編集する | `edit` |
 | タスクをリリースに割り当てる | `version`、`edit --planned-version`、`epic plan` |
@@ -27,6 +28,19 @@ title: CLIリファレンス
 | サーバーとHookを動かす | `serve`、`stop`、`hook` |
 | Agent Projectプラグインを導入・更新する | `setup`、`update` |
 | 削除する（人だけ） | `rm`、`project rm`、`epic rm`、`init` |
+
+## セッションをエージェントに接続する {#connect-a-session-to-an-agent}
+
+人がボードでエージェント（名前と1行の役割）を登録し、接続を始めます。ボードには、10分間有効な一度きりのコードが表示されます。セッションはそのコードを交換します。
+
+```bash
+agpj --project "My project" connect K7M2QX9P
+agpj --project "My project" agent ls
+```
+
+`connect`は接続の秘密値を、あなただけが読めるファイルに、このセッションと結び付けて保存します。ボードが持つのはそのダイジェストだけです。プロジェクトにエージェントがあるときの`state`は、接続を通して動きます。接続していないセッションは`not_connected`、エージェントを別のセッションに切り替えられたセッションは`connection_replaced`、別のエージェントのカードは`not_assignee`になり、`--actor human`は`human_only`です（人の操作はボードで行います）。二つ目のセッションはエージェントを横取りできず（`agent_busy`）、人がボードで「切り替え」を選んで新しいコードを渡す必要があります。空きのカードを稼働中にすると、自分のエージェントのカードになります。
+
+セッションが終わると、Claude Codeの`SessionEnd`フックが、そのセッションの稼働中のタスクを稼働待（paused）に戻します。強制終了したセッションは終了を知らせないので、接続の活動が30分ないままの稼働中のタスクは、ボードが稼働待に戻します。
 
 ## タスクを追加して確認する
 
