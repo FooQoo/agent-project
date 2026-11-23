@@ -129,4 +129,12 @@ fn write_task(out: &mut String, task: &ProgressTask) {
     if let Some(question) = &task.question {
         let _ = writeln!(out, "    question: {question}");
     }
+    for plan in &task.result_plans {
+        let kind = if plan.is_final { " (final)" } else { "" };
+        let _ = writeln!(
+            out,
+            "    undelivered {}{kind}: {} - deliver when: {}",
+            plan.id, plan.content, plan.condition
+        );
+    }
 }
