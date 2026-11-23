@@ -27,6 +27,7 @@ const copy = {
     epic: 'LAUNCH', epicName: 'Product launch',
     plan: ['Decide the rollout approach', 'Write the release notes', 'Prepare the launch checklist'],
     earlier: { doneHuman: 'Approve the new logo', doneAi: 'Set up the staging site', todoHuman: 'Review the pricing page' },
+    pricingBody: '## Goal\n\nConfirm the prices shown on the pricing page.\n\n## Next step\n\nCheck each plan against the price list, then approve the page.',
     body: '## Goal\n\nDecide how the launch reaches its first users.\n\n## Next step\n\nAgree the rollout approach, then record it in the plan.',
     checks: ['The rollout approach is decided', 'The plan is updated', 'The result is recorded'],
     question: 'How should we roll out the launch?',
@@ -44,6 +45,7 @@ const copy = {
     epic: 'LAUNCH', epicName: 'プロダクトの公開',
     plan: ['公開の進め方を決める', 'リリースノートを書く', '公開前のチェックリストを用意する'],
     earlier: { doneHuman: '新しいロゴを承認する', doneAi: 'ステージング環境を用意する', todoHuman: '料金ページを確認する' },
+    pricingBody: '## 目的\n\n料金ページに載せる金額を確認する。\n\n## 次の作業\n\n各プランを価格表と見比べ、ページを承認する。',
     body: '## 目的\n\n最初の利用者へどう届けるかを決める。\n\n## 次の作業\n\n公開の進め方に合意し、計画に記録する。',
     checks: ['公開の進め方が決まっている', '計画を更新している', '結果を記録している'],
     question: '公開をどのように進めますか？',
@@ -87,7 +89,7 @@ function seed(home, text) {
   run('add', e.doneHuman, '--assignee', 'human', '--actor', 'human');
   run('add', e.doneAi, '--assignee', 'ai', '--actor', 'ai');
   run('mv', '2', 'doing', '--actor', 'ai');
-  run('add', e.todoHuman, '--assignee', 'human', '--actor', 'human');
+  run('add', e.todoHuman, '--assignee', 'human', '--actor', 'human', `--desc=${text.pricingBody}`);
   for (const id of ['1', '2']) run('mv', id, 'done', '--actor', 'human', '--reason', 'Sample work completed');
   return meta.id;
 }
