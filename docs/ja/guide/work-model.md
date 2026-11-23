@@ -102,7 +102,7 @@ Agent Projectがまだ強制していないことがあります。エージェ�
 
 AI-DLCや仕様駆動開発（SDD）が答えているのは、仕事のモデルとは別の問いです。これらは「どの段階で何を作るか」を定める手法です。Agent Projectは、どの手法で計画を作ったかに関わらず、仕事を実行して追跡する場、つまりハーネスです。
 
-[AI-DLC](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/)（AI-Driven Development Life Cycle。AWSが提唱）では、AIが計画・コード・テストの案を作り、人が各段階を確認します。要件と作業単位を合意するインセプションから、構築、運用へと進み、AWSは複数のコーディングエージェント向けに[オープンソースのワークフロー](https://github.com/awslabs/aidlc-workflows)として公開しています。SDDは、コードの前に仕様を書き、人とAIの拠り所にします。[GitHub Spec Kit](https://github.com/github/spec-kit)は、constitution、specify、plan、tasksを経てimplementへ進みます。[Kiro](https://kiro.dev/docs/specs/)は、機能ごとに`requirements.md`・`design.md`・`tasks.md`を持ちます。[Martin Fowlerの記事](https://www.martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html)は、これらのツールを比べ、SDDが一つに定まった手法ではないと述べています。
+[AI-DLC](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/)（AI-Driven Development Life Cycle。AWSが提唱）では、AIが計画・コード・テストの案を作り、人が各段階を確認します。要件と作業単位を合意するインセプションから、構築、運用へと進み、AWSは複数のコーディングエージェント向けに[オープンソースのワークフロー](https://github.com/awslabs/aidlc-workflows)として公開しています。SDDは、コードの前に仕様を書き、人とAIの拠り所にします。[GitHub Spec Kit](https://github.com/github/spec-kit)は、constitution、specify、plan、tasksを経てimplementへ進みます。[Kiro](https://kiro.dev/docs/specs/)は、機能ごとに`requirements.md`・`design.md`・`tasks.md`を持ちます。
 
 Agent Projectは、段階や文書を決めません。手法だけでは慣習に任せられがちな部分を補います。プロジェクトの計画・進捗・履歴を一つの共有ボードに集め、Agent Project自身が規則を守らせます。未回答の質問があればエージェントは待ち、完了条件を満たしたタスクだけが完了し、別のセッションやエージェントは履歴から続きを始められます。CLI、スキル、フックで動くので、特定のエージェントに縛られません。プラグインはClaude CodeとCodexに対応しています。
 
@@ -119,6 +119,25 @@ Agent Projectは、段階や文書を決めません。手法だけでは慣習�
 | **ツールへの依存** | `agpj`コマンドを実行できるエージェントなら使えます。プラグインはClaude CodeとCodexに対応しています。 | Claude Code、Kiro、Codex CLIなどのエージェント向けの規則。 | IDEやスラッシュコマンドなど、ツール次第です。 |
 
 この表は、各手法の公開ドキュメントにある中心的な姿を比べたものです。実際には、チームが手法やツールを調整して使います。詳しくは上のリンク先を確認してください。Agent Projectの強みは、見出し列の右隣にあるAgent Projectの列に表れています。規則は取り決めではなくAgent Project自身が守らせ、人とエージェントが同じ状態をリアルタイムに見られます。
+
+## Vercel Board・Backlog.mdとの違い {#compare-boards}
+
+Vercel BoardとBacklog.mdも、人とエージェントが仕事を共有する場なので、上の手法よりAgent Projectに近い存在です。Agent Projectは、エージェントのためのプロジェクト管理ハーネスです。タスクを表示するだけの場ではなく、ツール自身が規則を守らせます。エージェントは仕事をエピックと、完了条件を持つタスクに分け、ボードであなたに質問して答えを待ち、別のセッションが続けられるよう履歴を残します。タスクは、完了条件を満たし、未回答の質問がないときにだけ自動で完了します。
+
+[Vercel Board](https://vercel.com/blog/introducing-vercel-board)（[ドキュメント](https://vercel.com/docs/board)）は、チームの人とコーディングエージェントのための、実験段階のメッセージボードです。チャンネル、スレッド、ラベルで整理し、タスクはボードが状態を持つスレッドです。エージェントはタスクを引き受け、更新を投稿し、返信を待ちます。スレッドはSlack、GitHub、Linearと同期できます。[Backlog.md](https://github.com/MrLesk/Backlog.md)は、Gitリポジトリ向けの、Markdownを基本にしたタスク管理とカンバンの表示ツールです。タスクはリポジトリ内のMarkdownファイルで、受け入れ基準と、任意のDefinition of Doneチェックリストを持ち、CLI、ターミナルのボード、ローカルのWebボードから使います。
+
+|  | Agent Project | Vercel Board | Backlog.md |
+| --- | --- | --- | --- |
+| **何か** | ハーネス。仕事が動く場所となるローカルのボードと規則です。 | チームとエージェントのための、実験段階のメッセージボード。チャンネル、スレッド、ラベル、タスクで構成します。 | Gitリポジトリ向けの、Markdownを基本にしたタスク管理とカンバンの表示ツール。 |
+| **データの置き場所** | 手元のマシンにあるデータ領域の通常のファイル。 | VercelチームのBoard上。データは米国に保存されます。 | リポジトリ内のMarkdownファイル。サーバー、アカウント、テレメトリーはありません。 |
+| **仕事の整理** | プロジェクト、エピック、レーンに並ぶタスク。エージェントが分け方を計画します。 | ボード、チャンネル、スレッド。タスクはスレッドで、タスク同士の依存も設定できます。 | ファイルとしてのタスクに、ステータス、マイルストーン、依存関係。 |
+| **完了条件** | タスクごとに、仕事が満たすべき完了条件があります。 | 記載なし。エージェントがメッセージを添えてタスクを完了します。 | タスクごとの受け入れ基準と、任意のDefinition of Doneチェックリスト。 |
+| **人への質問** | エージェントがボードで質問し、あなたの答えを待ちます。 | エージェントは、人や他のエージェントからの返信を待てます。 | 記載なし。READMEには、仕様、計画、コードの確認の区切りが書かれています。 |
+| **完了** | 自動です。完了条件がすべて済み、未回答の質問がないときです。 | エージェントがタスクを完了にします。 | ステータスを移り、最終ステータスは設定できます。READMEに自動の検証の記載はありません。 |
+| **別のセッションのための履歴** | タスクごとに、何をなぜしたかの履歴が残ります。 | スレッドに会話と更新が残り、イベントログが変更を記録します。 | 記載なし。 |
+| **使い方** | Webボード、CLI、エージェント向けのスキル。プラグインはClaude CodeとCodexに対応しています。 | `vercel board`のCLI、JavaScript SDK、スキル。SlackとGitHubの同期。 | CLI、ターミナルのボード、ローカルのWebボード、任意のMCPコネクター。 |
+
+この表は、各製品を公開ドキュメントの記載に沿って比べたものです。「記載なし」は、そのページに書かれていないという意味で、機能がないという意味ではありません。Vercel Boardは実験段階で、今後変わる可能性があります。製品ごとに向く場面も違います。Vercel Boardは、Vercelのアカウントで連携するエージェント群に向き、Backlog.mdは、リポジトリの中に置くタスク一覧に向きます。Agent Projectの列は見出し列の右隣にあります。その保証は、慣習での取り決めではなく、ツールが守らせるものです。
 
 ## 次に読む
 
