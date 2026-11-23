@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SPARRING } from './model';
 import { applyModeEvent, resetModes, setProjectMode, useProjectMode } from './store';
 
 afterEach(() => {
@@ -14,7 +15,7 @@ describe('useProjectMode', () => {
     const { result } = renderHook(() => useProjectMode('p1'));
     expect(result.current).toBeNull();
     await act(async () => {});
-    expect(result.current).toEqual({ mode: 'sparring', since: null });
+    expect(result.current).toEqual(SPARRING);
     act(() => {
       applyModeEvent({
         data: JSON.stringify({
@@ -29,7 +30,7 @@ describe('useProjectMode', () => {
   it('keeps a mode it already knows without reading again', () => {
     const fetcher = vi.fn();
     vi.stubGlobal('fetch', fetcher);
-    setProjectMode('p1', { mode: 'sleep', since: null });
+    setProjectMode('p1', { ...SPARRING, mode: 'sleep' });
     const { result } = renderHook(() => useProjectMode('p1'));
     expect(result.current?.mode).toBe('sleep');
     expect(fetcher).not.toHaveBeenCalled();

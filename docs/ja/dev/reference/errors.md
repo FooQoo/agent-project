@@ -153,7 +153,7 @@ ngrokの入口では、Hostの確認に失敗した要求は理由`not available
 
 | コード | いつ | 終了コード | HTTP |
 | --- | --- | --- | --- |
-| `invalid_mode` | 本文が`{"mode": "sparring"}`か`{"mode": "sleep"}`ちょうどではない。何も保存しない。 | n/a | 422 |
+| `invalid_mode` | 本文が`{"mode": "sparring" | "sleep" | "auto"}`か、異なる2つの`HH:MM`を持つ`{"schedule": {enabled, start, end}}`のどちらかちょうどではない。何も保存しない。 | n/a | 422 |
 | `mode_unavailable` | モードのファイルを書けなかった。保存済みのモードは変わらない。 | n/a | 500 |
 
 ## 通知設定
