@@ -37,8 +37,8 @@ fn messages_and_reasons_follow_the_design_table() {
             "In Doing a task goes from idle to running, from running to paused, and from paused to running. Move the card to change the other states.",
         ),
         (
-            "the project has no current version.",
-            "Set one with \"version current <VERSION>\", or name a version.",
+            "the project has no release version.",
+            "Set one with \"version release <VERSION>\", or name a version.",
         ),
         (
             "task #5 is a draft and read-only for agents.",

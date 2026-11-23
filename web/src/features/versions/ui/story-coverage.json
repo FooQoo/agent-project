@@ -43,23 +43,23 @@
       ]
     },
     {
-      "file": "features/versions/ui/CurrentVersionMenu.tsx",
+      "file": "features/versions/ui/ReleaseVersionMenu.tsx",
       "exports": [
         {
-          "name": "CurrentVersionMenu",
+          "name": "ReleaseVersionMenu",
           "stories": [
             {
-              "id": "versions-currentversionmenu--current-set",
-              "states": ["closed", "current version shown"],
+              "id": "versions-releaseversionmenu--release-set",
+              "states": ["closed", "release version shown"],
               "interaction": true
             },
             {
-              "id": "versions-currentversionmenu--none-set",
+              "id": "versions-releaseversionmenu--none-set",
               "states": ["closed", "not set"],
               "interaction": true
             },
             {
-              "id": "versions-currentversionmenu--open",
+              "id": "versions-releaseversionmenu--open",
               "states": [
                 "open",
                 "typed-version row",
@@ -69,12 +69,12 @@
               "interaction": true
             },
             {
-              "id": "versions-currentversionmenu--selecting-a-version",
+              "id": "versions-releaseversionmenu--selecting-a-version",
               "states": ["select a version"],
               "interaction": true
             },
             {
-              "id": "versions-currentversionmenu--typing-a-new-version",
+              "id": "versions-releaseversionmenu--typing-a-new-version",
               "states": ["type a new version", "confirm"],
               "interaction": true
             }
@@ -89,12 +89,12 @@
           "name": "PlannedVersionPicker",
           "stories": [
             {
-              "id": "versions-fields--picker-current-enabled",
+              "id": "versions-fields--picker-release-enabled",
               "states": ["current enabled", "unplanned selected"],
               "interaction": true
             },
             {
-              "id": "versions-fields--picker-current-disabled",
+              "id": "versions-fields--picker-release-disabled",
               "states": ["current disabled", "hint"],
               "interaction": true
             },
@@ -129,7 +129,7 @@
               "interaction": true
             },
             {
-              "id": "versions-fields--epic-current-unavailable",
+              "id": "versions-fields--epic-release-unavailable",
               "states": ["current disabled"],
               "interaction": true
             }
@@ -144,12 +144,12 @@
           "name": "OptionRow",
           "stories": [
             {
-              "id": "versions-fields--picker-current-enabled",
+              "id": "versions-fields--picker-release-enabled",
               "states": ["checked row", "row"],
               "interaction": true
             },
             {
-              "id": "versions-fields--picker-current-disabled",
+              "id": "versions-fields--picker-release-disabled",
               "states": ["disabled row"],
               "interaction": true
             }
@@ -159,7 +159,7 @@
           "name": "OptionText",
           "stories": [
             {
-              "id": "versions-fields--picker-current-enabled",
+              "id": "versions-fields--picker-release-enabled",
               "states": ["label", "hint"],
               "interaction": true
             }

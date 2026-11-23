@@ -1,4 +1,4 @@
-import { HeaderCurrentVersion } from '../features/versions/ui/HeaderCurrentVersion';
+import { HeaderReleaseVersion } from '../features/versions/ui/HeaderReleaseVersion';
 import { VersionTag, showsVersionTag } from '../features/versions/ui/VersionTag';
 import type { TaskSummary } from '../shared/api/contracts';
 import type { AppControllerModel } from './contracts';
@@ -8,20 +8,20 @@ const NO_VERSIONS: readonly string[] = [];
 
 /**
  * The PC board's planned versions: the tag of a card (in its own slot, apart from the epic label)
- * and the header's current-version menu. Nothing else of the board changes with them.
+ * and the header's release-version menu. Nothing else of the board changes with them.
  */
 export function useBoardVersions(model: AppControllerModel) {
   const { boardData, activeId } = model;
   // A sample board of a Story may predate the version fields.
   const versions = boardData?.project?.versions ?? NO_VERSIONS;
-  const current = boardData?.project?.currentVersion ?? null;
+  const release = boardData?.project?.releaseVersion ?? null;
   const renderVersion = (task: TaskSummary) =>
-    showsVersionTag(task.plannedVersion ?? null, { versions, current }) ? (
-      <VersionTag planned={task.plannedVersion ?? null} current={current} />
+    showsVersionTag(task.plannedVersion ?? null, { versions, release }) ? (
+      <VersionTag planned={task.plannedVersion ?? null} release={release} />
     ) : null;
   const versionSlot =
     boardData !== null && isProjectId(activeId) ? (
-      <HeaderCurrentVersion projectId={activeId} disabled={model.session.operation !== null} />
+      <HeaderReleaseVersion projectId={activeId} disabled={model.session.operation !== null} />
     ) : null;
   return { renderVersion, versionSlot };
 }

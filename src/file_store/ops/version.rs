@@ -1,4 +1,4 @@
-//! Versions: the project's list of versions (the files of `docs/release/`) and its current one, and the version a task is
+//! Versions: the project's list of versions (the files of `docs/release/`) and its release version, and the version a task is
 //! planned for. Every write holds the project's write lock and saves atomically.
 
 use chrono::{DateTime, Utc};
@@ -14,25 +14,25 @@ use crate::error::AgpjError;
 use crate::file_store::FileStore;
 use crate::file_store::model::{HistoryRecord, ProjectFile, TaskFile, TaskView};
 use crate::file_store::reader;
-use crate::file_store::releases::{create_release_file, effective_current, listed_versions};
+use crate::file_store::releases::{create_release_file, effective_release, listed_versions};
 use crate::file_store::validate::EpicId;
 
-/// The versions of a project and the current one.
+/// The versions of a project and the release version.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProjectVersions {
     pub versions: Vec<String>,
-    pub current: Option<String>,
+    pub release: Option<String>,
 }
 
-/// The listed versions and the current one of a project, read now.
+/// The listed versions and the release version of a project, read now.
 fn versions_of(
     shared: &std::path::Path,
     project: &ProjectId,
     file: &ProjectFile,
 ) -> ProjectVersions {
     let versions = listed_versions(&crate::file_store::layout::project_dir(shared, project));
-    let current = effective_current(&versions, file.current_version.as_deref());
-    ProjectVersions { versions, current }
+    let release = effective_release(&versions, file.release_version.as_deref());
+    ProjectVersions { versions, release }
 }
 
 /// Which version a task is planned for.
@@ -40,8 +40,8 @@ fn versions_of(
 pub enum VersionChoice {
     /// Remove the plan.
     Unset,
-    /// The project's current version, resolved to its name when the task is saved.
-    Current,
+    /// The project's release version, resolved to its name when the task is saved.
+    Release,
     /// A version the project lists.
     Named(String),
 }
@@ -58,7 +58,7 @@ pub struct EpicVersionSet {
 }
 
 impl FileStore {
-    /// The project's versions (the files in `docs/release/`) and its current version. A current
+    /// The project's versions (the files in `docs/release/`) and its release version. A release
     /// version whose file is missing is reported as none.
     pub fn project_versions(&self, project: &ProjectId) -> Result<ProjectVersions, AgpjError> {
         let file = reader::read_project_file(self.shared_dir(), project)?;
@@ -87,10 +87,10 @@ impl FileStore {
         })
     }
 
-    /// Set (`Some`) or clear (`None`) the project's current version. A version that is not yet
+    /// Set (`Some`) or clear (`None`) the project's release version. A version that is not yet
     /// listed is listed first, by creating its file from the template and issuing its
     /// release-notes card. Tasks keep the version they were given.
-    pub fn set_current_version(
+    pub fn set_release_version(
         &self,
         project: &ProjectId,
         name: Option<&str>,
@@ -106,12 +106,12 @@ impl FileStore {
         {
             self.ensure_release_notes_task(&project_dir, project, name, now)?;
             // Creating the card advanced the task counter in project.json: read the file
-            // again so saving the current version does not write the old counter back.
+            // again so saving the release version does not write the old counter back.
             file = reader::read_project_file(shared, project)?;
             changed = true;
         }
-        if file.current_version != name {
-            file.current_version = name;
+        if file.release_version != name {
+            file.release_version = name;
             save_project(shared, &project_dir, &file)?;
             changed = true;
         }
@@ -121,7 +121,7 @@ impl FileStore {
         })
     }
 
-    /// Turn `choice` into a concrete one without saving anything: `Current` becomes the current
+    /// Turn `choice` into a concrete one without saving anything: `Release` becomes the release
     /// version's name, and a named version must be listed. A listed version is never removed, so
     /// storing the result later cannot fail for the version itself.
     pub fn resolve_version_choice(
@@ -135,7 +135,7 @@ impl FileStore {
         })
     }
 
-    /// Set or clear the version a task is planned for. `Current` stores the project's current
+    /// Set or clear the version a task is planned for. `Release` stores the project's release
     /// version as it is now. Only a real change records a history entry and moves `updatedAt`;
     /// the same value again changes nothing. The plan can be set on a Done or archived task, by
     /// an AI as well as a person; an AI still cannot change a person's draft.

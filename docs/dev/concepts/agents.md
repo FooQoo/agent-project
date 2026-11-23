@@ -95,7 +95,7 @@ Every `agpj` command and every top-level field of the progress table is listed i
 
 1. Read `pid` and `port` from `serve.json` in the same data area and connect to `GET /api/events`. When no server answers, start one first and wait until it does (see [Server and web UI](./server-and-ui.md#how-a-command-starts-a-server)). If the connection fails after `serve.json` was read, start a server once more.
 2. Match the project name against the cursor and fix the ProjectId. A cursor for another project, or in an old format, is `cursor_invalid`.
-3. After `ready`, compare the project's current version with the cursor. If they differ, return at once; this catches changes made between fetching and subscribing.
+3. After `ready`, compare the project's release version with the cursor. If they differ, return at once; this catches changes made between fetching and subscribing.
 4. Otherwise wait for `changed`. If a re-read shows the same version (another project changed), keep waiting.
 
 - `changed`, `ready`, and keep-alive comments are distinguished. Renames return the same project's snapshot; deletion returns `project_not_found` and never moves to a re-created project.

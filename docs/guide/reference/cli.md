@@ -162,22 +162,22 @@ agpj ls --all-projects --json
 
 ## Plan tasks for a version {#plan-tasks-for-a-version}
 
-A project lists its versions and can name one of them as the current version. A task is planned for one version, or for none (unplanned). A version name is 1 to 64 characters with no whitespace, such as `v1.8.0`; it is kept and compared exactly.
+A project lists its versions and can name one of them as the release version. A task is planned for one version, or for none (unplanned). A version name is 1 to 64 characters with no whitespace, such as `v1.8.0`; it is kept and compared exactly.
 
 ```sh
 agpj --project "My project" version add v1.9.0
-agpj --project "My project" version current v1.8.0
-agpj --project "My project" version current
-agpj --project "My project" version current --clear
+agpj --project "My project" version release v1.8.0
+agpj --project "My project" version release
+agpj --project "My project" version release --clear
 agpj --project "My project" version ls --json
 ```
 
-A project's versions are the `*.md` files directly inside `docs/release/` of its [Docs](../watch/docs), listed newest first (`v1.10.0` before `v1.9.0`; `TEMPLATE.md` is the release template and is never a version). `version add VERSION` creates `docs/release/VERSION.md` as a copy of `docs/release/TEMPLATE.md` (a standard release-note template is written there first when it is missing) and never overwrites an existing file, so a version that already has its file is already listed. It also puts one card in the Backlog, owned by the AI, titled `Write the release notes for VERSION` (in Japanese when the board language is Japanese) and planned for VERSION, for writing those notes: the work starts only after a person sends it to Todo, and adding the same version again issues no second card. Adding a version does not change the current version. You can also add a version by creating the file yourself. `version current VERSION` lists the version the same way when it is not listed yet and makes it current. Without an argument it shows the current version. If the current version's file is deleted later, the project reads as having no current version until the file returns. Changing the current version moves no task: a task stores the version name it was given.
+A project's versions are the `*.md` files directly inside `docs/release/` of its [Docs](../watch/docs), listed newest first (`v1.10.0` before `v1.9.0`; `TEMPLATE.md` is the release template and is never a version). `version add VERSION` creates `docs/release/VERSION.md` as a copy of `docs/release/TEMPLATE.md` (a standard release-note template is written there first when it is missing) and never overwrites an existing file, so a version that already has its file is already listed. It also puts one card in the Backlog, owned by the AI, titled `Write the release notes for VERSION` (in Japanese when the board language is Japanese) and planned for VERSION, for writing those notes: the work starts only after a person sends it to Todo, and adding the same version again issues no second card. Adding a version does not change the release version. You can also add a version by creating the file yourself. `version release VERSION` lists the version the same way when it is not listed yet and makes it current. Without an argument it shows the release version. If the release version's file is deleted later, the project reads as having no release version until the file returns. Changing the release version moves no task: a task stores the version name it was given.
 
 ### Generate a release document {#generate-a-release-document}
 
 ```sh
-agpj --project "My project" release doc --current-version
+agpj --project "My project" release doc --release-version
 agpj --project "My project" release doc --version v1.9.0
 ```
 
@@ -193,7 +193,7 @@ Each item names its card (`#12`), the number of results and history entries, and
 
 The document is safe to edit by hand. The generated part sits between the lines `<!-- agpj:generated:start -->` and `<!-- agpj:generated:end -->`. Generating again replaces only what is between them, so text above or below stays, and generating twice from the same board changes nothing. A file without those lines, such as the one `version add` creates from the template, keeps its text and gets the block added at the end. A file with a missing, repeated, or reversed marker line is refused with `release_doc_refused` and left as it was, as is a file that changes while it is generated. The file is saved in one step, so a failure never leaves half a document.
 
-`--version VERSION` generates for that version and lists it first when it is not listed, as `version add` does. `--current-version` uses the project's current version; with none set it fails with `no_current_version` (exit code 1) and writes nothing. Each version has its own file, so generating for another version adds a second document and leaves the first alone. Open the file from Docs in the board, where `docs/release/` shows the versions.
+`--version VERSION` generates for that version and lists it first when it is not listed, as `version add` does. `--release-version` uses the project's release version; with none set it fails with `no_release_version` (exit code 1) and writes nothing. Each version has its own file, so generating for another version adds a second document and leaves the first alone. Open the file from Docs in the board, where `docs/release/` shows the versions.
 
 Generating never publishes anything. It writes one file inside the project's shared folder, and sends nothing to GitHub or any other service.
 
@@ -202,19 +202,19 @@ A card's planned version is the `plannedVersion` key in the frontmatter of its `
 Plan a card when you add it, or later:
 
 ```sh
-agpj --project "My project" add "Fix the login bug" --assignee ai --actor ai --current-version
+agpj --project "My project" add "Fix the login bug" --assignee ai --actor ai --release-version
 agpj --project "My project" edit 15 --planned-version v1.9.0
-agpj --project "My project" edit 15 --current-version
+agpj --project "My project" edit 15 --release-version
 agpj --project "My project" edit 15 --unplanned
 ```
 
-`--planned-version VERSION` needs a listed version (`version add`, or a file in `docs/release/`), `--current-version` stores the current version's name as it is now, and `--unplanned` removes the plan. The three exclude each other. When the project has no current version, `--current-version` fails with `no_current_version` (exit code 1) and changes nothing. Each real change is recorded in the card's history; planning a card for the version it already has changes nothing. The planned version is the one field you can change on a Done or archived card, as an agent or a person; every other edit of a Done card stays refused for an agent, so an edit that combines `--planned-version` with a title or description change on a Done card is refused as a whole. An agent cannot change a person's draft.
+`--planned-version VERSION` needs a listed version (`version add`, or a file in `docs/release/`), `--release-version` stores the release version's name as it is now, and `--unplanned` removes the plan. The three exclude each other. When the project has no release version, `--release-version` fails with `no_release_version` (exit code 1) and changes nothing. Each real change is recorded in the card's history; planning a card for the version it already has changes nothing. The planned version is the one field you can change on a Done or archived card, as an agent or a person; every other edit of a Done card stays refused for an agent, so an edit that combines `--planned-version` with a title or description change on a Done card is refused as a whole. An agent cannot change a person's draft.
 
 Plan every card of an epic at once with `epic plan`:
 
 ```sh
 agpj --project "My project" epic plan LAUNCH --planned-version v1.9.0
-agpj --project "My project" epic plan LAUNCH --current-version --only-unplanned
+agpj --project "My project" epic plan LAUNCH --release-version --only-unplanned
 agpj --project "My project" epic plan LAUNCH --unplanned
 ```
 
@@ -223,13 +223,13 @@ Each card is saved on its own, so a failure part way leaves the earlier cards ch
 Narrow `ls` and `progress` to one version:
 
 ```sh
-agpj --project "My project" ls --current-version
+agpj --project "My project" ls --release-version
 agpj --project "My project" ls --version v1.8.0 --epic LAUNCH --json
 agpj --project "My project" ls --unplanned --column todo
 agpj --project "My project" progress --version v1.8.0 --json
 ```
 
-`--version VERSION`, `--current-version`, and `--unplanned` exclude each other, and combine with the other filters. `--current-version` with no current version fails with `no_current_version`; `ls --all-projects` takes `--version` and `--unplanned` but not `--current-version`, because each project has its own. Every task in the JSON carries its `plannedVersion` (left out when the task has none), and the text shows `[plan VERSION]`. The root `agpj --version` still prints the version of the program.
+`--version VERSION`, `--release-version`, and `--unplanned` exclude each other, and combine with the other filters. `--release-version` with no release version fails with `no_release_version`; `ls --all-projects` takes `--version` and `--unplanned` but not `--release-version`, because each project has its own. Every task in the JSON carries its `plannedVersion` (left out when the task has none), and the text shows `[plan VERSION]`. The root `agpj --version` still prints the version of the program.
 
 A version filter only hides tasks. In `progress`, which tasks are ready for an agent is decided on the whole board first, so a task whose earlier-wave tasks are hidden by the filter is still not ready, and `nextTasks` holds the first three ready tasks that the filter keeps. Requests, answers, and epics to close are not narrowed.
 

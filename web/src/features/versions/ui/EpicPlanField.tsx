@@ -11,7 +11,7 @@ import { OptionRow } from './Options';
 import './versions.css';
 
 export interface EpicPlanFieldProps {
-  current: string | null;
+  release: string | null;
   versions: readonly string[];
   disabled?: boolean;
   /** Plans every task of the epic that is not done for the choice (the server skips the rest). */
@@ -23,23 +23,23 @@ export interface EpicPlanFieldProps {
 // Controls and versions have disjoint values, so a version may be named anything.
 const KEEP = 'c:keep';
 const NONE = 'c:none';
-const CURRENT = 'c:current';
+const RELEASE = 'c:release';
 
 function choiceOf(key: string): VersionChoice | null {
   if (key === KEEP) return null;
   if (key === NONE) return { choice: 'unset' };
-  if (key === CURRENT) return { choice: 'current' };
+  if (key === RELEASE) return { choice: 'release' };
   return { choice: 'named', version: key.slice(2) };
 }
 
 /**
  * The planned version of an epic's tasks, inside the epic's editor: no change (the default), none,
- * the current version, or a version of the list. Saving the editor plans every task of the epic that
+ * the release version, or a version of the list. Saving the editor plans every task of the epic that
  * is not done for that choice. The choice is taken when it is made, so a later update of the board
  * cannot change what Save applies; a single task is changed afterwards in its own editor.
  */
 export function EpicPlanField({
-  current,
+  release,
   versions,
   disabled = false,
   apply,
@@ -55,14 +55,14 @@ export function EpicPlanField({
     return () => onPending(null);
   }, [key, onPending]);
   const [open, setOpen] = useState(false);
-  const named = sortVersions(versions.filter((version) => version !== current));
+  const named = sortVersions(versions.filter((version) => version !== release));
   const labels = new Map<string, string>([
     [KEEP, t('versions.bulk.noChange')],
     [
-      CURRENT,
-      current === null
-        ? t('versions.bulk.currentUnset')
-        : t('versions.bulk.current', { version: current }),
+      RELEASE,
+      release === null
+        ? t('versions.bulk.releaseUnset')
+        : t('versions.bulk.release', { version: release }),
     ],
     [NONE, t('versions.detail.none')],
   ]);
@@ -101,11 +101,11 @@ export function EpicPlanField({
           >
             <OptionRow value={KEEP} checked={key === KEEP} label={labels.get(KEEP) ?? ''} />
             <OptionRow
-              value={CURRENT}
-              checked={key === CURRENT}
-              disabled={current === null}
-              label={labels.get(CURRENT) ?? ''}
-              hint={current === null ? t('versions.detail.currentUnsetHint') : undefined}
+              value={RELEASE}
+              checked={key === RELEASE}
+              disabled={release === null}
+              label={labels.get(RELEASE) ?? ''}
+              hint={release === null ? t('versions.detail.releaseUnsetHint') : undefined}
             />
             {named.map((version) => (
               <OptionRow

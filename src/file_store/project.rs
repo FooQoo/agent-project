@@ -114,7 +114,7 @@ impl FileStore {
                 default_epics_seeded: false,
                 next_question_id: 1,
                 versions: None,
-                current_version: None,
+                release_version: None,
             };
             io::write_json(
                 &layout::project_file(&temp),

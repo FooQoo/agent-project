@@ -117,9 +117,9 @@ pub struct QuestionSummary {
 pub struct Projection {
     pub project_id: String,
     pub project_name: String,
-    /// The project's versions and its current one.
+    /// The project's versions and its release version.
     pub versions: Vec<String>,
-    pub current_version: Option<String>,
+    pub release_version: Option<String>,
     /// The version of the whole Summary (the archived tasks are not part of it).
     pub version: String,
     pub tasks: Vec<TaskProjection>,

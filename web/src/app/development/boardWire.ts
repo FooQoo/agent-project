@@ -46,7 +46,7 @@ export function summaryOfBoard(board: Board): Summary {
       id: board.project.id,
       name: board.project.name,
       versions: board.project.versions ?? [],
-      currentVersion: board.project.currentVersion ?? null,
+      releaseVersion: board.project.releaseVersion ?? null,
     },
     version: '',
     tasks: board.tasks.map((task) => {

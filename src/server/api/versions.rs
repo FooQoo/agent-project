@@ -1,4 +1,4 @@
-//! The project's versions, its current version, and the version tasks are planned for. Only a
+//! The project's versions, its release version, and the version tasks are planned for. Only a
 //! person changes them here, so the actor is always the person.
 
 use std::sync::Arc;
@@ -18,7 +18,7 @@ use crate::server::store::{indexed_view, parse_project_id, refresh_index, with_r
 fn versions_json(value: &ProjectVersions, changed: Option<bool>) -> serde_json::Value {
     let mut json = serde_json::json!({
         "versions": value.versions,
-        "currentVersion": value.current,
+        "releaseVersion": value.release,
     });
     if let Some(changed) = changed {
         json["changed"] = changed.into();
@@ -26,7 +26,7 @@ fn versions_json(value: &ProjectVersions, changed: Option<bool>) -> serde_json::
     json
 }
 
-/// `GET .../versions`: the versions and the current one, from the index.
+/// `GET .../versions`: the versions and the release version, from the index.
 pub(super) async fn get_versions(
     State(state): State<Arc<AppState>>,
     Path(raw_project): Path<String>,
@@ -41,7 +41,7 @@ pub(super) async fn get_versions(
             &versions_json(
                 &ProjectVersions {
                     versions: view.versions.clone(),
-                    current: view.current_version.clone(),
+                    release: view.release_version.clone(),
                 },
                 None,
             ),
@@ -76,25 +76,25 @@ pub(super) async fn add_version(
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct CurrentVersionInput {
-    /// The version to make current, or `null` to clear it.
+pub(super) struct ReleaseVersionInput {
+    /// The version to make the release version, or `null` to clear it.
     version: Option<String>,
 }
 
-/// `PUT .../versions/current`: set or clear the current version. A version that is not listed
+/// `PUT .../versions/release`: set or clear the release version. A version that is not listed
 /// is listed first.
-pub(super) async fn set_current_version(
+pub(super) async fn set_release_version(
     headers: HeaderMap,
     State(state): State<Arc<AppState>>,
     Path(raw_project): Path<String>,
-    StrictJson(input): StrictJson<CurrentVersionInput>,
+    StrictJson(input): StrictJson<ReleaseVersionInput>,
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
         Err(error) => return agpj_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.set_current_version(&project_id, input.version.as_deref(), chrono::Utc::now())
+        store.set_release_version(&project_id, input.version.as_deref(), chrono::Utc::now())
     })
     .await;
     versions_answer(&state, result)
@@ -121,7 +121,7 @@ fn versions_answer(
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct ReleaseDocInput {
-    /// The version to generate for, or `null` for the project's current version.
+    /// The version to generate for, or `null` for the project's release version.
     version: Option<String>,
 }
 
@@ -139,7 +139,7 @@ pub(super) async fn generate_release_doc(
     };
     let choice = match input.version {
         Some(name) => VersionChoice::Named(name),
-        None => VersionChoice::Current,
+        None => VersionChoice::Release,
     };
     let result = with_request_files(&state, &headers, move |store| {
         store.generate_release_doc(&project_id, &choice, chrono::Utc::now())

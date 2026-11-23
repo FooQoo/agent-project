@@ -24,8 +24,8 @@ impl AgpjError {
             }
             AgpjError::TaskArchived { .. } => "Restore the task before editing it.".into(),
             AgpjError::TaskNotArchived { .. } => "Only an archived task can be deleted here.".into(),
-            AgpjError::NoCurrentVersion => {
-                "Set one with \"version current <VERSION>\", or name a version.".into()
+            AgpjError::NoReleaseVersion => {
+                "Set one with \"version release <VERSION>\", or name a version.".into()
             }
             AgpjError::ArchiveTargetsChanged => "Read the latest Done tasks and confirm the archive again.".into(),
             AgpjError::AttachmentNotFound { .. } => "The attachment does not belong to this task.".into(),

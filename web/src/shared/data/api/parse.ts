@@ -190,13 +190,13 @@ export function parseSummary(value: unknown): Summary {
     ['project', 'version', 'tasks', 'epics', 'problems'],
     ['questions', 'messages'],
   );
-  const project = exact(o.project, 'summary.project', ['id', 'name', 'versions', 'currentVersion']);
+  const project = exact(o.project, 'summary.project', ['id', 'name', 'versions', 'releaseVersion']);
   const summary: Summary = {
     project: {
       id: str(project.id, 'summary.project.id'),
       name: str(project.name, 'summary.project.name'),
       versions: list(project.versions, 'summary.project.versions', str),
-      currentVersion: nullableStr(project.currentVersion, 'summary.project.currentVersion'),
+      releaseVersion: nullableStr(project.releaseVersion, 'summary.project.releaseVersion'),
     },
     version: str(o.version, 'summary.version'),
     tasks: list(o.tasks, 'summary.tasks', parseTask),

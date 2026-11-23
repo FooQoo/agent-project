@@ -193,7 +193,7 @@ fn damaged_markers_are_refused_and_the_file_is_left_as_it_was() {
 }
 
 #[test]
-fn the_current_version_needs_to_be_set_and_writes_nothing_without_it() {
+fn the_release_version_needs_to_be_set_and_writes_nothing_without_it() {
     let (_root, home) = demo();
     let (code, error) = json_error(
         &home,
@@ -202,12 +202,12 @@ fn the_current_version_needs_to_be_set_and_writes_nothing_without_it() {
             "Demo",
             "release",
             "doc",
-            "--current-version",
+            "--release-version",
             "--json",
         ],
     );
     assert_eq!(code, 1);
-    assert!(error.contains("no_current_version"), "{error}");
+    assert!(error.contains("no_release_version"), "{error}");
     assert!(
         fs::read_dir(project_dir(&home).join("docs/release"))
             .unwrap()
@@ -215,8 +215,8 @@ fn the_current_version_needs_to_be_set_and_writes_nothing_without_it() {
             .is_none()
     );
 
-    run(&home, &["version", "current", "v1.8.0"]);
-    let out = run(&home, &["release", "doc", "--current-version"]);
+    run(&home, &["version", "release", "v1.8.0"]);
+    let out = run(&home, &["release", "doc", "--release-version"]);
     assert_eq!(out["version"], "v1.8.0");
     assert!(release(&home, "v1.8.0").is_file());
 }

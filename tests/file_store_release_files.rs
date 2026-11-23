@@ -167,7 +167,7 @@ fn adding_creates_the_file_from_the_template_and_never_overwrites_one() {
     assert!(f.store.add_version(&f.project, "TEMPLATE", at(5)).is_err());
     assert!(
         f.store
-            .set_current_version(&f.project, Some("TEMPLATE"), at(5))
+            .set_release_version(&f.project, Some("TEMPLATE"), at(5))
             .is_err()
     );
     // The template exists (the first add wrote it) and is still not a version.
@@ -184,48 +184,48 @@ fn adding_creates_the_file_from_the_template_and_never_overwrites_one() {
 #[test]
 fn project_json_keeps_no_version_list_and_setting_current_lists_the_version() {
     let f = fixture();
-    let current = f
+    let release = f
         .store
-        .set_current_version(&f.project, Some("v1.8.0"), at(5))
+        .set_release_version(&f.project, Some("v1.8.0"), at(5))
         .unwrap();
-    assert!(current.changed);
-    assert_eq!(current.value.versions, ["v1.8.0"]);
+    assert!(release.changed);
+    assert_eq!(release.value.versions, ["v1.8.0"]);
     assert!(f.release().join("v1.8.0.md").is_file());
     let text = fs::read_to_string(f.dir().join("project.json")).unwrap();
-    assert!(text.contains("\"currentVersion\": \"v1.8.0\""), "{text}");
+    assert!(text.contains("\"releaseVersion\": \"v1.8.0\""), "{text}");
     assert!(!text.contains("\"versions\""), "{text}");
 
     // A leftover `versions` field of an earlier build does not break loading and is dropped.
     let legacy = text.replace(
-        "\"currentVersion\"",
-        "\"versions\": [\"old\"],\n  \"currentVersion\"",
+        "\"releaseVersion\"",
+        "\"versions\": [\"old\"],\n  \"releaseVersion\"",
     );
     fs::write(f.dir().join("project.json"), legacy).unwrap();
     assert_eq!(f.versions(), ["v1.8.0"]);
     f.store
-        .set_current_version(&f.project, None, at(5))
+        .set_release_version(&f.project, None, at(5))
         .unwrap();
     let text = fs::read_to_string(f.dir().join("project.json")).unwrap();
-    assert!(!text.contains("versions") && !text.contains("currentVersion"));
+    assert!(!text.contains("versions") && !text.contains("releaseVersion"));
 }
 
 #[test]
-fn a_current_version_whose_file_is_gone_reads_as_none_and_comes_back_with_the_file() {
+fn a_release_version_whose_file_is_gone_reads_as_none_and_comes_back_with_the_file() {
     let f = fixture();
     f.store
-        .set_current_version(&f.project, Some("v1.8.0"), at(5))
+        .set_release_version(&f.project, Some("v1.8.0"), at(5))
         .unwrap();
     fs::remove_file(f.release().join("v1.8.0.md")).unwrap();
 
     let read = f.store.project_versions(&f.project).unwrap();
     assert!(read.versions.is_empty());
-    assert_eq!(read.current, None);
-    assert_eq!(f.store.snapshot(&f.project).unwrap().current_version, None);
+    assert_eq!(read.release, None);
+    assert_eq!(f.store.snapshot(&f.project).unwrap().release_version, None);
     assert!(
         f.store
-            .set_task_planned_version(&f.project, 1, &VersionChoice::Current, Actor::Human, at(5))
+            .set_task_planned_version(&f.project, 1, &VersionChoice::Release, Actor::Human, at(5))
             .is_err(),
-        "the current choice needs a listed current version"
+        "the release choice needs a listed release version"
     );
     // project.json still names it: nothing was cleared.
     let text = fs::read_to_string(f.dir().join("project.json")).unwrap();
@@ -236,7 +236,7 @@ fn a_current_version_whose_file_is_gone_reads_as_none_and_comes_back_with_the_fi
         f.store
             .project_versions(&f.project)
             .unwrap()
-            .current
+            .release
             .as_deref(),
         Some("v1.8.0")
     );

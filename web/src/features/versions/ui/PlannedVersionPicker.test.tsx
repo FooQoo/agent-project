@@ -18,7 +18,7 @@ function picker(props: Partial<Parameters<typeof PlannedVersionPicker>[0]> = {})
     <PlannedVersionPicker
       taskId={7}
       planned={null}
-      current="v1.8.0"
+      release="v1.8.0"
       versions={['v1.8.0', 'v1.9.0']}
       onSave={onSave}
       onPending={onPending}
@@ -29,18 +29,22 @@ function picker(props: Partial<Parameters<typeof PlannedVersionPicker>[0]> = {})
 }
 
 describe('the planned version field of the task editor', () => {
-  it('offers current, the other versions and none', () => {
+  it('offers release, the other versions and none', () => {
     picker();
-    expect(screen.getByRole('radio', { name: /Make it current \(v1\.8\.0\)/ })).toBeTruthy();
+    expect(
+      screen.getByRole('radio', { name: /Make it the release version \(v1\.8\.0\)/ }),
+    ).toBeTruthy();
     expect(screen.getByRole('radio', { name: /v1\.9\.0/ })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /Leave unplanned/ })).toBeTruthy();
   });
 
-  it('disables current while the project has none', () => {
-    picker({ current: null });
-    const current = screen.getByRole('radio', { name: /Make it current/ }) as HTMLButtonElement;
-    expect(current.disabled).toBe(true);
-    expect(screen.getByText('Unavailable: no current version is set')).toBeTruthy();
+  it('disables release while the project has none', () => {
+    picker({ release: null });
+    const release = screen.getByRole('radio', {
+      name: /Make it the release version/,
+    }) as HTMLButtonElement;
+    expect(release.disabled).toBe(true);
+    expect(screen.getByText('Unavailable: no release version is set')).toBeTruthy();
   });
 
   it('has nothing to save until the person changes the choice', () => {
@@ -55,9 +59,9 @@ describe('the planned version field of the task editor', () => {
 
   it('saves over the value it shows, with the choice made', async () => {
     const { onSave, pending } = picker({ planned: 'v1.9.0' });
-    fireEvent.click(screen.getByRole('radio', { name: /Make it current/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /Make it the release version/ }));
     await pending()?.();
-    expect(onSave).toHaveBeenCalledWith({ choice: 'current' }, 'v1.9.0');
+    expect(onSave).toHaveBeenCalledWith({ choice: 'release' }, 'v1.9.0');
     fireEvent.click(screen.getByRole('radio', { name: /Leave unplanned/ }));
     await pending()?.();
     expect(onSave).toHaveBeenLastCalledWith({ choice: 'unset' }, 'v1.9.0');
@@ -76,7 +80,7 @@ describe('the planned version field of the task editor', () => {
     });
     const onRefetch = vi.fn();
     const { pending } = picker({ onSave, onRefetch });
-    fireEvent.click(screen.getByRole('radio', { name: /Make it current/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /Make it the release version/ }));
     await expect(pending()?.()).rejects.toBeInstanceOf(PlannedVersionChangedError);
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toContain('v1.9.0');
@@ -92,12 +96,12 @@ describe('the planned version field of the task editor', () => {
       .mockRejectedValueOnce(new PlannedVersionChangedError('changed', 'v1.9.0'))
       .mockResolvedValue(undefined);
     const { pending } = picker({ onSave });
-    fireEvent.click(screen.getByRole('radio', { name: /Make it current/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /Make it the release version/ }));
     await expect(pending()?.()).rejects.toBeInstanceOf(PlannedVersionChangedError);
-    expect(onSave).toHaveBeenLastCalledWith({ choice: 'current' }, null);
+    expect(onSave).toHaveBeenLastCalledWith({ choice: 'release' }, null);
     // The message named v1.9.0: saving again is a deliberate replacement of it.
     await pending()?.();
-    expect(onSave).toHaveBeenLastCalledWith({ choice: 'current' }, 'v1.9.0');
+    expect(onSave).toHaveBeenLastCalledWith({ choice: 'release' }, 'v1.9.0');
   });
 
   it('does not renew the expected value when the board updates by itself', async () => {
@@ -122,15 +126,15 @@ describe('the planned version field of the task editor', () => {
 
   it('keeps versions named like the controls apart from the controls', async () => {
     const { onSave, pending } = picker({
-      versions: ['v1.8.0', '__none__', 'c:current'],
+      versions: ['v1.8.0', '__none__', 'c:release'],
       planned: '__none__',
     });
     // The task is planned for the version named "__none__", not unplanned.
     expect(screen.getByRole('radio', { name: '__none__' }).getAttribute('aria-checked')).toBe(
       'true',
     );
-    fireEvent.click(screen.getByRole('radio', { name: 'c:current' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'c:release' }));
     await pending()?.();
-    expect(onSave).toHaveBeenLastCalledWith({ choice: 'named', version: 'c:current' }, '__none__');
+    expect(onSave).toHaveBeenLastCalledWith({ choice: 'named', version: 'c:release' }, '__none__');
   });
 });

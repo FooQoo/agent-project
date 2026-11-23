@@ -71,7 +71,7 @@ pub(crate) fn summary_of(projection: &Projection) -> Summary {
             id: projection.project_id.clone(),
             name: projection.project_name.clone(),
             versions: projection.versions.clone(),
-            current_version: projection.current_version.clone(),
+            release_version: projection.release_version.clone(),
         },
         version: projection.version.clone(),
         tasks: projection

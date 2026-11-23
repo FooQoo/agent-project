@@ -163,22 +163,22 @@ agpj ls --all-projects --json
 
 ## タスクをバージョンに割り当てる {#plan-tasks-for-a-version}
 
-プロジェクトはバージョンの一覧を持ち、その1つを現在のバージョンにできます。タスクは1つのバージョンに割り当てるか、どのバージョンにも割り当てません（未定）。バージョンの名前は空白を含まない1〜64文字（例: `v1.8.0`）で、書いたとおりに保存し、比較します。
+プロジェクトはバージョンの一覧を持ち、その1つをリリースバージョンにできます。タスクは1つのバージョンに割り当てるか、どのバージョンにも割り当てません（未定）。バージョンの名前は空白を含まない1〜64文字（例: `v1.8.0`）で、書いたとおりに保存し、比較します。
 
 ```sh
 agpj --project "My project" version add v1.9.0
-agpj --project "My project" version current v1.8.0
-agpj --project "My project" version current
-agpj --project "My project" version current --clear
+agpj --project "My project" version release v1.8.0
+agpj --project "My project" version release
+agpj --project "My project" version release --clear
 agpj --project "My project" version ls --json
 ```
 
-プロジェクトのバージョンは、その[ドキュメント](../watch/docs)の`docs/release/`直下にある`*.md`ファイルで、新しいものから並びます（`v1.10.0`は`v1.9.0`より前。`TEMPLATE.md`はリリースのテンプレートで、バージョンにはなりません）。`version add VERSION`は`docs/release/TEMPLATE.md`をコピーして`docs/release/VERSION.md`を作り（テンプレートがなければ、標準のリリースノートのテンプレートを先に書きます）、既存のファイルは上書きしません。すでにファイルがあるバージョンは、一覧にあるものとして扱います。あわせて、そのリリースノートを書くための、担当がAIのカードをBacklogに1枚作ります（タイトルは`Write the release notes for VERSION`。表示言語が日本語なら日本語）で、予定のバージョンはそのバージョンです。人がTodoに送ってから着手し、同じバージョンをもう一度追加しても2枚目は作りません。バージョンを追加しても現在のバージョンは変わりません。ファイルを自分で作ってもバージョンを追加できます。`version current VERSION`は、まだ一覧にないバージョンを同じ方法で載せたうえでカレントにします。引数なしでは現在のバージョンを表示します。あとで現在のバージョンのファイルを削除すると、ファイルが戻るまで、プロジェクトは現在のバージョンがないものとして読みます。現在のバージョンを変えてもタスクは動きません。タスクは割り当てられたバージョンの名前を保存しています。
+プロジェクトのバージョンは、その[ドキュメント](../watch/docs)の`docs/release/`直下にある`*.md`ファイルで、新しいものから並びます（`v1.10.0`は`v1.9.0`より前。`TEMPLATE.md`はリリースのテンプレートで、バージョンにはなりません）。`version add VERSION`は`docs/release/TEMPLATE.md`をコピーして`docs/release/VERSION.md`を作り（テンプレートがなければ、標準のリリースノートのテンプレートを先に書きます）、既存のファイルは上書きしません。すでにファイルがあるバージョンは、一覧にあるものとして扱います。あわせて、そのリリースノートを書くための、担当がAIのカードをBacklogに1枚作ります（タイトルは`Write the release notes for VERSION`。表示言語が日本語なら日本語）で、予定のバージョンはそのバージョンです。人がTodoに送ってから着手し、同じバージョンをもう一度追加しても2枚目は作りません。バージョンを追加してもリリースバージョンは変わりません。ファイルを自分で作ってもバージョンを追加できます。`version release VERSION`は、まだ一覧にないバージョンを同じ方法で載せたうえでリリースバージョンにします。引数なしではリリースバージョンを表示します。あとでリリースバージョンのファイルを削除すると、ファイルが戻るまで、プロジェクトはリリースバージョンがないものとして読みます。リリースバージョンを変えてもタスクは動きません。タスクは割り当てられたバージョンの名前を保存しています。
 
 ### リリースドキュメントを生成する {#generate-a-release-document}
 
 ```sh
-agpj --project "My project" release doc --current-version
+agpj --project "My project" release doc --release-version
 agpj --project "My project" release doc --version v1.9.0
 ```
 
@@ -194,7 +194,7 @@ agpj --project "My project" release doc --version v1.9.0
 
 文書は手で編集して構いません。生成する部分は`<!-- agpj:generated:start -->`と`<!-- agpj:generated:end -->`の行の間にあります。再生成で置き換わるのはその間だけなので、前後の文章は残り、同じプロジェクトデータから2回生成しても何も変わりません。この行がないファイル（`version add`がテンプレートから作ったものなど）は、文章を残したまま末尾にブロックを追加します。マーカー行が欠けている、重複している、順序が逆のファイルは`release_doc_refused`で拒否してそのまま残し、生成中に内容が変わったファイルも同様です。保存は一度に行うので、失敗しても書きかけの文書は残りません。
 
-`--version VERSION`はそのバージョンで生成し、一覧にないバージョンは`version add`と同じようにまず一覧に加えます。`--current-version`はプロジェクトの現在のバージョンを使い、未設定なら`no_current_version`（終了コード1）で失敗して何も書きません。バージョンごとに別のファイルになるので、別のバージョンで生成すると文書が2つ並び、最初の文書には触れません。ファイルはカンバンの「ドキュメント」から開けます。`docs/release/`にバージョンが並びます。
+`--version VERSION`はそのバージョンで生成し、一覧にないバージョンは`version add`と同じようにまず一覧に加えます。`--release-version`はプロジェクトのリリースバージョンを使い、未設定なら`no_release_version`（終了コード1）で失敗して何も書きません。バージョンごとに別のファイルになるので、別のバージョンで生成すると文書が2つ並び、最初の文書には触れません。ファイルはカンバンの「ドキュメント」から開けます。`docs/release/`にバージョンが並びます。
 
 生成しても何も公開されません。書くのはプロジェクトの共有フォルダ内の1ファイルだけで、GitHubなどへは何も送りません。
 
@@ -203,19 +203,19 @@ agpj --project "My project" release doc --version v1.9.0
 カードは追加するときにも、あとからでも割り当てられます。
 
 ```sh
-agpj --project "My project" add "Fix the login bug" --assignee ai --actor ai --current-version
+agpj --project "My project" add "Fix the login bug" --assignee ai --actor ai --release-version
 agpj --project "My project" edit 15 --planned-version v1.9.0
-agpj --project "My project" edit 15 --current-version
+agpj --project "My project" edit 15 --release-version
 agpj --project "My project" edit 15 --unplanned
 ```
 
-`--planned-version VERSION`は一覧にあるバージョン（`version add`済み、または`docs/release/`にファイルがあるもの）が必要です。`--current-version`はその時点の現在のバージョンの名前を保存し、`--unplanned`は割り当てを外します。3つは同時に指定できません。プロジェクトに現在のバージョンがないときの`--current-version`は`no_current_version`（終了コード1）で失敗し、何も変更しません。実際に変わったときだけカードの履歴に記録し、すでにそのバージョンのカードに同じバージョンを割り当てても何も変わりません。予定のバージョンは、Doneやアーカイブされたカードでもエージェントと人のどちらも変更できる唯一の項目です。Doneのカードのそのほかの編集はエージェントには拒否されたままなので、Doneのカードで`--planned-version`とタイトルや説明の変更を組み合わせた編集は全体が拒否されます。エージェントは人の下書きを変更できません。
+`--planned-version VERSION`は一覧にあるバージョン（`version add`済み、または`docs/release/`にファイルがあるもの）が必要です。`--release-version`はその時点のリリースバージョンの名前を保存し、`--unplanned`は割り当てを外します。3つは同時に指定できません。プロジェクトにリリースバージョンがないときの`--release-version`は`no_release_version`（終了コード1）で失敗し、何も変更しません。実際に変わったときだけカードの履歴に記録し、すでにそのバージョンのカードに同じバージョンを割り当てても何も変わりません。予定のバージョンは、Doneやアーカイブされたカードでもエージェントと人のどちらも変更できる唯一の項目です。Doneのカードのそのほかの編集はエージェントには拒否されたままなので、Doneのカードで`--planned-version`とタイトルや説明の変更を組み合わせた編集は全体が拒否されます。エージェントは人の下書きを変更できません。
 
 エピックのカードをまとめて割り当てるには`epic plan`を使います。
 
 ```sh
 agpj --project "My project" epic plan LAUNCH --planned-version v1.9.0
-agpj --project "My project" epic plan LAUNCH --current-version --only-unplanned
+agpj --project "My project" epic plan LAUNCH --release-version --only-unplanned
 agpj --project "My project" epic plan LAUNCH --unplanned
 ```
 
@@ -224,13 +224,13 @@ agpj --project "My project" epic plan LAUNCH --unplanned
 `ls`と`progress`は1つのバージョンに絞り込めます。
 
 ```sh
-agpj --project "My project" ls --current-version
+agpj --project "My project" ls --release-version
 agpj --project "My project" ls --version v1.8.0 --epic LAUNCH --json
 agpj --project "My project" ls --unplanned --column todo
 agpj --project "My project" progress --version v1.8.0 --json
 ```
 
-`--version VERSION`、`--current-version`、`--unplanned`は同時に指定できず、ほかの絞り込みと組み合わせられます。現在のバージョンがないプロジェクトでの`--current-version`は`no_current_version`で失敗します。`ls --all-projects`は`--version`と`--unplanned`を受け付けますが、現在のバージョンはプロジェクトごとに違うため`--current-version`は受け付けません。JSONのタスクには`plannedVersion`が付き（割り当てがなければ省かれます）、テキストでは`[plan VERSION]`と表示します。ルートの`agpj --version`は、これまでどおりプログラムのバージョンを表示します。
+`--version VERSION`、`--release-version`、`--unplanned`は同時に指定できず、ほかの絞り込みと組み合わせられます。リリースバージョンがないプロジェクトでの`--release-version`は`no_release_version`で失敗します。`ls --all-projects`は`--version`と`--unplanned`を受け付けますが、リリースバージョンはプロジェクトごとに違うため`--release-version`は受け付けません。JSONのタスクには`plannedVersion`が付き（割り当てがなければ省かれます）、テキストでは`[plan VERSION]`と表示します。ルートの`agpj --version`は、これまでどおりプログラムのバージョンを表示します。
 
 バージョンの絞り込みはタスクを隠すだけです。`progress`では、エージェントが着手できるタスクをプロジェクト全体で先に決めるので、前のウェーブのタスクが絞り込みで隠れていても、そのタスクは着手可能になりません。`nextTasks`には、絞り込みに合う着手可能なタスクの先頭3件が入ります。リクエスト、回答、閉じるエピックは絞り込みの対象外です。
 
