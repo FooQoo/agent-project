@@ -47,7 +47,7 @@ Only the `TASK.md`/`task.json` pair, and a message change with the task pairs it
 
 ## Format versions and the draft mark
 
-A `task.json` must declare `formatVersion: 3`. A Backlog `epic.json` has `formatVersion: 2`, and the other epic files stay at `formatVersion: 1`; both are read. Any other version is `format_unsupported` (a `task.json` of version 1 or 2 included), and the message says "Only formatVersion 2 is supported". An earlier version of `agpj` cannot read a version-2 file.
+A `task.json` must declare `formatVersion: 3`. A Backlog `epic.json` has `formatVersion: 2`, and the other epic files stay at `formatVersion: 1`; both are read. Any other version is `format_unsupported` (a `task.json` of version 1 or 2 included), and the message says "Only formatVersion 3 is supported". An earlier version of `agpj` cannot read a version-2 file.
 
 `draft` is `null` or `"human"`. A `draft: "ai"` is not a valid value: that `task.json` or `epic.json` fails to parse like any other invalid file, so it is reported in `problems`, left out of the board, and never rewritten. Nothing else in the project is affected.
 

@@ -1127,3 +1127,72 @@ fn a_project_without_agents_still_resumes_after_the_last_answer() {
     assert_eq!(task.agent_status, RunState::Running);
     assert_eq!(task.run_connection_id, None);
 }
+
+#[test]
+fn an_agent_edit_with_an_unreadable_connection_registry_is_not_saved() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    let path = fx
+        ._root
+        .path()
+        .join("shared/projects")
+        .join(fx.project.as_str())
+        .join(".internal")
+        .join("connections.json");
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    std::fs::write(&path, "{").unwrap();
+    assert!(
+        fx.store
+            .update_agent(&fx.project, "A-1", Some("Renamed"), None)
+            .is_err()
+    );
+    std::fs::remove_file(&path).unwrap();
+    let agents = fx.store.list_agents(&fx.project).unwrap();
+    assert_eq!(agents[0].name, "Screen");
+}
+
+#[test]
+fn a_card_of_an_archived_agent_cannot_enter_doing_until_it_is_reassigned() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "", t0())
+        .unwrap();
+    fx.store
+        .register_agent(&fx.project, "CLI", "", t0())
+        .unwrap();
+    let id = fx
+        .store
+        .create_task(
+            &fx.project,
+            NewTask {
+                title: "work".into(),
+                description: String::new(),
+                assignee: Assignee::Ai,
+                actor: Actor::Human,
+                draft: None,
+            },
+            t0(),
+        )
+        .unwrap()
+        .id;
+    fx.store
+        .move_work_task_for_user(&fx.project, id, Column::Todo, ctx(Actor::Human), t0())
+        .ok();
+    fx.store
+        .assign_task_agent(&fx.project, id, Some("A-1"), t0())
+        .unwrap();
+    fx.store.archive_agent(&fx.project, "A-1", t0()).unwrap();
+    assert!(matches!(
+        fx.store
+            .move_work_task_for_user(&fx.project, id, Column::Doing, ctx(Actor::Human), t0()),
+        Err(AgpjError::AgentNotFound { .. })
+    ));
+    fx.store
+        .assign_task_agent(&fx.project, id, Some("A-2"), t0())
+        .unwrap();
+    fx.store
+        .move_work_task_for_user(&fx.project, id, Column::Doing, ctx(Actor::Human), t0())
+        .unwrap();
+}

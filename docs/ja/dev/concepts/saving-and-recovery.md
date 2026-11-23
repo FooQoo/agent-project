@@ -47,7 +47,7 @@
 
 ## 形式のバージョンとdraftの値
 
-`task.json`は`formatVersion: 3`を宣言する必要があります。バックログを使う`epic.json`は`formatVersion: 2`で、ほかのエピックのファイルは`formatVersion: 1`のままです。どちらも読めます。ほかのバージョン（バージョン1・2の`task.json`を含む）は`format_unsupported`で、メッセージは「Only formatVersion 2 is supported」と伝えます。以前のバージョンの`agpj`はバージョン2のファイルを読めません。
+`task.json`は`formatVersion: 3`を宣言する必要があります。バックログを使う`epic.json`は`formatVersion: 2`で、ほかのエピックのファイルは`formatVersion: 1`のままです。どちらも読めます。ほかのバージョン（バージョン1・2の`task.json`を含む）は`format_unsupported`で、メッセージは「Only formatVersion 3 is supported」と伝えます。以前のバージョンの`agpj`はバージョン2のファイルを読めません。
 
 `draft`は`null`または`"human"`です。`draft: "ai"`は有効な値ではなく、その`task.json`・`epic.json`は、ほかの不正なファイルと同じく解析に失敗します。`problems`に報告され、カンバンからは除かれ、書き換えられません。プロジェクトのほかの部分には影響しません。
 

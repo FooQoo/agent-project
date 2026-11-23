@@ -15,6 +15,23 @@ pub(in crate::file_store::ops) fn has_live_agents_locked(
         .any(|agent| agent.archived_at.is_none()))
 }
 
+/// A card that enters Doing with an agent needs that agent to still be live: an archived agent
+/// can never start it.
+pub(in crate::file_store::ops) fn ensure_agent_live_locked(
+    shared: &Path,
+    project_dir: &Path,
+    agent_id: &str,
+) -> Result<(), AgpjError> {
+    let agents: AgentsFile = load(shared, &agents_path(project_dir))?;
+    let agent = find_agent(&agents, agent_id)?;
+    if agent.archived_at.is_some() {
+        return Err(AgpjError::AgentNotFound {
+            agent: agent_id.into(),
+        });
+    }
+    Ok(())
+}
+
 impl FileStore {
     /// Whether the project has a live agent. Connections are required once a person has
     /// registered the first agent; a project without agents has nobody to be confused with.
@@ -100,8 +117,9 @@ impl FileStore {
             record.role = role;
         }
         let record = record.clone();
-        save(shared, &agents_path(&dir), &file)?;
+        // Read the connections first so a malformed registry fails before the edit is saved.
         let connections: ConnectionsFile = load(shared, &connections_path(&dir))?;
+        save(shared, &agents_path(&dir), &file)?;
         Ok(view_of(&record, &connections))
     }
 

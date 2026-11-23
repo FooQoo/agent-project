@@ -50,7 +50,8 @@ pub(super) fn load<T: serde::de::DeserializeOwned + Default>(
     path: &std::path::Path,
 ) -> Result<T, AgpjError> {
     let label = layout::shared_label(shared, path);
-    if !path.exists() {
+    // Only a confirmed missing file is an empty registry; an unreadable parent is an error.
+    if !path.try_exists().map_err(|e| io::read_error(&label, e))? {
         return Ok(T::default());
     }
     let text = io::read_text(path, &label)?;

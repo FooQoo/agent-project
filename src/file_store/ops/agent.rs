@@ -178,6 +178,12 @@ impl FileStore {
                 action: "moving a task from Doing back to Todo".into(),
             });
         }
+        if to == Column::Doing
+            && task.task_status != Column::Doing
+            && let Some(agent_id) = task.agent_id.as_deref()
+        {
+            super::assignment::ensure_agent_live_locked(shared, &project_dir, agent_id)?;
+        }
         if task.task_status == to {
             return Ok(Changed {
                 value: reader::read_task_locked(shared, project, id)?,

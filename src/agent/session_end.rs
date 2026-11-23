@@ -31,12 +31,21 @@ pub(super) fn run(
         return;
     };
     let now = SystemClock.now();
-    let key = session_id.map(super::session_identity::claude_key);
+    // A board-launched session keys its secret by `AGPJ_RESIDENT_ID`, which wins over the
+    // Claude session ID, so release the secrets held under either key.
+    let mut keys: Vec<String> = Vec::new();
+    keys.extend(session_id.map(super::session_identity::claude_key));
+    if std::env::var_os("AGPJ_RESIDENT_ID").is_some() {
+        let key = super::session_identity::SessionIdentity::from_env().key;
+        if !keys.contains(&key) {
+            keys.push(key);
+        }
+    }
     let mut ended: Vec<crate::domain::ProjectId> = Vec::new();
     if let Some(meta) = meta {
-        let secret = key
-            .as_deref()
-            .and_then(|key| super::connection_store::load_secret_for_key(data_dir, &meta.id, key))
+        let secret = keys
+            .iter()
+            .find_map(|key| super::connection_store::load_secret_for_key(data_dir, &meta.id, key))
             .or_else(|| super::connection_store::load_secret(data_dir, &meta.id));
         if let Some(secret) = secret {
             let _ = store.end_connection_session(&meta.id, &secret, now);
@@ -45,10 +54,11 @@ pub(super) fn run(
     }
     // The folder may be unbound, or bound to another project than the one the session
     // connected to with `--project`: release every project that holds this session's secret.
-    if let Some(key) = key.as_deref() {
+    for key in &keys {
         for (project, secret) in super::connection_store::stored_secrets_for_key(data_dir, key) {
             if !ended.contains(&project) {
                 let _ = store.end_connection_session(&project, &secret, now);
+                ended.push(project);
             }
         }
     }
