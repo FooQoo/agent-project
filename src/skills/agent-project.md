@@ -118,7 +118,7 @@ The question JSON, waiting for the answers, showing the question in the chat, re
 
 ## 8. Wait and resume
 
-When no work can proceed in the ordinary work loop, wait for a change with `agpj --project "<name>" wait --after "<cursor>" --json`, using the `cursor` of the latest snapshot. Never poll the board on a timer. After `wait --after` returns, check the snapshot for the answer you waited on: if an answer is there, read it and take it in with `message accept <id> --actor ai` before treating it as input or resuming; if it is not there, wait again with the `cursor` of the latest snapshot. After `message ask` or `message wait` returns answers, they are already taken in. After an answer, follow "After an answer" in `agpj skills waiting`. The error codes of a wait and the listener distinction: `agpj skills waiting`.
+When no work can proceed in the ordinary work loop, wait for a change with `agpj --project "<name>" wait --after "<cursor>" --json`, using the `cursor` of the latest snapshot. Never poll the board on a timer. When `wait --after` returns, check the snapshot for the answer you waited on: if an answer is there, read it and take it in with `message accept <id> --actor ai` before treating it as input or resuming. If the wait returned because of a project change and the answer is not there, re-check the snapshot for independent ready work and do it; wait again with the `cursor` of the latest snapshot only when none is left. Answers returned by `message ask` or `message wait` are already taken in. Once an answer is in, follow "After an answer" in `agpj skills waiting`. The error codes of a wait and the listener distinction: `agpj skills waiting`.
 
 ## 9. Drafts and archived tasks
 

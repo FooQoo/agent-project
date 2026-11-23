@@ -170,7 +170,7 @@ agpj --project "My project" wait --until task --idle-timeout 300 --json
 
 The timeout is required and must be from 1 to 86,400 seconds; there is no default. A task already in Todo is returned immediately, so tasks created before listening are included. An AI task already in Doing is also eligible when its `agentStatus` is `idle` or `paused`.
 
-Before starting or resuming the listener, inspect AI tasks by `agentStatus`: if any task is `running` or has `awaitingAnswer` set, resolve that work first. A Running task that has had no history entry for 30 minutes is listed first in `nextTasks` as stalled; the agent continues it, or records why it cannot with `history add`. A Doing lane by itself does not block the listener.
+Before starting or resuming the listener, inspect AI tasks by `agentStatus`: if any task is `running`, or has `awaitingAnswer` set while in Todo or Doing, resolve that work first (an AI task in Backlog or Done with an open question is left alone). A Running task that has had no history entry for 30 minutes is listed first in `nextTasks` as stalled; the agent continues it, or records why it cannot with `history add`. A Doing lane by itself does not block the listener.
 
 Each successful call returns one task. Finish that task, then call `wait` again in the same session to take the next one. The selector follows the same order as the progress table: epics sorted by ID, each epic's saved waves and then task ID, followed by ungrouped tasks by ID. It selects only AI-owned Todo/Doing tasks with `agentStatus` of `idle` or `paused` that do not wait for an answer and are non-draft and non-archived.
 
@@ -178,7 +178,7 @@ It does not claim or edit the task. Read its epic's `EPIC.md` when it has one, i
 
 Use the listener procedure of the agent-project skill (printed by `agpj skills listening`) for the full loop, including decisions waiting for an answer and recovery after a session is interrupted.
 
-An Awaiting answer task keeps the same session waiting for the answer; it is not another task to skip to, and its time does not count toward idle timeout. When the answer is taken in, a Paused task in Doing goes back to Running by itself. The session re-reads the task and continues it only if it is still its to run; if a person paused it or moved it to another column, the session follows its current state. Only then does it listen again.
+When the task the session is working on in Todo or Doing is Awaiting answer, the session waits for that answer before taking another task, and the waiting time does not count toward idle timeout. An AI task in Backlog or Done with an open question is left alone, and the listener continues other work. When the answer is taken in, follow "After an answer" in `agpj skills waiting`: a Paused task in Doing goes back to Running by itself, and a task that a person paused or moved to another column keeps its current state. Only then does the session listen again.
 
 An agent cannot pause a task. When it is blocked on a person, it asks a question so that the task shows Awaiting answer; for any other cause it records why with `history add`.
 

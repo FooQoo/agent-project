@@ -215,10 +215,9 @@ function moveTask(
     ...task,
     taskStatus: target,
     taskStatusChangedAt: at,
+    // A lane change resets the run state, but an open question stays open and answerable.
     agentStatus: 'idle',
-    awaitingAnswer: false,
-    pendingReason: null,
-    pendingRequestId: null,
+    awaitingAnswer: task.awaitingAnswer && task.pendingRequestId !== null,
     updatedAt: at,
     agentStatusChangedAt: at,
     history: [...task.history, { at, reason }],
