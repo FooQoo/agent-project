@@ -411,3 +411,59 @@ fn next_tasks_carry_the_run_state_and_list_a_stalled_task_first() {
     assert_eq!(json["why"], "stalled");
     assert_eq!(json["agentStatus"], "running");
 }
+
+#[test]
+fn a_retried_acceptance_still_resumes_a_task_the_first_one_left_paused() {
+    let fx = fx();
+    let id = fx.task(Assignee::Ai);
+    fx.run(id);
+    qa::ask(
+        &fx.store,
+        &fx.project,
+        &[id],
+        "Which?",
+        &[("a", "A"), ("b", "B")],
+    );
+    qa::answer(&fx.store, &fx.project, "Q-1", Some("a"), None);
+    fx.store
+        .accept_message(&fx.project, "Q-1", Actor::Ai, now())
+        .unwrap();
+    assert_eq!(fx.view(id).agent_status, RunState::Running);
+
+    // The answer is already accepted but the task is paused again, as a failed resume leaves it.
+    fx.store
+        .set_agent_status(&fx.project, id, RunState::Paused, ctx(Actor::Human), now())
+        .unwrap();
+    let again = fx
+        .store
+        .accept_message(&fx.project, "Q-1", Actor::Ai, now());
+    assert!(matches!(
+        again,
+        Err(agent_project::error::AgpjError::AnswerAccepted { .. })
+    ));
+    assert_eq!(fx.view(id).agent_status, RunState::Running);
+    // A further retry changes nothing and writes no duplicate history.
+    let resumed = |fx: &Fx| {
+        fx.view(id)
+            .history
+            .iter()
+            .filter(|e| e.reason == "Resumed after the answers to Q-1.")
+            .count()
+    };
+    assert_eq!(resumed(&fx), 2);
+    let _ = fx
+        .store
+        .accept_message(&fx.project, "Q-1", Actor::Ai, now());
+    assert_eq!(resumed(&fx), 2);
+
+    // The wait's hand-over takes the same path.
+    fx.store
+        .set_agent_status(&fx.project, id, RunState::Paused, ctx(Actor::Human), now())
+        .unwrap();
+    let written = fx
+        .store
+        .accept_answers(&fx.project, &["Q-1".to_string()], now())
+        .unwrap();
+    assert!(written.is_empty());
+    assert_eq!(fx.view(id).agent_status, RunState::Running);
+}

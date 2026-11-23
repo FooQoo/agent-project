@@ -70,6 +70,9 @@ impl FileStore {
                 }
                 let reply = question.reply.as_mut().expect("an answered question");
                 if reply.accepted_at.is_some() {
+                    // A retry after a failed resume: finish the resume (a no-op when it
+                    // already happened), then report the answer as taken in.
+                    self.resume_after_answers(project, &project_dir, &[question], now)?;
                     return Err(AgpjError::AnswerAccepted { id: id.to_owned() });
                 }
                 reply.accepted_at = Some(stamp(now));
@@ -104,6 +107,7 @@ impl FileStore {
         let mut changes = Vec::new();
         let mut written = Vec::new();
         let mut answered = Vec::new();
+        let mut retried = Vec::new();
         for id in ids {
             let Message::Question(mut question) = read_message(shared, &project_dir, id)? else {
                 continue;
@@ -111,9 +115,14 @@ impl FileStore {
             if question.state() != MessageState::Closed {
                 continue;
             }
-            let Some(reply) = question.reply.as_mut().filter(|r| r.accepted_at.is_none()) else {
+            let Some(reply) = question.reply.as_mut() else {
                 continue;
             };
+            if reply.accepted_at.is_some() {
+                // Taken in before: only finish a resume that an earlier failure left undone.
+                retried.push(question);
+                continue;
+            }
             reply.accepted_at = Some(at);
             changes.push(message_change(
                 &project_dir,
@@ -125,6 +134,9 @@ impl FileStore {
         }
         if !changes.is_empty() {
             save_batch_locked(&project_dir, changes)?;
+        }
+        answered.append(&mut retried);
+        if !answered.is_empty() {
             self.resume_after_answers(project, &project_dir, &answered, now)?;
         }
         Ok(written)
