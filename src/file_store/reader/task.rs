@@ -94,6 +94,7 @@ pub(crate) fn read_task_lenient(
                 .chain(&parsed.acceptance_defects)
                 .chain(&parsed.questions_defects)
                 .chain(&parsed.planned_version_defects)
+                .chain(&parsed.result_plans_defects)
                 .map(|d| Problem {
                     file: md_label.clone(),
                     field: d.field.clone(),
@@ -128,6 +129,7 @@ pub(crate) fn task_view(
     let updated_at = body_modified.map_or(task.updated_at, |m| m.max(task.updated_at));
     let parts = frontmatter::parse(&description);
     let questions = frontmatter::questions_of(&description);
+    let (result_plans, plan_defects) = frontmatter::result_plans_of(&description, true);
     TaskView {
         id: task.id,
         title: task.title,
@@ -135,6 +137,8 @@ pub(crate) fn task_view(
         body: parts.body,
         acceptance: parts.acceptance,
         acceptance_error: !parts.defects.is_empty(),
+        result_plans,
+        result_plans_error: !plan_defects.is_empty(),
         assignee: task.assignee,
         epic_id: task.epic_id,
         epic: None,

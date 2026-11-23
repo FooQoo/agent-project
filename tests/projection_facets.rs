@@ -203,6 +203,7 @@ fn projection_a_body_change_is_summary_and_document() {
             TaskTextParts {
                 body: Some(&body),
                 acceptance: None,
+                ..Default::default()
             },
             at(11),
         )
@@ -236,6 +237,7 @@ fn projection_an_acceptance_change_is_summary_and_document() {
             TaskTextParts {
                 body: None,
                 acceptance: Some(&items),
+                ..Default::default()
             },
             at(11),
         )

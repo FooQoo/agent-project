@@ -93,6 +93,7 @@ fn home() -> (tempfile::TempDir, ProjectId) {
             TaskTextParts {
                 body: None,
                 acceptance: Some(&items),
+                ..Default::default()
             },
             at(5),
         )

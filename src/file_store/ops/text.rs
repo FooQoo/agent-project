@@ -4,7 +4,10 @@ use std::path::Path;
 
 use crate::domain::ProjectId;
 use crate::error::AgpjError;
-use crate::file_store::frontmatter::{AcceptanceItem, compose_questions, questions_of};
+use crate::file_store::TaskTextParts;
+use crate::file_store::frontmatter::{
+    compose_questions, compose_result_plans, normalize_result_plans, questions_of,
+};
 use crate::file_store::history::{ParseMode, compose_task, parse_task};
 use crate::file_store::io;
 use crate::file_store::layout;
@@ -57,7 +60,9 @@ pub(super) fn write_text(
             &label,
         )?;
         let questions = questions_of(&stored).map_err(invalid)?;
-        replacement = Some(compose_questions(&composed, &questions).map_err(invalid)?);
+        let composed = compose_questions(&composed, &questions).map_err(invalid)?;
+        // Plans without an ID get one here, so the saved file always holds stable IDs.
+        replacement = Some(normalize_result_plans(&composed).map_err(invalid)?);
     }
     task.title = next_title;
     Ok((true, replacement))
@@ -67,10 +72,14 @@ pub(super) fn write_parts(
     shared: &Path,
     project_dir: &Path,
     task: &mut TaskFile,
-    body: Option<&str>,
-    acceptance: Option<&[AcceptanceItem]>,
+    parts: TaskTextParts<'_>,
 ) -> Result<Option<String>, AgpjError> {
-    if body.is_none() && acceptance.is_none() {
+    let TaskTextParts {
+        body,
+        acceptance,
+        result_plans,
+    } = parts;
+    if body.is_none() && acceptance.is_none() && result_plans.is_none() {
         return Ok(None);
     }
     let md_path = layout::task_md(&layout::task_dir(project_dir, task.id));
@@ -94,5 +103,15 @@ pub(super) fn write_parts(
                 reason: defect.reason,
             }
         })?;
+    let composed = match result_plans {
+        Some(plans) => {
+            compose_result_plans(&composed, plans).map_err(|defect| AgpjError::FileInvalid {
+                file: label.clone(),
+                field: defect.field,
+                reason: defect.reason,
+            })?
+        }
+        None => composed,
+    };
     Ok((composed != original).then_some(composed))
 }
