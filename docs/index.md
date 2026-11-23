@@ -46,11 +46,14 @@ landing:
         - { text: Edit docs/release-notes.md }
     board:
       label: With Agent Project
-      caption: A waiting task and its question stand out in the lane.
+      caption: A waiting task shows how many questions need your answer.
       alt: The Kanban board with a waiting task in Doing that shows the agent's question and its options
+    question:
+      caption: Opening it shows the question, its options, and a place for a memo.
+      alt: The Messages dialog with the agent's question about how to publish the website, two options, and a memo field
     questions:
       - { title: What is stuck?, text: Waiting tasks change color and stand out in their lane. }
-      - { title: What needs my answer?, text: The question and its options appear right on the task. }
+      - { title: What needs my answer?, text: The task shows how many questions are unanswered. Open it in Messages and pick an option, with a memo if you like. }
       - { title: How far along is it?, text: Each task keeps its acceptance count and its history. }
   loop:
     eyebrow: How it goes

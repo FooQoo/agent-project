@@ -18,6 +18,8 @@ import boardDark from '../../images/guide/board-dark.png'
 import boardDarkJa from '../../images/guide/board-dark.ja.png'
 import docs from '../../images/guide/docs.png'
 import docsJa from '../../images/guide/docs.ja.png'
+import question from '../../images/guide/question.png'
+import questionJa from '../../images/guide/question.ja.png'
 import messages from '../../images/guide/messages-list.png'
 import messagesJa from '../../images/guide/messages-list.ja.png'
 
@@ -45,8 +47,8 @@ const ja = computed(() => lang.value === 'ja')
 
 const images = computed(() =>
   ja.value
-    ? { board: boardJa, boardDark: boardDarkJa, messages: messagesJa, epic: epicJa, docs: docsJa }
-    : { board, boardDark, messages, epic, docs },
+    ? { board: boardJa, boardDark: boardDarkJa, messages: messagesJa, question: questionJa, epic: epicJa, docs: docsJa }
+    : { board, boardDark, messages, question, epic, docs },
 )
 // The phone feature shows, from the left, the card list, a question being answered, and a task in the drawer.
 const phones = computed(() =>
@@ -174,6 +176,12 @@ onMounted(() => {
             <figcaption>{{ c.problem.board.caption }}</figcaption>
           </figure>
         </div>
+        <figure class="lp-question-fig">
+          <div class="lp-question-shot">
+            <img :src="images.question" :alt="c.problem.question.alt" loading="lazy" />
+          </div>
+          <figcaption>{{ c.problem.question.caption }}</figcaption>
+        </figure>
         <ul class="lp-questions">
           <li v-for="(q, i) in c.problem.questions" :key="q.title">
             <LandingIcon :name="['circle-pause', 'message-circle', 'list-checks'][i]" :size="22" :class="`lp-ink--${['pending', 'doing', 'done'][i]}`" />
@@ -779,6 +787,42 @@ onMounted(() => {
   width: 260%;
   max-width: none;
   margin: -12% 0 0 -66%;
+}
+.lp-question-fig {
+  display: grid;
+  gap: 14px;
+  max-width: 900px;
+  margin: 32px auto 0;
+}
+.lp-question-fig figcaption {
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+}
+.lp-question-shot {
+  overflow: hidden;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  background: var(--lp-lane);
+}
+.lp-question-shot img {
+  display: block;
+  width: 190%;
+  max-width: none;
+  margin: -6% 0 0 -92%;
+  aspect-ratio: 2240 / 1600;
+}
+.lp-question-shot {
+  height: 310px;
+}
+@media (min-width: 640px) {
+  .lp-question-shot {
+    height: auto;
+    aspect-ratio: 2240 / 1060;
+  }
+  .lp-question-shot img {
+    width: 100%;
+    margin: 0;
+  }
 }
 @media (min-width: 960px) {
   .lp-compare {
