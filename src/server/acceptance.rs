@@ -39,7 +39,7 @@ pub(crate) async fn set_project_task_acceptance(
         );
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.set_acceptance_done(&project_id, id, &condition, input.done, chrono::Utc::now())
+        store.set_acceptance_done(&project_id, id, &condition, input.done, crate::clock::now())
     })
     .await;
     match result {

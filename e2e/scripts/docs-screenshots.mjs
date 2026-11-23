@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { chromium, expect } from '@playwright/test';
 import { setPreferences } from '../helpers/preferences.mjs';
-import { cli, copy, markdown, project, repo, seed, seedProposal, settle, startServer, stop } from './lib/sample-board.mjs';
+import { browserArgs, cli, copy, freezeClock, markdown, project, repo, seed, seedProposal, settle, startServer, stop } from './lib/sample-board.mjs';
 
 // Captures the screenshots used by the guide pages into docs/images/guide.
 // Build web/ and the CLI first. Only disposable sample data and free loopback ports are used.
@@ -91,7 +91,7 @@ function addSamples(home, id, text, more) {
   return id;
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: browserArgs });
 try {
   for (const locale of ['en', 'ja']) {
     const home = mkdtempSync(path.join(os.tmpdir(), 'agpj-docs-'));
@@ -114,9 +114,9 @@ try {
       const open = async (mode) => {
         // The language and theme are saved on the board, as the settings screen does. Every open page follows.
         await setPreferences(origin, { locale, theme: { mode, accent: 'blue' } });
-        const ctx = await browser.newContext({
+        const ctx = await freezeClock(await browser.newContext({
           viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, timezoneId: 'UTC',
-        });
+        }));
         contexts.push(ctx);
         const tab = await ctx.newPage();
         tab.on('pageerror', (error) => errors.push(error.message));

@@ -157,7 +157,7 @@ pub(super) async fn create_epic(
         document,
     };
     match with_files(&state, move |store| {
-        store.create_epic(&project_id, new, chrono::Utc::now())
+        store.create_epic(&project_id, new, crate::clock::now())
     })
     .await
     {
@@ -239,7 +239,7 @@ pub(super) async fn update_epic(
             document,
             refuse_if_draft: false,
         };
-        let now = chrono::Utc::now();
+        let now = crate::clock::now();
         let mut result = store.update_epic(&project_id, &epic_id, update, now)?;
         if let Some(order) = waves {
             let ordered = store.set_epic_waves(&project_id, &epic_id, &order, false, now)?;

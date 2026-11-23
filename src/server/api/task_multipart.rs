@@ -75,7 +75,7 @@ pub(super) async fn edit_task_multipart(
     let added = payload.additions;
     let attachments_changed = !removed.is_empty() || !added.is_empty();
     let result = with_request_files(&state, &headers, move |store| {
-        let now = chrono::Utc::now();
+        let now = crate::clock::now();
         // The images and the text are saved under one lock, after every refusal.
         store.edit_draft_task_with_images(
             &project_id,
@@ -164,7 +164,7 @@ pub(super) async fn create_task_multipart(
                     epic_id,
                     images: additions,
                 },
-                chrono::Utc::now(),
+                crate::clock::now(),
             )
         })
         .await;
@@ -230,7 +230,7 @@ pub(super) async fn create_task_multipart(
     }
     let additions = payload.additions;
     let result = with_request_files(&state, &headers, move |store| {
-        let now = chrono::Utc::now();
+        let now = crate::clock::now();
         let task = store.create_task(
             &project_id,
             NewTask {

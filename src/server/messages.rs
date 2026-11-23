@@ -192,7 +192,7 @@ pub(super) async fn record_answers(
     let ids: Vec<String> = items.iter().map(|a| a.question_id.clone()).collect();
     let result = with_request_files(&state, &headers, move |store| {
         Ok(
-            match store.answer_questions(&project, items, AnswerVia::Ui, chrono::Utc::now()) {
+            match store.answer_questions(&project, items, AnswerVia::Ui, crate::clock::now()) {
                 Ok(questions) => Ok(questions),
                 Err(
                     error @ (AgpjError::QuestionAnswered { .. }
@@ -228,7 +228,7 @@ pub(crate) async fn withdraw_message(
         Err(error) => return agpj_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.withdraw_message(&project, &id, Actor::Human, chrono::Utc::now())
+        store.withdraw_message(&project, &id, Actor::Human, crate::clock::now())
     })
     .await;
     match result {

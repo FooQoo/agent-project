@@ -68,7 +68,7 @@ pub(super) async fn add_version(
         Err(error) => return agpj_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.add_version(&project_id, &input.name, chrono::Utc::now())
+        store.add_version(&project_id, &input.name, crate::clock::now())
     })
     .await;
     versions_answer(&state, result)
@@ -94,7 +94,7 @@ pub(super) async fn set_release_version(
         Err(error) => return agpj_error_response(&error),
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.set_release_version(&project_id, input.version.as_deref(), chrono::Utc::now())
+        store.set_release_version(&project_id, input.version.as_deref(), crate::clock::now())
     })
     .await;
     versions_answer(&state, result)
@@ -142,7 +142,7 @@ pub(super) async fn generate_release_doc(
         None => VersionChoice::Release,
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.generate_release_doc(&project_id, &choice, chrono::Utc::now())
+        store.generate_release_doc(&project_id, &choice, crate::clock::now())
     })
     .await;
     match result {

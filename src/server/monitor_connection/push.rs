@@ -82,7 +82,7 @@ pub struct PushStore {
 }
 
 fn now_text() -> String {
-    chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+    crate::clock::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
 }
 
 fn vapid_of(pkcs8: Vec<u8>) -> Option<Vapid> {
