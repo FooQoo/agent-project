@@ -3,18 +3,20 @@
 
 use std::sync::Arc;
 
-use axum::extract::{Path, State};
+use axum::extract::{Multipart, Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
 use serde::Deserialize;
 
+use super::multipart::{MultipartAttachmentMeta, parse_multipart};
 use super::parse_task_id;
 use crate::domain::ResultKind;
+use crate::domain::AttachmentInput;
 use crate::file_store::ResultInput;
 use crate::server::AppState;
 use crate::server::acceptance::{AcceptanceInput, set_project_task_acceptance};
 use crate::server::request::StrictJson;
-use crate::server::response::{agpj_error_response, json_response};
+use crate::server::response::{agpj_error_response, error_response, json_response};
 use crate::server::store::{parse_project_id, refresh_index, with_request_files};
 
 /// `PUT .../tasks/{id}/acceptance/{condition}`: set one condition to `done`.
@@ -62,7 +64,94 @@ pub(super) async fn record_publication(
         Ok(id) => id,
         Err(response) => return *response,
     };
-    let result = with_request_files(&state, &headers, move |store| {
+    let result = add_result(&state, &headers, project_id, id, input, Vec::new()).await;
+    result_response(&state, result)
+}
+
+/// The metadata part of `POST .../tasks/{id}/results/multipart`: the fields of the JSON body, and
+/// one entry in `attachments` for each image part, in order.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct PublicationMeta {
+    published: Option<String>,
+    link: Option<String>,
+    #[serde(default)]
+    summary: String,
+    title: Option<String>,
+    key: Option<String>,
+    plan: Option<String>,
+    #[serde(default, rename = "final")]
+    is_final: bool,
+    #[serde(default)]
+    attachments: Vec<MultipartAttachmentMeta>,
+}
+
+impl super::multipart::ImageList for PublicationMeta {
+    fn images(&self) -> &[MultipartAttachmentMeta] {
+        &self.attachments
+    }
+}
+
+/// `POST .../tasks/{id}/results/multipart`: the same delivery as the JSON route, with images.
+pub(super) async fn record_publication_multipart(
+    headers: HeaderMap,
+    State(state): State<Arc<AppState>>,
+    Path((raw_project, raw_id)): Path<(String, String)>,
+    multipart: Result<Multipart, axum::extract::multipart::MultipartRejection>,
+) -> Response {
+    let project_id = match parse_project_id(&raw_project) {
+        Ok(id) => id,
+        Err(error) => return agpj_error_response(&error),
+    };
+    let id = match parse_task_id(&raw_id) {
+        Ok(id) => id,
+        Err(response) => return *response,
+    };
+    let Ok(multipart) = multipart else {
+        return super::multipart::multipart_too_large();
+    };
+    let payload = match parse_multipart::<PublicationMeta>(multipart).await {
+        Ok(value) => value,
+        Err(response) => return response,
+    };
+    let meta = payload.meta;
+    if meta.published.is_some() && !payload.additions.is_empty() {
+        return error_response(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "invalid_value",
+            "request body is invalid.",
+            "A publication takes no images.",
+        );
+    }
+    let result = add_result(
+        &state,
+        &headers,
+        project_id,
+        id,
+        PublicationInput {
+            published: meta.published,
+            link: meta.link,
+            summary: meta.summary,
+            title: meta.title,
+            key: meta.key,
+            plan: meta.plan,
+            is_final: meta.is_final,
+        },
+        payload.additions,
+    )
+    .await;
+    result_response(&state, result)
+}
+
+async fn add_result(
+    state: &Arc<AppState>,
+    headers: &HeaderMap,
+    project_id: crate::domain::ProjectId,
+    id: i64,
+    input: PublicationInput,
+    images: Vec<AttachmentInput>,
+) -> Result<crate::file_store::RecordedResult, crate::error::AgpjError> {
+    with_request_files(state, headers, move |store| {
         store.add_result(
             &project_id,
             id,
@@ -75,7 +164,7 @@ pub(super) async fn record_publication(
                 title: input.title,
                 summary: input.summary,
                 link: input.link,
-                images: Vec::new(),
+                images,
                 key: input.key,
                 published: input.published,
                 plan: input.plan,
@@ -83,11 +172,17 @@ pub(super) async fn record_publication(
             crate::clock::now(),
         )
     })
-    .await;
+    .await
+}
+
+fn result_response(
+    state: &Arc<AppState>,
+    result: Result<crate::file_store::RecordedResult, crate::error::AgpjError>,
+) -> Response {
     match result {
         Ok(recorded) => {
             if recorded.created {
-                refresh_index(&state);
+                refresh_index(state);
             }
             let status = if recorded.created {
                 StatusCode::CREATED

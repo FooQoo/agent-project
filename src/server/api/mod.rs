@@ -174,6 +174,10 @@ fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<
             get(list_task_results).post(record_publication),
         )
         .route(
+            "/api/projects/{project_id}/tasks/{id}/results/multipart",
+            post(record_publication_multipart),
+        )
+        .route(
             "/api/projects/{project_id}/tasks/{id}/attachments/{attachment_id}",
             get(get_task_attachment).delete(delete_task_attachment),
         )

@@ -53,7 +53,11 @@ pub(super) async fn list_task_results(
     match with_files(&state, move |store| store.task(&project_id, id)).await {
         Ok(task) => json_response(
             StatusCode::OK,
-            &serde_json::json!({"taskId": task.id, "results": task.results}),
+            &serde_json::json!({
+                "taskId": task.id,
+                "results": task.results,
+                "resultPlans": task.result_plans,
+            }),
         ),
         Err(error) => agpj_error_response(&error),
     }
@@ -74,7 +78,7 @@ pub(super) async fn add_task_attachment(
     let Ok(multipart) = multipart else {
         return multipart_too_large();
     };
-    let payload = match parse_multipart(multipart).await {
+    let payload = match parse_multipart::<super::multipart::MultipartMeta>(multipart).await {
         Ok(value) => value,
         Err(response) => return response,
     };
