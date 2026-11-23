@@ -39,6 +39,6 @@ history: []
 (Add concise verified acceptance results and artifact references here after verification.)
 ```
 
-`resultPlans` is optional. Each plan has `content` (what is delivered) and `condition` (when it should be delivered); mark the final one with `final: true` (at most one). Leave out `id`: the store gives each plan its `RP-<n>` in the same save. If no intermediate result is needed, write only the final plan, or no plans at all. Do not use plans for work steps or a delivery order. Later, `result add <id> --plan RP-<n>` delivers one (`agpj skills results`).
+`resultPlans` is optional. Each plan has `content` (what is delivered) and `condition` (when it should be delivered); mark the final one with `final: true` (at most one). Leave out `id`: the store gives each plan its `RP-<n>` in the same save, so write plans only through `agpj` (`add --desc-file`, `edit --desc-file`) and never by editing `TASK.md` directly: a stored plan without an ID is a defect and is not shown or deliverable. If no intermediate result is needed, write only the final plan, or no plans at all. Do not use plans for work steps or a delivery order. Later, `result add <id> --plan RP-<n>` delivers one (`agpj skills results`).
 
 The body headings above are recommended, not required: a body without them is still valid. Write the headings in the language of the board, per the language rule of the skill. Record history only in the history frontmatter, as decisions and grounds; do not add an execution-history section to the body.
