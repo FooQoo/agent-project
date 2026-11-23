@@ -18,10 +18,10 @@ export const modeJa = {
     until: '{{time}} まで',
     brainstorm: '壁打ち',
     brainstorming: '壁打ち中',
-    brainstormTarget: '{{target}} を壁打ち',
+    brainstormTarget: '壁打ち: {{target}}',
     brainstormChip: '壁打ち: {{target}}',
     brainstormTitle: '壁打ちモード: エージェントが {{target}} を深めるための質問をします。',
-    brainstormOn: '{{target}} を壁打ち中',
+    brainstormOn: '壁打ち中: {{target}}',
     brainstormNote:
       'エージェントが {{target}} を深めるために、質問を1つずつします。組手かスリープを選ぶと終わります。',
     endBrainstorm: '壁打ちを終える',
