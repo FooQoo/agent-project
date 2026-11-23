@@ -38,8 +38,8 @@ test('the board switches to sleep, shows the chip, and follows the CLI', async (
   // The two options are the same size.
   const sparring = await modes.getByRole('radio', { name: 'Sparring' }).boundingBox();
   const sleep = await modes.getByRole('radio', { name: 'Sleep' }).boundingBox();
-  expect(Math.round(sparring!.width)).toBe(Math.round(sleep!.width));
-  expect(Math.round(sparring!.height)).toBe(Math.round(sleep!.height));
+  expect(Math.abs(sparring!.width - sleep!.width)).toBeLessThan(1);
+  expect(Math.abs(sparring!.height - sleep!.height)).toBeLessThan(1);
 
   await modes.getByRole('radio', { name: 'Sleep' }).click();
   await expect(modes.getByRole('radio', { name: 'Sleep' })).toBeChecked();
