@@ -99,7 +99,7 @@ flowchart TD
 2. **Start.** Move the task to Doing with a reason, then report Running. Review a user-owned task only when it affects the work.
 3. **Work and record.** Put the grounds for a move or state change in its `--reason`; that entry is the record. Add `history add` only for a decision that changes no state but matters later, such as keeping a card in Todo, with the grounds, the decision, and when known the condition for reconsidering. Reading the list needs no entry, and `result add` records itself. Keep the plan and concise verification results in the body; attach images when visual proof is useful.
 4. **Ask when blocked.** Ask with `message ask` when you need a decision; the task shows Awaiting answer until you answer, and a Running task in Doing is paused automatically when the question is attached (see [Decisions](./decisions)). An agent never pauses a task itself.
-5. **Resume.** When the agent takes in the answer, the task goes back to Running by itself, provided every question it refers to is answered and it is an AI task in Doing and Paused; while another referenced question is open, it stays Paused. The agent re-reads the task to see whether it resumed, then reads the task and history and reconsiders the plan.
+5. **Resume.** When the agent takes in the answer, a Paused AI task in Doing goes back to Running by itself, provided every question it refers to is answered; while another referenced question is open, it stays Paused. The agent then re-reads the task and continues only if it is still its to run: a pause or a move to another column by a person is respected, and the agent follows the task's current state. It reads the task and history and reconsiders the plan.
 6. **Finish.** Mark acceptance conditions done only after verifying them. Eligible AI tasks move to Done automatically when all conditions are complete. An agent never moves a Doing task back to Todo.
 7. **Wait.** If no work can proceed, wait for a change (see below).
 
@@ -178,7 +178,7 @@ It does not claim or edit the task. Read its epic's `EPIC.md` when it has one, i
 
 Use the listener procedure of the agent-project skill (printed by `agpj skills listening`) for the full loop, including decisions waiting for an answer and recovery after a session is interrupted.
 
-An Awaiting answer task keeps the same session waiting for the answer; it is not another task to skip to, and its time does not count toward idle timeout. When the answer is taken in, the task goes back to Running by itself, and the session reads the answer and continues that task before listening again.
+An Awaiting answer task keeps the same session waiting for the answer; it is not another task to skip to, and its time does not count toward idle timeout. When the answer is taken in, a Paused task in Doing goes back to Running by itself. The session re-reads the task and continues it only if it is still its to run; if a person paused it or moved it to another column, the session follows its current state. Only then does it listen again.
 
 An agent cannot pause a task. When it is blocked on a person, it asks a question so that the task shows Awaiting answer; for any other cause it records why with `history add`.
 
