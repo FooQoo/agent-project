@@ -9,17 +9,26 @@ landing:
     label: Copy command
     done: Copied
   hero:
-    title: "Delegate big work.\nStop babysitting it."
-    lead: Agent Project is a shared workspace where your AI agent plans and reports, and you answer. It turns your request into a plan with acceptance conditions, starts it once your questions are answered, and stops for you only when it must. Watch and answer from your PC, your phone, or the chat.
+    title: "Big work moves on\nwithout you driving it."
+    lead: Agent Project gives Codex and Claude Code the project management they lack. Ask AI to plan the work, approve the start, and answer the questions it raises along the way. It breaks the goal into tasks, decides up front what done means, asks you only what it must not decide alone, and brings back results checked against those conditions.
     install: brew install fooqoo/tap/agpj
     primary: { text: Get started, link: /guide/getting-started }
     secondary: { text: GitHub, link: https://github.com/FooQoo/agent-project }
     meta: macOS · Claude Code / Codex · MIT License
     videoLabel: "Demo: you send a request with Ask AI, the agent turns it into tasks and asks a question, you answer, and the agent works until the task is done"
+  pm:
+    eyebrow: Project management for agents
+    title: Agents run on their own when the board manages the project.
+    lead: A strong agent still loses its way in a long job. It wanders, stops, or calls the work done too early. The board gives it four things a project manager provides. Agent Project is for people building a product alone with Codex or Claude Code.
+    items:
+      - { icon: kanban, tone: todo, title: Break down and order, text: The goal becomes epics and tasks in order, and the progress table tells the agent what can move next. }
+      - { icon: list-checks, tone: done, title: Decide what done means, text: Each task has acceptance conditions set before the work starts. It reaches Done on its own only when every condition is verified. }
+      - { icon: message-circle, tone: doing, title: Ask before deciding, text: "When your intent is unclear, your preference decides, an action cannot be undone, or the work grows, the agent stops and asks you, with options." }
+      - { icon: file-text, tone: pending, title: Keep what it did, text: History and results record what the agent did and decided, so the next session or agent starts from there. }
   problem:
-    eyebrow: Why a shared workspace
-    title: Today, handing off means watching over it.
-    lead: You write the plan, catch questions buried in the log, and check whether it is really done. Put the plan, the questions, and the conditions in one place, and you can ask for the work and step away until the agent needs you.
+    eyebrow: Why a board
+    title: The question should not scroll past.
+    lead: In a terminal alone, the one question that needs you is buried in the log, and the plan and the conditions live only in the chat. On the board they stand where you can see them, so you can step away until the agent needs you.
     terminal:
       label: Only in the terminal
       caption: The question scrolls past in the middle of the log.
@@ -44,24 +53,25 @@ landing:
       - { title: What needs my answer?, text: The question and its options appear right on the task. }
       - { title: How far along is it?, text: Each task keeps its acceptance count and its history. }
   loop:
-    eyebrow: How it works
-    title: Request, answer, and let it run.
-    lead: Describe what you want. The agent plans it on the board, asks what it cannot settle, and starts once you have answered. It works in order. It stops for you only when it must, and each task moves to Done on its own once its verified conditions are met.
+    eyebrow: How it goes
+    title: Ask AI to plan. Approve. Answer. Receive.
+    lead: Tell your agent what you want. It puts a plan on the board with acceptance conditions and asks what it cannot settle. Once you approve the start, it works in order, and you answer only when it stops for you. What comes back is checked against the conditions.
     actors: { ai: AI, human: You, auto: Auto }
     lanes:
-      - title: Request → Plan
+      - title: Plan
         steps:
-          - { actor: human, title: Request, text: Tell your agent what you want, in plain words. }
-          - { actor: ai, title: Plan, text: Puts a plan on the board, with acceptance conditions, and asks its questions. }
-      - title: Answer
+          - { actor: human, title: Ask AI to plan, text: Tell your agent what you want, in plain words. }
+          - { actor: ai, title: Plan, text: Puts epics and tasks on the board, each with acceptance conditions, and asks the questions it cannot settle. }
+      - title: Start
         steps:
-          - { actor: human, title: Answer, text: Answer the questions. The agent starts the plan once none is open. }
+          - { actor: human, title: Approve the start, text: Answer the questions and send the plan to Todo. A task does not start while one of its questions is open. }
       - title: Work
         steps:
-          - { actor: ai, title: Work, text: Works through the tasks in order. It stops only when your intent is unclear, your preference decides, an action cannot be undone, or the work grows. }
-      - title: Done
+          - { actor: ai, title: Work, text: "Works through the tasks in order. It stops only when your intent is unclear, your preference decides, an action cannot be undone, or the work grows." }
+          - { actor: human, title: Answer on the way, text: "Answer from the board, your phone, or the chat. The answer is recorded once, and the agent carries on." }
+      - title: Result
         steps:
-          - { actor: auto, title: Done, text: Moves to Done once every verified condition is met. }
+          - { actor: auto, title: Receive the result, text: A task moves to Done once every verified condition is met. What the agent did and decided stays in its history and results. }
   features:
     eyebrow: Monitors for the work
     title: Watch and step in from anywhere.

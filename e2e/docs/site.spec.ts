@@ -86,7 +86,7 @@ for (const lang of langs) {
     const landing = page.locator('.landing');
     await expect(landing.locator('h1')).toHaveCount(1);
     await expect(landing.locator('h1')).toHaveText(
-      en ? /^Delegate big work\.\s*Stop babysitting it\.$/ : /^頼むだけで、\s*計画から完了まで\s*AIが進めてくれる。$/,
+      en ? /^Big work moves on\s*without you driving it\.$/ : /^人が回さなくても、\s*大きな仕事が進む。$/,
     );
 
     // The install command is shown and copied as plain text.
@@ -101,10 +101,12 @@ for (const lang of langs) {
     await expect(start).toHaveAttribute('href', en ? `${siteBase}guide/getting-started` : `${siteBase}ja/guide/getting-started`);
     await expect(hero.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', repoUrl);
 
-    // The loop has five steps across four lanes, and the request and the answers are the user's.
+    // Four project-management abilities, then a loop of six steps across four lanes: the request,
+    // the approval of the start, and the answers on the way are the user's.
+    await expect(landing.locator('.lp-questions--four li')).toHaveCount(4);
     await expect(landing.locator('.lp-loop__lane')).toHaveCount(4);
-    await expect(landing.locator('.lp-loop .lp-card')).toHaveCount(5);
-    await expect(landing.locator('.lp-loop .lp-card--human')).toHaveCount(2);
+    await expect(landing.locator('.lp-loop .lp-card')).toHaveCount(6);
+    await expect(landing.locator('.lp-loop .lp-card--human')).toHaveCount(3);
 
     // Four features; only Docs carries the public preview badge.
     await expect(landing.locator('.lp-feature')).toHaveCount(4);
