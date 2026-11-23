@@ -1,6 +1,6 @@
 {
   "name": "agent-project",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "description": "The Agent Project Skill and the Hook that shows the progress table.",
   "hooks": "./hooks/claude.json"
 }
