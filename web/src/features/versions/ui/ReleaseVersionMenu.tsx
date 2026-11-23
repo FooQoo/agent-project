@@ -9,29 +9,36 @@ import { sortVersions } from '../model/order';
 import { OptionRow } from './Options';
 import './versions.css';
 
-const NONE = '__none__';
+const ALL = '__all__';
 
 export interface ReleaseVersionMenuProps {
   versions: readonly string[];
   /** The project's release version; `null` when none is set. */
   release: string | null;
-  /** Makes a listed version the release version, or clears the release version with `null`. */
-  onSelect: (version: string | null) => Promise<unknown>;
-  /** Lists a new version. It does not become the release version: only choosing it from the list does that. */
+  /** The version the board is filtered by; `null` shows every version ("All"). */
+  filter: string | null;
+  /** Filters the board by a listed version, or shows all versions with `null`. View-only: nothing is saved. */
+  onFilter: (version: string | null) => void;
+  /** Makes a version the project's release version. */
+  onMakeRelease: (version: string) => Promise<unknown>;
+  /** Lists a new version. It changes neither the filter nor the release version. */
   onAdd: (name: string) => Promise<unknown>;
   disabled?: boolean;
 }
 
 /**
- * The project's release version, in the header beside the project's name. It opens a list of the
- * project's versions, newest first: choosing one makes it the release version. The top row is a text field:
- * typing a version and confirming only lists it; the release version changes when one is chosen
- * from the list. "No release version" is the state a project starts in.
+ * The version filter of the board, in the header beside the project's name. It opens a list of the
+ * project's versions, newest first, under "All": choosing one filters the Todo, Doing and Done lanes
+ * to it, and "All" clears the filter. Choosing only changes this screen. The release version is marked
+ * with a star and changes only with the button at the bottom. The top row is a text field: typing a
+ * version and confirming only lists it.
  */
 export function ReleaseVersionMenu({
   versions,
   release,
-  onSelect,
+  filter,
+  onFilter,
+  onMakeRelease,
   onAdd,
   disabled = false,
 }: ReleaseVersionMenuProps) {
@@ -40,9 +47,10 @@ export function ReleaseVersionMenu({
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  const listed = sortVersions(
-    release !== null && !versions.includes(release) ? [...versions, release] : versions,
+  const extra = [release, filter].filter(
+    (version): version is string => version !== null && !versions.includes(version),
   );
+  const listed = sortVersions([...versions, ...extra]);
 
   const run = async (change: () => Promise<unknown>, done: () => void) => {
     if (busy) return;
@@ -59,7 +67,7 @@ export function ReleaseVersionMenu({
   };
 
   const name = draft.trim();
-  const value = release ?? t('versions.header.unset');
+  const value = filter ?? t('versions.header.all');
   return (
     <Popover
       open={open}
@@ -75,9 +83,9 @@ export function ReleaseVersionMenu({
           className="ver-head"
           disabled={disabled}
           aria-label={t('versions.header.buttonValue', { version: value })}
-          data-set={release !== null}
+          data-set={filter !== null}
         >
-          {release === null ? <FlagOffIcon aria-hidden="true" /> : <FlagIcon aria-hidden="true" />}
+          {filter === null ? <FlagOffIcon aria-hidden="true" /> : <FlagIcon aria-hidden="true" />}
           <strong className="ver-head__value">{value}</strong>
           <ChevronDownIcon aria-hidden="true" />
         </Button>
@@ -114,28 +122,42 @@ export function ReleaseVersionMenu({
           </Button>
         </form>
         <RadioGroup
-          value={release ?? NONE}
-          onValueChange={(next) =>
-            void run(
-              () => onSelect(next === NONE ? null : next),
-              () => setOpen(false),
-            )
-          }
+          value={filter ?? ALL}
+          onValueChange={(next) => {
+            onFilter(next === ALL ? null : next);
+            setOpen(false);
+          }}
           className="ver-options ver-head-list"
           aria-label={t('versions.header.listLabel')}
         >
-          {listed.length === 0 && <p className="ver-note">{t('versions.header.empty')}</p>}
+          <OptionRow value={ALL} checked={filter === null} label={t('versions.header.all')} />
           {listed.map((version) => (
             <OptionRow
               key={version}
               value={version}
-              checked={release === version}
+              checked={filter === version}
               label={version}
-              mark={release === version ? t('versions.header.markRelease') : undefined}
+              mark={release === version ? '\u2605' : undefined}
+              markLabel={release === version ? t('versions.header.markRelease') : undefined}
             />
           ))}
-          <OptionRow value={NONE} checked={release === null} label={t('versions.header.none')} />
+          {listed.length === 0 && <p className="ver-note">{t('versions.header.empty')}</p>}
         </RadioGroup>
+        {filter !== null && filter !== release && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={busy}
+            onClick={() =>
+              void run(
+                () => onMakeRelease(filter),
+                () => setOpen(false),
+              )
+            }
+          >
+            {t('versions.header.makeRelease', { version: filter })}
+          </Button>
+        )}
         {failed && (
           <p className="ver-error" role="alert">
             {t('versions.header.failed')}

@@ -19,6 +19,7 @@ export function OptionRow({
   label,
   hint,
   mark,
+  markLabel,
 }: {
   value: string;
   checked: boolean;
@@ -27,13 +28,19 @@ export function OptionRow({
   hint?: string;
   /** A small mark after the label, such as "Release version". */
   mark?: string;
+  /** What the mark says to a screen reader or on hover, when the mark itself is a symbol. */
+  markLabel?: string;
 }) {
   const id = useId();
   return (
     <label htmlFor={id} className="ver-option" data-checked={checked} data-disabled={disabled}>
       <RadioGroupItem id={id} value={value} disabled={disabled} />
       <OptionText label={label} hint={hint} />
-      {mark && <span className="ver-tag__mark">{mark}</span>}
+      {mark && (
+        <span className="ver-tag__mark" title={markLabel}>
+          {mark}
+        </span>
+      )}
     </label>
   );
 }

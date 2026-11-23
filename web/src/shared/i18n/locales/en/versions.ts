@@ -5,10 +5,10 @@ export const versionsEn = {
       release: 'Release version',
     },
     header: {
-      buttonValue: 'Release version: {{version}}',
-      unset: 'Not set',
+      buttonValue: 'Version filter: {{version}}',
+      all: 'All',
+      makeRelease: 'Make the shown {{version}} the release version',
       listLabel: 'Versions of this project',
-      none: 'No release version',
       addLabel: 'New version',
       addPlaceholder: 'New version, such as v1.9.0',
       addConfirm: 'Add this version to the project',

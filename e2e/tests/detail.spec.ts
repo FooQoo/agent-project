@@ -173,8 +173,8 @@ test('the task grips never take keyboard focus', async ({ page }) => {
   }
   expect(visited).toEqual([
     'BUTTON agent-board',
-    // The project's release version is a menu in the header, after the project's name.
-    'BUTTON Release version: Not set',
+    // The version filter is a menu in the header, after the project's name.
+    'BUTTON Version filter: All',
     'BUTTON Ask AI',
     // Docs, Epics, Archive and Settings are in one menu at the right end.
     'BUTTON Menu',

@@ -5,10 +5,10 @@ export const versionsJa = {
       release: 'リリースバージョン',
     },
     header: {
-      buttonValue: 'リリースバージョン: {{version}}',
-      unset: '未設定',
+      buttonValue: 'バージョンの絞り込み: {{version}}',
+      all: 'すべて',
+      makeRelease: '表示中の {{version}} をリリースバージョンにする',
       listLabel: 'このプロジェクトのバージョン',
-      none: 'リリースバージョンを決めない',
       addLabel: '新しいバージョン',
       addPlaceholder: '新しいバージョン（例: v1.9.0）',
       addConfirm: 'このバージョンをプロジェクトに追加',

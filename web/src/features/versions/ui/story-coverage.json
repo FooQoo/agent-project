@@ -49,13 +49,13 @@
           "name": "ReleaseVersionMenu",
           "stories": [
             {
-              "id": "versions-releaseversionmenu--release-set",
-              "states": ["closed", "release version shown"],
+              "id": "versions-releaseversionmenu--filtered-by-release",
+              "states": ["closed", "version filter shown"],
               "interaction": true
             },
             {
-              "id": "versions-releaseversionmenu--none-set",
-              "states": ["closed", "not set"],
+              "id": "versions-releaseversionmenu--showing-all",
+              "states": ["closed", "all versions"],
               "interaction": true
             },
             {
@@ -63,14 +63,15 @@
               "states": [
                 "open",
                 "typed-version row",
-                "confirm disabled while empty",
-                "current mark"
+                "all item",
+                "release version star",
+                "make release button"
               ],
               "interaction": true
             },
             {
-              "id": "versions-releaseversionmenu--selecting-a-version",
-              "states": ["select a version"],
+              "id": "versions-releaseversionmenu--choosing-a-version",
+              "states": ["choose a version to filter by"],
               "interaction": true
             },
             {

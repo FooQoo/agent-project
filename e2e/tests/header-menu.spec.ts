@@ -18,7 +18,7 @@ for (const viewport of [
   test(`${viewport.width}x${viewport.height}: nothing in the header is cut short`, async ({ page }) => {
     await page.setViewportSize(viewport);
     const header = page.getByRole('banner');
-    await expect(header.getByRole('button', { name: /^Release version:/ })).toBeVisible();
+    await expect(header.getByRole('button', { name: /^Version filter:/ })).toBeVisible();
     await expect(header.getByRole('button', { name: 'Ask AI' })).toBeVisible();
     await expect(header.getByRole('button', { name: 'Menu', exact: true })).toBeVisible();
     // No label of the header is clipped: every box shows its whole content.
@@ -32,10 +32,10 @@ for (const viewport of [
   });
 }
 
-test('the version button shows the flag and the version, with the current-version name for readers', async ({ page }) => {
-  const button = page.getByRole('banner').getByRole('button', { name: /^Release version:/ });
-  await expect(button).toHaveAccessibleName('Release version: Not set');
-  await expect(button).toHaveText('Not set');
+test('the version button shows the flag and the version, named as the version filter for readers', async ({ page }) => {
+  const button = page.getByRole('banner').getByRole('button', { name: /^Version filter:/ });
+  await expect(button).toHaveAccessibleName('Version filter: All');
+  await expect(button).toHaveText('All');
 });
 
 test('the menu holds Docs, Epics, Archive and Settings, in that order', async ({ page }) => {
