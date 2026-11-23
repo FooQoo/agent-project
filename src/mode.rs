@@ -93,6 +93,26 @@ fn read_projects(data_dir: &Path) -> Map<String, Value> {
     }
 }
 
+/// The saved entries for `set`. A missing file is an empty map; any other read or parse error is
+/// returned, so `set` never overwrites saved modes it could not read.
+fn read_projects_strict(data_dir: &Path) -> std::io::Result<Map<String, Value>> {
+    let bytes = match std::fs::read(path_in(data_dir)) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Map::new()),
+        Err(error) => return Err(error),
+    };
+    let invalid =
+        |what: &str| std::io::Error::new(std::io::ErrorKind::InvalidData, what.to_string());
+    match serde_json::from_slice::<Value>(&bytes).map_err(std::io::Error::other)? {
+        Value::Object(mut file) => match file.remove("projects") {
+            Some(Value::Object(projects)) => Ok(projects),
+            None => Ok(Map::new()),
+            Some(_) => Err(invalid("modes.json: projects is not an object")),
+        },
+        _ => Err(invalid("modes.json is not an object")),
+    }
+}
+
 /// The saved mode of a project. A missing, invalid, or unknown entry is sparring.
 pub fn load(data_dir: &Path, project: &str) -> ProjectMode {
     let projects = read_projects(data_dir);
@@ -132,7 +152,7 @@ pub fn set(
     kind: ModeKind,
     now: DateTime<Utc>,
 ) -> std::io::Result<ProjectMode> {
-    let mut projects = read_projects(data_dir);
+    let mut projects = read_projects_strict(data_dir)?;
     let mode = if kind == ModeKind::Sparring {
         projects.remove(project);
         ProjectMode::default()
@@ -197,5 +217,28 @@ mod tests {
         assert_eq!(current(dir.path(), "p1"), ModeKind::Sparring);
         std::fs::write(internal.join(FILE_NAME), "not json").unwrap();
         assert_eq!(current(dir.path(), "p1"), ModeKind::Sparring);
+    }
+}
+
+#[cfg(test)]
+mod strict_tests {
+    use super::*;
+
+    #[test]
+    fn set_keeps_an_unreadable_file_intact() {
+        let dir = tempfile::tempdir().unwrap();
+        let internal = dir.path().join(INTERNAL_DIR);
+        std::fs::create_dir_all(&internal).unwrap();
+        let file = internal.join(FILE_NAME);
+        for broken in ["not json", "[]", r#"{"projects":[]}"#] {
+            std::fs::write(&file, broken).unwrap();
+            let now = Utc::now();
+            assert!(set(dir.path(), "p1", ModeKind::Sleep, now).is_err());
+            assert_eq!(std::fs::read_to_string(&file).unwrap(), broken);
+        }
+        std::fs::remove_file(&file).unwrap();
+        std::fs::create_dir(&file).unwrap();
+        assert!(set(dir.path(), "p1", ModeKind::Sleep, Utc::now()).is_err());
+        assert!(file.is_dir());
     }
 }
