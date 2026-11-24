@@ -94,7 +94,7 @@ fn answers_survive_later_questions_restart_and_empty_history() {
     assert!(reopened.question(&project, "Q-2").unwrap().reply.is_none());
     let metadata: serde_json::Value =
         serde_json::from_slice(&std::fs::read(path.join("task.json")).unwrap()).unwrap();
-    assert_eq!(metadata["formatVersion"], 1);
+    assert_eq!(metadata["formatVersion"], 3);
     assert!(metadata.get("history").is_none());
     assert!(
         metadata

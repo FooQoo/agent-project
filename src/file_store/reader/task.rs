@@ -176,6 +176,9 @@ pub(crate) fn task_view(
         task_status_changed_at: task.task_status_changed_at,
         onboarding_sample: task.onboarding_sample,
         planned_version: task.planned_version,
+        agent_id: task.agent_id,
+        assignment_generation: task.assignment_generation,
+        run_connection_id: task.run_connection_id,
         history: task.history,
     }
 }

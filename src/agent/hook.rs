@@ -4,6 +4,9 @@
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
+use super::hook_output::error_context;
+pub(crate) use super::hook_output::output;
+
 use crate::{
     clock::{Clock, SystemClock},
     domain::{ProjectId, validate_project_name},
@@ -17,9 +20,9 @@ use crate::{
 const MAX_PROGRESS_BYTES: usize = 256 * 1024;
 
 /// Why no snapshot could be produced. Shown to the agent as `AGPJ_ERROR`.
-struct Failure {
-    code: &'static str,
-    reason: String,
+pub(super) struct Failure {
+    pub(super) code: &'static str,
+    pub(super) reason: String,
 }
 
 impl Failure {
@@ -95,6 +98,8 @@ struct HookInput {
     hook_event_name: Option<serde_json::Value>,
     #[serde(default)]
     cwd: Option<serde_json::Value>,
+    #[serde(default)]
+    session_id: Option<String>,
     #[serde(flatten)]
     stop: super::stop::StopFields,
 }
@@ -138,6 +143,15 @@ fn hook_output(
         .unwrap_or("");
     if event == "Stop" && matches!(agent, "claude" | "codex") {
         return super::stop::run_hook(shared, project, input.cwd.as_ref(), &input.stop);
+    }
+    if event == "SessionEnd" && agent == "claude" {
+        super::session_end::run(
+            shared,
+            project,
+            input.cwd.as_ref(),
+            input.session_id.as_deref(),
+        );
+        return None;
     }
     let allowed = match agent {
         "claude" => matches!(event, "PostToolUse" | "PostToolUseFailure" | "SessionStart"),
@@ -191,7 +205,7 @@ pub(super) fn folder_or_none(cwd: Option<&serde_json::Value>) -> Option<PathBuf>
 /// The folder the hook runs for: a non-empty absolute `cwd` from the input, or
 /// the process folder when the input gives none (missing, null, or empty). A
 /// value that cannot be used is reported, never taken for "no folder".
-fn hook_folder(input_cwd: Option<&serde_json::Value>) -> Result<PathBuf, Failure> {
+pub(super) fn hook_folder(input_cwd: Option<&serde_json::Value>) -> Result<PathBuf, Failure> {
     let unavailable = |what: String| Failure::new("hook_cwd_unavailable", what);
     let given = match input_cwd {
         None | Some(serde_json::Value::Null) => None,
@@ -273,19 +287,6 @@ fn progress_text(json: &str) -> Result<String, Failure> {
         ));
     }
     Ok(format!("AGPJ_PROGRESS\n{json}"))
-}
-
-fn error_context(failure: &Failure) -> String {
-    let body = serde_json::json!({"code": failure.code, "reason": failure.reason});
-    format!(
-        "AGPJ_ERROR\n{body}\nDo not make board-dependent changes until a complete progress table is available."
-    )
-}
-
-/// The hook's JSON for `event` with `context` as the agent's added context.
-pub(crate) fn output(event: &str, context: &str) -> String {
-    serde_json::json!({"hookSpecificOutput":{"hookEventName":event,"additionalContext":context}})
-        .to_string()
 }
 
 #[cfg(test)]

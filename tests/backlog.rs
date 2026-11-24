@@ -140,9 +140,9 @@ fn a_plan_only_request_is_created_in_the_backlog_and_an_execute_request_in_todo(
     assert_eq!((by_agent.task_status, by_agent.draft), (Column::Todo, None));
 
     // Only a file that uses the Backlog carries formatVersion 2; a card in Todo keeps 1.
-    assert_eq!(f.task_json(plan)["formatVersion"], 2);
+    assert_eq!(f.task_json(plan)["formatVersion"], 3);
     assert_eq!(f.task_json(plan)["taskStatus"], "backlog");
-    assert_eq!(f.task_json(execute)["formatVersion"], 1);
+    assert_eq!(f.task_json(execute)["formatVersion"], 3);
 }
 
 #[test]
@@ -750,7 +750,7 @@ fn a_newer_file_format_is_left_out_like_any_other_unsupported_version() {
     let id = f.plan("Plan");
     let path = f.dir.join(format!("tasks/{id}/task.json"));
     let mut json: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
-    json["formatVersion"] = json!(3);
+    json["formatVersion"] = json!(4);
     fs::write(&path, serde_json::to_string_pretty(&json).unwrap()).unwrap();
     let board = f.store.board(&f.project).unwrap();
     assert!(board.tasks.is_empty());

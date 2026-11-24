@@ -20,6 +20,14 @@
 | `task_in_backlog` | エージェントの`mv`・`state`が、バックログのタスクを対象にした。エージェントのDoingやDoneへの移動は拒否され、バックログを出るのは未着手への送信だけです。 | 1 | 409 |
 | `send_with_open_questions` | 人の`mv <id> todo`・`epic send`・Webでの未着手への移動が、未回答の質問がある計画を、確認なし（`--force`、APIでは`ack: true`）で対象にした。何も保存せず、メッセージに質問のIDを示す。確認して送ったあとも質問は残り、回答があるまでタスクはAwaiting answerです。 | 1 | 409 |
 | `human_only` | エージェントが依頼の取り下げ、未回答の質問がある送信の確認（`--force`）、`mv ... backlog`、DoingのタスクのTodoへの差し戻し（「moving a task from Doing back to Todo is for a person only.」）を行おうとした。これを行えるのは人だけ。 | 1 | 403 |
+| `not_connected` | セッションがエージェントに接続していません。`agpj connect`を実行していないか、秘密値が不明です。プロジェクトにエージェントがあるとき、実行状態の変更には接続が要ります。 | 1 | 403 |
+| `connection_replaced` | ユーザーがエージェントを別のセッションに切り替えたため、接続が失効しています。 | 1 | 403 |
+| `not_assignee` | タスクが別のエージェントまたは人のものです。 | 1 | 403 |
+| `agent_busy` | エージェントに有効な接続がすでにあります。置き換えられるのは、ユーザーが「切り替え」で出したコードだけです。 | 1 | 409 |
+| `agent_in_use` | エージェントにDoingのタスクか有効な接続が残っているため、削除できません。 | 1 | 409 |
+| `agent_not_found` | このIDの有効なエージェントがありません。 | 1 | 404 |
+| `agent_name_taken` | プロジェクトの別の有効なエージェントが同じ名前です。 | 1 | 409 |
+| `connect_code_invalid` | 接続コードが不明、使用済み、または10分を過ぎています。 | 1 | 400 |
 | `task_not_draft` | 下書きでないタスクへのWebの編集。 | 1 | 409 |
 | `task_is_done` | DoneのタスクへのAIの変更。許可されるのは、最終の成果がまだないDoneのタスクへの最初の`result add --final`と、公開の記録（`result add --published`）です。 | 1 | 409 |
 | `acceptance_unmet` | 条件が未達成、またはfrontmatterが不正なタスクを、AIがDoneへ移そうとした。 | 2 | なし |
@@ -72,7 +80,7 @@
 | `invalid_value` | 値が規則（長さ、形式など）に違反している。 | 2 | 422 |
 | `confirmation_required` | 削除に、端末での人のy/Nが必要。 | 1 | なし |
 | `file_invalid` | 共有ファイルが壊れている、または形式に違反している。 | 1 | 422 |
-| `format_unsupported` | 共有ファイルの`formatVersion`が1でも2でもない（メッセージは「Only formatVersion 2 is supported」）。 | 1 | 500 |
+| `format_unsupported` | 共有ファイルの`formatVersion`が未対応である。`task.json`は3でなければならず、それ以前のタスクファイルは変換せずに拒否する。ほかの共有ファイルは1か2を受け付ける（メッセージは「Only formatVersion 2 is supported」）。 | 1 | 500 |
 | `file_unreadable` | 共有ファイルを読めない。 | 1 | 500 |
 | `file_error` | 共有ファイルを書けない、またはジャーナルを復旧できない。 | 1 | 500 |
 | `database_busy` | プロジェクトの書き込みロックが5秒以内に空かなかった。 | 1 | 503 |

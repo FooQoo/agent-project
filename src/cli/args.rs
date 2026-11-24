@@ -10,6 +10,7 @@ mod history;
 mod message;
 mod mode;
 mod project;
+mod registry;
 mod release;
 mod result;
 mod task;
@@ -24,6 +25,7 @@ pub use self::history::*;
 pub use self::message::*;
 pub use self::mode::*;
 pub use self::project::*;
+pub use self::registry::*;
 pub use self::release::*;
 pub use self::result::*;
 pub use self::task::*;
@@ -70,6 +72,12 @@ pub enum Command {
     Mv(MvArgs),
     /// Report a task's run state: idle or running
     State(StateArgs),
+    /// Join this session to an agent with a connection code from the board
+    Connect(ConnectArgs),
+    /// Leave the agent this session is connected to, so the agent is free again
+    Disconnect,
+    /// List the project's agents
+    Agent(AgentArgs),
     /// Append a work note to a task history
     History(HistoryArgs),
     /// Record a decision that a subagent made in the user's place
@@ -132,6 +140,9 @@ impl Command {
             Command::Edit(_) => "edit",
             Command::Mv(_) => "mv",
             Command::State(_) => "state",
+            Command::Connect(_) => "connect",
+            Command::Disconnect => "disconnect",
+            Command::Agent(_) => "agent",
             Command::History(_) => "history",
             Command::Decision(_) => "decision",
             Command::Mode(_) => "mode",
@@ -237,8 +248,7 @@ pub fn parse(args: &[OsString]) -> Result<Parsed, AgpjError> {
     }
 }
 
-/// How many times `--project` appears as an option (not as the value of
-/// another option). Everything after `--` is a value.
+/// How many times `--project` appears as an option; everything after `--` is a value.
 fn project_occurrences(args: &[OsString]) -> usize {
     let mut count = 0;
     let mut skip_next = false;
@@ -279,8 +289,7 @@ fn parser_message(rendered: &str) -> String {
     message
 }
 
-/// The subcommand named on the command line, if any: the first argument that
-/// is not an option.
+/// The subcommand named on the command line, if any: the first non-option argument.
 fn subcommand_in(args: &[OsString]) -> Option<String> {
     args.iter()
         .skip(1)

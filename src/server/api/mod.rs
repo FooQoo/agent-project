@@ -1,5 +1,6 @@
 //! The board router and its routes; the handlers live in the submodules, grouped as the routes are.
 
+mod agents;
 mod archive;
 mod archive_page;
 mod detail;
@@ -88,10 +89,8 @@ pub(crate) fn router(state: Arc<AppState>) -> Router {
 }
 
 /// The board router behind the ngrok entrance. The entrance has already checked the public Host,
-/// the session, the Origin and the CSRF token, so the local Host and token guards are not used
-/// here, and the page carries no token. Whatever acts on the PC itself (the connection settings,
-/// opening a docs path, the notify call of local agents, and starting or stopping the sessions
-/// the board launches) is not part of this router.
+/// the session, the Origin and the CSRF token, so the local guards and the page token are not
+/// used here. Whatever acts on the PC itself (see `local`) is not part of this router.
 pub(crate) fn remote_router(state: Arc<AppState>) -> Router {
     routes(get(remote_index)).finish(state)
 }
@@ -130,6 +129,7 @@ fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<
         .route("/api/projects/{project_id}/archive", get(archive))
         .route("/api/projects/{project_id}/summary", get(summary))
         .route("/api/projects/{project_id}/sessions", get(list_sessions))
+        .merge(agents::routes())
         .route(
             "/api/projects/{project_id}/tasks/{id}/detail",
             get(task_detail),

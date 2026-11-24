@@ -42,7 +42,16 @@ pub(crate) fn agpj_error_response(error: &AgpjError) -> Response {
         | AgpjError::AttachmentNotFound { .. }
         | AgpjError::EpicNotFound { .. }
         | AgpjError::MessageNotFound { .. } => StatusCode::NOT_FOUND,
-        AgpjError::HumanOnly { .. } | AgpjError::AiOnly { .. } => StatusCode::FORBIDDEN,
+        AgpjError::HumanOnly { .. }
+        | AgpjError::AiOnly { .. }
+        | AgpjError::NotConnected
+        | AgpjError::ConnectionReplaced
+        | AgpjError::NotAssignee { .. } => StatusCode::FORBIDDEN,
+        AgpjError::AgentBusy { .. }
+        | AgpjError::AgentInUse { .. }
+        | AgpjError::AgentNameTaken { .. } => StatusCode::CONFLICT,
+        AgpjError::AgentNotFound { .. } => StatusCode::NOT_FOUND,
+        AgpjError::ConnectCodeInvalid => StatusCode::BAD_REQUEST,
         AgpjError::QuestionsUnanswered { .. }
         | AgpjError::QuestionAnswered { .. }
         | AgpjError::QuestionWithdrawn { .. }

@@ -20,6 +20,14 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `send_with_open_questions` | A person's `mv <id> todo`, `epic send`, or Web move to Todo targets a plan with open questions and no confirmation (`--force`, or `ack: true` in the API). Nothing is saved; the message lists the question IDs. After a confirmed send the question stays and the task is Awaiting answer until it is answered. | 1 | 409 |
 | `epic_is_draft` | A CLI `epic edit`, or `epic edit --waves`, targets a person's draft epic; or a person sends an epic in a person's draft. | 1 | 409 |
 | `human_only` | An agent withdraws a request, confirms a send with open questions (`--force`), runs `mv ... backlog`, or moves a task from Doing back to Todo ("moving a task from Doing back to Todo is for a person only."). Only a person can. | 1 | 403 |
+| `not_connected` | The session has no connection to an agent: it never ran `agpj connect`, or the secret is unknown. Setting a run state needs one once the project has an agent. | 1 | 403 |
+| `connection_replaced` | The connection was revoked because the user switched the agent to another session. | 1 | 403 |
+| `not_assignee` | The task belongs to another agent or to a person. | 1 | 403 |
+| `agent_busy` | The agent already has an active connection; only a code the user issued with Switch replaces it. | 1 | 409 |
+| `agent_in_use` | The agent still has a Doing task or an active connection, so it cannot be deleted. | 1 | 409 |
+| `agent_not_found` | No live agent has this ID. | 1 | 404 |
+| `agent_name_taken` | Another live agent of the project has this name. | 1 | 409 |
+| `connect_code_invalid` | The connection code is unknown, already used, or older than ten minutes. | 1 | 400 |
 | `task_not_draft` | A web edit targets a task that is not a draft. | 1 | 409 |
 | `task_is_done` | An AI change targets a Done task. Two changes are allowed: the first `result add --final` on a Done task with no final result, and a publication record (`result add --published`). | 1 | 409 |
 | `acceptance_unmet` | An AI moves a task to Done while a condition is unmet or the frontmatter is invalid. | 2 | n/a |
@@ -72,7 +80,7 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `invalid_value` | A value breaks a rule (length, format, and so on). | 2 | 422 |
 | `confirmation_required` | A deletion needs a human y/N in a terminal. | 1 | n/a |
 | `file_invalid` | A shared file is malformed or breaks the format. | 1 | 422 |
-| `format_unsupported` | A shared file has a `formatVersion` other than 1 or 2 (the message says "Only formatVersion 2 is supported"). | 1 | 500 |
+| `format_unsupported` | A shared file has an unsupported `formatVersion`. A `task.json` must be version 3, and an earlier task file is rejected without conversion; other shared files accept version 1 or 2 (the message says "Only formatVersion 2 is supported"). | 1 | 500 |
 | `file_unreadable` | A shared file cannot be read. | 1 | 500 |
 | `file_error` | A shared file cannot be written, or a journal cannot be recovered. | 1 | 500 |
 | `database_busy` | The project write lock was not free within 5 seconds. | 1 | 503 |

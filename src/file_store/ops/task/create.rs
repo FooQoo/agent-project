@@ -187,6 +187,9 @@ impl FileStore {
             onboarding_sample: None,
             planned_version: release_notes_version.clone(),
             release_notes_version,
+            agent_id: None,
+            assignment_generation: 1,
+            run_connection_id: None,
             release_completed_at: None,
             history: vec![transition_event(Transition {
                 language,

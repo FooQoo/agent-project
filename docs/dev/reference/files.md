@@ -69,7 +69,7 @@ The data area is `.agent-project/` in the home directory on every OS, or a non-e
 ```
 
 - JSON is UTF-8, camelCase, two-space indented, with one trailing newline. Unknown fields are rejected.
-- `workspace.json` is `{"format":"agpj-files","formatVersion":1}`. `project.json` has `formatVersion: 1`. A `task.json` or `epic.json` that uses the Backlog has `formatVersion: 2`; the files of ordinary cards stay at `formatVersion: 1`, and both are read. Any other version is rejected with `format_unsupported`, reported, and left untouched. An earlier version of `agpj` cannot read a version-2 file. Old AI drafts are converted once, automatically (see [Saving and recovery](../concepts/saving-and-recovery.md#format-versions-and-the-draft-mark)).
+- `workspace.json` is `{"format":"agpj-files","formatVersion":1}`. `project.json` has `formatVersion: 1`. A `task.json` has `formatVersion: 3` (see [Agents and connections](#agents-and-connections)); an `epic.json` that uses the Backlog has `formatVersion: 2` and the files of other epics stay at `formatVersion: 1`, and both are read. Any other version is rejected with `format_unsupported`, reported, and left untouched. An earlier version of `agpj` cannot read a version-2 file. Old AI drafts are converted once, automatically (see [Saving and recovery](../concepts/saving-and-recovery.md#format-versions-and-the-draft-mark)).
 - Names starting with `.` are not source files. `README.md` describes the folder and its editing rules; the product writes it at creation.
 - Images live in the owner's `assets/`. Bodies reference images as `assets/<attachment-id>.<ext>` (or the older `attachment:<id>`). Images are PNG, JPEG, WebP, or GIF; at most 10 MiB each, 20 per owner, and 50 MiB in total.
 - `bindings.json` and `serve.json` are machine-local. `serve.json` tells the CLI where to notify and `wait` where to connect; it never holds a token. `agpj stop` finds the server through it.
@@ -101,7 +101,7 @@ A `task.json` looks like this:
 
 ```json
 {
-  "formatVersion": 1,
+  "formatVersion": 3,
   "id": 1,
   "title": "Implement the answer UI",
   "assignee": "ai",
@@ -116,11 +116,14 @@ A `task.json` looks like this:
   "updatedAt": "2026-10-10T00:00:00Z",
   "agentStatusChangedAt": "2026-10-10T00:00:00Z",
   "taskStatusChangedAt": "2026-10-10T00:00:00Z",
-  "attachments": []
+  "attachments": [],
+  "agentId": null,
+  "assignmentGeneration": 1,
+  "runConnectionId": null
 }
 ```
 
-- `results` is written only when the task has at least one result, so a file from before results existed is unchanged and reads as `results: []`. The format version stays 1.
+- `results` is written only when the task has at least one result, so a file from before results existed is unchanged and reads as `results: []`. The task format version is 3.
 - Each `requestAnswers` item is `{requestId, actor, choiceId, choiceLabel, text, at}`. `choiceId` and `choiceLabel` are both `null` or both set; `text` is `null` or a valid answer; at least one of choice or text is present.
 - `pendingRequestId` and `pendingRequest`, written by earlier versions, are ignored when read and are not written on the next save.
 - Older short-request tasks may contain `simpleRequest` metadata. It remains readable for compatibility but new tasks do not write or use it to detect repeats.
@@ -225,6 +228,15 @@ A result is something the requester can look at, delivered by an agent with `agp
 A plan counts as delivered while a saved result carries its `planId`; nothing is stored in the plan itself, and `show --json` and the API return it as `deliveredResultVersion` on each plan: the `version` of the result that delivers it, or `null` while it is undelivered. A plan is delivered by at most one result: a second, different result against it is refused with `result_plan_delivered`, and repeating the same delivery finds the first one. Editing the plans afterwards does not change a stored `planId`.
 
 Recording a result changes neither `taskStatus` nor `agentStatus`. Under one project lock it writes the images (if any, in order), then saves `task.json` and `TASK.md` together with one history entry. If an image is refused or the save fails, the image files written so far are removed and no entry exists, so a failed save is never something to deliver. If the key already exists with the same content, nothing is written and the existing entry is returned. A task holds at most 100 results.
+
+
+### Agents and connections {#agents-and-connections}
+
+`task.json` has `formatVersion: 3`. Besides the fields above it holds `agentId` (`null`, or the `A-<n>` of the agent that owns the card; always `null` on a person's card), `assignmentGeneration` (an integer from 1 that goes up at every claim and assignment), and `runConnectionId` (the connection that set the task running, `null` otherwise). Any other version is `format_unsupported`; nothing is converted.
+
+`<project>/agents.json` is `{formatVersion: 1, nextAgentId, agents: [{id, name, role, createdAt, archivedAt}]}`. The ID (`A-1`, `A-2`, ...) never changes and is never reused, so a rename or a role edit keeps every card's `agentId`. A live name is unique, at most 50 characters; the role is one line of at most 100. Deleting an agent sets `archivedAt`.
+
+`<project>/.internal/connections.json` is `{formatVersion: 1, codes, connections}`. A code holds only the digest of the eight-character code, its agent, whether it is a switch, and when it expires (ten minutes). A connection holds `id` (`C-<hex>`), `agentId`, `secretDigest`, `origin` (`external` or `board`), `tool`, `sessionLabel`, `issuedAt`, `lastActivityAt`, `revokedAt`, and `replacedBy`. The secret itself is never written to a shared file. The session keeps it in `<data folder>/connections/<project ID>/<session key>.secret` (mode 0600), or receives it in `AGPJ_CONNECTION_SECRET`.
 
 ## Messages
 

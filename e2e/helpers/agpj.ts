@@ -315,7 +315,7 @@ interface Fixture {
 function taskFilesFor(item: FixtureTask, question?: string): { task: Record<string, unknown>; markdown: string } {
   const history = item.history.map(({ at, reason }) => ({ at, reason }));
   const taskJson = {
-    formatVersion: 1,
+    formatVersion: 3,
     id: item.id,
     title: item.title,
     assignee: item.assignee,
@@ -331,6 +331,9 @@ function taskFilesFor(item: FixtureTask, question?: string): { task: Record<stri
     updatedAt: item.updatedAt,
     agentStatusChangedAt: item.agentStatusChangedAt,
     attachments: [],
+    agentId: null,
+    assignmentGeneration: 1,
+    runConnectionId: null,
   };
   return { task: taskJson, markdown: taskMarkdown(item.description, history, question ? [question] : []) };
 }

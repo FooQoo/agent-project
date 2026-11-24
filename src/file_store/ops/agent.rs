@@ -15,10 +15,7 @@ use super::{
     HistoryKind, Transition, ensure_ai_task_not_done, lane_end, lock_project, save_task, stamp,
     task_waits, transition_event,
 };
-use crate::domain::{
-    Actor, ChangeContext, Changed, Column, Draft, ProjectId, RunState, check_state_change,
-    check_work_state,
-};
+use crate::domain::{Actor, ChangeContext, Changed, Column, Draft, ProjectId, RunState};
 use crate::error::AgpjError;
 
 /// Who moves: the CLI (drafts stay), the CLI with the open questions confirmed (`--force`), a
@@ -181,6 +178,12 @@ impl FileStore {
                 action: "moving a task from Doing back to Todo".into(),
             });
         }
+        if to == Column::Doing
+            && task.task_status != Column::Doing
+            && let Some(agent_id) = task.agent_id.as_deref()
+        {
+            super::assignment::ensure_agent_live_locked(shared, &project_dir, agent_id)?;
+        }
         if task.task_status == to {
             return Ok(Changed {
                 value: reader::read_task_locked(shared, project, id)?,
@@ -208,6 +211,7 @@ impl FileStore {
         task.task_status_changed_at = at;
         task.position = position;
         task.agent_status = next_state;
+        task.run_connection_id = None;
         task.updated_at = at;
         task.history.push(event);
         if to == Column::Done {
@@ -220,73 +224,11 @@ impl FileStore {
             changed: true,
         })
     }
-
-    /// Change a task's run state. Only an AI-owned task in Doing can run or pause, and only
-    /// idle to running, running to paused, and paused to running are allowed. An agent may
-    /// pause its own running task (the stale-running reminder asks for it) but cannot
-    /// run a task that waits for answers. A state that is already set is not a change,
-    /// whatever the reason. Waiting is never stored: it is read from the questions.
-    pub fn set_agent_status(
-        &self,
-        project: &ProjectId,
-        id: i64,
-        state: RunState,
-        ctx: ChangeContext,
-        now: DateTime<Utc>,
-    ) -> Result<Changed<TaskView>, AgpjError> {
-        let shared = self.shared_dir();
-        let (project_dir, _lock) = lock_project(shared, project)?;
-        let mut task = reader::read_task_strict(shared, project, id)?;
-        if task.archived_at.is_some() {
-            return Err(AgpjError::TaskArchived { id });
-        }
-        ensure_ai_task_not_done(&task, ctx.actor)?;
-        if let Some(draft) = task.draft {
-            return Err(draft_refusal(id, draft));
-        }
-        if task.task_status == Column::Backlog {
-            return Err(AgpjError::TaskInBacklog { id });
-        }
-        check_work_state(task.assignee, task.task_status, state)?;
-        if task.agent_status != state {
-            check_state_change(task.agent_status, state)?;
-        }
-        if ctx.actor == Actor::Ai && state == RunState::Running && task_waits(shared, project, id)?
-        {
-            return Err(AgpjError::QuestionsUnanswered { id });
-        }
-        if task.agent_status == state {
-            return Ok(Changed {
-                value: reader::read_task_locked(shared, project, id)?,
-                changed: false,
-            });
-        }
-        let at = stamp(now);
-        let event = transition_event(Transition {
-            language: self.history_language(project, &task)?,
-            kind: HistoryKind::Agent,
-            reason: Some(&ctx.reason),
-            from_task: Some(task.task_status),
-            to_task: task.task_status,
-            from_agent: Some(task.agent_status),
-            to_agent: state,
-            at,
-        })?;
-        task.agent_status = state;
-        task.agent_status_changed_at = at;
-        task.updated_at = at;
-        task.history.push(event);
-        save_task(shared, &project_dir, &task)?;
-        Ok(Changed {
-            value: reader::read_task_locked(shared, project, id)?,
-            changed: true,
-        })
-    }
 }
 
 /// The refusal of a move or state change on a draft: a person's own draft waits for its
 /// owner to finalize it.
-fn draft_refusal(id: i64, draft: crate::domain::Draft) -> AgpjError {
+pub(super) fn draft_refusal(id: i64, draft: crate::domain::Draft) -> AgpjError {
     match draft {
         crate::domain::Draft::Human => AgpjError::TaskIsDraft { id },
     }

@@ -69,6 +69,28 @@ impl AgpjError {
                 "Check the questions, then send again with --force (the API takes ack: true)."
                     .into()
             }
+            AgpjError::NotConnected => {
+                "Get a one-time connection code from the user, then run agpj connect <code>."
+                    .into()
+            }
+            AgpjError::ConnectionReplaced => {
+                "The user switched this agent to another session. Stop writing from this one."
+                    .into()
+            }
+            AgpjError::NotAssignee { .. } => {
+                "Pick a task of your own agent or an unassigned one.".into()
+            }
+            AgpjError::AgentBusy { .. } => {
+                "Ask the user for a switch code (connect-code with switch), then use that code.".into()
+            }
+            AgpjError::AgentInUse { .. } => {
+                "Hand its Doing tasks to another agent, then have its session run agpj disconnect.".into()
+            }
+            AgpjError::AgentNotFound { .. } => "List the agents with agpj agent ls.".into(),
+            AgpjError::AgentNameTaken { .. } => "Choose another name.".into(),
+            AgpjError::ConnectCodeInvalid => {
+                "Ask the user for a new connection code; a code works once for ten minutes.".into()
+            }
             AgpjError::HumanOnly { .. } => {
                 "Ask the user to do this in the web UI or run it with --actor human.".into()
             }

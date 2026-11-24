@@ -62,6 +62,26 @@ impl AgpjError {
             AgpjError::SendWithOpenQuestions { ids } => {
                 format!("the plan has open questions: {}.", ids.join(", "))
             }
+            AgpjError::NotConnected => "This session is not connected to an agent.".to_string(),
+            AgpjError::ConnectionReplaced => {
+                "This session's connection was replaced or revoked.".to_string()
+            }
+            AgpjError::NotAssignee { id } => {
+                format!("Task #{id} is not assigned to this session's agent.")
+            }
+            AgpjError::AgentBusy { agent } => {
+                format!("Agent {agent} already has an active connection.")
+            }
+            AgpjError::AgentInUse { agent } => {
+                format!("Agent {agent} still has a Doing task or an active connection.")
+            }
+            AgpjError::AgentNotFound { agent } => format!("There is no agent {agent}."),
+            AgpjError::AgentNameTaken { name } => {
+                format!("Another agent is already named {name}.")
+            }
+            AgpjError::ConnectCodeInvalid => {
+                "The connection code is unknown, already used, or expired.".to_string()
+            }
             AgpjError::HumanOnly { action } => format!("{action} is for a person only."),
             AgpjError::AiOnly { action } => format!("{action} is for an agent only."),
             AgpjError::TaskIsDone { id } => {

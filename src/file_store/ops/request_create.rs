@@ -93,7 +93,7 @@ impl FileStore {
             super::super::history_language::HistoryLanguage::infer(&normalized_body, &title)
         });
         let task = model::TaskFile {
-            format_version: layout::FORMAT_VERSION,
+            format_version: layout::TASK_FORMAT_VERSION,
             id,
             title,
             assignee: crate::domain::Assignee::Ai,
@@ -117,6 +117,9 @@ impl FileStore {
             release_notes_version: None,
             release_completed_at: None,
             planned_version: None,
+            agent_id: None,
+            assignment_generation: 1,
+            run_connection_id: None,
             history: vec![transition_event(Transition {
                 language,
                 kind: HistoryKind::Created,

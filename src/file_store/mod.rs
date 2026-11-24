@@ -44,6 +44,9 @@ pub use ops::{
     MAX_RESULTS, ProjectVersions, RecordedResult, ReleaseDoc, RequestImage, ResultInput,
     SendRequestInput, VersionChoice,
 };
+pub use ops::{
+    AgentView, Connected, ConnectionOrigin, ConnectionView, IssuedCode, STALE_RUN_SECONDS, Verified,
+};
 pub use ops::{EpicVersionPlan, EpicVersionScope, SkipReason};
 use reader::ProjectSnapshot;
 

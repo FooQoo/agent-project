@@ -47,7 +47,7 @@ Only the `TASK.md`/`task.json` pair, and a message change with the task pairs it
 
 ## Format versions and the draft mark
 
-A `task.json` or `epic.json` that uses the Backlog has `formatVersion: 2`; the files of ordinary cards stay at `formatVersion: 1`, and both are read. Any other version is `format_unsupported`, and the message says "Only formatVersion 2 is supported". An earlier version of `agpj` cannot read a version-2 file.
+A `task.json` must declare `formatVersion: 3`. A Backlog `epic.json` has `formatVersion: 2`, and the other epic files stay at `formatVersion: 1`; both are read. Any other version is `format_unsupported` (a `task.json` of version 1 or 2 included), and the message says "Only formatVersion 3 is supported". An earlier version of `agpj` cannot read a version-2 file.
 
 `draft` is `null` or `"human"`. A `draft: "ai"` is not a valid value: that `task.json` or `epic.json` fails to parse like any other invalid file, so it is reported in `problems`, left out of the board, and never rewritten. Nothing else in the project is affected.
 
@@ -78,7 +78,7 @@ The product never repairs files on its own. It reports what is wrong, keeps show
 | --- | --- |
 | Unreadable file | `file_unreadable` with the relative path; nothing is written. |
 | Invalid `task.json` | That task is left out of `tasks` and listed in `problems`; writes to it fail with `file_invalid`. |
-| `formatVersion` other than 1 or 2 | Listed as `format_unsupported` and left out; the file is never converted, deleted, or rewritten. |
+| `task.json` whose `formatVersion` is not 3, or another file whose version is not 1 or 2 | Listed as `format_unsupported` and left out; the file is never converted, deleted, or rewritten. |
 | Invalid `project.json` | The whole read of that project fails with `file_invalid`. |
 | Unparsable YAML in `TASK.md` | The text after the closing line (or the whole file) is shown as the body, with empty `acceptance` and `acceptanceError: true`. Updates are refused for every actor. |
 | Invalid `acceptance` only | Body and history still work. AI moves to Done are refused because unmet conditions cannot be ruled out; people's moves still work. |
@@ -108,7 +108,7 @@ Releases before this format kept a whole run in the file, with sample cards on t
 | The OS drops events and asks for a rescan | Every project is reloaded. |
 | An editor overwrites a file in place without a temporary file | A half-written body may appear briefly in `problems`, until the event for the finished write triggers a reload. |
 | The project lock is busy for more than 5 seconds | `database_busy`; nothing changes; retry. |
-| An agent crashes while its task is Running | The task stays Running. Nothing resets it automatically. |
+| An agent crashes while its task is Running | A task that runs on a connection returns to waiting after the connection has been quiet for a fixed time, or when its session ends. A task without a connection stays Running; nothing resets it automatically. |
 | The shared area is on a network drive | Not supported: OS events may not arrive. |
 
 Browser-side failures (lost responses, retries, disconnects) are covered in [Server and web UI](./server-and-ui.md#behavior-on-failure-in-the-ui).

@@ -51,7 +51,13 @@ fn templates_cover_the_documented_events() {
     claude_events.sort();
     assert_eq!(
         claude_events,
-        ["PostToolUse", "PostToolUseFailure", "SessionStart", "Stop"]
+        [
+            "PostToolUse",
+            "PostToolUseFailure",
+            "SessionEnd",
+            "SessionStart",
+            "Stop"
+        ]
     );
     let mut codex_events: Vec<String> = handlers(&codex()).into_iter().map(|h| h.0).collect();
     codex_events.sort();

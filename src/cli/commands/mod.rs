@@ -3,6 +3,7 @@
 
 pub mod add;
 pub mod attachment;
+pub mod connect;
 pub mod decision;
 pub mod edit;
 pub mod epic;

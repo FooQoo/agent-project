@@ -7,10 +7,12 @@
 mod attachment;
 mod epic;
 mod task;
+mod task_view;
 
 pub use self::attachment::*;
 pub use self::epic::*;
 pub use self::task::*;
+pub use self::task_view::*;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

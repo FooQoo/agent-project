@@ -47,7 +47,7 @@
 
 ## 形式のバージョンとdraftの値
 
-バックログを使う`task.json`・`epic.json`は`formatVersion: 2`で、通常のカードのファイルは`formatVersion: 1`のままです。どちらも読めます。ほかのバージョンは`format_unsupported`で、メッセージは「Only formatVersion 2 is supported」と伝えます。以前のバージョンの`agpj`はバージョン2のファイルを読めません。
+`task.json`は`formatVersion: 3`を宣言する必要があります。バックログを使う`epic.json`は`formatVersion: 2`で、ほかのエピックのファイルは`formatVersion: 1`のままです。どちらも読めます。ほかのバージョン（バージョン1・2の`task.json`を含む）は`format_unsupported`で、メッセージは「Only formatVersion 3 is supported」と伝えます。以前のバージョンの`agpj`はバージョン2のファイルを読めません。
 
 `draft`は`null`または`"human"`です。`draft: "ai"`は有効な値ではなく、その`task.json`・`epic.json`は、ほかの不正なファイルと同じく解析に失敗します。`problems`に報告され、カンバンからは除かれ、書き換えられません。プロジェクトのほかの部分には影響しません。
 
@@ -78,7 +78,7 @@ Agent Projectは、不正なファイルを自動修正しません。問題の�
 | --- | --- |
 | 読めないファイル | 相対パス付きの`file_unreadable`。何も書かない。 |
 | 不正な`task.json` | そのタスクを`tasks`から外して`problems`に載せる。そのタスクへの書き込みは`file_invalid`で失敗する。 |
-| 1・2以外の`formatVersion` | `format_unsupported`として載せて外す。ファイルを変換・削除・書き換えしない。 |
+| `formatVersion`が3でない`task.json`、または1・2でないほかのファイル | `format_unsupported`として載せて外す。ファイルを変換・削除・書き換えしない。 |
 | 不正な`project.json` | そのプロジェクトの読み込み全体が`file_invalid`で失敗する。 |
 | `TASK.md`のYAMLを解析できない | 閉じ線の後の文（またはファイル全体）を本文として表示し、`acceptance`を空、`acceptanceError: true`にする。どの主体の更新も拒否する。 |
 | `acceptance`だけが不正 | 本文と履歴は使える。未達成の条件がないと確かめられないため、AIのDoneへの移動を拒否する。人の移動はできる。 |
@@ -108,7 +108,7 @@ Agent Projectは、不正なファイルを自動修正しません。問題の�
 | OSがイベントを取りこぼして再走査を求めた | すべてのプロジェクトを読み直す。 |
 | エディターが一時ファイルを使わずにその場で上書きした | 書きかけの本文が一時的に`problems`に現れ、書き終えたときのイベントで読み直される。 |
 | プロジェクトのロックが5秒を超えて使われている | `database_busy`。何も変わらないので再実行する。 |
-| タスクがRunningのままエージェントが異常終了した | タスクはRunningのまま。自動では未稼働に戻らない。 |
+| タスクがRunningのままエージェントが異常終了した | 接続で動いているタスクは、接続が一定時間無反応のとき、またはセッションが終了したときに待機へ戻る。接続のないタスクはRunningのままで、自動では戻らない。 |
 | 共有領域がネットワークドライブにある | 対象外。OSのイベントが届かないことがある。 |
 
 ブラウザ側の失敗（応答の喪失、再試行、切断）は[サーバーと画面](./server-and-ui.md#画面での失敗時の振る舞い)で扱います。

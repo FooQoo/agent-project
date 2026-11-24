@@ -113,6 +113,11 @@ The main files and directories outside `src/` are:
 - `web/src/shared/markdown/frontmatter.ts` and `resolveRelativeImage.ts`: the front matter split and the relative image paths the dialog uses.
 - `tests/docs_*.rs`: the Rust tests of the routes, reads, README, sandbox, and ngrok entrance.
 
+### Agents and connections
+
+- `src/file_store/ops/assignment/`: the registry and connections (`model.rs`: records and views, `store.rs`: reading, saving, and `verify_locked`, `registry.rs`: register, rename, delete, `connect.rs`: codes, exchange, session end, stale runs, `assign.rs`: giving a task to an agent). `src/file_store/ops/run_state.rs` sets a run state, through a connection when the project has agents.
+- `src/agent/connection_store.rs` keeps a session's secret; `src/agent/session_end.rs` handles the `SessionEnd` hook; `src/server/stale_runs.rs` sweeps quiet connections; `src/server/api/agents.rs` holds the routes; `src/cli/commands/connect.rs` is `connect` and `agent ls`.
+
 ### First-run guide
 
 - `src/file_store/onboarding_state.rs`: the state file, which records only whether the guide was seen.
