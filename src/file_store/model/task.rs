@@ -162,6 +162,10 @@ pub struct TaskMetadata {
     /// SHA-256 of the last accepted TASK.md bytes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub content_digest: Option<String>,
+    /// SHA-256 of the same bytes with every acceptance `done` flag read as false. A direct edit
+    /// that leaves this unchanged touched nothing but the checkboxes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shape_digest: Option<String>,
     /// A direct edit awaits human review.
     #[serde(default)]
     pub external_edit: bool,
@@ -202,6 +206,7 @@ impl From<&TaskFile> for TaskMetadata {
             assignment_generation: task.assignment_generation,
             run_connection_id: task.run_connection_id.clone(),
             content_digest: task.content_digest.clone(),
+            shape_digest: None,
             external_edit: task.external_edit,
         }
     }

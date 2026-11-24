@@ -152,6 +152,18 @@ fn task_pair(
                 crate::domain::Column::Doing | crate::domain::Column::Done
             )
     });
+    // A direct edit that only ticked or cleared acceptance checkboxes is a legitimate way to
+    // report progress: the checkboxes drive automatic completion. Any other change, including a
+    // body change made in the same edit, fails the shape comparison and stays a direct edit.
+    let checkbox_only = direct_edit
+        && old_meta.as_ref().is_some_and(|meta| {
+            is_checkbox_only_edit(
+                &old.markdown,
+                meta.content_digest.as_deref(),
+                meta.shape_digest.as_deref(),
+            )
+        });
+    let direct_edit = direct_edit && !checkbox_only;
     let mut history = task.history.clone();
     if direct_edit && !old_meta.as_ref().is_some_and(|m| m.external_edit) {
         history.push(crate::file_store::model::HistoryRecord {
@@ -182,6 +194,7 @@ fn task_pair(
     let markdown = sync_planned_version(text, markdown, task, &md_label)?;
     let mut metadata = TaskMetadata::from(task);
     metadata.content_digest = Some(content_digest(&markdown));
+    metadata.shape_digest = Some(shape_digest(&markdown));
     metadata.external_edit =
         direct_edit || task.external_edit || old_meta.as_ref().is_some_and(|m| m.external_edit);
     let mut json = serde_json::to_vec_pretty(&metadata)
@@ -231,6 +244,53 @@ fn sync_planned_version(
             field: defect.field,
             reason: defect.reason,
         })
+}
+
+/// Whether `markdown` differs from the accepted file (`digest`, `shape`) only in acceptance
+/// checkboxes.
+pub(super) fn is_checkbox_only_edit(
+    markdown: &[u8],
+    digest: Option<&str>,
+    shape: Option<&str>,
+) -> bool {
+    digest.is_some_and(|digest| digest != content_digest(markdown))
+        && shape == Some(shape_digest(markdown).as_str())
+}
+
+/// Digest the Markdown with every `done: true|false` of the acceptance block of the front matter
+/// read as `done: false`, so two files that differ only in checkbox states have one shape.
+pub(super) fn shape_digest(bytes: &[u8]) -> String {
+    let text = String::from_utf8_lossy(bytes);
+    let mut out = String::with_capacity(text.len());
+    let mut fence = 0;
+    let mut in_acceptance = false;
+    for line in text.split_inclusive('\n') {
+        let trimmed = line.trim_end();
+        if fence < 2 && trimmed == "---" {
+            fence += 1;
+            in_acceptance = false;
+        } else if fence == 1 {
+            let top_level = !line.starts_with([' ', '\t', '-']) && !trimmed.is_empty();
+            if top_level {
+                in_acceptance = trimmed.starts_with("acceptance:");
+            }
+            if in_acceptance && let Some(at) = line.find("done:") {
+                let after = &line[at + 5..];
+                let value = after.trim_start();
+                let token_len = value
+                    .find(|c: char| !c.is_ascii_alphanumeric())
+                    .unwrap_or(value.len());
+                if matches!(&value[..token_len], "true" | "false") {
+                    out.push_str(&line[..at]);
+                    out.push_str("done: false");
+                    out.push_str(&value[token_len..]);
+                    continue;
+                }
+            }
+        }
+        out.push_str(line);
+    }
+    content_digest(out.as_bytes())
 }
 
 /// Digest the exact persisted Markdown bytes.

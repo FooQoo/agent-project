@@ -167,6 +167,7 @@ impl FileStore {
         let result = (|| -> Result<(), AgpjError> {
             let mut metadata = model::TaskMetadata::from(&task);
             metadata.content_digest = Some(super::save::content_digest(markdown.as_bytes()));
+            metadata.shape_digest = Some(super::save::shape_digest(markdown.as_bytes()));
             io::write_json(&layout::task_json(&staging), &metadata, "task.json")?;
             io::write_atomic(&layout::task_md(&staging), markdown.as_bytes(), "TASK.md")?;
             if !request.images.is_empty() {

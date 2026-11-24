@@ -78,6 +78,7 @@ fn write_new_task(
             };
         let mut metadata = TaskMetadata::from(task);
         metadata.content_digest = Some(super::super::save::content_digest(body.as_bytes()));
+        metadata.shape_digest = Some(super::super::save::shape_digest(body.as_bytes()));
         io::write_json(
             &layout::task_json(&temp),
             &metadata,

@@ -62,6 +62,7 @@ impl FileStore {
                 // Bootstrapping a legacy task only changes task.json. Rewriting TASK.md here
                 // would change its modification time and make an unchanged task look edited.
                 metadata.content_digest = Some(super::save::content_digest(&markdown));
+                metadata.shape_digest = Some(super::save::shape_digest(&markdown));
                 let mut json = serde_json::to_vec_pretty(&metadata)
                     .map_err(|error| super::super::io::write_error("task.json", error))?;
                 json.push(b'\n');
@@ -75,8 +76,17 @@ impl FileStore {
                 super::save_task_planning(shared, &project_dir, &task)?;
                 changed = true;
             }
+            // A direct edit of a Doing or Done card blocks automatic completion, unless it
+            // changed nothing but acceptance checkboxes: those are how progress is reported.
+            let checkbox_only = super::save::is_checkbox_only_edit(
+                &markdown,
+                metadata.content_digest.as_deref(),
+                metadata.shape_digest.as_deref(),
+            );
             if metadata.external_edit
-                || (mismatched && matches!(metadata.task_status, Column::Doing | Column::Done))
+                || (mismatched
+                    && !checkbox_only
+                    && matches!(metadata.task_status, Column::Doing | Column::Done))
             {
                 continue;
             }
