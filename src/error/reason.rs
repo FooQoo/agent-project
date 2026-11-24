@@ -35,6 +35,7 @@ impl AgpjError {
                 "Set one with \"version release <VERSION>\", or name a version.".into()
             }
             AgpjError::ArchiveTargetsChanged => "Read the latest Done tasks and confirm the archive again.".into(),
+            AgpjError::TaskDocumentChanged { .. } => "Read the latest task document and confirm it again.".into(),
             AgpjError::AttachmentNotFound { .. } => "The attachment does not belong to this task.".into(),
             AgpjError::AttachmentLimitExceeded => "A task may contain at most 20 images and 50 MiB in total.".into(),
             AgpjError::EpicIdTaken { .. } => "Choose another EPIC-ID.".into(),

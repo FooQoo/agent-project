@@ -36,13 +36,35 @@ pub(super) fn save_task_with_markdown(
     save_task_text(shared, project_dir, task, replacement).map(drop)
 }
 
-pub(super) fn confirm_external_edit(
+pub(super) fn save_task_expected(
     shared: &Path,
     project_dir: &Path,
     task: &TaskFile,
+    expected_markdown: Option<&[u8]>,
+) -> Result<(), AgpjError> {
+    use crate::file_store::transaction::save_pair_locked;
+    let (targets, old, new) = task_pair(shared, project_dir, task, None)?;
+    if expected_markdown.is_some_and(|expected| expected != old.markdown) {
+        return Err(AgpjError::TaskDocumentChanged { id: task.id });
+    }
+    save_pair_locked(project_dir, &targets, &old, &new)
+}
+
+pub(super) fn confirm_external_edit(
+    shared: &Path,
+    project_dir: &Path,
+    project: &crate::domain::ProjectId,
+    task: &TaskFile,
+    expected_document_version: &str,
 ) -> Result<(), AgpjError> {
     use crate::file_store::transaction::save_pair_locked;
     let (targets, old, mut new) = task_pair(shared, project_dir, task, None)?;
+    let current = crate::file_store::reader::read_task_locked(shared, project, task.id)?;
+    if crate::file_store::detail_version::task_versions(&current).document
+        != expected_document_version
+    {
+        return Err(AgpjError::TaskDocumentChanged { id: task.id });
+    }
     let mut metadata: crate::file_store::model::TaskMetadata =
         serde_json::from_slice(&new.metadata)
             .map_err(|error| io::write_error("task.json", error))?;

@@ -157,7 +157,11 @@ impl FileStore {
             task.position = position;
             task.updated_at = at;
             task.history.push(event);
-            self.save_done_task(project, &project_dir, &mut task, now)?;
+            match self.save_done_task(project, &project_dir, &mut task, now, Some(&markdown)) {
+                Ok(()) => {}
+                Err(AgpjError::TaskDocumentChanged { .. }) => continue,
+                Err(error) => return Err(error),
+            }
             changed = true;
         }
         Ok(changed)

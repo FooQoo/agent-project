@@ -232,7 +232,7 @@ export function TaskDetailView({
             onClick={() => {
               setConfirmingExternalEdit(true);
               setExternalEditError(false);
-              void confirmExternalEdit(projectId, task.id)
+              void confirmExternalEdit(projectId, task.id, document.version ?? '')
                 .then(() => setExternalEditError(false))
                 .catch(() => setExternalEditError(true))
                 .finally(() => setConfirmingExternalEdit(false));

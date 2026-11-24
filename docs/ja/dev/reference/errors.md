@@ -36,6 +36,7 @@
 | `invalid_state_for_assignee` | 人のタスクにIdle以外の稼働状態を設定した。 | 2 | 422 |
 | `invalid_state_for_draft` | 稼働中のタスクを下書きにした。 | 1 | 409 |
 | `archive_targets_changed` | 確認を開いた後に、一括アーカイブの対象が移動または削除された。 | 1 | 409 |
+| `task_document_changed` | 人が確認した後にタスク文書が変わった。確認は保存されない。現在の文書を読み、もう一度確認する。 | 1 | 409 |
 
 ## 質問と回答
 
