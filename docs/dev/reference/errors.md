@@ -36,6 +36,7 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `invalid_state_for_assignee` | A human task is given a run state other than Idle. | 2 | 422 |
 | `invalid_state_for_draft` | A running task is made a draft. | 1 | 409 |
 | `archive_targets_changed` | A bulk archive target moved or was deleted since the confirmation opened. | 1 | 409 |
+| `task_document_changed` | The task document changed after the person reviewed it. Nothing is confirmed; read the current document and confirm again. | 1 | 409 |
 
 ## Questions and answers
 

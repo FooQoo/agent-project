@@ -86,9 +86,12 @@ export function setTaskEpic(projectId: ProjectId, id: number, epicId: string | n
   return sendTask('PUT', `${projectPath(projectId)}/tasks/${id}/epic`, { epicId });
 }
 
-export function confirmExternalEdit(projectId: ProjectId, id: number) {
-  return postTask<{ task: Task }>(
-    `${projectPath(projectId)}/tasks/${id}/external-edit/confirm`,
-    {},
-  );
+export function confirmExternalEdit(
+  projectId: ProjectId,
+  id: number,
+  expectedDocumentVersion: string,
+) {
+  return postTask<{ task: Task }>(`${projectPath(projectId)}/tasks/${id}/external-edit/confirm`, {
+    expectedDocumentVersion,
+  });
 }

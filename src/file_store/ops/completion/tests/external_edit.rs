@@ -19,8 +19,42 @@ fn direct_task_file_updates_are_rechecked_and_existing_done_is_not_reopened() {
             .count(),
         1
     );
-    let confirmed = f.store.confirm_external_edit(&f.project, id).unwrap();
+    let view = f.store.task(&f.project, id).unwrap();
+    let version = crate::file_store::detail_version::task_versions(&view).document;
+    let confirmed = f
+        .store
+        .confirm_external_edit(&f.project, id, &version)
+        .unwrap();
     assert!(!confirmed.external_edit);
+}
+
+#[test]
+fn stale_external_edit_confirmation_conflicts_with_a_new_document_revision() {
+    let f = Fixture::new();
+    let id = f.task("Direct edit", Assignee::Ai, OPEN, false);
+    f.store
+        .move_work_task(
+            &f.project,
+            id,
+            Column::Doing,
+            ChangeContext {
+                actor: Actor::Ai,
+                reason: "Start".into(),
+            },
+            at(2),
+        )
+        .unwrap();
+    f.replace_description(id, &OPEN.replace("Work.", "Work, first edit."));
+    assert!(f.store.auto_complete_all(at(3)).unwrap());
+    let shown = f.store.task(&f.project, id).unwrap();
+    let version = crate::file_store::detail_version::task_versions(&shown).document;
+
+    f.replace_description(id, &OPEN.replace("Work.", "Work, newer edit."));
+    assert!(matches!(
+        f.store.confirm_external_edit(&f.project, id, &version),
+        Err(crate::error::AgpjError::TaskDocumentChanged { .. })
+    ));
+    assert!(f.store.task(&f.project, id).unwrap().external_edit);
 }
 
 #[test]
