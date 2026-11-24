@@ -117,7 +117,7 @@ Storybookのビルドはアプリのビルドと分けています。Storybook�
 
 - **サンプルデータモードとデモ**は、同じハンドラをページの中のService Workerの後ろで動かすので、サーバーなしで画面が動きます。[ブラウザのデモ](../concepts/demo.md#service-worker)を参照してください。`web/mock-browser.ts`が、インストール済みの`msw`パッケージから、開発サーバーではワーカーのスクリプトを配信し、デモのビルドでは書き出します。この2つのモードにスクリプトのコピーはありません。
 
-`web/.storybook/static/mockServiceWorker.js`は`pnpm --dir web exec msw init <フォルダ> --no-save`で生成します。`msw`パッケージは固定バージョンです。更新したときに再生成して、新しいファイルをコミットしてください。ワーカーとパッケージが食い違うとMSWが警告します。BiomeとCodeRabbitはこのファイルを対象外にします。
+`web/.storybook/static/mockServiceWorker.js`は`pnpm --dir web exec msw init <フォルダ> --no-save`で生成します。`msw`パッケージは固定バージョンです。更新したときに再生成して、新しいファイルをコミットしてください。ワーカーとパッケージが食い違うとMSWが警告します。Biomeはこのファイルを対象外にします。
 
 Storyで使う架空の画像は`web/.storybook/static/`にあります。Storybookとテストはこのフォルダをルートから配信するため、Storyは設定なしに`/sample-attachment.png`のようなURLを使えます。
 

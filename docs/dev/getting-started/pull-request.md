@@ -8,6 +8,7 @@ Before you change behavior, read the [developer reference](../index.md) for the 
 
 - Keep source code, code comments, repository instructions, and the English README (`README.md`) in English. Localized UI resources, `README.ja.md`, `CONTRIBUTING.ja.md`, and the Japanese documentation site pages under `docs/ja/**` may use their target language; English is the source, so update the Japanese translation in the same change. All other documentation remains in English.
 - Keep implementation and tests in this repository.
+- Keep commit messages, pull request titles, descriptions, and comments free of `#<number>` references and local-only information. GitHub turns `#<number>` into a link to whatever pull request or issue has that number, which is usually unrelated, and other people cannot open files that exist only on your machine. The rule is in [AGENTS.md](https://github.com/FooQoo/agent-project/blob/main/AGENTS.md#branches), and a pull request description follows the headings of the [pull request template](https://github.com/FooQoo/agent-project/blob/main/.github/pull_request_template.md).
 - Keep each production source file within 300 lines: `src/**/*.rs`, and `.ts` and `.tsx` under `web/src/`. Tests and styles have no limit.
   - Rust: `tests/file_size.rs` counts the lines before a file's `#[cfg(test)]` module.
   - Web UI: Biome's `noExcessiveLinesPerFile` rule in `web/biome.json` checks the files, so `pnpm --dir web check` reports them. The same command then checks the import layers and cycles of `web/src/` (see [Where the web code lives](../concepts/server-and-ui.md#where-the-web-code-lives)).
@@ -66,11 +67,7 @@ The [CI workflow](https://github.com/FooQoo/agent-project/blob/main/.github/work
 
 On a pull request, a newer commit cancels the run in progress. On `main`, a run is never cancelled; a newer push waits for it, so every merge gets a finished run. When a pull request is merged or closed, the [Cancel CI of a closed pull request](https://github.com/FooQoo/agent-project/blob/main/.github/workflows/cancel-closed-pr.yml) workflow cancels its remaining CI and Release build runs, so they do not hold the runners that the run on `main` needs.
 
-[CodeRabbit](https://www.coderabbit.ai/) also reviews pull requests to `main`, and those to a `feature/` branch in a stack, and comments on them in English. Draft pull requests and pull requests to other branches are not reviewed automatically; mark a draft ready for review when you want its review. The settings are in `.coderabbit.yaml`.
-
-CodeRabbit reports only problems that must be fixed before merging, mainly bugs, and does not suggest optional improvements. It also checks that a change in behavior updates the documentation in the same pull request, and that a changed test is explained as an intended change of the specification or as a fix to the test. Lock files and other generated files are left out of the review. Treat its comments as suggestions: fix what is right, and reply with the reason when you do not.
-
-Wait for CodeRabbit before you merge. A Major or Critical finding makes it request changes, and it approves once those threads are resolved; the `CodeRabbit` status shows while the review runs. Check every finding against the current code, then fix it and point to the commit, or reply with the reason you leave it. When the change is too large and CodeRabbit skips the review, CI alone decides.
+Before you merge a change to code, have it reviewed by a reviewer that did not write it, for example a Claude Code review of the diff run by a separate agent. Check every finding against the current code, then fix it and point to the commit, or reply with the reason you leave it. A change to documentation only is decided by CI.
 
 Check that the Rust and web jobs pass before you merge, and run `pnpm --dir e2e test` locally when the change affects the app. When the E2E job fails, its traces are attached to the run as the `e2e-results-<shard>` artifact of the shard that failed.
 

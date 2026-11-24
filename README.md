@@ -4,7 +4,7 @@
 
 # Agent Project
 
-[![CI](https://github.com/FooQoo/agent-project/actions/workflows/ci.yml/badge.svg)](https://github.com/FooQoo/agent-project/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/FooQoo/agent-project/graph/badge.svg)](https://codecov.io/gh/FooQoo/agent-project) [![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/FooQoo/agent-project?utm_source=oss&utm_medium=github&utm_campaign=FooQoo%2Fagent-project&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)](https://coderabbit.ai)
+[![CI](https://github.com/FooQoo/agent-project/actions/workflows/ci.yml/badge.svg)](https://github.com/FooQoo/agent-project/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/FooQoo/agent-project/graph/badge.svg)](https://codecov.io/gh/FooQoo/agent-project)
 
 **Big work moves on without you driving it.**
 
