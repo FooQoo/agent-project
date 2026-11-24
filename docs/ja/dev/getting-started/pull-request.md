@@ -8,6 +8,7 @@
 
 - ソースコード、コードコメント、リポジトリの指示文書、英語のREADME(`README.md`)は英語で書きます。UIの翻訳リソース、`README.ja.md`、`CONTRIBUTING.ja.md`、ドキュメントサイトの日本語ページ(`docs/ja/**`)は対象の言語で書けます。英語が正本なので、日本語訳は同じ変更で更新します。それ以外の文書は英語で書きます。
 - 実装とテストはこのリポジトリに置きます。
+- コミットメッセージ、プルリクエストのタイトル、説明、コメントに、`#<番号>` の参照やローカルだけの情報を書かないでください。GitHubは `#<番号>` を同じ番号のプルリクエストやIssueへのリンクに変えますが、多くの場合それは無関係なものです。また、自分のマシンにしかないファイルは、ほかの人には開けません。規則は[AGENTS.md](https://github.com/FooQoo/agent-project/blob/main/AGENTS.md#branches)にあります。プルリクエストの説明は、[プルリクエストのテンプレート](https://github.com/FooQoo/agent-project/blob/main/.github/pull_request_template.md)の見出しに沿って書きます。
 - プロダクションのソースファイル(`src/**/*.rs`と、`web/src/`配下の`.ts`・`.tsx`)は、1ファイル300行以内に収めます。テストとスタイルには上限はありません。
   - Rust: `tests/file_size.rs`が確認し、`#[cfg(test)]`モジュールより前の行だけを数えます。
   - Web画面: `web/biome.json`のBiomeのルール`noExcessiveLinesPerFile`が確認するので、`pnpm --dir web check`で検出されます。同じコマンドが、続けて`web/src/`のimportの層と循環も検査します（[Webコードの置き場所](../concepts/server-and-ui.md#webコードの置き場所)）。
