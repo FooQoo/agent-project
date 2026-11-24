@@ -216,7 +216,7 @@ impl FileStore {
         task.updated_at = at;
         task.history.push(event);
         if to == Column::Done {
-            self.save_done_task(project, &project_dir, &mut task, now)?;
+            self.save_done_task(project, &project_dir, &mut task, now, None)?;
         } else {
             save_task(shared, &project_dir, &task)?;
         }

@@ -68,6 +68,10 @@ pub enum AgpjError {
     /// A command asked for the project's release version, and the project has none.
     NoReleaseVersion,
     ArchiveTargetsChanged,
+    /// The task document changed after a person reviewed it.
+    TaskDocumentChanged {
+        id: i64,
+    },
     AttachmentNotFound {
         id: String,
     },

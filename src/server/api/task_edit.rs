@@ -182,6 +182,7 @@ pub(super) async fn confirm_external_edit(
     headers: HeaderMap,
     State(state): State<Arc<AppState>>,
     Path((raw_project, raw_id)): Path<(String, String)>,
+    StrictJson(input): StrictJson<ConfirmExternalEditInput>,
 ) -> Response {
     let project_id = match parse_project_id(&raw_project) {
         Ok(id) => id,
@@ -192,7 +193,7 @@ pub(super) async fn confirm_external_edit(
         Err(response) => return *response,
     };
     let result = with_request_files(&state, &headers, move |store| {
-        store.confirm_external_edit(&project_id, id)
+        store.confirm_external_edit(&project_id, id, &input.expected_document_version)
     })
     .await;
     changed_task_response(
@@ -202,6 +203,12 @@ pub(super) async fn confirm_external_edit(
             changed: true,
         }),
     )
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct ConfirmExternalEditInput {
+    expected_document_version: String,
 }
 
 /// `epicId` of `PUT .../epic`: an EPIC-ID, or `null` to take the task out of
