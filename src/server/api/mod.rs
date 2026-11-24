@@ -25,7 +25,6 @@ mod task_acceptance;
 mod task_attachments;
 mod task_edit;
 mod task_multipart;
-mod task_results;
 mod tasks;
 mod version_plan;
 mod versions;
@@ -170,7 +169,10 @@ fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<
                 .post(add_task_attachment)
                 .patch(edit_task_multipart),
         )
-        .merge(task_results::routes())
+        .route(
+            "/api/projects/{project_id}/tasks/{id}/results",
+            get(list_task_results).post(record_publication),
+        )
         .route(
             "/api/projects/{project_id}/tasks/{id}/attachments/{attachment_id}",
             get(get_task_attachment).delete(delete_task_attachment),

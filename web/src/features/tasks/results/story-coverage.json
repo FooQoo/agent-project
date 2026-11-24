@@ -111,16 +111,6 @@
               "interaction": false
             },
             {
-              "id": "task-detail-resultsview--plans-register-japanese",
-              "states": ["register form in a box", "Japanese"],
-              "interaction": true
-            },
-            {
-              "id": "task-detail-resultsview--plans-register-japanese-phone",
-              "states": ["phone width"],
-              "interaction": true
-            },
-            {
               "id": "task-detail-resultsview--no-plans-japanese",
               "states": ["no plans: as before"],
               "interaction": true

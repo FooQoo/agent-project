@@ -78,7 +78,7 @@ pub(super) async fn add_task_attachment(
     let Ok(multipart) = multipart else {
         return multipart_too_large();
     };
-    let payload = match parse_multipart::<super::multipart::MultipartMeta>(multipart).await {
+    let payload = match parse_multipart(multipart).await {
         Ok(value) => value,
         Err(response) => return response,
     };

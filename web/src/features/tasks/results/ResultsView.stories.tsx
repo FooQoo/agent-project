@@ -371,8 +371,6 @@ const JA = { locale: 'ja' } as const;
 export const PlansMixed: Story = {
   args: {
     state: { status: 'ready', results: PLANNED, plans: PLANS },
-    canRegister: true,
-    onRegister: fn(async () => {}),
   },
   play: async ({ canvasElement }) => {
     const box = canvasElement.querySelector('[data-plan="RP-1"]');
@@ -384,8 +382,6 @@ export const PlansMixed: Story = {
 export const PlansMixedJapanese: Story = {
   args: {
     state: { status: 'ready', results: JA_RESULTS, plans: JA_PLANS },
-    canRegister: true,
-    onRegister: fn(async () => {}),
   },
   globals: JA,
 };
@@ -393,8 +389,6 @@ export const PlansMixedJapanese: Story = {
 export const PlansMixedJapanesePhone: Story = {
   args: {
     state: { status: 'ready', results: JA_RESULTS, plans: JA_PLANS },
-    canRegister: true,
-    onRegister: fn(async () => {}),
   },
   globals: { ...JA, width: 'phone-375' },
 };
@@ -403,39 +397,14 @@ export const PlansMixedJapanesePhone: Story = {
 export const PlansFinalOnly: Story = {
   args: {
     state: { status: 'ready', results: [], plans: [PLANS[1] as ResultPlanView] },
-    canRegister: true,
-    onRegister: fn(async () => {}),
   },
 };
 
 export const PlansFinalOnlyJapanese: Story = {
   args: {
     state: { status: 'ready', results: [], plans: [JA_PLANS[1] as ResultPlanView] },
-    canRegister: true,
-    onRegister: fn(async () => {}),
   },
   globals: JA,
-};
-
-/** Registering into a box opens the form in the box. */
-export const PlansRegisterJapanese: Story = {
-  args: {
-    state: { status: 'ready', results: JA_RESULTS, plans: JA_PLANS },
-    canRegister: true,
-    onRegister: fn(async () => {}),
-  },
-  globals: JA,
-  play: async ({ canvasElement }) => {
-    await userEvent.click(
-      within(canvasElement).getAllByRole('button', { name: '実物を登録' })[0] as HTMLElement,
-    );
-    await expect(within(canvasElement).getByRole('form')).toBeVisible();
-  },
-};
-
-export const PlansRegisterJapanesePhone: Story = {
-  ...PlansRegisterJapanese,
-  globals: { ...JA, width: 'phone-375' },
 };
 
 /** A task with no plans shows the Results tab as it always did. */
@@ -452,8 +421,6 @@ export const FromNotification: Story = {
   args: {
     state: { status: 'ready', results: PLANNED, plans: PLANS },
     focusVersion: 1,
-    canRegister: true,
-    onRegister: fn(async () => {}),
   },
   globals: { width: 'phone-375', mode: 'dark' },
   play: async ({ canvasElement }) => {
