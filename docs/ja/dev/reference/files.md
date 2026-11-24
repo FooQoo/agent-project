@@ -66,6 +66,7 @@ Agent Projectが保存するすべてのファイルを、項目と例ととも�
   .internal/preferences.json
   .internal/remote-devices.json
   .internal/resident-autostart.json
+  .internal/resident-connection.json
 ```
 
 - JSONはUTF-8・camelCase・2スペースのインデントで、末尾に改行を一つ付けます。未知の項目は拒否します。
@@ -486,6 +487,8 @@ ngrokのリモート接続は、秘密ではない設定を`<データ領域>/.i
 ## セッションの自動起動
 
 サーバーの起動時にAgent Projectが起動するセッションは、`<データ領域>/.internal/resident-autostart.json`に保存します。Agent Projectが起動するセッションは全体で1つなので、選択は最大1つです。このファイルはアプリのもので、ローカルの入口の`PUT /api/projects/{projectId}/sessions/autostart`だけが書き込み、手で書くことはありません。`shared/`には置きません。置き換えは原子的で、所有者だけの権限（OSにあれば`0600`）です。
+
+常駐セッションの接続先プロジェクトIDと秘密値は、ローカルの `.internal/resident-connection.json` に同じく所有者だけの権限で保存します。共有の台帳には秘密値のダイジェストが入ります。人が常駐セッションを停止すると、ローカルのファイルを削除します。
 
 ```json
 {

@@ -21,9 +21,11 @@ A session the board starts runs without a person watching it, and it approves th
 3. Under **Model**, keep **Default model** or choose one from the list. If the list cannot be read, the dialog says why and offers only the default.
 4. Choose **Start**. While the request runs, the controls are disabled and the button reads **Starting…**. Choose **Stop** to end the session, or **Restart** after a failure.
 
-If the agent is in the middle of a turn (the state is **Working on a task**), **Stop** first asks `Stop while it is working?`. Stopping then cuts the agent off: unfinished work is lost, and a task it was handling stays Running until you or another agent takes it over. Choose **Stop anyway** to go on, or **Keep running** to close the question. The board cannot see background work an agent started itself, so treat a working agent as busy. A waiting agent is idle and stops at once with no question, and so does a failed or restarting one.
+If the agent is in the middle of a turn (the state is **Working on a task**), **Stop** first asks `Stop while it is working?`. Stopping then cuts the agent off: unfinished work is lost, and the board releases the connection and puts its running tasks back to Waiting. Choose **Stop anyway** to go on, or **Keep running** to close the question. The board cannot see background work an agent started itself, so treat a working agent as busy. A waiting agent is idle and stops at once with no question, and so does a failed or restarting one.
 
 ![The resident agent dialog with a waiting Claude Code session, the tool and model choices, and the external sessions list](../../images/guide/resident-session.png){.screenshot}
+
+A resident session connects to the project’s default agent automatically. If an external session is already connected to that agent, run `agpj disconnect` in that session before starting the resident. The resident keeps its connection through automatic restarts and board restarts. Starting the resident for another project releases its previous connection.
 
 The tool and model you choose apply from the next start. While a session runs with another choice, the dialog shows `Next start: …`.
 
@@ -68,7 +70,7 @@ The board shows these items in two places:
 
 ## When the agent stops on an error {#stopped-on-error}
 
-If the agent's turn fails, or its process stops in the middle of a turn without you stopping it, a task it was working on would stay Running with nobody behind it. The board adds one history entry to each such task. The entry says that the resident agent stopped on an error, gives a short reason, and says that another agent needs to take the task over, and the board sets the task to Paused so that any agent can pick it up. The entry is written in the language of the task's text. A task that was not Running, or that is no longer in Doing, is left alone, and stopping the agent yourself writes nothing.
+If the agent's turn fails, or its process stops in the middle of a turn without you stopping it, a task it was working on would stay Running with nobody behind it. The board adds one history entry to each such task. The entry says that the resident agent stopped on an error, gives a short reason, and says that another agent needs to take the task over, and the board sets the task to Paused so that any agent can pick it up. The entry is written in the language of the task's text. A task that was not Running, or that is no longer in Doing, is left alone. A stop you request records that the connection ended and its running tasks went back to Waiting.
 
 ## Remote access {#remote-access}
 

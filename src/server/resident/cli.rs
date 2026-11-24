@@ -274,6 +274,7 @@ pub fn scrubbed(name: &str) -> bool {
     }
     name == "CLAUDECODE"
         || name == "AGPJ_RESIDENT_ID"
+        || name == crate::agent::connection_store::SECRET_ENV
         || name.starts_with("CLAUDE_CODE_")
         || name.starts_with("CODEX_")
 }

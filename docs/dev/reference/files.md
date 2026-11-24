@@ -66,6 +66,7 @@ The data area is `.agent-project/` in the home directory on every OS, or a non-e
   .internal/preferences.json
   .internal/remote-devices.json
   .internal/resident-autostart.json
+  .internal/resident-connection.json
 ```
 
 - JSON is UTF-8, camelCase, two-space indented, with one trailing newline. Unknown fields are rejected.
@@ -487,6 +488,8 @@ A save changes only the fields it sends; the others keep their saved values. The
 ## Session auto-start
 
 The session the board launches when the server starts is saved in `<data-root>/.internal/resident-autostart.json`. The board launches one session in total, so there is at most one choice. The file belongs to the application: it is written only by `PUT /api/projects/{projectId}/sessions/autostart` on the local listener, never by hand. It is not in `shared/`. It is replaced atomically with owner-only permissions (`0600` where the OS has them).
+
+The resident connection’s project ID and credential are saved in the local `.internal/resident-connection.json` with the same owner-only permissions. The shared project registry stores the digest of the credential. A person’s Stop removes the local file.
 
 ```json
 {

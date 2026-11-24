@@ -33,7 +33,7 @@ Use the browser to review and edit work, and `agpj` for agent updates and projec
 
 ## Connect a session to an agent {#connect-a-session-to-an-agent}
 
-A person registers agents (a name and a one-line role) and issues a one-time connection code (valid for ten minutes) with the board's web API on the local entrance; the settings screen for this is not part of this revision. The session exchanges the code:
+On the local board, open **Settings** and choose **Connect an agent** to issue a one-time code for the default agent. The code is valid for ten minutes. The session exchanges the code by running:
 
 ```bash
 agpj --project "My project" connect K7M2QX9P
