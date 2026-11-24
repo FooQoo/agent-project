@@ -5,11 +5,26 @@ use std::path::Path;
 
 /// The active default agent ID in a readable project registry.
 pub(crate) fn registered_default_agent_id(shared: &Path, project_dir: &Path) -> Option<String> {
-    let file: AgentsFile = load(shared, &agents_path(project_dir)).ok()?;
-    file.agents
+    resolve_agent_id_locked(shared, project_dir, None)
+        .ok()
+        .flatten()
+}
+
+/// Older AI task files may omit their agent. Use the registered default in that case.
+pub(in crate::file_store::ops) fn resolve_agent_id_locked(
+    shared: &Path,
+    project_dir: &Path,
+    stored: Option<&str>,
+) -> Result<Option<String>, AgpjError> {
+    if let Some(stored) = stored {
+        return Ok(Some(stored.to_owned()));
+    }
+    let file: AgentsFile = load(shared, &agents_path(project_dir))?;
+    Ok(file
+        .agents
         .into_iter()
         .find(|agent| agent.is_default && agent.archived_at.is_none())
-        .map(|agent| agent.id)
+        .map(|agent| agent.id))
 }
 
 /// A card that enters Doing with an agent needs that agent to still be live: an archived agent

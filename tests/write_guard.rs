@@ -294,10 +294,13 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
         .join("shared/projects")
         .join(fx.project.as_str())
         .join(format!("tasks/{legacy}/task.json"));
-    let mut value: serde_json::Value =
-        serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
-    value["agentId"] = serde_json::Value::Null;
-    std::fs::write(&metadata, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    let omit_legacy_owner = || {
+        let mut value: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
+        value["agentId"] = serde_json::Value::Null;
+        std::fs::write(&metadata, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    };
+    omit_legacy_owner();
     assert_eq!(
         fx.store
             .snapshot(&fx.project)
@@ -322,6 +325,50 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
         .unwrap();
     assert!(check(legacy, &default_secret).status.success());
     assert!(fx.store.task(&fx.project, legacy).unwrap().acceptance[0].done);
+    omit_legacy_owner();
+    assert!(matches!(
+        fx.store.set_agent_status_connected(
+            &fx.project,
+            legacy,
+            RunState::Running,
+            ctx(Actor::Ai),
+            &other_secret,
+            before_refusal + chrono::Duration::minutes(5),
+        ),
+        Err(AgpjError::NotAssignee { .. })
+    ));
+    assert_eq!(other_activity(), before_refusal);
+    fx.store
+        .set_agent_status_connected(
+            &fx.project,
+            legacy,
+            RunState::Running,
+            ctx(Actor::Ai),
+            &default_secret,
+            t0(),
+        )
+        .unwrap();
+    let legacy_question = qa::ask(
+        &fx.store,
+        &fx.project,
+        &[legacy],
+        "Resume the older task?",
+        &[],
+    );
+    qa::answer(
+        &fx.store,
+        &fx.project,
+        &legacy_question.id,
+        None,
+        Some("Yes."),
+    );
+    omit_legacy_owner();
+    fx.store
+        .accept_message(&fx.project, &legacy_question.id, Actor::Ai, t0())
+        .unwrap();
+    let resumed = fx.store.task(&fx.project, legacy).unwrap();
+    assert_eq!(resumed.agent_status, RunState::Running);
+    assert!(resumed.run_connection_id.is_some());
 
     let question = qa::ask(&fx.store, &fx.project, &[id], "Which way?", &[]);
     qa::answer(

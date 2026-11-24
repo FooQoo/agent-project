@@ -85,14 +85,13 @@ impl FileStore {
                 if task.assignee != crate::domain::Assignee::Ai {
                     return Err(AgpjError::NotAssignee { id });
                 }
-                match task.agent_id.as_deref() {
-                    Some(owner) if owner != verified.agent_id => {
-                        return Err(AgpjError::NotAssignee { id });
-                    }
-                    None if state != RunState::Running => {
-                        return Err(AgpjError::NotAssignee { id });
-                    }
-                    _ => {}
+                let owner = super::assignment::resolve_agent_id_locked(
+                    shared,
+                    &project_dir,
+                    task.agent_id.as_deref(),
+                )?;
+                if owner.as_deref() != Some(verified.agent_id.as_str()) {
+                    return Err(AgpjError::NotAssignee { id });
                 }
             }
             if task.archived_at.is_some() {

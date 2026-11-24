@@ -69,21 +69,16 @@ pub(in crate::file_store::ops) fn check_session_write(
     if !old_guarded && !guarded(task.assignee, task.task_status) {
         return Ok(());
     }
-    let agents: AgentsFile = load(shared, &agents_path(dir))?;
     let project = dir
         .file_name()
         .and_then(|name| name.to_str())
         .and_then(|name| name.parse::<ProjectId>().ok())
         .ok_or(AgpjError::NotConnected)?;
-    let default_id = agents
-        .agents
-        .iter()
-        .find(|a| a.is_default && a.archived_at.is_none())
-        .map(|a| a.id.clone());
     let old_agent = match old {
-        Some(o) => o.agent_id.clone(),
-        None => task.agent_id.clone(),
+        Some(o) => o.agent_id.as_deref(),
+        None => task.agent_id.as_deref(),
     };
+    let owner = resolve_agent_id_locked(shared, dir, old_agent)?;
     let secret = crate::agent::connection_store::load_secret(&data_dir, &project)
         .ok_or(AgpjError::NotConnected)?;
     authorize_locked(
@@ -93,14 +88,10 @@ pub(in crate::file_store::ops) fn check_session_write(
         stamp(chrono::Utc::now()),
         |verified| {
             let agent = verified.agent_id.as_str();
-            let owner = old_agent
-                .as_deref()
-                .or(default_id.as_deref())
-                .unwrap_or(agent);
             // A session never hands a card to another agent; only a person does.
-            let kept = task.agent_id == old_agent
+            let kept = task.agent_id.as_deref() == old_agent
                 || (old_agent.is_none() && task.agent_id.as_deref() == Some(agent));
-            if owner != agent || !kept {
+            if owner.as_deref() != Some(agent) || !kept {
                 return Err(AgpjError::NotAssignee { id: task.id });
             }
             Ok(())

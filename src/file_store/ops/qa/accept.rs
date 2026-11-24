@@ -238,13 +238,18 @@ impl FileStore {
                 continue;
             }
             // Resume only when the current agent has a fresh connection that can own the run.
-            let Some(agent) = task.agent_id.as_deref() else {
+            let Some(agent) = crate::file_store::ops::assignment::resolve_agent_id_locked(
+                shared,
+                project_dir,
+                task.agent_id.as_deref(),
+            )?
+            else {
                 continue;
             };
             let Some(connection) = crate::file_store::ops::assignment::fresh_connection_locked(
                 shared,
                 project_dir,
-                agent,
+                &agent,
                 at,
             )?
             else {
