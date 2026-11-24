@@ -237,16 +237,15 @@ impl FileStore {
             if resumed_already {
                 continue;
             }
-            // A task assigned to a registered agent resumes only on that agent's active
-            // connection that is not stale, which can release it when the session ends. With none, it stays
-            // paused and no resume is recorded; a project with only the default agent resumes on its own.
+            // Bind the resumed run to the current agent's fresh connection so it can be paused
+            // when that connection ends. A default-only project still permits an unconnected run.
             let needs_connection =
                 crate::file_store::ops::assignment::has_other_live_agents_locked(
                     shared,
                     project_dir,
                 )?;
             let connection = match task.agent_id.as_deref() {
-                Some(agent) if needs_connection => {
+                Some(agent) => {
                     match crate::file_store::ops::assignment::fresh_connection_locked(
                         shared,
                         project_dir,
@@ -255,8 +254,8 @@ impl FileStore {
                     ) {
                         Err(AgpjError::NotAssignee { .. } | AgpjError::NotConnected) => continue,
                         Err(error) => return Err(error),
-                        Ok(Some(connection)) => Some(connection),
-                        Ok(None) => continue,
+                        Ok(None) if needs_connection => continue,
+                        Ok(connection) => connection,
                     }
                 }
                 _ => None,
