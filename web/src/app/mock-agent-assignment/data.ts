@@ -258,14 +258,6 @@ export const countIn = (cards: readonly MockCard[], lane: Lane) =>
 export const loadOf = (cards: readonly MockCard[], agentId: string) =>
   cards.filter((card) => card.agentId === agentId && card.lane !== 'done').length;
 
-/** The AI cards of an epic that are not finished: what the epic's bulk change can move. */
-export const openAiIn = (cards: readonly MockCard[], epicId: string) =>
-  cards.filter((card) => card.epicId === epicId && card.lane !== 'done' && !card.human);
-
-/** The cards a bulk change to `to` moves: open AI cards of the epic that do not already have that agent. */
-export const bulkTargets = (cards: readonly MockCard[], epicId: string, to: string | null) =>
-  openAiIn(cards, epicId).filter((card) => card.agentId !== to);
-
 export function summaryOf(card: MockCard, epics: readonly EpicRef[]): TaskSummary {
   return {
     id: card.id,

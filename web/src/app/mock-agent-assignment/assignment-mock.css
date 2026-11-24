@@ -242,7 +242,7 @@
   height: 100%;
 }
 
-/* ---- Assignee avatar in the detail, and the epic bulk bar ---- */
+/* ---- The assignee control in the detail ---- */
 
 .aassignee {
   display: inline-flex;
@@ -252,10 +252,12 @@
 .aassignee__btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 2px;
+  gap: 6px;
+  padding: 4px 8px 4px 4px;
   border: 0;
   border-radius: 999px;
+  font-size: 12px;
+  color: var(--r-text2);
   background: transparent;
   cursor: pointer;
 }
@@ -273,38 +275,6 @@
 .aavatar--empty {
   background: transparent;
   border: 1.5px dashed var(--r-muted);
-}
-
-.achip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  height: 26px;
-  padding: 0 8px 0 3px;
-  border: 1px solid var(--r-border);
-  border-radius: 999px;
-  background: var(--r-surface);
-  font-size: 12px;
-  color: var(--r-text);
-}
-
-.achip .aavatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-}
-
-.achip__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.achip--none {
-  padding: 0 10px;
-  border-style: dashed;
-  color: var(--r-muted);
 }
 
 .acardagent {
@@ -645,141 +615,6 @@
   color: var(--r-muted);
 }
 
-/* ---- Choices (the same size for every agent) ---- */
-
-.achoices {
-  display: grid;
-  gap: 8px;
-}
-
-.achoice {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--r-border);
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.achoice:has([data-state="checked"]) {
-  border-color: var(--r-accent);
-  box-shadow: 0 0 0 2px var(--r-accent-soft);
-}
-
-.achoice[data-current="true"] {
-  background: var(--r-lane);
-  cursor: default;
-}
-
-.achoice .aident {
-  flex: 1 1 0;
-}
-
-.achoice__side {
-  flex: none;
-  font-size: 12px;
-  color: var(--r-muted);
-  text-align: right;
-}
-
-.achoice__current {
-  font-weight: 700;
-  color: var(--r-text2);
-}
-
-.awarn {
-  display: flex;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--r-pend-bd);
-  border-radius: 8px;
-  background: var(--r-pend-bg);
-  font-size: 13px;
-  color: var(--r-pend-tx);
-}
-
-.awarn > svg {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  margin-top: 1px;
-}
-
-.awarn p {
-  margin-top: 2px;
-}
-
-.awarn__ack {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  font-weight: 600;
-}
-
-/* ---- Bulk ---- */
-
-.alines {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.alines__item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  padding: 6px 8px;
-  border: 1px solid var(--r-border);
-  border-radius: 8px;
-  font-size: 13px;
-}
-
-.alines__item[data-change="true"] {
-  border-color: var(--r-accent);
-  background: var(--r-accent-soft);
-}
-
-.alines__id,
-.alines__lane {
-  flex: none;
-  font-size: 12px;
-  color: var(--r-muted);
-}
-
-.alines__title {
-  flex: 1 1 160px;
-  min-width: 0;
-  color: var(--r-text);
-}
-
-.alines__why {
-  flex: none;
-  font-size: 12px;
-  color: var(--r-text2);
-}
-
-.alines__note {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--r-muted);
-}
-
-.abefore {
-  padding: 8px 12px;
-  border: 1px solid var(--r-accent);
-  border-radius: 8px;
-  background: var(--r-accent-soft);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--r-text);
-}
-
 /* ---- Notice ---- */
 
 .anotice {
@@ -840,6 +675,54 @@
   white-space: nowrap;
 }
 
-.aepicbtn {
-  align-self: flex-start;
+.aassignee__btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.aassignee__menu .menu__item {
+  gap: 8px;
+}
+
+.aassignee__item-name {
+  flex: 1;
+}
+
+.aassignee__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aassignee__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--r-border);
+  border-radius: 10px;
+  background: var(--r-surface);
+  font-size: 14px;
+  color: var(--r-text);
+  text-align: left;
+}
+
+.aassignee__row[data-current="true"] {
+  border-color: var(--r-accent);
+}
+
+.aassignee__row svg {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+}
+
+/* A handover to an agent with no connected session will not start: its name is dimmed. */
+[data-agent-state="unconnected"] .aassignee__item-name,
+[data-agent-state="replaced"] .aassignee__item-name {
+  color: var(--r-muted);
 }

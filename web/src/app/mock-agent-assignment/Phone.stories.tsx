@@ -29,34 +29,14 @@ export const CardDetail: Story = {
   args: { initial: { openId: 28 } },
 };
 
-/** Handover as a sheet: the choice list, what carries over and what stops. */
-export const ReassignChoose: Story = {
-  args: { initial: { openId: 28, dialog: 'reassign', to: 'A-2' } },
-};
-
-/** The new agent has no parent session: one more confirmation before the handover. */
-export const ReassignUnconnected: Story = {
-  args: { initial: { openId: 28, dialog: 'reassign', to: 'A-3' } },
+/** The assignee sheet opened from the detail: the same list as the PC menu. */
+export const AssigneeMenuOpen: Story = {
+  args: { initial: { openId: 28, menu: true } },
 };
 
 /** After the handover on the Doing tab, with the toast. */
 export const AfterReassign: Story = {
-  args: { initial: { done: 'reassign', to: 'A-2' } },
-};
-
-/** The epic tab of the detail drawer: the epic's open AI cards and the way to change all their agents. */
-export const EpicTab: Story = {
-  args: { initial: { openId: 28, tab: 'epic' } },
-};
-
-/** Epic bulk change as a sheet, reached from the epic tab of the detail. */
-export const EpicBulkConfirm: Story = {
-  args: { initial: { openId: 28, tab: 'epic', dialog: 'bulk', epicId: 'LOGIN-1', to: 'A-2' } },
-};
-
-/** After the bulk change on the Backlog tab. */
-export const AfterBulk: Story = {
-  args: { initial: { done: 'bulk', epicId: 'LOGIN-1', to: 'A-2', lane: 'backlog' } },
+  args: { initial: { done: 'reassign', to: 'A-1' } },
 };
 
 /** Agents sheet: names, roles and states; the connection code is shown only on the PC. */

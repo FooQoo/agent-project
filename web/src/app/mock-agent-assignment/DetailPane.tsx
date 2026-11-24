@@ -73,7 +73,7 @@ export interface DetailPaneProps {
   onTab: (tab: DetailTab) => void;
   onClose: () => void;
   onToggleCondition: (conditionId: string, done: boolean) => void;
-  /** What the mock adds to the detail: the assignee's avatar and, on the epic tab, the bulk assign. */
+  /** What the mock adds to the detail: the assignee control. */
   extra?: ReactNode;
   statusLabels?: 'pc' | 'monitor';
 }

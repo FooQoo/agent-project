@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 export const Board: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // The board holds no agent list and no bulk bar: agents are managed in Settings.
+    // The board holds no agent list: agents are managed in Settings.
     await expect(canvas.queryByRole('region', { name: /Agents|担当/ })).toBeNull();
     await expect(canvas.queryByRole('button', { name: /Manage agents|担当の設定/ })).toBeNull();
     // Every AI card carries the default agent's name; no card says "Unassigned".
@@ -30,34 +30,14 @@ export const CardDetail: Story = {
   args: { initial: { openId: 28 } },
 };
 
-/** Handover in the middle of the work: nothing chosen yet, what carries over and what stops are listed. */
-export const ReassignChoose: Story = {
-  args: { initial: { openId: 28, dialog: 'reassign' } },
+/** The card detail with the assignee menu open under the avatar: every agent with its connection state. */
+export const AssigneeMenuOpen: Story = {
+  args: { initial: { openId: 28, menu: true } },
 };
 
-/** The new agent has no parent session: the handover needs one more confirmation. */
-export const ReassignUnconnected: Story = {
-  args: { initial: { openId: 28, dialog: 'reassign', to: 'A-3' } },
-};
-
-/** After the handover: the card carries the new agent's name, the toast gives the result. */
+/** After choosing another agent in the menu: the card carries the new agent and the toast gives the result. */
 export const AfterReassign: Story = {
-  args: { initial: { openId: 28, done: 'reassign', to: 'A-2' } },
-};
-
-/** The epic tab of the detail: the epic's open AI cards and the way to change all their agents (the only entry to the bulk change). */
-export const EpicTab: Story = {
-  args: { initial: { openId: 28, tab: 'epic' } },
-};
-
-/** Bulk change from the epic tab: the open AI cards move to one agent; finished, human and already-assigned cards stay with the reason. */
-export const EpicBulkConfirm: Story = {
-  args: { initial: { openId: 28, tab: 'epic', dialog: 'bulk', epicId: 'LOGIN-1', to: 'A-2' } },
-};
-
-/** After the bulk change: the moved cards carry the new agent and the toast names them. */
-export const AfterBulk: Story = {
-  args: { initial: { done: 'bulk', epicId: 'LOGIN-1', to: 'A-2', lane: 'backlog' } },
+  args: { initial: { openId: 28, done: 'reassign', to: 'A-1' } },
 };
 
 /** Settings > Agents (opened from the settings button): name, role, state and parent session of each agent; the three connection states. */

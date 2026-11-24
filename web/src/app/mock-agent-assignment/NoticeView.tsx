@@ -20,26 +20,14 @@ export function NoticeView({
     <div className="anotice" role="status">
       <CheckCircle2Icon aria-hidden="true" />
       <div className="anotice__text">
-        {notice.kind === 'reassign' ? (
-          <>
-            <strong>
-              {m.resultReassigned(
-                notice.id,
-                agentOf(agents, notice.from)?.name ?? '',
-                agentOf(agents, notice.to)?.name ?? '',
-              )}
-            </strong>
-            <span>{m.resultReassignedBody(notice.g0, notice.g1)}</span>
-          </>
-        ) : (
-          <>
-            <strong>
-              {m.resultBulk(notice.ids.length, agentOf(agents, notice.to)?.name ?? '')} (
-              {notice.ids.map((id) => `#${id}`).join(', ')})
-            </strong>
-            <span>{m.resultBulkBody(notice.kept)}</span>
-          </>
-        )}
+        <strong>
+          {m.resultReassigned(
+            notice.id,
+            agentOf(agents, notice.from)?.name ?? '',
+            agentOf(agents, notice.to)?.name ?? '',
+          )}
+        </strong>
+        <span>{m.resultReassignedBody(notice.g0, notice.g1)}</span>
       </div>
       <Button type="button" size="s" variant="outline" onClick={onDismiss}>
         {m.dismiss}

@@ -1,7 +1,14 @@
-import { CircleDashedIcon, LinkIcon, ReplaceIcon } from 'lucide-react';
+import { CheckIcon, ChevronDownIcon, CircleDashedIcon, LinkIcon, ReplaceIcon } from 'lucide-react';
 import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Button } from '@/shared/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu';
+import { Surface } from './Surface';
 import type { ConnectionState, MockAgent, MockSession } from './data';
 import { type MockText, useMockText } from './text';
 import './assignment-mock.css';
@@ -117,18 +124,6 @@ export function RowSlot({
   );
 }
 
-/** The agent's initial and name as a chip, for the dialogs that name an agent in a sentence. */
-export function AgentChip({ agent }: { agent: MockAgent | null }) {
-  const m = useMockText();
-  if (!agent) return <span className="achip achip--none">{m.unassigned}</span>;
-  return (
-    <span className="achip" data-agent={agent.id} data-state={agent.state}>
-      <Avatar agent={agent} />
-      <span className="achip__name">{agent.name}</span>
-    </span>
-  );
-}
-
 /**
  * The agent on a card: its small avatar and short name in the card's meta row. A card with no agent
  * shows nothing, and the connection state is left to Settings and the chooser.
@@ -145,41 +140,95 @@ export function CardAgent({ agent }: { agent: MockAgent | null }) {
   );
 }
 
-/** The detail's only assignment control: the assignee's avatar in the status row, which opens the chooser. */
-export function AssigneeButton({
+/**
+ * The detail's only assignment control: the assignee (avatar, name, chevron) in the status row. On the PC it
+ * opens a menu under it; on a phone it opens a bottom sheet with the same list. Choosing an agent changes the
+ * assignee at once.
+ */
+export function AssigneeMenu({
   agent,
+  agents,
   disabled,
-  onChange,
+  phone,
+  defaultOpen = false,
+  onSelect,
 }: {
   agent: MockAgent | null;
+  agents: readonly MockAgent[];
   disabled: boolean;
-  onChange: () => void;
+  phone: boolean;
+  defaultOpen?: boolean;
+  onSelect: (agentId: string) => void;
 }) {
   const m = useMockText();
+  const [sheet, setSheet] = useState(defaultOpen && phone);
   if (!agent) return null;
+  const trigger = (
+    <button
+      type="button"
+      className="aassignee__btn"
+      disabled={disabled}
+      aria-label={`${m.assignChange}: ${agent.name}`}
+      onClick={phone ? () => setSheet(true) : undefined}
+    >
+      <Avatar agent={agent} />
+      <span className="aassignee__name">{agent.name}</span>
+      <ChevronDownIcon aria-hidden="true" />
+    </button>
+  );
+  const row = (item: MockAgent) => (
+    <>
+      <Avatar agent={item} />
+      <span className="aassignee__item-name">{item.name}</span>
+      <StateBadge state={item.state} />
+    </>
+  );
   return (
     <RowSlot row=".detail__meta" className="aassignee">
-      <button
-        type="button"
-        className="aassignee__btn"
-        disabled={disabled}
-        aria-label={`${m.assignChange}: ${agent.name}`}
-        title={agent.name}
-        onClick={onChange}
-      >
-        <Avatar agent={agent} />
-      </button>
+      {phone ? (
+        <>
+          {trigger}
+          {sheet && (
+            <Surface kind="sheet" title={m.reassignTitle} onClose={() => setSheet(false)}>
+              <ul className="aassignee__list">
+                {agents.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className="aassignee__row"
+                      data-current={item.id === agent.id || undefined}
+                      data-agent-state={item.state}
+                      onClick={() => {
+                        setSheet(false);
+                        if (item.id !== agent.id) onSelect(item.id);
+                      }}
+                    >
+                      {row(item)}
+                      {item.id === agent.id && <CheckIcon aria-hidden="true" />}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Surface>
+          )}
+        </>
+      ) : (
+        <DropdownMenu defaultOpen={defaultOpen}>
+          <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+          <DropdownMenuContent className="aassignee__menu">
+            <DropdownMenuRadioGroup
+              value={agent.id}
+              onValueChange={(id) => id !== agent.id && onSelect(id)}
+            >
+              {agents.map((item) => (
+                <DropdownMenuRadioItem key={item.id} value={item.id} data-agent-state={item.state}>
+                  {row(item)}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </RowSlot>
-  );
-}
-
-/** On the epic tab: one small button that opens the bulk change dialog (no extra box or text). */
-export function EpicAssignBar({ count, onAssign }: { count: number; onAssign: () => void }) {
-  const m = useMockText();
-  if (count === 0) return null;
-  return (
-    <Button type="button" size="s" variant="outline" className="aepicbtn" onClick={onAssign}>
-      {m.epicChangeAll}
-    </Button>
   );
 }

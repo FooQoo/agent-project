@@ -6,7 +6,7 @@ import { TaskCardView } from '../../features/tasks/card/TaskCard';
 import { Drawer } from '@/shared/ui/drawer';
 import { Header, type SettingsSlotState } from '../../shared/ui/app-header/Header';
 import '../../pages/monitor/components/monitor-lanes.css';
-import { AssigneeButton, CardAgent, EpicAssignBar } from './AgentParts';
+import { AssigneeMenu, CardAgent } from './AgentParts';
 import {
   type Fixture,
   type Lane,
@@ -14,25 +14,14 @@ import {
   type MockCard,
   agentOf,
   buildFixture,
-  bulkTargets,
   countIn,
   summaryOf,
-  openAiIn,
 } from './data';
 import { AgentsSurface } from './AgentsSurface';
-import { BulkSurface } from './BulkSurface';
 import { NoticeView } from './NoticeView';
-import { ReassignSurface } from './ReassignSurface';
 import { SwitchSurface } from './SwitchSurface';
 import { DetailPane } from './DetailPane';
-import {
-  type DialogName,
-  type Initial,
-  type Notice,
-  bulkAssign,
-  handOver,
-  initialState,
-} from './screen-state';
+import { type DialogName, type Initial, type Notice, handOver, initialState } from './screen-state';
 import { useIsJa, useMockText } from './text';
 import './assignment-mock.css';
 
@@ -63,7 +52,7 @@ export interface AssignmentScreenProps {
 
 /**
  * The agent-assignment mock: the board with the agent's avatar in each card, the card detail with the avatar in its status row,
- * the agents settings, the connection switch, the mid-way handover, and the epic bulk assign. Fixed data held
+ * the agents settings, the connection switch, and the change of a card's agent from its detail. Fixed data held
  * in memory; nothing is saved.
  */
 export function AssignmentScreen({ variant = 'desktop', initial = {} }: AssignmentScreenProps) {
@@ -83,12 +72,11 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
   const [lane, setLane] = useState<Lane>(initial.lane ?? 'doing');
   const [dialog, setDialog] = useState<DialogName | null>(initial.dialog ?? null);
   const [switchAgent, setSwitchAgent] = useState(initial.switchAgent ?? 'A-1');
-  const [epicId, setEpicId] = useState(initial.epicId ?? 'LOGIN-1');
   const lanesId = useId();
   const open = cards.find((c) => c.id === openId) ?? null;
   const close = () => setDialog(null);
 
-  const confirmReassign = (to: string) => {
+  const changeAgent = (to: string) => {
     if (!open) return;
     setNotice({
       kind: 'reassign',
@@ -99,20 +87,7 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
       g1: open.generation + 1,
     });
     setCards((all) => handOver(all, open.id, to));
-    close();
   };
-  const confirmBulk = (to: string) => {
-    const ids = bulkTargets(cards, epicId, to).map((c) => c.id);
-    setNotice({
-      kind: 'bulk',
-      ids,
-      to,
-      kept: cards.filter((c) => c.epicId === epicId).length - ids.length,
-    });
-    setCards((all) => bulkAssign(all, epicId, to));
-    close();
-  };
-
   const laneCards = (name: Lane) => (
     <>
       {cards
@@ -149,24 +124,16 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
         statusLabels={statusLabels}
         onToggleCondition={() => undefined}
         extra={
-          <>
-            {!open.human && (
-              <AssigneeButton
-                agent={agentOf(fixture.agents, open.agentId)}
-                disabled={open.lane === 'done'}
-                onChange={() => setDialog('reassign')}
-              />
-            )}
-            {tab === 'epic' && open.epicId && !open.human && (
-              <EpicAssignBar
-                count={openAiIn(cards, open.epicId).length}
-                onAssign={() => {
-                  setEpicId(open.epicId ?? epicId);
-                  setDialog('bulk');
-                }}
-              />
-            )}
-          </>
+          !open.human && (
+            <AssigneeMenu
+              agent={agentOf(fixture.agents, open.agentId)}
+              agents={fixture.agents}
+              disabled={open.lane === 'done'}
+              phone={phone}
+              defaultOpen={initial.menu}
+              onSelect={changeAgent}
+            />
+          )
         }
       />
     );
@@ -218,28 +185,6 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
           showCode={dialog === 'switchCode'}
           onShowCode={() => setDialog('switchCode')}
           onClose={close}
-        />
-      )}
-      {dialog === 'reassign' && open && (
-        <ReassignSurface
-          kind={kind}
-          fixture={fixture}
-          cards={cards}
-          card={open}
-          initialTo={initial.to}
-          onClose={close}
-          onConfirm={confirmReassign}
-        />
-      )}
-      {dialog === 'bulk' && (
-        <BulkSurface
-          kind={kind}
-          fixture={fixture}
-          cards={cards}
-          epicId={epicId}
-          initialTo={initial.to}
-          onClose={close}
-          onConfirm={confirmBulk}
         />
       )}
     </>
