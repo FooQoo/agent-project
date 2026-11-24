@@ -3,6 +3,15 @@
 use super::*;
 use std::path::Path;
 
+/// The active default agent ID in a readable project registry.
+pub(crate) fn registered_default_agent_id(shared: &Path, project_dir: &Path) -> Option<String> {
+    let file: AgentsFile = load(shared, &agents_path(project_dir)).ok()?;
+    file.agents
+        .into_iter()
+        .find(|agent| agent.is_default && agent.archived_at.is_none())
+        .map(|agent| agent.id)
+}
+
 /// Whether the project has a live agent beyond its default, read under a held project lock.
 pub(in crate::file_store::ops) fn has_other_live_agents_locked(
     shared: &Path,

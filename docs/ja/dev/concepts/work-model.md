@@ -44,7 +44,7 @@
 | 条件のないタスク。 | `ensure_acceptance_met`は条件が空でも通すので、エージェントはそのタスクを手でDoneにできます。自動のDoneは条件が1件以上あることを求めます。 | `src/file_store/ops/agent.rs`の`ensure_acceptance_met`。`src/file_store/ops/completion.rs`の`auto_complete_project`。 |
 | 誰が答えたか。 | `answer_questions`は回答と経路（`--via`）を記録しますが、`--actor human`は信用して受け取ります。チャットの返事を書き戻すエージェントは、ユーザーに代わって書き込みます。 | `src/file_store/ops/qa/answer.rs`。`src/cli/args/message.rs`の`HumanActorArg`。 |
 | 計画を送ったあとの、タスクの書き換え。 | バックログのタスクが（人、またはユーザーに指示されたエージェントによって）未着手へ送られると、通常のタスクになります。`edit`は本文と条件を置き換えられ、人が承認した文面との比較はありません。承認の手順がないためです。編集は履歴に残り、送信自体も履歴の1件（`人が Todo へ送りました。`または`エージェントが Todo へ送りました。`とエージェントの理由）です。 | `src/file_store/ops/task/edit.rs`の`edit_task`。`src/file_store/ops/send.rs`の送信。 |
-| ファイルの直接編集。 | 検査は`FileStore`の操作の中にあり、ほかのプログラムによる`TASK.md`への書き込みは通りません。ウォッチャーはファイルを読み直し、自動のDoneを動かすことはありますが、その編集の履歴は足さず、下書き・Done・アーカイブのタスクも拒みません。 | `src/file_store/watch.rs`。[保存と復旧](./saving-and-recovery.md#ファイルに不備があるとき)。 |
+| ファイルの直接編集。 | ほかのプログラムによる`TASK.md`への書き込みは`FileStore`の検査を通りません。ウォッチャーが読み直し、Doing・Doneでは外部編集の履歴を記録して、人が確認するまで自動のDoneを保留します。構造上有効な完了条件の`done`真偽値だけの変更は進捗として扱います。 | `src/file_store/watch.rs`、`src/file_store/ops/save.rs`。[保存と復旧](./saving-and-recovery.md#ファイルに不備があるとき)。 |
 | Running。 | `Running`は申告のとおりに保存されます。期限で戻すことも、エージェントの生存を確かめることもしません。 | `src/file_store/ops/agent.rs`の`set_agent_status`。 |
 | 自動のDoneにはサーバーが要る。 | `auto_complete_project`は、ファイルのウォッチャーとサーバーの起動時から動き、CLIからは動きません。サーバーが動いていない間に条件が揃ったタスクは、次の起動まで待ちます。 | `src/file_store/watch.rs`。`src/file_store/ops/completion.rs`の`auto_complete_all`。 |
 | 自分のタスク。 | 人のタスクはIdleだけで、自動のDoneは対象にしません。Doneへの移動と条件のチェックは記録されるだけで、確かめられません。`ensure_acceptance_met`は、エージェントの移動でしか呼ばれません。 | `src/domain/mod.rs`の`check_work_state`。`src/file_store/ops/agent.rs`の`move_task`。 |

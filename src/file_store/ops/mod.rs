@@ -29,6 +29,7 @@ mod version;
 mod version_names;
 mod version_plan;
 
+pub(crate) use assignment::registered_default_agent_id;
 pub use assignment::{
     AgentView, Connected, ConnectionOrigin, ConnectionView, IssuedCode, STALE_RUN_SECONDS,
     SessionWrites, Verified, enter_session_writes,

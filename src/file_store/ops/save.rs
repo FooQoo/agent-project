@@ -1,5 +1,9 @@
 //! Saving a task's `task.json` and `TASK.md` as one pair.
 
+mod shape;
+
+pub(super) use shape::{content_digest, is_checkbox_only_edit, shape_digest};
+
 use std::path::Path;
 
 use crate::error::AgpjError;
@@ -244,57 +248,4 @@ fn sync_planned_version(
             field: defect.field,
             reason: defect.reason,
         })
-}
-
-/// Whether `markdown` differs from the accepted file (`digest`, `shape`) only in acceptance
-/// checkboxes.
-pub(super) fn is_checkbox_only_edit(
-    markdown: &[u8],
-    digest: Option<&str>,
-    shape: Option<&str>,
-) -> bool {
-    digest.is_some_and(|digest| digest != content_digest(markdown))
-        && shape == Some(shape_digest(markdown).as_str())
-}
-
-/// Digest the Markdown with every `done: true|false` of the acceptance block of the front matter
-/// read as `done: false`, so two files that differ only in checkbox states have one shape.
-pub(super) fn shape_digest(bytes: &[u8]) -> String {
-    let text = String::from_utf8_lossy(bytes);
-    let mut out = String::with_capacity(text.len());
-    let mut fence = 0;
-    let mut in_acceptance = false;
-    for line in text.split_inclusive('\n') {
-        let trimmed = line.trim_end();
-        if fence < 2 && trimmed == "---" {
-            fence += 1;
-            in_acceptance = false;
-        } else if fence == 1 {
-            let top_level = !line.starts_with([' ', '\t', '-']) && !trimmed.is_empty();
-            if top_level {
-                in_acceptance = trimmed.starts_with("acceptance:");
-            }
-            if in_acceptance && let Some(at) = line.find("done:") {
-                let after = &line[at + 5..];
-                let value = after.trim_start();
-                let token_len = value
-                    .find(|c: char| !c.is_ascii_alphanumeric())
-                    .unwrap_or(value.len());
-                if matches!(&value[..token_len], "true" | "false") {
-                    out.push_str(&line[..at]);
-                    out.push_str("done: false");
-                    out.push_str(&value[token_len..]);
-                    continue;
-                }
-            }
-        }
-        out.push_str(line);
-    }
-    content_digest(out.as_bytes())
-}
-
-/// Digest the exact persisted Markdown bytes.
-pub(super) fn content_digest(bytes: &[u8]) -> String {
-    use sha2::{Digest, Sha256};
-    format!("{:x}", Sha256::digest(bytes))
 }

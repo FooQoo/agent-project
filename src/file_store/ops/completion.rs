@@ -51,17 +51,23 @@ impl FileStore {
             let Ok(markdown) = std::fs::read(&md_path) else {
                 continue;
             };
+            let exact_digest = super::save::content_digest(&markdown);
             let mismatched = metadata
                 .content_digest
                 .as_ref()
-                .is_some_and(|digest| *digest != super::save::content_digest(&markdown));
-            if metadata.content_digest.is_none() {
+                .is_some_and(|digest| *digest != exact_digest);
+            let needs_digest_bootstrap = metadata.content_digest.is_none()
+                || !metadata
+                    .shape_digest
+                    .as_deref()
+                    .is_some_and(|shape| shape.starts_with("v2:"));
+            if !mismatched && needs_digest_bootstrap {
                 if reader::read_task_strict(shared, project, id).is_err() {
                     continue;
                 }
                 // Bootstrapping a legacy task only changes task.json. Rewriting TASK.md here
                 // would change its modification time and make an unchanged task look edited.
-                metadata.content_digest = Some(super::save::content_digest(&markdown));
+                metadata.content_digest = Some(exact_digest.clone());
                 metadata.shape_digest = Some(super::save::shape_digest(&markdown));
                 let mut json = serde_json::to_vec_pretty(&metadata)
                     .map_err(|error| super::super::io::write_error("task.json", error))?;
