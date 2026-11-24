@@ -139,6 +139,7 @@ export function TaskCardView({
     <div
       className={selection ? 'card__item card__item--selecting' : 'card__item'}
       role="group"
+      aria-description={task.assignedAgent?.name}
       tabIndex={-1}
     >
       {selection && (
@@ -154,7 +155,6 @@ export function TaskCardView({
         className={className}
         role="button"
         tabIndex={0}
-        aria-description={task.assignedAgent?.name}
         aria-current={selected ? 'true' : 'false'}
         data-lane={task.taskStatus}
         data-drag-count={selection?.drag?.lead ? selection.drag.count : undefined}

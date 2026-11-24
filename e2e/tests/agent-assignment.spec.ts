@@ -66,7 +66,8 @@ test('a person can register an agent and reassign a Doing card on PC and phone',
   await desktopOption.click();
   await expect(page.getByRole('button', { name: 'Change agent · Release reviewer' })).toBeVisible();
   await expect(desktopCard.getByTitle('Release reviewer')).toBeVisible();
-  await expect(desktopCard).toHaveAccessibleDescription('Release reviewer');
+  const cardGroup = page.getByRole('group').filter({ has: desktopCard });
+  await expect(cardGroup).toHaveAccessibleDescription('Release reviewer');
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(target);
