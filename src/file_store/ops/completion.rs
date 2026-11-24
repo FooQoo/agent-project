@@ -99,17 +99,17 @@ impl FileStore {
             let Ok(loaded) = reader::read_task_lenient(shared, project, id) else {
                 continue;
             };
-            let task = loaded.view;
-            if task.description.as_bytes() != markdown
-                || task.assignee != crate::domain::Assignee::Ai
-                || task.external_edit
-                || task.draft.is_some()
-                || task.archived_at.is_some()
-                || !matches!(task.task_status, Column::Todo | Column::Doing)
-                || index.is_waiting(&task.question_ids, task.questions_error)
-                || task.acceptance_error
-                || task.acceptance.is_empty()
-                || task.acceptance.iter().any(|item| !item.done)
+            let view = loaded.view;
+            if view.description.as_bytes() != markdown
+                || view.assignee != crate::domain::Assignee::Ai
+                || view.external_edit
+                || view.draft.is_some()
+                || view.archived_at.is_some()
+                || !matches!(view.task_status, Column::Todo | Column::Doing)
+                || index.is_waiting(&view.question_ids, view.questions_error)
+                || view.acceptance_error
+                || view.acceptance.is_empty()
+                || view.acceptance.iter().any(|item| !item.done)
             {
                 continue;
             }
@@ -124,6 +124,8 @@ impl FileStore {
             };
             let parsed = frontmatter::parse(&text);
             if text.as_bytes() != markdown
+                || task.history != view.history
+                || task.planned_version != view.planned_version
                 || !parsed.defects.is_empty()
                 || parsed.acceptance.is_empty()
                 || parsed.acceptance.iter().any(|item| !item.done)
