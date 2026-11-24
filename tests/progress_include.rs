@@ -2,6 +2,8 @@
 //! completed tasks. The default table must not change. Runs the real CLI on a
 //! temporary data area.
 
+mod common;
+
 use std::fs;
 use std::io::Cursor;
 use std::path::Path;
@@ -93,38 +95,35 @@ fn board() -> Board {
     // an epic with no Todo or Doing task, and a task without an epic.
     let closed = add(home.path(), "closed epic done", Some("CLOSED"));
     let stray = add(home.path(), "no epic done", None);
+    let secret = common::connect_default_agent(home.path(), "Demo");
+    let agent_write = |args: &[&str]| {
+        let args = [&["--project", "Demo"][..], args].concat();
+        let (code, _, err) = common::agpj_with_connection(home.path(), &secret, &args);
+        assert_eq!(code, 0, "{args:?} failed: {err}");
+    };
     let w = waiting.to_string();
-    out(agpj(
-        home.path(),
-        &["mv", &w, "doing", "--actor", "ai", "--reason", "start"],
-    ));
-    out(agpj(
-        home.path(),
-        &[
-            "message",
-            "ask",
-            "--actor",
-            "ai",
-            "--task",
-            &w,
-            "--questions-json",
-            r#"{"questions":[{"body":"Proceed?","choices":[{"id":"y","label":"Yes"},{"id":"n","label":"No"}]}]}"#,
-            "--no-wait",
-        ],
-    ));
+    agent_write(&["mv", &w, "doing", "--actor", "ai", "--reason", "start"]);
+    agent_write(&[
+        "message",
+        "ask",
+        "--actor",
+        "ai",
+        "--task",
+        &w,
+        "--questions-json",
+        r#"{"questions":[{"body":"Proceed?","choices":[{"id":"y","label":"Yes"},{"id":"n","label":"No"}]}]}"#,
+        "--no-wait",
+    ]);
     for id in [first, second, closed, stray] {
-        out(agpj(
-            home.path(),
-            &[
-                "mv",
-                &id.to_string(),
-                "done",
-                "--actor",
-                "human",
-                "--reason",
-                "done",
-            ],
-        ));
+        agent_write(&[
+            "mv",
+            &id.to_string(),
+            "done",
+            "--actor",
+            "human",
+            "--reason",
+            "done",
+        ]);
         // Completion times have one-second resolution.
         std::thread::sleep(std::time::Duration::from_millis(1100));
     }
