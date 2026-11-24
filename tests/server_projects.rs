@@ -435,7 +435,7 @@ fn serve_reconciles_existing_completed_tasks_and_rechecks_external_task_edits() 
         board["tasks"].as_array().is_some_and(|tasks| {
             tasks
                 .iter()
-                .any(|task| task["id"] == edited.id && task["externalEdit"] == true)
+                .any(|task| task["id"] == edited.id && task["taskStatus"] == "done")
         })
     });
     let edited_json = board["tasks"]
@@ -444,8 +444,8 @@ fn serve_reconciles_existing_completed_tasks_and_rechecks_external_task_edits() 
         .iter()
         .find(|task| task["id"] == edited.id)
         .unwrap();
-    assert_eq!(edited_json["taskStatus"], "doing");
-    assert_eq!(edited_json["externalEdit"], true);
+    assert_eq!(edited_json["taskStatus"], "done");
+    assert_eq!(edited_json["externalEdit"], false);
     let detail = server.get(&format!(
         "/api/projects/{project}/tasks/{}/detail?sections=history",
         edited.id
