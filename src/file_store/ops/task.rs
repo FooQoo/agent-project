@@ -50,11 +50,18 @@ impl FileStore {
         &self,
         project: &ProjectId,
         id: i64,
+        expected_document_version: &str,
     ) -> Result<TaskView, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, lock) = lock_project(shared, project)?;
         let task = reader::read_task_strict(shared, project, id)?;
-        super::save::confirm_external_edit(shared, &project_dir, &task)?;
+        super::save::confirm_external_edit(
+            shared,
+            &project_dir,
+            project,
+            &task,
+            expected_document_version,
+        )?;
         drop(lock);
         self.auto_complete_project(project, crate::clock::now())?;
         self.task(project, id)

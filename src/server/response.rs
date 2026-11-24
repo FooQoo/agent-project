@@ -80,7 +80,8 @@ pub(crate) fn agpj_error_response(error: &AgpjError) -> Response {
         | AgpjError::ProjectHasNoFolder { .. } => StatusCode::CONFLICT,
         AgpjError::TaskArchived { .. }
         | AgpjError::TaskNotArchived { .. }
-        | AgpjError::ArchiveTargetsChanged => StatusCode::CONFLICT,
+        | AgpjError::ArchiveTargetsChanged
+        | AgpjError::TaskDocumentChanged { .. } => StatusCode::CONFLICT,
         AgpjError::InvalidArgument { .. }
         | AgpjError::InvalidValue { .. }
         | AgpjError::NoReleaseVersion

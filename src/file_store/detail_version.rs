@@ -48,6 +48,7 @@ fn hash_attachments(hasher: &mut VersionHasher, attachments: &[Attachment]) {
 
 /// The versions of a task's two sections. The document version covers the body, the
 /// acceptance conditions and the image list; the history version covers every entry.
+/// While an external edit awaits review, the document version also identifies its exact text.
 pub fn task_versions(task: &TaskView) -> DetailVersions {
     let mut document = VersionHasher::new("task-document");
     document.field(&task.body);
@@ -75,6 +76,9 @@ pub fn task_versions(task: &TaskView) -> DetailVersions {
         });
     }
     hash_attachments(&mut document, &task.attachments);
+    if task.external_edit {
+        document.field(&task.description);
+    }
     DetailVersions {
         document: document.finish(),
         history: history_version(&task.history),

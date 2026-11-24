@@ -16,6 +16,7 @@ impl AgpjError {
             AgpjError::TaskNotArchived { .. } => "task_not_archived",
             AgpjError::NoReleaseVersion => "no_release_version",
             AgpjError::ArchiveTargetsChanged => "archive_targets_changed",
+            AgpjError::TaskDocumentChanged { .. } => "task_document_changed",
             AgpjError::AttachmentNotFound { .. } => "attachment_not_found",
             AgpjError::AttachmentLimitExceeded => "attachment_limit_exceeded",
             AgpjError::EpicIdTaken { .. } => "epic_id_taken",

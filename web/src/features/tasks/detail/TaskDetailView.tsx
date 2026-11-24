@@ -228,11 +228,13 @@ export function TaskDetailView({
           <p>{t('detail.externalEditNotice')}</p>
           <button
             type="button"
-            disabled={confirmingExternalEdit}
+            disabled={confirmingExternalEdit || document.version === null}
             onClick={() => {
+              const version = document.version;
+              if (version === null) return;
               setConfirmingExternalEdit(true);
               setExternalEditError(false);
-              void confirmExternalEdit(projectId, task.id)
+              void confirmExternalEdit(projectId, task.id, version)
                 .then(() => setExternalEditError(false))
                 .catch(() => setExternalEditError(true))
                 .finally(() => setConfirmingExternalEdit(false));

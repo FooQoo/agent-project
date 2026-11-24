@@ -28,6 +28,7 @@ impl AgpjError {
             AgpjError::TaskNotArchived { id } => format!("task #{id} is not archived."),
             AgpjError::NoReleaseVersion => "the project has no release version.".into(),
             AgpjError::ArchiveTargetsChanged => "archive targets changed.".into(),
+            AgpjError::TaskDocumentChanged { .. } => "task document changed after review.".into(),
             AgpjError::AttachmentNotFound { id } => format!("attachment {id} not found."),
             AgpjError::AttachmentLimitExceeded => "attachment limits were exceeded.".into(),
             AgpjError::EpicIdTaken { id } => format!("epic {id} already exists."),
