@@ -7,7 +7,7 @@ use std::str::FromStr;
 use agent_project::domain::{Actor, ChangeContext, Column, ProjectId};
 use agent_project::file_store::{FileStore, TaskTextParts, frontmatter::AcceptanceItem};
 use chrono::{TimeZone, Utc};
-use common::{agpj, demo_project, json_ok};
+use common::{agpj, agpj_with_connection, connect_default_agent, demo_project, json_ok};
 
 fn project_id(home: &std::path::Path) -> ProjectId {
     ProjectId::from_str(
@@ -90,13 +90,15 @@ fn body_only_draft_edit_uses_latest_markdown_acceptance_and_history() {
 fn cli_file_replacement_without_history_keeps_current_history() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
+    let secret = connect_default_agent(home.path(), "Demo");
     let initial = json_ok(home.path(), &["--project", "Demo", "show", "1", "--json"]);
     let original = initial["task"]["description"].as_str().unwrap();
     let replacement = home.path().join("replacement.md");
     std::fs::write(&replacement, "Edited by CLI\n").unwrap();
 
-    let (_, _, err) = agpj(
+    let (_, _, err) = agpj_with_connection(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",
@@ -123,8 +125,9 @@ fn cli_file_replacement_without_history_keeps_current_history() {
     assert_eq!(after["task"]["history"], history);
     assert_eq!(after["task"]["body"], "Edited by CLI");
 
-    let (_, _, err) = agpj(
+    let (_, _, err) = agpj_with_connection(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",
@@ -143,8 +146,9 @@ fn cli_file_replacement_without_history_keeps_current_history() {
     let stale_file = home.path().join("stale.md");
     std::fs::write(&stale_file, original).unwrap();
     let stale_path = stale_file.to_str().unwrap();
-    let (code, _, error) = agpj(
+    let (code, _, error) = agpj_with_connection(
         home.path(),
+        &secret,
         &["--project", "Demo", "edit", "1", "--desc-file", stale_path],
     );
     assert_eq!(code, 0, "{error}");
