@@ -187,7 +187,16 @@ impl FileStore {
             onboarding_sample: None,
             planned_version: release_notes_version.clone(),
             release_notes_version,
-            agent_id: None,
+            agent_id: if new.assignee == crate::domain::Assignee::Ai {
+                Some(super::super::assignment::default_agent_id_locked(
+                    shared,
+                    project_dir,
+                    language,
+                    now,
+                )?)
+            } else {
+                None
+            },
             assignment_generation: 1,
             run_connection_id: None,
             release_completed_at: None,

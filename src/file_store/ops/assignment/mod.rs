@@ -8,6 +8,7 @@
 
 mod assign;
 mod connect;
+mod guard;
 mod model;
 mod registry;
 mod store;
@@ -26,6 +27,10 @@ use crate::domain::{Assignee, Column, ProjectId, RunState};
 use crate::error::AgpjError;
 
 pub(in crate::file_store::ops) use connect::fresh_connection_locked;
+pub use guard::{SessionWrites, enter_session_writes};
+pub(in crate::file_store::ops) use guard::{
+    check_session_write, default_agent_id_locked, ensure_session_may_write, exempt,
+};
 pub use model::*;
 use model::{ConnectCode, ConnectionRecord, ConnectionsFile};
 pub(in crate::file_store::ops) use registry::{ensure_agent_live_locked, has_live_agents_locked};

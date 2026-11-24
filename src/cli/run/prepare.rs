@@ -137,6 +137,17 @@ pub(crate) fn prepare(cli: &Cli, env: &mut Env) -> Result<Context, AgpjError> {
 }
 
 fn dispatch(ctx: &mut Context, command: &Command) -> Result<Outcome, AgpjError> {
+    // A command line is a session, so its task writes are checked against its connection. The
+    // server (`serve`) is where a person acts and is never checked.
+    let _session = (!matches!(command, Command::Serve(_))).then(|| {
+        crate::file_store::enter_session_writes(
+            ctx.files
+                .shared_dir()
+                .parent()
+                .map(std::path::Path::to_path_buf)
+                .unwrap_or_default(),
+        )
+    });
     match command {
         Command::Project(args) => commands::project::run(ctx, args),
         Command::Init(args) => commands::init::run(ctx, args),

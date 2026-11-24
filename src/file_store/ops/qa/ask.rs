@@ -146,6 +146,7 @@ impl FileStore {
                 return Err(AgpjError::TaskIsDraft { id: *id });
             }
             ensure_ai_task_not_done(&task, input.actor)?;
+            super::super::assignment::ensure_session_may_write(shared, &project_dir, &task)?;
             tasks.push(task);
         }
 

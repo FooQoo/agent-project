@@ -77,6 +77,21 @@ impl Loaded {
             _ => Ok(()),
         }
     }
+
+    /// A session may change a task's images only when the task is its agent's to change; a
+    /// refusal comes before any image file is written.
+    pub(super) fn ensure_session_may_write(
+        &self,
+        shared: &Path,
+        project_dir: &Path,
+    ) -> Result<(), AgpjError> {
+        match self {
+            Loaded::Task(task) => {
+                super::super::assignment::ensure_session_may_write(shared, project_dir, task)
+            }
+            Loaded::Epic(_) => Ok(()),
+        }
+    }
 }
 
 pub(super) fn load(

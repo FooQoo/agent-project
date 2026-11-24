@@ -31,6 +31,9 @@ pub struct AgentRecord {
     pub created_at: DateTime<Utc>,
     #[serde(with = "crate::clock::serde_opt_utc")]
     pub archived_at: Option<DateTime<Utc>>,
+    /// The agent every AI task starts with. Created with the first AI task; it cannot be deleted.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub is_default: bool,
 }
 
 /// `agents.json`: the project's registered agents.
@@ -151,6 +154,7 @@ pub struct AgentView {
     pub created_at: DateTime<Utc>,
     #[serde(with = "crate::clock::serde_opt_utc")]
     pub archived_at: Option<DateTime<Utc>>,
+    pub is_default: bool,
     pub connection: Option<ConnectionView>,
 }
 

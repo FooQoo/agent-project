@@ -31,13 +31,12 @@ impl FileStore {
                     });
                 }
             }
-            None if task.task_status == Column::Doing => {
+            None => {
                 return Err(AgpjError::InvalidValue {
                     field: "agentId".into(),
-                    reason: "A Doing task needs an agent.".into(),
+                    reason: "An AI task always has an agent.".into(),
                 });
             }
-            None => {}
         }
         let at = stamp(now);
         if task.agent_id.as_deref() == agent_id {
@@ -77,6 +76,7 @@ impl FileStore {
         now: DateTime<Utc>,
     ) -> Result<Vec<i64>, AgpjError> {
         let shared = self.shared_dir();
+        let _exempt = exempt();
         let mut paused = Vec::new();
         for id in reader::task_ids(dir)? {
             let Ok(mut task) = reader::read_task_strict(shared, project, id) else {

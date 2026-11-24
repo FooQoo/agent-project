@@ -12,7 +12,7 @@ pub(in crate::file_store::ops) fn has_live_agents_locked(
     Ok(agents
         .agents
         .iter()
-        .any(|agent| agent.archived_at.is_none()))
+        .any(|agent| agent.archived_at.is_none() && !agent.is_default))
 }
 
 /// A card that enters Doing with an agent needs that agent to still be live: an archived agent
@@ -39,7 +39,7 @@ impl FileStore {
         Ok(self
             .list_agents(project)?
             .iter()
-            .any(|agent| agent.archived_at.is_none()))
+            .any(|agent| agent.archived_at.is_none() && !agent.is_default))
     }
 
     /// The project's agents, oldest first, archived ones last.
@@ -77,6 +77,7 @@ impl FileStore {
             role,
             created_at: stamp(now),
             archived_at: None,
+            is_default: false,
         };
         file.next_agent_id += 1;
         file.agents.push(record.clone());
@@ -133,7 +134,12 @@ impl FileStore {
         let shared = self.shared_dir();
         let (dir, _lock) = lock_project(shared, project)?;
         let mut file: AgentsFile = load(shared, &agents_path(&dir))?;
-        find_agent(&file, id)?;
+        if find_agent(&file, id)?.is_default {
+            return Err(AgpjError::InvalidValue {
+                field: "agentId".into(),
+                reason: "The default agent cannot be deleted.".into(),
+            });
+        }
         let connections: ConnectionsFile = load(shared, &connections_path(&dir))?;
         let busy = connections
             .connections

@@ -45,7 +45,8 @@ pub use ops::{
     SendRequestInput, VersionChoice,
 };
 pub use ops::{
-    AgentView, Connected, ConnectionOrigin, ConnectionView, IssuedCode, STALE_RUN_SECONDS, Verified,
+    AgentView, Connected, ConnectionOrigin, ConnectionView, IssuedCode, STALE_RUN_SECONDS,
+    SessionWrites, Verified, enter_session_writes,
 };
 pub use ops::{EpicVersionPlan, EpicVersionScope, SkipReason};
 use reader::ProjectSnapshot;

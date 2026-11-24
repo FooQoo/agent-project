@@ -114,6 +114,7 @@ pub(super) fn view_of(agent: &AgentRecord, connections: &ConnectionsFile) -> Age
         role: agent.role.clone(),
         created_at: agent.created_at,
         archived_at: agent.archived_at,
+        is_default: agent.is_default,
         connection: connections
             .connections
             .iter()

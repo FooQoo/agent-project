@@ -234,7 +234,7 @@ history:
 
 `task.json`は`formatVersion: 3`です。上の項目に加えて、`agentId`（`null`、またはカードを持つエージェントの`A-<n>`。人のカードでは常に`null`）、`assignmentGeneration`（1から始まり、取得や割り当てのたびに増える整数）、`runConnectionId`（タスクを稼働中にした接続。そうでなければ`null`）を持ちます。ほかのバージョンは`format_unsupported`で、変換はしません。
 
-`<project>/agents.json`は`{formatVersion: 1, nextAgentId, agents: [{id, name, role, createdAt, archivedAt}]}`です。ID（`A-1`、`A-2`…）は変わらず再利用もしないので、改名や役割の編集をしても、カードの`agentId`はそのまま残ります。有効な名前は重複できず、50文字までです。役割は100文字までの1行です。エージェントを削除すると`archivedAt`が入ります。
+`<project>/agents.json`は`{formatVersion: 1, nextAgentId, agents: [{id, name, role, createdAt, archivedAt, isDefault}]}`です。`isDefault`は`true`のときだけ書かれ、すべてのAIタスクが最初に付く既定のエージェントに付きます。ID（`A-1`、`A-2`…）は変わらず再利用もしないので、改名や役割の編集をしても、カードの`agentId`はそのまま残ります。有効な名前は重複できず、50文字までです。役割は100文字までの1行です。エージェントを削除すると`archivedAt`が入ります。
 
 `<project>/.internal/connections.json`は`{formatVersion: 1, codes, connections}`です。コードには、8文字のコードのダイジェスト、エージェント、切り替えかどうか、期限（10分）だけを置きます。接続は`id`（`C-<hex>`）、`agentId`、`secretDigest`、`origin`（`external`か`board`）、`tool`、`sessionLabel`、`issuedAt`、`lastActivityAt`、`revokedAt`、`replacedBy`を持ちます。秘密値そのものは共有ファイルに書きません。セッションは`<データフォルダ>/connections/<プロジェクトID>/<セッション鍵>.secret`（権限0600）に保存するか、`AGPJ_CONNECTION_SECRET`で受け取ります。
 

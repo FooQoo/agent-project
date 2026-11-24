@@ -117,7 +117,12 @@ impl FileStore {
             release_notes_version: None,
             release_completed_at: None,
             planned_version: None,
-            agent_id: None,
+            agent_id: Some(super::assignment::default_agent_id_locked(
+                shared,
+                &project_dir,
+                language,
+                now,
+            )?),
             assignment_generation: 1,
             run_connection_id: None,
             history: vec![transition_event(Transition {

@@ -56,6 +56,19 @@ impl Fx {
             )
             .unwrap()
             .id;
+        // Every AI task starts with the default agent; these tests work with the first agent
+        // they registered, so the card is given to it before it starts.
+        if self
+            .store
+            .list_agents(&self.project)
+            .unwrap()
+            .iter()
+            .any(|a| a.id == "A-1" && !a.is_default)
+        {
+            self.store
+                .assign_task_agent(&self.project, id, Some("A-1"), t0())
+                .unwrap();
+        }
         self.store
             .move_work_task_for_user(&self.project, id, Column::Doing, ctx(Actor::Human), t0())
             .unwrap();
@@ -123,7 +136,8 @@ fn a_rename_and_a_role_edit_keep_the_agent_id_on_cards() {
             .register_agent(&fx.project, "CLI", "", t0())
             .unwrap()
             .id,
-        "A-2"
+        // A-2 went to the default agent, which the first AI task created.
+        "A-3"
     );
 }
 
@@ -459,6 +473,9 @@ fn session_end_releases_runs_in_every_project_holding_the_secret_from_an_unbound
         )
         .unwrap()
         .id;
+    fx.store
+        .assign_task_agent(&beta, beta_task, Some("A-1"), t0())
+        .unwrap();
     fx.store
         .move_work_task_for_user(&beta, beta_task, Column::Doing, ctx(Actor::Human), t0())
         .unwrap();

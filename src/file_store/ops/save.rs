@@ -16,6 +16,17 @@ pub(super) fn save_task(
     save_task_with_markdown(shared, project_dir, task, None)
 }
 
+/// [`save_task`] for planning and bookkeeping that belongs to the project, not to the agent that
+/// works the card: the session write guard does not apply.
+pub(super) fn save_task_planning(
+    shared: &Path,
+    project_dir: &Path,
+    task: &TaskFile,
+) -> Result<(), AgpjError> {
+    let _exempt = super::assignment::exempt();
+    save_task(shared, project_dir, task)
+}
+
 pub(super) fn save_task_with_markdown(
     shared: &Path,
     project_dir: &Path,
@@ -95,6 +106,9 @@ fn task_pair(
             reason: "the file is not valid UTF-8".into(),
         }
     })?;
+    let old_meta: Option<crate::file_store::model::TaskMetadata> =
+        serde_json::from_slice(&old.metadata).ok();
+    super::assignment::check_session_write(shared, project_dir, old_meta.as_ref(), task)?;
     let parsed = parse_task(text, ParseMode::Stored);
     if let Some(defect) = parsed.history_defects.first() {
         return Err(AgpjError::FileInvalid {

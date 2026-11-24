@@ -30,7 +30,8 @@ mod version_names;
 mod version_plan;
 
 pub use assignment::{
-    AgentView, Connected, ConnectionOrigin, ConnectionView, IssuedCode, STALE_RUN_SECONDS, Verified,
+    AgentView, Connected, ConnectionOrigin, ConnectionView, IssuedCode, STALE_RUN_SECONDS,
+    SessionWrites, Verified, enter_session_writes,
 };
 pub(in crate::file_store) use qa::migrate_legacy_locked;
 use qa::task_waits;
@@ -42,7 +43,7 @@ pub use version::{EpicVersionSet, ProjectVersions, VersionChoice};
 pub use version_plan::{EpicVersionPlan, EpicVersionScope, SkipReason};
 
 use self::history_event::{HistoryKind, Transition, reason_or_default, transition_event};
-use self::save::{save_task, save_task_text, save_task_with_markdown};
+use self::save::{save_task, save_task_planning, save_task_text, save_task_with_markdown};
 use self::text::{write_parts, write_text};
 
 use std::path::{Path, PathBuf};

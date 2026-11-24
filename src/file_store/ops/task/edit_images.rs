@@ -38,6 +38,7 @@ impl FileStore {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let task = reader::read_task_strict(shared, project, id)?;
+        super::super::assignment::ensure_session_may_write(shared, &project_dir, &task)?;
         if task.archived_at.is_some() {
             return Err(AgpjError::TaskArchived { id });
         }
