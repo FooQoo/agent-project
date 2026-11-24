@@ -100,7 +100,9 @@ impl FileStore {
                 continue;
             };
             let task = loaded.view;
-            if task.assignee != crate::domain::Assignee::Ai
+            if task.description.as_bytes() != markdown
+                || task.assignee != crate::domain::Assignee::Ai
+                || task.external_edit
                 || task.draft.is_some()
                 || task.archived_at.is_some()
                 || !matches!(task.task_status, Column::Todo | Column::Doing)
@@ -121,10 +123,12 @@ impl FileStore {
                 Err(_) => continue,
             };
             let parsed = frontmatter::parse(&text);
-            if !parsed.defects.is_empty()
+            if text.as_bytes() != markdown
+                || !parsed.defects.is_empty()
                 || parsed.acceptance.is_empty()
                 || parsed.acceptance.iter().any(|item| !item.done)
                 || task.assignee != crate::domain::Assignee::Ai
+                || task.external_edit
                 || task.draft.is_some()
                 || task.archived_at.is_some()
                 || !matches!(task.task_status, Column::Todo | Column::Doing)

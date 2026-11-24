@@ -64,8 +64,9 @@ pub(super) fn confirm_external_edit(
     use crate::file_store::transaction::save_pair_locked;
     let (targets, old, mut new) = task_pair(shared, project_dir, task, None)?;
     let current = crate::file_store::reader::read_task_locked(shared, project, task.id)?;
-    if crate::file_store::detail_version::task_versions(&current).document
-        != expected_document_version
+    if current.description.as_bytes() != old.markdown
+        || crate::file_store::detail_version::task_versions(&current).document
+            != expected_document_version
     {
         return Err(AgpjError::TaskDocumentChanged { id: task.id });
     }
