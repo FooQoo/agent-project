@@ -43,14 +43,24 @@ pub(in crate::file_store) enum Split<'a> {
 }
 
 pub(in crate::file_store) fn split(text: &str) -> Split<'_> {
-    if !(text == "---" || text.starts_with("---\n")) {
+    let (start, newline) = if text.starts_with("---\r\n") {
+        (5, "\r\n")
+    } else if text.starts_with("---\n") {
+        (4, "\n")
+    } else if text == "---" {
+        (3, "")
+    } else {
         return Split::None;
-    }
-    let start = text.len().min(4);
+    };
     let mut pos = start;
     loop {
         let end = text[pos..].find('\n').map_or(text.len(), |i| pos + i);
-        if &text[pos..end] == "---" {
+        let line_end = if end > pos && text.as_bytes()[end - 1] == b'\r' {
+            end - 1
+        } else {
+            end
+        };
+        if &text[pos..line_end] == "---" {
             let yaml = &text[start..pos];
             let after = if end < text.len() {
                 &text[end + 1..]
@@ -58,7 +68,11 @@ pub(in crate::file_store) fn split(text: &str) -> Split<'_> {
                 ""
             };
             // One blank line after the closing line is a separator, not body.
-            let body = after.strip_prefix('\n').unwrap_or(after);
+            let body = after
+                .strip_prefix(newline)
+                .or_else(|| after.strip_prefix('\n'))
+                .or_else(|| after.strip_prefix("\r\n"))
+                .unwrap_or(after);
             return Split::Found { yaml, body };
         }
         if end >= text.len() {

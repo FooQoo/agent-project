@@ -111,12 +111,23 @@ pub(crate) fn read_snapshot_locked(
     let release_version =
         crate::file_store::releases::effective_release(&versions, file.release_version.as_deref());
     let project = meta_of(file);
+    // Read the registry once for the snapshot, then resolve legacy AI cards in memory. A
+    // missing registry intentionally leaves legacy boards untouched.
+    let legacy_default = crate::file_store::ops::read_agents(shared, &project_dir)
+        .ok()
+        .and_then(|agents| {
+            crate::file_store::ops::default_agent(&agents).map(|agent| agent.id.clone())
+        });
     let mut tasks = Vec::new();
     let (epics, mut problems) = read_epics(shared, &project_dir);
     for task_id in task_ids(&project_dir)? {
         match read_task_lenient(shared, project_id, task_id) {
             Ok(load) => {
-                tasks.push(load.view);
+                let mut view = load.view;
+                if view.agent_id.is_none() && view.assignee == crate::domain::Assignee::Ai {
+                    view.agent_id = legacy_default.clone();
+                }
+                tasks.push(view);
                 problems.extend(load.problems);
             }
             Err(found) => problems.extend(found),

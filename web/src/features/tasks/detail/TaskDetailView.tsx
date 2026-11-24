@@ -109,7 +109,6 @@ export function TaskDetailView({
   const [scroller, setScroller] = useState<HTMLElement | null>(null);
   const [confirmingExternalEdit, setConfirmingExternalEdit] = useState(false);
   const [externalEditError, setExternalEditError] = useState(false);
-  const [externalEditConfirmed, setExternalEditConfirmed] = useState(false);
   const panelRef = (id: DetailTab) => (tab === id ? setScroller : undefined);
   const ownProblems = problems.filter((problem) =>
     problem.file.startsWith(`projects/${projectId}/tasks/${task.id}/`),
@@ -224,7 +223,7 @@ export function TaskDetailView({
         </span>
       </div>
       {readOnlyDraft && task.draft !== null && <DraftStatus />}
-      {task.externalEdit && !externalEditConfirmed && (
+      {task.externalEdit && (
         <section className="detail__external-edit" role="status">
           <p>{t('detail.externalEditNotice')}</p>
           <button
@@ -234,7 +233,7 @@ export function TaskDetailView({
               setConfirmingExternalEdit(true);
               setExternalEditError(false);
               void confirmExternalEdit(projectId, task.id)
-                .then(() => setExternalEditConfirmed(true))
+                .then(() => setExternalEditError(false))
                 .catch(() => setExternalEditError(true))
                 .finally(() => setConfirmingExternalEdit(false));
             }}

@@ -273,6 +273,18 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
         serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
     value["agentId"] = serde_json::Value::Null;
     std::fs::write(&metadata, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    assert_eq!(
+        fx.store
+            .snapshot(&fx.project)
+            .unwrap()
+            .tasks
+            .into_iter()
+            .find(|task| task.id == legacy)
+            .unwrap()
+            .agent_id
+            .as_deref(),
+        Some("A-1")
+    );
     as_session(None);
     assert!(matches!(
         fx.store

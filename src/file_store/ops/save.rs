@@ -253,44 +253,59 @@ pub(super) fn is_checkbox_only_edit(
     digest: Option<&str>,
     shape: Option<&str>,
 ) -> bool {
-    digest.is_some_and(|digest| digest != content_digest(markdown))
-        && shape == Some(shape_digest(markdown).as_str())
+    let Some(digest) = digest else { return false };
+    if digest == content_digest(markdown) {
+        return false;
+    }
+    let Some(shape) = shape else { return false };
+    shape == shape_digest(markdown)
 }
 
 /// Digest the Markdown with every `done: true|false` of the acceptance block of the front matter
 /// read as `done: false`, so two files that differ only in checkbox states have one shape.
 pub(super) fn shape_digest(bytes: &[u8]) -> String {
-    let text = String::from_utf8_lossy(bytes);
-    let mut out = String::with_capacity(text.len());
-    let mut fence = 0;
-    let mut in_acceptance = false;
-    for line in text.split_inclusive('\n') {
-        let trimmed = line.trim_end();
-        if fence < 2 && trimmed == "---" {
-            fence += 1;
-            in_acceptance = false;
-        } else if fence == 1 {
-            let top_level = !line.starts_with([' ', '\t', '-']) && !trimmed.is_empty();
-            if top_level {
-                in_acceptance = trimmed.starts_with("acceptance:");
-            }
-            if in_acceptance && let Some(at) = line.find("done:") {
-                let after = &line[at + 5..];
-                let value = after.trim_start();
-                let token_len = value
-                    .find(|c: char| !c.is_ascii_alphanumeric())
-                    .unwrap_or(value.len());
-                if matches!(&value[..token_len], "true" | "false") {
-                    out.push_str(&line[..at]);
-                    out.push_str("done: false");
-                    out.push_str(&value[token_len..]);
-                    continue;
-                }
-            }
+    let Ok(text) = std::str::from_utf8(bytes) else {
+        return shape_bytes_digest(bytes);
+    };
+    let parsed = frontmatter::parse_document(text);
+    let split = frontmatter::split(text);
+    let frontmatter::Split::Found { yaml, body } = split else {
+        return shape_bytes_digest(bytes);
+    };
+    let Ok(mut value) = frontmatter::read_yaml(yaml) else {
+        return shape_bytes_digest(bytes);
+    };
+    use serde_yaml_ng::Value;
+    let key = Value::String("acceptance".into());
+    let Some(Value::Sequence(items)) = value.as_mapping_mut().and_then(|map| map.get_mut(&key))
+    else {
+        return shape_bytes_digest(bytes);
+    };
+    for item in items {
+        let Some(map) = item.as_mapping_mut() else {
+            return shape_bytes_digest(bytes);
+        };
+        let done = Value::String("done".into());
+        match map.get_mut(&done) {
+            Some(slot @ Value::Bool(_)) => *slot = Value::Bool(false),
+            _ => return shape_bytes_digest(bytes),
         }
-        out.push_str(line);
     }
-    content_digest(out.as_bytes())
+    let Ok(normalized) = serde_yaml_ng::to_string(&value) else {
+        return shape_bytes_digest(bytes);
+    };
+    if !parsed.defects.is_empty() {
+        return shape_bytes_digest(bytes);
+    }
+    shape_bytes_digest(format!("{normalized}\n---\n\n{body}").as_bytes())
+}
+
+fn shape_bytes_digest(bytes: &[u8]) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(b"agent-project/task-shape/v2\0");
+    hasher.update(bytes);
+    format!("v2:{:x}", hasher.finalize())
 }
 
 /// Digest the exact persisted Markdown bytes.

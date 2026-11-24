@@ -3,6 +3,18 @@
 use super::*;
 use std::path::Path;
 
+/// Read the canonical agent registry for a project.
+pub(crate) fn read_agents(shared: &Path, project_dir: &Path) -> Result<AgentsFile, AgpjError> {
+    load(shared, &agents_path(project_dir))
+}
+
+/// The active default agent, if the project has one.
+pub(crate) fn default_agent(file: &AgentsFile) -> Option<&AgentRecord> {
+    file.agents
+        .iter()
+        .find(|agent| agent.is_default && agent.archived_at.is_none())
+}
+
 /// Whether the project has a live agent beyond its default, read under a held project lock.
 pub(in crate::file_store::ops) fn has_other_live_agents_locked(
     shared: &Path,
