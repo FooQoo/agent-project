@@ -10,7 +10,7 @@ import {
 import { openableUrl } from './openableUrl';
 import { formatShort } from '../model/format';
 import type { TaskResultsState } from './useTaskResults';
-import { ResultPlansSection } from '../result-plans/ResultPlansSection';
+import { PlanBox } from '../result-plans/PlanBox';
 import type { PlanDelivery } from '../result-plans/deliverPlan';
 import './results.css';
 import { Spinner } from '@/shared/ui/spinner/Spinner';
@@ -41,8 +41,6 @@ export function ResultsView({
   onRegister?: (plan: ResultPlanView, delivery: PlanDelivery) => Promise<void>;
 }) {
   const { t } = useTranslation();
-  // The result a plan's "Open result" button chose; it wins over the one the link names.
-  const [opened, setOpened] = useState<number | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
   const openedAt = useRef(Date.now());
   // Pictures above the linked result change the layout as they load: for a moment after the view
@@ -65,7 +63,10 @@ export function ResultsView({
       </div>
     );
   const newestFirst = [...state.results].sort((a, b) => b.version - a.version);
-  const focus = opened ?? focusVersion;
+  const focus = focusVersion;
+  const plans = state.plans ?? [];
+  const planIds = new Set(plans.map((plan) => plan.id));
+  const planless = newestFirst.filter((result) => !result.planId || !planIds.has(result.planId));
   const missing = focus != null && !state.results.some((result) => result.version === focus);
   return (
     <div className="results">
@@ -84,15 +85,31 @@ export function ResultsView({
           {t('results.versionMissing', { version: focus })}
         </p>
       )}
-      <ResultPlansSection
-        plans={state.plans ?? []}
-        canRegister={canRegister}
-        onRegister={onRegister}
-        onOpenResult={setOpened}
-      />
-      {state.results.length === 0 && <p className="results__note">{t('results.empty')}</p>}
+      {plans.length > 0 && (
+        <div className="results__boxes">
+          {plans.map((plan) => (
+            <PlanBox key={plan.id} plan={plan} canRegister={canRegister} onRegister={onRegister}>
+              <ol className="results__list">
+                {newestFirst
+                  .filter((result) => result.planId === plan.id)
+                  .map((result) => (
+                    <ResultItem
+                      key={result.version}
+                      result={result}
+                      attachmentUrl={attachmentUrl}
+                      focused={result.version === focus}
+                    />
+                  ))}
+              </ol>
+            </PlanBox>
+          ))}
+        </div>
+      )}
+      {state.results.length === 0 && plans.length === 0 && (
+        <p className="results__note">{t('results.empty')}</p>
+      )}
       <ol className="results__list" ref={listRef} onLoadCapture={settleFocus}>
-        {newestFirst.map((result) => (
+        {planless.map((result) => (
           <ResultItem
             key={result.version}
             result={result}

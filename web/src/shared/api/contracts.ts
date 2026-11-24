@@ -170,10 +170,6 @@ export interface Task {
   acceptanceError: boolean;
   /** The version the task is planned for; `null` or absent when unplanned. */
   plannedVersion?: string | null;
-  /** The planned results, each with its delivered state. */
-  resultPlans?: ResultPlanView[];
-  /** The planned results cannot be read from the frontmatter. */
-  resultPlansError?: boolean;
   assignee: Assignee;
   taskStatus: ColumnName;
   /** Time of the last real lane change; independent of later notes and edits. */

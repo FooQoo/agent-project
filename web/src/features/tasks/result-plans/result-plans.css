@@ -1,123 +1,5 @@
-/* Planned results: the editor in the edit dialog and the section on the Results tab. */
-.plans-edit {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-family: var(--font-sans);
-}
-
-.plans-edit__list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.plans-edit__row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px;
-  border: 1px solid var(--r-border);
-  border-radius: 8px;
-}
-
-.plans-edit__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.plans-edit__spacer {
-  flex: 1 1 0;
-}
-
-.plans-edit__id {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--r-text2);
-}
-
-.plans-edit__delivered {
-  font-size: 12px;
-  color: var(--r-accent);
-}
-
-.plans-edit__final {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--r-text);
-}
-
-.plans-edit__field {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.plans-edit__caption {
-  font-size: 12px;
-  color: var(--r-text2);
-}
-
-.plans-edit__error {
-  margin: 0;
-  font-size: 12px;
-  color: var(--r-danger, #c0392b);
-}
-
-.plans-edit__note {
-  margin: 0;
-  font-size: 11px;
-  color: var(--r-muted);
-}
-
-.plans-edit__add {
-  align-self: flex-start;
-}
-
-.plans {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
-  font-family: var(--font-sans);
-}
-
-.plans__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.plans__title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--r-text);
-}
-
-.plans__count {
-  font-size: 12px;
-  color: var(--r-text2);
-}
-
-.plans__list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.plans__row {
+/* Planned results as boxes on the Results tab. */
+.plan-box {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -126,26 +8,27 @@
   border: 1px solid var(--r-border);
   border-radius: 8px;
   background: var(--r-bg);
+  font-family: var(--font-sans);
 }
 
-.plans__row[data-state="delivered"] {
+.plan-box[data-state="delivered"] {
   border-color: color-mix(in srgb, var(--r-accent) 45%, var(--r-border));
 }
 
-.plans__meta {
+.plan-box__meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
 
-.plans__id {
+.plan-box__id {
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--r-text2);
 }
 
-.plans__kind {
+.plan-box__kind {
   font-size: 11px;
   padding: 1px 6px;
   border: 1px solid var(--r-border);
@@ -153,12 +36,12 @@
   color: var(--r-text2);
 }
 
-.plans__kind[data-final="true"] {
+.plan-box__kind[data-final="true"] {
   color: var(--r-accent);
   border-color: var(--r-accent);
 }
 
-.plans__state {
+.plan-box__state {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -166,16 +49,16 @@
   color: var(--r-text2);
 }
 
-.plans__state[data-state="delivered"] {
+.plan-box__state[data-state="delivered"] {
   color: var(--r-accent);
 }
 
-.plans__state svg {
+.plan-box__state svg {
   width: 14px;
   height: 14px;
 }
 
-.plans__content {
+.plan-box__content {
   margin: 0;
   font-size: 14px;
   font-weight: 500;
@@ -183,18 +66,35 @@
   overflow-wrap: anywhere;
 }
 
-.plans__condition {
+.plan-box__condition {
   margin: 0;
   font-size: 13px;
   color: var(--r-text2);
   overflow-wrap: anywhere;
 }
 
-.plans__condition-label {
+.plan-box__condition-label {
   margin-right: 6px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+/* The delivered result sits inside its box, over the width of the box. */
+.plan-box__results {
+  align-self: stretch;
+  margin-top: 4px;
+}
+
+.plan-box__results .results__list {
+  gap: 0;
+}
+
+.results__boxes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 16px;
 }
 
 .plan-register {
@@ -249,9 +149,4 @@
   .plan-register__actions > * {
     flex: 0 0 140px;
   }
-}
-
-/* The edit dialog holds the conditions and the planned results as two docks. */
-.editor__dock {
-  gap: 8px;
 }

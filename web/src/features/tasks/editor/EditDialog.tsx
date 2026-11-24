@@ -5,8 +5,6 @@ import type { ActionDialogData } from '../model/actionData';
 import type { AcceptanceItem, EpicRef, Task } from '../../../shared/api/contracts';
 import { acceptanceProblem } from '../acceptance/model/acceptance';
 import { ConditionsDock } from '../acceptance/ConditionsDock';
-import { ResultPlansDock } from '../result-plans/ResultPlansDock';
-import { planProblem, toWire, type ResultPlanItem } from '../result-plans/model/resultPlans';
 import { EditorBody, useOverLimit } from '../../../shared/ui/editor/EditorBody';
 import { EditorShell } from '../../../shared/ui/editor/EditorShell';
 import {
@@ -81,9 +79,6 @@ export function EditDialog({
   const [title, setTitle] = useState(saved.title);
   const [description, setDescription] = useState(saved.description);
   const [conditions, setConditions] = useState<AcceptanceItem[]>(saved.acceptance);
-  const [plans, setPlans] = useState<ResultPlanItem[]>(saved.resultPlans);
-  // A stored plan list that cannot be read is left as it is.
-  const plansEditable = !whole && !task.resultPlansError;
   const [editorKey, setEditorKey] = useState(0);
   const conditionsId = useId();
   const [removed, setRemoved] = useState<string[]>([]);
@@ -107,19 +102,13 @@ export function EditDialog({
   const titleChanged = title.trim() !== saved.title;
   const conditionsChanged =
     !whole && JSON.stringify(conditions) !== JSON.stringify(saved.acceptance);
-  const plansChanged = plansEditable && JSON.stringify(plans) !== JSON.stringify(saved.resultPlans);
   const dirty =
-    titleChanged ||
-    description !== saved.description ||
-    conditionsChanged ||
-    plansChanged ||
-    imagesChanged;
+    titleChanged || description !== saved.description || conditionsChanged || imagesChanged;
   const overLimit = useOverLimit(description);
   const valid =
     titleProblem(title) === null &&
     countChars(description) <= DESCRIPTION_LIMIT &&
-    (whole || acceptanceProblem(conditions) === null) &&
-    (!plansEditable || planProblem(plans) === null);
+    (whole || acceptanceProblem(conditions) === null);
 
   // Only a person's draft is stored as a draft. The `'ai'` the Summary shows on a plan in the
   // Backlog is not: the editor takes the edit lock first, like any other card.
@@ -132,7 +121,6 @@ export function EditDialog({
       title: title.trim(),
       description,
       acceptance: whole ? [] : conditions,
-      resultPlans: plansEditable ? plans : [],
       attachmentIds: attachmentState.attachments.map((a) => a.id),
     }),
     enter: async () => snapshotOfContent(enterDraft ? contentOf(await enterDraft(), whole) : saved),
@@ -156,7 +144,6 @@ export function EditDialog({
       setTitle(content.title);
       setDescription(content.description);
       setConditions(content.acceptance);
-      setPlans(content.resultPlans);
       setRemoved([]);
       attachmentState.reset(content.attachments);
       setEditorKey((key) => key + 1);
@@ -228,7 +215,6 @@ export function EditDialog({
           input,
           whole ? { description: text } : { body: text, acceptance: conditions },
         );
-      if (plansChanged) input.resultPlans = toWire(plans);
       if (nextTitle !== saved.title) input.title = nextTitle;
       // Without `enterDraft` nothing was entered on the server, so there is nothing to end.
       if (lock.entered && enterDraft) input.finalize = true;
@@ -271,21 +257,12 @@ export function EditDialog({
         disabled={flow.saving || readOnly}
         dock={
           whole ? undefined : (
-            <>
-              <ConditionsDock
-                id={conditionsId}
-                items={conditions}
-                onChange={setConditions}
-                disabled={flow.saving || readOnly}
-              />
-              {plansEditable && (
-                <ResultPlansDock
-                  items={plans}
-                  onChange={setPlans}
-                  disabled={flow.saving || readOnly}
-                />
-              )}
-            </>
+            <ConditionsDock
+              id={conditionsId}
+              items={conditions}
+              onChange={setConditions}
+              disabled={flow.saving || readOnly}
+            />
           )
         }
         asideTop={

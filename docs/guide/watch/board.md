@@ -56,21 +56,23 @@ A result is also readable on its own from an address that names the project, the
 
 ### See planned results and register the real one {#planned-results}
 
-When a task has planned results (see [Plan the results](./editing.md#plan-the-results)), the **Results** tab lists them above the delivered results. The heading shows how many are delivered, such as **1 of 3 delivered**. Each row shows:
+A task can have planned results: what it will deliver and in what state. Plans are written in the task's `TASK.md` (the `resultPlans` field) and with `agpj`, not in the web UI. See [Deliver a result](../reference/cli.md#deliver-a-result).
+
+When a task has plans, the **Results** tab shows each plan as a box, in the order they are planned. A box shows:
 
 - the plan's number, and whether it is **Final** or **Intermediate**;
 - **Delivered** or **Not delivered**;
 - what will be delivered, and the state in which it should be delivered, after **When**.
 
-A task with no plans shows only the results, as before. A task whose only plan is the final one shows that single row.
+A delivered box holds the result that delivered it, drawn as described in [Read a result](#read-a-result). A box that is not delivered is empty. Results that belong to no plan stay in the list below the boxes, newest first. A task with no plans shows the Results tab exactly as above.
 
-For a plan that is not delivered, select **Register the result** to open a form in the row. Write a summary, add pictures with **Add images**, and give a link, then select **Register**. All three are optional: a summary left empty reads as the plan's content. The same form is used on the phone, where the pictures are picked from the photo library or the camera.
+To register the real result of an undelivered plan, select **Register the result** in its box. A form opens in the box with a summary, **Add images**, and a link. All three are optional, so the result can be text only, a URL, an image, or any mix; a summary left empty reads as the plan's content. The same form is used on the phone, where the pictures come from the photo library or the camera.
 
-- If registering fails, the form stays open with what you entered. Read the reason under the fields and select **Try again**; nothing was saved by the failed request.
-- After it succeeds, the row shows **Delivered** and the result appears in the list. Select **Open result N** in the row to scroll to that result and highlight it.
-- A plan is delivered once. A draft task cannot take results, so its rows show no register button.
+- If registering fails, the form stays open with what you entered. Read the reason and select **Try again**; the failed request saved nothing.
+- After it succeeds, the result appears inside the box, which now reads **Delivered**.
+- A plan is delivered once. A draft task cannot take results, so its boxes show no register button.
 
-When you open a result from a notification, the plans sit above it and the result it names is highlighted.
+When you open a result from a notification, the box that holds it is shown and the result is highlighted.
 
 ## Move a task
 

@@ -82,13 +82,52 @@
               "interaction": true
             },
             {
-              "id": "task-detail-resultsview--with-plans",
-              "states": ["plans above results", "open the delivering result"],
+              "id": "task-detail-resultsview--plans-mixed",
+              "states": [
+                "delivered result inside its box",
+                "undelivered box empty",
+                "result without plan below"
+              ],
+              "interaction": true
+            },
+            {
+              "id": "task-detail-resultsview--plans-mixed-japanese",
+              "states": ["Japanese"],
+              "interaction": false
+            },
+            {
+              "id": "task-detail-resultsview--plans-mixed-japanese-phone",
+              "states": ["Japanese", "phone width"],
+              "interaction": false
+            },
+            {
+              "id": "task-detail-resultsview--plans-final-only",
+              "states": ["only a final plan"],
+              "interaction": false
+            },
+            {
+              "id": "task-detail-resultsview--plans-final-only-japanese",
+              "states": ["Japanese"],
+              "interaction": false
+            },
+            {
+              "id": "task-detail-resultsview--plans-register-japanese",
+              "states": ["register form in a box", "Japanese"],
+              "interaction": true
+            },
+            {
+              "id": "task-detail-resultsview--plans-register-japanese-phone",
+              "states": ["phone width"],
+              "interaction": true
+            },
+            {
+              "id": "task-detail-resultsview--no-plans-japanese",
+              "states": ["no plans: as before"],
               "interaction": true
             },
             {
               "id": "task-detail-resultsview--from-notification",
-              "states": ["linked result highlighted below the plans", "phone width, dark"],
+              "states": ["linked result highlighted in its box", "phone width, dark"],
               "interaction": true
             }
           ]

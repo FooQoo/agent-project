@@ -1,4 +1,4 @@
-import type { AcceptanceItem, Draft, ProjectId, ResultPlan } from '../../../shared/api/contracts';
+import type { AcceptanceItem, Draft, ProjectId } from '../../../shared/api/contracts';
 import { projectPath } from '../../../shared/api/http';
 import { multipartBody, sendMultipart, sendTask } from '../../../shared/api/write';
 import type { EditorAttachment } from '../../../shared/ui/editor/attachmentTypes';
@@ -16,7 +16,6 @@ export async function editTask(
     description?: string;
     body?: string;
     acceptance?: AcceptanceItem[];
-    resultPlans?: (Omit<ResultPlan, 'id'> & { id?: string })[];
     finalize?: boolean;
   },
 ) {

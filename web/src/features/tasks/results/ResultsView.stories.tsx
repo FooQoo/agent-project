@@ -310,7 +310,7 @@ const PLANS: ResultPlanView[] = [
     content: 'The finished report',
     condition: 'When both screens are done',
     final: true,
-    deliveredResultVersion: 3,
+    deliveredResultVersion: null,
   },
   {
     id: 'RP-3',
@@ -319,32 +319,145 @@ const PLANS: ResultPlanView[] = [
     deliveredResultVersion: null,
   },
 ];
+const PLANNED: TaskResult[] = RESULTS.map((result) =>
+  result.version === 1 ? { ...result, planId: 'RP-1' } : result,
+);
 
-/** The plans sit above the results; a delivered plan opens the result that delivered it. */
-export const WithPlans: Story = {
-  args: { state: { status: 'ready', results: RESULTS, plans: PLANS }, canRegister: true },
+const JA_RESULTS: TaskResult[] = [
+  {
+    version: 1,
+    key: 'first',
+    kind: 'progress',
+    title: '一覧画面を描きました',
+    summary: '一覧画面のスクリーンショットです。',
+    attachmentId: 'capture-1',
+    planId: 'RP-1',
+    at: '2026-11-20T01:00:00Z',
+  },
+  {
+    version: 2,
+    key: 'second',
+    kind: 'progress',
+    title: '調査メモ',
+    summary: '予定とは別に、調べた内容をまとめました。',
+    link: 'outputs/notes/index.html',
+    at: '2026-11-20T03:30:00Z',
+  },
+];
+const JA_PLANS: ResultPlanView[] = [
+  {
+    id: 'RP-1',
+    content: '一覧画面のスクリーンショット',
+    condition: '一覧画面を描き終えたら',
+    deliveredResultVersion: 1,
+  },
+  {
+    id: 'RP-2',
+    content: '全項目を含む最終レポート',
+    condition: 'すべての条件を満たしたら',
+    final: true,
+    deliveredResultVersion: null,
+  },
+  {
+    id: 'RP-3',
+    content: '二つの画面の操作動画',
+    condition: 'レポートの確認が済んだら',
+    deliveredResultVersion: null,
+  },
+];
+const JA = { locale: 'ja' } as const;
+
+/** Each plan is a box: the delivered result sits inside its box, an undelivered box is empty, and a result with no plan stays below the boxes. */
+export const PlansMixed: Story = {
+  args: {
+    state: { status: 'ready', results: PLANNED, plans: PLANS },
+    canRegister: true,
+    onRegister: fn(async () => {}),
+  },
   play: async ({ canvasElement }) => {
-    const view = within(canvasElement);
-    await userEvent.click(view.getByRole('button', { name: 'Open result 3' }));
-    await waitFor(() =>
-      expect(canvasElement.querySelector('[data-result-version="3"]')).toHaveAttribute(
-        'data-focused',
-        'true',
-      ),
-    );
+    const box = canvasElement.querySelector('[data-plan="RP-1"]');
+    await expect(box?.querySelector('[data-result-version="1"]')).not.toBeNull();
+    await expect(within(canvasElement).getAllByText('Not delivered')).toHaveLength(2);
   },
 };
 
-/** Opened from a notification: the result it names is highlighted below the plans. */
+export const PlansMixedJapanese: Story = {
+  args: {
+    state: { status: 'ready', results: JA_RESULTS, plans: JA_PLANS },
+    canRegister: true,
+    onRegister: fn(async () => {}),
+  },
+  globals: JA,
+};
+
+export const PlansMixedJapanesePhone: Story = {
+  args: {
+    state: { status: 'ready', results: JA_RESULTS, plans: JA_PLANS },
+    canRegister: true,
+    onRegister: fn(async () => {}),
+  },
+  globals: { ...JA, width: 'phone-375' },
+};
+
+/** Only a final plan, not delivered. */
+export const PlansFinalOnly: Story = {
+  args: {
+    state: { status: 'ready', results: [], plans: [PLANS[1] as ResultPlanView] },
+    canRegister: true,
+    onRegister: fn(async () => {}),
+  },
+};
+
+export const PlansFinalOnlyJapanese: Story = {
+  args: {
+    state: { status: 'ready', results: [], plans: [JA_PLANS[1] as ResultPlanView] },
+    canRegister: true,
+    onRegister: fn(async () => {}),
+  },
+  globals: JA,
+};
+
+/** Registering into a box opens the form in the box. */
+export const PlansRegisterJapanese: Story = {
+  args: {
+    state: { status: 'ready', results: JA_RESULTS, plans: JA_PLANS },
+    canRegister: true,
+    onRegister: fn(async () => {}),
+  },
+  globals: JA,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getAllByRole('button', { name: '実物を登録' })[0] as HTMLElement,
+    );
+    await expect(within(canvasElement).getByRole('form')).toBeVisible();
+  },
+};
+
+export const PlansRegisterJapanesePhone: Story = {
+  ...PlansRegisterJapanese,
+  globals: { ...JA, width: 'phone-375' },
+};
+
+/** A task with no plans shows the Results tab as it always did. */
+export const NoPlansJapanese: Story = {
+  args: { state: { status: 'ready', results: JA_RESULTS, plans: [] } },
+  globals: JA,
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector('.plan-box')).toBeNull();
+  },
+};
+
+/** Opened from a notification: the result it names is highlighted inside its box. */
 export const FromNotification: Story = {
   args: {
-    state: { status: 'ready', results: RESULTS, plans: PLANS },
-    focusVersion: 2,
+    state: { status: 'ready', results: PLANNED, plans: PLANS },
+    focusVersion: 1,
     canRegister: true,
+    onRegister: fn(async () => {}),
   },
   globals: { width: 'phone-375', mode: 'dark' },
   play: async ({ canvasElement }) => {
-    await expect(canvasElement.querySelector('[data-result-version="2"]')).toHaveAttribute(
+    await expect(canvasElement.querySelector('[data-result-version="1"]')).toHaveAttribute(
       'data-focused',
       'true',
     );

@@ -3,153 +3,40 @@
   "owner": "U11",
   "files": [
     {
-      "file": "features/tasks/result-plans/ResultPlansSection.tsx",
+      "file": "features/tasks/result-plans/PlanBox.tsx",
       "exports": [
         {
-          "name": "ResultPlansSection",
+          "name": "PlanBox",
           "stories": [
             {
-              "id": "task-detail-resultplans--undelivered",
-              "states": ["not delivered rows", "register form opens"],
+              "id": "task-detail-planbox--undelivered",
+              "states": ["empty undelivered box", "register form opens"],
               "interaction": true
             },
             {
-              "id": "task-detail-resultplans--undelivered-phone",
-              "states": ["phone width", "dark"],
+              "id": "task-detail-planbox--undelivered-japanese",
+              "states": ["Japanese"],
               "interaction": false
             },
             {
-              "id": "task-detail-resultplans--delivered",
-              "states": ["delivered row", "open result"],
+              "id": "task-detail-planbox--delivered",
+              "states": ["holds the delivered result"],
               "interaction": true
             },
             {
-              "id": "task-detail-resultplans--delivered-phone",
-              "states": ["phone width", "dark", "Japanese"],
+              "id": "task-detail-planbox--final-box",
+              "states": ["final plan"],
               "interaction": false
             },
             {
-              "id": "task-detail-resultplans--final-only",
-              "states": ["only a final plan"],
-              "interaction": true
-            },
-            {
-              "id": "task-detail-resultplans--final-only-phone",
-              "states": ["phone width", "dark"],
-              "interaction": false
-            },
-            {
-              "id": "task-detail-resultplans--no-plans",
-              "states": ["no plans draws nothing"],
-              "interaction": true
-            },
-            {
-              "id": "task-detail-resultplans--no-plans-phone",
-              "states": ["phone width", "dark"],
-              "interaction": false
-            },
-            {
-              "id": "task-detail-resultplans--several-plans",
-              "states": ["several plans", "one delivered"],
-              "interaction": false
-            },
-            {
-              "id": "task-detail-resultplans--several-plans-phone",
-              "states": ["phone width", "dark", "Japanese"],
-              "interaction": false
-            },
-            {
-              "id": "task-detail-resultplans--read-only",
+              "id": "task-detail-planbox--read-only",
               "states": ["no register button"],
               "interaction": true
             },
             {
-              "id": "task-detail-resultplans--register-retry",
-              "states": ["failure keeps input", "try again", "closes on success"],
+              "id": "task-detail-planbox--register-retry",
+              "states": ["failure keeps input", "try again"],
               "interaction": true
-            },
-            {
-              "id": "task-detail-resultplans--undelivered-japanese",
-              "states": ["Japanese plan text"],
-              "interaction": false
-            },
-            {
-              "id": "task-detail-resultplans--delivered-japanese",
-              "states": ["Japanese plan text"],
-              "interaction": false
-            },
-            {
-              "id": "task-detail-resultplans--final-only-japanese",
-              "states": ["Japanese plan text"],
-              "interaction": false
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "file": "features/tasks/result-plans/ResultPlansDock.tsx",
-      "exports": [
-        {
-          "name": "ResultPlansDock",
-          "stories": [
-            {
-              "id": "task-detail-resultplans--editor-several-plans",
-              "states": [
-                "rows with final and delivered",
-                "add plan",
-                "delivered plan cannot be removed"
-              ],
-              "interaction": true
-            },
-            {
-              "id": "task-detail-resultplans--editor-phone",
-              "states": ["phone width", "dark", "Japanese"],
-              "interaction": false
-            },
-            {
-              "id": "task-detail-resultplans--editor-folded",
-              "states": ["folded line with count"],
-              "interaction": false
-            },
-            {
-              "id": "task-detail-resultplans--editor-japanese",
-              "states": ["Japanese plan text"],
-              "interaction": false
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "file": "features/tasks/result-plans/ResultPlansEditor.tsx",
-      "exports": [
-        {
-          "name": "ResultPlansEditor",
-          "stories": [
-            {
-              "id": "task-detail-resultplans--editor-problems",
-              "states": ["empty field"],
-              "interaction": true
-            },
-            {
-              "id": "task-detail-resultplans--editor-two-finals",
-              "states": ["two final plans"],
-              "interaction": true
-            },
-            {
-              "id": "task-detail-resultplans--editor-several-plans",
-              "states": [
-                "rows with final and delivered",
-                "add plan",
-                "delivered plan cannot be removed"
-              ],
-              "interaction": true
-            },
-            {
-              "id": "task-detail-resultplans--editor-phone",
-              "states": ["phone width", "dark", "Japanese"],
-              "interaction": false
             }
           ]
         }
@@ -162,12 +49,12 @@
           "name": "PlanRegisterForm",
           "stories": [
             {
-              "id": "task-detail-resultplans--register-form",
+              "id": "task-detail-planbox--register-form",
               "states": ["summary, link, images"],
               "interaction": false
             },
             {
-              "id": "task-detail-resultplans--register-form-phone",
+              "id": "task-detail-planbox--register-form-phone",
               "states": ["phone width", "dark", "Japanese"],
               "interaction": false
             }
