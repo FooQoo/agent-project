@@ -9,6 +9,7 @@ mod accept;
 mod answer;
 mod answer_images;
 mod ask;
+mod history_images;
 mod link;
 mod migrate;
 mod read;

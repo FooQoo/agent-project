@@ -845,3 +845,120 @@ fn a_refused_ask_writes_nothing_and_reserves_no_number() {
     assert_eq!(project["nextQuestionId"], 1);
     assert_eq!(f.ask("Fine?", &two, &[task]), "Q-1");
 }
+
+#[test]
+fn a_question_copied_into_history_keeps_which_question_an_image_came_from() {
+    let f = fixture();
+    let task = f.task("Wait for a decision");
+    let image = || RequestImage {
+        name: "layout.png".into(),
+        bytes: PNG.to_vec(),
+    };
+    let ask = |body: &str, images: Vec<RequestImage>| AskQuestion {
+        body: body.into(),
+        choices: Vec::new(),
+        recommended_choice_id: None,
+        tasks: Vec::new(),
+        images,
+    };
+    let asked = f
+        .store
+        .ask_questions(
+            &f.project,
+            AskInput {
+                held: false,
+                actor: Actor::Ai,
+                asked_by: None,
+                brainstorm: None,
+                questions: vec![
+                    ask("First ![](attachments/layout.png)", vec![image()]),
+                    ask(
+                        "Second ![](attachments/layout.png) ![](attachments/gone.png)",
+                        vec![image()],
+                    ),
+                ],
+                tasks: vec![task],
+            },
+            Utc::now(),
+        )
+        .unwrap();
+    let history = f.store.task(&f.project, task).unwrap().history;
+    let reasons: Vec<&str> = history.iter().map(|h| h.reason.as_str()).collect();
+    assert!(
+        reasons
+            .iter()
+            .any(|r| r.contains("![](attachments/Q-1/layout.png)"))
+    );
+    assert!(reasons.iter().any(|r| {
+        r.contains("![](attachments/Q-2/layout.png)") && r.contains("![](attachments/gone.png)")
+    }));
+    // The question file itself keeps the body as it was written.
+    assert!(
+        f.file(&asked[0].id)
+            .contains("First ![](attachments/layout.png)")
+    );
+
+    // Answering copies the body again, and keeps the question there too.
+    f.store
+        .answer_questions(
+            &f.project,
+            vec![AnswerItem {
+                question_id: asked[0].id.clone(),
+                choice_id: None,
+                text: Some("Ship it".into()),
+                images: Vec::new(),
+            }],
+            AnswerVia::Ui,
+            Utc::now(),
+        )
+        .unwrap();
+    let history = f.store.task(&f.project, task).unwrap().history;
+    assert!(history.iter().any(|h| {
+        h.reason.contains("Answered a question") && h.reason.contains("attachments/Q-1/layout.png")
+    }));
+}
+
+#[test]
+fn a_released_held_question_keeps_which_question_an_image_came_from() {
+    let f = fixture();
+    let task = f.task("Wait for a decision");
+    f.store
+        .ask_questions(
+            &f.project,
+            AskInput {
+                held: true,
+                actor: Actor::Ai,
+                asked_by: None,
+                brainstorm: None,
+                questions: vec![AskQuestion {
+                    body: "Held ![](attachments/layout.png) ![](attachments/gone.png)".into(),
+                    choices: Vec::new(),
+                    recommended_choice_id: None,
+                    tasks: Vec::new(),
+                    images: vec![RequestImage {
+                        name: "layout.png".into(),
+                        bytes: PNG.to_vec(),
+                    }],
+                }],
+                tasks: vec![task],
+            },
+            Utc::now(),
+        )
+        .unwrap();
+    assert!(
+        f.store
+            .task(&f.project, task)
+            .unwrap()
+            .history
+            .iter()
+            .all(|h| !h.reason.contains("Held"))
+    );
+    f.store
+        .release_held_questions(&f.project, Utc::now())
+        .unwrap();
+    let history = f.store.task(&f.project, task).unwrap().history;
+    assert!(history.iter().any(|h| {
+        h.reason.contains("![](attachments/Q-1/layout.png)")
+            && h.reason.contains("![](attachments/gone.png)")
+    }));
+}

@@ -6,6 +6,7 @@ use super::super::{
     HistoryKind, Transition, ensure_ai_task_not_done, lock_project, save_project, stamp,
     transition_event,
 };
+use super::history_images::qualify_attachment_refs;
 use super::send::{RequestImage, checked_images, stage_images};
 use super::{message_change, options_line};
 use crate::domain::{Actor, ProjectId, RunState};
@@ -199,13 +200,18 @@ impl FileStore {
                     continue;
                 }
                 let options = options_line(&question.choices);
+                let body = qualify_attachment_refs(&question.body, &question.id, |name| {
+                    staged_images[*index]
+                        .iter()
+                        .any(|(stored, _)| stored == name)
+                });
                 let english = format!(
-                    "Asked a question ({}):\n\n{}\n\nOptions: {options}",
-                    question.id, question.body
+                    "Asked a question ({}):\n\n{body}\n\nOptions: {options}",
+                    question.id
                 );
                 let japanese = format!(
-                    "質問しました（{}）:\n\n{}\n\n選択肢: {options}",
-                    question.id, question.body
+                    "質問しました（{}）:\n\n{body}\n\n選択肢: {options}",
+                    question.id
                 );
                 task.history.push(HistoryRecord {
                     at,

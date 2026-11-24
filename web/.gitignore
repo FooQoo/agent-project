@@ -4,3 +4,4 @@ dist-demo/
 .screenshots/
 storybook-static/
 .vitest/
+debug-storybook.log

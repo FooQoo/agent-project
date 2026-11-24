@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { messageAttachmentUrl, resolveMessageImage } from './messageAttachment';
+import {
+  messageAttachmentUrl,
+  resolveHistoryImage,
+  resolveMessageImage,
+} from './messageAttachment';
 
 const project = 'a'.repeat(32);
 
@@ -34,5 +38,46 @@ describe('resolveMessageImage', () => {
     'screen.png',
   ])('leaves %s unresolved', (reference) => {
     expect(resolveMessageImage(project, 'Q-3', reference)).toBeNull();
+  });
+});
+
+describe('resolveHistoryImage', () => {
+  it('resolves attachments/<Q-n>/<name> from a history entry', () => {
+    expect(resolveHistoryImage(project, 'attachments/Q-348/screen.png')).toBe(
+      `/api/projects/${project}/messages/Q-348/attachments/screen.png`,
+    );
+  });
+
+  it('keeps two questions with one image name apart', () => {
+    expect(resolveHistoryImage(project, 'attachments/Q-1/a.png')).not.toBe(
+      resolveHistoryImage(project, 'attachments/Q-2/a.png'),
+    );
+  });
+
+  it.each(['_a.png', '-a.png', 'a_b-c.d.webp', 'a'.repeat(100)])(
+    'accepts the plain name %s',
+    (name) => {
+      expect(resolveHistoryImage(project, `attachments/Q-1/${name}`)).toBe(
+        `/api/projects/${project}/messages/Q-1/attachments/${name}`,
+      );
+    },
+  );
+
+  it.each([
+    `${'https:'}//e.test/a.png`,
+    'attachments/screen.png',
+    'attachments/Q-1/',
+    'attachments//a.png',
+    'attachments/Q-0/a.png',
+    'attachments/Q-01/a.png',
+    'attachments/Q-x/a.png',
+    'attachments/R-1/a.png',
+    'attachments/Q-1/.hidden',
+    'attachments/Q-1/a b.png',
+    'attachments/Q-1/../a.png',
+    'attachments/Q-1/sub/a.png',
+    `attachments/Q-1/${'a'.repeat(101)}`,
+  ])('leaves %s unresolved', (reference) => {
+    expect(resolveHistoryImage(project, reference)).toBeNull();
   });
 });

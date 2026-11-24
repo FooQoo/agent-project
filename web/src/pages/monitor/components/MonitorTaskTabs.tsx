@@ -1,6 +1,7 @@
 import { AcceptanceTabView } from '../../../features/tasks/detail/AcceptanceTabView';
 import { HistoryTimeline } from '../../../features/tasks/history/HistoryTimeline';
 import type { Problem } from '../../../shared/api/contracts';
+import { resolveHistoryImage } from '../../../shared/api/messageAttachment';
 import { useTaskDetail } from '../../../shared/data/react';
 import { useWrite } from '../../../shared/data/react/use-write';
 import { ResultsTab } from '../../../features/tasks/results/ResultsTab';
@@ -90,6 +91,7 @@ export function TaskHistoryTab({
           resolveAttachment={attachmentResolver((id) =>
             resolvers.attachmentUrl(item.projectId, item.task.id, id),
           )}
+          resolveImage={(src) => resolveHistoryImage(item.projectId, src)}
         />
       )}
     </MonitorSection>
