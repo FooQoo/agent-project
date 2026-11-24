@@ -19,7 +19,17 @@ Before you change behavior, read the [developer reference](../index.md) for the 
 - When you add an `agpj` command or a top-level field of the progress table, decide whether it creates something an agent could forget. Add a nudge rule, or record `NoRule` with a reason, in `src/nudge/coverage.rs`; the tests fail until you do. See [When you add a feature](../concepts/agents.md#when-you-add-a-feature).
 - Define a text option of the `agpj` CLI so that it takes exactly one value and never takes the next flag as that value: do not use `allow_hyphen_values`, `trailing_var_arg`, or `last(true)`. Text that starts with `-` is passed as `--opt=- text`, from a file, or as `-` for standard input. An option or argument that takes several values (`num_args` above 1) or splits a value (`value_delimiter`) must be reviewed: list it with a reason in the allowlists of `tests/cli_invariants.rs`. That test checks the whole command tree, and `tests/docs_examples.rs` parses every `agpj` example in the documentation, the skill pages, the README, and the help text, so a stale example fails the build.
 
-## UI changes
+## Screen design and changes
+
+### Design policy
+
+- Design from use cases. Write down who does the operation, when, and for what, and build only for situations that really happen, so that no screen exists for an operation nobody performs. For example, a person does not register results; agents do that with the CLI. An operation only an agent performs, or a rare recovery operation, belongs in the CLI or stays quiet in an existing place. Changing an assignee, for example, is only for handing over a task that went wrong.
+- Screens are already crowded. Before you add a button, panel, dialog, or field, look for a way to extend or improve an existing screen, tab, or part, because every new element competes with the ones already there. Prefer removing or replacing an element over adding one, and state the reason in the pull request whenever you do add a new one.
+- Buttons that sit side by side as choices have the same width and height, even when one is primary, so that size does not suggest which choice is right. Distinguish them by style.
+- When a short UI request can be read in more than one way, restate its target and purpose before you implement it, so that you do not build the wrong thing.
+- Show a new screen as a Storybook mock and settle it before you implement it, because changing a mock is cheaper than changing finished code. See [Storybook](./setup.md#storybook) for how to run it.
+
+### Implementation rules
 
 - Use the existing shadcn/ui Dialog and Button components for modal flows. Reuse the shared overlay and theme styles instead of implementing an independent modal shell.
 - Size buttons only through the shared parts: the `size` of `Button`, `DialogActions` for the buttons that end a dialog or a confirm, `IconLabel` for an icon with its text, and `ConfirmPanel` for a confirm inside a panel. A stylesheet rule with `cursor: pointer` that gives itself a fixed `px` height or width is reported by Biome (`web/biome-plugins/no-fixed-clickable-size.grit`), in the editor and in `pnpm --dir web check`. A rule that must keep a fixed size (a list row, a slider) says why in a comment before the declaration: `/* biome-ignore lint/plugin: reason */`.
