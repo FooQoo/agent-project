@@ -141,6 +141,7 @@ fn check_summary(body: &str, project: &ProjectId) -> Summary {
                 "agentStatus",
                 "assignee",
                 "draft",
+                "externalEdit",
                 "position",
                 "epicId",
                 "acceptance",

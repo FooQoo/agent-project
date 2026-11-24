@@ -29,6 +29,7 @@ const READ_ONLY: Cover = NoRule("read-only");
 /// subcommands is covered through them.
 pub const COMMANDS: &[(&str, Cover)] = &[
     ("add", NoRule("creates a Todo task; nothing to record yet")),
+    ("acceptance check", Rules(&["conditions-after-merge"])),
     ("attachment add", Rules(&["question-images"])),
     ("attachment get", READ_ONLY),
     ("attachment ls", READ_ONLY),

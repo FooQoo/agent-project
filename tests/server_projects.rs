@@ -435,7 +435,7 @@ fn serve_reconciles_existing_completed_tasks_and_rechecks_external_task_edits() 
         board["tasks"].as_array().is_some_and(|tasks| {
             tasks
                 .iter()
-                .any(|task| task["id"] == edited.id && task["taskStatus"] == "done")
+                .any(|task| task["id"] == edited.id && task["externalEdit"] == true)
         })
     });
     let edited_json = board["tasks"]
@@ -444,7 +444,8 @@ fn serve_reconciles_existing_completed_tasks_and_rechecks_external_task_edits() 
         .iter()
         .find(|task| task["id"] == edited.id)
         .unwrap();
-    assert_eq!(edited_json["taskStatus"], "done");
+    assert_eq!(edited_json["taskStatus"], "doing");
+    assert_eq!(edited_json["externalEdit"], true);
     let detail = server.get(&format!(
         "/api/projects/{project}/tasks/{}/detail?sections=history",
         edited.id
@@ -459,6 +460,32 @@ fn serve_reconciles_existing_completed_tasks_and_rechecks_external_task_edits() 
         Some(&json!({"answers": [{"questionId": request, "choiceId": "a"}]}).to_string()),
     );
     assert_eq!(answer.status, 200, "{}", answer.body);
+    let board = read_until(&server, &board_path, |board| {
+        board["tasks"].as_array().is_some_and(|tasks| {
+            tasks.iter().any(|task| {
+                task["id"] == pending_task.id
+                    && task["externalEdit"] == true
+                    && task["awaitingAnswer"] == false
+            })
+        })
+    });
+    let pending_json = board["tasks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|task| task["id"] == pending_task.id)
+        .unwrap();
+    assert_eq!(pending_json["taskStatus"], "doing");
+    assert_eq!(pending_json["externalEdit"], true);
+    let confirmed = server.write(
+        "POST",
+        &format!(
+            "/api/projects/{project}/tasks/{}/external-edit/confirm",
+            pending_task.id
+        ),
+        Some("{}"),
+    );
+    assert_eq!(confirmed.status, 200, "{}", confirmed.body);
     let board = read_until(&server, &board_path, |board| {
         board["tasks"].as_array().is_some_and(|tasks| {
             tasks
