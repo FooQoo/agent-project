@@ -475,3 +475,27 @@ fn the_only_live_default_agent_can_start_without_a_connection() {
         Column::Doing
     );
 }
+
+#[test]
+fn a_board_written_without_a_registry_still_lets_a_session_work() {
+    // A restored backup or a hand-written fixture has Doing cards and no `agents.json`: with
+    // nobody registered, the session works as the card's own agent instead of being refused.
+    let fx = fx();
+    let id = fx.task(Assignee::Ai);
+    fx.store
+        .move_work_task_for_user(&fx.project, id, Column::Doing, ctx(Actor::Human), t0())
+        .unwrap();
+    let registry = std::fs::read_dir(fx.root.path().join("shared/projects"))
+        .unwrap()
+        .flatten()
+        .map(|e| e.path().join("agents.json"))
+        .find(|p| p.exists())
+        .unwrap();
+    std::fs::remove_file(registry).unwrap();
+
+    let _session = enter_session_writes(fx.root.path().to_path_buf());
+    fx.store.add_result(&fx.project, id, input(), t0()).unwrap();
+    fx.store
+        .move_work_task(&fx.project, id, Column::Done, ctx(Actor::Ai), t0())
+        .ok();
+}

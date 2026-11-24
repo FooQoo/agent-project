@@ -84,14 +84,19 @@ pub(in crate::file_store::ops) fn check_session_write(
         .agents
         .iter()
         .any(|agent| !agent.is_default && agent.archived_at.is_none());
-    let verified_agent_id = match crate::agent::connection_store::load_secret(&data_dir, &project) {
-        Some(secret) => verify_locked(shared, dir, &secret, stamp(chrono::Utc::now()))?.agent_id,
-        None if !has_other_live_agent => default_id.clone().ok_or(AgpjError::NotConnected)?,
-        None => return Err(AgpjError::NotConnected),
-    };
     let old_agent = match old {
         Some(o) => o.agent_id.clone(),
         None => task.agent_id.clone(),
+    };
+    let verified_agent_id = match crate::agent::connection_store::load_secret(&data_dir, &project) {
+        Some(secret) => verify_locked(shared, dir, &secret, stamp(chrono::Utc::now()))?.agent_id,
+        // Nobody else is registered: the session acts as the card's own agent. A board whose
+        // files were written directly (a restored backup, a fixture) may have no default agent yet.
+        None if !has_other_live_agent => match default_id.clone().or_else(|| old_agent.clone()) {
+            Some(id) => id,
+            None => return Ok(()),
+        },
+        None => return Err(AgpjError::NotConnected),
     };
     let owner = old_agent
         .clone()
