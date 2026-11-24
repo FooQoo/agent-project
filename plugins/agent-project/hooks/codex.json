@@ -31,8 +31,7 @@
           {
             "type": "command",
             "command": "agpj hook --agent codex",
-            "timeout": 10,
-            "additionalContextLimit": 0
+            "timeout": 10
           }
         ]
       }

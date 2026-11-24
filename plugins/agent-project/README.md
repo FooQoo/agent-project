@@ -81,7 +81,7 @@ Inspect `/hooks` and review the fixed command. The `agent-project` Skill does no
 
 ## Codex CLI and Codex App
 
-`hooks/codex.json` registers the fixed command for `SessionStart` (startup, resume, clear, compact) `PostToolUse`, and `Stop`. It sets `additionalContextLimit` to `0` so that the 256 KiB check done by `agpj` is the only limit.
+`hooks/codex.json` registers the fixed command for `SessionStart` (startup, resume, clear, compact) `PostToolUse`, and `Stop`. The `SessionStart` and `PostToolUse` handlers set `additionalContextLimit` to `0`, leaving the 256 KiB check in `agpj` as the limit on additional context. The `Stop` handler uses the continuation response supported by that event.
 
 ## After renaming a project
 
