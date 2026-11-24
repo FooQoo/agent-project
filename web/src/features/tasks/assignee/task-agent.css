@@ -1,0 +1,59 @@
+.task-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.task-agent > span:not(.agent-avatar) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-agent--trigger {
+  padding: 0.2rem 0.35rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.task-agent--trigger:hover {
+  background: var(--muted);
+}
+
+.task-agent__menu {
+  width: min(19rem, 90vw);
+  max-height: var(--radix-dropdown-menu-content-available-height);
+  overflow-y: auto;
+}
+
+.task-agent__loading {
+  padding: 0.35rem 0.5rem;
+}
+
+.task-agent__options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.task-agent__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 0.25rem;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  text-align: start;
+}
+
+.monitor-task-agent {
+  margin: 0.2rem 0.75rem 0.25rem;
+}

@@ -1,0 +1,32 @@
+.agent-settings__list {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0.75rem 0;
+  padding: 0;
+}
+
+.agent-settings__list > li {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.agent-settings__form,
+.agent-settings__code {
+  display: grid;
+  gap: 0.5rem;
+  margin-block: 0.5rem;
+}
+
+.agent-settings__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.agent-settings__default {
+  margin-block-end: 0.75rem;
+}

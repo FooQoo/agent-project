@@ -55,6 +55,8 @@ pub struct SummaryTask {
     pub task_status: Column,
     pub agent_status: RunState,
     pub assignee: Assignee,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub assigned_agent: Option<crate::file_store::projection::AssignedAgent>,
     pub draft: Option<crate::domain::Draft>,
     #[serde(default)]
     pub external_edit: bool,

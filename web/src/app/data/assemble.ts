@@ -47,6 +47,7 @@ export function toTaskSummary(task: SummaryTask, epics: readonly SummaryEpic[]):
     id: task.id,
     title: task.title,
     assignee: task.assignee,
+    assignedAgent: task.assignedAgent,
     taskStatus: task.taskStatus,
     taskStatusChangedAt: task.taskStatusChangedAt,
     position: task.position,

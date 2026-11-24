@@ -34,10 +34,10 @@ pub(in crate::file_store::ops) use guard::{
 };
 pub use model::*;
 use model::{ConnectCode, ConnectionRecord, ConnectionsFile};
-pub(crate) use registry::registered_default_agent_id;
 pub(in crate::file_store::ops) use registry::{
     ensure_agent_live_locked, has_other_live_agents_locked,
 };
+pub(crate) use registry::{registered_agents, registered_default_agent_id};
 pub(crate) use store::digest_of;
 pub(in crate::file_store::ops) use store::verify_locked;
 use store::*;

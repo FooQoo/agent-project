@@ -3,10 +3,15 @@
 use super::*;
 use std::path::Path;
 
+/// The agents in a readable registry, including archived names that cards still reference.
+pub(crate) fn registered_agents(shared: &Path, project_dir: &Path) -> Vec<AgentRecord> {
+    let file: AgentsFile = load(shared, &agents_path(project_dir)).unwrap_or_default();
+    file.agents
+}
+
 /// The active default agent ID in a readable project registry.
 pub(crate) fn registered_default_agent_id(shared: &Path, project_dir: &Path) -> Option<String> {
-    let file: AgentsFile = load(shared, &agents_path(project_dir)).ok()?;
-    file.agents
+    registered_agents(shared, project_dir)
         .into_iter()
         .find(|agent| agent.is_default && agent.archived_at.is_none())
         .map(|agent| agent.id)
@@ -42,6 +47,20 @@ pub(in crate::file_store::ops) fn ensure_agent_live_locked(
 }
 
 impl FileStore {
+    /// Prepare the default agent for a board that does not have one yet.
+    pub fn prepare_default_agent(
+        &self,
+        project: &ProjectId,
+        now: DateTime<Utc>,
+    ) -> Result<String, AgpjError> {
+        let shared = self.shared_dir();
+        let (dir, _lock) = lock_project(shared, project)?;
+        let language = self
+            .history_language
+            .unwrap_or(crate::file_store::history_language::HistoryLanguage::English);
+        default_agent_id_locked(shared, &dir, language, now)
+    }
+
     /// Whether this project has a live agent in addition to its default agent.
     pub fn has_agents(&self, project: &ProjectId) -> Result<bool, AgpjError> {
         Ok(self

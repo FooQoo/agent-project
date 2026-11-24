@@ -1,0 +1,42 @@
+.agent-avatar {
+  display: inline-grid;
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: hsl(var(--agent-hue) 65% 83%);
+  color: hsl(var(--agent-hue) 50% 22%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.agent-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.agent-identity__text {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.agent-identity__text > span,
+.agent-identity__status {
+  font-size: 0.75rem;
+}
+
+.agent-identity__status {
+  margin-inline-start: auto;
+  flex: 0 0 auto;
+}
+
+.card-agent {
+  display: inline-flex;
+}

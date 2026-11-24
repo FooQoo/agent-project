@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { parseAsString, useQueryState } from 'nuqs';
 import { SettingsDialog } from '../../features/settings/ui/SettingsDialog';
 import type { PreferencesEndpoint } from '../../shared/preferences';
@@ -8,6 +8,9 @@ import { requestTutorial } from '../onboarding/tutorialRequest';
 import { ModeSettingsSection } from '../modeSlot';
 import { NotificationSettingsRow } from '../notificationSlot';
 import { ResidentSettingsRow } from '../residentSlot';
+import { AgentConnectionEntryRow } from '../../features/agent-connection/AgentConnectionEntryRow';
+import { AgentConnectionSettings } from '../../features/agent-connection/AgentConnectionSettings';
+import { onDismissSettingsSheets } from '../../shared/lib/sheets/dismissSheets';
 
 /**
  * The settings dialog of the board's phone screen: the language and theme, and the row that shows
@@ -30,33 +33,54 @@ export function PhoneSettings({
 }) {
   // The project the board shows, from the same `project` query the board reads.
   const [projectId] = useQueryState('project', parseAsString);
+  const [agentsOpen, setAgentsOpen] = useState(false);
+  useEffect(() => onDismissSettingsSheets(() => setAgentsOpen(false)), []);
   return (
-    <SettingsDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      restoreFocusRef={restoreFocusRef}
-      preferencesEndpoint={preferencesEndpoint}
-      kind="sheet"
-      extra={
-        <>
-          <ModeSettingsSection projectId={projectId} />
-          <div className="settings__entries">
-            <TutorialEntryRow
-              onStart={() => {
-                onOpenChange(false);
-                requestTutorial();
-              }}
-            />
-            {residentRow ?? (
-              <ResidentSettingsRow projectId={projectId} onClose={() => onOpenChange(false)} />
-            )}
-            {notificationRow ??
-              (preferencesEndpoint ? (
-                <NotificationSettingsRow onClose={() => onOpenChange(false)} />
-              ) : null)}
-          </div>
-        </>
-      }
-    />
+    <>
+      <SettingsDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        restoreFocusRef={restoreFocusRef}
+        preferencesEndpoint={preferencesEndpoint}
+        kind="sheet"
+        extra={
+          <>
+            <ModeSettingsSection projectId={projectId} />
+            <div className="settings__entries">
+              <TutorialEntryRow
+                onStart={() => {
+                  onOpenChange(false);
+                  requestTutorial();
+                }}
+              />
+              {preferencesEndpoint && projectId && (
+                <AgentConnectionEntryRow
+                  onOpen={() => {
+                    onOpenChange(false);
+                    setAgentsOpen(true);
+                  }}
+                />
+              )}
+              {residentRow ?? (
+                <ResidentSettingsRow projectId={projectId} onClose={() => onOpenChange(false)} />
+              )}
+              {notificationRow ??
+                (preferencesEndpoint ? (
+                  <NotificationSettingsRow onClose={() => onOpenChange(false)} />
+                ) : null)}
+            </div>
+          </>
+        }
+      />
+      {preferencesEndpoint && projectId && agentsOpen && (
+        <AgentConnectionSettings
+          key={projectId}
+          projectId={projectId}
+          onOpenChange={setAgentsOpen}
+          restoreFocusRef={restoreFocusRef}
+          kind="sheet"
+        />
+      )}
+    </>
   );
 }

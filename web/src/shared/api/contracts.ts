@@ -128,10 +128,16 @@ export interface AcceptanceCounts {
  * A task as a list shows it: no body, condition text, history or files. A full `Task` is also a
  * `TaskSummary`, so a screen that needs only this part takes either.
  */
+export interface AssignedAgent {
+  id: string;
+  name: string;
+}
+
 export interface TaskSummary {
   id: number;
   title: string;
   assignee: Assignee;
+  assignedAgent?: AssignedAgent;
   taskStatus: ColumnName;
   /** Time of the last real lane change; independent of later notes and edits. */
   taskStatusChangedAt: string;
@@ -173,6 +179,7 @@ export interface Task {
   /** The version the task is planned for; `null` or absent when unplanned. */
   plannedVersion?: string | null;
   assignee: Assignee;
+  assignedAgent?: AssignedAgent;
   taskStatus: ColumnName;
   /** Time of the last real lane change; independent of later notes and edits. */
   taskStatusChangedAt: string;

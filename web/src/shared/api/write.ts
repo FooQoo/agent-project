@@ -24,8 +24,16 @@ export async function postEmpty(path: string): Promise<{ task: Task }> {
 }
 
 export async function postTask<T>(path: string, value: unknown): Promise<T> {
+  return writeJson('POST', path, value);
+}
+
+export async function writeJson<T>(
+  method: 'POST' | 'PATCH',
+  path: string,
+  value: unknown,
+): Promise<T> {
   const response = await fetch(path, {
-    method: 'POST',
+    method,
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),

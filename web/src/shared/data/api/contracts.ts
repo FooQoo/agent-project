@@ -3,6 +3,7 @@
 // This file has types only; parsing is in `parse.ts` and the Detail order checks in
 // `detail-stream.ts`.
 import type {
+  AssignedAgent,
   Assignee,
   Attachment,
   Choice,
@@ -47,6 +48,7 @@ export interface SummaryTask {
   /** The task refers to an open question (or its questions cannot be read). */
   awaitingAnswer: boolean;
   assignee: Assignee;
+  assignedAgent?: AssignedAgent;
   draft: Draft | null;
   externalEdit?: boolean;
   position: number;

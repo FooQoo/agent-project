@@ -8,7 +8,7 @@ use axum::Router;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
-use axum::routing::{get, patch, put};
+use axum::routing::{get, patch, post, put};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -25,6 +25,10 @@ pub(super) fn routes() -> Router<Arc<AppState>> {
         .route(
             "/api/projects/{project_id}/agents",
             get(list_agents).post(register_agent),
+        )
+        .route(
+            "/api/projects/{project_id}/agents/default",
+            post(prepare_default_agent),
         )
         .route(
             "/api/projects/{project_id}/agents/{agent_id}",
@@ -82,6 +86,26 @@ pub(super) async fn register_agent(
         Ok(agent) => {
             refresh_index(&state);
             json_response(StatusCode::CREATED, &json!({"agent": agent}))
+        }
+        Err(error) => agpj_error_response(&error),
+    }
+}
+
+/// `POST .../agents/default`: prepare the default agent for an existing board.
+pub(super) async fn prepare_default_agent(
+    headers: HeaderMap,
+    State(state): State<Arc<AppState>>,
+    Path(raw_project): Path<String>,
+) -> Response {
+    let project = project_of!(raw_project);
+    let saved = with_request_files(&state, &headers, move |files| {
+        files.prepare_default_agent(&project, SystemClock.now())
+    })
+    .await;
+    match saved {
+        Ok(agent_id) => {
+            refresh_index(&state);
+            json_response(StatusCode::OK, &json!({"agentId": agent_id}))
         }
         Err(error) => agpj_error_response(&error),
     }

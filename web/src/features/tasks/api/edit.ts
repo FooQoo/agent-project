@@ -95,3 +95,8 @@ export function confirmExternalEdit(
     expectedDocumentVersion,
   });
 }
+
+/** Gives the card to a registered agent without moving it to another lane. */
+export async function assignAgent(projectId: string, taskId: number, agentId: string) {
+  return sendTask('PUT', `${projectPath(projectId)}/tasks/${taskId}/agent`, { agentId });
+}
