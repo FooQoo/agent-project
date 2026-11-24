@@ -28,7 +28,6 @@ const TASK_FIELDS = [
   'awaitingAnswer',
   'assignee',
   'draft',
-  'externalEdit',
   'position',
   'epicId',
   'acceptance',
