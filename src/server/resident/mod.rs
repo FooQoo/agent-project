@@ -14,6 +14,7 @@
 mod autostart;
 mod board;
 pub mod cli;
+mod connection;
 pub mod driver;
 mod events;
 mod health;
@@ -270,11 +271,9 @@ impl Launcher {
         let _gate = self.gate();
         self.reset_plans();
         let targets = self.stop_targets(reason);
-        if targets.is_empty() {
-            return Ok(false);
-        }
         terminate(&targets, self.stop_grace);
-        Ok(true)
+        let disconnected = self.disconnect_child()?;
+        Ok(!targets.is_empty() || disconnected)
     }
 
     /// Stop every launched session (the server is shutting down).

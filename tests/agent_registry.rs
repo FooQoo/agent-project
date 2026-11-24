@@ -866,6 +866,69 @@ fn session_cmd(home: &std::path::Path, session: &str, args: &[&str]) -> std::pro
 }
 
 #[test]
+fn cli_runs_and_resumes_the_default_agents_card_on_its_connection() {
+    let fx = fx();
+    let id = fx.doing_task();
+    let secret = fx.connect("A-1", false, Utc::now()).unwrap();
+    let connection = fx
+        .store
+        .verify_connection(&fx.project, &secret, Utc::now())
+        .unwrap();
+    let run = |args: &[&str]| {
+        let output = session_cmd(fx._root.path(), "resident", args)
+            .env("AGPJ_CONNECTION_SECRET", &secret)
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+    };
+    let task = || fx.store.task(&fx.project, id).unwrap();
+    run(&[
+        "--project",
+        "Alpha",
+        "state",
+        &id.to_string(),
+        "running",
+        "--actor",
+        "ai",
+    ]);
+    assert_eq!(
+        task().run_connection_id.as_ref(),
+        Some(&connection.connection_id)
+    );
+
+    let question = qa::ask(
+        &fx.store,
+        &fx.project,
+        &[id],
+        "Which way?",
+        &[("a", "A"), ("b", "B")],
+    );
+    assert_eq!(task().agent_status, RunState::Paused);
+    qa::answer(&fx.store, &fx.project, &question.id, Some("a"), None);
+    run(&[
+        "--project",
+        "Alpha",
+        "message",
+        "accept",
+        &question.id,
+        "--actor",
+        "ai",
+    ]);
+    assert_eq!(task().agent_status, RunState::Running);
+    assert_eq!(
+        task().run_connection_id.as_ref(),
+        Some(&connection.connection_id)
+    );
+
+    let paused = fx
+        .store
+        .disconnect_session(&fx.project, &secret, Utc::now())
+        .unwrap();
+    assert_eq!(paused, vec![id]);
+    assert_eq!(task().agent_status, RunState::Paused);
+}
+
+#[test]
 fn a_revoked_secret_lets_the_session_connect_to_another_agent() {
     let home = tempfile::tempdir().unwrap();
     assert!(
