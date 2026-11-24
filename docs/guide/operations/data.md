@@ -59,6 +59,8 @@ A `task.json` or `epic.json` that holds `"draft": "ai"` is an invalid file: the 
 
 Each project's `docs/` folder holds your own Markdown documents, which you read and edit from **Docs** in the board header menu. Agent Project creates the folder with a short `README.md` and an empty `docs/release/` folder (an existing project gets `docs/release/` the first time you add or generate a version), but it does not treat the files as board data: changing them never changes the board, with one exception: the `*.md` files directly inside `docs/release/` are the project's list of versions (`v1.8.0.md` lists `v1.8.0`), so adding or removing one changes that list. See [Project docs](../watch/docs).
 
+Agent Project checks task ownership when supported CLI operations save a task. These checks do not prevent a program with OS write access from changing `TASK.md`, `task.json`, or other shared files directly. They are coordination checks, not filesystem access controls.
+
 ## Projects and folders
 
 Most commands name the project with `--project NAME`. A project keeps its ID when you rename it, so folder registrations, tasks, and history follow the new name.

@@ -12,7 +12,7 @@ pub(in crate::file_store::ops) fn has_live_agents_locked(
     Ok(agents
         .agents
         .iter()
-        .any(|agent| agent.archived_at.is_none() && !agent.is_default))
+        .any(|agent| agent.archived_at.is_none()))
 }
 
 /// A card that enters Doing with an agent needs that agent to still be live: an archived agent
@@ -33,13 +33,12 @@ pub(in crate::file_store::ops) fn ensure_agent_live_locked(
 }
 
 impl FileStore {
-    /// Whether the project has a live agent. Connections are required once a person has
-    /// registered the first agent; a project without agents has nobody to be confused with.
+    /// Whether the project has a live agent. Connections are required once an agent exists.
     pub fn has_agents(&self, project: &ProjectId) -> Result<bool, AgpjError> {
         Ok(self
             .list_agents(project)?
             .iter()
-            .any(|agent| agent.archived_at.is_none() && !agent.is_default))
+            .any(|agent| agent.archived_at.is_none()))
     }
 
     /// The project's agents, oldest first, archived ones last.

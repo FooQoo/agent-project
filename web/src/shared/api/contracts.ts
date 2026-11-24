@@ -151,6 +151,8 @@ export interface TaskSummary {
   createdAt?: string;
   /** A draft is read-only for agents until a person finalizes it. */
   draft: Draft | null;
+  /** A direct TASK.md edit is awaiting a person's confirmation. */
+  externalEdit?: boolean;
   /** The conditions themselves, or only their counts where the text is not loaded. */
   acceptance: AcceptanceItem[] | AcceptanceCounts;
   /** The conditions cannot be read from the frontmatter. */

@@ -20,7 +20,7 @@ For causes and fixes of the common ones, see [Troubleshooting](../troubleshootin
 | `send_with_open_questions` | A person's `mv <id> todo`, `epic send`, or Web move to Todo targets a plan with open questions and no confirmation (`--force`, or `ack: true` in the API). Nothing is saved; the message lists the question IDs. After a confirmed send the question stays and the task is Awaiting answer until it is answered. | 1 | 409 |
 | `epic_is_draft` | A CLI `epic edit`, or `epic edit --waves`, targets a person's draft epic; or a person sends an epic in a person's draft. | 1 | 409 |
 | `human_only` | An agent withdraws a request, confirms a send with open questions (`--force`), runs `mv ... backlog`, or moves a task from Doing back to Todo ("moving a task from Doing back to Todo is for a person only."). Only a person can. | 1 | 403 |
-| `not_connected` | The session has no connection to an agent: it never ran `agpj connect`, or the secret is unknown. Setting a run state needs one once the project has an agent. | 1 | 403 |
+| `not_connected` | The session has no connection to an agent: it never ran `agpj connect`, or the secret is unknown. Starting or changing an AI task from Doing onward needs one once an agent exists. | 1 | 403 |
 | `connection_replaced` | The connection was revoked because the user switched the agent to another session. | 1 | 403 |
 | `not_assignee` | The task belongs to another agent or to a person. | 1 | 403 |
 | `agent_busy` | The agent already has an active connection; only a code the user issued with Switch replaces it. | 1 | 409 |

@@ -38,6 +38,9 @@ impl FileStore {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, task_id)?;
+        if actor == Actor::Ai {
+            super::super::assignment::ensure_session_may_write(shared, &project_dir, &task)?;
+        }
         if task.archived_at.is_some() {
             return Err(AgpjError::TaskArchived { id: task_id });
         }

@@ -39,6 +39,33 @@ impl FileStore {
         let index = QaIndex::load(shared, &project_dir)?;
 
         for id in reader::task_ids(&project_dir)? {
+            // Reconcile direct edits before considering automatic completion.
+            let dir = super::super::layout::task_dir(&project_dir, id);
+            let meta_path = super::super::layout::task_json(&dir);
+            let md_path = super::super::layout::task_md(&dir);
+            let metadata = std::fs::read(&meta_path).ok().and_then(|bytes| {
+                serde_json::from_slice::<super::super::model::TaskMetadata>(&bytes).ok()
+            });
+            let Some(metadata) = metadata else { continue };
+            let Ok(markdown) = std::fs::read(&md_path) else {
+                continue;
+            };
+            let mismatched = metadata
+                .content_digest
+                .as_ref()
+                .is_some_and(|digest| *digest != super::save::content_digest(&markdown));
+            if mismatched || metadata.content_digest.is_none() {
+                let Ok(task) = reader::read_task_strict(shared, project, id) else {
+                    continue;
+                };
+                super::save_task_planning(shared, &project_dir, &task)?;
+                changed = true;
+            }
+            if metadata.external_edit
+                || (mismatched && matches!(metadata.task_status, Column::Doing | Column::Done))
+            {
+                continue;
+            }
             let Ok(loaded) = reader::read_task_lenient(shared, project, id) else {
                 continue;
             };

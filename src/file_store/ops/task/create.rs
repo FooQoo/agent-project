@@ -76,9 +76,11 @@ fn write_new_task(
                     })?,
                 None => body,
             };
+        let mut metadata = TaskMetadata::from(task);
+        metadata.content_digest = Some(super::super::save::content_digest(body.as_bytes()));
         io::write_json(
             &layout::task_json(&temp),
-            &TaskMetadata::from(task),
+            &metadata,
             &format!("{label}/task.json"),
         )?;
         io::write_atomic(
@@ -199,6 +201,8 @@ impl FileStore {
             },
             assignment_generation: 1,
             run_connection_id: None,
+            content_digest: None,
+            external_edit: false,
             release_completed_at: None,
             history: vec![transition_event(Transition {
                 language,

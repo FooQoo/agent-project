@@ -17,6 +17,8 @@ Several agents, the CLI, the web server, and text editors may touch the same fil
 - When the server index is involved, locks are taken in the order index, then project. State updates release the project lock before updating the index and notifying.
 - **Direct edits take no lock.** An editor that saves `TASK.md` or `EPIC.md` is not coordinated with the CLI; the last save wins. Board files have no revision-number conflict detection; only [project docs](#project-docs) do.
 
+Task writes store a SHA-256 digest of the exact `TASK.md` bytes in `task.json`. On first reconciliation, tasks created before the digest existed are bootstrapped from their current file without being marked as externally edited. A later mismatch is detected under the project lock: Backlog and Todo edits are accepted, while Doing and Done edits set `externalEdit` and add one history entry. The board shows a confirmation action; automatic Done remains paused until a person confirms the current file. This detects direct edits but does not prevent an operating-system process from writing them.
+
 ## Saving a task
 
 A task's state (`task.json`) and its history (`TASK.md`) must never disagree, so they are committed as one pair through a durable journal in `.internal/transactions/`:

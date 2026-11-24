@@ -17,6 +17,7 @@ import { AcceptanceTabView } from './AcceptanceTabView';
 import { ResultsTab } from '../results/ResultsTab';
 import { DetailSectionView } from './DetailSection';
 import { DetailHeader } from './DetailHeader';
+import { confirmExternalEdit } from '../api/edit';
 import './detail.css';
 
 export interface TaskDetailViewProps {
@@ -106,6 +107,9 @@ export function TaskDetailView({
   });
   // The active panel scrolls the document; a long one is drawn only near the viewport.
   const [scroller, setScroller] = useState<HTMLElement | null>(null);
+  const [confirmingExternalEdit, setConfirmingExternalEdit] = useState(false);
+  const [externalEditError, setExternalEditError] = useState(false);
+  const [externalEditConfirmed, setExternalEditConfirmed] = useState(false);
   const panelRef = (id: DetailTab) => (tab === id ? setScroller : undefined);
   const ownProblems = problems.filter((problem) =>
     problem.file.startsWith(`projects/${projectId}/tasks/${task.id}/`),
@@ -221,6 +225,28 @@ export function TaskDetailView({
         </span>
       </div>
       {readOnlyDraft && task.draft !== null && <DraftStatus />}
+      {task.externalEdit && !externalEditConfirmed && (
+        <section className="detail__external-edit" role="status">
+          <p>{t('detail.externalEditNotice')}</p>
+          <button
+            type="button"
+            disabled={confirmingExternalEdit}
+            onClick={() => {
+              setConfirmingExternalEdit(true);
+              setExternalEditError(false);
+              void confirmExternalEdit(projectId, task.id)
+                .then(() => setExternalEditConfirmed(true))
+                .catch(() => setExternalEditError(true))
+                .finally(() => setConfirmingExternalEdit(false));
+            }}
+          >
+            {confirmingExternalEdit
+              ? t('detail.externalEditConfirming')
+              : t('detail.externalEditConfirm')}
+          </button>
+          {externalEditError && <p role="alert">{t('detail.externalEditFailed')}</p>}
+        </section>
+      )}
       {children}
       <DetailTabs
         idBase={idBase}

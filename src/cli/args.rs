@@ -68,6 +68,8 @@ pub enum Command {
     Add(AddArgs),
     /// Change a task's title or description
     Edit(EditArgs),
+    /// Mark an acceptance condition as verified
+    Acceptance(AcceptanceArgs),
     /// Move a task to todo, doing, or done (a person can also take an unstarted Todo task back to backlog)
     Mv(MvArgs),
     /// Report a task's run state: idle or running
@@ -138,6 +140,7 @@ impl Command {
             Command::Init(_) => "init",
             Command::Add(_) => "add",
             Command::Edit(_) => "edit",
+            Command::Acceptance(_) => "acceptance",
             Command::Mv(_) => "mv",
             Command::State(_) => "state",
             Command::Connect(_) => "connect",
@@ -170,11 +173,12 @@ impl Command {
     }
 }
 
-pub const SUBCOMMAND_NAMES: [&str; 27] = [
+pub const SUBCOMMAND_NAMES: [&str; 28] = [
     "project",
     "init",
     "add",
     "edit",
+    "acceptance",
     "mv",
     "state",
     "history",
@@ -297,4 +301,22 @@ fn subcommand_in(args: &[OsString]) -> Option<String> {
         .find(|arg| !arg.starts_with('-'))
         .filter(|arg| SUBCOMMAND_NAMES.contains(arg))
         .map(str::to_string)
+}
+
+#[derive(clap::Args, Debug)]
+pub struct AcceptanceArgs {
+    #[command(subcommand)]
+    pub command: AcceptanceCommand,
+}
+
+#[derive(clap::Subcommand, Debug)]
+pub enum AcceptanceCommand {
+    /// Mark one verified condition as met
+    Check(AcceptanceCheckArgs),
+}
+
+#[derive(clap::Args, Debug)]
+pub struct AcceptanceCheckArgs {
+    pub id: i64,
+    pub condition: String,
 }

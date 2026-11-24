@@ -70,14 +70,6 @@ pub(in crate::file_store::ops) fn check_session_write(
         return Ok(());
     }
     let agents: AgentsFile = load(shared, &agents_path(dir))?;
-    let others = agents
-        .agents
-        .iter()
-        .any(|a| a.archived_at.is_none() && !a.is_default);
-    if !others {
-        // Only the default agent exists: there is nobody a session could be confused with.
-        return Ok(());
-    }
     let project = dir
         .file_name()
         .and_then(|name| name.to_str())

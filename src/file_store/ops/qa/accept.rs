@@ -88,13 +88,18 @@ impl FileStore {
                     }
                     MessageState::Closed => {}
                 }
-                let reply = question.reply.as_mut().expect("an answered question");
-                if reply.accepted_at.is_some() {
+                if question
+                    .reply
+                    .as_ref()
+                    .is_some_and(|reply| reply.accepted_at.is_some())
+                {
                     // A retry after a failed resume: finish the resume (a no-op when it
                     // already happened), then report the answer as taken in.
                     self.resume_after_answers(project, &project_dir, &[question], now)?;
                     return Err(AgpjError::AnswerAccepted { id: id.to_owned() });
                 }
+                self.ensure_answer_session_may_write(project, &project_dir, &question)?;
+                let reply = question.reply.as_mut().expect("an answered question");
                 reply.accepted_at = Some(stamp(now));
                 Message::Question(question)
             }
@@ -110,6 +115,41 @@ impl FileStore {
                 Accepted::Question(QuestionView::of(&question, Vec::new()))
             }
         })
+    }
+
+    /// Check every current task reference before accepting an answer. The project lock keeps
+    /// these references and their assignments stable until the receipt is saved.
+    fn ensure_answer_session_may_write(
+        &self,
+        project: &ProjectId,
+        project_dir: &std::path::Path,
+        question: &crate::file_store::qa::Question,
+    ) -> Result<(), AgpjError> {
+        let shared = self.shared_dir();
+        // The question's task list is authoritative for ordinary links. Check it first and
+        // fail closed if one of those task files is malformed.
+        for id in &question.tasks {
+            let task = reader::read_task_strict(shared, project, *id)?;
+            super::super::assignment::ensure_session_may_write(shared, project_dir, &task)?;
+        }
+        for id in reader::task_ids(project_dir)? {
+            if question.tasks.contains(&id) {
+                continue;
+            }
+            // A broken unrelated task must not prevent an answer from being taken in. A
+            // readable task that names this question still gets the full authority check.
+            let Ok(task) = reader::read_task_strict(shared, project, id) else {
+                continue;
+            };
+            let Ok(text) = reader::read_body(shared, project, id) else {
+                continue;
+            };
+            let parsed = parse_task(&text, ParseMode::Stored);
+            if parsed.questions.iter().any(|q| q == &question.id) {
+                super::super::assignment::ensure_session_may_write(shared, project_dir, &task)?;
+            }
+        }
+        Ok(())
     }
 
     /// Accept every answer among the questions `ids` that no agent took in yet: the wait that
@@ -135,15 +175,27 @@ impl FileStore {
             if question.state() != MessageState::Closed {
                 continue;
             }
-            let Some(reply) = question.reply.as_mut() else {
-                continue;
-            };
-            if reply.accepted_at.is_some() {
-                // Taken in before: only finish a resume that an earlier failure left undone.
-                retried.push(question);
+            if question
+                .reply
+                .as_ref()
+                .is_none_or(|reply| reply.accepted_at.is_some())
+            {
+                if question.reply.is_some() {
+                    // Taken in before: only finish a resume that an earlier failure left undone.
+                    retried.push(question);
+                }
                 continue;
             }
-            reply.accepted_at = Some(at);
+            match self.ensure_answer_session_may_write(project, &project_dir, &question) {
+                Ok(()) => {}
+                Err(AgpjError::NotAssignee { .. } | AgpjError::NotConnected) => continue,
+                Err(error) => return Err(error),
+            }
+            question
+                .reply
+                .as_mut()
+                .expect("an answered question")
+                .accepted_at = Some(at);
             changes.push(message_change(
                 &project_dir,
                 &Message::Question(question.clone()),
@@ -232,9 +284,11 @@ impl FileStore {
                         project_dir,
                         agent,
                         at,
-                    )? {
-                        Some(connection) => Some(connection),
-                        None => continue,
+                    ) {
+                        Err(AgpjError::NotAssignee { .. } | AgpjError::NotConnected) => continue,
+                        Err(error) => return Err(error),
+                        Ok(Some(connection)) => Some(connection),
+                        Ok(None) => continue,
                     }
                 }
                 _ => None,
@@ -256,7 +310,13 @@ impl FileStore {
             task.run_connection_id = connection;
             task.agent_status_changed_at = at;
             task.updated_at = at;
-            save_task(shared, project_dir, &task)?;
+            match save_task(shared, project_dir, &task) {
+                // Taking in the answer is already committed. A session that cannot resume a
+                // particular task must leave it paused without turning that success into an
+                // apparent failure (or blocking other tasks that can resume).
+                Err(AgpjError::NotAssignee { .. } | AgpjError::NotConnected) => continue,
+                result => result?,
+            }
         }
         Ok(())
     }

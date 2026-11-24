@@ -36,6 +36,23 @@ pub(super) fn save_task_with_markdown(
     save_task_text(shared, project_dir, task, replacement).map(drop)
 }
 
+pub(super) fn confirm_external_edit(
+    shared: &Path,
+    project_dir: &Path,
+    task: &TaskFile,
+) -> Result<(), AgpjError> {
+    use crate::file_store::transaction::save_pair_locked;
+    let (targets, old, mut new) = task_pair(shared, project_dir, task, None)?;
+    let mut metadata: crate::file_store::model::TaskMetadata =
+        serde_json::from_slice(&new.metadata)
+            .map_err(|error| io::write_error("task.json", error))?;
+    metadata.external_edit = false;
+    new.metadata = serde_json::to_vec_pretty(&metadata)
+        .map_err(|error| io::write_error("task.json", error))?;
+    new.metadata.push(b'\n');
+    save_pair_locked(project_dir, &targets, &old, &new)
+}
+
 /// Like `save_task_with_markdown`, and returns the TASK.md text that was committed,
 /// with `task.history` composed in, so a caller needs no read after the commit.
 pub(super) fn save_task_text(
@@ -125,19 +142,36 @@ fn task_pair(
             "The task history changed before the operation could be saved.",
         ));
     }
+    // A direct edit may arrive before the watcher. Record it during this save as well.
+    let direct_edit = old_meta.as_ref().is_some_and(|meta| {
+        meta.content_digest
+            .as_ref()
+            .is_some_and(|digest| *digest != content_digest(&old.markdown))
+            && matches!(
+                meta.task_status,
+                crate::domain::Column::Doing | crate::domain::Column::Done
+            )
+    });
+    let mut history = task.history.clone();
+    if direct_edit && !old_meta.as_ref().is_some_and(|m| m.external_edit) {
+        history.push(crate::file_store::model::HistoryRecord {
+            at: crate::clock::now(),
+            reason: "The task file was updated directly; review is required.".into(),
+        });
+    }
     let markdown = if let Some(replacement) = replacement {
         let parts = frontmatter::parse(replacement);
-        compose_task(replacement, &parts.body, None, &task.history)
+        compose_task(replacement, &parts.body, None, &history)
             .map_err(|defect| AgpjError::FileInvalid {
                 file: md_label.clone(),
                 field: defect.field,
                 reason: defect.reason,
             })?
             .into_bytes()
-    } else if task.history == parsed.history {
+    } else if history == parsed.history {
         old.markdown.clone()
     } else {
-        compose_task(text, &parsed.body, None, &task.history)
+        compose_task(text, &parsed.body, None, &history)
             .map_err(|defect| AgpjError::FileInvalid {
                 file: md_label.clone(),
                 field: defect.field,
@@ -146,7 +180,11 @@ fn task_pair(
             .into_bytes()
     };
     let markdown = sync_planned_version(text, markdown, task, &md_label)?;
-    let mut json = serde_json::to_vec_pretty(&TaskMetadata::from(task))
+    let mut metadata = TaskMetadata::from(task);
+    metadata.content_digest = Some(content_digest(&markdown));
+    metadata.external_edit =
+        direct_edit || task.external_edit || old_meta.as_ref().is_some_and(|m| m.external_edit);
+    let mut json = serde_json::to_vec_pretty(&metadata)
         .map_err(|error| io::write_error(&json_label, error))?;
     json.push(b'\n');
     Ok((
@@ -193,4 +231,10 @@ fn sync_planned_version(
             field: defect.field,
             reason: defect.reason,
         })
+}
+
+/// Digest the exact persisted Markdown bytes.
+pub(super) fn content_digest(bytes: &[u8]) -> String {
+    use sha2::{Digest, Sha256};
+    format!("{:x}", Sha256::digest(bytes))
 }

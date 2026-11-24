@@ -87,6 +87,7 @@ pub(crate) fn summary_of(projection: &Projection) -> Summary {
                     agent_status: f.agent_status,
                     assignee: f.assignee,
                     draft: f.draft,
+                    external_edit: f.external_edit,
                     position: f.position,
                     epic_id: f.epic_id.clone(),
                     acceptance: AcceptanceCount {

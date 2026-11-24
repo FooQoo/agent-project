@@ -56,6 +56,8 @@ pub struct SummaryTask {
     pub agent_status: RunState,
     pub assignee: Assignee,
     pub draft: Option<crate::domain::Draft>,
+    #[serde(default)]
+    pub external_edit: bool,
     pub position: i64,
     pub epic_id: Option<String>,
     pub acceptance: AcceptanceCount,

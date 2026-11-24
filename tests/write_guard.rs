@@ -11,6 +11,8 @@ use chrono::{DateTime, TimeZone, Utc};
 
 #[path = "common/mod.rs"]
 mod common;
+#[path = "support/qa.rs"]
+mod qa;
 
 fn t0() -> DateTime<Utc> {
     Utc.with_ymd_and_hms(2026, 11, 24, 9, 0, 0).unwrap()
@@ -131,9 +133,8 @@ fn every_ai_task_gets_the_default_agent_and_a_person_task_gets_none() {
         assert_eq!(view.agent_id.as_deref(), Some(id.as_str()));
     }
     assert_eq!(fx.store.task(&fx.project, human).unwrap().agent_id, None);
-    // The default agent alone does not make connections mandatory, and it cannot be deleted
-    // or taken away from a task.
-    assert!(!fx.store.has_agents(&fx.project).unwrap());
+    // The default agent requires a connection and cannot be deleted or taken away.
+    assert!(fx.store.has_agents(&fx.project).unwrap());
     assert!(fx.store.archive_agent(&fx.project, &id, t0()).is_err());
     assert!(
         fx.store
@@ -149,6 +150,14 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
     let fx = fx();
     let id = fx.task(Assignee::Ai);
     let default_agent = fx.store.list_agents(&fx.project).unwrap()[0].id.clone();
+    {
+        let _session = enter_session_writes(fx.root.path().to_path_buf());
+        assert!(matches!(
+            fx.store
+                .move_work_task(&fx.project, id, Column::Doing, ctx(Actor::Ai), t0()),
+            Err(AgpjError::NotConnected)
+        ));
+    }
     let other = fx
         .store
         .register_agent(&fx.project, "Screen", "UI", t0())
@@ -171,10 +180,49 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
             .move_work_task(&fx.project, id, Column::Doing, ctx(Actor::Ai), t0())
     };
 
+    // Start and reassignment contend for the same project lock. Either the old owner starts
+    // first, or reassignment wins and the old owner is refused; the final owner is always new.
+    as_session(Some(&default_secret));
+    drop(_session);
+    for _ in 0..20 {
+        let raced = fx.task(Assignee::Ai);
+        let barrier = std::sync::Barrier::new(2);
+        std::thread::scope(|scope| {
+            let start = scope.spawn(|| {
+                let _session = enter_session_writes(fx.root.path().to_path_buf());
+                barrier.wait();
+                fx.store
+                    .move_work_task(&fx.project, raced, Column::Doing, ctx(Actor::Ai), t0())
+            });
+            barrier.wait();
+            fx.store
+                .assign_task_agent(&fx.project, raced, Some(&other), t0())
+                .unwrap();
+            let started = start.join().unwrap();
+            assert!(started.is_ok() || matches!(started, Err(AgpjError::NotAssignee { .. })));
+            let task = fx.store.task(&fx.project, raced).unwrap();
+            assert_eq!(task.agent_id.as_deref(), Some(other.as_str()));
+            assert_eq!(
+                task.task_status,
+                if started.is_ok() {
+                    Column::Doing
+                } else {
+                    Column::Todo
+                }
+            );
+        });
+    }
+
+    let _session = enter_session_writes(fx.root.path().to_path_buf());
+
+    fx.store.edit_task(&fx.project, id, None, Some(
+        "---\nacceptance:\n  - id: AC-1\n    text: Verified\n    done: false\n---\n\nPlan.\n"
+    ), t0()).unwrap();
+
     // A Todo plan is co-editable by any agent; starting it is the assigned agent's alone.
     as_session(Some(&other_secret));
     fx.store
-        .edit_task(&fx.project, id, None, Some("## 概要\n\n計画\n"), t0())
+        .edit_task(&fx.project, id, None, Some("---\nacceptance:\n  - id: AC-1\n    text: Verified\n    done: false\n---\n\n## 概要\n\n計画\n"), t0())
         .unwrap();
     assert!(matches!(to_doing(&fx), Err(AgpjError::NotAssignee { .. })));
     as_session(None);
@@ -185,6 +233,159 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
     );
     as_session(Some(&default_secret));
     to_doing(&fx).unwrap();
+
+    // The CLI checks the connection before changing the condition, including a retry.
+    let check = |task_id: i64, secret: &str| {
+        std::process::Command::new(env!("CARGO_BIN_EXE_agpj"))
+            .args([
+                "--project",
+                "Alpha",
+                "acceptance",
+                "check",
+                &task_id.to_string(),
+                "AC-1",
+                "--json",
+            ])
+            .env("AGPJ_HOME", fx.root.path())
+            .env("AGPJ_CONNECTION_SECRET", secret)
+            .env("AGPJ_AUTOSTART", "0")
+            .env("AGPJ_OPEN_BROWSER", "0")
+            .output()
+            .unwrap()
+    };
+    assert!(!check(id, &other_secret).status.success());
+    assert!(!fx.store.task(&fx.project, id).unwrap().acceptance[0].done);
+    assert!(check(id, &default_secret).status.success());
+    assert!(fx.store.task(&fx.project, id).unwrap().acceptance[0].done);
+    assert!(!check(id, &other_secret).status.success());
+    assert!(check(id, &default_secret).status.success());
+
+    // Older cards can lack an explicit agentId; the default agent still owns them.
+    let legacy = fx.task(Assignee::Ai);
+    fx.store
+        .edit_task(
+            &fx.project,
+            legacy,
+            None,
+            Some("---\nacceptance:\n  - id: AC-1\n    text: Verified\n    done: false\n---\n\nLegacy plan.\n"),
+            t0(),
+        )
+        .unwrap();
+    let metadata = fx
+        .root
+        .path()
+        .join("shared/projects")
+        .join(fx.project.as_str())
+        .join(format!("tasks/{legacy}/task.json"));
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
+    value["agentId"] = serde_json::Value::Null;
+    std::fs::write(&metadata, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    as_session(None);
+    assert!(matches!(
+        fx.store
+            .move_work_task(&fx.project, legacy, Column::Doing, ctx(Actor::Ai), t0()),
+        Err(AgpjError::NotConnected)
+    ));
+    as_session(Some(&default_secret));
+    fx.store
+        .move_work_task(&fx.project, legacy, Column::Doing, ctx(Actor::Ai), t0())
+        .unwrap();
+    assert!(check(legacy, &default_secret).status.success());
+    assert!(fx.store.task(&fx.project, legacy).unwrap().acceptance[0].done);
+
+    let question = qa::ask(&fx.store, &fx.project, &[id], "Which way?", &[]);
+    qa::answer(
+        &fx.store,
+        &fx.project,
+        &question.id,
+        None,
+        Some("This way."),
+    );
+    as_session(Some(&other_secret));
+    assert!(matches!(
+        fx.store
+            .accept_message(&fx.project, &question.id, Actor::Ai, t0()),
+        Err(AgpjError::NotAssignee { id: task_id }) if task_id == id
+    ));
+    as_session(Some(&default_secret));
+    fx.store
+        .accept_message(&fx.project, &question.id, Actor::Ai, t0())
+        .unwrap();
+
+    // The early `message ask`/`wait` path accepts answers in a batch. An unauthorized entry
+    // stays pending while an independently authorized entry in the same batch is accepted.
+    let other_question = qa::ask(&fx.store, &fx.project, &[id], "Another choice?", &[]);
+    qa::answer(
+        &fx.store,
+        &fx.project,
+        &other_question.id,
+        None,
+        Some("Yes."),
+    );
+    let second_task = fx.task(Assignee::Ai);
+    fx.store
+        .assign_task_agent(&fx.project, second_task, Some(&other), t0())
+        .unwrap();
+    as_session(Some(&other_secret));
+    fx.store
+        .move_work_task(
+            &fx.project,
+            second_task,
+            Column::Doing,
+            ctx(Actor::Ai),
+            t0(),
+        )
+        .unwrap();
+    let other_task_question = qa::ask(&fx.store, &fx.project, &[second_task], "Their choice?", &[]);
+    qa::answer(
+        &fx.store,
+        &fx.project,
+        &other_task_question.id,
+        None,
+        Some("No."),
+    );
+    let unrelated = fx.task(Assignee::Human);
+    let project_dir =
+        agent_project::file_store::layout::project_dir(fx.store.shared_dir(), &fx.project);
+    std::fs::write(
+        agent_project::file_store::layout::task_md(&agent_project::file_store::layout::task_dir(
+            &project_dir,
+            unrelated,
+        )),
+        "not valid task frontmatter",
+    )
+    .unwrap();
+    as_session(Some(&default_secret));
+    let accepted = fx
+        .store
+        .accept_answers(
+            &fx.project,
+            &[other_question.id.clone(), other_task_question.id.clone()],
+            t0(),
+        )
+        .unwrap();
+    assert_eq!(accepted, vec![other_question.id.clone()]);
+    assert_eq!(
+        fx.store
+            .message(&fx.project, &other_question.id)
+            .unwrap()
+            .state(),
+        "closed"
+    );
+    assert_eq!(
+        fx.store
+            .message(&fx.project, &other_task_question.id)
+            .unwrap()
+            .state(),
+        "closed"
+    );
+    assert!(
+        fx.store
+            .accept_answers(&fx.project, &[other_task_question.id], t0())
+            .unwrap()
+            .is_empty()
+    );
 
     // Another and an unconnected agent leave no trace in the task, its history, or its files.
     let before = fx.history_len(id);

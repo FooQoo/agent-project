@@ -1,6 +1,6 @@
-import type { AcceptanceItem, Draft, ProjectId } from '../../../shared/api/contracts';
+import type { AcceptanceItem, Draft, ProjectId, Task } from '../../../shared/api/contracts';
 import { projectPath } from '../../../shared/api/http';
-import { multipartBody, sendMultipart, sendTask } from '../../../shared/api/write';
+import { multipartBody, postTask, sendMultipart, sendTask } from '../../../shared/api/write';
 import type { EditorAttachment } from '../../../shared/ui/editor/attachmentTypes';
 
 /**
@@ -84,4 +84,11 @@ export function setAcceptance(
 /** Puts a card into the epic (`epicId`) or takes it out (`null`). */
 export function setTaskEpic(projectId: ProjectId, id: number, epicId: string | null) {
   return sendTask('PUT', `${projectPath(projectId)}/tasks/${id}/epic`, { epicId });
+}
+
+export function confirmExternalEdit(projectId: ProjectId, id: number) {
+  return postTask<{ task: Task }>(
+    `${projectPath(projectId)}/tasks/${id}/external-edit/confirm`,
+    {},
+  );
 }

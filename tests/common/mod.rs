@@ -90,21 +90,20 @@ pub fn demo_project(home: &Path) {
         ],
     );
     assert_eq!(code, 0, "{err}");
-    let (code, _, err) = agpj(
-        home,
-        &[
-            "--project",
-            "Demo",
-            "mv",
-            "1",
-            "doing",
-            "--actor",
-            "ai",
-            "--reason",
-            "Start.",
-        ],
-    );
-    assert_eq!(code, 0, "{err}");
+    let store = agent_project::file_store::FileStore::open(&home.join("shared"));
+    let project = store.project_by_name("Demo").unwrap().id;
+    store
+        .move_work_task_for_user(
+            &project,
+            1,
+            agent_project::domain::Column::Doing,
+            agent_project::domain::ChangeContext {
+                actor: agent_project::domain::Actor::Human,
+                reason: "Start.".into(),
+            },
+            chrono::Utc::now(),
+        )
+        .unwrap();
 }
 
 pub struct Reply {

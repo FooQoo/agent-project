@@ -70,6 +70,7 @@ fn access(command: &Command) -> Access {
         Command::Add(_)
         | Command::Attachment(_)
         | Command::Edit(_)
+        | Command::Acceptance(_)
         | Command::Mv(_)
         | Command::State(_)
         | Command::Connect(_)
@@ -156,6 +157,7 @@ fn dispatch(ctx: &mut Context, command: &Command) -> Result<Outcome, AgpjError> 
         Command::Result(args) => commands::result::run(ctx, args),
         Command::Epic(args) => commands::epic::run(ctx, args),
         Command::Edit(args) => commands::edit::run(ctx, args),
+        Command::Acceptance(args) => commands::acceptance::run(ctx, args),
         Command::Mv(args) => commands::mv::run(ctx, args),
         Command::State(args) => commands::state::run(ctx, args),
         Command::Connect(args) => commands::connect::connect(ctx, args),

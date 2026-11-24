@@ -12,7 +12,7 @@ use crate::file_store::model::{HistoryRecord, ProjectFile, TaskFile, TaskMetadat
 use crate::file_store::reader;
 use crate::file_store::releases::{effective_release, listed_versions};
 
-use super::{reason_or_default, save_project, save_task_planning, stamp};
+use super::{reason_or_default, save_project, save_task, stamp};
 
 impl FileStore {
     /// Issue the Backlog release-work card of `name`, unless a card carrying
@@ -82,8 +82,9 @@ impl FileStore {
         task: &mut TaskFile,
         now: DateTime<Utc>,
     ) -> Result<(), AgpjError> {
+        super::assignment::ensure_session_may_write(self.shared_dir(), project_dir, task)?;
         let previous = self.advance_release_for_done(project, project_dir, task, now)?;
-        if let Err(error) = save_task_planning(self.shared_dir(), project_dir, task) {
+        if let Err(error) = save_task(self.shared_dir(), project_dir, task) {
             if let Some(previous) = previous {
                 let _ = save_project(self.shared_dir(), project_dir, &previous);
             }

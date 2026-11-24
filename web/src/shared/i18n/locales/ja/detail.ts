@@ -27,6 +27,11 @@ export const detailJa = {
     problem: 'ファイルに不備があります: {{file}}（{{field}}） — {{reason}}',
     problemNoField: 'ファイルに不備があります: {{file}} — {{reason}}',
     saveError: '保存できませんでした。もう一度お試しください。',
+    externalEditNotice:
+      'ボード外で TASK.md が変更されました。確認後に確定してください。確定するまで自動完了しません。',
+    externalEditConfirm: '変更を確認しました',
+    externalEditConfirming: '確定しています…',
+    externalEditFailed: '変更を確定できませんでした。もう一度お試しください。',
     pageOutOfDate: 'ページが古くなっています。再読み込みしてから、もう一度お試しください。',
   },
   results: {

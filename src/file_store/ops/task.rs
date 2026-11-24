@@ -45,6 +45,21 @@ fn one_line(text: &str) -> String {
 }
 
 impl FileStore {
+    /// Clear the human-review marker after the person confirms the current task file.
+    pub fn confirm_external_edit(
+        &self,
+        project: &ProjectId,
+        id: i64,
+    ) -> Result<TaskView, AgpjError> {
+        let shared = self.shared_dir();
+        let (project_dir, lock) = lock_project(shared, project)?;
+        let task = reader::read_task_strict(shared, project, id)?;
+        super::save::confirm_external_edit(shared, &project_dir, &task)?;
+        drop(lock);
+        self.auto_complete_project(project, crate::clock::now())?;
+        self.task(project, id)
+    }
+
     /// Record a decision of sleep mode in the task history: who decided, the question, the
     /// choice, why, and what it rests on.
     pub fn add_decision(
