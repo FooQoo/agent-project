@@ -477,13 +477,14 @@ fn serve_reconciles_existing_completed_tasks_and_rechecks_external_task_edits() 
         .unwrap();
     assert_eq!(pending_json["taskStatus"], "doing");
     assert_eq!(pending_json["externalEdit"], true);
+    let document_version = pending_json["detailVersions"]["document"].as_str().unwrap();
     let confirmed = server.write(
         "POST",
         &format!(
             "/api/projects/{project}/tasks/{}/external-edit/confirm",
             pending_task.id
         ),
-        Some("{}"),
+        Some(&json!({"expectedDocumentVersion": document_version}).to_string()),
     );
     assert_eq!(confirmed.status, 200, "{}", confirmed.body);
     let board = read_until(&server, &board_path, |board| {
