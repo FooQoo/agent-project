@@ -120,16 +120,21 @@ export function RowSlot({
 }
 
 /**
- * The agent on a card: its small avatar and short name in the card's meta row. A card with no agent
+ * The agent on a card: its small avatar in the card's meta row (the name is the label and tooltip). A card with no agent
  * shows nothing, and the connection state is left to Settings and the chooser.
  */
 export function CardAgent({ agent }: { agent: MockAgent | null }) {
   if (!agent) return null;
   return (
     <RowSlot row=".card__top" beforeSelector=".card__spacer" className="acardagent">
-      <span className="acardagent__chip" data-agent={agent.id}>
+      <span
+        className="acardagent__chip"
+        data-agent={agent.id}
+        role="img"
+        aria-label={agent.name}
+        title={agent.name}
+      >
         <Avatar agent={agent} />
-        <span className="acardagent__name">{agent.name}</span>
       </span>
     </RowSlot>
   );

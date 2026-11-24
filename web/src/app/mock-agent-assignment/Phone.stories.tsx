@@ -15,7 +15,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The Doing tab: every AI card carries the agent's avatar and short name; no agent list on the board. */
+/** The Doing tab: every AI card carries the agent's avatar; no agent list on the board. */
 export const Board: Story = {
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getAllByRole('tab')).toHaveLength(4);

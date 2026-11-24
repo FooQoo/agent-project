@@ -12,15 +12,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The board: every AI card carries the agent's avatar and short name (the default agent unless changed); the human card shows none. */
+/** The board: every AI card carries the agent's avatar (the default agent unless changed); the human card shows none. */
 export const Board: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The board holds no agent list: agents are managed in Settings.
     await expect(canvas.queryByRole('region', { name: /Agents|担当/ })).toBeNull();
     await expect(canvas.queryByRole('button', { name: /Manage agents|担当の設定/ })).toBeNull();
-    // Every AI card carries the default agent's name; no card says "Unassigned".
-    await expect(canvas.getAllByText(/^(エージェント|Agent)$/).length).toBeGreaterThan(0);
+    // Every AI card carries the default agent's avatar, named by its label; no card says "Unassigned".
+    await expect(
+      canvas.getAllByRole('img', { name: /^(エージェント|Agent)$/ }).length,
+    ).toBeGreaterThan(0);
     await expect(canvas.queryByText(/未割り当て|Unassigned/)).toBeNull();
   },
 };
