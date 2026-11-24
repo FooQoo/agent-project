@@ -8,7 +8,7 @@ export const PROJECT_ID = '0f1e2d3c4b5a69788796a5b4c3d2e1f0';
 const NOW = '2026-11-24T09:00:00.000Z';
 
 /** The state of the parent session an agent is tied to (SPEC 20_AGENT_ASSIGNMENT, 4 and 6.1). */
-export type ConnectionState = 'connected' | 'unconnected' | 'replaced';
+export type ConnectionState = 'connected' | 'unconnected';
 
 export interface MockSession {
   tool: string;
@@ -26,8 +26,6 @@ export interface MockAgent {
   state: ConnectionState;
   /** The session that works as this agent now (state connected). */
   session: MockSession | null;
-  /** A session this agent had before a switch; its updates are rejected. */
-  replacedSession: MockSession | null;
 }
 
 export interface MockCard {
@@ -85,7 +83,6 @@ export function buildFixture(ja: boolean): Fixture {
       color: '#2563eb',
       state: 'connected',
       session: { tool: 'Claude Code', label: 'ui-work', idleMin: 2 },
-      replacedSession: { tool: 'Claude Code', label: 'ui-work-old', idleMin: 95 },
     },
     {
       id: 'A-2',
@@ -94,7 +91,6 @@ export function buildFixture(ja: boolean): Fixture {
       color: '#c2410c',
       state: 'connected',
       session: { tool: 'Codex', label: 'cli-work', idleMin: 0 },
-      replacedSession: null,
     },
     {
       id: 'A-3',
@@ -103,16 +99,14 @@ export function buildFixture(ja: boolean): Fixture {
       color: '#7c3aed',
       state: 'unconnected',
       session: null,
-      replacedSession: null,
     },
     {
       id: 'A-4',
       name: t('調査担当', 'Research agent'),
       role: t('仕様と先行事例の調査', 'Specs and prior art'),
       color: '#0f766e',
-      state: 'replaced',
+      state: 'unconnected',
       session: null,
-      replacedSession: { tool: 'Claude Code', label: 'research', idleMin: 41 },
     },
   ];
   const mk = (

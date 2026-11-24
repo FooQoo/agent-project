@@ -129,13 +129,6 @@
   border-color: var(--r-accent);
   color: var(--r-accent);
 }
-
-.astate[data-state="replaced"] {
-  border-color: var(--r-pend-bd);
-  background: var(--r-pend-bg);
-  color: var(--r-pend-tx);
-}
-
 .aident {
   display: flex;
   gap: 10px;
@@ -185,14 +178,7 @@
 
 .asession--none {
   color: var(--r-muted);
-}
-
-.asession[data-tone="old"] strong {
-  color: var(--r-muted);
-  text-decoration: line-through;
-}
-
-/* ---- Phone ---- */
+} /* ---- Phone ---- */
 
 .aphone {
   display: flex;
@@ -425,28 +411,6 @@
 .alist__meta {
   color: var(--r-muted);
 }
-
-.alist__prev {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 6px;
-  padding: 6px 8px;
-  border: 1px dashed var(--r-border);
-  border-radius: 8px;
-}
-
-.alist__prev-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.alist__prev-note {
-  color: var(--r-muted);
-}
-
 .alist__pc {
   display: flex;
   align-items: center;
@@ -613,51 +577,7 @@
 .acode__wait {
   font-size: 12px;
   color: var(--r-muted);
-}
-
-/* ---- Notice ---- */
-
-.anotice {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  left: 16px;
-  z-index: 40;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 10px 12px;
-  border: 1px solid var(--r-accent);
-  border-radius: 10px;
-  background: var(--r-surface);
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
-  color: var(--r-text);
-  font-size: 13px;
-}
-
-.anotice > svg {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  color: var(--r-accent);
-}
-
-.anotice__text {
-  display: flex;
-  flex: 1 1 220px;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.anotice__text span {
-  color: var(--r-text2);
-}
-
-/* The agent avatar alone marks an AI card: the product's robot icon and the "AI" label are left out. */
+} /* The agent avatar alone marks an AI card: the product's robot icon and the "AI" label are left out. */
 .arow .assignee-label,
 .adetail .assignee-label,
 .adetail .detail__assignee {
@@ -722,7 +642,6 @@
 }
 
 /* A handover to an agent with no connected session will not start: its name is dimmed. */
-[data-agent-state="unconnected"] .aassignee__item-name,
-[data-agent-state="replaced"] .aassignee__item-name {
+[data-agent-state="unconnected"] .aassignee__item-name {
   color: var(--r-muted);
 }

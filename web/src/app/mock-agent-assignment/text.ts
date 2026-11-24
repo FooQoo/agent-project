@@ -9,7 +9,6 @@ const ja = {
   laneEmpty: 'カードはありません',
   close: '閉じる',
   cancel: 'キャンセル',
-  dismiss: '閉じる',
   // mode slot (owned by INTERACTION-MODES; the value is a placeholder)
   modeLabel: 'モード',
   modeValue: '組手',
@@ -18,11 +17,9 @@ const ja = {
   // connection states
   stateConnected: '接続中',
   stateUnconnected: '未接続',
-  stateReplaced: '置き換え済み',
   sessionOf: (tool: string, label: string) => `${tool} ・ ${label}`,
   idle: (n: number) => (n === 0 ? 'たった今' : `${n} 分前`),
   noSession: '親セッションがありません',
-  replacedNote: '切り替えで置き換えられた旧セッション。更新は拒否されます',
   // agents dialog
   agentsTitle: '担当',
   agentsLead:
@@ -37,7 +34,6 @@ const ja = {
   agentRole: '役割',
   agentRoleHint: '〜100 字。一言で書きます',
   agentSave: '登録する',
-  previousSession: '直前の接続',
   // switch dialog
   switchTitle: '接続を切り替える',
   switchTarget: '切り替える担当',
@@ -63,8 +59,6 @@ const ja = {
   // results
   resultReassigned: (id: number, from: string, to: string) =>
     `#${id} の担当を${from}から${to}に替えました`,
-  resultReassignedBody: (g0: number, g1: number) =>
-    `履歴に残しました ・ 世代 ${g0} → ${g1} ・ 新担当が接続すると続きから始めます`,
 };
 
 const en: typeof ja = {
@@ -75,17 +69,14 @@ const en: typeof ja = {
   laneEmpty: 'No cards',
   close: 'Close',
   cancel: 'Cancel',
-  dismiss: 'Dismiss',
   modeLabel: 'Mode',
   modeValue: 'Kumite',
   agentMeta: (id, n) => `ID ${id} ・ ${n} cards`,
   stateConnected: 'Connected',
   stateUnconnected: 'Not connected',
-  stateReplaced: 'Replaced',
   sessionOf: (tool, label) => `${tool} · ${label}`,
   idle: (n) => (n === 0 ? 'just now' : `${n} min ago`),
   noSession: 'No parent session',
-  replacedNote: 'The earlier session, replaced by a switch. Its updates are rejected',
   agentsTitle: 'Agents',
   agentsLead:
     'Split work by name and role, and tie one parent session to each. Cards point at the agent ID, so a rename keeps them.',
@@ -99,7 +90,6 @@ const en: typeof ja = {
   agentRole: 'Role',
   agentRoleHint: 'Up to 100 characters, in one line',
   agentSave: 'Register',
-  previousSession: 'Previous connection',
   switchTitle: 'Switch connection',
   switchTarget: 'Agent to switch',
   switchNow: 'Parent session now',
@@ -119,8 +109,6 @@ const en: typeof ja = {
   assignChange: 'Change agent',
   reassignTitle: 'Change agent',
   resultReassigned: (id, from, to) => `Handed #${id} over from ${from} to ${to}`,
-  resultReassignedBody: (g0, g1) =>
-    `Recorded in history · generation ${g0} → ${g1} · the new agent continues once connected`,
 };
 
 export type MockText = typeof ja;

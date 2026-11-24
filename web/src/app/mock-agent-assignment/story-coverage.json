@@ -643,26 +643,6 @@
       ]
     },
     {
-      "file": "app/mock-agent-assignment/NoticeView.tsx",
-      "exports": [
-        {
-          "name": "NoticeView",
-          "stories": [
-            {
-              "id": "mocks-agentassignment-desktop--after-reassign",
-              "states": ["after reassign"],
-              "interaction": false
-            },
-            {
-              "id": "mocks-agentassignment-phone--after-reassign",
-              "states": ["after reassign"],
-              "interaction": false
-            }
-          ]
-        }
-      ]
-    },
-    {
       "file": "app/mock-agent-assignment/AgentsSurface.tsx",
       "exports": [
         {

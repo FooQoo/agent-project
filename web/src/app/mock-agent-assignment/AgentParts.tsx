@@ -1,4 +1,4 @@
-import { CheckIcon, ChevronDownIcon, CircleDashedIcon, LinkIcon, ReplaceIcon } from 'lucide-react';
+import { CheckIcon, ChevronDownIcon, CircleDashedIcon, LinkIcon } from 'lucide-react';
 import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -14,11 +14,7 @@ import { type MockText, useMockText } from './text';
 import './assignment-mock.css';
 
 const stateLabel = (m: MockText, state: ConnectionState) =>
-  state === 'connected'
-    ? m.stateConnected
-    : state === 'unconnected'
-      ? m.stateUnconnected
-      : m.stateReplaced;
+  state === 'connected' ? m.stateConnected : m.stateUnconnected;
 
 /** The agent's initial in its own color. The name always stays beside it, so color is never the only cue. */
 export function Avatar({ agent }: { agent: MockAgent }) {
@@ -33,11 +29,10 @@ export function Avatar({ agent }: { agent: MockAgent }) {
   );
 }
 
-/** Connected, not connected, replaced: icon and text, never color alone. */
+/** Connected or not connected: icon and text, never color alone. */
 export function StateBadge({ state }: { state: ConnectionState }) {
   const m = useMockText();
-  const Icon =
-    state === 'connected' ? LinkIcon : state === 'unconnected' ? CircleDashedIcon : ReplaceIcon;
+  const Icon = state === 'connected' ? LinkIcon : CircleDashedIcon;
   return (
     <span className="astate" data-state={state}>
       <Icon aria-hidden="true" />

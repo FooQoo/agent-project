@@ -18,7 +18,7 @@ import {
   summaryOf,
 } from './data';
 import { AgentsSurface } from './AgentsSurface';
-import { NoticeView } from './NoticeView';
+import { TransientNotice } from '@/shared/ui/transient-notice/TransientNotice';
 import { SwitchSurface } from './SwitchSurface';
 import { DetailPane } from './DetailPane';
 import { type DialogName, type Initial, type Notice, handOver, initialState } from './screen-state';
@@ -138,8 +138,22 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
       />
     );
 
-  const noticeView = notice && (
-    <NoticeView notice={notice} agents={fixture.agents} onDismiss={() => setNotice(null)} />
+  // The result of a change uses the app's own toast.
+  const noticeView = (
+    <TransientNotice
+      tone="success"
+      message={
+        notice
+          ? m.resultReassigned(
+              notice.id,
+              agentOf(fixture.agents, notice.from)?.name ?? '',
+              agentOf(fixture.agents, notice.to)?.name ?? '',
+            )
+          : null
+      }
+      durationMs={initial.done ? 3_600_000 : undefined}
+      onDismiss={() => setNotice(null)}
+    />
   );
 
   // The slot beside the project name where INTERACTION-MODES shows the project's mode.
