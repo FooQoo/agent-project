@@ -1,7 +1,7 @@
 import type { DetailTab } from '../../features/tasks/detail/DetailTabs';
 import { type Lane, type MockCard, buildFixture } from './data';
 
-export type DialogName = 'agents' | 'agentsAdd' | 'switch' | 'switchCode' | 'reassign' | 'bulk';
+export type DialogName = 'agents' | 'agentsAdd' | 'switch' | 'switchCode';
 
 export interface Initial {
   openId?: number | null;
@@ -10,11 +10,12 @@ export interface Initial {
   dialog?: DialogName;
   /** The agent the switch dialog is about. */
   switchAgent?: string;
-  /** The choice already made in the handover or the bulk dialog. */
+  /** The agent a finished change went to (with `done`). */
   to?: string;
-  epicId?: string;
+  /** Opens the card's assignee menu (the sheet on a phone). */
+  menu?: boolean;
   /** Shows the result of an operation that was just confirmed. */
-  done?: 'reassign' | 'bulk';
+  done?: 'reassign';
 }
 
 export interface AssignmentScreenProps {
@@ -22,21 +23,19 @@ export interface AssignmentScreenProps {
   initial?: Initial;
 }
 
-export type Notice =
-  | { kind: 'reassign'; id: number; from: string; to: string; g0: number; g1: number }
-  | { kind: 'bulk'; ids: number[]; to: string; kept: number };
+export type Notice = {
+  kind: 'reassign';
+  id: number;
+  from: string;
+  to: string;
+  g0: number;
+  g1: number;
+};
 
 export const handOver = (cards: MockCard[], id: number, to: string): MockCard[] =>
   cards.map((c) =>
     c.id === id
       ? { ...c, agentId: to, generation: c.generation + 1, running: false, fresh: true }
-      : { ...c, fresh: false },
-  );
-
-export const bulkAssign = (cards: MockCard[], epicId: string, to: string): MockCard[] =>
-  cards.map((c) =>
-    c.epicId === epicId && c.agentId === null
-      ? { ...c, agentId: to, generation: c.generation + 1, fresh: true }
       : { ...c, fresh: false },
   );
 
@@ -57,17 +56,6 @@ export function initialState(
       to: initial.to ?? 'A-3',
       g0: card?.generation ?? 2,
       g1: (card?.generation ?? 2) + 1,
-    };
-  }
-  if (initial.done === 'bulk') {
-    const epicId = initial.epicId ?? 'LOGIN-1';
-    const ids = cards.filter((c) => c.epicId === epicId && c.agentId === null).map((c) => c.id);
-    cards = bulkAssign(cards, epicId, initial.to ?? 'A-1');
-    notice = {
-      kind: 'bulk',
-      ids,
-      to: initial.to ?? 'A-1',
-      kept: cards.filter((c) => c.epicId === epicId).length - ids.length,
     };
   }
   return { cards, notice };

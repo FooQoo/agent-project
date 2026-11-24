@@ -69,13 +69,6 @@
   box-shadow: 0 0 0 2px var(--r-accent-soft);
 }
 
-.amarks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 0 4px;
-}
-
 /* ---- Mode slot: only room for INTERACTION-MODES; the content is a placeholder. ---- */
 
 .amode {
@@ -112,45 +105,6 @@
   line-height: 1;
 }
 
-.achip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  max-width: 100%;
-  height: 26px;
-  padding: 0 8px 0 3px;
-  border: 1px solid var(--r-border);
-  border-radius: 999px;
-  background: var(--r-surface);
-  font-size: 12px;
-  color: var(--r-text);
-}
-
-.achip .aavatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-}
-
-.achip__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.achip__mark {
-  padding-left: 6px;
-  border-left: 1px solid var(--r-border);
-  color: var(--r-accent);
-}
-
-.achip--none {
-  padding: 0 10px;
-  border-style: dashed;
-  color: var(--r-muted);
-}
-
 .astate {
   display: inline-flex;
   flex: none;
@@ -175,13 +129,6 @@
   border-color: var(--r-accent);
   color: var(--r-accent);
 }
-
-.astate[data-state="replaced"] {
-  border-color: var(--r-pend-bd);
-  background: var(--r-pend-bg);
-  color: var(--r-pend-tx);
-}
-
 .aident {
   display: flex;
   gap: 10px;
@@ -231,107 +178,12 @@
 
 .asession--none {
   color: var(--r-muted);
-}
-
-.asession[data-tone="old"] strong {
-  color: var(--r-muted);
-  text-decoration: line-through;
-}
-
-/* ---- Strip ---- */
-
-.astrip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  padding: 8px 24px 0;
-}
-
-.astrip__agents {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.astrip__agent {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 10px 0 4px;
-  border: 1px solid var(--r-border);
-  border-radius: 8px;
-  background: var(--r-surface);
-  font-size: 12px;
-  color: var(--r-text);
-}
-
-.astrip__name {
-  font-weight: 600;
-}
-
-.astrip__dot {
-  width: 8px;
-  height: 8px;
-  border: 1.5px solid var(--r-muted);
-  border-radius: 999px;
-}
-
-.astrip__dot[data-state="connected"] {
-  border-color: var(--r-accent);
-  background: var(--r-accent);
-}
-
-.astrip__dot[data-state="replaced"] {
-  border-color: var(--r-pend-tx);
-}
-
-.astrip__state {
-  color: var(--r-text2);
-}
-
-.astrip__count {
-  min-width: 18px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--r-lane);
-  color: var(--r-text2);
-  text-align: center;
-}
-
-.astrip__tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-left: auto;
-}
-
-.astrip__go {
-  color: var(--r-accent);
-}
-
-/* ---- Phone ---- */
+} /* ---- Phone ---- */
 
 .aphone {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.aphone .astrip {
-  padding: 0;
-}
-
-.aphone .astrip__tools {
-  margin-left: 0;
-}
-
-.aphone .astrip__state {
-  display: none;
 }
 
 .lane-tabs.atabs {
@@ -376,39 +228,56 @@
   height: 100%;
 }
 
-/* ---- Assignment section in the detail ---- */
+/* ---- The assignee control in the detail ---- */
 
-.asection {
-  display: flex;
-  flex: none;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px;
-  border: 1px solid var(--r-border);
-  border-radius: 10px;
-  background: var(--r-surface);
+.aassignee {
+  display: inline-flex;
+  align-items: center;
 }
 
-.asection__h {
+.aassignee__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 4px;
+  border: 0;
+  border-radius: 999px;
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--r-muted);
+  color: var(--r-text2);
+  background: transparent;
+  cursor: pointer;
 }
 
-.asection__meta,
-.asection__note {
-  font-size: 12px;
-  color: var(--r-muted);
+.aassignee__btn:hover:not(:disabled),
+.aassignee__btn:focus-visible {
+  outline: 2px solid var(--r-accent);
+  outline-offset: 1px;
 }
 
-.asection__none {
-  font-size: 13px;
-  color: var(--r-muted);
+.aassignee__btn:disabled {
+  cursor: default;
 }
 
-.asection > button {
-  align-self: flex-start;
+.aavatar--empty {
+  background: transparent;
+  border: 1.5px dashed var(--r-muted);
+}
+
+.acardagent {
+  display: inline-flex;
+  align-items: center;
+}
+
+.acardagent__chip {
+  display: inline-flex;
+}
+
+.acardagent .aavatar,
+.aassignee .aavatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  font-size: 11px;
 }
 
 /* ---- Surfaces ---- */
@@ -530,28 +399,6 @@
 .alist__meta {
   color: var(--r-muted);
 }
-
-.alist__prev {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 6px;
-  padding: 6px 8px;
-  border: 1px dashed var(--r-border);
-  border-radius: 8px;
-}
-
-.alist__prev-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.alist__prev-note {
-  color: var(--r-muted);
-}
-
 .alist__pc {
   display: flex;
   align-items: center;
@@ -718,84 +565,41 @@
 .acode__wait {
   font-size: 12px;
   color: var(--r-muted);
+} /* The agent avatar alone marks an AI card: the product's robot icon and the "AI" label are left out. */
+.arow .assignee-label,
+.adetail .assignee-label,
+.adetail .detail__assignee {
+  display: none;
 }
 
-/* ---- Choices (the same size for every agent) ---- */
+/* Keep the status chip on one line: the card's meta row may wrap as a whole but not inside a chip. */
+.arow .card__top {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
 
-.achoices {
-  display: grid;
+.arow .card__side {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.aassignee__btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.aassignee__menu .menu__item {
   gap: 8px;
 }
 
-.achoice {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--r-border);
-  border-radius: 8px;
-  cursor: pointer;
+.aassignee__item-name {
+  flex: 1;
 }
 
-.achoice:has([data-state="checked"]) {
-  border-color: var(--r-accent);
-  box-shadow: 0 0 0 2px var(--r-accent-soft);
-}
-
-.achoice[data-current="true"] {
-  background: var(--r-lane);
-  cursor: default;
-}
-
-.achoice .aident {
-  flex: 1 1 0;
-}
-
-.achoice__side {
-  flex: none;
-  font-size: 12px;
-  color: var(--r-muted);
-  text-align: right;
-}
-
-.achoice__current {
-  font-weight: 700;
-  color: var(--r-text2);
-}
-
-.awarn {
-  display: flex;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--r-pend-bd);
-  border-radius: 8px;
-  background: var(--r-pend-bg);
-  font-size: 13px;
-  color: var(--r-pend-tx);
-}
-
-.awarn > svg {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  margin-top: 1px;
-}
-
-.awarn p {
-  margin-top: 2px;
-}
-
-.awarn__ack {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  font-weight: 600;
-}
-
-/* ---- Bulk ---- */
-
-.alines {
+.aassignee__list {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -804,115 +608,31 @@
   list-style: none;
 }
 
-.alines__item {
+.aassignee__row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  padding: 6px 8px;
-  border: 1px solid var(--r-border);
-  border-radius: 8px;
-  font-size: 13px;
-}
-
-.alines__item[data-change="true"] {
-  border-color: var(--r-accent);
-  background: var(--r-accent-soft);
-}
-
-.alines__id,
-.alines__lane {
-  flex: none;
-  font-size: 12px;
-  color: var(--r-muted);
-}
-
-.alines__title {
-  flex: 1 1 160px;
-  min-width: 0;
-  color: var(--r-text);
-}
-
-.alines__why {
-  flex: none;
-  font-size: 12px;
-  color: var(--r-text2);
-}
-
-.alines__note {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--r-muted);
-}
-
-.abefore {
-  padding: 8px 12px;
-  border: 1px solid var(--r-accent);
-  border-radius: 8px;
-  background: var(--r-accent-soft);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--r-text);
-}
-
-/* ---- Notice ---- */
-
-.anotice {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  left: 16px;
-  z-index: 40;
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 10px 12px;
-  border: 1px solid var(--r-accent);
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--r-border);
   border-radius: 10px;
   background: var(--r-surface);
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+  font-size: 14px;
   color: var(--r-text);
-  font-size: 13px;
+  text-align: left;
 }
 
-.anotice > svg {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  color: var(--r-accent);
+.aassignee__row[data-current="true"] {
+  border-color: var(--r-accent);
 }
 
-.anotice__text {
-  display: flex;
-  flex: 1 1 220px;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+.aassignee__row svg {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
 }
 
-.anotice__text span {
-  color: var(--r-text2);
-}
-
-/* The agent chip hugs the card above it. */
-.amarks {
-  margin-top: -6px;
-  margin-bottom: 6px;
-}
-
-/* Phone: the strip scrolls sideways instead of growing taller. */
-.aphone .astrip__agents,
-.aphone .astrip__tools {
-  flex-wrap: nowrap;
-  max-width: 100%;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.aphone .astrip__agent,
-.aphone .astrip__tools > button {
-  flex: none;
+/* A handover to an agent with no connected session will not start: its name is dimmed. */
+[data-agent-state="unconnected"] .aassignee__item-name {
+  color: var(--r-muted);
 }

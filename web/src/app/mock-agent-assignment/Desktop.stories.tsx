@@ -12,44 +12,37 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The board with the agent strip: each agent's name, state and open cards; the epics with unassigned cards. */
+/** The board: every AI card carries the agent's avatar (the default agent unless changed); the human card shows none. */
 export const Board: Story = {
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByRole('region', { name: /Agents|担当/ })).toBeVisible();
+    const canvas = within(canvasElement);
+    // The board holds no agent list: agents are managed in Settings.
+    await expect(canvas.queryByRole('region', { name: /Agents|担当/ })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: /Manage agents|担当の設定/ })).toBeNull();
+    // Every AI card carries the default agent's avatar, named by its label; no card says "Unassigned".
+    await expect(
+      canvas.getAllByRole('img', { name: /^(エージェント|Agent)$/ }).length,
+    ).toBeGreaterThan(0);
+    await expect(canvas.queryByText(/未割り当て|Unassigned/)).toBeNull();
   },
 };
 
-/** A Doing card open in the existing detail panel, with the assignment section above it. */
+/** A Doing card open in the existing detail panel: the agent's avatar sits in the status row. */
 export const CardDetail: Story = {
   args: { initial: { openId: 28 } },
 };
 
-/** Handover in the middle of the work: nothing chosen yet, what carries over and what stops are listed. */
-export const ReassignChoose: Story = {
-  args: { initial: { openId: 28, dialog: 'reassign' } },
+/** The card detail with the assignee menu open under the avatar: every agent with its connection state. */
+export const AssigneeMenuOpen: Story = {
+  args: { initial: { openId: 28, menu: true } },
 };
 
-/** The new agent has no parent session: the handover needs one more confirmation. */
-export const ReassignUnconnected: Story = {
-  args: { initial: { openId: 28, dialog: 'reassign', to: 'A-3' } },
-};
-
-/** After the handover: the card carries the new agent's name, the toast gives the result. */
+/** After choosing another agent in the menu: the card carries the new agent and the toast gives the result. */
 export const AfterReassign: Story = {
   args: { initial: { openId: 28, done: 'reassign', to: 'A-1' } },
 };
 
-/** Bulk assign on an epic: only the unassigned cards change; the others stay with the reason. */
-export const EpicBulkConfirm: Story = {
-  args: { initial: { dialog: 'bulk', epicId: 'LOGIN-1', to: 'A-1' } },
-};
-
-/** After the bulk assign: the assigned cards are marked and the toast names them. */
-export const AfterBulk: Story = {
-  args: { initial: { done: 'bulk', epicId: 'LOGIN-1', to: 'A-1', lane: 'backlog' } },
-};
-
-/** Settings > Agents: name, role, state and parent session of each agent; the three connection states. */
+/** Settings > Agents (opened from the settings button): name, role, state and parent session of each agent; the three connection states. */
 export const AgentsSettings: Story = {
   args: { initial: { dialog: 'agents' } },
 };

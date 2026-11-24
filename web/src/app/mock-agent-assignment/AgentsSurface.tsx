@@ -3,7 +3,7 @@ import { useId, useState } from 'react';
 import { Button } from '@/shared/ui/button';
 import { DialogActions } from '@/shared/ui/dialog-actions';
 import { Input } from '@/shared/ui/input';
-import { AgentIdentity, SessionLine, StateBadge } from './AgentParts';
+import { AgentIdentity } from './AgentParts';
 import { type MockAgent, type MockCard, loadOf } from './data';
 import { Surface } from './Surface';
 import { useMockText } from './text';
@@ -69,16 +69,6 @@ export function AgentsSurface({
                     <span className="alist__meta">
                       {m.agentMeta(agent.id, loadOf(cards, agent.id))}
                     </span>
-                    {agent.replacedSession && (
-                      <span className="alist__prev">
-                        <span className="alist__prev-head">
-                          {m.previousSession}
-                          <StateBadge state="replaced" />
-                        </span>
-                        <SessionLine session={agent.replacedSession} tone="old" />
-                        <span className="alist__prev-note">{m.replacedNote}</span>
-                      </span>
-                    )}
                   </>
                 }
               />
