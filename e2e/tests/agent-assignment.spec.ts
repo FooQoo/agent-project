@@ -1,18 +1,50 @@
 import { readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { agpjOk, createEmptyProject, mainHome, projectId, replaceFileAtomically, workspace } from '../helpers/agpj';
+import {
+  agpjOk,
+  createEmptyProject,
+  makeHome,
+  projectId,
+  removeHome,
+  replaceFileAtomically,
+  startServe,
+  stopServe,
+  workspace,
+  type Serve,
+} from '../helpers/agpj';
 import { expect, test } from '../helpers/fixtures';
 import { openHeaderItem } from '../helpers/ui';
 
-test('a person can register an agent and reassign a Doing card on PC and phone', async ({ page }) => {
-  const project = 'Assignment UI';
-  createEmptyProject(mainHome(), project);
-  const { task } = JSON.parse(
-    agpjOk(project, ['add', 'Review the release', '--assignee', 'ai', '--actor', 'human', '--json']).stdout,
-  ) as { task: { id: number } };
-  agpjOk(project, ['mv', String(task.id), 'doing', '--actor', 'human']);
+const assignmentProject = 'Assignment UI';
+const existingProject = 'Existing assignments';
+let home: string;
+let serve: Serve | undefined;
 
-  const target = `/?project=${projectId(project)}`;
+test.beforeAll(async () => {
+  test.setTimeout(120_000);
+  home = makeHome('agent-assignment');
+  createEmptyProject(home, assignmentProject);
+  createEmptyProject(home, existingProject);
+  serve = await startServe(home);
+});
+
+test.afterAll(async () => {
+  if (serve) await stopServe(serve);
+  if (home) removeHome(home);
+});
+
+const boardUrl = (project: string) => `${serve!.url}/?project=${projectId(project, home)}`;
+const cli = (project: string, ...args: string[]) => agpjOk(project, args, home);
+
+
+test('a person can register an agent and reassign a Doing card on PC and phone', async ({ page }) => {
+  const project = assignmentProject;
+  const { task } = JSON.parse(
+    cli(project, 'add', 'Review the release', '--assignee', 'ai', '--actor', 'human', '--json').stdout,
+  ) as { task: { id: number } };
+  cli(project, 'mv', String(task.id), 'doing', '--actor', 'human');
+
+  const target = boardUrl(project);
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(target);
   await openHeaderItem(page, 'Settings');
@@ -52,23 +84,22 @@ test('a person can register an agent and reassign a Doing card on PC and phone',
   await picker.getByRole('button', { name: /^Agent Disconnected$/ }).click();
   await expect(picker).toBeHidden();
   await expect(page.getByRole('button', { name: 'Change agent · Agent', exact: true })).toBeVisible();
-  const taskState = JSON.parse(agpjOk(project, ['show', String(task.id), '--json']).stdout);
+  const taskState = JSON.parse(cli(project, 'show', String(task.id), '--json').stdout);
   expect(taskState.task).toMatchObject({ taskStatus: 'doing', agentId: 'A-1' });
 });
 
 test('an existing card can use a default agent set up in Settings', async ({ page }) => {
-  const project = 'Existing assignments';
-  createEmptyProject(mainHome(), project);
+  const project = existingProject;
   const { task } = JSON.parse(
-    agpjOk(project, ['add', 'Existing AI card', '--assignee', 'ai', '--actor', 'human', '--json']).stdout,
+    cli(project, 'add', 'Existing AI card', '--assignee', 'ai', '--actor', 'human', '--json').stdout,
   ) as { task: { id: number } };
-  const folder = workspace(project).folder;
+  const folder = workspace(project, home).folder;
   const metadataPath = join(folder, 'tasks', String(task.id), 'task.json');
   const metadata = JSON.parse(readFileSync(metadataPath, 'utf8'));
   replaceFileAtomically(metadataPath, JSON.stringify({ ...metadata, agentId: null }));
   rmSync(join(folder, 'agents.json'));
 
-  await page.goto(`/?project=${projectId(project)}`);
+  await page.goto(boardUrl(project));
   await openHeaderItem(page, 'Settings');
   await page.getByRole('region', { name: 'Agents', exact: true }).getByRole('button', { name: 'Manage' }).click();
   const settings = page.getByRole('dialog', { name: 'Agents', exact: true });
@@ -78,9 +109,9 @@ test('an existing card can use a default agent set up in Settings', async ({ pag
   const command = settings.locator('code');
   await expect(command).toHaveText(/^agpj connect [A-Z2-9]+$/);
   const code = (await command.innerText()).split(' ')[2];
-  agpjOk(project, ['connect', code]);
-  agpjOk(project, ['mv', String(task.id), 'doing', '--actor', 'ai']);
-  agpjOk(project, ['state', String(task.id), 'running', '--actor', 'ai']);
+  cli(project, 'connect', code);
+  cli(project, 'mv', String(task.id), 'doing', '--actor', 'ai');
+  cli(project, 'state', String(task.id), 'running', '--actor', 'ai');
   await page.keyboard.press('Escape');
   const card = page.locator('.card[data-lane="doing"]').filter({ hasText: 'Existing AI card' });
   await expect(card.getByTitle('Agent', { exact: true })).toBeVisible();
