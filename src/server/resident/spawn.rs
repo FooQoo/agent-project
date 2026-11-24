@@ -9,6 +9,7 @@ use super::driver::{
 use super::process::{Exit, new_launch_id, open_log};
 use super::push::{self, Push};
 use super::{Launched, Launcher, Live, cli};
+use crate::agent::connection_store::SECRET_ENV;
 use crate::clock::{Clock, SystemClock};
 use crate::domain::ProjectId;
 use crate::error::AgpjError;
@@ -101,23 +102,41 @@ impl Launcher {
             }
         }
         let failed = |reason: String| AgpjError::SessionLaunchFailed { reason };
-        let log_path = self.log_path(tool);
-        let log = open_log(&log_path)
-            .map_err(|e| failed(format!("Cannot write {}: {e}.", log_path.display())))?;
         let launch_id = new_launch_id()?;
         let driver: Arc<dyn AgentDriver> = Arc::from((self.factory)(tool, &program));
-        driver.start(StartSpec {
-            cwd: folder.to_path_buf(),
-            model: model.map(str::to_string),
-            prompt: cli::prompt(project_name),
-            writable_dirs: vec![self.data_dir.clone()],
-            env: vec![
-                ("AGPJ_RESIDENT_ID".to_string(), launch_id.clone()),
-                ("AGPJ_SESSION_TOOL".to_string(), tool.as_str().to_string()),
-                ("AGPJ_SESSION_ORIGIN".to_string(), "board".to_string()),
-            ],
-            log,
-        })?;
+        let connection = self.connect_child(project, tool)?;
+        let mut env = vec![
+            ("AGPJ_RESIDENT_ID".to_string(), launch_id.clone()),
+            ("AGPJ_SESSION_TOOL".to_string(), tool.as_str().to_string()),
+            ("AGPJ_SESSION_ORIGIN".to_string(), "board".to_string()),
+            (
+                "AGPJ_HOME".to_string(),
+                self.data_dir.to_string_lossy().into_owned(),
+            ),
+        ];
+        if let Some((secret, _)) = &connection {
+            env.push((SECRET_ENV.to_string(), secret.clone()));
+        }
+        let log_path = self.log_path(tool);
+        let started = open_log(&log_path)
+            .map_err(|e| failed(format!("Cannot write {}: {e}.", log_path.display())))
+            .and_then(|log| {
+                driver.start(StartSpec {
+                    cwd: folder.to_path_buf(),
+                    model: model.map(str::to_string),
+                    prompt: cli::prompt(project_name),
+                    writable_dirs: vec![self.data_dir.clone()],
+                    env,
+                    log,
+                })
+            });
+        if let Err(error) = started {
+            driver.stop(self.stop_grace);
+            if connection.is_some_and(|(_, created)| created) {
+                self.disconnect_child()?;
+            }
+            return Err(error);
+        }
         let launched = Live {
             launch_id: launch_id.clone(),
             pid: driver.pid().unwrap_or(0),

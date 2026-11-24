@@ -16,7 +16,7 @@ use crate::server::request::ApiJson;
 use crate::server::resident::{AutoStart, Health, Launched, resolve_project};
 use crate::server::response::{agpj_error_response, json_response};
 use crate::server::sessions::{Attributes, SessionList, Tool};
-use crate::server::store::{parse_project_id, with_files};
+use crate::server::store::{parse_project_id, refresh_index, with_files};
 
 #[derive(Serialize)]
 struct Listed {
@@ -191,7 +191,12 @@ pub(super) async fn stop_session(
     }
     let launcher = state.resident.clone();
     match blocking(move || launcher.stop()).await {
-        Ok(stopped) => json_response(StatusCode::OK, &serde_json::json!({ "stopped": stopped })),
+        Ok(stopped) => {
+            if stopped {
+                refresh_index(&state);
+            }
+            json_response(StatusCode::OK, &serde_json::json!({ "stopped": stopped }))
+        }
         Err(error) => agpj_error_response(&error),
     }
 }

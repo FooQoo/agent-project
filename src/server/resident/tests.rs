@@ -269,6 +269,7 @@ fn claude_starts_headless_with_every_permission_and_a_scrubbed_environment() {
 
 mod autostart;
 mod codex;
+mod connection;
 mod drivers;
 mod handoff;
 mod health;

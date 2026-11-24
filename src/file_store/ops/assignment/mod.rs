@@ -11,6 +11,7 @@ mod connect;
 mod guard;
 mod model;
 mod registry;
+mod resident;
 mod store;
 
 use chrono::{DateTime, Duration, Utc};
