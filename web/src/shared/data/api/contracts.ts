@@ -48,6 +48,7 @@ export interface SummaryTask {
   awaitingAnswer: boolean;
   assignee: Assignee;
   draft: Draft | null;
+  externalEdit?: boolean;
   position: number;
   epicId: string | null;
   acceptance: AcceptanceCount;
