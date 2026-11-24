@@ -156,45 +156,30 @@ export function AssigneeButton({
   onChange: () => void;
 }) {
   const m = useMockText();
+  if (!agent) return null;
   return (
     <RowSlot row=".detail__meta" className="aassignee">
       <button
         type="button"
         className="aassignee__btn"
         disabled={disabled}
-        data-empty={agent ? undefined : true}
-        aria-label={agent ? `${m.assignChange}: ${agent.name}` : m.assignAssign}
-        title={agent ? agent.name : m.assignAssign}
+        aria-label={`${m.assignChange}: ${agent.name}`}
+        title={agent.name}
         onClick={onChange}
       >
-        {agent ? (
-          <Avatar agent={agent} />
-        ) : (
-          <span className="aavatar aavatar--empty" aria-hidden="true" />
-        )}
+        <Avatar agent={agent} />
       </button>
     </RowSlot>
   );
 }
 
-/** On the epic tab: the epic's unassigned cards and the way to give them to one agent. */
-export function EpicAssignBar({
-  epicName,
-  unassigned,
-  onAssign,
-}: {
-  epicName: string;
-  unassigned: number;
-  onAssign: () => void;
-}) {
+/** On the epic tab: one small button that opens the bulk change dialog (no extra box or text). */
+export function EpicAssignBar({ count, onAssign }: { count: number; onAssign: () => void }) {
   const m = useMockText();
-  if (unassigned === 0) return null;
+  if (count === 0) return null;
   return (
-    <div className="aepicbar">
-      <span>{m.epicUnassigned(epicName, unassigned)}</span>
-      <Button type="button" size="s" variant="outline" onClick={onAssign}>
-        {m.epicAssign}
-      </Button>
-    </div>
+    <Button type="button" size="s" variant="outline" className="aepicbtn" onClick={onAssign}>
+      {m.epicChangeAll}
+    </Button>
   );
 }

@@ -1,5 +1,5 @@
 import type { DetailTab } from '../../features/tasks/detail/DetailTabs';
-import { type Lane, type MockCard, buildFixture } from './data';
+import { type Lane, type MockCard, buildFixture, bulkTargets } from './data';
 
 export type DialogName = 'agents' | 'agentsAdd' | 'switch' | 'switchCode' | 'reassign' | 'bulk';
 
@@ -33,12 +33,15 @@ export const handOver = (cards: MockCard[], id: number, to: string): MockCard[] 
       : { ...c, fresh: false },
   );
 
-export const bulkAssign = (cards: MockCard[], epicId: string, to: string): MockCard[] =>
-  cards.map((c) =>
-    c.epicId === epicId && c.agentId === null
+/** Moves every open AI card of the epic to `to`; the others stay. */
+export const bulkAssign = (cards: MockCard[], epicId: string, to: string): MockCard[] => {
+  const moved = new Set(bulkTargets(cards, epicId, to).map((c) => c.id));
+  return cards.map((c) =>
+    moved.has(c.id)
       ? { ...c, agentId: to, generation: c.generation + 1, fresh: true }
       : { ...c, fresh: false },
   );
+};
 
 /** The cards and the notice a story starts with: the board, or the board after a confirmed operation. */
 export function initialState(
@@ -61,12 +64,12 @@ export function initialState(
   }
   if (initial.done === 'bulk') {
     const epicId = initial.epicId ?? 'LOGIN-1';
-    const ids = cards.filter((c) => c.epicId === epicId && c.agentId === null).map((c) => c.id);
-    cards = bulkAssign(cards, epicId, initial.to ?? 'A-1');
+    const ids = bulkTargets(cards, epicId, initial.to ?? 'A-2').map((c) => c.id);
+    cards = bulkAssign(cards, epicId, initial.to ?? 'A-2');
     notice = {
       kind: 'bulk',
       ids,
-      to: initial.to ?? 'A-1',
+      to: initial.to ?? 'A-2',
       kept: cards.filter((c) => c.epicId === epicId).length - ids.length,
     };
   }

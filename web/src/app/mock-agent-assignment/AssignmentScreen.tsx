@@ -14,9 +14,10 @@ import {
   type MockCard,
   agentOf,
   buildFixture,
+  bulkTargets,
   countIn,
   summaryOf,
-  unassignedIn,
+  openAiIn,
 } from './data';
 import { AgentsSurface } from './AgentsSurface';
 import { BulkSurface } from './BulkSurface';
@@ -101,7 +102,7 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
     close();
   };
   const confirmBulk = (to: string) => {
-    const ids = cards.filter((c) => c.epicId === epicId && c.agentId === null).map((c) => c.id);
+    const ids = bulkTargets(cards, epicId, to).map((c) => c.id);
     setNotice({
       kind: 'bulk',
       ids,
@@ -149,15 +150,16 @@ export function AssignmentScreen({ variant = 'desktop', initial = {} }: Assignme
         onToggleCondition={() => undefined}
         extra={
           <>
-            <AssigneeButton
-              agent={agentOf(fixture.agents, open.agentId)}
-              disabled={open.lane === 'done'}
-              onChange={() => setDialog('reassign')}
-            />
-            {tab === 'epic' && open.epicId && (
+            {!open.human && (
+              <AssigneeButton
+                agent={agentOf(fixture.agents, open.agentId)}
+                disabled={open.lane === 'done'}
+                onChange={() => setDialog('reassign')}
+              />
+            )}
+            {tab === 'epic' && open.epicId && !open.human && (
               <EpicAssignBar
-                epicName={fixture.epics.find((e) => e.id === open.epicId)?.name ?? open.epicId}
-                unassigned={unassignedIn(cards, open.epicId).length}
+                count={openAiIn(cards, open.epicId).length}
                 onAssign={() => {
                   setEpicId(open.epicId ?? epicId);
                   setDialog('bulk');

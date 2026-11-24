@@ -35,8 +35,10 @@ export interface MockCard {
   title: string;
   epicId: string | null;
   lane: Lane;
-  /** `null` is an unassigned card. */
+  /** Every AI card has an agent (the default one unless changed); a human card has none. */
   agentId: string | null;
+  /** A card for a person: no agent, no avatar. */
+  human?: boolean;
   /** Raised by every claim, assignment and handover (SPEC 6.5). */
   generation: number;
   running: boolean;
@@ -75,8 +77,11 @@ export function buildFixture(ja: boolean): Fixture {
   const agents: MockAgent[] = [
     {
       id: 'A-1',
-      name: t('画面担当', 'UI agent'),
-      role: t('画面の実装と Storybook', 'Screens and Storybook'),
+      name: t('エージェント', 'Agent'),
+      role: t(
+        '既定の担当。AI のカードはすべてここに付きます',
+        'The default agent: every AI card starts here',
+      ),
       color: '#2563eb',
       state: 'connected',
       session: { tool: 'Claude Code', label: 'ui-work', idleMin: 2 },
@@ -148,9 +153,9 @@ export function buildFixture(ja: boolean): Fixture {
       t('現行のログイン処理を調べる', 'Survey the current sign-in flow'),
       'LOGIN-1',
       'backlog',
-      null,
+      'A-1',
     ),
-    mk(42, t('認証方式の候補を比べる', 'Compare sign-in methods'), 'LOGIN-1', 'backlog', null, {
+    mk(42, t('認証方式の候補を比べる', 'Compare sign-in methods'), 'LOGIN-1', 'backlog', 'A-1', {
       question: t('SSO は今回の対象に含めますか？', 'Is SSO in scope this time?'),
     }),
     mk(
@@ -158,14 +163,14 @@ export function buildFixture(ja: boolean): Fixture {
       t('選んだ方式でログイン画面を作る', 'Build the sign-in screen'),
       'LOGIN-1',
       'backlog',
-      null,
+      'A-1',
     ),
     mk(
       44,
       t('既存利用者の移行手順を書く', 'Write the migration steps'),
       'LOGIN-1',
       'backlog',
-      null,
+      'A-1',
     ),
     mk(45, t('ログインのエラー文言を直す', 'Reword the sign-in errors'), 'LOGIN-1', 'todo', 'A-1'),
     mk(
@@ -197,6 +202,7 @@ export function buildFixture(ja: boolean): Fixture {
       'SEARCH-2',
       'todo',
       null,
+      { human: true },
     ),
     mk(
       28,
@@ -252,14 +258,19 @@ export const countIn = (cards: readonly MockCard[], lane: Lane) =>
 export const loadOf = (cards: readonly MockCard[], agentId: string) =>
   cards.filter((card) => card.agentId === agentId && card.lane !== 'done').length;
 
-export const unassignedIn = (cards: readonly MockCard[], epicId: string) =>
-  cards.filter((card) => card.epicId === epicId && card.agentId === null);
+/** The AI cards of an epic that are not finished: what the epic's bulk change can move. */
+export const openAiIn = (cards: readonly MockCard[], epicId: string) =>
+  cards.filter((card) => card.epicId === epicId && card.lane !== 'done' && !card.human);
+
+/** The cards a bulk change to `to` moves: open AI cards of the epic that do not already have that agent. */
+export const bulkTargets = (cards: readonly MockCard[], epicId: string, to: string | null) =>
+  openAiIn(cards, epicId).filter((card) => card.agentId !== to);
 
 export function summaryOf(card: MockCard, epics: readonly EpicRef[]): TaskSummary {
   return {
     id: card.id,
     title: card.title,
-    assignee: 'ai',
+    assignee: card.human ? 'human' : 'ai',
     taskStatus: card.lane === 'backlog' ? 'todo' : card.lane,
     taskStatusChangedAt: NOW,
     position: card.id,

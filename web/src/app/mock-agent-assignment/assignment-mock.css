@@ -336,20 +336,6 @@
   font-size: 11px;
 }
 
-.aepicbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid var(--r-border);
-  border-radius: 10px;
-  background: var(--r-surface);
-  font-size: 12px;
-  color: var(--r-text2);
-}
-
 /* ---- Surfaces ---- */
 
 .modal.asurface-modal,
@@ -834,4 +820,26 @@
 
 .anotice__text span {
   color: var(--r-text2);
+}
+
+/* The agent avatar alone marks an AI card: the product's robot icon and the "AI" label are left out. */
+.arow .assignee-label,
+.adetail .assignee-label,
+.adetail .detail__assignee {
+  display: none;
+}
+
+/* Keep the status chip on one line: the card's meta row may wrap as a whole but not inside a chip. */
+.arow .card__top {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+.arow .card__side {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.aepicbtn {
+  align-self: flex-start;
 }

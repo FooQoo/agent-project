@@ -4,14 +4,14 @@ import { DialogActions } from '@/shared/ui/dialog-actions';
 import { RadioGroup } from '@/shared/ui/radio-group';
 import { AgentChip } from './AgentParts';
 import { AgentChoice } from './AgentChoice';
-import { type Fixture, type MockCard, agentOf, loadOf } from './data';
+import { type Fixture, type MockCard, agentOf, bulkTargets, loadOf } from './data';
 import { Surface } from './Surface';
 import { useMockText } from './text';
 import type { Kind } from './surface-kind';
 import './assignment-mock.css';
 
 /**
- * The bulk action on an epic: it targets only unassigned cards, lists the ones that change and the ones that
+ * The bulk change on an epic: it moves the open AI cards to one agent, lists the ones that change and the ones that
  * stay (with the reason), and shows the agent's open-card count before and after.
  */
 export function BulkSurface({
@@ -36,8 +36,9 @@ export function BulkSurface({
   const [to, setTo] = useState<string | null>(initialTo ?? null);
   const epic = fixture.epics.find((item) => item.id === epicId);
   const inEpic = cards.filter((card) => card.epicId === epicId);
-  const will = inEpic.filter((card) => card.agentId === null);
-  const skip = inEpic.filter((card) => card.agentId !== null);
+  const will = bulkTargets(cards, epicId, to);
+  const willIds = new Set(will.map((card) => card.id));
+  const skip = inEpic.filter((card) => !willIds.has(card.id));
   const target = agentOf(fixture.agents, to);
   const before = target ? loadOf(cards, target.id) : 0;
   return (
@@ -116,7 +117,11 @@ export function BulkSurface({
                   <span className="alines__title">{card.title}</span>
                   <span className="alines__lane">{m[card.lane]}</span>
                   <span className="alines__why">
-                    {card.lane === 'done' ? m.bulkSkipDone : m.bulkSkipAssigned(holder?.name ?? '')}
+                    {card.lane === 'done'
+                      ? m.bulkSkipDone
+                      : card.human
+                        ? m.bulkSkipHuman
+                        : m.bulkSkipAssigned(holder?.name ?? '')}
                   </span>
                 </li>
               );
