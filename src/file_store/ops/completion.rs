@@ -43,10 +43,11 @@ impl FileStore {
             let dir = super::super::layout::task_dir(&project_dir, id);
             let meta_path = super::super::layout::task_json(&dir);
             let md_path = super::super::layout::task_md(&dir);
-            let metadata = std::fs::read(&meta_path).ok().and_then(|bytes| {
+            let Some(mut metadata) = std::fs::read(&meta_path).ok().and_then(|bytes| {
                 serde_json::from_slice::<super::super::model::TaskMetadata>(&bytes).ok()
-            });
-            let Some(metadata) = metadata else { continue };
+            }) else {
+                continue;
+            };
             let Ok(markdown) = std::fs::read(&md_path) else {
                 continue;
             };
@@ -54,7 +55,20 @@ impl FileStore {
                 .content_digest
                 .as_ref()
                 .is_some_and(|digest| *digest != super::save::content_digest(&markdown));
-            if mismatched || metadata.content_digest.is_none() {
+            if metadata.content_digest.is_none() {
+                if reader::read_task_strict(shared, project, id).is_err() {
+                    continue;
+                }
+                // Bootstrapping a legacy task only changes task.json. Rewriting TASK.md here
+                // would change its modification time and make an unchanged task look edited.
+                metadata.content_digest = Some(super::save::content_digest(&markdown));
+                let mut json = serde_json::to_vec_pretty(&metadata)
+                    .map_err(|error| super::super::io::write_error("task.json", error))?;
+                json.push(b'\n');
+                let label = super::super::layout::shared_label(shared, &meta_path);
+                super::super::io::write_atomic(&meta_path, &json, &label)?;
+                changed = true;
+            } else if mismatched {
                 let Ok(task) = reader::read_task_strict(shared, project, id) else {
                     continue;
                 };
