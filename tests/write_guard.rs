@@ -133,8 +133,8 @@ fn every_ai_task_gets_the_default_agent_and_a_person_task_gets_none() {
         assert_eq!(view.agent_id.as_deref(), Some(id.as_str()));
     }
     assert_eq!(fx.store.task(&fx.project, human).unwrap().agent_id, None);
-    // The default agent requires a connection and cannot be deleted or taken away.
-    assert!(fx.store.has_agents(&fx.project).unwrap());
+    // The default agent cannot be deleted or taken away.
+    assert!(!fx.store.has_agents(&fx.project).unwrap());
     assert!(fx.store.archive_agent(&fx.project, &id, t0()).is_err());
     assert!(
         fx.store
@@ -150,14 +150,6 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
     let fx = fx();
     let id = fx.task(Assignee::Ai);
     let default_agent = fx.store.list_agents(&fx.project).unwrap()[0].id.clone();
-    {
-        let _session = enter_session_writes(fx.root.path().to_path_buf());
-        assert!(matches!(
-            fx.store
-                .move_work_task(&fx.project, id, Column::Doing, ctx(Actor::Ai), t0()),
-            Err(AgpjError::NotConnected)
-        ));
-    }
     let other = fx
         .store
         .register_agent(&fx.project, "Screen", "UI", t0())
@@ -464,4 +456,22 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
     as_session(Some(&other_secret));
     fx.store.add_result(&fx.project, id, input(), t0()).unwrap();
     as_session(None);
+}
+
+#[test]
+fn the_only_live_default_agent_can_start_without_a_connection() {
+    let fx = fx();
+    let id = fx.task(Assignee::Ai);
+    let agents = fx.store.list_agents(&fx.project).unwrap();
+    assert_eq!(agents.len(), 1);
+    assert!(agents[0].is_default);
+
+    let _session = enter_session_writes(fx.root.path().to_path_buf());
+    fx.store
+        .move_work_task(&fx.project, id, Column::Doing, ctx(Actor::Ai), t0())
+        .unwrap();
+    assert_eq!(
+        fx.store.task(&fx.project, id).unwrap().task_status,
+        Column::Doing
+    );
 }

@@ -2,9 +2,11 @@
 
 use std::sync::Arc;
 
+use axum::Router;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
+use axum::routing::post;
 use serde::{Deserialize, Deserializer};
 
 use super::epics::{whole_or_parts, whole_text};
@@ -18,6 +20,13 @@ use crate::server::AppState;
 use crate::server::request::StrictJson;
 use crate::server::response::{agpj_error_response, error_response};
 use crate::server::store::{parse_project_id, with_request_files};
+
+pub(super) fn external_edit_route() -> Router<Arc<AppState>> {
+    Router::new().route(
+        "/api/projects/{project_id}/tasks/{id}/external-edit/confirm",
+        post(confirm_external_edit),
+    )
+}
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

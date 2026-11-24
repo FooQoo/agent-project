@@ -34,8 +34,8 @@ impl FileStore {
     }
 
     /// [`FileStore::set_agent_status`] for a command line with no connection secret. The check
-    /// that the project has no live agent runs under the same project lock as the save, so an
-    /// agent registered meanwhile cannot be bypassed: an AI actor then gets `NotConnected`.
+    /// that the project has no additional live agent runs under the same project lock as the save,
+    /// so an agent registered meanwhile cannot be bypassed: an AI actor then gets `NotConnected`.
     /// A person's change (the web UI) is allowed either way.
     pub fn set_agent_status_unconnected(
         &self,
@@ -79,7 +79,7 @@ impl FileStore {
         let (project_dir, _lock) = lock_project(shared, project)?;
         if refuse_when_agents
             && secret.is_none()
-            && super::assignment::has_live_agents_locked(shared, &project_dir)?
+            && super::assignment::has_other_live_agents_locked(shared, &project_dir)?
         {
             return Err(if ctx.actor == Actor::Ai {
                 AgpjError::NotConnected

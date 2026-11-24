@@ -199,10 +199,7 @@ fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<
             "/api/projects/{project_id}/tasks/{id}/draft",
             put(set_draft),
         )
-        .route(
-            "/api/projects/{project_id}/tasks/{id}/external-edit/confirm",
-            post(confirm_external_edit),
-        )
+        .merge(task_edit::external_edit_route())
         .route(
             "/api/projects/{project_id}/tasks/{id}/send",
             post(send_task),

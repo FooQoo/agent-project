@@ -3,8 +3,8 @@
 use super::*;
 use std::path::Path;
 
-/// Whether the project has a live agent, read under a project lock the caller already holds.
-pub(in crate::file_store::ops) fn has_live_agents_locked(
+/// Whether the project has a live agent beyond its default, read under a held project lock.
+pub(in crate::file_store::ops) fn has_other_live_agents_locked(
     shared: &Path,
     project_dir: &Path,
 ) -> Result<bool, AgpjError> {
@@ -12,7 +12,7 @@ pub(in crate::file_store::ops) fn has_live_agents_locked(
     Ok(agents
         .agents
         .iter()
-        .any(|agent| agent.archived_at.is_none()))
+        .any(|agent| !agent.is_default && agent.archived_at.is_none()))
 }
 
 /// A card that enters Doing with an agent needs that agent to still be live: an archived agent
@@ -33,12 +33,12 @@ pub(in crate::file_store::ops) fn ensure_agent_live_locked(
 }
 
 impl FileStore {
-    /// Whether the project has a live agent. Connections are required once an agent exists.
+    /// Whether this project has a live agent in addition to its default agent.
     pub fn has_agents(&self, project: &ProjectId) -> Result<bool, AgpjError> {
         Ok(self
             .list_agents(project)?
             .iter()
-            .any(|agent| agent.archived_at.is_none()))
+            .any(|agent| !agent.is_default && agent.archived_at.is_none()))
     }
 
     /// The project's agents, oldest first, archived ones last.

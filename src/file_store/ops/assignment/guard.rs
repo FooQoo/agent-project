@@ -75,25 +75,34 @@ pub(in crate::file_store::ops) fn check_session_write(
         .and_then(|name| name.to_str())
         .and_then(|name| name.parse::<ProjectId>().ok())
         .ok_or(AgpjError::NotConnected)?;
-    let secret = crate::agent::connection_store::load_secret(&data_dir, &project)
-        .ok_or(AgpjError::NotConnected)?;
-    let verified = verify_locked(shared, dir, &secret, stamp(chrono::Utc::now()))?;
     let default_id = agents
         .agents
         .iter()
         .find(|a| a.is_default && a.archived_at.is_none())
         .map(|a| a.id.clone());
+    let has_other_live_agent = agents
+        .agents
+        .iter()
+        .any(|agent| !agent.is_default && agent.archived_at.is_none());
+    let verified_agent_id = match crate::agent::connection_store::load_secret(&data_dir, &project) {
+        Some(secret) => verify_locked(shared, dir, &secret, stamp(chrono::Utc::now()))?.agent_id,
+        None if !has_other_live_agent => default_id.clone().ok_or(AgpjError::NotConnected)?,
+        None => return Err(AgpjError::NotConnected),
+    };
     let old_agent = match old {
         Some(o) => o.agent_id.clone(),
         None => task.agent_id.clone(),
     };
-    let owner = old_agent.clone().or(default_id);
-    if owner.as_deref() != Some(verified.agent_id.as_str()) {
+    let owner = old_agent
+        .clone()
+        .or(default_id)
+        .or_else(|| Some(verified_agent_id.clone()));
+    if owner.as_deref() != Some(verified_agent_id.as_str()) {
         return Err(AgpjError::NotAssignee { id: task.id });
     }
     // A session never hands a card to another agent; only a person does.
     let kept = task.agent_id == old_agent
-        || (old_agent.is_none() && task.agent_id.as_deref() == Some(verified.agent_id.as_str()));
+        || (old_agent.is_none() && task.agent_id.as_deref() == Some(verified_agent_id.as_str()));
     if !kept {
         return Err(AgpjError::NotAssignee { id: task.id });
     }

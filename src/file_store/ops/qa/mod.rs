@@ -6,6 +6,7 @@
 //! or none does. The readable record goes to the history of the tasks that refer to a question.
 
 mod accept;
+mod accept_guard;
 mod answer;
 mod answer_images;
 mod ask;
