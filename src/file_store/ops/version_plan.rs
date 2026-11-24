@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 
 use super::version::resolve;
 use super::{EpicVersionSet, VersionChoice};
-use super::{lock_project, save_task};
+use super::{lock_project, save_task_planning};
 use crate::domain::Column;
 use crate::error::AgpjError;
 use crate::file_store::FileStore;
@@ -79,7 +79,7 @@ impl FileStore {
         }
         let changed = self.apply_version(project, &mut task, target, now)?;
         if changed {
-            save_task(shared, &project_dir, &task)?;
+            save_task_planning(shared, &project_dir, &task)?;
         }
         Ok(crate::domain::Changed {
             value: reader::read_task_locked(shared, project, task_id)?,
@@ -154,7 +154,7 @@ impl FileStore {
             } else {
                 if !dry_run {
                     self.apply_version(project, &mut task, target.clone(), now)?;
-                    save_task(shared, &project_dir, &task)?;
+                    save_task_planning(shared, &project_dir, &task)?;
                 }
                 outcome.result.changed.push(task_id);
             }

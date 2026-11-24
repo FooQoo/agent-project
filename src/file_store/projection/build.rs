@@ -33,6 +33,7 @@ fn task_fields(task: &TaskView) -> TaskSummaryFields {
         agent_status: task.agent_status,
         assignee: task.assignee,
         draft: task.draft,
+        external_edit: task.external_edit,
         position: task.position,
         epic_id: task.epic_id.clone(),
         acceptance_done: task.acceptance.iter().filter(|item| item.done).count() as u32,

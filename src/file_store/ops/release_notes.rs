@@ -82,6 +82,7 @@ impl FileStore {
         task: &mut TaskFile,
         now: DateTime<Utc>,
     ) -> Result<(), AgpjError> {
+        super::assignment::ensure_session_may_write(self.shared_dir(), project_dir, task)?;
         let previous = self.advance_release_for_done(project, project_dir, task, now)?;
         if let Err(error) = save_task(self.shared_dir(), project_dir, task) {
             if let Some(previous) = previous {

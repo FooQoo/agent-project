@@ -130,6 +130,7 @@ impl FileStore {
             });
         }
         ensure_ai_task_not_done(&task, ctx.actor)?;
+        super::assignment::ensure_session_may_write(shared, &project_dir, &task)?;
         if block_drafts && let Some(draft) = task.draft {
             return Err(draft_refusal(id, draft));
         }

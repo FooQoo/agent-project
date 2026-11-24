@@ -61,6 +61,7 @@ export function toTaskSummary(task: SummaryTask, epics: readonly SummaryEpic[]):
     updatedAt: task.updatedAt,
     createdAt: task.createdAt,
     draft: task.draft,
+    externalEdit: task.externalEdit,
     acceptance: { done: task.acceptance.done, total: task.acceptance.total },
     acceptanceError: task.acceptanceError,
     plannedVersion: task.plannedVersion,

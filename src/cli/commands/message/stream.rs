@@ -71,7 +71,11 @@ fn wait_and_print(
     // The answers just printed are in the agent's hands: they leave the progress table and the
     // hook. A failure here loses nothing; the answers stay listed until they are accepted.
     if handed
-        && let Ok(written) = ctx.files.accept_answers(&project, ids, ctx.clock.now())
+        && let Ok(written) = {
+            let _session =
+                crate::file_store::enter_session_writes(data_dir(ctx.files.shared_dir()));
+            ctx.files.accept_answers(&project, ids, ctx.clock.now())
+        }
         && !written.is_empty()
     {
         notify(ctx, env);
@@ -80,6 +84,7 @@ fn wait_and_print(
 }
 
 pub(super) fn ask(ctx: &mut Context, env: &mut Env, args: &MessageAskArgs) -> i32 {
+    let _session = crate::file_store::enter_session_writes(data_dir(ctx.files.shared_dir()));
     let prepared = (|| {
         let project = ctx.project_id()?.clone();
         // In sleep mode nothing reaches the board, the notifications, or the chat.

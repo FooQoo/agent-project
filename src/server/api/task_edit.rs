@@ -2,9 +2,11 @@
 
 use std::sync::Arc;
 
+use axum::Router;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
+use axum::routing::post;
 use serde::{Deserialize, Deserializer};
 
 use super::epics::{whole_or_parts, whole_text};
@@ -18,6 +20,13 @@ use crate::server::AppState;
 use crate::server::request::StrictJson;
 use crate::server::response::{agpj_error_response, error_response};
 use crate::server::store::{parse_project_id, with_request_files};
+
+pub(super) fn external_edit_route() -> Router<Arc<AppState>> {
+    Router::new().route(
+        "/api/projects/{project_id}/tasks/{id}/external-edit/confirm",
+        post(confirm_external_edit),
+    )
+}
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -166,6 +175,33 @@ pub(super) async fn set_draft(
     })
     .await;
     changed_task_response(&state, result)
+}
+
+/// Confirm a detected direct edit of an in-progress or completed task.
+pub(super) async fn confirm_external_edit(
+    headers: HeaderMap,
+    State(state): State<Arc<AppState>>,
+    Path((raw_project, raw_id)): Path<(String, String)>,
+) -> Response {
+    let project_id = match parse_project_id(&raw_project) {
+        Ok(id) => id,
+        Err(error) => return agpj_error_response(&error),
+    };
+    let id = match parse_task_id(&raw_id) {
+        Ok(id) => id,
+        Err(response) => return *response,
+    };
+    let result = with_request_files(&state, &headers, move |store| {
+        store.confirm_external_edit(&project_id, id)
+    })
+    .await;
+    changed_task_response(
+        &state,
+        result.map(|value| crate::domain::Changed {
+            value,
+            changed: true,
+        }),
+    )
 }
 
 /// `epicId` of `PUT .../epic`: an EPIC-ID, or `null` to take the task out of

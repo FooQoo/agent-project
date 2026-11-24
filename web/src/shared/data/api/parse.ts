@@ -44,7 +44,12 @@ const TASK_FIELDS = [
 ];
 
 function parseTask(value: unknown, path: string): SummaryTask {
-  const o = exact(value, path, TASK_FIELDS, ['onboardingSample', 'questionIds', 'openQuestionIds']);
+  const o = exact(value, path, TASK_FIELDS, [
+    'onboardingSample',
+    'questionIds',
+    'openQuestionIds',
+    'externalEdit',
+  ]);
   const acceptance = exact(o.acceptance, `${path}.acceptance`, ['done', 'total']);
   const versions = exact(o.detailVersions, `${path}.detailVersions`, ['document', 'history']);
   const task: SummaryTask = {
@@ -78,6 +83,9 @@ function parseTask(value: unknown, path: string): SummaryTask {
       history: str(versions.history, `${path}.detailVersions.history`),
     },
   };
+  if (o.externalEdit !== undefined) {
+    task.externalEdit = bool(o.externalEdit, `${path}.externalEdit`);
+  }
   // The question lists come from servers that keep project questions; a mock may leave them out.
   for (const field of ['questionIds', 'openQuestionIds'] as const) {
     if (o[field] !== undefined) task[field] = list(o[field], `${path}.${field}`, str);

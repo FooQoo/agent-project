@@ -7,7 +7,8 @@ use super::epic::read_epic_file;
 pub(super) use super::version_names::resolve;
 use super::version_plan::EpicVersionScope;
 use super::{
-    ensure_ai_task_not_done, lock_project, reason_or_default, save_project, save_task, stamp,
+    ensure_ai_task_not_done, lock_project, reason_or_default, save_project, save_task_planning,
+    stamp,
 };
 use crate::domain::{Actor, Changed, Draft, ProjectId, validate_version_name};
 use crate::error::AgpjError;
@@ -157,7 +158,7 @@ impl FileStore {
         }
         let changed = self.apply_version(project, &mut task, target, now)?;
         if changed {
-            save_task(shared, &project_dir, &task)?;
+            save_task_planning(shared, &project_dir, &task)?;
         }
         Ok(Changed {
             value: reader::read_task_locked(shared, project, task_id)?,
@@ -221,7 +222,7 @@ impl FileStore {
                 continue;
             }
             if self.apply_version(project, &mut task, target.clone(), now)? {
-                save_task(shared, &project_dir, &task)?;
+                save_task_planning(shared, &project_dir, &task)?;
                 result.changed.push(task_id);
             } else {
                 result.unchanged.push(task_id);

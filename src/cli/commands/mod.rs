@@ -1,6 +1,7 @@
 //! One module per subcommand. Each exposes
 //! `pub fn run(ctx: &mut Context, args: &XxxArgs) -> Result<Outcome, AgpjError>`.
 
+pub mod acceptance;
 pub mod add;
 pub mod attachment;
 pub mod connect;

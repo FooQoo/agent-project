@@ -98,7 +98,7 @@ The project's release version is changed with the version button in the header, 
 
 ## Edit the files directly
 
-Agents, and you, can also edit a task's `TASK.md` and an epic's `EPIC.md` as plain files; the board notices the change. Find the project's folder instead of guessing its location:
+You can edit a task's `TASK.md` and an epic's `EPIC.md` as plain files; the board notices the change. Direct edits to Backlog and Todo tasks are accepted. A direct edit to a Doing or Done task is recorded in its history and shown in the task details for your confirmation. Automatic completion stays paused until you confirm that you reviewed the current file. The board detects these edits but cannot prevent another process from writing the files. Find the project's folder instead of guessing its location:
 
 ```sh
 agpj --project "My project" workspace --json

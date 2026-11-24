@@ -117,9 +117,16 @@ impl FileStore {
             release_notes_version: None,
             release_completed_at: None,
             planned_version: None,
-            agent_id: None,
+            agent_id: Some(super::assignment::default_agent_id_locked(
+                shared,
+                &project_dir,
+                language,
+                now,
+            )?),
             assignment_generation: 1,
             run_connection_id: None,
+            content_digest: None,
+            external_edit: false,
             history: vec![transition_event(Transition {
                 language,
                 kind: HistoryKind::Created,
@@ -158,11 +165,10 @@ impl FileStore {
             .join(io::random_hex(16).map_err(|e| io::write_error("request-staging", e))?);
         fs::create_dir(&staging).map_err(|e| io::write_error("request-staging", e))?;
         let result = (|| -> Result<(), AgpjError> {
-            io::write_json(
-                &layout::task_json(&staging),
-                &model::TaskMetadata::from(&task),
-                "task.json",
-            )?;
+            let mut metadata = model::TaskMetadata::from(&task);
+            metadata.content_digest = Some(super::save::content_digest(markdown.as_bytes()));
+            metadata.shape_digest = Some(super::save::shape_digest(markdown.as_bytes()));
+            io::write_json(&layout::task_json(&staging), &metadata, "task.json")?;
             io::write_atomic(&layout::task_md(&staging), markdown.as_bytes(), "TASK.md")?;
             if !request.images.is_empty() {
                 let assets = layout::assets_dir(&staging);

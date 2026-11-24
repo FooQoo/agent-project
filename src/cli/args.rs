@@ -1,7 +1,9 @@
 //! Command line definition (clap derive) and argument post-validation.
 
+mod acceptance;
 mod agent;
 mod attachment;
+mod command;
 mod dash_hint;
 mod enums;
 mod epic;
@@ -17,6 +19,7 @@ mod task;
 mod validate;
 mod version;
 
+pub use self::acceptance::*;
 pub use self::agent::*;
 pub use self::attachment::*;
 pub use self::enums::*;
@@ -68,6 +71,8 @@ pub enum Command {
     Add(AddArgs),
     /// Change a task's title or description
     Edit(EditArgs),
+    /// Mark an acceptance condition as verified
+    Acceptance(AcceptanceArgs),
     /// Move a task to todo, doing, or done (a person can also take an unstarted Todo task back to backlog)
     Mv(MvArgs),
     /// Report a task's run state: idle or running
@@ -130,51 +135,12 @@ pub enum Command {
     Release(ReleaseArgs),
 }
 
-impl Command {
-    /// The subcommand's name as typed on the command line.
-    pub fn name(&self) -> &'static str {
-        match self {
-            Command::Project(_) => "project",
-            Command::Init(_) => "init",
-            Command::Add(_) => "add",
-            Command::Edit(_) => "edit",
-            Command::Mv(_) => "mv",
-            Command::State(_) => "state",
-            Command::Connect(_) => "connect",
-            Command::Disconnect => "disconnect",
-            Command::Agent(_) => "agent",
-            Command::History(_) => "history",
-            Command::Decision(_) => "decision",
-            Command::Mode(_) => "mode",
-            Command::Message(_) => "message",
-            Command::Rm(_) => "rm",
-            Command::Ls(_) => "ls",
-            Command::Show(_) => "show",
-            Command::Attachment(_) => "attachment",
-            Command::Result(_) => "result",
-            Command::Epic(_) => "epic",
-            Command::Snapshot(_) => "snapshot",
-            Command::Hook(_) => "hook",
-            Command::Skills(_) => "skills",
-            Command::Wait(_) => "wait",
-            Command::Serve(_) => "serve",
-            Command::Open(_) => "open",
-            Command::Stop(_) => "stop",
-            Command::Setup(_) => "setup",
-            Command::Update(_) => "update",
-            Command::Workspace(_) => "workspace",
-            Command::Progress(_) => "progress",
-            Command::Version(_) => "version",
-            Command::Release(_) => "release",
-        }
-    }
-}
-
-pub const SUBCOMMAND_NAMES: [&str; 27] = [
+pub const SUBCOMMAND_NAMES: [&str; 28] = [
     "project",
     "init",
     "add",
     "edit",
+    "acceptance",
     "mv",
     "state",
     "history",

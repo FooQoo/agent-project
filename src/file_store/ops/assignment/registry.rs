@@ -3,8 +3,8 @@
 use super::*;
 use std::path::Path;
 
-/// Whether the project has a live agent, read under a project lock the caller already holds.
-pub(in crate::file_store::ops) fn has_live_agents_locked(
+/// Whether the project has a live agent beyond its default, read under a held project lock.
+pub(in crate::file_store::ops) fn has_other_live_agents_locked(
     shared: &Path,
     project_dir: &Path,
 ) -> Result<bool, AgpjError> {
@@ -12,7 +12,7 @@ pub(in crate::file_store::ops) fn has_live_agents_locked(
     Ok(agents
         .agents
         .iter()
-        .any(|agent| agent.archived_at.is_none()))
+        .any(|agent| !agent.is_default && agent.archived_at.is_none()))
 }
 
 /// A card that enters Doing with an agent needs that agent to still be live: an archived agent
@@ -33,13 +33,12 @@ pub(in crate::file_store::ops) fn ensure_agent_live_locked(
 }
 
 impl FileStore {
-    /// Whether the project has a live agent. Connections are required once a person has
-    /// registered the first agent; a project without agents has nobody to be confused with.
+    /// Whether this project has a live agent in addition to its default agent.
     pub fn has_agents(&self, project: &ProjectId) -> Result<bool, AgpjError> {
         Ok(self
             .list_agents(project)?
             .iter()
-            .any(|agent| agent.archived_at.is_none()))
+            .any(|agent| !agent.is_default && agent.archived_at.is_none()))
     }
 
     /// The project's agents, oldest first, archived ones last.
@@ -77,6 +76,7 @@ impl FileStore {
             role,
             created_at: stamp(now),
             archived_at: None,
+            is_default: false,
         };
         file.next_agent_id += 1;
         file.agents.push(record.clone());
@@ -133,7 +133,12 @@ impl FileStore {
         let shared = self.shared_dir();
         let (dir, _lock) = lock_project(shared, project)?;
         let mut file: AgentsFile = load(shared, &agents_path(&dir))?;
-        find_agent(&file, id)?;
+        if find_agent(&file, id)?.is_default {
+            return Err(AgpjError::InvalidValue {
+                field: "agentId".into(),
+                reason: "The default agent cannot be deleted.".into(),
+            });
+        }
         let connections: ConnectionsFile = load(shared, &connections_path(&dir))?;
         let busy = connections
             .connections

@@ -56,6 +56,19 @@ impl Fx {
             )
             .unwrap()
             .id;
+        // Every AI task starts with the default agent; these tests work with the first agent
+        // they registered, so the card is given to it before it starts.
+        if self
+            .store
+            .list_agents(&self.project)
+            .unwrap()
+            .iter()
+            .any(|a| a.id == "A-1" && !a.is_default)
+        {
+            self.store
+                .assign_task_agent(&self.project, id, Some("A-1"), t0())
+                .unwrap();
+        }
         self.store
             .move_work_task_for_user(&self.project, id, Column::Doing, ctx(Actor::Human), t0())
             .unwrap();
@@ -123,7 +136,8 @@ fn a_rename_and_a_role_edit_keep_the_agent_id_on_cards() {
             .register_agent(&fx.project, "CLI", "", t0())
             .unwrap()
             .id,
-        "A-2"
+        // A-2 went to the default agent, which the first AI task created.
+        "A-3"
     );
 }
 
@@ -460,6 +474,9 @@ fn session_end_releases_runs_in_every_project_holding_the_secret_from_an_unbound
         .unwrap()
         .id;
     fx.store
+        .assign_task_agent(&beta, beta_task, Some("A-1"), t0())
+        .unwrap();
+    fx.store
         .move_work_task_for_user(&beta, beta_task, Column::Doing, ctx(Actor::Human), t0())
         .unwrap();
     fx.store
@@ -499,18 +516,27 @@ fn session_end_releases_runs_in_every_project_holding_the_secret_from_an_unbound
 }
 
 #[test]
-fn a_run_state_without_a_connection_is_refused_once_the_project_has_agents() {
+fn a_run_state_without_a_connection_acts_as_the_default_agent() {
     let fx = fx();
     let id = fx.doing_task();
-    // No agents yet: the plain rules apply.
-    assert!(
-        fx.store
-            .set_agent_status_unconnected(&fx.project, id, RunState::Running, ctx(Actor::Ai), t0())
-            .is_ok()
-    );
+    fx.store
+        .set_agent_status(&fx.project, id, RunState::Running, ctx(Actor::Ai), t0())
+        .unwrap();
+    fx.store
+        .set_agent_status(&fx.project, id, RunState::Paused, ctx(Actor::Human), t0())
+        .unwrap();
+    // The default agent is the only live agent, so the session acts as it without connecting.
+    fx.store
+        .set_agent_status_unconnected(&fx.project, id, RunState::Running, ctx(Actor::Ai), t0())
+        .unwrap();
     fx.store
         .set_agent_status_unconnected(&fx.project, id, RunState::Paused, ctx(Actor::Ai), t0())
         .unwrap();
+    assert_eq!(
+        fx.store.task(&fx.project, id).unwrap().agent_status,
+        RunState::Paused
+    );
+    // A second live agent makes the session connection mandatory.
     fx.store
         .register_agent(&fx.project, "Screen", "", t0())
         .unwrap();
@@ -1108,7 +1134,7 @@ fn a_registered_agents_card_resumes_on_its_connection_after_the_last_answer() {
 }
 
 #[test]
-fn a_project_without_agents_still_resumes_after_the_last_answer() {
+fn a_default_agent_card_resumes_after_the_last_answer_without_a_connection() {
     let fx = fx();
     let id = fx.doing_task();
     fx.store

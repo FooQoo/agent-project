@@ -88,13 +88,18 @@ impl FileStore {
                     }
                     MessageState::Closed => {}
                 }
-                let reply = question.reply.as_mut().expect("an answered question");
-                if reply.accepted_at.is_some() {
+                if question
+                    .reply
+                    .as_ref()
+                    .is_some_and(|reply| reply.accepted_at.is_some())
+                {
                     // A retry after a failed resume: finish the resume (a no-op when it
                     // already happened), then report the answer as taken in.
                     self.resume_after_answers(project, &project_dir, &[question], now)?;
                     return Err(AgpjError::AnswerAccepted { id: id.to_owned() });
                 }
+                self.ensure_answer_session_may_write(project, &project_dir, &question)?;
+                let reply = question.reply.as_mut().expect("an answered question");
                 reply.accepted_at = Some(stamp(now));
                 Message::Question(question)
             }
@@ -135,15 +140,27 @@ impl FileStore {
             if question.state() != MessageState::Closed {
                 continue;
             }
-            let Some(reply) = question.reply.as_mut() else {
-                continue;
-            };
-            if reply.accepted_at.is_some() {
-                // Taken in before: only finish a resume that an earlier failure left undone.
-                retried.push(question);
+            if question
+                .reply
+                .as_ref()
+                .is_none_or(|reply| reply.accepted_at.is_some())
+            {
+                if question.reply.is_some() {
+                    // Taken in before: only finish a resume that an earlier failure left undone.
+                    retried.push(question);
+                }
                 continue;
             }
-            reply.accepted_at = Some(at);
+            match self.ensure_answer_session_may_write(project, &project_dir, &question) {
+                Ok(()) => {}
+                Err(AgpjError::NotAssignee { .. } | AgpjError::NotConnected) => continue,
+                Err(error) => return Err(error),
+            }
+            question
+                .reply
+                .as_mut()
+                .expect("an answered question")
+                .accepted_at = Some(at);
             changes.push(message_change(
                 &project_dir,
                 &Message::Question(question.clone()),
@@ -222,20 +239,27 @@ impl FileStore {
             }
             // A task assigned to a registered agent resumes only on that agent's active
             // connection that is not stale, which can release it when the session ends. With none, it stays
-            // paused and no resume is recorded; a project without agents resumes on its own.
+            // paused and no resume is recorded; a project with only the default agent resumes on its own.
+            let needs_connection =
+                crate::file_store::ops::assignment::has_other_live_agents_locked(
+                    shared,
+                    project_dir,
+                )?;
             let connection = match task.agent_id.as_deref() {
-                Some(agent) => {
+                Some(agent) if needs_connection => {
                     match crate::file_store::ops::assignment::fresh_connection_locked(
                         shared,
                         project_dir,
                         agent,
                         at,
-                    )? {
-                        Some(connection) => Some(connection),
-                        None => continue,
+                    ) {
+                        Err(AgpjError::NotAssignee { .. } | AgpjError::NotConnected) => continue,
+                        Err(error) => return Err(error),
+                        Ok(Some(connection)) => Some(connection),
+                        Ok(None) => continue,
                     }
                 }
-                None => None,
+                _ => None,
             };
             let language = self.history_language(project, &task)?;
             let listed = questions.join(", ");
@@ -254,7 +278,13 @@ impl FileStore {
             task.run_connection_id = connection;
             task.agent_status_changed_at = at;
             task.updated_at = at;
-            save_task(shared, project_dir, &task)?;
+            match save_task(shared, project_dir, &task) {
+                // Taking in the answer is already committed. A session that cannot resume a
+                // particular task must leave it paused without turning that success into an
+                // apparent failure (or blocking other tasks that can resume).
+                Err(AgpjError::NotAssignee { .. } | AgpjError::NotConnected) => continue,
+                result => result?,
+            }
         }
         Ok(())
     }

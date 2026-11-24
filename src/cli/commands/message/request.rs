@@ -44,6 +44,7 @@ pub(super) fn send(ctx: &Context, args: &MessageSendArgs) -> Result<Printed, Agp
 }
 
 pub(super) fn accept(ctx: &Context, args: &MessageAcceptArgs) -> Result<Printed, AgpjError> {
+    let _session = crate::file_store::enter_session_writes(super::data_dir(ctx.files.shared_dir()));
     let accepted =
         ctx.files
             .accept_message(ctx.project_id()?, &args.id, Actor::Ai, ctx.clock.now())?;

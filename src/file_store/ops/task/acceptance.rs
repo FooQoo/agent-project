@@ -1,9 +1,8 @@
-//! A person checking or unchecking one acceptance condition from the board
-//! or remote access.
+//! A person or connected agent checking one acceptance condition.
 
 use chrono::{DateTime, Utc};
 
-use crate::domain::{Changed, ProjectId};
+use crate::domain::{Actor, Changed, Draft, ProjectId};
 use crate::error::AgpjError;
 use crate::file_store::history::{ParseMode, parse_task};
 use crate::file_store::io;
@@ -20,7 +19,7 @@ use super::view;
 
 impl FileStore {
     /// Set the acceptance condition `condition` of a task to `done`, as a
-    /// person. The latest TASK.md is read under the project lock and only that
+    /// person or connected agent. The latest TASK.md is read under the project lock and only that
     /// condition changes, so the person's choice wins over any change made
     /// since they loaded the task, and nothing else is lost. A condition that
     /// already has the value changes nothing. An archived task is refused; a
@@ -34,9 +33,39 @@ impl FileStore {
         done: bool,
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgpjError> {
+        self.set_acceptance_done_inner(project, id, condition, done, now, false)
+    }
+
+    /// An agent checks a verified condition, subject to task and connection protections.
+    pub fn check_acceptance_as_agent(
+        &self,
+        project: &ProjectId,
+        id: i64,
+        condition: &str,
+        now: DateTime<Utc>,
+    ) -> Result<Changed<TaskView>, AgpjError> {
+        self.set_acceptance_done_inner(project, id, condition, true, now, true)
+    }
+
+    fn set_acceptance_done_inner(
+        &self,
+        project: &ProjectId,
+        id: i64,
+        condition: &str,
+        done: bool,
+        now: DateTime<Utc>,
+        agent: bool,
+    ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
         let mut task = reader::read_task_strict(shared, project, id)?;
+        if agent {
+            if task.draft == Some(Draft::Human) {
+                return Err(AgpjError::TaskIsDraft { id });
+            }
+            super::super::ensure_ai_task_not_done(&task, Actor::Ai)?;
+            super::super::assignment::ensure_session_may_write(shared, &project_dir, &task)?;
+        }
         if task.archived_at.is_some() {
             return Err(AgpjError::TaskArchived { id });
         }
@@ -76,6 +105,14 @@ impl FileStore {
                 format!("A person marked {condition} as not met."),
                 format!("ユーザーが{condition}を未達成に戻しました。"),
             )
+        };
+        let (english, japanese) = if agent {
+            (
+                format!("An agent marked {condition} as met."),
+                format!("エージェントが{condition}を達成にしました。"),
+            )
+        } else {
+            (english, japanese)
         };
         let event = transition_event(Transition {
             kind: HistoryKind::Acceptance,

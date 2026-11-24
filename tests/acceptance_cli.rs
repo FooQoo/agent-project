@@ -3,12 +3,32 @@
 
 mod common;
 
+use agent_project::file_store::{ConnectionOrigin, FileStore};
+use chrono::Utc;
 use common::{agpj, demo_project, json_error, json_ok};
 
 /// Run a command that must succeed; its text output is not parsed.
 fn run_ok(home: &std::path::Path, args: &[&str]) {
     let (code, _, err) = agpj(home, args);
     assert_eq!(code, 0, "{args:?} failed: {err}");
+}
+
+fn demo_project_connected(home: &std::path::Path) {
+    demo_project(home);
+    let store = FileStore::open(&home.join("shared"));
+    let project = store.project_by_name("Demo").unwrap().id;
+    let code = store
+        .issue_connect_code(&project, "A-1", false, Utc::now())
+        .unwrap();
+    let (code, _, err) = agpj(home, &["--project", "Demo", "connect", &code.code]);
+    assert_eq!(code, 0, "{err}");
+    // The CLI exchange persists the secret only inside this temporary home.
+    assert!(store.list_agents(&project).unwrap().iter().any(|agent| {
+        agent
+            .connection
+            .as_ref()
+            .is_some_and(|c| c.origin == ConnectionOrigin::External)
+    }));
 }
 
 const UNMET: &str = "---\nacceptance:\n  - id: AC-1\n    text: The list is returned as JSON\n    done: true\n  - id: AC-2\n    text: Deletion asks for confirmation\n    done: false\n---\n\nBody.\n";
@@ -52,7 +72,7 @@ fn task_status(home: &std::path::Path, id: &str) -> String {
 #[test]
 fn an_agent_cannot_move_a_task_to_done_while_a_condition_is_unmet() {
     let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    demo_project_connected(home.path());
     add_task(home.path(), UNMET);
 
     let (code, error) = json_error(
@@ -81,7 +101,7 @@ fn an_agent_cannot_move_a_task_to_done_while_a_condition_is_unmet() {
 #[test]
 fn the_refusal_names_the_unmet_conditions() {
     let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    demo_project_connected(home.path());
     add_task(home.path(), UNMET);
     let (_, _, err) = agpj(
         home.path(),
@@ -104,7 +124,7 @@ fn the_refusal_names_the_unmet_conditions() {
 #[test]
 fn an_agent_can_move_a_task_to_done_when_every_condition_is_met() {
     let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    demo_project_connected(home.path());
     add_task(home.path(), ALL_MET);
     run_ok(
         home.path(),
@@ -126,7 +146,7 @@ fn an_agent_can_move_a_task_to_done_when_every_condition_is_met() {
 #[test]
 fn a_task_without_conditions_can_be_moved_to_done_by_an_agent() {
     let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    demo_project_connected(home.path());
     run_ok(
         home.path(),
         &[
@@ -147,7 +167,7 @@ fn a_task_without_conditions_can_be_moved_to_done_by_an_agent() {
 #[test]
 fn a_person_can_move_a_task_to_done_while_a_condition_is_unmet() {
     let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    demo_project_connected(home.path());
     add_task(home.path(), UNMET);
     run_ok(
         home.path(),
@@ -169,7 +189,7 @@ fn a_person_can_move_a_task_to_done_while_a_condition_is_unmet() {
 #[test]
 fn an_agent_is_refused_when_the_frontmatter_has_a_defect() {
     let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    demo_project_connected(home.path());
     add_task(home.path(), ALL_MET);
     // The CLI refuses a defective file when it is written, so the defect is put in by hand.
     let project = json_ok(home.path(), &["project", "ls", "--json"])["projects"][0]["id"]

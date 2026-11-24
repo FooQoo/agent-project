@@ -76,9 +76,12 @@ fn write_new_task(
                     })?,
                 None => body,
             };
+        let mut metadata = TaskMetadata::from(task);
+        metadata.content_digest = Some(super::super::save::content_digest(body.as_bytes()));
+        metadata.shape_digest = Some(super::super::save::shape_digest(body.as_bytes()));
         io::write_json(
             &layout::task_json(&temp),
-            &TaskMetadata::from(task),
+            &metadata,
             &format!("{label}/task.json"),
         )?;
         io::write_atomic(
@@ -187,9 +190,20 @@ impl FileStore {
             onboarding_sample: None,
             planned_version: release_notes_version.clone(),
             release_notes_version,
-            agent_id: None,
+            agent_id: if new.assignee == crate::domain::Assignee::Ai {
+                Some(super::super::assignment::default_agent_id_locked(
+                    shared,
+                    project_dir,
+                    language,
+                    now,
+                )?)
+            } else {
+                None
+            },
             assignment_generation: 1,
             run_connection_id: None,
+            content_digest: None,
+            external_edit: false,
             release_completed_at: None,
             history: vec![transition_event(Transition {
                 language,

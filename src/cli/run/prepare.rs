@@ -70,6 +70,7 @@ fn access(command: &Command) -> Access {
         Command::Add(_)
         | Command::Attachment(_)
         | Command::Edit(_)
+        | Command::Acceptance(_)
         | Command::Mv(_)
         | Command::State(_)
         | Command::Connect(_)
@@ -137,6 +138,17 @@ pub(crate) fn prepare(cli: &Cli, env: &mut Env) -> Result<Context, AgpjError> {
 }
 
 fn dispatch(ctx: &mut Context, command: &Command) -> Result<Outcome, AgpjError> {
+    // A command line is a session, so its task writes are checked against its connection. The
+    // server (`serve`) is where a person acts and is never checked.
+    let _session = (!matches!(command, Command::Serve(_))).then(|| {
+        crate::file_store::enter_session_writes(
+            ctx.files
+                .shared_dir()
+                .parent()
+                .map(std::path::Path::to_path_buf)
+                .unwrap_or_default(),
+        )
+    });
     match command {
         Command::Project(args) => commands::project::run(ctx, args),
         Command::Init(args) => commands::init::run(ctx, args),
@@ -145,6 +157,7 @@ fn dispatch(ctx: &mut Context, command: &Command) -> Result<Outcome, AgpjError> 
         Command::Result(args) => commands::result::run(ctx, args),
         Command::Epic(args) => commands::epic::run(ctx, args),
         Command::Edit(args) => commands::edit::run(ctx, args),
+        Command::Acceptance(args) => commands::acceptance::run(ctx, args),
         Command::Mv(args) => commands::mv::run(ctx, args),
         Command::State(args) => commands::state::run(ctx, args),
         Command::Connect(args) => commands::connect::connect(ctx, args),

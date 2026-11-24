@@ -14,7 +14,7 @@ use crate::file_store::reader;
 use crate::file_store::validate::EpicId;
 
 use super::super::{
-    HistoryKind, Transition, ensure_ai_task_not_done, lock_project, save_task, stamp,
+    HistoryKind, Transition, ensure_ai_task_not_done, lock_project, save_task_planning, stamp,
     transition_event,
 };
 use super::read_epic_file;
@@ -106,7 +106,7 @@ impl FileStore {
         task.history.push(event);
         task.epic_id = next;
         task.updated_at = at;
-        save_task(shared, &project_dir, &task)?;
+        save_task_planning(shared, &project_dir, &task)?;
         Ok(Changed {
             value: reader::read_task_locked(shared, project, task_id)?,
             changed: true,

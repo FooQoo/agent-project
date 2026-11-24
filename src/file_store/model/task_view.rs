@@ -93,5 +93,6 @@ pub struct TaskView {
     pub assignment_generation: u32,
     /// The connection that set the task running; `None` while it is not running.
     pub run_connection_id: Option<String>,
+    pub external_edit: bool,
     pub history: Vec<HistoryRecord>,
 }

@@ -65,6 +65,7 @@ Every change adds an entry to the task's history: moves, state changes, question
 These rules are kept by Agent Project itself, not left to the agent's good manners:
 
 - **Who owns a task never changes.** The owner is fixed when the task is created.
+- **Only the current assigned agent can change work in progress.** Todo plans remain co-editable. When the project has only its default agent, sessions act as that agent without connecting; after another live agent is registered, starting an AI task and changing it from Doing onward require a live connection for its assignee. A session cannot bypass the check with `--actor human`.
 - **Only valid states exist.** A column and a run state that do not go together are refused, and nobody can set a state that does not fit. In Doing, only Idle to Running, Running to Paused, and Paused to Running are allowed.
 - **The agent waits when you have not answered.** A task that refers to an open question shows Awaiting answer, and the agent cannot mark it Running. Asking a question about a Running task in Doing, or linking one, pauses it at the same moment and records "Waiting for the answers to Q-1." in its history. When the agent takes in your answers, the task goes back to Running by itself and the history records "Resumed after the answers to Q-1." An agent also cannot move a task from Doing back to Todo; you can.
 - **An answer is recorded once.** The first answer stands and is not overwritten. A question, its answer, and the history of the tasks that refer to it are saved together.
@@ -92,7 +93,7 @@ Some things are not enforced by Agent Project yet. They depend on the agent foll
 
 - **Tasks with no conditions.** An agent could move a task without any acceptance conditions to Done by hand. Automatic Done never does this.
 - **Who answered.** Agent Project does not check who actually typed an answer. When you reply in the chat, the agent records your words on the board.
-- **Editing the files directly.** Changing `TASK.md` by hand skips these checks and the automatic history. Use the board or the CLI.
+- **Editing the files directly.** OS write access can still change `TASK.md` without these checks or automatic history. For Doing and later tasks, use `agpj edit` for the body and `agpj acceptance check <id> <AC-n>` for verified conditions.
 - **Running.** Running is self-reported, so a task can look active when its agent has stopped.
 - **Automatic Done needs the server.** It happens only while `agpj serve` is running, so a finished task can wait in Doing until it is.
 - **Your own tasks.** Tasks you own are recorded, not verified.

@@ -67,6 +67,11 @@ pub struct TaskFile {
     pub assignment_generation: u32,
     /// The connection that set the task running; `None` while it is not running.
     pub run_connection_id: Option<String>,
+    /// SHA-256 of the last accepted TASK.md bytes.
+    #[serde(default, skip_serializing)]
+    pub content_digest: Option<String>,
+    #[serde(default)]
+    pub external_edit: bool,
     pub history: Vec<HistoryRecord>,
 }
 
@@ -154,6 +159,16 @@ pub struct TaskMetadata {
     pub assignment_generation: u32,
     /// See `TaskFile::run_connection_id`.
     pub run_connection_id: Option<String>,
+    /// SHA-256 of the last accepted TASK.md bytes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content_digest: Option<String>,
+    /// SHA-256 of the same bytes with every acceptance `done` flag read as false. A direct edit
+    /// that leaves this unchanged touched nothing but the checkboxes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shape_digest: Option<String>,
+    /// A direct edit awaits human review.
+    #[serde(default)]
+    pub external_edit: bool,
 }
 
 impl From<&TaskFile> for TaskMetadata {
@@ -190,6 +205,9 @@ impl From<&TaskFile> for TaskMetadata {
             agent_id: task.agent_id.clone(),
             assignment_generation: task.assignment_generation,
             run_connection_id: task.run_connection_id.clone(),
+            content_digest: task.content_digest.clone(),
+            shape_digest: None,
+            external_edit: task.external_edit,
         }
     }
 }
@@ -223,6 +241,8 @@ impl TaskMetadata {
             agent_id: self.agent_id,
             assignment_generation: self.assignment_generation,
             run_connection_id: self.run_connection_id,
+            content_digest: self.content_digest,
+            external_edit: self.external_edit,
             history,
         }
     }

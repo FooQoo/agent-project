@@ -16,6 +16,17 @@ pub(super) fn save_task(
     save_task_with_markdown(shared, project_dir, task, None)
 }
 
+/// [`save_task`] for planning and bookkeeping that belongs to the project, not to the agent that
+/// works the card: the session write guard does not apply.
+pub(super) fn save_task_planning(
+    shared: &Path,
+    project_dir: &Path,
+    task: &TaskFile,
+) -> Result<(), AgpjError> {
+    let _exempt = super::assignment::exempt();
+    save_task(shared, project_dir, task)
+}
+
 pub(super) fn save_task_with_markdown(
     shared: &Path,
     project_dir: &Path,
@@ -23,6 +34,23 @@ pub(super) fn save_task_with_markdown(
     replacement: Option<&str>,
 ) -> Result<(), AgpjError> {
     save_task_text(shared, project_dir, task, replacement).map(drop)
+}
+
+pub(super) fn confirm_external_edit(
+    shared: &Path,
+    project_dir: &Path,
+    task: &TaskFile,
+) -> Result<(), AgpjError> {
+    use crate::file_store::transaction::save_pair_locked;
+    let (targets, old, mut new) = task_pair(shared, project_dir, task, None)?;
+    let mut metadata: crate::file_store::model::TaskMetadata =
+        serde_json::from_slice(&new.metadata)
+            .map_err(|error| io::write_error("task.json", error))?;
+    metadata.external_edit = false;
+    new.metadata = serde_json::to_vec_pretty(&metadata)
+        .map_err(|error| io::write_error("task.json", error))?;
+    new.metadata.push(b'\n');
+    save_pair_locked(project_dir, &targets, &old, &new)
 }
 
 /// Like `save_task_with_markdown`, and returns the TASK.md text that was committed,
@@ -95,6 +123,9 @@ fn task_pair(
             reason: "the file is not valid UTF-8".into(),
         }
     })?;
+    let old_meta: Option<crate::file_store::model::TaskMetadata> =
+        serde_json::from_slice(&old.metadata).ok();
+    super::assignment::check_session_write(shared, project_dir, old_meta.as_ref(), task)?;
     let parsed = parse_task(text, ParseMode::Stored);
     if let Some(defect) = parsed.history_defects.first() {
         return Err(AgpjError::FileInvalid {
@@ -111,19 +142,48 @@ fn task_pair(
             "The task history changed before the operation could be saved.",
         ));
     }
+    // A direct edit may arrive before the watcher. Record it during this save as well.
+    let direct_edit = old_meta.as_ref().is_some_and(|meta| {
+        meta.content_digest
+            .as_ref()
+            .is_some_and(|digest| *digest != content_digest(&old.markdown))
+            && matches!(
+                meta.task_status,
+                crate::domain::Column::Doing | crate::domain::Column::Done
+            )
+    });
+    // A direct edit that only ticked or cleared acceptance checkboxes is a legitimate way to
+    // report progress: the checkboxes drive automatic completion. Any other change, including a
+    // body change made in the same edit, fails the shape comparison and stays a direct edit.
+    let checkbox_only = direct_edit
+        && old_meta.as_ref().is_some_and(|meta| {
+            is_checkbox_only_edit(
+                &old.markdown,
+                meta.content_digest.as_deref(),
+                meta.shape_digest.as_deref(),
+            )
+        });
+    let direct_edit = direct_edit && !checkbox_only;
+    let mut history = task.history.clone();
+    if direct_edit && !old_meta.as_ref().is_some_and(|m| m.external_edit) {
+        history.push(crate::file_store::model::HistoryRecord {
+            at: crate::clock::now(),
+            reason: "The task file was updated directly; review is required.".into(),
+        });
+    }
     let markdown = if let Some(replacement) = replacement {
         let parts = frontmatter::parse(replacement);
-        compose_task(replacement, &parts.body, None, &task.history)
+        compose_task(replacement, &parts.body, None, &history)
             .map_err(|defect| AgpjError::FileInvalid {
                 file: md_label.clone(),
                 field: defect.field,
                 reason: defect.reason,
             })?
             .into_bytes()
-    } else if task.history == parsed.history {
+    } else if history == parsed.history {
         old.markdown.clone()
     } else {
-        compose_task(text, &parsed.body, None, &task.history)
+        compose_task(text, &parsed.body, None, &history)
             .map_err(|defect| AgpjError::FileInvalid {
                 file: md_label.clone(),
                 field: defect.field,
@@ -132,7 +192,12 @@ fn task_pair(
             .into_bytes()
     };
     let markdown = sync_planned_version(text, markdown, task, &md_label)?;
-    let mut json = serde_json::to_vec_pretty(&TaskMetadata::from(task))
+    let mut metadata = TaskMetadata::from(task);
+    metadata.content_digest = Some(content_digest(&markdown));
+    metadata.shape_digest = Some(shape_digest(&markdown));
+    metadata.external_edit =
+        direct_edit || task.external_edit || old_meta.as_ref().is_some_and(|m| m.external_edit);
+    let mut json = serde_json::to_vec_pretty(&metadata)
         .map_err(|error| io::write_error(&json_label, error))?;
     json.push(b'\n');
     Ok((
@@ -179,4 +244,57 @@ fn sync_planned_version(
             field: defect.field,
             reason: defect.reason,
         })
+}
+
+/// Whether `markdown` differs from the accepted file (`digest`, `shape`) only in acceptance
+/// checkboxes.
+pub(super) fn is_checkbox_only_edit(
+    markdown: &[u8],
+    digest: Option<&str>,
+    shape: Option<&str>,
+) -> bool {
+    digest.is_some_and(|digest| digest != content_digest(markdown))
+        && shape == Some(shape_digest(markdown).as_str())
+}
+
+/// Digest the Markdown with every `done: true|false` of the acceptance block of the front matter
+/// read as `done: false`, so two files that differ only in checkbox states have one shape.
+pub(super) fn shape_digest(bytes: &[u8]) -> String {
+    let text = String::from_utf8_lossy(bytes);
+    let mut out = String::with_capacity(text.len());
+    let mut fence = 0;
+    let mut in_acceptance = false;
+    for line in text.split_inclusive('\n') {
+        let trimmed = line.trim_end();
+        if fence < 2 && trimmed == "---" {
+            fence += 1;
+            in_acceptance = false;
+        } else if fence == 1 {
+            let top_level = !line.starts_with([' ', '\t', '-']) && !trimmed.is_empty();
+            if top_level {
+                in_acceptance = trimmed.starts_with("acceptance:");
+            }
+            if in_acceptance && let Some(at) = line.find("done:") {
+                let after = &line[at + 5..];
+                let value = after.trim_start();
+                let token_len = value
+                    .find(|c: char| !c.is_ascii_alphanumeric())
+                    .unwrap_or(value.len());
+                if matches!(&value[..token_len], "true" | "false") {
+                    out.push_str(&line[..at]);
+                    out.push_str("done: false");
+                    out.push_str(&value[token_len..]);
+                    continue;
+                }
+            }
+        }
+        out.push_str(line);
+    }
+    content_digest(out.as_bytes())
+}
+
+/// Digest the exact persisted Markdown bytes.
+pub(super) fn content_digest(bytes: &[u8]) -> String {
+    use sha2::{Digest, Sha256};
+    format!("{:x}", Sha256::digest(bytes))
 }

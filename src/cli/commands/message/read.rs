@@ -151,6 +151,7 @@ pub(super) fn withdraw(ctx: &Context, args: &MessageWithdrawArgs) -> Result<Prin
 }
 
 pub(super) fn link(ctx: &Context, args: &MessageLinkArgs, add: bool) -> Result<Printed, AgpjError> {
+    let _session = crate::file_store::enter_session_writes(super::data_dir(ctx.files.shared_dir()));
     let project = ctx.project_id()?;
     let task = ctx.files.link_questions(
         project,

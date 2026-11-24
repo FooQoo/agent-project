@@ -27,6 +27,7 @@ pub(in crate::file_store::ops) fn add_image_locked(
     {
         let mut loaded = load(shared, project, owner)?;
         loaded.ensure_writable(block_drafts)?;
+        loaded.ensure_session_may_write(shared, project_dir)?;
         let (metadata, path) = write_image(
             shared,
             project_dir,
@@ -57,6 +58,7 @@ pub(in crate::file_store::ops) fn delete_image_locked(
 ) -> Result<(), AgpjError> {
     let mut loaded = load(shared, project, owner)?;
     loaded.ensure_writable(block_drafts)?;
+    loaded.ensure_session_may_write(shared, project_dir)?;
     let index = loaded
         .attachments()
         .iter()

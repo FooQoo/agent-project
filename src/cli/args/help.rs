@@ -16,6 +16,7 @@ Commands:
   init    Create the project's board, or empty an existing one
   add     Add a task to Todo
   edit    Change a task's title or description
+  acceptance Check a verified acceptance condition
   mv      Move a task to todo, doing, or done
   history Append a work note
   state   Report a task's run state: idle or running

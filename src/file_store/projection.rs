@@ -30,6 +30,7 @@ pub struct TaskSummaryFields {
     pub agent_status: RunState,
     pub assignee: Assignee,
     pub draft: Option<crate::domain::Draft>,
+    pub external_edit: bool,
     pub position: i64,
     pub epic_id: Option<String>,
     pub acceptance_done: u32,

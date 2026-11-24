@@ -179,6 +179,7 @@ pub(crate) fn task_view(
         agent_id: task.agent_id,
         assignment_generation: task.assignment_generation,
         run_connection_id: task.run_connection_id,
+        external_edit: task.external_edit,
         history: task.history,
     }
 }

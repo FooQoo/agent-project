@@ -240,17 +240,4 @@ fn pending_is_left_alone_then_answered_task_is_reconsidered() {
     assert_eq!(task.agent_status, RunState::Idle);
 }
 
-#[test]
-fn direct_task_file_updates_are_rechecked_and_existing_done_is_not_reopened() {
-    let f = Fixture::new();
-    let id = f.task("Edited externally", Assignee::Ai, OPEN, false);
-    f.replace_description(id, COMPLETE);
-    assert!(f.store.auto_complete_all(at(2)).unwrap());
-
-    f.replace_description(id, OPEN);
-    assert!(!f.store.auto_complete_all(at(3)).unwrap());
-    assert_eq!(
-        f.store.task(&f.project, id).unwrap().task_status,
-        Column::Done
-    );
-}
+mod external_edit;
