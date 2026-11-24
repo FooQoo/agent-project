@@ -230,7 +230,7 @@ test('PM-4 a running task opens read-only, and a task that starts running turns 
   agpjOk(mainProject, ['state', String(idle), 'running', '--actor', 'ai', '--reason', 'Working']);
   await expect(dialog).toHaveAttribute('data-read-only', '', { timeout: 15_000 });
   await expect(titleField(dialog)).toBeDisabled();
-  agpjOk(mainProject, ['state', String(idle), 'paused', '--actor', 'human', '--reason', 'Done working']);
+  agpjOk(mainProject, ['state', String(idle), 'paused', '--actor', 'ai', '--reason', 'Done working']);
   await expect(titleField(dialog)).toBeEnabled({ timeout: 15_000 });
   await dialog.getByRole('button', { name: 'Close', exact: true }).first().click();
   await expect(dialog).toHaveCount(0);

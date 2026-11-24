@@ -132,6 +132,7 @@ fn ask_without_waiting_needs_no_server_and_a_wait_without_autostart_needs_one() 
             "1",
             "--questions-json",
             &request,
+            "--json",
         ],
     );
     assert_eq!(code, 1, "{err}");

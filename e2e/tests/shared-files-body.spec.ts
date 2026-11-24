@@ -167,7 +167,7 @@ test('a Done task rejects agent edits while a person can still edit and show its
   await openBoard(page);
   // The agent reports the work: the card stays in Doing, paused.
   agpjOk(mainProject, ['state', '13', 'running', '--actor', 'ai', '--reason', 'Working.']);
-  agpjOk(mainProject, ['state', '13', 'paused', '--actor', 'human', '--reason', 'Reported as finished.']);
+  agpjOk(mainProject, ['state', '13', 'paused', '--actor', 'ai', '--reason', 'Reported as finished.']);
   expect(show(13)).toMatchObject({ taskStatus: 'doing', agentStatus: 'paused' });
   await expect(page.getByRole('region', { name: 'Doing' }).getByRole('button', { name: /^#13(?!\d)/ })).toBeVisible();
 
