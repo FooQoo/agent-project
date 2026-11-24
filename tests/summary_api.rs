@@ -132,34 +132,39 @@ fn check_summary(body: &str, project: &ProjectId) -> Summary {
         set(&["id", "name", "versions", "releaseVersion"])
     );
     for task in value["tasks"].as_array().unwrap() {
-        assert_eq!(
-            keys(task),
-            set(&[
-                "id",
-                "title",
-                "taskStatus",
-                "agentStatus",
-                "assignee",
-                "draft",
-                "externalEdit",
-                "position",
-                "epicId",
-                "acceptance",
-                "acceptanceError",
-                "plannedVersion",
-                "createdAt",
-                "updatedAt",
-                "awaitingAnswer",
-                "pendingRequestId",
-                "pendingReason",
-                "pendingChoices",
-                "questionIds",
-                "openQuestionIds",
-                "taskStatusChangedAt",
-                "agentStatusChangedAt",
-                "detailVersions",
-            ])
-        );
+        let mut expected = set(&[
+            "id",
+            "title",
+            "taskStatus",
+            "agentStatus",
+            "assignee",
+            "draft",
+            "externalEdit",
+            "position",
+            "epicId",
+            "acceptance",
+            "acceptanceError",
+            "plannedVersion",
+            "createdAt",
+            "updatedAt",
+            "awaitingAnswer",
+            "pendingRequestId",
+            "pendingReason",
+            "pendingChoices",
+            "questionIds",
+            "openQuestionIds",
+            "taskStatusChangedAt",
+            "agentStatusChangedAt",
+            "detailVersions",
+        ]);
+        if task["assignee"] == "ai" {
+            expected.insert("assignedAgent".to_string());
+            let agent = &task["assignedAgent"];
+            assert_eq!(keys(agent), set(&["id", "name"]));
+            assert_eq!(agent["id"], "A-1");
+            assert!(agent["name"].as_str().is_some_and(|name| !name.is_empty()));
+        }
+        assert_eq!(keys(task), expected);
         assert_eq!(keys(&task["detailVersions"]), set(&["document", "history"]));
         assert_eq!(keys(&task["acceptance"]), set(&["done", "total"]));
     }

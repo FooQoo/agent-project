@@ -154,6 +154,7 @@ export function TaskCardView({
         className={className}
         role="button"
         tabIndex={0}
+        aria-description={task.assignedAgent?.name}
         aria-current={selected ? 'true' : 'false'}
         data-lane={task.taskStatus}
         data-drag-count={selection?.drag?.lead ? selection.drag.count : undefined}

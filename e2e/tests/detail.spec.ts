@@ -68,8 +68,8 @@ test('the panel shows the run state and the reason for Doing tasks, and an empty
   await expect(task(page, 11).locator('.spinner')).toHaveCSS('animation-name', 'spin');
   await expect(panel.locator('.detail__meta .status-label--running svg')).toHaveCount(1);
   await expect(panel.locator('.detail__meta .status-label--running svg')).toHaveCSS('animation-name', 'none');
-  await expect(task(page, 11).locator('.assignee-label svg')).toHaveCount(1);
-  await expect(panel.locator('.detail__meta .assignee-label')).toHaveCSS('border-top-style', 'none');
+  await expect(task(page, 11).locator('.assignee-label svg, .card-agent')).toHaveCount(1);
+  await expect(panel.locator('.detail__meta :is(.assignee-label, .task-agent)')).toHaveCSS('border-top-style', 'none');
 
   // A card outside Doing has a column and no run state. Archive is the right end of the toolbar beside the tabs.
   await task(page, 8).click();

@@ -27,14 +27,15 @@ test('a person can register an agent and reassign a Doing card on PC and phone',
   await settings.getByRole('button', { name: 'Close', exact: true }).click();
 
   const desktopCard = page.locator('.card[data-lane="doing"]').filter({ hasText: 'Review the release' });
-  await expect(desktopCard.getByRole('img', { name: 'Agent', exact: true })).toBeVisible();
+  await expect(desktopCard.getByTitle('Agent', { exact: true })).toBeVisible();
   await desktopCard.click();
   await page.getByRole('button', { name: 'Change agent · Agent', exact: true }).click();
   const desktopOption = page.getByRole('menuitemradio', { name: /Release reviewer/ });
   await expect(desktopOption).toContainText('Checks release notes');
   await desktopOption.click();
   await expect(page.getByRole('button', { name: 'Change agent · Release reviewer' })).toBeVisible();
-  await expect(desktopCard.getByRole('img', { name: 'Release reviewer' })).toBeVisible();
+  await expect(desktopCard.getByTitle('Release reviewer')).toBeVisible();
+  await expect(desktopCard).toHaveAccessibleDescription('Release reviewer');
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(target);
@@ -42,7 +43,8 @@ test('a person can register an agent and reassign a Doing card on PC and phone',
   const phoneCard = page
     .getByRole('tabpanel', { name: /^Doing/ })
     .getByRole('article', { name: /Review the release/ });
-  await expect(phoneCard.getByRole('img', { name: 'Release reviewer' })).toBeVisible();
+  await expect(phoneCard.getByTitle('Release reviewer')).toBeVisible();
+  await expect(phoneCard).toHaveAccessibleDescription('Release reviewer');
   await phoneCard.getByRole('button', { name: 'Review the release' }).click();
   await page.getByRole('button', { name: 'Change agent · Release reviewer' }).click();
   const picker = page.getByRole('dialog', { name: 'Change agent' });
@@ -81,5 +83,5 @@ test('an existing card can use a default agent set up in Settings', async ({ pag
   agpjOk(project, ['state', String(task.id), 'running', '--actor', 'ai']);
   await page.keyboard.press('Escape');
   const card = page.locator('.card[data-lane="doing"]').filter({ hasText: 'Existing AI card' });
-  await expect(card.getByRole('img', { name: 'Agent', exact: true })).toBeVisible();
+  await expect(card.getByTitle('Agent', { exact: true })).toBeVisible();
 });

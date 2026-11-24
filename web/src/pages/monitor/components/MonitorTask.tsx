@@ -49,6 +49,7 @@ export function MonitorTask({
     <article
       className={`monitor-card monitor-card--${section}`}
       aria-label={label}
+      aria-description={task.assignedAgent?.name}
       data-task-id={task.id}
       data-agent-status={showsState ? task.agentStatus : undefined}
       data-awaiting-answer={pending ? 'true' : undefined}
