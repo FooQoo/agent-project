@@ -1,30 +1,16 @@
 import { CheckCircle2Icon, CircleDashedIcon } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/button';
 import type { ResultPlanView } from '../../../shared/api/contracts';
-import type { PlanDelivery } from './deliverPlan';
-import { PlanRegisterForm } from './PlanRegisterForm';
 import './result-plans.css';
 
 /**
  * One planned result as a box on the Results tab: what is to be delivered and when, whether it is
  * delivered, and the result that delivered it inside (`children`). An undelivered box is empty and
- * says so; a person who may record results registers the real result from it.
+ * says so. Results are registered by agents with `agpj result add --plan`.
  */
-export function PlanBox({
-  plan,
-  canRegister,
-  onRegister,
-  children,
-}: {
-  plan: ResultPlanView;
-  canRegister: boolean;
-  onRegister?: (plan: ResultPlanView, delivery: PlanDelivery) => Promise<void>;
-  children?: ReactNode;
-}) {
+export function PlanBox({ plan, children }: { plan: ResultPlanView; children?: ReactNode }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
   const delivered = plan.deliveredResultVersion !== null;
   const state = delivered ? 'delivered' : 'pending';
   return (
@@ -49,22 +35,6 @@ export function PlanBox({
         {plan.condition}
       </p>
       {delivered && <div className="plan-box__results">{children}</div>}
-      {!delivered && canRegister && onRegister && !open && (
-        <Button type="button" size="s" className="plan-box__action" onClick={() => setOpen(true)}>
-          {t('resultPlans.registerResult')}
-        </Button>
-      )}
-      {!delivered && canRegister && onRegister && open && (
-        <PlanRegisterForm
-          planId={plan.id}
-          placeholder={plan.content}
-          onCancel={() => setOpen(false)}
-          onSubmit={async (delivery) => {
-            await onRegister(plan, delivery);
-            setOpen(false);
-          }}
-        />
-      )}
     </section>
   );
 }

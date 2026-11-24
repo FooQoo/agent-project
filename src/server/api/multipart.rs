@@ -4,7 +4,6 @@ use axum::extract::Multipart;
 use axum::http::StatusCode;
 use axum::response::Response;
 use serde::Deserialize;
-use serde::de::DeserializeOwned;
 
 use crate::domain::Assignee;
 use crate::server::request::MAX_BODY;
@@ -44,25 +43,14 @@ pub(super) struct MultipartAttachmentMeta {
     pub(super) name: Option<String>,
 }
 
-/// A metadata part that lists the images that come with it.
-pub(super) trait ImageList {
-    fn images(&self) -> &[MultipartAttachmentMeta];
-}
-
-impl ImageList for MultipartMeta {
-    fn images(&self) -> &[MultipartAttachmentMeta] {
-        &self.attachments
-    }
-}
-
-pub(super) struct MultipartPayload<M = MultipartMeta> {
-    pub(super) meta: M,
+pub(super) struct MultipartPayload {
+    pub(super) meta: MultipartMeta,
     pub(super) additions: Vec<crate::domain::AttachmentInput>,
 }
 
-pub(super) async fn parse_multipart<M: DeserializeOwned + ImageList>(
+pub(super) async fn parse_multipart(
     mut multipart: Multipart,
-) -> Result<MultipartPayload<M>, Response> {
+) -> Result<MultipartPayload, Response> {
     let mut metadata = None;
     let mut files = Vec::new();
     let mut metadata_bytes = 0usize;
@@ -101,14 +89,16 @@ pub(super) async fn parse_multipart<M: DeserializeOwned + ImageList>(
                     "Send exactly one metadata part.",
                 ));
             }
-            metadata = Some(serde_json::from_slice::<M>(&bytes).map_err(|_| {
-                error_response(
-                    StatusCode::UNPROCESSABLE_ENTITY,
-                    "invalid_value",
-                    "request body is invalid.",
-                    "The metadata part is not valid for this route.",
-                )
-            })?);
+            metadata = Some(
+                serde_json::from_slice::<MultipartMeta>(&bytes).map_err(|_| {
+                    error_response(
+                        StatusCode::UNPROCESSABLE_ENTITY,
+                        "invalid_value",
+                        "request body is invalid.",
+                        "The metadata part is not valid for this route.",
+                    )
+                })?,
+            );
         } else if matches!(
             name.as_str(),
             "file" | "files" | "attachment" | "attachments"
@@ -148,7 +138,7 @@ pub(super) async fn parse_multipart<M: DeserializeOwned + ImageList>(
             "A request may contain at most 20 images.",
         ));
     }
-    if files.len() != meta.images().len() {
+    if files.len() != meta.attachments.len() {
         return Err(error_response(
             StatusCode::UNPROCESSABLE_ENTITY,
             "invalid_value",
@@ -158,7 +148,7 @@ pub(super) async fn parse_multipart<M: DeserializeOwned + ImageList>(
     }
     let additions = files
         .into_iter()
-        .zip(meta.images().iter())
+        .zip(meta.attachments.iter())
         .map(|((filename, bytes), item)| crate::domain::AttachmentInput {
             id: item.id.clone(),
             name: item.name.clone().unwrap_or(filename),

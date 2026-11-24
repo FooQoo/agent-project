@@ -54,3 +54,71 @@ fn results_route_lists_what_the_cli_recorded() {
     );
     server.stop();
 }
+
+#[test]
+fn results_route_returns_the_plans_with_their_delivered_state() {
+    let home = tempfile::tempdir().unwrap();
+    demo_project(home.path());
+    let file = home.path().join("desc.md");
+    std::fs::write(
+        &file,
+        "---\nresultPlans:\n  - content: A screenshot\n    condition: When fixed\n  - content: The report\n    condition: When done\n    final: true\n---\n\nBody.\n",
+    )
+    .unwrap();
+    let (code, _, err) = common::agpj(
+        home.path(),
+        &[
+            "--project",
+            "Demo",
+            "add",
+            "Planned",
+            "--assignee",
+            "ai",
+            "--actor",
+            "human",
+            "--desc-file",
+            file.to_str().unwrap(),
+        ],
+    );
+    assert_eq!(code, 0, "{err}");
+    let pid = json_ok(home.path(), &["project", "ls", "--json"])["projects"][0]["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let task = json_ok(home.path(), &["--project", "Demo", "ls", "--json"])["tasks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["id"].as_i64().unwrap())
+        .max()
+        .unwrap();
+    let server = Running::start(home.path());
+    let path = format!("/api/projects/{pid}/tasks/{task}/results");
+    let before = server.get(&path).json();
+    assert_eq!(before["resultPlans"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        before["resultPlans"][0]["deliveredResultVersion"],
+        serde_json::Value::Null
+    );
+
+    json_ok(
+        home.path(),
+        &[
+            "--project",
+            "Demo",
+            "result",
+            "add",
+            &task.to_string(),
+            "--plan",
+            "RP-1",
+            "--summary",
+            "Fixed",
+            "--actor",
+            "ai",
+            "--json",
+        ],
+    );
+    let after = server.get(&path).json();
+    assert_eq!(after["resultPlans"][0]["deliveredResultVersion"], 1);
+    assert_eq!(after["results"][0]["planId"], "RP-1");
+}

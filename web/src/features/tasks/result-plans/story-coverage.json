@@ -10,7 +10,7 @@
           "stories": [
             {
               "id": "task-detail-planbox--undelivered",
-              "states": ["empty undelivered box", "register form opens"],
+              "states": ["empty undelivered box", "nothing interactive"],
               "interaction": true
             },
             {
@@ -26,36 +26,6 @@
             {
               "id": "task-detail-planbox--final-box",
               "states": ["final plan"],
-              "interaction": false
-            },
-            {
-              "id": "task-detail-planbox--read-only",
-              "states": ["no register button"],
-              "interaction": true
-            },
-            {
-              "id": "task-detail-planbox--register-retry",
-              "states": ["failure keeps input", "try again"],
-              "interaction": true
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "file": "features/tasks/result-plans/PlanRegisterForm.tsx",
-      "exports": [
-        {
-          "name": "PlanRegisterForm",
-          "stories": [
-            {
-              "id": "task-detail-planbox--register-form",
-              "states": ["summary, link, images"],
-              "interaction": false
-            },
-            {
-              "id": "task-detail-planbox--register-form-phone",
-              "states": ["phone width", "dark", "Japanese"],
               "interaction": false
             }
           ]
