@@ -75,8 +75,13 @@ fn every_template_command_uses_cwd_resolution_and_is_fixed() {
             );
             assert_eq!(hook["type"], "command");
             assert_eq!(hook["timeout"], 10, "{agent} {event}");
-            if agent == "codex" {
+            if agent == "codex" && event != "Stop" {
                 assert_eq!(hook["additionalContextLimit"], 0, "{event}");
+            } else {
+                assert!(
+                    hook.get("additionalContextLimit").is_none(),
+                    "{agent} {event}"
+                );
             }
             for forbidden in [
                 "PROJECT_NAME",
