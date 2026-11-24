@@ -1,3 +1,4 @@
+import { CardAgent } from '../../../shared/ui/agent/CardAgent';
 import { useTranslation } from 'react-i18next';
 import { formatShort, stateLabel } from '../../../features/tasks/model/format';
 import { TaskCardContent, waitsOnQuestion } from '../../../features/tasks/card/TaskCard';
@@ -55,7 +56,11 @@ export function MonitorTask({
       <span className="monitor-card__top">
         {/* The guide's sample cards have no number of their own; the span keeps the row's layout. */}
         <span className="monitor-card__id">{task.id > 0 ? `#${task.id}` : ''}</span>
-        <AssigneeLabel assignee={task.assignee} />
+        {task.assignedAgent ? (
+          <CardAgent agent={task.assignedAgent} />
+        ) : (
+          <AssigneeLabel assignee={task.assignee} />
+        )}
         <span className="monitor-card__indicators">
           {task.taskStatus === 'backlog' && (task.openQuestionIds?.length ?? 0) > 0 && (
             <span className="card__open-question">{t('backlog.openQuestion')}</span>

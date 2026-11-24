@@ -1,136 +1,179 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent, DialogTitle } from '../../shared/ui/dialog';
 import { Button } from '../../shared/ui/button';
-import { WriteError } from '../../shared/api/writeErrors';
-import { loadDefaultAgentId, issueConnectCode, type ConnectCode } from './api';
-import '../../shared/styles/modal.css';
+import { Surface } from '../../shared/ui/surface/Surface';
+import { AgentCodePanel } from './AgentCodePanel';
+import { AgentIdentity } from '../../shared/ui/agent/AgentIdentity';
+import { AgentRegistrationForm } from './AgentRegistrationForm';
+import { loadAgents, type Agent } from '../../shared/api/agents';
+import { prepareDefaultAgent, saveAgent } from './api';
+import './agent-connection.css';
 
 export function AgentConnectionSettings({
   onOpenChange,
   projectId,
   restoreFocusRef,
+  kind = 'dialog',
+  canIssueCode = kind === 'dialog',
 }: {
   onOpenChange: (open: boolean) => void;
-  projectId: string | null;
+  projectId: string;
   restoreFocusRef?: { current: HTMLElement | null };
+  kind?: 'dialog' | 'sheet';
+  canIssueCode?: boolean;
 }) {
   const { t } = useTranslation();
-  const [agentId, setAgentId] = useState<string | null>(null);
-  const [code, setCode] = useState<ConnectCode | null>(null);
-  const [busy, setBusy] = useState(projectId !== null);
-  const [error, setError] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [agents, setAgents] = useState<Agent[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [edit, setEdit] = useState<Agent | 'new' | null>(null);
+  const [connect, setConnect] = useState<Agent | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [prepareFailed, setPrepareFailed] = useState(false);
 
   useEffect(() => {
-    if (!projectId) return;
     let active = true;
-    void loadDefaultAgentId(projectId)
-      .then((id) => {
-        if (active) setAgentId(id);
-      })
-      .catch(() => {
-        if (active) setError(t('agentConnection.loadFailed'));
-      })
-      .finally(() => {
-        if (active) setBusy(false);
-      });
+    let request = 0;
+    const refresh = () => {
+      const current = ++request;
+      void loadAgents(projectId).then(
+        (loaded) => {
+          if (!active || current !== request) return;
+          setAgents(loaded);
+          setFailed(false);
+        },
+        () => {
+          if (active && current === request) setFailed(true);
+        },
+      );
+    };
+    refresh();
+    window.addEventListener('focus', refresh);
     return () => {
       active = false;
+      window.removeEventListener('focus', refresh);
     };
-  }, [projectId, t]);
+  }, [projectId]);
 
-  useEffect(() => {
-    if (!code) return;
-    const expiry = window.setTimeout(
-      () => {
-        setCode(null);
-        setCopied(false);
-      },
-      Math.max(0, Date.parse(code.expiresAt) - Date.now()),
+  const save = async (value: Pick<Agent, 'name' | 'role'>) => {
+    const id = edit && edit !== 'new' ? edit.id : undefined;
+    const saved = await saveAgent(projectId, value, id);
+    setAgents((current) =>
+      id
+        ? (current ?? []).map((item) => (item.id === id ? saved : item))
+        : [...(current ?? []), saved],
     );
-    return () => window.clearTimeout(expiry);
-  }, [code]);
-
-  const issue = async () => {
-    if (!projectId || !agentId || busy) return;
-    setBusy(true);
-    setError('');
-    setCode(null);
-    setCopied(false);
-    try {
-      setCode(await issueConnectCode(projectId, agentId));
-    } catch (reason) {
-      setError(
-        reason instanceof WriteError && reason.code === 'agent_busy'
-          ? t('agentConnection.busy')
-          : t('agentConnection.issueFailed'),
-      );
-    } finally {
-      setBusy(false);
-    }
   };
 
-  const command = code ? `agpj connect ${code.code}` : '';
-  const copy = async () => {
+  const prepare = async () => {
+    if (preparing) return;
+    setPreparing(true);
+    setPrepareFailed(false);
     try {
-      await navigator.clipboard.writeText(command);
-      setCopied(true);
+      await prepareDefaultAgent(projectId);
+      setAgents(await loadAgents(projectId));
     } catch {
-      setError(t('agentConnection.copyFailed'));
+      setPrepareFailed(true);
+    } finally {
+      setPreparing(false);
     }
   };
 
   return (
-    <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent
-        className="modal"
-        showCloseButton={false}
-        aria-describedby={undefined}
-        onCloseAutoFocus={(event) => {
-          const target = restoreFocusRef?.current;
-          if (!target?.isConnected) return;
-          event.preventDefault();
-          target.focus();
-        }}
-      >
-        <div className="modal__header">
-          <DialogTitle className="modal__title">{t('agentConnection.title')}</DialogTitle>
-          <button
-            type="button"
-            className="modal__close"
-            aria-label={t('dialog.close')}
-            onClick={() => onOpenChange(false)}
-          >
-            ×
-          </button>
-        </div>
-        {busy && !agentId && !error ? <p>{t('agentConnection.loading')}</p> : null}
-        {!busy && !agentId && !error ? <p>{t('agentConnection.noAgent')}</p> : null}
-        {agentId && !code ? (
-          <Button type="button" disabled={busy} onClick={() => void issue()}>
-            {t('agentConnection.issue')}
-          </Button>
-        ) : null}
-        {code ? (
-          <>
-            <p>
-              {t('agentConnection.expires', {
-                time: new Date(code.expiresAt).toLocaleTimeString(),
-              })}
-            </p>
-            <code>{command}</code>
-            <Button type="button" onClick={() => void copy()}>
-              {copied ? t('agentConnection.copied') : t('agentConnection.copy')}
+    <Surface
+      kind={kind}
+      title={t('agentConnection.title')}
+      closeLabel={t('dialog.close')}
+      onClose={() => onOpenChange(false)}
+      returnFocusTo={() => restoreFocusRef?.current ?? null}
+    >
+      {failed ? <p role="alert">{t('agentConnection.loadFailed')}</p> : null}
+      {!agents && !failed ? <p role="status">{t('agentConnection.loading')}</p> : null}
+      {agents && (
+        <>
+          {!agents.some((agent) => agent.isDefault) && (
+            <div className="agent-settings__default">
+              <p>{t('agentConnection.defaultHelp')}</p>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={preparing}
+                onClick={() => void prepare()}
+              >
+                {t('agentConnection.prepareDefault')}
+              </Button>
+              {prepareFailed && <p role="alert">{t('agentConnection.saveFailed')}</p>}
+            </div>
+          )}
+          {edit === 'new' ? (
+            <AgentRegistrationForm onSave={save} onClose={() => setEdit(null)} />
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setConnect(null);
+                setEdit('new');
+              }}
+            >
+              {t('agentConnection.add')}
             </Button>
-          </>
-        ) : null}
-        {error ? (
-          <p className="modal__error" role="alert">
-            {error}
-          </p>
-        ) : null}
-      </DialogContent>
-    </Dialog>
+          )}
+          <ul className="agent-settings__list">
+            {agents.map((agent) => (
+              <li key={agent.id}>
+                <AgentIdentity agent={agent} />
+                {edit && edit !== 'new' && edit.id === agent.id ? (
+                  <AgentRegistrationForm
+                    agent={agent}
+                    onSave={save}
+                    onClose={() => setEdit(null)}
+                  />
+                ) : (
+                  <div className="agent-settings__actions">
+                    <Button
+                      type="button"
+                      size="s"
+                      variant="outline"
+                      onClick={() => {
+                        setConnect(null);
+                        setEdit(agent);
+                      }}
+                    >
+                      {t('agentConnection.edit')}
+                    </Button>
+                    {canIssueCode && (
+                      <Button
+                        type="button"
+                        size="s"
+                        variant="outline"
+                        onClick={() => {
+                          setEdit(null);
+                          setConnect(agent);
+                        }}
+                      >
+                        {t(
+                          agent.connection
+                            ? 'agentConnection.switch'
+                            : 'agentConnection.prepareCode',
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                )}
+                {connect?.id === agent.id && (
+                  <AgentCodePanel
+                    key={agent.id}
+                    agent={connect}
+                    projectId={projectId}
+                    onClose={() => setConnect(null)}
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+          {!canIssueCode && <p>{t('agentConnection.codeOnComputer')}</p>}
+        </>
+      )}
+    </Surface>
   );
 }

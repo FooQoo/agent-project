@@ -38,7 +38,7 @@ export function BoardSettings({ open, onOpenChange, restoreFocusRef }: SettingsS
   // The project the board shows, from the same `project` query the board reads.
   const [projectId] = useQueryState('project', parseAsString);
   const withConnection = phoneConnection();
-  const withAgentConnection = withConnection && import.meta.env.MODE !== 'mock';
+  const withAgentConnection = Boolean(boardPreferences && projectId);
   return (
     <>
       <SettingsDialog
@@ -88,11 +88,12 @@ export function BoardSettings({ open, onOpenChange, restoreFocusRef }: SettingsS
           projectId={projectId}
         />
       ) : null}
-      {withAgentConnection && agentConnectionOpen ? (
+      {withAgentConnection && agentConnectionOpen && projectId ? (
         <AgentConnectionSettings
           key={projectId}
           onOpenChange={setAgentConnectionOpen}
           projectId={projectId}
+          canIssueCode={withConnection}
           restoreFocusRef={restoreFocusRef}
         />
       ) : null}

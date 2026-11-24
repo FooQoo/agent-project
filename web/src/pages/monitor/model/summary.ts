@@ -35,6 +35,7 @@ function taskOf(task: SummaryTask, epics: ReadonlyMap<string, EpicRef>): Task {
     acceptance: acceptanceOf(task),
     acceptanceError: false,
     assignee: task.assignee,
+    assignedAgent: task.assignedAgent,
     taskStatus: task.taskStatus,
     taskStatusChangedAt: task.taskStatusChangedAt,
     position: task.position,

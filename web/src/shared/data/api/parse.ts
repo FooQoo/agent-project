@@ -49,6 +49,7 @@ function parseTask(value: unknown, path: string): SummaryTask {
     'questionIds',
     'openQuestionIds',
     'externalEdit',
+    'assignedAgent',
   ]);
   const acceptance = exact(o.acceptance, `${path}.acceptance`, ['done', 'total']);
   const versions = exact(o.detailVersions, `${path}.detailVersions`, ['document', 'history']);
@@ -83,6 +84,14 @@ function parseTask(value: unknown, path: string): SummaryTask {
       history: str(versions.history, `${path}.detailVersions.history`),
     },
   };
+  if (o.assignedAgent !== undefined) {
+    const field = `${path}.assignedAgent`;
+    const agent = exact(o.assignedAgent, field, ['id', 'name']);
+    task.assignedAgent = {
+      id: str(agent.id, `${field}.id`),
+      name: str(agent.name, `${field}.name`),
+    };
+  }
   if (o.externalEdit !== undefined) {
     task.externalEdit = bool(o.externalEdit, `${path}.externalEdit`);
   }

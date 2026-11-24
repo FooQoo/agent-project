@@ -46,6 +46,8 @@ pub struct ProjectSnapshot {
     /// Every request of the project with its state, in ID order.
     #[serde(skip)]
     pub requests: Vec<RequestView>,
+    #[serde(skip)]
+    pub agents: Vec<crate::file_store::ops::AgentRecord>,
 }
 
 /// Orders archived tasks for the archive list: newest `archivedAt` first, a task
@@ -113,7 +115,11 @@ pub(crate) fn read_snapshot_locked(
     let project = meta_of(file);
     // Read the registry once for the snapshot, then resolve legacy AI cards in memory. A
     // missing registry intentionally leaves legacy boards untouched.
-    let legacy_default = crate::file_store::ops::registered_default_agent_id(shared, &project_dir);
+    let agents = crate::file_store::ops::registered_agents(shared, &project_dir);
+    let legacy_default = agents
+        .iter()
+        .find(|agent| agent.is_default && agent.archived_at.is_none())
+        .map(|agent| &agent.id);
     let mut tasks = Vec::new();
     let (epics, mut problems) = read_epics(shared, &project_dir);
     for task_id in task_ids(&project_dir)? {
@@ -121,7 +127,7 @@ pub(crate) fn read_snapshot_locked(
             Ok(load) => {
                 let mut view = load.view;
                 if view.agent_id.is_none() && view.assignee == crate::domain::Assignee::Ai {
-                    view.agent_id = legacy_default.clone();
+                    view.agent_id = legacy_default.cloned();
                 }
                 tasks.push(view);
                 problems.extend(load.problems);
@@ -155,6 +161,7 @@ pub(crate) fn read_snapshot_locked(
         release_version,
         questions,
         requests,
+        agents,
     })
 }
 

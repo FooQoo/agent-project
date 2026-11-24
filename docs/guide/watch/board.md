@@ -6,6 +6,14 @@ title: The board
 
 The board is where you watch the work and step in while the agent keeps going. You see what is moving and what is waiting, and you can move a card, check a condition, or rewrite a task without stopping the agent; it follows the change the next time it reads the board. This page covers the daily actions; the ideas behind them are in [The work model](../work-model). When the agent stops to ask you something, you answer in [Decisions](../delegate/decisions).
 
+## Assign a card to an agent
+
+Open **Settings → Agents** to register agents with a name and a short description of their role. The list shows whether each agent is connected. On the computer running the board, use **Connect** to issue a one-time code for a session, or **Switch connection** to issue a code that will replace its current session when used.
+
+Each AI card shows the assigned agent's icon. Open the card and choose the agent's name to see the other agents and their roles. On a PC, the choices appear in a menu. On a phone, they appear in a bottom sheet. Choose the agent who should take over. The card stays in its lane. If it was running, it goes back to waiting for the new agent.
+
+If the project has no default agent yet, **Set up default agent** creates it. Existing AI cards without an explicit assignment then use that agent.
+
 ## Add work
 
 1. Select a project in the header and choose **Ask AI**.

@@ -12,7 +12,7 @@ mod diff;
 
 use std::collections::BTreeMap;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use super::model::{Choice, Problem};
 use crate::domain::{Assignee, Column, RunState};
@@ -22,6 +22,14 @@ pub use changes::{ChangeSet, ChangeSink, Facet, Resource, ResourceChange, Resour
 pub(crate) use changes::{invalid_changes, project_change, ready_changes};
 pub use diff::{diff, invalidate_all};
 
+/// The display identity of the assigned agent. Connection details are fetched when needed.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AssignedAgent {
+    pub id: String,
+    pub name: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct TaskSummaryFields {
     pub id: i64,
@@ -29,6 +37,7 @@ pub struct TaskSummaryFields {
     pub task_status: Column,
     pub agent_status: RunState,
     pub assignee: Assignee,
+    pub assigned_agent: Option<AssignedAgent>,
     pub draft: Option<crate::domain::Draft>,
     pub external_edit: bool,
     pub position: i64,

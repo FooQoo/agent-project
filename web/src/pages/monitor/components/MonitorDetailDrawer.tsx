@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { TaskAgentPicker } from '../../../features/tasks/assignee/TaskAgentPicker';
 import { Drawer } from '../../../shared/ui/drawer';
 import { MonitorDrawerPanels } from './MonitorDrawerPanels';
 import type { Problem } from '../../../shared/api/contracts';
@@ -50,6 +51,18 @@ export function MonitorDetailDrawer({
         ) : null
       }
     >
+      {open && task.assignedAgent && (
+        <div className="monitor-task-agent">
+          <TaskAgentPicker
+            key={`${item.projectId}:${task.id}`}
+            projectId={item.projectId}
+            taskId={task.id}
+            agent={task.assignedAgent}
+            phone
+            readOnly={task.taskStatus === 'done'}
+          />
+        </div>
+      )}
       <MonitorDrawerPanels
         item={item}
         tab={tab}

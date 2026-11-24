@@ -1,7 +1,7 @@
 //! Building a projection from a parsed project snapshot.
 
 use crate::file_store::detail::{epic_version, task_versions};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::Path;
 
@@ -9,8 +9,8 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use super::{
-    EpicProgress, EpicProjection, EpicSummaryFields, Projection, QuestionSummary, TaskProjection,
-    TaskSummaryFields,
+    AssignedAgent, EpicProgress, EpicProjection, EpicSummaryFields, Projection, QuestionSummary,
+    TaskProjection, TaskSummaryFields,
 };
 use crate::file_store::index::hex_prefix;
 use crate::file_store::layout;
@@ -25,13 +25,17 @@ fn digest<T: Serialize + ?Sized>(value: &T) -> String {
     hex_prefix(&Sha256::digest(bytes))
 }
 
-fn task_fields(task: &TaskView) -> TaskSummaryFields {
+fn task_fields(task: &TaskView, agents: &BTreeMap<&str, &str>) -> TaskSummaryFields {
     TaskSummaryFields {
         id: task.id,
         title: task.title.clone(),
         task_status: task.task_status,
         agent_status: task.agent_status,
         assignee: task.assignee,
+        assigned_agent: task.agent_id.as_ref().map(|id| AssignedAgent {
+            id: id.clone(),
+            name: agents.get(id.as_str()).copied().unwrap_or(id).to_owned(),
+        }),
         draft: task.draft,
         external_edit: task.external_edit,
         position: task.position,
@@ -57,8 +61,12 @@ fn task_fields(task: &TaskView) -> TaskSummaryFields {
     }
 }
 
-fn task_projection(task: &TaskView, damaged: bool) -> TaskProjection {
-    let fields = task_fields(task);
+fn task_projection(
+    task: &TaskView,
+    damaged: bool,
+    agents: &BTreeMap<&str, &str>,
+) -> TaskProjection {
+    let fields = task_fields(task, agents);
     let archived = task.archived_at.is_some();
     // The same values the Detail stream reports.
     let versions = task_versions(task);
@@ -158,10 +166,15 @@ pub fn project(shared: &Path, snapshot: &ProjectSnapshot) -> Projection {
         }
     }
 
+    let agents = snapshot
+        .agents
+        .iter()
+        .map(|agent| (agent.id.as_str(), agent.name.as_str()))
+        .collect();
     let tasks: Vec<TaskProjection> = snapshot
         .tasks
         .iter()
-        .map(|task| task_projection(task, damaged_tasks.contains(&task.id)))
+        .map(|task| task_projection(task, damaged_tasks.contains(&task.id), &agents))
         .collect();
     let epics: Vec<EpicProjection> = snapshot
         .epics

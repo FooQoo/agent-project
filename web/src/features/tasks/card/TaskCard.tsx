@@ -1,3 +1,4 @@
+import { CardAgent } from '../../../shared/ui/agent/CardAgent';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode, RefCallback } from 'react';
 import { formatShort, stateLabel } from '../model/format';
@@ -167,7 +168,11 @@ export function TaskCardView({
           </span>
           {/* The guide's sample cards have no number of their own. */}
           {task.id > 0 && <span className="card__id">#{task.id}</span>}
-          <AssigneeLabel assignee={task.assignee} />
+          {task.assignedAgent ? (
+            <CardAgent agent={task.assignedAgent} />
+          ) : (
+            <AssigneeLabel assignee={task.assignee} />
+          )}
           {task.draft !== null && <span className="card__draft">{t('draft.label')}</span>}
           {task.taskStatus === 'backlog' && (task.openQuestionIds?.length ?? 0) > 0 && (
             <span className="card__open-question">{t('backlog.openQuestion')}</span>

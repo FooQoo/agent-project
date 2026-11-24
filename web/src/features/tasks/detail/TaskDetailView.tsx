@@ -6,6 +6,7 @@ import { stateLabel } from '../model/format';
 import type { EpicRef, Problem, ProjectId, TaskSummary } from '../../../shared/api/contracts';
 import type { SectionSnapshot } from '../../../shared/data/core';
 import { AssigneeLabel } from '../assignee/AssigneeLabel';
+import { TaskAgentPicker } from '../assignee/TaskAgentPicker';
 import { resolveHistoryImage } from '../../../shared/api/messageAttachment';
 import { HistoryTimeline } from '../history/HistoryTimeline';
 import { StatusLabel } from '../status/StatusLabel';
@@ -217,10 +218,22 @@ export function TaskDetailView({
             monitor={statusLabels === 'monitor'}
           />
         )}
-        <AssigneeLabel assignee={task.assignee} />
-        <span className="detail__assignee" aria-hidden="true">
-          {t(`assignee.${task.assignee}`)}
-        </span>
+        {task.assignedAgent ? (
+          <TaskAgentPicker
+            key={`${projectId}:${task.id}`}
+            projectId={projectId}
+            taskId={task.id}
+            agent={task.assignedAgent}
+            readOnly={task.taskStatus === 'done'}
+          />
+        ) : (
+          <>
+            <AssigneeLabel assignee={task.assignee} />
+            <span className="detail__assignee" aria-hidden="true">
+              {t(`assignee.${task.assignee}`)}
+            </span>
+          </>
+        )}
       </div>
       {readOnlyDraft && task.draft !== null && <DraftStatus />}
       {task.externalEdit && (

@@ -86,6 +86,7 @@ pub(crate) fn summary_of(projection: &Projection) -> Summary {
                     task_status: f.task_status,
                     agent_status: f.agent_status,
                     assignee: f.assignee,
+                    assigned_agent: f.assigned_agent.clone(),
                     draft: f.draft,
                     external_edit: f.external_edit,
                     position: f.position,

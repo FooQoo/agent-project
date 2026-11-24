@@ -38,7 +38,7 @@ export function Surface({
   dismissible?: boolean;
   /** The scrolling body, for a list that draws only the rows in view. */
   bodyRef?: Ref<HTMLDivElement>;
-  /** A sheet gives the focus to this element when it closes, instead of the one that had it on open. */
+  /** Return focus to this element when the surface closes. */
   returnFocusTo?: () => HTMLElement | null;
   children: ReactNode;
 }) {
@@ -81,8 +81,9 @@ export function Surface({
         onCloseAutoFocus={(event) => {
           // The dialog has no trigger of its own: focus goes back to the button that opened it.
           event.preventDefault();
-          if (opener instanceof HTMLElement && opener !== document.body && opener.isConnected) {
-            opener.focus();
+          const target = returnFocusTo?.() ?? opener;
+          if (target instanceof HTMLElement && target !== document.body && target.isConnected) {
+            target.focus();
           }
         }}
       >
