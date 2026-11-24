@@ -297,13 +297,20 @@ pub(super) fn shape_digest(bytes: &[u8]) -> String {
     if !parsed.defects.is_empty() {
         return shape_bytes_digest(bytes);
     }
-    shape_bytes_digest(format!("{normalized}\n---\n\n{body}").as_bytes())
+    shape_digest_in_domain(
+        b"agent-project/task-shape/normalized-acceptance/v2\0",
+        format!("{normalized}\n---\n\n{body}").as_bytes(),
+    )
 }
 
 fn shape_bytes_digest(bytes: &[u8]) -> String {
+    shape_digest_in_domain(b"agent-project/task-shape/raw/v2\0", bytes)
+}
+
+fn shape_digest_in_domain(domain: &[u8], bytes: &[u8]) -> String {
     use sha2::{Digest, Sha256};
     let mut hasher = Sha256::new();
-    hasher.update(b"agent-project/task-shape/v2\0");
+    hasher.update(domain);
     hasher.update(bytes);
     format!("v2:{:x}", hasher.finalize())
 }
