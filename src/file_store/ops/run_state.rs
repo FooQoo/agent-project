@@ -30,22 +30,26 @@ impl FileStore {
         ctx: ChangeContext,
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgpjError> {
-        self.set_agent_status_guarded(project, id, state, ctx, now, None, false)
+        self.set_agent_status_guarded(project, id, state, ctx, now, None)
     }
 
-    /// [`FileStore::set_agent_status`] for a command line with no connection secret. The check
-    /// that the project has no additional live agent runs under the same project lock as the save,
-    /// so an agent registered meanwhile cannot be bypassed: an AI actor then gets `NotConnected`.
-    /// A person's change (the web UI) is allowed either way.
+    /// [`FileStore::set_agent_status`] for a command line without a connection. AI state changes
+    /// require a verified connection even when the default agent is the only registered agent.
     pub fn set_agent_status_unconnected(
         &self,
-        project: &ProjectId,
-        id: i64,
-        state: RunState,
+        _project: &ProjectId,
+        _id: i64,
+        _state: RunState,
         ctx: ChangeContext,
-        now: DateTime<Utc>,
+        _now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgpjError> {
-        self.set_agent_status_guarded(project, id, state, ctx, now, None, true)
+        Err(if ctx.actor == Actor::Ai {
+            AgpjError::NotConnected
+        } else {
+            AgpjError::HumanOnly {
+                action: "Changing a run state from the command line as a person".into(),
+            }
+        })
     }
 
     /// [`FileStore::set_agent_status`] for a session that acts through its connection. The secret
@@ -61,10 +65,9 @@ impl FileStore {
         secret: &str,
         now: DateTime<Utc>,
     ) -> Result<Changed<TaskView>, AgpjError> {
-        self.set_agent_status_guarded(project, id, state, ctx, now, Some(secret), false)
+        self.set_agent_status_guarded(project, id, state, ctx, now, Some(secret))
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn set_agent_status_guarded(
         &self,
         project: &ProjectId,
@@ -73,60 +76,60 @@ impl FileStore {
         ctx: ChangeContext,
         now: DateTime<Utc>,
         secret: Option<&str>,
-        refuse_when_agents: bool,
     ) -> Result<Changed<TaskView>, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
-        if refuse_when_agents
-            && secret.is_none()
-            && super::assignment::has_other_live_agents_locked(shared, &project_dir)?
-        {
-            return Err(if ctx.actor == Actor::Ai {
-                AgpjError::NotConnected
-            } else {
-                AgpjError::HumanOnly {
-                    action: "Changing a run state from the command line as a person".into(),
-                }
-            });
-        }
-        let verified = secret
-            .map(|secret| {
-                super::assignment::verify_locked(shared, &project_dir, secret, stamp(now))
-            })
-            .transpose()?;
         let mut task = reader::read_task_strict(shared, project, id)?;
-        if let Some(verified) = &verified {
-            if task.assignee != crate::domain::Assignee::Ai {
-                return Err(AgpjError::NotAssignee { id });
-            }
-            match task.agent_id.as_deref() {
-                Some(owner) if owner != verified.agent_id => {
+        let validate = |verified: Option<&super::assignment::Verified>| {
+            if let Some(verified) = verified {
+                if task.assignee != crate::domain::Assignee::Ai {
                     return Err(AgpjError::NotAssignee { id });
                 }
-                None if state != RunState::Running => {
-                    return Err(AgpjError::NotAssignee { id });
+                match task.agent_id.as_deref() {
+                    Some(owner) if owner != verified.agent_id => {
+                        return Err(AgpjError::NotAssignee { id });
+                    }
+                    None if state != RunState::Running => {
+                        return Err(AgpjError::NotAssignee { id });
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
-        }
-        if task.archived_at.is_some() {
-            return Err(AgpjError::TaskArchived { id });
-        }
-        ensure_ai_task_not_done(&task, ctx.actor)?;
-        if let Some(draft) = task.draft {
-            return Err(draft_refusal(id, draft));
-        }
-        if task.task_status == Column::Backlog {
-            return Err(AgpjError::TaskInBacklog { id });
-        }
-        check_work_state(task.assignee, task.task_status, state)?;
-        if task.agent_status != state {
-            check_state_change(task.agent_status, state)?;
-        }
-        if ctx.actor == Actor::Ai && state == RunState::Running && task_waits(shared, project, id)?
-        {
-            return Err(AgpjError::QuestionsUnanswered { id });
-        }
+            if task.archived_at.is_some() {
+                return Err(AgpjError::TaskArchived { id });
+            }
+            ensure_ai_task_not_done(&task, ctx.actor)?;
+            if let Some(draft) = task.draft {
+                return Err(draft_refusal(id, draft));
+            }
+            if task.task_status == Column::Backlog {
+                return Err(AgpjError::TaskInBacklog { id });
+            }
+            check_work_state(task.assignee, task.task_status, state)?;
+            if task.agent_status != state {
+                check_state_change(task.agent_status, state)?;
+            }
+            if ctx.actor == Actor::Ai
+                && state == RunState::Running
+                && task_waits(shared, project, id)?
+            {
+                return Err(AgpjError::QuestionsUnanswered { id });
+            }
+            Ok(())
+        };
+        let at = stamp(now);
+        let verified = if let Some(secret) = secret {
+            Some(super::assignment::authorize_locked(
+                shared,
+                &project_dir,
+                secret,
+                at,
+                |verified| validate(Some(verified)),
+            )?)
+        } else {
+            validate(None)?;
+            None
+        };
         let run_connection = match (&verified, state) {
             (Some(verified), RunState::Running) => Some(verified.connection_id.clone()),
             _ => None,
@@ -145,7 +148,6 @@ impl FileStore {
                 changed: false,
             });
         }
-        let at = stamp(now);
         if task.agent_status == state {
             // The same state on another connection (a switch) or a free card: only the owner
             // and the connection change, so there is no history line of a transition.

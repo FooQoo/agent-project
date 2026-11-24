@@ -80,37 +80,32 @@ pub(in crate::file_store::ops) fn check_session_write(
         .iter()
         .find(|a| a.is_default && a.archived_at.is_none())
         .map(|a| a.id.clone());
-    let has_other_live_agent = agents
-        .agents
-        .iter()
-        .any(|agent| !agent.is_default && agent.archived_at.is_none());
     let old_agent = match old {
         Some(o) => o.agent_id.clone(),
         None => task.agent_id.clone(),
     };
-    let verified_agent_id = match crate::agent::connection_store::load_secret(&data_dir, &project) {
-        Some(secret) => verify_locked(shared, dir, &secret, stamp(chrono::Utc::now()))?.agent_id,
-        // Nobody else is registered: the session acts as the card's own agent. A board whose
-        // files were written directly (a restored backup, a fixture) may have no default agent yet.
-        None if !has_other_live_agent => match default_id.clone().or_else(|| old_agent.clone()) {
-            Some(id) => id,
-            None => return Ok(()),
+    let secret = crate::agent::connection_store::load_secret(&data_dir, &project)
+        .ok_or(AgpjError::NotConnected)?;
+    authorize_locked(
+        shared,
+        dir,
+        &secret,
+        stamp(chrono::Utc::now()),
+        |verified| {
+            let agent = verified.agent_id.as_str();
+            let owner = old_agent
+                .as_deref()
+                .or(default_id.as_deref())
+                .unwrap_or(agent);
+            // A session never hands a card to another agent; only a person does.
+            let kept = task.agent_id == old_agent
+                || (old_agent.is_none() && task.agent_id.as_deref() == Some(agent));
+            if owner != agent || !kept {
+                return Err(AgpjError::NotAssignee { id: task.id });
+            }
+            Ok(())
         },
-        None => return Err(AgpjError::NotConnected),
-    };
-    let owner = old_agent
-        .clone()
-        .or(default_id)
-        .or_else(|| Some(verified_agent_id.clone()));
-    if owner.as_deref() != Some(verified_agent_id.as_str()) {
-        return Err(AgpjError::NotAssignee { id: task.id });
-    }
-    // A session never hands a card to another agent; only a person does.
-    let kept = task.agent_id == old_agent
-        || (old_agent.is_none() && task.agent_id.as_deref() == Some(verified_agent_id.as_str()));
-    if !kept {
-        return Err(AgpjError::NotAssignee { id: task.id });
-    }
+    )?;
     Ok(())
 }
 

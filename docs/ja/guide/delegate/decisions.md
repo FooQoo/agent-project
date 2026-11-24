@@ -108,7 +108,7 @@ sequenceDiagram
     U->>B: 選択肢を選ぶ、またはメモを書く
     Note over B: 回答を保存し、タスクに履歴を追加
     B-->>A: message askが回答を出力して終了
-    Note over B: ほかに未回答の質問がなければ、タスクは自動で再開
+    Note over B: 回答がそろい、担当エージェントが接続中ならタスクは再開
     A->>B: タスクを読み直す
     Note over A: 進行中かつ稼働中のままなら続ける
 ```
