@@ -153,10 +153,15 @@ fn watcher_reconciliation_upgrades_old_shape_digest_without_touching_task_markdo
 #[test]
 fn watcher_reconciliation_bootstraps_an_ordinary_task_once() {
     let f = Fixture::new();
-    let markdown = "---\ntitle: Ordinary task\n---\n\nNo acceptance conditions.\n";
-    let id = f.task("Ordinary task", Assignee::Ai, markdown, false);
+    let id = f.task(
+        "Ordinary task",
+        Assignee::Ai,
+        "No acceptance conditions.",
+        false,
+    );
     let markdown_path = f.path(id);
     let metadata_path = markdown_path.parent().unwrap().join("task.json");
+    let markdown = std::fs::read(&markdown_path).unwrap();
     let mut metadata: crate::file_store::model::TaskMetadata =
         serde_json::from_slice(&std::fs::read(&metadata_path).unwrap()).unwrap();
     metadata.content_digest = None;
@@ -171,11 +176,11 @@ fn watcher_reconciliation_bootstraps_an_ordinary_task_once() {
         serde_json::from_slice(&std::fs::read(&metadata_path).unwrap()).unwrap();
     assert_eq!(
         saved.content_digest.as_deref(),
-        Some(super::super::super::save::content_digest(markdown.as_bytes()).as_str())
+        Some(super::super::super::save::content_digest(&markdown).as_str())
     );
     assert_eq!(
         saved.shape_digest.as_deref(),
-        Some(super::super::super::save::shape_digest(markdown.as_bytes()).as_str())
+        Some(super::super::super::save::shape_digest(&markdown).as_str())
     );
-    assert_eq!(std::fs::read(&markdown_path).unwrap(), markdown.as_bytes());
+    assert_eq!(std::fs::read(&markdown_path).unwrap(), markdown);
 }
