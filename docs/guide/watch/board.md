@@ -54,6 +54,26 @@ When an agent delivers a result with `agpj result add` (see [Deliver a result](.
 
 A result is also readable on its own from an address that names the project, the task, and the version: `https://<host>/?project=<ProjectId>&task=<id>&result=<version>`. Opening it shows that task's details with the Results tab selected, and scrolls to the result and highlights it. This works on the phone through [remote access](./remote-access.md#open-a-result-from-a-link) and on the PC board, and it works even if another project was on the screen. If the task has no such version, the tab says so and lists the results it does have.
 
+### See planned results and register the real one {#planned-results}
+
+A task can have planned results: what it will deliver and in what state. Plans are written in the task's `TASK.md` (the `resultPlans` field) and with `agpj`, not in the web UI. See [Deliver a result](../reference/cli.md#deliver-a-result).
+
+When a task has plans, the **Results** tab shows each plan as a box, in the order they are planned. A box shows:
+
+- the plan's number, and whether it is **Final** or **Intermediate**;
+- **Delivered** or **Not delivered**;
+- what will be delivered, and the state in which it should be delivered, after **When**.
+
+A delivered box holds the result that delivered it, drawn as described in [Read a result](#read-a-result). A box that is not delivered is empty. Results that belong to no plan stay in the list below the boxes, newest first. A task with no plans shows the Results tab exactly as above.
+
+To register the real result of an undelivered plan, select **Register the result** in its box. A form opens in the box with a summary, **Add images**, and a link. All three are optional, so the result can be text only, a URL, an image, or any mix; a summary left empty reads as the plan's content. The same form is used on the phone, where the pictures come from the photo library or the camera.
+
+- If registering fails, the form stays open with what you entered. Read the reason and select **Try again**; the failed request saved nothing.
+- After it succeeds, the result appears inside the box, which now reads **Delivered**.
+- A plan is delivered once. A draft task cannot take results, so its boxes show no register button.
+
+When you open a result from a notification, the box that holds it is shown and the result is highlighted.
+
 ## Move a task
 
 On a touch screen, press the grip at the left of the card's header and move your finger to drag at once. Pressing elsewhere on the card and holding for a moment also drags it, and a quick swipe scrolls the column instead.

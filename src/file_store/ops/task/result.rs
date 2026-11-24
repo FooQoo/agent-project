@@ -74,16 +74,27 @@ pub struct RecordedResult {
 }
 
 impl FileStore {
-    /// Record a result on a task, from the agent side (the CLI). A task that is
-    /// archived, a draft, or Done refuses it, as for any agent change, except
-    /// that a retry of a result that was already recorded succeeds quietly and
-    /// the first final result and a publication record may be added to a Done task.
+    /// Record a result on a task, from the agent side (the CLI). An archived, draft, or
+    /// Done task refuses it, except a retry of a recorded result, a first final result,
+    /// and a publication record.
     pub fn add_result(
         &self,
         project: &ProjectId,
         id: i64,
         input: ResultInput,
         now: DateTime<Utc>,
+    ) -> Result<RecordedResult, AgpjError> {
+        self.add_result_as(project, id, input, now, false)
+    }
+
+    /// Like `add_result`; `by_person` (the board) lets a Done task take it, as the Done guard is for agents.
+    pub fn add_result_as(
+        &self,
+        project: &ProjectId,
+        id: i64,
+        input: ResultInput,
+        now: DateTime<Utc>,
+        by_person: bool,
     ) -> Result<RecordedResult, AgpjError> {
         let shared = self.shared_dir();
         let (project_dir, _lock) = lock_project(shared, project)?;
@@ -200,11 +211,10 @@ impl FileStore {
         if task.archived_at.is_some() {
             return Err(AgpjError::TaskArchived { id });
         }
-        // A final result may still be recorded on a Done task that has none: automatic Done
-        // can happen before the agent writes it.
+        // A first final result may follow an automatic Done.
         let late_final =
             kind == ResultKind::Final && !task.results.iter().any(|r| r.kind == ResultKind::Final);
-        if !late_final && !published {
+        if !late_final && !published && !by_person {
             ensure_ai_task_not_done(&task, crate::domain::Actor::Ai)?;
         }
         if task.draft == Some(Draft::Human) {

@@ -159,6 +159,7 @@ export function TaskDetailView({
             refreshKey={(history.data ?? history.partial)?.items.length}
             attachmentUrl={attachmentUrl}
             focusVersion={focusResultVersion}
+            canRegister={task.draft === null}
           />
         );
       case 'history':

@@ -2,10 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ImageOffIcon, LinkIcon, Maximize2Icon } from 'lucide-react';
 import { ImageLightbox } from '../../../shared/ui/lightbox/ImageLightbox';
-import { resultImageIds, type TaskResult } from '../../../shared/api/contracts';
+import {
+  resultImageIds,
+  type ResultPlanView,
+  type TaskResult,
+} from '../../../shared/api/contracts';
 import { openableUrl } from './openableUrl';
 import { formatShort } from '../model/format';
 import type { TaskResultsState } from './useTaskResults';
+import { PlanBox } from '../result-plans/PlanBox';
+import type { PlanDelivery } from '../result-plans/deliverPlan';
 import './results.css';
 import { Spinner } from '@/shared/ui/spinner/Spinner';
 
@@ -20,6 +26,8 @@ export function ResultsView({
   focusVersion,
   refreshFailed = false,
   onRetry,
+  canRegister = false,
+  onRegister,
 }: {
   state: TaskResultsState;
   attachmentUrl: (attachmentId: string) => string;
@@ -27,6 +35,10 @@ export function ResultsView({
   /** The latest read failed; the results shown are the ones read before. */
   refreshFailed?: boolean;
   onRetry?: () => void;
+  /** The person may register a result from a plan's row. */
+  canRegister?: boolean;
+  /** Registers the real result of a plan; it rejects when the server refuses, and the form retries. */
+  onRegister?: (plan: ResultPlanView, delivery: PlanDelivery) => Promise<void>;
 }) {
   const { t } = useTranslation();
   const listRef = useRef<HTMLOListElement>(null);
@@ -51,8 +63,11 @@ export function ResultsView({
       </div>
     );
   const newestFirst = [...state.results].sort((a, b) => b.version - a.version);
-  const missing =
-    focusVersion != null && !state.results.some((result) => result.version === focusVersion);
+  const focus = focusVersion;
+  const plans = state.plans ?? [];
+  const planIds = new Set(plans.map((plan) => plan.id));
+  const planless = newestFirst.filter((result) => !result.planId || !planIds.has(result.planId));
+  const missing = focus != null && !state.results.some((result) => result.version === focus);
   return (
     <div className="results">
       {refreshFailed && (
@@ -67,17 +82,39 @@ export function ResultsView({
       )}
       {missing && (
         <p className="results__note" role="status">
-          {t('results.versionMissing', { version: focusVersion })}
+          {t('results.versionMissing', { version: focus })}
         </p>
       )}
-      {state.results.length === 0 && <p className="results__note">{t('results.empty')}</p>}
+      {plans.length > 0 && (
+        <div className="results__boxes">
+          {plans.map((plan) => (
+            <PlanBox key={plan.id} plan={plan} canRegister={canRegister} onRegister={onRegister}>
+              <ol className="results__list">
+                {newestFirst
+                  .filter((result) => result.planId === plan.id)
+                  .map((result) => (
+                    <ResultItem
+                      key={result.version}
+                      result={result}
+                      attachmentUrl={attachmentUrl}
+                      focused={result.version === focus}
+                    />
+                  ))}
+              </ol>
+            </PlanBox>
+          ))}
+        </div>
+      )}
+      {state.results.length === 0 && plans.length === 0 && (
+        <p className="results__note">{t('results.empty')}</p>
+      )}
       <ol className="results__list" ref={listRef} onLoadCapture={settleFocus}>
-        {newestFirst.map((result) => (
+        {planless.map((result) => (
           <ResultItem
             key={result.version}
             result={result}
             attachmentUrl={attachmentUrl}
-            focused={result.version === focusVersion}
+            focused={result.version === focus}
           />
         ))}
       </ol>

@@ -41,7 +41,7 @@ pub(super) async fn edit_task_multipart(
             );
         }
     };
-    let payload = match parse_multipart(multipart).await {
+    let payload = match parse_multipart::<super::multipart::MultipartMeta>(multipart).await {
         Ok(value) => value,
         Err(response) => return response,
     };
@@ -123,7 +123,7 @@ pub(super) async fn create_task_multipart(
             );
         }
     };
-    let payload = match parse_multipart(multipart).await {
+    let payload = match parse_multipart::<super::multipart::MultipartMeta>(multipart).await {
         Ok(value) => value,
         Err(response) => return response,
     };

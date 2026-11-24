@@ -1,13 +1,13 @@
 import { useCallback, useEffect } from 'react';
 import { getJson, projectPath } from '../../../shared/api/http';
-import type { ProjectId, TaskResult } from '../../../shared/api/contracts';
+import type { ProjectId, ResultPlanView, TaskResult } from '../../../shared/api/contracts';
 import { queryKeys } from '../../../shared/data/core/query-keys';
 import { useReadQuery } from '../../../shared/data/react';
 
 export type TaskResultsState =
   | { status: 'loading' }
   | { status: 'error' }
-  | { status: 'ready'; results: readonly TaskResult[] };
+  | { status: 'ready'; results: readonly TaskResult[]; plans?: readonly ResultPlanView[] };
 
 /**
  * Reads a task's results. The Summary and Detail streams do not carry them, so they are read from
@@ -24,7 +24,9 @@ export function useTaskResults(
   const query = useReadQuery({
     queryKey: queryKeys.taskResults(projectId, taskId),
     queryFn: () =>
-      getJson<{ results: TaskResult[] }>(`${projectPath(projectId)}/tasks/${taskId}/results`),
+      getJson<{ results: TaskResult[]; resultPlans?: ResultPlanView[] }>(
+        `${projectPath(projectId)}/tasks/${taskId}/results`,
+      ),
     enabled,
   });
   const { refetch } = query;
@@ -35,7 +37,7 @@ export function useTaskResults(
   }, [enabled, refreshKey, refetch]);
   const retry = useCallback(() => void refetch({ cancelRefetch: false }), [refetch]);
   const value: TaskResultsState = query.data
-    ? { status: 'ready', results: query.data.results }
+    ? { status: 'ready', results: query.data.results, plans: query.data.resultPlans ?? [] }
     : query.isError
       ? { status: 'error' }
       : { status: 'loading' };

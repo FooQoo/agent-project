@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "owner": "U11",
+  "files": [
+    {
+      "file": "features/tasks/result-plans/PlanBox.tsx",
+      "exports": [
+        {
+          "name": "PlanBox",
+          "stories": [
+            {
+              "id": "task-detail-planbox--undelivered",
+              "states": ["empty undelivered box", "register form opens"],
+              "interaction": true
+            },
+            {
+              "id": "task-detail-planbox--undelivered-japanese",
+              "states": ["Japanese"],
+              "interaction": false
+            },
+            {
+              "id": "task-detail-planbox--delivered",
+              "states": ["holds the delivered result"],
+              "interaction": true
+            },
+            {
+              "id": "task-detail-planbox--final-box",
+              "states": ["final plan"],
+              "interaction": false
+            },
+            {
+              "id": "task-detail-planbox--read-only",
+              "states": ["no register button"],
+              "interaction": true
+            },
+            {
+              "id": "task-detail-planbox--register-retry",
+              "states": ["failure keeps input", "try again"],
+              "interaction": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "features/tasks/result-plans/PlanRegisterForm.tsx",
+      "exports": [
+        {
+          "name": "PlanRegisterForm",
+          "stories": [
+            {
+              "id": "task-detail-planbox--register-form",
+              "states": ["summary, link, images"],
+              "interaction": false
+            },
+            {
+              "id": "task-detail-planbox--register-form-phone",
+              "states": ["phone width", "dark", "Japanese"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
