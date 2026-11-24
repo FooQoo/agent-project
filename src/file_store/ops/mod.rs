@@ -29,11 +29,11 @@ mod version;
 mod version_names;
 mod version_plan;
 
+pub(crate) use assignment::registered_default_agent_id;
 pub use assignment::{
     AgentView, Connected, ConnectionOrigin, ConnectionView, IssuedCode, STALE_RUN_SECONDS,
     SessionWrites, Verified, enter_session_writes,
 };
-pub(crate) use assignment::{default_agent, read_agents};
 pub(in crate::file_store) use qa::migrate_legacy_locked;
 use qa::task_waits;
 pub use qa::{Accepted, AnswerItem, AskInput, AskQuestion, RequestImage, SendRequestInput};

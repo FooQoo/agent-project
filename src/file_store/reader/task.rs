@@ -289,11 +289,7 @@ pub(crate) fn read_task_locked(
     let md_path = layout::task_md(&layout::task_dir(&project_dir, task_id));
     let mut view = task_view(task, body, file_time(&md_path));
     if view.agent_id.is_none() && view.assignee == crate::domain::Assignee::Ai {
-        view.agent_id = crate::file_store::ops::read_agents(shared, &project_dir)
-            .ok()
-            .and_then(|agents| {
-                crate::file_store::ops::default_agent(&agents).map(|agent| agent.id.clone())
-            });
+        view.agent_id = crate::file_store::ops::registered_default_agent_id(shared, &project_dir);
     }
     attach_epic(&mut view, &read_epics(shared, &project_dir).0);
     qa::apply(&mut view, &QaIndex::load(shared, &project_dir)?);
