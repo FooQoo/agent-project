@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { parseAsString, useQueryState } from 'nuqs';
 import { ConnectionEntryRow } from '../features/monitor-connections/ui/ConnectionEntryRow';
 import { ConnectionSettings } from '../features/monitor-connections/ui/ConnectionSettings';
+import { AgentConnectionEntryRow } from '../features/agent-connection/AgentConnectionEntryRow';
+import { AgentConnectionSettings } from '../features/agent-connection/AgentConnectionSettings';
 import { SettingsDialog } from '../features/settings/ui/SettingsDialog';
 import { csrfHeaders, readToken } from '../shared/api/http';
 import { TutorialEntryRow } from './onboarding/TutorialEntryRow';
@@ -32,9 +34,11 @@ const phoneConnection = () => import.meta.env.MODE !== 'demo' && !usesRemoteSess
  */
 export function BoardSettings({ open, onOpenChange, restoreFocusRef }: SettingsSlotState) {
   const [connectionOpen, setConnectionOpen] = useState(false);
+  const [agentConnectionOpen, setAgentConnectionOpen] = useState(false);
   // The project the board shows, from the same `project` query the board reads.
   const [projectId] = useQueryState('project', parseAsString);
   const withConnection = phoneConnection();
+  const withAgentConnection = withConnection && import.meta.env.MODE !== 'mock';
   return (
     <>
       <SettingsDialog
@@ -60,6 +64,14 @@ export function BoardSettings({ open, onOpenChange, restoreFocusRef }: SettingsS
                   }}
                 />
               ) : null}
+              {withAgentConnection ? (
+                <AgentConnectionEntryRow
+                  onOpen={() => {
+                    onOpenChange(false);
+                    setAgentConnectionOpen(true);
+                  }}
+                />
+              ) : null}
               <ResidentSettingsRow projectId={projectId} onClose={() => onOpenChange(false)} />
               {boardPreferences ? (
                 <NotificationSettingsRow onClose={() => onOpenChange(false)} />
@@ -74,6 +86,14 @@ export function BoardSettings({ open, onOpenChange, restoreFocusRef }: SettingsS
           onOpenChange={setConnectionOpen}
           restoreFocusRef={restoreFocusRef}
           projectId={projectId}
+        />
+      ) : null}
+      {withAgentConnection && agentConnectionOpen ? (
+        <AgentConnectionSettings
+          key={projectId}
+          onOpenChange={setAgentConnectionOpen}
+          projectId={projectId}
+          restoreFocusRef={restoreFocusRef}
         />
       ) : null}
     </>

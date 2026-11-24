@@ -62,6 +62,8 @@ agpj serve
 
 Open [http://127.0.0.1:7420/](http://127.0.0.1:7420/) and select the project in the header. Press Ctrl+C in its terminal to stop it. You do not have to keep it running for agents: a waiting command and the agent hook start a server in the background when none runs, and that server stops by itself after 30 minutes without use. To keep a server running in the background instead, use `agpj serve -d`. The server listens only on `127.0.0.1`; choose another port with `--port` if 7420 is taken.
 
+The first AI card creates the project's default agent. To connect a session, open **Settings** and choose **Connect an agent**. Issue a one-time code, copy the displayed `agpj connect` command, and run it from the agent session in the project's registered folder. The code expires after ten minutes. Once connected, the agent can start a Todo card. If the card is still in Backlog, send it to Todo first.
+
 ![Agent Project in the browser with a project selected, showing tasks in Todo, Doing, and Done](../images/board.png){.screenshot}
 
 The board opens with the selected project in the header. Tasks sit in the Todo, Doing, and Done columns.
