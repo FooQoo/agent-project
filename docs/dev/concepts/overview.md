@@ -124,14 +124,6 @@ When an agent runs `agpj --project demo mv 12 doing --actor ai`:
 
 ## Development policies
 
-### Compatibility
-
-While the product has no released users to protect, breaking changes are accepted, because carrying compatibility code for formats nobody depends on only adds code to maintain.
-
-- A change to a stored format does not come with automatic migration or backward-compatibility code. Each file declares a `formatVersion`, and a file in a format the code does not support fails with `format_unsupported`, as a `task.json` of an earlier version does today. It is reported and left untouched; it is never converted, deleted, or rewritten. See [Format versions](./saving-and-recovery.md#format-versions-and-the-draft-mark), [Errors](../reference/errors.md), and [Files](../reference/files.md).
-- When a maintainer's own data has to move to a new format, they do it with a one-shot script that is not committed to the repository, because the product should only ever describe the current format.
-- The documentation describes the current product. It carries no upgrade or migration steps for development versions that were never released.
-
 ### External services
 
 When a design depends on an external service, such as an API, a hosted platform, or a third-party tool, settle what the service does before designing around it, because a wrong assumption surfaces only after the design is built on it.
