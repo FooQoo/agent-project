@@ -122,6 +122,25 @@ When an agent runs `agpj --project demo mv 12 doing --actor ai`:
 2. The server's file watcher receives an OS event and waits 200 ms for related events.
 3. It reloads the project, re-evaluates automatic Done for eligible tasks, and, if the data changed, notifies browsers and waiting agents.
 
+## Development policies
+
+### Compatibility
+
+While the product has no released users to protect, breaking changes are accepted, because carrying compatibility code for formats nobody depends on only adds code to maintain.
+
+- A change to a stored format does not come with automatic migration or backward-compatibility code. Each file declares a `formatVersion`, and a file in a format the code does not support fails with `format_unsupported`, as a `task.json` of an earlier version does today. It is reported and left untouched; it is never converted, deleted, or rewritten. See [Format versions](./saving-and-recovery.md#format-versions-and-the-draft-mark), [Errors](../reference/errors.md), and [Files](../reference/files.md).
+- When a maintainer's own data has to move to a new format, they do it with a one-shot script that is not committed to the repository, because the product should only ever describe the current format.
+- The documentation describes the current product. It carries no upgrade or migration steps for development versions that were never released.
+
+### External services
+
+When a design depends on an external service, such as an API, a hosted platform, or a third-party tool, settle what the service does before designing around it, because a wrong assumption surfaces only after the design is built on it.
+
+1. List what is unknown about the service.
+2. Read the service's documentation for each item.
+3. If the documentation does not settle an item, confirm it with a small proof of concept against the real service.
+4. Record what was confirmed, and how, in the design page.
+
 ## Where to go next
 
 - [Follow your first change](../getting-started/first-change.md): trace one rule from the command to the file and its test.
