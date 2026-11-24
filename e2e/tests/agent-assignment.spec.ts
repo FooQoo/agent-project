@@ -33,9 +33,8 @@ test.afterAll(async () => {
   if (home) removeHome(home);
 });
 
-const boardUrl = (project: string) => `${serve!.url}/?project=${projectId(project, home)}`;
+const boardUrl = (project: string) => new URL(`/?project=${projectId(project, home)}`, serve!.url).href;
 const cli = (project: string, ...args: string[]) => agpjOk(project, args, home);
-
 
 test('a person can register an agent and reassign a Doing card on PC and phone', async ({ page }) => {
   const project = assignmentProject;
