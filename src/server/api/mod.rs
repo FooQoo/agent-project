@@ -8,6 +8,7 @@ mod docs;
 mod draft_wire;
 mod epic_attachments;
 mod epics;
+mod finish;
 mod guards;
 mod local;
 mod messages;
@@ -34,7 +35,6 @@ mod versions;
 use std::sync::Arc;
 
 use axum::Router;
-use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
 use axum::middleware;
 use axum::response::Response;
@@ -48,7 +48,8 @@ use detail::{epic_detail, task_detail};
 use docs::*;
 use epic_attachments::*;
 use epics::*;
-use guards::{host_guard, no_referrer, write_guard};
+use finish::Finish;
+use guards::{host_guard, write_guard};
 use messages::*;
 use onboarding::*;
 use pages::*;
@@ -64,8 +65,6 @@ use task_multipart::*;
 use tasks::*;
 use version_plan::{set_epic_version, set_task_version};
 use versions::{add_version, generate_release_doc, get_versions, set_release_version};
-
-const MAX_MULTIPART_BODY: usize = 52 * 1024 * 1024;
 
 #[derive(Clone)]
 struct GuardContext {
@@ -94,22 +93,6 @@ pub(crate) fn router(state: Arc<AppState>) -> Router {
 /// used here. Whatever acts on the PC itself (see `local`) is not part of this router.
 pub(crate) fn remote_router(state: Arc<AppState>) -> Router {
     routes(get(remote_index)).finish(state)
-}
-
-trait Finish {
-    fn finish(self, state: Arc<AppState>) -> Router;
-}
-
-impl Finish for Router<Arc<AppState>> {
-    fn finish(self, state: Arc<AppState>) -> Router {
-        self.layer(middleware::from_fn_with_state(
-            state.activity.clone(),
-            super::idle::track,
-        ))
-        .layer(DefaultBodyLimit::max(MAX_MULTIPART_BODY))
-        .layer(middleware::from_fn(no_referrer))
-        .with_state(state)
-    }
 }
 
 fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<AppState>> {
