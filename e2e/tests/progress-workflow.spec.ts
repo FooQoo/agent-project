@@ -4,6 +4,8 @@ import path from 'node:path';
 import { expect, test } from '../helpers/fixtures';
 import {
   agpjBinary,
+  agpjEnv,
+  connectFixtureAgent,
   agpjCatalogOk,
   agpjOk,
   makeHome,
@@ -20,7 +22,7 @@ import { closeMessages } from '../helpers/answer-flow';
 function run(args: string[], home: string, cwd: string, input = ''): { code: number; stdout: string; stderr: string } {
   const result = spawnSync(agpjBinary(), args, {
     cwd,
-    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
+    env: agpjEnv(home, 'Workflow E2E'),
     encoding: 'utf8',
     input,
   });
@@ -40,7 +42,7 @@ function startWaiter(home: string, cwd: string, project: string, id: number): Ch
     }),
   ], {
     cwd,
-    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
+    env: agpjEnv(home, project),
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   return child;
@@ -76,6 +78,7 @@ test('project setup, progress hook, indefinite question, auto-Done, and AI write
     agpjOk(project, ['epic', 'add', 'RELEASE', '--name', 'Release work', '--actor', 'human'], home);
     agpjOk(project, ['add', 'Publish release', '--epic', 'RELEASE', '--assignee', 'ai', '--actor', 'human', `--desc=Private task body for progress omission check.`], home);
     agpjOk(project, ['add', 'Prepare release notes', '--epic', 'RELEASE', '--assignee', 'ai', '--actor', 'human', `--desc=Another private task body.`], home);
+    connectFixtureAgent(home, project);
     const tasks = JSON.parse(agpjOk(project, ['ls', '--json'], home).stdout).tasks as Array<{ id: number; title: string }>;
     const publish = tasks.find((task) => task.title === 'Publish release')!.id;
     const notes = tasks.find((task) => task.title === 'Prepare release notes')!.id;

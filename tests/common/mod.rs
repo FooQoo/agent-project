@@ -60,6 +60,7 @@ fn agpj_inner(
         .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
+        .env_remove("AGPJ_CONNECTION_SECRET")
         .current_dir(home)
         .args(folder_args(home, args))
         .stdin(std::process::Stdio::null());
@@ -76,25 +77,29 @@ fn agpj_inner(
 
 /// Create a real external connection for a project's default agent and return its secret.
 pub fn connect_default_agent(home: &Path, project_name: &str) -> String {
+    try_connect_default_agent(home, project_name).expect("default agent")
+}
+
+/// Used by integration fixtures that run the same CLI before and after creating a card.
+pub fn try_connect_default_agent(home: &Path, project_name: &str) -> Option<String> {
+    let store = FileStore::open(&home.join("shared"));
+    let project_id = store.project_by_name(project_name).ok()?.id;
     static CONNECTIONS: OnceLock<Mutex<std::collections::HashMap<String, String>>> =
         OnceLock::new();
-    let key = format!("{}:{project_name}", home.display());
+    let key = format!("{}:{project_id}", home.display());
     let connections = CONNECTIONS.get_or_init(|| Mutex::new(std::collections::HashMap::new()));
     let mut connections = connections
         .lock()
         .unwrap_or_else(|error| error.into_inner());
     if let Some(secret) = connections.get(&key) {
-        return secret.clone();
+        return Some(secret.clone());
     }
 
-    let store = FileStore::open(&home.join("shared"));
-    let project_id = store.project_by_name(project_name).unwrap().id;
     let agent = store
         .list_agents(&project_id)
         .unwrap()
         .into_iter()
-        .find(|agent| agent.is_default)
-        .expect("default agent");
+        .find(|agent| agent.is_default)?;
     let now = Utc::now();
     let code = store
         .issue_connect_code(&project_id, &agent.id, false, now)
@@ -111,8 +116,23 @@ pub fn connect_default_agent(home: &Path, project_name: &str) -> String {
         .unwrap()
         .secret;
     connections.insert(key, secret.clone());
-    secret
+    Some(secret)
 }
+
+pub fn fixture_project_arg<'a>(args: &[&'a str]) -> Option<&'a str> {
+    args.windows(2)
+        .find(|pair| pair[0] == "--project")
+        .map(|pair| pair[1])
+}
+
+pub fn json_ok_connected_fixture(home: &Path, args: &[&str]) -> Value {
+    let secret =
+        fixture_project_arg(args).and_then(|project| try_connect_default_agent(home, project));
+    let (code, out, err) = agpj_inner(home, args, secret.as_deref());
+    assert_eq!(code, 0, "{args:?} failed: {err}");
+    serde_json::from_str(&out).unwrap_or_else(|_| panic!("not JSON: {out}"))
+}
+
 /// Run a command that must succeed and parse its JSON output.
 pub fn json_ok(home: &Path, args: &[&str]) -> Value {
     let (code, out, err) = agpj(home, args);

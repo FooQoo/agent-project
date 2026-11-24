@@ -10,7 +10,10 @@ use std::process::{Child, Command, Stdio};
 use serde_json::Value;
 use tempfile::tempdir;
 
-use common::{Running, agpj, decision_json, demo_project, json_error, json_ok};
+use common::{
+    Running, agpj, agpj_with_connection, connect_default_agent, decision_json, demo_project,
+    json_error, json_ok,
+};
 
 fn demo(args: &[&str]) -> Vec<String> {
     let mut all = vec!["--project".to_string(), "Demo".to_string()];
@@ -21,7 +24,21 @@ fn demo(args: &[&str]) -> Vec<String> {
 fn run(home: &Path, args: &[&str]) -> (i32, String, String) {
     let all = demo(args);
     let refs: Vec<&str> = all.iter().map(String::as_str).collect();
-    agpj(home, &refs)
+    if has_ai_actor(args) {
+        let secret = connect_default_agent(home, "Demo");
+        agpj_with_connection(home, &secret, &refs)
+    } else {
+        agpj(home, &refs)
+    }
+}
+
+fn has_ai_actor(args: &[&str]) -> bool {
+    args.windows(2).any(|pair| pair == ["--actor", "ai"])
+}
+
+fn connected_agpj(home: &Path, args: &[&str]) -> (i32, String, String) {
+    let secret = connect_default_agent(home, "Demo");
+    agpj_with_connection(home, &secret, args)
 }
 
 fn lines(out: &str) -> Vec<Value> {
@@ -38,14 +55,20 @@ struct Waiter {
 
 impl Waiter {
     fn spawn(home: &Path, args: &[&str]) -> Waiter {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+        let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
+        command
             .env("AGPJ_AUTOSTART", "0")
             .env("AGPJ_OPEN_BROWSER", "0")
             .env("AGPJ_WATCH", "poll")
             .env("AGPJ_HOME", home)
             .env("TZ", "UTC")
             .current_dir(home)
-            .args(demo(args))
+            .args(demo(args));
+        if has_ai_actor(args) {
+            let secret = connect_default_agent(home, "Demo");
+            command.env("AGPJ_CONNECTION_SECRET", secret);
+        }
+        let mut child = command
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
@@ -94,9 +117,26 @@ fn ask_without_waiting_needs_no_server_and_a_wait_without_autostart_needs_one() 
             "1",
             "--questions-json",
             &request,
+            "--no-wait",
         ],
     );
-    assert_eq!((code, err.as_str()), (1, "board_unavailable"));
+    assert_eq!((code, err.as_str()), (1, "not_connected"));
+    let (code, _, err) = run(
+        home.path(),
+        &[
+            "message",
+            "ask",
+            "--actor",
+            "ai",
+            "--task",
+            "1",
+            "--questions-json",
+            &request,
+        ],
+    );
+    assert_eq!(code, 1, "{err}");
+    let error: Value = serde_json::from_str(&err).unwrap();
+    assert_eq!(error["error"]["code"], "board_unavailable");
     let listed = json_ok(
         home.path(),
         &["--project", "Demo", "message", "ls", "--json"],
@@ -331,7 +371,7 @@ fn edit_with_desc_file_keeps_question_refs_and_the_task_stays_pending() {
     let file = home.path().join("desc.md");
     std::fs::write(&file, "---\nquestions: [Q-9]\n---\nReplaced body\n").unwrap();
     let path = file.to_str().unwrap();
-    let (code, _, err) = agpj(
+    let (code, _, err) = connected_agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--desc-file", path],
     );
@@ -343,7 +383,7 @@ fn edit_with_desc_file_keeps_question_refs_and_the_task_stays_pending() {
 
     // The same holds for a plain file without frontmatter.
     std::fs::write(&file, "Second body\n").unwrap();
-    let (code, _, err) = agpj(
+    let (code, _, err) = connected_agpj(
         home.path(),
         &["--project", "Demo", "edit", "1", "--desc-file", path],
     );

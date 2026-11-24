@@ -20,7 +20,7 @@ fn results_route_lists_what_the_cli_recorded() {
     assert_eq!(empty.status, 200);
     assert_eq!(empty.json()["results"], json!([]));
 
-    json_ok(
+    common::json_ok_connected_fixture(
         home.path(),
         &[
             "--project",

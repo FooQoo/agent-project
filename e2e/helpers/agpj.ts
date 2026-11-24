@@ -81,11 +81,37 @@ export function skipGuide(home: string): void {
 }
 
 export function removeHome(home: string): void {
+  fixtureConnections.delete(home);
   rmSync(home, { recursive: true, force: true });
 }
 
-function agpjEnv(home: string): NodeJS.ProcessEnv {
-  return { ...process.env, AGPJ_HOME: home, TZ: 'UTC' };
+const fixtureConnections = new Map<string, Map<string, string>>();
+
+export function agpjEnv(home: string, project?: string): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    AGPJ_HOME: home,
+    TZ: 'UTC',
+    AGPJ_CONNECTION_SECRET: project ? fixtureConnections.get(home)?.get(project) : undefined,
+  };
+}
+
+/** Give a CLI fixture a project-scoped connection from the real registry. */
+export function connectFixtureAgent(home: string, project: string): void {
+  let connections = fixtureConnections.get(home);
+  if (!connections) fixtureConnections.set(home, connections = new Map());
+  if (connections.has(project)) return;
+  const binary = process.env.AGPJ_E2E_PHONE_BACKEND;
+  if (!binary) throw new Error('AGPJ_E2E_PHONE_BACKEND is required to connect a fixture agent');
+  const result = spawnSync(binary, ['--ignored', '--exact', 'connect_fixture_agent', '--nocapture'], {
+    cwd: home,
+    env: { ...agpjEnv(home), AGPJ_E2E_CONNECT_PROJECT: project },
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) throw new Error(`Connecting fixture agent for ${project} failed: ${result.stderr}`);
+  const secret = result.stdout.match(/^CONNECTION (\S+)$/m)?.[1];
+  if (!secret) throw new Error(`Connecting fixture agent for ${project} did not return a connection`);
+  connections.set(project, secret);
 }
 
 /**
@@ -107,7 +133,7 @@ export interface AgpjResult {
  * without a terminal. The project is always named by the caller.
  */
 export function agpj(project: string, args: string[], home: string = mainHome()): AgpjResult {
-  return run(['--project', project, ...withTestDefaults(args)], home);
+  return run(['--project', project, ...withTestDefaults(args)], home, project);
 }
 
 /** Run a whole-catalog command such as `project create NAME` or `project ls`, which takes no `--project`. */
@@ -127,9 +153,9 @@ function withOwnFolder(args: string[], home: string): string[] {
   return [...args.slice(0, at + 3), '--folder', folder, ...args.slice(at + 3)];
 }
 
-function run(args: string[], home: string): AgpjResult {
+function run(args: string[], home: string, project?: string): AgpjResult {
   const result = spawnSync(agpjBinary(), args, {
-    env: agpjEnv(home),
+    env: agpjEnv(home, project),
     cwd: home,
     encoding: 'utf8',
     input: '',
@@ -356,10 +382,17 @@ function questionMarkdownFor(item: FixtureTask): string {
  */
 export function seedProject(project: string, file: string, home: string = mainHome()): void {
   const folder = workspace(project, home).folder;
+  const fixture = JSON.parse(readFileSync(file, 'utf8')) as Fixture;
+  if (fixture.tasks.some((task) => task.assignee === 'ai') && !fixtureConnections.get(home)?.has(project)) {
+    // This older data fixture writes tasks directly. Let the CLI register its default agent
+    // before the fixture replaces the generated card and sets the fixture's task counter.
+    const agents = JSON.parse(agpjOk(project, ['agent', 'ls', '--json'], home).stdout).agents as { isDefault: boolean }[];
+    if (!agents.some((agent) => agent.isDefault)) agpjOk(project, ['add', 'Fixture agent setup'], home);
+    connectFixtureAgent(home, project);
+  }
   rmSync(path.join(folder, 'tasks'), { recursive: true, force: true });
   rmSync(path.join(folder, 'epics'), { recursive: true, force: true });
   rmSync(path.join(folder, 'qa'), { recursive: true, force: true });
-  const fixture = JSON.parse(readFileSync(file, 'utf8')) as Fixture;
   let nextQuestionId = 1;
   for (const item of fixture.tasks) {
     const dir = path.join(folder, 'tasks', String(item.id));
@@ -458,6 +491,7 @@ function waitForServeToShow(url: string, project: string, file: string, id: stri
 export function removeProject(project: string, home: string = mainHome()): void {
   const result = agpjOnTerminal(project, 'y', ['project', 'rm'], home);
   if (result.code !== 0) throw new Error(`deleting ${project} failed: ${result.stdout}${result.stderr}`);
+  fixtureConnections.get(home)?.delete(project);
 }
 
 /** Leave exactly `Alpha` and `Beta` in `home`, each restored from its backup and shown by the serve at `serveUrl`. */
@@ -476,7 +510,7 @@ function withTestDefaults(args: string[]): string[] {
   if (command === 'add' && !result.includes('--assignee')) result.push('--assignee', 'ai');
   if (command === 'add' && !result.includes('--actor')) result.push('--actor', 'human');
   if ((command === 'mv' || command === 'state') && !result.includes('--actor')) {
-    result.push('--actor', 'human');
+    result.push('--actor', command === 'state' ? 'ai' : 'human');
   }
   return result;
 }

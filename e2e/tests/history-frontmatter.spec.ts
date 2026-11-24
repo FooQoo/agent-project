@@ -5,6 +5,8 @@ import path from 'node:path';
 import { expect, test, type Page } from '../helpers/fixtures';
 import {
 	agpjBinary,
+	agpjEnv,
+	connectFixtureAgent,
 	agpjOk,
 	askArgs,
 	makeHome,
@@ -47,7 +49,7 @@ interface TaskView {
 function cli(args: string[]): { code: number; stdout: string; stderr: string } {
 	const result = spawnSync(agpjBinary(), ['--project', project, ...args], {
 		cwd: home,
-		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
+		env: agpjEnv(home, project),
 		encoding: 'utf8',
 	});
 	if (result.error) throw result.error;
@@ -57,7 +59,7 @@ function cli(args: string[]): { code: number; stdout: string; stderr: string } {
 function catalog(args: string[]): { code: number; stdout: string; stderr: string } {
 	const result = spawnSync(agpjBinary(), args, {
 		cwd: home,
-		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
+		env: agpjEnv(home, project),
 		encoding: 'utf8',
 	});
 	if (result.error) throw result.error;
@@ -80,6 +82,7 @@ function snapshot(): { cursor: string; tasks: TaskView[]; problems: { file: stri
 
 function addTask(title: string, description = 'History E2E body.', assignee: 'ai' | 'human' = 'ai'): number {
 	const result = JSON.parse(cliOk(['add', title, `--desc=${description}`, '--assignee', assignee, '--actor', 'human']));
+	if (assignee === 'ai') connectFixtureAgent(home, project);
 	return result.task.id as number;
 }
 
@@ -104,7 +107,7 @@ async function openPc(page: Page): Promise<void> {
 function beginWait(cursor: string): { child: ChildProcess; result: Promise<{ code: number | null; stdout: string; stderr: string }> } {
 	const child = spawn(agpjBinary(), ['--project', project, 'wait', '--after', cursor, '--timeout', '10', '--json'], {
 		cwd: home,
-		env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
+		env: agpjEnv(home, project),
 		stdio: ['ignore', 'pipe', 'pipe'],
 	});
 	let stdout = '';

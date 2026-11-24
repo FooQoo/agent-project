@@ -2,6 +2,8 @@
 //! how an epic's waves list is stored in its EPIC.md. Runs the real CLI on
 //! a temporary data area.
 
+mod common;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -11,8 +13,14 @@ use serde_json::{Value, json};
 use tempfile::{TempDir, tempdir};
 
 fn agpj(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
-    Command::cargo_bin("agpj")
-        .unwrap()
+    let mut command = Command::cargo_bin("agpj").unwrap();
+    command.env_remove("AGPJ_CONNECTION_SECRET");
+    if let Some(secret) = common::fixture_project_arg(args)
+        .and_then(|project| common::try_connect_default_agent(home, project))
+    {
+        command.env("AGPJ_CONNECTION_SECRET", secret);
+    }
+    command
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")

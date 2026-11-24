@@ -4,6 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import {
   agpjBinary,
+  agpjEnv,
+  connectFixtureAgent,
   agpjCatalogOk,
   decisionJson,
   projectId,
@@ -19,7 +21,7 @@ export { startPhoneEntrance, type PhoneEntrance } from './phone-entrance.mjs';
 function run(home: string, args: string[]): string {
   const result = spawnSync(agpjBinary(), args, {
     cwd: home,
-    env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' },
+    env: agpjEnv(home, args[1]),
     encoding: 'utf8',
   });
   if (result.error) throw new Error(`agpj ${args.join(' ')} did not run: ${result.error.message}`, { cause: result.error });
@@ -33,6 +35,7 @@ function task(home: string, project: string, title: string, description: string)
   const value = JSON.parse(
     run(home, ['--project', project, 'add', title, `--desc=${taskBody(description)}`, '--assignee', 'ai', '--actor', 'human', '--json']),
   ) as { task: { id: number } };
+  connectFixtureAgent(home, project);
   return value.task.id;
 }
 

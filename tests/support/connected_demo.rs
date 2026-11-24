@@ -1,4 +1,5 @@
 //! A temporary Demo project whose CLI acts as the default agent.
+#![allow(dead_code)]
 
 use std::path::Path;
 
