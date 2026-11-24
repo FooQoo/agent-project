@@ -223,6 +223,8 @@ pub fn build_filtered(
             .map(|task| task.task_status_changed_at)
             .max(),
     };
+    // The reminders are written in the project's language.
+    table.locale = crate::server::preferences::saved_locale(shared);
     table.reminders = crate::nudge::state_reminders(&table, fetched_at);
     if let Some(filter) = filter {
         narrow::narrow(&mut table, snapshot, filter);

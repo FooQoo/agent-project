@@ -1,6 +1,6 @@
 //! Builders shared by the nudge tests.
 
-use super::{Call, Facts, Turn};
+use super::{Call, Facts, Lang, Turn};
 use crate::domain::{Actor, Assignee, Column, NewTask, RunState};
 use crate::file_store::FileStore;
 use crate::progress::{self, FinalResultMissing, Include, Progress};
@@ -103,6 +103,7 @@ impl Scenario {
             turn: self.turn.as_ref(),
             message: self.message,
             now: chrono::Utc::now(),
+            lang: Lang::from_locale(self.progress.as_ref().and_then(|p| p.locale.as_deref())),
         }
     }
 }

@@ -2,11 +2,11 @@
 //! points to, then its cases in `cases.rs` and a row in the rule list of
 //! `docs/dev/concepts/agents.md` (and its Japanese copy).
 
-use super::commands::{contains_sequence, ends_with_question, runs_agpj, tokens};
+use super::commands::{contains_sequence, runs_agpj, tokens};
 use super::question_rules;
 use super::record_rules;
 use super::state_rules;
-use super::{Area, Call, Facts, Finding, Kind, Rule, Source, When};
+use super::{Area, Call, Facts, Finding, Kind, Lang, Rule, Source, When};
 
 /// Every rule, in the order their reminders are listed.
 pub const RULES: &[Rule] = &[
@@ -16,7 +16,7 @@ pub const RULES: &[Rule] = &[
         source: Source::Turn,
         when: When::TurnEnd,
         kind: Kind::Check,
-        check: question,
+        check: question_rules::question,
     },
     Rule {
         id: "question-images",
@@ -151,31 +151,6 @@ const fn entry(
     }
 }
 
-/// The last reply is a question to the user and none was put on the board.
-fn question(facts: &Facts) -> Vec<Finding> {
-    let Some(reply) = facts.reply() else {
-        return Vec::new();
-    };
-    // Without a readable transcript the turn cannot be checked.
-    if !ends_with_question(reply)
-        || facts.turn.is_none()
-        || facts
-            .calls()
-            .iter()
-            .any(|c| runs_agpj(&c.command, &[&["message", "ask"], &["message", "answer"]]))
-    {
-        return Vec::new();
-    }
-    vec![
-        Finding::new(
-            "Does your question wait on the user's answer? If so, put it on the board with `agpj message ask` and show it in the chat too.",
-        ),
-        Finding::new(
-            "Does it ask about something visual (a screen, a mock, a design)? Attach the images to the question.",
-        ),
-    ]
-}
-
 /// An AI task has all its conditions met and no final result.
 fn final_result(facts: &Facts) -> Vec<Finding> {
     let Some(progress) = facts.progress else {
@@ -185,10 +160,16 @@ fn final_result(facts: &Facts) -> Vec<Finding> {
         .final_result_missing
         .iter()
         .map(|task| {
-            Finding::new(format!(
-                "Task #{id} has all conditions met but no final result: record `agpj result add {id} --final ...`.",
-                id = task.id
-            ))
+            Finding::new(match facts.lang {
+                Lang::En => format!(
+                    "Task #{id} has all conditions met but no final result: record `agpj result add {id} --final ...`.",
+                    id = task.id
+                ),
+                Lang::Ja => format!(
+                    "タスク #{id} は受け入れ条件がすべて満たされていますが、最終成果が記録されていません。`agpj result add {id} --final ...` で記録してください。",
+                    id = task.id
+                ),
+            })
             .task(task.id)
         })
         .collect()
@@ -199,9 +180,10 @@ fn result_pr(facts: &Facts) -> Vec<Finding> {
     if !result_expected(facts) || !facts.calls().iter().any(is_pr_create) {
         return Vec::new();
     }
-    vec![Finding::new(
+    vec![Finding::new(facts.lang.pick(
         "You opened a pull request in this turn but recorded no result.",
-    )]
+        "このターンでプルリクエストを作成しましたが、成果が記録されていません。",
+    ))]
 }
 
 /// The turn pushed or produced an image (and opened no pull request) and
@@ -214,9 +196,10 @@ fn result_artifact(facts: &Facts) -> Vec<Finding> {
     {
         return Vec::new();
     }
-    vec![Finding::new(
+    vec![Finding::new(facts.lang.pick(
         "You pushed or produced an image. If it is something the requester can look at, record it with `agpj result add`.",
-    )]
+        "プッシュまたは画像の生成をしました。依頼者が見られるものなら、`agpj result add` で記録してください。",
+    ))]
 }
 
 /// A result is due: the turn recorded none while an AI task is running.

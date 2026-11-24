@@ -8,7 +8,7 @@ use std::path::Path;
 use crate::clock::{Clock, SystemClock};
 use crate::domain::{ProjectId, validate_project_name};
 use crate::file_store::FileStore;
-use crate::nudge::{self, Facts, Kind, RULES, Rule};
+use crate::nudge::{self, Facts, Kind, Lang, RULES, Rule};
 use crate::progress::{self, Include};
 
 /// The fields of a Stop event's input the rules use.
@@ -68,6 +68,7 @@ pub(crate) fn run(input: &StopFields, shared: &Path, project: &ProjectId) -> Opt
         turn: turn.as_ref(),
         message: input.last_assistant_message.as_deref(),
         now,
+        lang: Lang::from_locale(progress.as_ref().and_then(|p| p.locale.as_deref())),
     };
     decide(&facts, RULES)
 }
@@ -87,12 +88,20 @@ pub(crate) fn decide(facts: &Facts, rules: &[Rule]) -> Option<String> {
             .map(|i| format!("- {mark}{}", i.text))
             .collect()
     };
-    let mut reason = String::from(
+    let lang = facts.lang;
+    let mut reason = String::from(lang.pick(
         "Agent Project turn-end checklist. Items under 'Found' are confirmed by the hook; handle them. Items under 'Check' are triggered by this turn; handle those that apply and ignore the rest.",
-    );
+        "Agent Project のターン終了チェックリスト。「見つかったこと」はフックが確認した項目なので、対応してください。「確認すること」はこのターンで該当しうる項目なので、当てはまるものに対応し、当てはまらないものは無視してください。",
+    ));
     for (title, body) in [
-        ("Found:", lines(Kind::Definite, "NG: ")),
-        ("Check:", lines(Kind::Check, "[ ] ")),
+        (
+            lang.pick("Found:", "見つかったこと:"),
+            lines(Kind::Definite, "NG: "),
+        ),
+        (
+            lang.pick("Check:", "確認すること:"),
+            lines(Kind::Check, "[ ] "),
+        ),
     ] {
         if !body.is_empty() {
             reason.push_str(&format!("\n\n{title}\n{}", body.join("\n")));

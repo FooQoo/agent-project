@@ -145,3 +145,53 @@ fn the_rule_list_of_the_docs_names_every_rule() {
         }
     }
 }
+
+mod locale {
+    use super::super::Lang;
+    use super::super::state_reminders;
+    use super::super::test_support::progress_with;
+
+    #[test]
+    fn lang_follows_the_locale_and_defaults_to_english() {
+        assert_eq!(Lang::from_locale(Some("ja")), Lang::Ja);
+        assert_eq!(Lang::from_locale(Some("en")), Lang::En);
+        assert_eq!(Lang::from_locale(None), Lang::En);
+    }
+
+    #[test]
+    fn reminder_texts_follow_the_locale_and_keep_commands_verbatim() {
+        let now = chrono::Utc::now();
+        let mut table = progress_with(true, &[3]);
+        let en = state_reminders(&table, now);
+        assert!(en[0].text.starts_with("Task #3 has all conditions met"));
+        table.locale = Some("ja".into());
+        let ja = state_reminders(&table, now);
+        assert_eq!(ja[0].rule, "final-result");
+        assert!(ja[0].text.starts_with("タスク #3 は"));
+        assert!(ja[0].text.contains("`agpj result add 3 --final ...`"));
+    }
+
+    #[test]
+    fn the_stale_running_text_is_japanese_with_commands_intact() {
+        let now = chrono::Utc::now();
+        let mut table = progress_with(true, &[]);
+        table.locale = Some("ja".into());
+        for task in table
+            .epics
+            .iter_mut()
+            .flat_map(|e| e.tasks.iter_mut())
+            .chain(table.unassigned.iter_mut())
+        {
+            task.last_activity_at = Some(now - chrono::Duration::hours(2));
+        }
+        let reminders = state_reminders(&table, now);
+        let stale = reminders
+            .iter()
+            .find(|r| r.rule == "stale-running")
+            .unwrap();
+        assert!(stale.text.contains("120 分間"));
+        assert!(stale.text.contains("`agpj state "));
+        assert!(stale.text.contains("paused --actor ai --reason"));
+        assert!(stale.text.contains("`agpj message ask`"));
+    }
+}
