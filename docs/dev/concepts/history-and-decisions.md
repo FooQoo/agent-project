@@ -79,3 +79,9 @@ history: []
 **Final result reminder.** Automatic Done does not wait for a final result. Instead the progress table lists, in `finalResultMissing`, each AI task whose conditions are all met and that has no `--final` result, while it is in Todo or Doing and for 24 hours after it moves to Done. Agents record the result with `result add --final`; that is the one AI change a Done task accepts, and only while it has no final result (a progress result, or a second final result, still fails with `task_is_done`). See [Agent output](../reference/agent-output.md).
 
 Done tasks refuse AI changes (edit, state, epic, history, and images) and never reopen automatically; people can still edit and reopen them. An AI lane move to Done is refused with `acceptance_unmet` while a condition is unmet or the frontmatter is invalid, and with `questions_unanswered` while the task waits for a person. Tasks with zero conditions, and moves by people, are not blocked. How this is evaluated is described in [Agent integration](./agents.md#automatic-done).
+
+## RAP contracts, completion, and change requests
+
+RAP turns an approved plan revision or an explicit direct-execution authorization into an immutable execution contract tied to a content-addressed document hash. Approving a stale revision is rejected, and stored revisions and contracts cannot be updated or deleted.
+
+Completion is evaluated in a single write transaction: a work item moves to Done only when its current contract matches its current revision, every referenced document passes integrity verification, both verification evidence and a final result are recorded for that contract, and no pending change request remains. Change requests are persisted immediately as pending; a request arriving before completion blocks Done, while a request arriving after completion reopens the work item into revision.

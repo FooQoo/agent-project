@@ -1,15 +1,25 @@
 //! Durable work and execution state for Remote Agent Project.
 
+mod change_requests;
+mod completion;
+mod contracts;
 mod documents;
 mod model;
 
+pub use change_requests::*;
+pub use completion::*;
+pub use contracts::*;
 pub use documents::DocumentHash;
 pub use model::*;
 use rusqlite::{Connection, OptionalExtension, Row, Transaction, TransactionBehavior, params};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-const MIGRATIONS: &[&str] = &[include_str!("schema.sql"), include_str!("documents.sql")];
+const MIGRATIONS: &[&str] = &[
+    include_str!("schema.sql"),
+    include_str!("documents.sql"),
+    include_str!("contracts.sql"),
+];
 const APPLICATION_ID: i64 = 0x0052_4150;
 
 #[derive(Debug, thiserror::Error)]
@@ -28,6 +38,8 @@ pub enum RapError {
     Conflict(&'static str),
     #[error("RAP document {0} is missing, unreadable, or has changed")]
     DocumentIntegrity(String),
+    #[error("RAP completion is blocked: {0:?}")]
+    CompletionBlocked(Vec<CompletionBlocker>),
     #[error("RAP {0} was not found")]
     NotFound(&'static str),
 }
@@ -200,7 +212,8 @@ impl RapStore {
 }
 
 const WORK_SELECT: &str = "SELECT id, project_id, workspace, kind, parent_epic_id, title,
-                                  rank, lane, phase, version FROM work_items";
+                                  rank, lane, phase, version, current_revision_id,
+                                  current_contract_id FROM work_items";
 
 fn fetch_work(connection: &Connection, id: WorkId) -> Result<WorkItem, RapError> {
     let sql = format!("{WORK_SELECT} WHERE id = ?1");
@@ -222,6 +235,8 @@ fn read_work(row: &Row<'_>) -> rusqlite::Result<WorkItem> {
         lane: row.get(7)?,
         phase: row.get(8)?,
         version: row.get(9)?,
+        current_revision_id: row.get::<_, Option<i64>>(10)?.map(RevisionId),
+        current_contract_id: row.get::<_, Option<i64>>(11)?.map(ContractId),
     })
 }
 

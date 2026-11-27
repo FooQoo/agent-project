@@ -15,6 +15,10 @@ macro_rules! id_type {
 id_type!(WorkId);
 id_type!(SessionId);
 id_type!(AttemptId);
+id_type!(RevisionId);
+id_type!(ContractId);
+id_type!(ChangeRequestId);
+id_type!(EvidenceId);
 
 macro_rules! state_type {
     ($name:ident { $($variant:ident => $value:literal),+ $(,)? }) => {
@@ -82,6 +86,8 @@ pub struct WorkItem {
     pub lane: BoardLane,
     pub phase: WorkPhase,
     pub version: i64,
+    pub current_revision_id: Option<RevisionId>,
+    pub current_contract_id: Option<ContractId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
