@@ -59,6 +59,27 @@ pub(in crate::file_store::ops) fn check_session_write(
     old: Option<&TaskMetadata>,
     task: &TaskFile,
 ) -> Result<(), AgpjError> {
+    check_session_write_inner(shared, dir, old, task, true)
+}
+
+/// Check a task write without refreshing connection activity. Multi-task operations use this
+/// for their full authorization preflight, then perform the ordinary check once all targets pass.
+pub(in crate::file_store::ops) fn check_session_write_without_touch(
+    shared: &Path,
+    dir: &Path,
+    old: Option<&TaskMetadata>,
+    task: &TaskFile,
+) -> Result<(), AgpjError> {
+    check_session_write_inner(shared, dir, old, task, false)
+}
+
+fn check_session_write_inner(
+    shared: &Path,
+    dir: &Path,
+    old: Option<&TaskMetadata>,
+    task: &TaskFile,
+    touch: bool,
+) -> Result<(), AgpjError> {
     let Some(data_dir) = SESSION.with(|s| s.borrow().clone()) else {
         return Ok(());
     };
@@ -81,22 +102,21 @@ pub(in crate::file_store::ops) fn check_session_write(
     let owner = resolve_agent_id_locked(shared, dir, old_agent)?;
     let secret = crate::agent::connection_store::load_secret(&data_dir, &project)
         .ok_or(AgpjError::NotConnected)?;
-    authorize_locked(
-        shared,
-        dir,
-        &secret,
-        stamp(chrono::Utc::now()),
-        |verified| {
-            let agent = verified.agent_id.as_str();
-            // A session never hands a card to another agent; only a person does.
-            let kept = task.agent_id.as_deref() == old_agent
-                || (old_agent.is_none() && task.agent_id.as_deref() == Some(agent));
-            if owner.as_deref() != Some(agent) || !kept {
-                return Err(AgpjError::NotAssignee { id: task.id });
-            }
-            Ok(())
-        },
-    )?;
+    let authorize = |verified: &Verified| {
+        let agent = verified.agent_id.as_str();
+        // A session never hands a card to another agent; only a person does.
+        let kept = task.agent_id.as_deref() == old_agent
+            || (old_agent.is_none() && task.agent_id.as_deref() == Some(agent));
+        if owner.as_deref() != Some(agent) || !kept {
+            return Err(AgpjError::NotAssignee { id: task.id });
+        }
+        Ok(())
+    };
+    if touch {
+        authorize_locked(shared, dir, &secret, stamp(chrono::Utc::now()), authorize)?;
+    } else {
+        super::authorize_locked_without_touch(shared, dir, &secret, authorize)?;
+    }
     Ok(())
 }
 

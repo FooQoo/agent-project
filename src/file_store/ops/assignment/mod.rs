@@ -30,12 +30,13 @@ use crate::error::AgpjError;
 pub(in crate::file_store::ops) use connect::fresh_connection_locked;
 pub use guard::{SessionWrites, enter_session_writes};
 pub(in crate::file_store::ops) use guard::{
-    check_session_write, default_agent_id_locked, ensure_session_may_write, exempt,
+    check_session_write, check_session_write_without_touch, default_agent_id_locked,
+    ensure_session_may_write, exempt,
 };
 pub use model::*;
 use model::{ConnectCode, ConnectionRecord, ConnectionsFile};
 pub(crate) use registry::registered_default_agent_id;
 pub(in crate::file_store::ops) use registry::{ensure_agent_live_locked, resolve_agent_id_locked};
-pub(in crate::file_store::ops) use store::authorize_locked;
 pub(crate) use store::digest_of;
 use store::*;
+pub(in crate::file_store::ops) use store::{authorize_locked, authorize_locked_without_touch};

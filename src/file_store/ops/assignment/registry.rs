@@ -57,7 +57,33 @@ impl FileStore {
     pub fn list_agents(&self, project: &ProjectId) -> Result<Vec<AgentView>, AgpjError> {
         let shared = self.shared_dir();
         let (dir, _lock) = lock_project(shared, project)?;
-        let agents: AgentsFile = load(shared, &agents_path(&dir))?;
+        let mut agents: AgentsFile = load(shared, &agents_path(&dir))?;
+        // Older projects can have AI cards from before the agent registry existed. The
+        // settings page is where a person requests a connection code, so repair that legacy
+        // default here under the same project lock before returning the agent list.
+        if !agents
+            .agents
+            .iter()
+            .any(|agent| agent.is_default && agent.archived_at.is_none())
+        {
+            for id in reader::task_ids(&dir)? {
+                let Ok(task) = reader::read_task_metadata_strict(shared, project, id) else {
+                    continue;
+                };
+                if task.assignee == Assignee::Ai
+                    && task.agent_id.is_none()
+                    && task.archived_at.is_none()
+                {
+                    let language = crate::file_store::history_language::HistoryLanguage::infer(
+                        "",
+                        &task.title,
+                    );
+                    default_agent_id_locked(shared, &dir, language, Utc::now())?;
+                    agents = load(shared, &agents_path(&dir))?;
+                    break;
+                }
+            }
+        }
         let connections: ConnectionsFile = load(shared, &connections_path(&dir))?;
         let mut views: Vec<AgentView> = agents
             .agents
