@@ -14,6 +14,7 @@ pub mod nudge;
 pub mod paths;
 pub mod plugin_hash;
 pub mod progress;
+pub mod rap;
 pub mod remote_settings;
 pub mod server;
 pub mod setup;

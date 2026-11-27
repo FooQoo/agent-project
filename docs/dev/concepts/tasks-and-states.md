@@ -107,3 +107,14 @@ A project lists versions as files and can name one of them as its release versio
 
 - On the desktop board and in the CLI, Todo and Doing sort by ascending position and Done by descending position. The mobile Done list sorts by `taskStatusChangedAt`, newest first. Completion order is never inferred from history. API `tasks` come in ID order; the UI sorts them for display. Epics sort by EPIC-ID.
 - Stored and JSON times are UTC strings in exactly `YYYY-MM-DDTHH:MM:SSZ`; offsets (even `+00:00`) and fractional seconds are rejected. The CLI displays local time of the machine, the UI that of the browser, as `MM/DD HH:mm`.
+
+## RAP work state
+
+The RAP core stores work in a shared SQLite database. Epic membership is scoped
+to a project and its canonical workspace path. A work item stores its board lane
+and work phase in separate fields. Native planning and execution sessions have
+separate rows, and each attempt records its own state. For example, a planning
+session can be running while its epic remains in Backlog. Opening the database
+after a restart preserves the relationships and the recorded states.
+
+The existing Agent Project board continues to read its own file store.
