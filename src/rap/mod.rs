@@ -1,6 +1,7 @@
 //! Durable work and execution state for Remote Agent Project.
 
 mod change_requests;
+mod collaboration;
 mod completion;
 mod contracts;
 mod documents;
@@ -8,6 +9,7 @@ mod model;
 pub mod scheduler;
 
 pub use change_requests::*;
+pub use collaboration::*;
 pub use completion::*;
 pub use contracts::*;
 pub use documents::DocumentHash;
@@ -21,6 +23,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("documents.sql"),
     include_str!("contracts.sql"),
     scheduler::MIGRATION,
+    include_str!("collaboration.sql"),
 ];
 const APPLICATION_ID: i64 = 0x0052_4150;
 
