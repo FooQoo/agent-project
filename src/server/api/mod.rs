@@ -56,7 +56,6 @@ use onboarding::*;
 use pages::*;
 use projects::*;
 use send::{send_epic, send_task};
-use sessions::list_sessions;
 use summaries::{dismiss_summary, list_summaries};
 use summary::summary;
 use task_acceptance::*;
@@ -113,7 +112,7 @@ fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<
         .route("/api/projects", get(projects))
         .route("/api/projects/{project_id}/archive", get(archive))
         .route("/api/projects/{project_id}/summary", get(summary))
-        .route("/api/projects/{project_id}/sessions", get(list_sessions))
+        .merge(local::session_routes())
         .merge(agents::routes())
         .merge(rap::routes())
         .route(

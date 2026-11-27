@@ -7,6 +7,7 @@ use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 
 use super::rap::{now_secs, rap_error};
+use crate::rap::scheduler::SchedulerSettings;
 use crate::rap::{Evidence, QuestionId, RapResult, ResultId, RevisionId, WorkId};
 use crate::server::AppState;
 
@@ -184,6 +185,19 @@ pub(super) async fn wake_sleep(State(state): State<Arc<AppState>>) -> Response {
         Ok(report) => {
             state.rap.notify("sleep_woken", None, None);
             Json(report).into_response()
+        }
+        Err(e) => rap_error(e),
+    }
+}
+
+pub(super) async fn update_settings(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<SchedulerSettings>,
+) -> Response {
+    match state.rap.scheduler.set_settings(body) {
+        Ok(()) => {
+            state.rap.notify("settings_updated", None, None);
+            Json(body).into_response()
         }
         Err(e) => rap_error(e),
     }

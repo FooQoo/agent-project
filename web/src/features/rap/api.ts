@@ -163,6 +163,25 @@ export function wakeRapSleep(fetcher: typeof fetch = fetch): Promise<RapWakeupRe
   return requestJson('/api/rap/sleep/wake', postInit({}), fetcher);
 }
 
+export function updateRapSettings(
+  settings: { auto_run: boolean; max_sessions: number },
+  fetcher: typeof fetch = fetch,
+): Promise<{ auto_run: boolean; max_sessions: number }> {
+  return requestJson(
+    '/api/rap/settings',
+    {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...authHeaders(),
+      },
+      body: JSON.stringify(settings),
+    },
+    fetcher,
+  );
+}
+
 export interface RapEventStream {
   close(): void;
 }

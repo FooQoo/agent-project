@@ -7,7 +7,7 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post};
+use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use serde::{Deserialize, Serialize};
 use tokio_stream::wrappers::BroadcastStream;
@@ -15,7 +15,7 @@ use tokio_stream::{Stream, StreamExt};
 
 use super::rap_actions::{
     answer_question, approve_plan, authorize_direct, create_change_request, enter_sleep,
-    list_results, revise_result, wake_sleep,
+    list_results, revise_result, update_settings, wake_sleep,
 };
 use crate::rap::scheduler::SchedulerSettings;
 use crate::rap::{
@@ -26,6 +26,7 @@ use crate::server::AppState;
 pub(super) fn routes() -> Router<Arc<AppState>> {
     Router::new()
         .route("/api/rap/events", get(rap_events))
+        .route("/api/rap/settings", put(update_settings))
         .route("/api/rap/projects/{project_id}/summary", get(rap_summary))
         .route("/api/rap/projects/{project_id}/work", post(create_work))
         .route("/api/rap/work/{work_id}/approve-plan", post(approve_plan))
