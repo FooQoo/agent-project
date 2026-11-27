@@ -92,6 +92,8 @@ pub(crate) struct AppState {
     pub sessions: Arc<sessions::SessionRegistry>,
     /// Starts and stops the headless sessions the board launches.
     pub resident: Arc<resident::Launcher>,
+    /// Shared RAP SQLite store, scheduler, and post-commit event feed.
+    pub rap: Arc<crate::rap::RapRuntime>,
 }
 
 pub fn is_serving(info: &crate::paths::ServeInfo) -> bool {

@@ -19,6 +19,8 @@ mod onboarding;
 mod pages;
 mod preferences;
 mod projects;
+mod rap;
+mod rap_actions;
 mod send;
 mod sessions;
 mod summaries;
@@ -113,6 +115,7 @@ fn routes(index_page: axum::routing::MethodRouter<Arc<AppState>>) -> Router<Arc<
         .route("/api/projects/{project_id}/summary", get(summary))
         .route("/api/projects/{project_id}/sessions", get(list_sessions))
         .merge(agents::routes())
+        .merge(rap::routes())
         .route(
             "/api/projects/{project_id}/tasks/{id}/detail",
             get(task_detail),

@@ -8,6 +8,7 @@ mod documents;
 mod model;
 mod notifications;
 mod results;
+pub mod runtime;
 pub mod scheduler;
 mod sleep;
 
@@ -19,6 +20,7 @@ pub use documents::DocumentHash;
 pub use model::*;
 pub use notifications::*;
 pub use results::*;
+pub use runtime::{RapEvent, RapRuntime};
 use rusqlite::{Connection, OptionalExtension, Row, Transaction, TransactionBehavior, params};
 pub use sleep::*;
 use std::path::{Path, PathBuf};

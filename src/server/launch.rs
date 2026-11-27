@@ -139,6 +139,8 @@ pub(crate) fn run<F: Future<Output = ()>>(
         )?;
         let activity = Activity::new();
         let sessions = sessions::SessionRegistry::new(session_grace());
+        let rap = crate::rap::RapRuntime::open(&data_dir.join("rap.db"))
+            .map_err(|e| internal(format!("Cannot open the RAP database: {e}")))?;
         let state = Arc::new(AppState {
             port: addr.port(),
             token: assets::new_token()?,
@@ -158,11 +160,8 @@ pub(crate) fn run<F: Future<Output = ()>>(
             docs_changed,
             activity: activity.clone(),
             sessions: sessions.clone(),
-            resident: resident::Launcher::new(
-                sessions,
-                resident::Executables::from_env(),
-                &data_dir,
-            ),
+            resident: resident::Launcher::new(sessions, resident::Executables::from_env(), &data_dir),
+            rap,
         });
         state.monitor.attach(&state);
         super::push_delivery::start(&state, &data_dir, monitor.push_transport.clone());
