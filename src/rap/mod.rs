@@ -5,11 +5,13 @@ mod collaboration;
 mod completion;
 mod contracts;
 mod documents;
+pub mod migration;
 mod model;
 mod notifications;
 mod results;
 pub mod runtime;
 pub mod scheduler;
+pub mod security;
 mod sleep;
 
 pub use change_requests::*;
@@ -17,11 +19,15 @@ pub use collaboration::*;
 pub use completion::*;
 pub use contracts::*;
 pub use documents::DocumentHash;
+pub use migration::{LegacyMapping, MigrationReport, copy_and_digest_tree, digest_tree};
 pub use model::*;
 pub use notifications::*;
 pub use results::*;
 pub use runtime::{RapEvent, RapRuntime};
 use rusqlite::{Connection, OptionalExtension, Row, Transaction, TransactionBehavior, params};
+pub use security::{
+    verify_irreversible_approval, verify_remote_session, verify_workspace_within_roots,
+};
 pub use sleep::*;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -35,6 +41,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("sleep.sql"),
     include_str!("results.sql"),
     include_str!("notifications.sql"),
+    include_str!("migration.sql"),
 ];
 const APPLICATION_ID: i64 = 0x0052_4150;
 

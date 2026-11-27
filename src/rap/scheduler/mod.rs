@@ -2,11 +2,13 @@
 
 mod claim;
 mod lifecycle;
+pub mod providers;
 pub mod runner;
 mod transitions;
 mod workspace;
 
 pub use lifecycle::{InFlight, ProcessIdentity};
+pub use providers::{ProviderCommand, build_provider_command, extract_session_id};
 pub use runner::{
     AdapterError, LaunchHandle, LaunchRequest, ProbeState, ProviderAdapter, RapRunner,
     ReconcileReport, parse_rate_limit_until,
