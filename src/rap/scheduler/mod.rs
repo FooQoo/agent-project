@@ -2,10 +2,15 @@
 
 mod claim;
 mod lifecycle;
+pub mod runner;
 mod transitions;
 mod workspace;
 
 pub use lifecycle::{InFlight, ProcessIdentity};
+pub use runner::{
+    AdapterError, LaunchHandle, LaunchRequest, ProbeState, ProviderAdapter, RapRunner,
+    ReconcileReport, parse_rate_limit_until,
+};
 pub use transitions::StoppedOutcome;
 
 use std::num::NonZeroU32;
@@ -94,6 +99,28 @@ impl SchedulerStore {
                 params![settings.auto_run, settings.max_sessions.get()],
             )?;
             Ok(())
+        })
+    }
+
+    /// Returns the active wait reason and optional retry timestamp for a work item.
+    pub fn waiting_reason(
+        &self,
+        work_id: WorkId,
+    ) -> Result<Option<(String, Option<i64>)>, RapError> {
+        self.store.read(|connection| {
+            let row = connection
+                .query_row(
+                    "SELECT waiting_reason, retry_at FROM scheduler_work WHERE work_id = ?1",
+                    [work_id.0],
+                    |row| {
+                        Ok((
+                            row.get::<_, Option<String>>(0)?,
+                            row.get::<_, Option<i64>>(1)?,
+                        ))
+                    },
+                )
+                .optional()?;
+            Ok(row.and_then(|(reason, retry_at)| reason.map(|r| (r, retry_at))))
         })
     }
 
