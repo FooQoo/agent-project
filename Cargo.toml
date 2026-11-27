@@ -36,6 +36,7 @@ serde_json = "1.0.151"
 serde_yaml_ng = "0.10"
 sha2 = "0.10.9"
 thiserror = "2.0.21"
+tempfile = "3.27.0"
 tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros", "signal", "net", "sync", "time"] }
 tokio-stream = { version = "0.1.19", features = ["sync"] }
 toml_edit = "=0.25.15"
@@ -46,7 +47,6 @@ pulldown-cmark = { version = "=0.13.4", default-features = false }
 assert_cmd = "2.2.2"
 expectrl = "0.9.0"
 predicates = "3.1.4"
-tempfile = "3.27.0"
 tokio = { version = "1.53.1", features = ["test-util"] }
 ureq = "3.4.2"
 

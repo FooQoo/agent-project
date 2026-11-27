@@ -1,13 +1,15 @@
 //! Durable work and execution state for Remote Agent Project.
 
+mod documents;
 mod model;
 
+pub use documents::DocumentHash;
 pub use model::*;
 use rusqlite::{Connection, OptionalExtension, Row, Transaction, TransactionBehavior, params};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-const MIGRATIONS: &[&str] = &[include_str!("schema.sql")];
+const MIGRATIONS: &[&str] = &[include_str!("schema.sql"), include_str!("documents.sql")];
 const APPLICATION_ID: i64 = 0x0052_4150;
 
 #[derive(Debug, thiserror::Error)]
@@ -24,6 +26,8 @@ pub enum RapError {
     InvalidInput(&'static str),
     #[error("{0} conflicts with current RAP state")]
     Conflict(&'static str),
+    #[error("RAP document {0} is missing, unreadable, or has changed")]
+    DocumentIntegrity(String),
     #[error("RAP {0} was not found")]
     NotFound(&'static str),
 }
@@ -36,6 +40,9 @@ pub struct RapStore {
 
 impl RapStore {
     /// Opens and migrates a RAP database at the supplied file path.
+    ///
+    /// The caller must supply a trusted, user-private data directory. This path is
+    /// local runtime configuration, never a path taken from a remote request.
     pub fn open(database: &Path) -> Result<Self, RapError> {
         let store = Self {
             database: database.to_owned(),
@@ -62,10 +69,11 @@ impl RapStore {
             .ok()
             .filter(|index| *index <= MIGRATIONS.len())
             .ok_or(RapError::NewerSchema(version))?;
-        for (index, migration) in MIGRATIONS.iter().enumerate().skip(version_index) {
+        for (migration, version) in MIGRATIONS.iter().zip(1_i64..).skip(version_index) {
             tx.execute_batch(migration)?;
-            tx.pragma_update(None, "user_version", index + 1)?;
+            tx.pragma_update(None, "user_version", version)?;
         }
+        store.recover_documents(&tx)?;
         tx.commit()?;
         Ok(store)
     }
