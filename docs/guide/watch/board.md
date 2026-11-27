@@ -201,29 +201,24 @@ Below the themes, four rows open other features. Each has an icon, a title, one 
 
 The dialog has a language switch and a grid of themes: one row of 12 light colors and one row of 12 dark colors. On a narrow window the button of each row moves under its description.
 
-### Mode {#mode}
+### Sleep schedule {#mode}
 
-The settings dialog has a **Mode** switch for the project on the board, with two options: **Sparring** and **Sleep**. Both options are the same size. A third state, **Brainstorm**, appears only while you brainstorm (see [Brainstorm](#brainstorm)). Sparring is the default: the agent listens and asks you on the board when it needs an answer. Sleep holds the questions back: the agent keeps working and decides in your place, the header shows how many questions are held, and they all reach you at once when sleep ends, and each decision is recorded on the task's history (see [Sleep mode](../delegate/agents#sleep-mode)).
+In settings, turn on **Sleep on a schedule** and set **From** and **Until**. Changes save automatically. The window repeats daily in the local time of the computer running Agent Project. Set a window such as 23:00 to 08:00 to sleep overnight. You can change the schedule from a PC or a phone.
 
-While the project is asleep, a **Sleep** chip with a moon icon shows in the header, on the PC and on the phone, so you notice it. The switch and the chip follow `agpj mode`: when the agent or you change the mode with the command, an open board shows it within a few seconds, without a reload. The mode belongs to you, not to the project's shared files, and is saved per project on this computer. A phone that opened the board through the remote entrance can switch it too.
+During sleep, the PC and phone headers show **Sleep** with a moon icon. The indicator updates when the window starts and ends, even while the board is open. It also shows the number of held questions if there are any. Those questions arrive together when sleep ends. See [Sleep mode](../delegate/agents#sleep-mode). The schedule is saved per project on this computer.
 
-The same section can put the project to sleep on a daily schedule. Turn on **Sleep on a schedule** and set **From** and **Until**, as times of day on this computer's clock. If **Until** is earlier than **From**, the window crosses midnight (for example 23:00 to 08:00). While the window is on, the settings and the header say so: "Asleep by the schedule until 8:00".
-
-A mode you set by hand wins over the schedule while it is set:
-
-- A change you make **during a window** holds until that window ends. Then the schedule takes over again.
-- A change you make **outside a window** holds until the next window starts, so a forgotten toggle at noon does not switch off the nightly sleep. With no window set, it holds until you change it. Choose **Follow the schedule** (or run `agpj mode auto`) to hand the decision back to the window at any time.
+A manual change made with `agpj mode` holds until the current window ends or, outside a window, until the next one starts. With the schedule off, it holds until you change it. In settings, choose **Follow the schedule** when the schedule is on, or **End sleep** when it is off and the project is asleep. You can also clear the manual change with `agpj mode auto`.
 
 ### Brainstorm {#brainstorm}
 
-Brainstorm mode asks the agent to question you about one epic or one task until you have thought it through (see [Brainstorm mode](../delegate/agents#brainstorm-mode)). It needs a target, so you start it from the target itself, not from the **Mode** switch:
+Brainstorm mode asks the agent to question you about one epic or one task until you have thought it through (see [Brainstorm mode](../delegate/agents#brainstorm-mode)). Start from the card or epic you want to brainstorm.
 
 - **From a card.** Select the task and choose **Brainstorm** under its title in the details.
 - **From an epic.** Select the epic in the epic list and choose **Brainstorm** under its name in the details.
 
 While that target is being brainstormed, the button turns into the label **Brainstorming** with an **End** button. Choosing **Brainstorm** on another card or epic moves the brainstorm there: one target is brainstormed at a time. An archived task has no **Brainstorm** button. While the project is asleep, whether by hand or by the schedule, the button is disabled and says "Brainstorming is unavailable in sleep mode.", because sleep wins over brainstorm.
 
-The header shows a **Brainstorm: #12** chip (or the epic ID) with an end button, on the PC and on the phone. A long target is cut with an ellipsis. In the settings, the **Mode** switch shows neither option as selected while you brainstorm, names the target, and has an **End brainstorm** button that returns to sparring. Choosing **Sparring** or **Sleep** also ends the brainstorm. `agpj mode` changes all of these without a reload, as it does for the sleep chip.
+The header shows a **Brainstorm: #12** chip (or the epic ID) with an end button, on the PC and on the phone. A long target is cut with an ellipsis. Settings also show the target and an **End brainstorm** button. Changes from `agpj mode` appear while the board is open.
 
 Each question the agent asks for the brainstorm shows a **Brainstorm: #12** badge when you open it from Messages, so you can tell which target it is about. Questions about ordinary work have no badge.
 
