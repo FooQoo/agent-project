@@ -5,6 +5,7 @@ mod completion;
 mod contracts;
 mod documents;
 mod model;
+pub mod scheduler;
 
 pub use change_requests::*;
 pub use completion::*;
@@ -19,6 +20,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("schema.sql"),
     include_str!("documents.sql"),
     include_str!("contracts.sql"),
+    scheduler::MIGRATION,
 ];
 const APPLICATION_ID: i64 = 0x0052_4150;
 

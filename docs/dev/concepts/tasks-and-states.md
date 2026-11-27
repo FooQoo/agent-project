@@ -118,3 +118,14 @@ session can be running while its epic remains in Backlog. Opening the database
 after a restart preserves the relationships and the recorded states.
 
 The existing Agent Project board continues to read its own file store.
+
+## RAP scheduler and workspace leases
+
+The RAP scheduler defaults to `auto_run = false` and `max_sessions = 1`. It
+claims only top-level authorized work (standalone tasks or epics; child tasks
+belong to their parent epic) whose referenced documents pass integrity checks.
+Independent workspaces can run concurrently up to `max_sessions`, while
+overlapping directories or subdirectories of the same Git worktree are mutually
+exclusive. An attempt in an unknown stop state retains its slot and workspace
+lease; a safe question pause (`AwaitingInput`) frees the session slot while
+retaining workspace ownership until the work resumes or finishes.
