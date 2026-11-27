@@ -200,8 +200,9 @@ fn a_task_takes_and_leaves_an_epic_over_http_and_a_person_may_change_an_archived
     assert_eq!(cleared.json()["task"]["epicId"], Value::Null);
 
     // A task that is archived takes no AI change, but a person may change it.
-    let (code, _, err) = agpj(
+    let (code, _, err) = common::agpj_with_connection(
         home.path(),
+        &common::connect_default_agent(home.path(), "Demo"),
         &[
             "--project",
             "Demo",
@@ -238,8 +239,9 @@ fn an_answer_names_a_choice_or_a_note_and_an_unknown_choice_is_422() {
             .to_string(),
     )
     .unwrap();
-    let (code, _, err) = agpj(
+    let (code, _, err) = common::agpj_with_connection(
         home.path(),
+        &common::connect_default_agent(home.path(), "Demo"),
         &[
             "--project",
             "Demo",

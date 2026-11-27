@@ -17,7 +17,14 @@ fn agpj(home: &std::path::Path, args: &[&str]) -> std::process::Output {
 }
 
 fn agpj_for(home: &std::path::Path, project: &str, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_agpj"))
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
+    command.env_remove("AGPJ_CONNECTION_SECRET");
+    if let Some(secret) =
+        Some(project).and_then(|project| common::try_connect_default_agent(home, project))
+    {
+        command.env("AGPJ_CONNECTION_SECRET", secret);
+    }
+    command
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")

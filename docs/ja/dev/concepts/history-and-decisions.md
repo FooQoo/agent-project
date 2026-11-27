@@ -26,7 +26,7 @@
 
 判断待ちは稼働状態ではなく、導き出す印です。`task.json`に保存するのは`idle`・`running`・`paused`だけで、`awaiting_answer`は有効な値ではありません。タスクを返す読み手（Summary、snapshot、`show`、`ls`、進捗表、hook）はどれも、判断待ちの間に真になる真偽値`awaitingAnswer`を加え、`openQuestionIds`と、IDが最も小さい未回答の質問の`pendingRequestId`・`pendingReason`・`pendingChoices`を返します。この印が`agentStatus`を変えることはありません。アーカイブ済みのタスクは対象外（`awaitingAnswer`は偽）で、参照は記録として残ります。判断待ちの間、AIによる`state <id> running`とDoneへの移動は`questions_unanswered`で失敗します。人による一時停止と移動は通します。AIによるPausedへの変更は`human_only`で拒否します。
 
-自動再開。回答を受け取ると（AIによる`message accept`、または回答済みの結果を返す`message ask`と`message wait`）、その質問を参照し、Pausedで、下書きでなく、ほかに未回答の質問を参照していないDoingのAI担当のタスクは、同じ保存でRunningに戻ります。履歴には「Q-1 の回答を受け取ったので再開しました。」（英語では`Resumed after the answers to Q-1.`。IDが複数のときは「, 」で並べます）を残します。ほかの質問を待っているタスクはPausedのままです。
+自動再開。回答を受け取ると（AIによる`message accept`、または回答済みの結果を返す`message ask`と`message wait`）、Doingで稼働待のAIタスクを再開できます。そのタスクが回答済みの質問を参照し、ほかに未回答の質問がなく、下書きでもアーカイブ済みでもなく、担当エージェントの接続が有効な場合に再開します。再開したタスクにその接続を記録し、履歴には「Q-1 の回答を受け取ったので再開しました。」（英語では`Resumed after the answers to Q-1.`。IDが複数のときは「, 」で並べます）を残します。
 
 ワークフロー情報を履歴の文章から推測することはありません。メッセージは`QA.md`から、参照はfrontmatterの`questions`から読むので、履歴を編集してもこれらは変わりません。
 

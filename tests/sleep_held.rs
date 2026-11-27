@@ -2,18 +2,22 @@
 //! manual switch (CLI and board) and by the end of the daily window.
 
 mod common;
+#[path = "support/connected_demo.rs"]
+mod connected_demo;
 
-use common::{Running, demo_project, json_ok};
+use connected_demo::ConnectedDemo;
+
+use common::Running;
 use serde_json::{Value, json};
 
-fn run(home: &std::path::Path, args: &[&str]) -> Value {
+fn run(home: &ConnectedDemo, args: &[&str]) -> Value {
     let mut all = vec!["--project", "Demo"];
     all.extend_from_slice(args);
     all.push("--json");
-    json_ok(home, &all)
+    home.json_ok(&all)
 }
 
-fn ask(home: &std::path::Path, body: &str, wait: bool) -> Value {
+fn ask(home: &ConnectedDemo, body: &str, wait: bool) -> Value {
     let questions = json!({"questions": [{"body": body}]}).to_string();
     let mut args = vec![
         "message",
@@ -31,7 +35,7 @@ fn ask(home: &std::path::Path, body: &str, wait: bool) -> Value {
     run(home, &args)
 }
 
-fn statuses(home: &std::path::Path) -> Vec<(String, String)> {
+fn statuses(home: &ConnectedDemo) -> Vec<(String, String)> {
     let listed = run(home, &["message", "ls", "--status", "all"]);
     listed["messages"]
         .as_array()
@@ -46,70 +50,64 @@ fn statuses(home: &std::path::Path) -> Vec<(String, String)> {
         .collect()
 }
 
-fn awaiting(home: &std::path::Path) -> bool {
+fn awaiting(home: &ConnectedDemo) -> bool {
     run(home, &["show", "1"])["task"]["awaitingAnswer"] == true
 }
 
 #[test]
 fn ac1_an_ask_during_sleep_is_held_and_returns_at_once_even_when_it_would_wait() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
-    run(home.path(), &["mode", "sleep"]);
+    let home = ConnectedDemo::new();
+    run(&home, &["mode", "sleep"]);
     // No --no-wait and no server: a held ask never waits, so it needs neither.
-    let first = ask(home.path(), "Keep the old rows?", true);
+    let first = ask(&home, "Keep the old rows?", true);
     assert_eq!(first, json!({"type": "held", "questions": [{"id": "Q-1"}]}));
-    let second = ask(home.path(), "Which name?", false);
+    let second = ask(&home, "Which name?", false);
     assert_eq!(second["questions"][0]["id"], "Q-2");
     assert_eq!(
-        statuses(home.path()),
+        statuses(&home),
         vec![("Q-1".into(), "held".into()), ("Q-2".into(), "held".into())]
     );
     // Nothing is open for the person, and the task is not waiting.
-    let open = run(home.path(), &["message", "ls"]);
+    let open = run(&home, &["message", "ls"]);
     assert_eq!(open["messages"].as_array().unwrap().len(), 0, "{open}");
-    assert!(!awaiting(home.path()));
+    assert!(!awaiting(&home));
     // A wait on a held question returns at once too.
-    let waited = run(home.path(), &["message", "wait", "Q-1"]);
+    let waited = run(&home, &["message", "wait", "Q-1"]);
     assert_eq!(waited["type"], "held");
 }
 
 #[test]
 fn ac2_leaving_sleep_by_hand_releases_every_held_question_in_order() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
-    run(home.path(), &["mode", "sleep"]);
-    ask(home.path(), "First?", false);
-    ask(home.path(), "Second?", false);
-    let back = run(home.path(), &["mode", "sparring"]);
+    let home = ConnectedDemo::new();
+    run(&home, &["mode", "sleep"]);
+    ask(&home, "First?", false);
+    ask(&home, "Second?", false);
+    let back = run(&home, &["mode", "sparring"]);
     assert_eq!(back["mode"]["released"], json!(["Q-1", "Q-2"]));
     assert_eq!(
-        statuses(home.path()),
+        statuses(&home),
         vec![("Q-1".into(), "open".into()), ("Q-2".into(), "open".into())]
     );
     // Still tied to the task, which now waits like after an ordinary ask.
-    assert!(awaiting(home.path()));
-    let shown = run(home.path(), &["message", "show", "Q-2"]);
+    assert!(awaiting(&home));
+    let shown = run(&home, &["message", "show", "Q-2"]);
     assert_eq!(shown["question"]["referencedBy"], json!([1]));
     // Released once: another switch finds nothing more.
-    let again = run(home.path(), &["mode", "sparring"]);
+    let again = run(&home, &["mode", "sparring"]);
     assert!(again["mode"].get("released").is_none());
 }
 
 #[test]
 fn ac3_a_withdrawn_held_question_is_not_delivered() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
-    run(home.path(), &["mode", "sleep"]);
-    ask(home.path(), "Not needed any more?", false);
-    ask(home.path(), "Still needed?", false);
-    run(
-        home.path(),
-        &["message", "withdraw", "Q-1", "--actor", "ai"],
-    );
-    let back = run(home.path(), &["mode", "sparring"]);
+    let home = ConnectedDemo::new();
+    run(&home, &["mode", "sleep"]);
+    ask(&home, "Not needed any more?", false);
+    ask(&home, "Still needed?", false);
+    run(&home, &["message", "withdraw", "Q-1", "--actor", "ai"]);
+    let back = run(&home, &["mode", "sparring"]);
     assert_eq!(back["mode"]["released"], json!(["Q-2"]));
     assert_eq!(
-        statuses(home.path()),
+        statuses(&home),
         vec![
             ("Q-1".into(), "withdrawn".into()),
             ("Q-2".into(), "open".into())
@@ -137,17 +135,16 @@ fn window(around: bool) -> (String, String) {
 
 #[test]
 fn ac2_the_end_of_the_daily_window_releases_the_held_questions_when_next_observed() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    let home = ConnectedDemo::new();
     let (start, end) = window(true);
     let scheduled = run(
-        home.path(),
+        &home,
         &["mode", "schedule", "--start", &start, "--end", &end],
     );
     assert_eq!(scheduled["mode"]["kind"], "sleep");
-    ask(home.path(), "First?", false);
-    ask(home.path(), "Second?", false);
-    assert!(!awaiting(home.path()));
+    ask(&home, "First?", false);
+    ask(&home, "Second?", false);
+    assert!(!awaiting(&home));
 
     // The window ends with no command: the saved window simply moves away from now.
     let path = home.path().join(".internal").join("modes.json");
@@ -164,19 +161,18 @@ fn ac2_the_end_of_the_daily_window_releases_the_held_questions_when_next_observe
     std::fs::write(&path, serde_json::to_vec(&file).unwrap()).unwrap();
 
     // The first look afterwards (here the progress table) delivers them, once.
-    let progress = run(home.path(), &["progress"]);
+    let progress = run(&home, &["progress"]);
     assert!(progress.get("mode").is_none());
     assert_eq!(
-        statuses(home.path()),
+        statuses(&home),
         vec![("Q-1".into(), "open".into()), ("Q-2".into(), "open".into())]
     );
-    assert!(awaiting(home.path()));
+    assert!(awaiting(&home));
 }
 
 #[test]
 fn the_board_hides_held_questions_counts_them_and_releases_them_on_a_switch() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    let home = ConnectedDemo::new();
     let id = std::fs::read_dir(home.path().join("shared").join("projects"))
         .unwrap()
         .next()
@@ -189,8 +185,8 @@ fn the_board_hides_held_questions_counts_them_and_releases_them_on_a_switch() {
     let mode_path = format!("/api/projects/{id}/mode");
     let put = |body: Value| server.write("PUT", &mode_path, Some(&body.to_string()));
     assert_eq!(put(json!({"mode": "sleep"})).status, 200);
-    ask(home.path(), "Keep the old rows?", false);
-    ask(home.path(), "Which name?", false);
+    ask(&home, "Keep the old rows?", false);
+    ask(&home, "Which name?", false);
 
     let mode = server.get(&mode_path).json();
     assert_eq!(mode["heldCount"], 2, "{mode}");

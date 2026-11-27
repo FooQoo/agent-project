@@ -62,19 +62,24 @@ fn setup(assignee: &str) -> (tempfile::TempDir, String, i64) {
         ],
     );
     let id = added["task"]["id"].as_i64().unwrap();
-    json_ok(
-        home.path(),
-        &[
-            "--project",
-            "Demo",
-            "mv",
-            &id.to_string(),
-            "doing",
-            "--actor",
-            "human",
-            "--json",
-        ],
-    );
+    let task_id = id.to_string();
+    let move_args = [
+        "--project",
+        "Demo",
+        "mv",
+        &task_id,
+        "doing",
+        "--actor",
+        "human",
+        "--json",
+    ];
+    let (code, _, err) = if assignee == "ai" {
+        let secret = common::connect_default_agent(home.path(), "Demo");
+        common::agpj_with_connection(home.path(), &secret, &move_args)
+    } else {
+        common::agpj(home.path(), &move_args)
+    };
+    assert_eq!(code, 0, "{err}");
     (home, pid, id)
 }
 

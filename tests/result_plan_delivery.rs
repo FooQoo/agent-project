@@ -3,8 +3,12 @@
 //! Runs the real CLI on a temporary data area.
 
 mod common;
+#[path = "support/connected_demo.rs"]
+mod connected_demo;
 
-use common::{agpj, demo_project, json_error, json_ok};
+use connected_demo::ConnectedDemo;
+
+use common::agpj;
 use serde_json::{Value, json};
 use std::path::Path;
 
@@ -33,23 +37,19 @@ fn add_task(home: &Path, desc: &str) {
     assert_eq!(code, 0, "{err}");
 }
 
-fn run(home: &Path, rest: &[&str]) -> Value {
-    json_ok(
-        home,
-        &[&["--project", "Demo"][..], rest, &["--json"]].concat(),
-    )
+fn run(home: &ConnectedDemo, rest: &[&str]) -> Value {
+    home.json_ok(&[&["--project", "Demo"][..], rest, &["--json"]].concat())
 }
 
-fn deliver(home: &Path, task: &str, rest: &[&str]) -> Value {
+fn deliver(home: &ConnectedDemo, task: &str, rest: &[&str]) -> Value {
     run(
         home,
         &[&["result", "add", task][..], rest, &["--actor", "ai"]].concat(),
     )
 }
 
-fn error_code(home: &Path, task: &str, rest: &[&str]) -> String {
-    json_error(
-        home,
+fn error_code(home: &ConnectedDemo, task: &str, rest: &[&str]) -> String {
+    home.json_error(
         &[
             &["--project", "Demo", "result", "add", task][..],
             rest,
@@ -60,7 +60,7 @@ fn error_code(home: &Path, task: &str, rest: &[&str]) -> String {
     .1
 }
 
-fn delivered(home: &Path, task: &str) -> Value {
+fn delivered(home: &ConnectedDemo, task: &str) -> Value {
     let plans = run(home, &["show", task])["task"]["resultPlans"].clone();
     Value::Array(
         plans
@@ -72,7 +72,7 @@ fn delivered(home: &Path, task: &str) -> Value {
     )
 }
 
-fn history(home: &Path, task: &str) -> Vec<String> {
+fn history(home: &ConnectedDemo, task: &str) -> Vec<String> {
     run(home, &["show", task])["task"]["history"]
         .as_array()
         .unwrap()
@@ -81,9 +81,8 @@ fn history(home: &Path, task: &str) -> Vec<String> {
         .collect()
 }
 
-fn setup() -> tempfile::TempDir {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+fn setup() -> ConnectedDemo {
+    let home = ConnectedDemo::new();
     add_task(home.path(), PLANS);
     home
 }
@@ -92,7 +91,7 @@ fn setup() -> tempfile::TempDir {
 #[test]
 fn plans_are_delivered_in_any_order_without_retyping_the_plan() {
     let home = setup();
-    let h = home.path();
+    let h = &home;
     assert_eq!(
         delivered(h, "2"),
         json!([["RP-1", null], ["RP-2", null], ["RP-3", null]])
@@ -133,7 +132,7 @@ fn plans_are_delivered_in_any_order_without_retyping_the_plan() {
 #[test]
 fn the_plan_content_is_the_default_summary_and_a_final_plan_makes_the_result_final() {
     let home = setup();
-    let h = home.path();
+    let h = &home;
     let result = deliver(h, "2", &["--plan", "RP-3"]);
     assert_eq!(result["result"]["kind"], "final");
     assert_eq!(result["result"]["summary"], "The finished report");
@@ -148,15 +147,11 @@ fn the_plan_content_is_the_default_summary_and_a_final_plan_makes_the_result_fin
 fn final_marks_only_the_final_plan() {
     let home = setup();
     assert_eq!(
-        error_code(
-            home.path(),
-            "2",
-            &["--plan", "RP-1", "--summary", "S", "--final"]
-        ),
+        error_code(&home, "2", &["--plan", "RP-1", "--summary", "S", "--final"]),
         "invalid_value"
     );
     assert_eq!(
-        delivered(home.path(), "2"),
+        delivered(&home, "2"),
         json!([["RP-1", null], ["RP-2", null], ["RP-3", null]])
     );
 }
@@ -165,7 +160,7 @@ fn final_marks_only_the_final_plan() {
 #[test]
 fn a_resend_changes_nothing_and_a_delivered_plan_takes_no_other_result() {
     let home = setup();
-    let h = home.path();
+    let h = &home;
     let args = ["--plan", "RP-1", "--summary", "Layout capture"];
     let first = deliver(h, "2", &args);
     let before = history(h, "2");
@@ -197,7 +192,7 @@ fn a_resend_changes_nothing_and_a_delivered_plan_takes_no_other_result() {
 #[test]
 fn an_unknown_plan_or_a_plan_of_another_task_is_refused() {
     let home = setup();
-    let h = home.path();
+    let h = &home;
     assert_eq!(
         error_code(h, "2", &["--plan", "RP-9", "--summary", "S"]),
         "result_plan_not_found"
@@ -214,29 +209,26 @@ fn an_unknown_plan_or_a_plan_of_another_task_is_refused() {
 #[test]
 fn a_failed_save_leaves_the_plan_undelivered_and_a_retry_works() {
     let home = setup();
-    let h = home.path();
+    let h = &home;
     // An image that is not an image is refused before anything is saved.
-    let bad = h.join("bad.png");
+    let bad = h.path().join("bad.png");
     std::fs::write(&bad, b"not an image").unwrap();
     let bad = bad.to_str().unwrap();
-    let (code, _, _) = agpj(
-        h,
-        &[
-            "--project",
-            "Demo",
-            "result",
-            "add",
-            "2",
-            "--plan",
-            "RP-1",
-            "--summary",
-            "S",
-            "--file",
-            bad,
-            "--actor",
-            "ai",
-        ],
-    );
+    let (code, _, _) = h.raw(&[
+        "--project",
+        "Demo",
+        "result",
+        "add",
+        "2",
+        "--plan",
+        "RP-1",
+        "--summary",
+        "S",
+        "--file",
+        bad,
+        "--actor",
+        "ai",
+    ]);
     assert_ne!(code, 0);
     assert_eq!(
         delivered(h, "2"),
@@ -251,7 +243,7 @@ fn a_publication_record_cannot_deliver_a_plan() {
     let home = setup();
     assert_eq!(
         error_code(
-            home.path(),
+            &home,
             "2",
             &[
                 "--plan",
@@ -273,7 +265,7 @@ fn a_publication_record_cannot_deliver_a_plan() {
 #[test]
 fn an_unplanned_result_keeps_working_and_leaves_every_plan_undelivered() {
     let home = setup();
-    let h = home.path();
+    let h = &home;
     let result = deliver(h, "2", &["--summary", "Something unplanned"]);
     assert_eq!(result["created"], true);
     assert!(result["result"].get("planId").is_none());
@@ -291,10 +283,9 @@ fn an_unplanned_result_keeps_working_and_leaves_every_plan_undelivered() {
 
 #[test]
 fn a_task_with_only_a_final_plan_delivers_it_and_clears_the_missing_final_result() {
-    let home = tempfile::tempdir().unwrap();
-    let h = home.path();
-    demo_project(h);
-    add_task(h, FINAL_ONLY);
+    let home = ConnectedDemo::new();
+    let h = &home;
+    add_task(h.path(), FINAL_ONLY);
     let listed = run(h, &["progress"])["finalResultMissing"].clone();
     assert!(
         listed.as_array().unwrap().iter().any(|t| t["id"] == 2),
@@ -323,11 +314,10 @@ fn a_task_with_only_a_final_plan_delivers_it_and_clears_the_missing_final_result
 
 #[test]
 fn undelivered_intermediate_plans_block_nothing() {
-    let home = tempfile::tempdir().unwrap();
-    let h = home.path();
-    demo_project(h);
+    let home = ConnectedDemo::new();
+    let h = &home;
     add_task(
-        h,
+        h.path(),
         &FINAL_ONLY.replace(
             "resultPlans:\n",
             "resultPlans:\n  - content: A first look\n    condition: Early\n",

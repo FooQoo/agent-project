@@ -1,6 +1,14 @@
 mod common;
 
-use common::{Running, demo_project, json_error, json_ok};
+use common::{
+    Running, agpj_with_connection, connect_default_agent, demo_project, json_error, json_ok,
+};
+
+fn connected_json(home: &std::path::Path, secret: &str, args: &[&str]) -> serde_json::Value {
+    let (code, out, err) = agpj_with_connection(home, secret, args);
+    assert_eq!(code, 0, "{args:?} failed: {err}");
+    serde_json::from_str(&out).unwrap()
+}
 
 fn last_reason(task: &serde_json::Value) -> &str {
     let entry = task["history"].as_array().unwrap().last().unwrap();
@@ -14,9 +22,11 @@ fn real_cli_appends_verbatim_notes_or_defaults_and_preserves_lane_timing() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
     let initial = json_ok(home.path(), &["--project", "Demo", "show", "1", "--json"]);
+    let secret = connect_default_agent(home.path(), "Demo");
     let note = "  Implemented request response lookup.\nVerified restart.  ";
-    let appended = json_ok(
+    let appended = connected_json(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",
@@ -35,8 +45,9 @@ fn real_cli_appends_verbatim_notes_or_defaults_and_preserves_lane_timing() {
     );
     let file = home.path().join("reason.txt");
     std::fs::write(&file, "Validated stored answers after restart.\n").unwrap();
-    let appended = json_ok(
+    let appended = connected_json(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",
@@ -58,14 +69,15 @@ fn real_cli_appends_verbatim_notes_or_defaults_and_preserves_lane_timing() {
             suffix,
         ]
         .concat();
-        let appended = json_ok(home.path(), &args);
+        let appended = connected_json(home.path(), &secret, &args);
         assert_eq!(
             last_reason(&appended["task"]),
             "Progress note in Doing; agent is idle."
         );
     }
-    let running = json_ok(
+    let running = connected_json(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",
@@ -81,8 +93,9 @@ fn real_cli_appends_verbatim_notes_or_defaults_and_preserves_lane_timing() {
         last_reason(&running["task"]),
         "Changed agent from idle to running in Doing."
     );
-    let no_op = json_ok(
+    let no_op = connected_json(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",
@@ -97,8 +110,9 @@ fn real_cli_appends_verbatim_notes_or_defaults_and_preserves_lane_timing() {
         ],
     );
     assert_eq!(running["task"]["history"], no_op["task"]["history"]);
-    let moved = json_ok(
+    let moved = connected_json(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",
@@ -198,8 +212,10 @@ fn history_add_enforces_write_guards_and_reports_bad_arguments() {
         (1, "task_archived".into())
     );
     server.write("POST", &format!("{task_path}/restore"), None);
-    json_ok(
+    let secret = connect_default_agent(home.path(), "Demo");
+    connected_json(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",

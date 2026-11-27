@@ -30,6 +30,23 @@ fn plain(home: &Path, args: &[&str]) -> String {
     out
 }
 
+fn run_with_connection(home: &Path, secret: &str, args: &[&str]) -> Value {
+    let mut all = vec!["--project", "Demo"];
+    all.extend(args);
+    all.push("--json");
+    let (code, out, err) = common::agpj_with_connection(home, secret, &all);
+    assert_eq!(code, 0, "{args:?} failed: {err}");
+    serde_json::from_str(&out).unwrap_or_else(|_| panic!("not JSON: {out}"))
+}
+
+fn plain_with_connection(home: &Path, secret: &str, args: &[&str]) -> String {
+    let mut all = vec!["--project", "Demo"];
+    all.extend(args);
+    let (code, out, err) = common::agpj_with_connection(home, secret, &all);
+    assert_eq!(code, 0, "{args:?} failed: {err}");
+    out
+}
+
 fn add(home: &Path, title: &str, extra: &[&str]) -> i64 {
     let mut args = vec!["add", title, "--assignee", "ai", "--actor", "human"];
     args.extend(extra);
@@ -265,13 +282,16 @@ fn a_description_file_that_changes_the_plan_records_one_history_entry() {
 fn epic_plan_reports_counts_skips_done_cards_and_can_leave_planned_cards_alone() {
     let home = tempfile::tempdir().unwrap();
     waves_board(home.path());
+    let secret = common::connect_default_agent(home.path(), "Demo");
     // #4 is the only unplanned card of the epic; #2 is finished.
-    plain(
+    plain_with_connection(
         home.path(),
+        &secret,
         &["mv", "2", "doing", "--actor", "ai", "--reason", "Go."],
     );
-    plain(
+    plain_with_connection(
         home.path(),
+        &secret,
         &["mv", "2", "done", "--actor", "ai", "--reason", "Done."],
     );
 
@@ -497,6 +517,7 @@ fn a_failed_version_change_in_edit_leaves_the_other_changes_unsaved() {
     let home = tempfile::tempdir().unwrap();
     demo(home.path());
     let id = add(home.path(), "Old title", &[]).to_string();
+    let secret = common::connect_default_agent(home.path(), "Demo");
 
     // No release version: the title is not changed.
     let (code, name) = fail(
@@ -512,12 +533,14 @@ fn a_failed_version_change_in_edit_leaves_the_other_changes_unsaved() {
     // A Done task refuses an agent's title change, so a version change in the same edit is
     // not saved either.
     run(home.path(), &["version", "add", "v1.8.0"]);
-    plain(
+    plain_with_connection(
         home.path(),
+        &secret,
         &["mv", &id, "doing", "--actor", "ai", "--reason", "Go."],
     );
-    plain(
+    plain_with_connection(
         home.path(),
+        &secret,
         &["mv", &id, "done", "--actor", "ai", "--reason", "Done."],
     );
     let (code, name) = fail(
@@ -542,23 +565,34 @@ fn a_done_task_takes_a_planned_version_from_an_agent_and_nothing_else() {
     let home = tempfile::tempdir().unwrap();
     demo(home.path());
     let id = add(home.path(), "Shipped", &[]).to_string();
+    let secret = common::connect_default_agent(home.path(), "Demo");
     run(home.path(), &["version", "add", "v1.8.0"]);
     run(home.path(), &["version", "add", "v2.0.0"]);
-    plain(
+    plain_with_connection(
         home.path(),
+        &secret,
         &["mv", &id, "doing", "--actor", "ai", "--reason", "Go."],
     );
-    plain(
+    plain_with_connection(
         home.path(),
+        &secret,
         &["mv", &id, "done", "--actor", "ai", "--reason", "Done."],
     );
 
-    let set = run(home.path(), &["edit", &id, "--planned-version", "v1.8.0"]);
+    let set = run_with_connection(
+        home.path(),
+        &secret,
+        &["edit", &id, "--planned-version", "v1.8.0"],
+    );
     assert_eq!(set["task"]["plannedVersion"], "v1.8.0");
     assert_eq!(set["task"]["taskStatus"], "done");
-    let moved = run(home.path(), &["edit", &id, "--planned-version", "v2.0.0"]);
+    let moved = run_with_connection(
+        home.path(),
+        &secret,
+        &["edit", &id, "--planned-version", "v2.0.0"],
+    );
     assert_eq!(moved["task"]["plannedVersion"], "v2.0.0");
-    let cleared = run(home.path(), &["edit", &id, "--unplanned"]);
+    let cleared = run_with_connection(home.path(), &secret, &["edit", &id, "--unplanned"]);
     assert_eq!(cleared["task"]["plannedVersion"], Value::Null);
     let history = cleared["task"]["history"].as_array().unwrap();
     assert!(
@@ -572,6 +606,20 @@ fn a_done_task_takes_a_planned_version_from_an_agent_and_nothing_else() {
     );
 
     // Every other edit of a Done task stays refused.
-    let (code, name) = fail(home.path(), &["edit", &id, "--title", "Other"]);
-    assert_eq!((code, name.as_str()), (1, "task_is_done"));
+    let (code, out, err) = common::agpj_with_connection(
+        home.path(),
+        &secret,
+        &[
+            "--project",
+            "Demo",
+            "--json",
+            "edit",
+            &id,
+            "--title",
+            "Other",
+        ],
+    );
+    assert_ne!(code, 0);
+    let value: Value = serde_json::from_str(&err).unwrap();
+    assert_eq!(value["error"]["code"], "task_is_done", "{out}");
 }

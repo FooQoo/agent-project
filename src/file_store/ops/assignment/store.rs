@@ -153,6 +153,37 @@ pub(in crate::file_store::ops) fn verify_locked(
     secret: &str,
     now: DateTime<Utc>,
 ) -> Result<Verified, AgpjError> {
+    authorize_locked(shared, dir, secret, now, |_| Ok(()))
+}
+
+/// Record activity only after the caller authorizes its operation under the same lock.
+pub(in crate::file_store::ops) fn authorize_locked(
+    shared: &std::path::Path,
+    dir: &std::path::Path,
+    secret: &str,
+    now: DateTime<Utc>,
+    authorize: impl FnOnce(&Verified) -> Result<(), AgpjError>,
+) -> Result<Verified, AgpjError> {
+    authorize_locked_inner(shared, dir, secret, now, true, authorize)
+}
+
+pub(in crate::file_store::ops) fn authorize_locked_without_touch(
+    shared: &std::path::Path,
+    dir: &std::path::Path,
+    secret: &str,
+    authorize: impl FnOnce(&Verified) -> Result<(), AgpjError>,
+) -> Result<Verified, AgpjError> {
+    authorize_locked_inner(shared, dir, secret, Utc::now(), false, authorize)
+}
+
+fn authorize_locked_inner(
+    shared: &std::path::Path,
+    dir: &std::path::Path,
+    secret: &str,
+    now: DateTime<Utc>,
+    touch: bool,
+    authorize: impl FnOnce(&Verified) -> Result<(), AgpjError>,
+) -> Result<Verified, AgpjError> {
     let path = connections_path(dir);
     let mut connections: ConnectionsFile = load(shared, &path)?;
     let digest = digest_of(secret.trim());
@@ -170,7 +201,8 @@ pub(in crate::file_store::ops) fn verify_locked(
         connection_id: record.id.clone(),
         agent_id: record.agent_id.clone(),
     };
-    if now - record.last_activity_at >= Duration::seconds(TOUCH_INTERVAL_SECONDS) {
+    authorize(&verified)?;
+    if touch && now - record.last_activity_at >= Duration::seconds(TOUCH_INTERVAL_SECONDS) {
         record.last_activity_at = now;
         save(shared, &path, &connections)?;
     }

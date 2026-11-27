@@ -5,23 +5,26 @@ use std::path::Path;
 
 /// The active default agent ID in a readable project registry.
 pub(crate) fn registered_default_agent_id(shared: &Path, project_dir: &Path) -> Option<String> {
-    let file: AgentsFile = load(shared, &agents_path(project_dir)).ok()?;
-    file.agents
-        .into_iter()
-        .find(|agent| agent.is_default && agent.archived_at.is_none())
-        .map(|agent| agent.id)
+    resolve_agent_id_locked(shared, project_dir, None)
+        .ok()
+        .flatten()
 }
 
-/// Whether the project has a live agent beyond its default, read under a held project lock.
-pub(in crate::file_store::ops) fn has_other_live_agents_locked(
+/// Older AI task files may omit their agent. Use the registered default in that case.
+pub(in crate::file_store::ops) fn resolve_agent_id_locked(
     shared: &Path,
     project_dir: &Path,
-) -> Result<bool, AgpjError> {
-    let agents: AgentsFile = load(shared, &agents_path(project_dir))?;
-    Ok(agents
+    stored: Option<&str>,
+) -> Result<Option<String>, AgpjError> {
+    if let Some(stored) = stored {
+        return Ok(Some(stored.to_owned()));
+    }
+    let file: AgentsFile = load(shared, &agents_path(project_dir))?;
+    Ok(file
         .agents
-        .iter()
-        .any(|agent| !agent.is_default && agent.archived_at.is_none()))
+        .into_iter()
+        .find(|agent| agent.is_default && agent.archived_at.is_none())
+        .map(|agent| agent.id))
 }
 
 /// A card that enters Doing with an agent needs that agent to still be live: an archived agent
@@ -54,7 +57,33 @@ impl FileStore {
     pub fn list_agents(&self, project: &ProjectId) -> Result<Vec<AgentView>, AgpjError> {
         let shared = self.shared_dir();
         let (dir, _lock) = lock_project(shared, project)?;
-        let agents: AgentsFile = load(shared, &agents_path(&dir))?;
+        let mut agents: AgentsFile = load(shared, &agents_path(&dir))?;
+        // Older projects can have AI cards from before the agent registry existed. The
+        // settings page is where a person requests a connection code, so repair that legacy
+        // default here under the same project lock before returning the agent list.
+        if !agents
+            .agents
+            .iter()
+            .any(|agent| agent.is_default && agent.archived_at.is_none())
+        {
+            for id in reader::task_ids(&dir)? {
+                let Ok(task) = reader::read_task_metadata_strict(shared, project, id) else {
+                    continue;
+                };
+                if task.assignee == Assignee::Ai
+                    && task.agent_id.is_none()
+                    && task.archived_at.is_none()
+                {
+                    let language = crate::file_store::history_language::HistoryLanguage::infer(
+                        "",
+                        &task.title,
+                    );
+                    default_agent_id_locked(shared, &dir, language, Utc::now())?;
+                    agents = load(shared, &agents_path(&dir))?;
+                    break;
+                }
+            }
+        }
         let connections: ConnectionsFile = load(shared, &connections_path(&dir))?;
         let mut views: Vec<AgentView> = agents
             .agents
