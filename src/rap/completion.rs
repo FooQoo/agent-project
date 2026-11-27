@@ -1,4 +1,4 @@
-use rusqlite::{Connection, params};
+use rusqlite::{Connection, Row, params};
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -188,6 +188,40 @@ fn has_evidence(
         params![work.0, contract.0, kind.as_str()],
         |row| row.get(0),
     )?)
+}
+
+pub(crate) fn read_evidence(row: &Row<'_>) -> rusqlite::Result<Evidence> {
+    let raw_kind: String = row.get(3)?;
+    let kind = match raw_kind.as_str() {
+        "verification" => EvidenceKind::Verification,
+        "final_result" => EvidenceKind::FinalResult,
+        _ => {
+            return Err(rusqlite::Error::InvalidColumnType(
+                3,
+                "kind".to_owned(),
+                rusqlite::types::Type::Text,
+            ));
+        }
+    };
+    let document_hash = match row.get::<_, Option<String>>(5)? {
+        Some(raw) => Some(DocumentHash::try_from(raw.as_str()).map_err(|_| {
+            rusqlite::Error::InvalidColumnType(
+                5,
+                "document_hash".to_owned(),
+                rusqlite::types::Type::Text,
+            )
+        })?),
+        None => None,
+    };
+    Ok(Evidence {
+        id: EvidenceId(row.get(0)?),
+        work_id: WorkId(row.get(1)?),
+        contract_id: ContractId(row.get(2)?),
+        kind,
+        summary: row.get(4)?,
+        document_hash,
+        recorded_at: row.get(6)?,
+    })
 }
 
 #[cfg(test)]

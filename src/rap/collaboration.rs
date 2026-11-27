@@ -243,7 +243,10 @@ impl RapStore {
     }
 }
 
-fn fetch_question(connection: &Connection, id: QuestionId) -> Result<RapQuestion, RapError> {
+pub(crate) fn fetch_question(
+    connection: &Connection,
+    id: QuestionId,
+) -> Result<RapQuestion, RapError> {
     connection
         .query_row(
             "SELECT id, work_id, session_id, prompt, asked_at, answer_body, answered_by,
@@ -256,7 +259,7 @@ fn fetch_question(connection: &Connection, id: QuestionId) -> Result<RapQuestion
         .ok_or(RapError::NotFound("question"))
 }
 
-fn read_question(row: &Row<'_>) -> rusqlite::Result<RapQuestion> {
+pub(crate) fn read_question(row: &Row<'_>) -> rusqlite::Result<RapQuestion> {
     let raw_state: String = row.get(8)?;
     Ok(RapQuestion {
         id: QuestionId(row.get(0)?),

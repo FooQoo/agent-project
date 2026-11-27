@@ -20,6 +20,9 @@ id_type!(ContractId);
 id_type!(ChangeRequestId);
 id_type!(EvidenceId);
 id_type!(QuestionId);
+id_type!(DecisionId);
+id_type!(ResultId);
+id_type!(NotificationId);
 
 macro_rules! state_type {
     ($name:ident { $($variant:ident => $value:literal),+ $(,)? }) => {

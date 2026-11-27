@@ -6,7 +6,10 @@ mod completion;
 mod contracts;
 mod documents;
 mod model;
+mod notifications;
+mod results;
 pub mod scheduler;
+mod sleep;
 
 pub use change_requests::*;
 pub use collaboration::*;
@@ -14,7 +17,10 @@ pub use completion::*;
 pub use contracts::*;
 pub use documents::DocumentHash;
 pub use model::*;
+pub use notifications::*;
+pub use results::*;
 use rusqlite::{Connection, OptionalExtension, Row, Transaction, TransactionBehavior, params};
+pub use sleep::*;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -24,6 +30,9 @@ const MIGRATIONS: &[&str] = &[
     include_str!("contracts.sql"),
     scheduler::MIGRATION,
     include_str!("collaboration.sql"),
+    include_str!("sleep.sql"),
+    include_str!("results.sql"),
+    include_str!("notifications.sql"),
 ];
 const APPLICATION_ID: i64 = 0x0052_4150;
 
