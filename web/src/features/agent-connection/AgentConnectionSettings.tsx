@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogTitle } from '../../shared/ui/dialog';
 import { Button } from '../../shared/ui/button';
 import { WriteError } from '../../shared/api/writeErrors';
-import { loadDefaultAgentId, issueConnectCode, type ConnectCode } from './api';
+import { AgentList } from './AgentList';
+import { defaultAgentId, issueConnectCode, type ConnectCode } from './api';
+import { useAgents } from './useAgents';
 import '../../shared/styles/modal.css';
 
 export function AgentConnectionSettings({
@@ -16,29 +18,16 @@ export function AgentConnectionSettings({
   restoreFocusRef?: { current: HTMLElement | null };
 }) {
   const { t } = useTranslation();
-  const [agentId, setAgentId] = useState<string | null>(null);
   const [code, setCode] = useState<ConnectCode | null>(null);
-  const [busy, setBusy] = useState(projectId !== null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!projectId) return;
-    let active = true;
-    void loadDefaultAgentId(projectId)
-      .then((id) => {
-        if (active) setAgentId(id);
-      })
-      .catch(() => {
-        if (active) setError(t('agentConnection.loadFailed'));
-      })
-      .finally(() => {
-        if (active) setBusy(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [projectId, t]);
+  const { query, register, changeTool } = useAgents(projectId);
+  const agents = query.data ?? [];
+  const agentId = defaultAgentId(agents);
+  const loading = projectId !== null && query.isPending;
+  const writing = register.isPending || changeTool.isPending;
+  const writeFailed = register.isError || changeTool.isError;
 
   useEffect(() => {
     if (!code) return;
@@ -105,8 +94,8 @@ export function AgentConnectionSettings({
             ×
           </button>
         </div>
-        {busy && !agentId && !error ? <p>{t('agentConnection.loading')}</p> : null}
-        {!busy && !agentId && !error ? <p>{t('agentConnection.noAgent')}</p> : null}
+        {loading ? <p>{t('agentConnection.loading')}</p> : null}
+        {!loading && !agentId && !query.isError ? <p>{t('agentConnection.noAgent')}</p> : null}
         {agentId && !code ? (
           <Button type="button" disabled={busy} onClick={() => void issue()}>
             {t('agentConnection.issue')}
@@ -125,9 +114,18 @@ export function AgentConnectionSettings({
             </Button>
           </>
         ) : null}
-        {error ? (
+        {projectId && !loading && !query.isError ? (
+          <AgentList
+            agents={agents}
+            busy={writing}
+            onChangeTool={(id, tool) => changeTool.mutate({ agentId: id, tool })}
+            onRegister={(input) => register.mutate(input)}
+          />
+        ) : null}
+        {error || query.isError || writeFailed ? (
           <p className="modal__error" role="alert">
-            {error}
+            {error ||
+              (query.isError ? t('agentConnection.loadFailed') : t('agentConnection.saveFailed'))}
           </p>
         ) : null}
       </DialogContent>

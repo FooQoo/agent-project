@@ -94,16 +94,19 @@ impl FileStore {
         Ok(views)
     }
 
-    /// Register an agent: a name that no other live agent has, and a one-line role.
+    /// Register an agent: a name that no other live agent has, a one-line role, and optionally the
+    /// tool that runs its tasks.
     pub fn register_agent(
         &self,
         project: &ProjectId,
         name: &str,
         role: &str,
+        tool: Option<&str>,
         now: DateTime<Utc>,
     ) -> Result<AgentView, AgpjError> {
         let name = check_text("name", name, MAX_AGENT_NAME_CHARS)?;
         let role = check_text("role", role, MAX_AGENT_ROLE_CHARS)?;
+        let tool = tool.map(check_tool).transpose()?;
         let shared = self.shared_dir();
         let (dir, _lock) = lock_project(shared, project)?;
         let mut file: AgentsFile = load(shared, &agents_path(&dir))?;
@@ -112,6 +115,7 @@ impl FileStore {
             id: format!("A-{}", file.next_agent_id),
             name,
             role,
+            tool,
             created_at: stamp(now),
             archived_at: None,
             is_default: false,
@@ -122,13 +126,14 @@ impl FileStore {
         Ok(view_of(&record, &ConnectionsFile::default()))
     }
 
-    /// Rename an agent or change its role. The ID, and so every card's agent, stays.
+    /// Rename an agent or change its role or tool. The ID, and so every card's agent, stays.
     pub fn update_agent(
         &self,
         project: &ProjectId,
         id: &str,
         name: Option<&str>,
         role: Option<&str>,
+        tool: Option<&str>,
     ) -> Result<AgentView, AgpjError> {
         let name = name
             .map(|n| check_text("name", n, MAX_AGENT_NAME_CHARS))
@@ -136,6 +141,7 @@ impl FileStore {
         let role = role
             .map(|r| check_text("role", r, MAX_AGENT_ROLE_CHARS))
             .transpose()?;
+        let tool = tool.map(check_tool).transpose()?;
         let shared = self.shared_dir();
         let (dir, _lock) = lock_project(shared, project)?;
         let mut file: AgentsFile = load(shared, &agents_path(&dir))?;
@@ -153,6 +159,9 @@ impl FileStore {
         }
         if let Some(role) = role {
             record.role = role;
+        }
+        if let Some(tool) = tool {
+            record.tool = Some(tool);
         }
         let record = record.clone();
         // Read the connections first so a malformed registry fails before the edit is saved.

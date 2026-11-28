@@ -1,0 +1,60 @@
+.agent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.agent-list__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.agent-list__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.agent-list__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.agent-list__who {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+.agent-list__name {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agent-list__role {
+  overflow: hidden;
+  color: var(--r-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agent-list__tool {
+  height: 36px;
+  flex: none;
+  padding: 0 8px;
+  border: 1px solid var(--r-border);
+  border-radius: 8px;
+  background: var(--r-surface);
+  color: var(--r-text);
+  font-size: 13px;
+}
+.agent-list__form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.agent-list__form .agent-list__tool {
+  width: 100%;
+}

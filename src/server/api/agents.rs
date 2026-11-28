@@ -64,6 +64,8 @@ pub(super) struct RegisterAgentInput {
     name: String,
     #[serde(default)]
     role: String,
+    #[serde(default)]
+    tool: Option<String>,
 }
 
 /// `POST .../agents`: register an agent.
@@ -75,7 +77,13 @@ pub(super) async fn register_agent(
 ) -> Response {
     let project = project_of!(raw_project);
     let saved = with_request_files(&state, &headers, move |files| {
-        files.register_agent(&project, &input.name, &input.role, SystemClock.now())
+        files.register_agent(
+            &project,
+            &input.name,
+            &input.role,
+            input.tool.as_deref(),
+            SystemClock.now(),
+        )
     })
     .await;
     match saved {
@@ -94,9 +102,11 @@ pub(super) struct UpdateAgentInput {
     name: Option<String>,
     #[serde(default)]
     role: Option<String>,
+    #[serde(default)]
+    tool: Option<String>,
 }
 
-/// `PATCH .../agents/{agent_id}`: rename an agent or change its role.
+/// `PATCH .../agents/{agent_id}`: rename an agent or change its role or tool.
 pub(super) async fn update_agent(
     headers: HeaderMap,
     State(state): State<Arc<AppState>>,
@@ -110,6 +120,7 @@ pub(super) async fn update_agent(
             &agent_id,
             input.name.as_deref(),
             input.role.as_deref(),
+            input.tool.as_deref(),
         )
     })
     .await;

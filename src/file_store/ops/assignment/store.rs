@@ -103,6 +103,17 @@ pub(super) fn check_text(field: &str, text: &str, max: usize) -> Result<String, 
     Ok(trimmed.to_string())
 }
 
+/// The wire spellings of the tools an agent can run with (the same as `Tool::as_str`).
+pub(super) fn check_tool(tool: &str) -> Result<String, AgpjError> {
+    match tool {
+        "codex" | "claude-code" => Ok(tool.to_string()),
+        _ => Err(AgpjError::InvalidValue {
+            field: "tool".into(),
+            reason: "The tool must be codex or claude-code.".into(),
+        }),
+    }
+}
+
 pub(super) fn is_active(record: &ConnectionRecord) -> bool {
     record.revoked_at.is_none()
 }
@@ -112,6 +123,7 @@ pub(super) fn view_of(agent: &AgentRecord, connections: &ConnectionsFile) -> Age
         id: agent.id.clone(),
         name: agent.name.clone(),
         role: agent.role.clone(),
+        tool: agent.tool.clone(),
         created_at: agent.created_at,
         archived_at: agent.archived_at,
         is_default: agent.is_default,
