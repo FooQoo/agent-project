@@ -212,6 +212,8 @@ try {
       await expect(notifications).toHaveCount(0);
       await openMenuItem(more.settings);
       await expect(settings).toBeVisible();
+      // The resident agent needs the same slot the sample CLI used to seed the board.
+      cli(home, ['--project', project, 'disconnect']);
       // resident-session: the dialog of a running session, opened from the Resident agent row of Settings.
       await settings.getByRole('button', { name: more.residentRow }).click();
       const resident = page.getByRole('dialog', { name: more.residentDialog });
