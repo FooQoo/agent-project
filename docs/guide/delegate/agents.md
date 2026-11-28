@@ -77,6 +77,16 @@ The format is in [Markdown file format](../reference/file-format).
 
 Agents write history in the same language as the task body. Generated notes from browser operations use your selected screen language. CLI operations and automatic completion use Japanese when the body contains Japanese characters, otherwise English; empty bodies and the default template use the title. Existing history and reasons you entered stay unchanged.
 
+## Choose the tool of an agent {#choose-the-tool}
+
+Each agent can record which AI tool runs its tasks, **Codex** or **Claude Code**. The choice is optional and is only stored and shown for now: no task is started by it.
+
+1. Open **Settings** and choose **Connect an agent**. The **Agents** dialog lists the project's agents with their roles and tools.
+2. To set or change the tool of an agent, pick **Codex** or **Claude Code** in the list on its row. The change is saved at once. An agent that has no tool shows **No tool** until you choose one.
+3. To register another agent, enter a name, an optional role, and the tool in the form under the list, then choose **Register agent**. The tool can stay **No tool**.
+
+`agpj agent ls` shows the tool of each agent too.
+
 ## The work loop
 
 ```mermaid
