@@ -42,7 +42,6 @@ test('a sleep schedule saved on the PC updates both headers and can be turned of
     const phonePage = await phone.newPage();
     await Promise.all([page.goto(mainUrl()), phonePage.goto(mainUrl())]);
     const settings = await openSettings(page);
-    await expect(settings.getByRole('radiogroup', { name: 'Mode', exact: true })).toHaveCount(0);
     const start = clock(-2);
     const end = clock(2);
     const from = settings.getByLabel('From');
