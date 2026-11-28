@@ -18,12 +18,12 @@ use crate::server::response::agpj_error_response;
 use crate::server::sessions::Tool;
 use crate::server::store::{parse_project_id, with_files};
 
-/// Resolves the preferred RAP provider from the saved auto-start tool (defaults to Codex).
-pub(super) fn preferred_provider(state: &AppState) -> Provider {
-    match state.resident.autostart().get().map(|a| a.tool) {
-        Some(Tool::ClaudeCode) => Provider::ClaudeCode,
+/// Resolves the RAP provider from the saved auto-start tool; `None` when none is saved.
+pub(super) fn preferred_provider(state: &AppState) -> Option<Provider> {
+    state.resident.autostart().get().map(|a| match a.tool {
+        Tool::ClaudeCode => Provider::ClaudeCode,
         _ => Provider::Codex,
-    }
+    })
 }
 
 /// Bridges an existing board task into `rap.db`, authorizes direct execution, and
@@ -50,7 +50,15 @@ pub(super) async fn run_board_task(
         Ok(pair) => pair,
         Err(error) => return agpj_error_response(&error),
     };
-    let provider = preferred_provider(&state);
+    let Some(provider) = preferred_provider(&state) else {
+        return (
+            StatusCode::CONFLICT,
+            Json(serde_json::json!({
+                "error": "No agent is set up to run tasks; choose one in the resident session settings."
+            })),
+        )
+            .into_response();
+    };
     if let Some(reason) = manual_run_blocker(&state, &workspace, provider, now_secs()) {
         return (
             StatusCode::CONFLICT,

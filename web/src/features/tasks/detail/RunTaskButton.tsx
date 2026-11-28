@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import type { TaskSummary } from '../../../shared/api/contracts';
 import { authHeaders } from '../../../shared/api/http';
+import { autoStartIsOn } from '../../resident-sessions/state';
+import { FOOTER_POLL_MS, useResidentSession } from '../../resident-sessions/useResidentSession';
 
 export function RunTaskButton({
   projectId,
@@ -20,8 +22,12 @@ export function RunTaskButton({
   const ja = i18n.language.startsWith('ja');
   const [state, setState] = useState<'idle' | 'sending' | 'queued' | 'error'>('idle');
   const [reason, setReason] = useState<string | null>(null);
+  // Without a saved auto-start tool there is no agent to run the task, so the button is not shown.
+  const { snapshot } = useResidentSession(projectId, FOOTER_POLL_MS);
+  const hasAgent = snapshot !== null && autoStartIsOn(snapshot.health.autoStart, projectId ?? '');
   if (
     !projectId ||
+    !hasAgent ||
     task.assignee !== 'ai' ||
     (task.taskStatus !== 'todo' && task.taskStatus !== 'doing')
   ) {

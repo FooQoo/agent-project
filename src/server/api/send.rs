@@ -62,17 +62,19 @@ pub(super) async fn send_task(
                     &crate::file_store::FileStore::open(&state.shared),
                     &project_id,
                 ) {
-                    let provider = super::rap_bridge::preferred_provider(&state);
-                    let _ = super::rap_bridge::enqueue_board_task(
-                        &state,
-                        &project_id,
-                        &workspace,
-                        &result.value.title,
-                        &result.value.description,
-                        result.value.position,
-                        provider,
-                        false,
-                    );
+                    // With no saved agent there is nothing to run the task, so it is not queued.
+                    if let Some(provider) = super::rap_bridge::preferred_provider(&state) {
+                        let _ = super::rap_bridge::enqueue_board_task(
+                            &state,
+                            &project_id,
+                            &workspace,
+                            &result.value.title,
+                            &result.value.description,
+                            result.value.position,
+                            provider,
+                            false,
+                        );
+                    }
                 }
             }
             json_response(
