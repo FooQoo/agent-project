@@ -192,19 +192,13 @@ fn health_is_listed_and_auto_start_is_saved_guarded_and_used_at_the_next_start()
     assert_eq!(health["state"], "stopped");
     server.stop();
 
-    // The next server starts the session by itself.
+    // The next server preserves the saved auto-start setting for RAP without
+    // spawning a legacy resident session on startup.
     let server = Running::start(home.path());
-    let mut state = Value::Null;
-    for _ in 0..600 {
-        state = server.get(&base).json()["health"].clone();
-        if state["state"] == "running" {
-            break;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(50));
-    }
-    assert_eq!(state["state"], "running", "{state}");
-    assert_eq!(state["tool"], "claude-code");
-    assert_eq!(server.get(&base).json()["launched"][0]["model"], "sonnet");
+    let state = server.get(&base).json()["health"].clone();
+    assert_eq!(state["state"], "stopped", "{state}");
+    assert_eq!(state["autoStart"]["tool"], "claude-code");
+    assert_eq!(state["autoStart"]["model"], "sonnet");
 
     let off = server.write(
         "PUT",
@@ -212,10 +206,6 @@ fn health_is_listed_and_auto_start_is_saved_guarded_and_used_at_the_next_start()
         Some(r#"{"enabled":false}"#),
     );
     assert_eq!(off.json()["autoStart"], Value::Null);
-    // A stop names no tool.
-    let stopped = server.write("POST", &format!("{base}/stop"), Some("{}"));
-    assert_eq!(stopped.status, 200);
-    assert_eq!(stopped.json()["stopped"], true);
     let health = server.get(&base).json()["health"].clone();
     assert_eq!(health["state"], "stopped");
     assert_eq!(health["autoStart"], Value::Null);

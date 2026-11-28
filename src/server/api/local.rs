@@ -1,6 +1,6 @@
 //! The routes that act on this PC itself, served by the local entrance only: the connection
-//! settings, the notify call of local agents, opening a docs path, and the sessions the board
-//! launches. The remote router leaves them out.
+//! settings, the notify call of local agents, and opening a docs path. The remote router leaves
+//! them out.
 
 use std::sync::Arc;
 
@@ -10,7 +10,8 @@ use axum::routing::{get, post, put};
 use super::agents::issue_connect_code;
 use super::docs::open_docs_path;
 use super::sessions::{
-    launch_session, session_log, session_models, set_autostart, stop_session, touch_session,
+    launch_session, list_sessions, session_log, session_models, set_autostart, stop_session,
+    touch_session,
 };
 use super::{monitor_connections, notify};
 use crate::server::AppState;
@@ -27,6 +28,12 @@ pub(super) fn routes() -> Router<Arc<AppState>> {
             post(touch_session),
         )
         .route("/api/projects/{project_id}/docs/open", post(open_docs_path))
+}
+
+/// Session listing, launch, stop, and auto-start routes served on both local and remote routers.
+pub(super) fn session_routes() -> Router<Arc<AppState>> {
+    Router::new()
+        .route("/api/projects/{project_id}/sessions", get(list_sessions))
         .route(
             "/api/projects/{project_id}/sessions/models",
             get(session_models),

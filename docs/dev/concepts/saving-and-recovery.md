@@ -114,3 +114,17 @@ Releases before this format kept a whole run in the file, with sample cards on t
 | The shared area is on a network drive | Not supported: OS events may not arrive. |
 
 Browser-side failures (lost responses, retries, disconnects) are covered in [Server and web UI](./server-and-ui.md#behavior-on-failure-in-the-ui).
+
+## RAP documents and attachments
+
+RAP stores document bytes beside its SQLite file in a directory whose name ends
+in `.objects`. A validated SHA-256 digest is the object's name. The SQLite
+reference links that digest to one work item.
+
+A writer holds the SQLite write transaction while it writes and syncs a staging
+file, verifies its digest, and publishes it without replacing an existing
+object. It syncs the directory before the database records the reference. On
+reopen RAP removes abandoned staging files and objects without a database
+reference. Reads and pre-execution/completion integrity checks verify the bytes
+and report an integrity error if a referenced file is missing or changed,
+holding back execution and completion until the mismatch is resolved.

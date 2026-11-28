@@ -4,7 +4,6 @@ import { ConnectedResidentEntryRow } from '../features/resident-sessions/ui/Resi
 import { ConnectedResidentIndicator } from '../features/resident-sessions/ui/ResidentFooter';
 import { ResidentHost } from '../features/resident-sessions/ui/ResidentHost';
 import { isProjectId } from './model/projectSession';
-import { usesRemoteSession } from './remote/session';
 
 /** The sample-data mode and the demo have no server, so they have no session to show or start. */
 const serverless = import.meta.env.MODE === 'mock' || import.meta.env.MODE === 'demo';
@@ -14,9 +13,8 @@ export const residentAvailable = (projectId: string | null): projectId is string
   !serverless && isProjectId(projectId);
 
 /**
- * The footer indicator of the board. Through the remote entrance it is display-only, because the
- * launch, stop, model and auto-start routes are served on the local listener only. The phone
- * layout always asks for `displayOnly`: its status line has no room for a button.
+ * The footer indicator of the board. The phone layout asks for `displayOnly` because its status
+ * line has no room for a button; the phone settings sheet opens the full dialog instead.
  */
 export function residentFooterSlot(
   projectId: string | null,
@@ -26,22 +24,21 @@ export function residentFooterSlot(
   return (
     <ConnectedResidentIndicator
       projectId={projectId}
-      remote={displayOnly || usesRemoteSession()}
+      remote={displayOnly}
       withState={displayOnly}
     />
   );
 }
 
-/** The dialog the footer and the settings row open; absent on the remote view, which cannot launch. */
+/** The dialog the footer and the settings row open, available on both local and remote views. */
 export function ResidentDialogHost({ projectId }: { projectId: string | null }) {
-  if (!residentAvailable(projectId) || usesRemoteSession()) return null;
+  if (!residentAvailable(projectId)) return null;
   return <ResidentHost key={projectId} projectId={projectId} />;
 }
 
 /**
  * The settings row that opens the resident-session dialog, for the PC and the phone settings
- * alike. It closes the settings dialog first, so only one dialog is on the screen. Absent on a
- * page that came through the remote entrance, which cannot launch.
+ * alike. It closes the settings dialog first, so only one dialog is on the screen.
  */
 export function ResidentSettingsRow({
   projectId,
@@ -50,7 +47,7 @@ export function ResidentSettingsRow({
   projectId: string | null;
   onClose: () => void;
 }) {
-  if (!residentAvailable(projectId) || usesRemoteSession()) return null;
+  if (!residentAvailable(projectId)) return null;
   return (
     <ConnectedResidentEntryRow
       projectId={projectId}

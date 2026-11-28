@@ -263,6 +263,11 @@ pub(super) async fn set_autostart(
         let launcher = state.resident.clone();
         let saved = choice.clone();
         blocking(move || launcher.autostart().set(saved)).await?;
+        if let Ok(mut settings) = state.rap.scheduler.settings() {
+            settings.auto_run = choice.is_some();
+            let _ = state.rap.scheduler.set_settings(settings);
+            state.rap.notify("settings_updated", None, None);
+        }
         Ok(choice)
     }
     .await;

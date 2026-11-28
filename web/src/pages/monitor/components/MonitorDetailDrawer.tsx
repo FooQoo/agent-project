@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { RunTaskButton } from '../../../features/tasks/detail/RunTaskButton';
 import { Drawer } from '../../../shared/ui/drawer';
 import { MonitorDrawerPanels } from './MonitorDrawerPanels';
 import type { Problem } from '../../../shared/api/contracts';
@@ -43,11 +44,16 @@ export function MonitorDetailDrawer({
       identity={t('monitor.drawerIdentity', { id: task.id })}
       title={task.title}
       label={
-        task.epic ? (
-          <span className="mobile-drawer__epic-label" title={task.epic.name}>
-            {task.epic.id}
-          </span>
-        ) : null
+        <div className="-mr-11 flex items-center justify-between gap-2 self-stretch">
+          {task.epic ? (
+            <span className="mobile-drawer__epic-label" title={task.epic.name}>
+              {task.epic.id}
+            </span>
+          ) : (
+            <span />
+          )}
+          <RunTaskButton projectId={item.projectId} task={task} compact />
+        </div>
       }
     >
       <MonitorDrawerPanels

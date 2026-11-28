@@ -21,8 +21,6 @@ use crate::file_store::watch::{DocsSink, Watch, WatchMode};
 use crate::lifecycle::LifecycleGuard;
 use crate::paths::{self, ServeInfo, ServeMode};
 
-/// How long an automatic server waits for a stopping server to let go of the
-/// data directory.
 const AUTO_LIFECYCLE_WAIT: Duration = Duration::from_secs(10);
 
 /// How long a session whose wait ended stays counted: `AGPJ_SESSION_GRACE_MS` when set to a
@@ -139,6 +137,8 @@ pub(crate) fn run<F: Future<Output = ()>>(
         )?;
         let activity = Activity::new();
         let sessions = sessions::SessionRegistry::new(session_grace());
+        let rap = crate::rap::RapRuntime::open(&data_dir.join("rap.db"))
+            .map_err(|e| internal(format!("Cannot open the RAP database: {e}")))?;
         let state = Arc::new(AppState {
             port: addr.port(),
             token: assets::new_token()?,
@@ -158,20 +158,13 @@ pub(crate) fn run<F: Future<Output = ()>>(
             docs_changed,
             activity: activity.clone(),
             sessions: sessions.clone(),
-            resident: resident::Launcher::new(
-                sessions,
-                resident::Executables::from_env(),
-                &data_dir,
-            ),
+            resident: resident::Launcher::new(sessions, resident::Executables::from_env(), &data_dir),
+            rap,
         });
         state.monitor.attach(&state);
         super::push_delivery::start(&state, &data_dir, monitor.push_transport.clone());
-        let files = state.shared.clone();
-        state.resident.watch_board(&state.shared, &state.changed);
         let app = api::router(state.clone());
 
-        // A command-line monitor must be up before the board announces itself;
-        // on failure nothing has been written yet, so the run just ends.
         let explicit = monitor.explicit;
         let monitor_ready = match state.monitor.startup(explicit).await {
             Ok(ready) => ready.filter(|_| explicit),
@@ -183,9 +176,8 @@ pub(crate) fn run<F: Future<Output = ()>>(
                 )));
             }
         };
-        state.resident.start(move |project| {
-            resident::resolve_project(&crate::file_store::FileStore::open(&files), project)
-        });
+        let (rap_stop, rap_rx) = tokio::sync::watch::channel(false);
+        let _rap_worker = crate::rap::scheduler::spawn_rap_worker(state.rap.clone(), rap_rx);
         let pid = std::process::id();
         let auto = Arc::new(AtomicBool::new(launch.auto.is_some()));
         if launch.auto.is_some() {
@@ -221,12 +213,13 @@ pub(crate) fn run<F: Future<Output = ()>>(
             () = shutdown => Ok(Ended::Shutdown),
             () = idle_stop => Ok(Ended::Idle),
         };
+        let _ = rap_stop.send(true);
         state.monitor.shutdown();
         state.resident.shutdown();
         instance::remove_serve_info_of(&serve_path, pid);
         result
     });
-    runtime.shutdown_timeout(Duration::from_secs(3)); // A drop waits on stuck blocking threads.
+    runtime.shutdown_timeout(Duration::from_secs(3));
     drop(lifecycle);
     ended
 }
