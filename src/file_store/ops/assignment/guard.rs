@@ -59,6 +59,27 @@ pub(in crate::file_store::ops) fn check_session_write(
     old: Option<&TaskMetadata>,
     task: &TaskFile,
 ) -> Result<(), AgpjError> {
+    check_session_write_inner(shared, dir, old, task, true)
+}
+
+/// Check a task write without refreshing connection activity. Multi-task operations use this
+/// for their full authorization preflight, then perform the ordinary check once all targets pass.
+pub(in crate::file_store::ops) fn check_session_write_without_touch(
+    shared: &Path,
+    dir: &Path,
+    old: Option<&TaskMetadata>,
+    task: &TaskFile,
+) -> Result<(), AgpjError> {
+    check_session_write_inner(shared, dir, old, task, false)
+}
+
+fn check_session_write_inner(
+    shared: &Path,
+    dir: &Path,
+    old: Option<&TaskMetadata>,
+    task: &TaskFile,
+    touch: bool,
+) -> Result<(), AgpjError> {
     let Some(data_dir) = SESSION.with(|s| s.borrow().clone()) else {
         return Ok(());
     };
@@ -69,47 +90,32 @@ pub(in crate::file_store::ops) fn check_session_write(
     if !old_guarded && !guarded(task.assignee, task.task_status) {
         return Ok(());
     }
-    let agents: AgentsFile = load(shared, &agents_path(dir))?;
     let project = dir
         .file_name()
         .and_then(|name| name.to_str())
         .and_then(|name| name.parse::<ProjectId>().ok())
         .ok_or(AgpjError::NotConnected)?;
-    let default_id = agents
-        .agents
-        .iter()
-        .find(|a| a.is_default && a.archived_at.is_none())
-        .map(|a| a.id.clone());
-    let has_other_live_agent = agents
-        .agents
-        .iter()
-        .any(|agent| !agent.is_default && agent.archived_at.is_none());
     let old_agent = match old {
-        Some(o) => o.agent_id.clone(),
-        None => task.agent_id.clone(),
+        Some(o) => o.agent_id.as_deref(),
+        None => task.agent_id.as_deref(),
     };
-    let verified_agent_id = match crate::agent::connection_store::load_secret(&data_dir, &project) {
-        Some(secret) => verify_locked(shared, dir, &secret, stamp(chrono::Utc::now()))?.agent_id,
-        // Nobody else is registered: the session acts as the card's own agent. A board whose
-        // files were written directly (a restored backup, a fixture) may have no default agent yet.
-        None if !has_other_live_agent => match default_id.clone().or_else(|| old_agent.clone()) {
-            Some(id) => id,
-            None => return Ok(()),
-        },
-        None => return Err(AgpjError::NotConnected),
+    let owner = resolve_agent_id_locked(shared, dir, old_agent)?;
+    let secret = crate::agent::connection_store::load_secret(&data_dir, &project)
+        .ok_or(AgpjError::NotConnected)?;
+    let authorize = |verified: &Verified| {
+        let agent = verified.agent_id.as_str();
+        // A session never hands a card to another agent; only a person does.
+        let kept = task.agent_id.as_deref() == old_agent
+            || (old_agent.is_none() && task.agent_id.as_deref() == Some(agent));
+        if owner.as_deref() != Some(agent) || !kept {
+            return Err(AgpjError::NotAssignee { id: task.id });
+        }
+        Ok(())
     };
-    let owner = old_agent
-        .clone()
-        .or(default_id)
-        .or_else(|| Some(verified_agent_id.clone()));
-    if owner.as_deref() != Some(verified_agent_id.as_str()) {
-        return Err(AgpjError::NotAssignee { id: task.id });
-    }
-    // A session never hands a card to another agent; only a person does.
-    let kept = task.agent_id == old_agent
-        || (old_agent.is_none() && task.agent_id.as_deref() == Some(verified_agent_id.as_str()));
-    if !kept {
-        return Err(AgpjError::NotAssignee { id: task.id });
+    if touch {
+        authorize_locked(shared, dir, &secret, stamp(chrono::Utc::now()), authorize)?;
+    } else {
+        super::authorize_locked_without_touch(shared, dir, &secret, authorize)?;
     }
     Ok(())
 }

@@ -6,8 +6,13 @@ use agent_project::domain::{
     RunState,
 };
 use agent_project::error::AgpjError;
-use agent_project::file_store::{ConnectionOrigin, FileStore, ResultInput, enter_session_writes};
+use agent_project::file_store::{
+    AskInput, AskQuestion, ConnectionOrigin, FileStore, ResultInput, enter_session_writes,
+};
 use chrono::{DateTime, TimeZone, Utc};
+use std::sync::Mutex;
+
+static SESSION_ENV_LOCK: Mutex<()> = Mutex::new(());
 
 #[path = "common/mod.rs"]
 mod common;
@@ -147,6 +152,7 @@ fn every_ai_task_gets_the_default_agent_and_a_person_task_gets_none() {
 // test: they must not interleave with another test that sets it.
 #[test]
 fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
+    let _session_env = SESSION_ENV_LOCK.lock().unwrap();
     let fx = fx();
     let id = fx.task(Assignee::Ai);
     let default_agent = fx.store.list_agents(&fx.project).unwrap()[0].id.clone();
@@ -213,10 +219,23 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
 
     // A Todo plan is co-editable by any agent; starting it is the assigned agent's alone.
     as_session(Some(&other_secret));
+    let other_activity = || {
+        fx.store
+            .list_agents(&fx.project)
+            .unwrap()
+            .into_iter()
+            .find(|agent| agent.id == other)
+            .unwrap()
+            .connection
+            .unwrap()
+            .last_activity_at
+    };
     fx.store
         .edit_task(&fx.project, id, None, Some("---\nacceptance:\n  - id: AC-1\n    text: Verified\n    done: false\n---\n\n## 概要\n\n計画\n"), t0())
         .unwrap();
+    let before_refusal = other_activity();
     assert!(matches!(to_doing(&fx), Err(AgpjError::NotAssignee { .. })));
+    assert_eq!(other_activity(), before_refusal);
     as_session(None);
     assert!(matches!(to_doing(&fx), Err(AgpjError::NotConnected)));
     assert_eq!(
@@ -225,6 +244,18 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
     );
     as_session(Some(&default_secret));
     to_doing(&fx).unwrap();
+    assert!(matches!(
+        fx.store.set_agent_status_connected(
+            &fx.project,
+            id,
+            RunState::Running,
+            ctx(Actor::Ai),
+            &other_secret,
+            before_refusal + chrono::Duration::minutes(5),
+        ),
+        Err(AgpjError::NotAssignee { .. })
+    ));
+    assert_eq!(other_activity(), before_refusal);
 
     // The CLI checks the connection before changing the condition, including a retry.
     let check = |task_id: i64, secret: &str| {
@@ -269,10 +300,13 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
         .join("shared/projects")
         .join(fx.project.as_str())
         .join(format!("tasks/{legacy}/task.json"));
-    let mut value: serde_json::Value =
-        serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
-    value["agentId"] = serde_json::Value::Null;
-    std::fs::write(&metadata, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    let omit_legacy_owner = || {
+        let mut value: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
+        value["agentId"] = serde_json::Value::Null;
+        std::fs::write(&metadata, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    };
+    omit_legacy_owner();
     assert_eq!(
         fx.store
             .snapshot(&fx.project)
@@ -297,6 +331,50 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
         .unwrap();
     assert!(check(legacy, &default_secret).status.success());
     assert!(fx.store.task(&fx.project, legacy).unwrap().acceptance[0].done);
+    omit_legacy_owner();
+    assert!(matches!(
+        fx.store.set_agent_status_connected(
+            &fx.project,
+            legacy,
+            RunState::Running,
+            ctx(Actor::Ai),
+            &other_secret,
+            before_refusal + chrono::Duration::minutes(5),
+        ),
+        Err(AgpjError::NotAssignee { .. })
+    ));
+    assert_eq!(other_activity(), before_refusal);
+    fx.store
+        .set_agent_status_connected(
+            &fx.project,
+            legacy,
+            RunState::Running,
+            ctx(Actor::Ai),
+            &default_secret,
+            t0(),
+        )
+        .unwrap();
+    let legacy_question = qa::ask(
+        &fx.store,
+        &fx.project,
+        &[legacy],
+        "Resume the older task?",
+        &[],
+    );
+    qa::answer(
+        &fx.store,
+        &fx.project,
+        &legacy_question.id,
+        None,
+        Some("Yes."),
+    );
+    omit_legacy_owner();
+    fx.store
+        .accept_message(&fx.project, &legacy_question.id, Actor::Ai, t0())
+        .unwrap();
+    let resumed = fx.store.task(&fx.project, legacy).unwrap();
+    assert_eq!(resumed.agent_status, RunState::Running);
+    assert!(resumed.run_connection_id.is_some());
 
     let question = qa::ask(&fx.store, &fx.project, &[id], "Which way?", &[]);
     qa::answer(
@@ -471,27 +549,29 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
 }
 
 #[test]
-fn the_only_live_default_agent_can_start_without_a_connection() {
+fn the_default_agent_cannot_start_without_a_connection() {
     let fx = fx();
     let id = fx.task(Assignee::Ai);
     let agents = fx.store.list_agents(&fx.project).unwrap();
     assert_eq!(agents.len(), 1);
     assert!(agents[0].is_default);
+    let before = fx.store.task(&fx.project, id).unwrap();
 
     let _session = enter_session_writes(fx.root.path().to_path_buf());
-    fx.store
-        .move_work_task(&fx.project, id, Column::Doing, ctx(Actor::Ai), t0())
-        .unwrap();
-    assert_eq!(
-        fx.store.task(&fx.project, id).unwrap().task_status,
-        Column::Doing
-    );
+    assert!(matches!(
+        fx.store
+            .move_work_task(&fx.project, id, Column::Doing, ctx(Actor::Ai), t0()),
+        Err(AgpjError::NotConnected)
+    ));
+    let after = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(after.task_status, Column::Todo);
+    assert_eq!(after.history, before.history);
 }
 
 #[test]
-fn a_board_written_without_a_registry_still_lets_a_session_work() {
-    // A restored backup or a hand-written fixture has Doing cards and no `agents.json`: with
-    // nobody registered, the session works as the card's own agent instead of being refused.
+fn a_board_written_without_a_registry_still_requires_a_connection_to_work() {
+    // A restored backup or a hand-written fixture has Doing cards and no `agents.json`. A session
+    // without credentials cannot infer its identity from the task's existing owner.
     let fx = fx();
     let id = fx.task(Assignee::Ai);
     fx.store
@@ -506,8 +586,111 @@ fn a_board_written_without_a_registry_still_lets_a_session_work() {
     std::fs::remove_file(registry).unwrap();
 
     let _session = enter_session_writes(fx.root.path().to_path_buf());
-    fx.store.add_result(&fx.project, id, input(), t0()).unwrap();
+    let before = fx.store.task(&fx.project, id).unwrap();
+    assert!(matches!(
+        fx.store.add_result(&fx.project, id, input(), t0()),
+        Err(AgpjError::NotConnected)
+    ));
+    let after = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(after.task_status, Column::Doing);
+    assert_eq!(after.history, before.history);
+    assert_eq!(after.results.len(), before.results.len());
+}
+
+#[test]
+fn listing_agents_repairs_the_default_for_a_legacy_project_before_connection_code_issuance() {
+    let fx = fx();
+    let id = fx.task(Assignee::Ai);
     fx.store
-        .move_work_task(&fx.project, id, Column::Done, ctx(Actor::Ai), t0())
-        .ok();
+        .move_work_task_for_user(&fx.project, id, Column::Doing, ctx(Actor::Human), t0())
+        .unwrap();
+    let registry = fx
+        .root
+        .path()
+        .join("shared/projects")
+        .join(fx.project.to_string())
+        .join("agents.json");
+    std::fs::remove_file(&registry).unwrap();
+    let metadata = registry
+        .parent()
+        .unwrap()
+        .join(format!("tasks/{id}/task.json"));
+    let mut task_json: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
+    task_json["agentId"] = serde_json::Value::Null;
+    std::fs::write(&metadata, serde_json::to_vec(&task_json).unwrap()).unwrap();
+
+    let agents = fx.store.list_agents(&fx.project).unwrap();
+    assert_eq!(agents.len(), 1);
+    assert!(agents[0].is_default);
+    let issued = fx
+        .store
+        .issue_connect_code(&fx.project, &agents[0].id, false, t0())
+        .unwrap();
+    assert!(!issued.code.is_empty());
+}
+
+#[test]
+fn refused_multi_task_question_does_not_touch_connection_or_write_questions() {
+    let _session_env = SESSION_ENV_LOCK.lock().unwrap();
+    let fx = fx();
+    let first = fx.task(Assignee::Ai);
+    let second = fx.task(Assignee::Ai);
+    let other = fx
+        .store
+        .register_agent(&fx.project, "Other", "", t0())
+        .unwrap();
+    for id in [first, second] {
+        fx.store
+            .move_work_task_for_user(&fx.project, id, Column::Doing, ctx(Actor::Human), t0())
+            .unwrap();
+    }
+    fx.store
+        .assign_task_agent(&fx.project, second, Some(&other.id), t0())
+        .unwrap();
+    let secret = fx.connect("A-1");
+    // SAFETY: only this test sets the session secret; other tests do not mutate it.
+    unsafe { std::env::set_var("AGPJ_CONNECTION_SECRET", &secret) };
+    let _session = enter_session_writes(fx.root.path().to_path_buf());
+    let connections = fx
+        .root
+        .path()
+        .join("shared/projects")
+        .join(fx.project.to_string())
+        .join(".internal/connections.json");
+    let before_connections = std::fs::read(&connections).unwrap();
+    let before_first = fx.store.task(&fx.project, first).unwrap();
+    let before_second = fx.store.task(&fx.project, second).unwrap();
+    let err = fx
+        .store
+        .ask_questions(
+            &fx.project,
+            AskInput {
+                actor: Actor::Ai,
+                asked_by: None,
+                brainstorm: None,
+                held: false,
+                questions: vec![AskQuestion {
+                    body: "Which approach?".into(),
+                    choices: Vec::new(),
+                    recommended_choice_id: None,
+                    tasks: Vec::new(),
+                    images: Vec::new(),
+                }],
+                tasks: vec![first, second],
+            },
+            t0() + chrono::Duration::minutes(2),
+        )
+        .unwrap_err();
+    assert!(
+        matches!(err, AgpjError::NotAssignee { id } if id == second),
+        "{err:?}"
+    );
+    assert_eq!(std::fs::read(&connections).unwrap(), before_connections);
+    assert_eq!(fx.store.task(&fx.project, first).unwrap(), before_first);
+    assert_eq!(fx.store.task(&fx.project, second).unwrap(), before_second);
+    assert!(fx.store.questions(&fx.project).unwrap().is_empty());
+    drop(_session);
+    // SAFETY: restore the environment after this test's single-threaded session.
+    unsafe { std::env::remove_var("AGPJ_CONNECTION_SECRET") };
 }

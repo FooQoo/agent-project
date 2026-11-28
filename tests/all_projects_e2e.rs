@@ -46,6 +46,20 @@ fn agpj(home: &Path, project: &str, args: &[&str]) -> Output {
     run(home, &full)
 }
 
+fn agpj_as_default_agent(home: &Path, project: &str, args: &[&str]) -> Output {
+    let secret = common::connect_default_agent(home, project);
+    bin()
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
+        .env("AGPJ_CONNECTION_SECRET", secret)
+        .env("TZ", "UTC")
+        .args(["--project", project])
+        .args(args)
+        .stdin(Stdio::null())
+        .output()
+        .unwrap()
+}
+
 /// A TASK.md body with `text` in its work section, which the file store accepts.
 fn valid_body(text: &str) -> String {
     format!(
@@ -176,16 +190,19 @@ fn add(home: &Path, project: &str, title: &str, assignee: &str) {
 }
 
 fn mv(home: &Path, project: &str, id: &str, column: &str, actor: &str, reason: &str) {
-    ok(&agpj(
-        home,
-        project,
-        &["mv", id, column, "--actor", actor, "--reason", reason],
-    ));
+    let args = ["mv", id, column, "--actor", actor, "--reason", reason];
+    let snapshot = snapshot_of(home, project);
+    let current_assignee_is_ai = task(&snapshot, id.parse().unwrap())["assignee"] == "ai";
+    if actor == "ai" || current_assignee_is_ai {
+        ok(&agpj_as_default_agent(home, project, &args));
+    } else {
+        ok(&agpj(home, project, &args));
+    }
 }
 
 fn state(home: &Path, project: &str, id: &str, run_state: &str, reason: &str) {
     if run_state == "pending" {
-        ok(&agpj(
+        ok(&agpj_as_default_agent(
             home,
             project,
             &[
@@ -201,7 +218,7 @@ fn state(home: &Path, project: &str, id: &str, run_state: &str, reason: &str) {
             ],
         ));
     } else {
-        ok(&agpj(
+        ok(&agpj_as_default_agent(
             home,
             project,
             &["state", id, run_state, "--actor", "ai", "--reason", reason],

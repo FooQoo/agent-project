@@ -2,8 +2,9 @@
 //! refers to, for any assignee, lane, and run state, and never changes the stored run state.
 
 use agent_project::domain::{Actor, Assignee, ChangeContext, Column, NewTask, ProjectId, RunState};
-use agent_project::file_store::FileStore;
+use agent_project::file_store::{ConnectionOrigin, FileStore};
 use chrono::{TimeZone, Utc};
+use std::cell::OnceCell;
 
 #[path = "support/qa.rs"]
 mod qa;
@@ -23,6 +24,7 @@ struct Fx {
     root: tempfile::TempDir,
     store: FileStore,
     project: ProjectId,
+    connection: OnceCell<String>,
 }
 
 fn fx() -> Fx {
@@ -33,6 +35,7 @@ fn fx() -> Fx {
         root,
         store,
         project,
+        connection: OnceCell::new(),
     }
 }
 
@@ -62,8 +65,33 @@ impl Fx {
 
     fn run(&self, id: i64) {
         self.mv(id, Column::Doing);
+        let secret = self.connection.get_or_init(|| {
+            let agent = self.store.list_agents(&self.project).unwrap().remove(0);
+            let code = self
+                .store
+                .issue_connect_code(&self.project, &agent.id, false, now())
+                .unwrap();
+            self.store
+                .exchange_connect_code(
+                    &self.project,
+                    &code.code,
+                    ConnectionOrigin::External,
+                    "codex",
+                    "Answer test",
+                    now(),
+                )
+                .unwrap()
+                .secret
+        });
         self.store
-            .set_agent_status(&self.project, id, RunState::Running, ctx(Actor::Ai), now())
+            .set_agent_status_connected(
+                &self.project,
+                id,
+                RunState::Running,
+                ctx(Actor::Ai),
+                secret,
+                now(),
+            )
             .unwrap();
     }
 

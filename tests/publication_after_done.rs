@@ -1,29 +1,29 @@
 //! A publication record is the one result a Done task still takes, from the CLI and the web API.
 
 mod common;
+#[path = "support/connected_demo.rs"]
+mod connected_demo;
+
+use connected_demo::ConnectedDemo;
 
 use std::fs;
-use std::path::Path;
 
-use common::{Running, demo_project, json_error, json_ok};
+use common::Running;
 use serde_json::{Value, json};
 
 const URL: &str = "https://example.com/releases/v1";
 
-fn run(home: &Path, rest: &[&str]) -> Value {
-    json_ok(
-        home,
-        &[&["--project", "Demo"][..], rest, &["--json"]].concat(),
-    )
+fn run(home: &ConnectedDemo, rest: &[&str]) -> Value {
+    home.json_ok(&[&["--project", "Demo"][..], rest, &["--json"]].concat())
 }
 
-fn fail(home: &Path, rest: &[&str]) -> String {
-    json_error(home, &[&["--project", "Demo"][..], rest].concat()).1
+fn fail(home: &ConnectedDemo, rest: &[&str]) -> String {
+    home.json_error(&[&["--project", "Demo"][..], rest].concat())
+        .1
 }
 
 /// Task #1 planned for `v1`, with a final result, moved to Done.
-fn done_task(home: &Path) {
-    demo_project(home);
+fn done_task(home: &ConnectedDemo) {
     run(home, &["version", "add", "v1"]);
     run(home, &["edit", "1", "--planned-version", "v1"]);
     run(
@@ -45,7 +45,7 @@ fn done_task(home: &Path) {
     );
 }
 
-fn publish(home: &Path, actor: &str, extra: &[&str]) -> Value {
+fn publish(home: &ConnectedDemo, actor: &str, extra: &[&str]) -> Value {
     run(
         home,
         &[
@@ -68,12 +68,12 @@ fn publish(home: &Path, actor: &str, extra: &[&str]) -> Value {
 
 #[test]
 fn ai_and_human_publication_on_a_done_card_with_a_final_result_is_counted() {
-    let home = tempfile::tempdir().unwrap();
-    done_task(home.path());
-    let before = run(home.path(), &["release", "doc", "--version", "v1"]);
+    let home = ConnectedDemo::new();
+    done_task(&home);
+    let before = run(&home, &["release", "doc", "--version", "v1"]);
     assert_eq!(before["published"], 0);
 
-    let ai = publish(home.path(), "ai", &["--link", URL]);
+    let ai = publish(&home, "ai", &["--link", URL]);
     assert_eq!(ai["created"], true);
     assert_eq!(ai["result"]["kind"], "progress");
     assert!(
@@ -83,17 +83,17 @@ fn ai_and_human_publication_on_a_done_card_with_a_final_result_is_counted() {
             .starts_with("Published: v1\n")
     );
     let human = publish(
-        home.path(),
+        &home,
         "human",
         &["--link", "https://example.com/other", "--key", "second"],
     );
     assert_eq!(human["created"], true);
 
-    let task = &run(home.path(), &["show", "1"])["task"];
+    let task = &run(&home, &["show", "1"])["task"];
     assert_eq!(task["taskStatus"], "done");
     assert_eq!(task["results"].as_array().unwrap().len(), 3);
 
-    let after = run(home.path(), &["release", "doc", "--version", "v1"]);
+    let after = run(&home, &["release", "doc", "--version", "v1"]);
     assert_eq!(after["published"], 1);
     let dir = fs::read_dir(home.path().join("shared/projects"))
         .unwrap()
@@ -107,29 +107,26 @@ fn ai_and_human_publication_on_a_done_card_with_a_final_result_is_counted() {
 
 #[test]
 fn a_publication_needs_a_link_and_a_valid_version_and_is_not_final() {
-    let home = tempfile::tempdir().unwrap();
-    done_task(home.path());
+    let home = ConnectedDemo::new();
+    done_task(&home);
     // clap requires the link, so the CLI refuses before the store is reached.
-    let (code, _, _) = common::agpj(
-        home.path(),
-        &[
-            "--project",
-            "Demo",
-            "result",
-            "add",
-            "1",
-            "--published",
-            "v1",
-            "--summary",
-            "x",
-            "--actor",
-            "ai",
-        ],
-    );
+    let (code, _, _) = home.raw(&[
+        "--project",
+        "Demo",
+        "result",
+        "add",
+        "1",
+        "--published",
+        "v1",
+        "--summary",
+        "x",
+        "--actor",
+        "ai",
+    ]);
     assert_ne!(code, 0);
     assert_eq!(
         fail(
-            home.path(),
+            &home,
             &[
                 "result",
                 "add",
@@ -146,37 +143,34 @@ fn a_publication_needs_a_link_and_a_valid_version_and_is_not_final() {
         ),
         "invalid_value"
     );
-    let (code, _, _) = common::agpj(
-        home.path(),
-        &[
-            "--project",
-            "Demo",
-            "result",
-            "add",
-            "1",
-            "--published",
-            "v1",
-            "--link",
-            URL,
-            "--final",
-            "--summary",
-            "x",
-            "--actor",
-            "ai",
-        ],
-    );
+    let (code, _, _) = home.raw(&[
+        "--project",
+        "Demo",
+        "result",
+        "add",
+        "1",
+        "--published",
+        "v1",
+        "--link",
+        URL,
+        "--final",
+        "--summary",
+        "x",
+        "--actor",
+        "ai",
+    ]);
     assert_ne!(code, 0);
-    let out = run(home.path(), &["release", "doc", "--version", "v1"]);
+    let out = run(&home, &["release", "doc", "--version", "v1"]);
     assert_eq!(out["published"], 0);
 }
 
 #[test]
 fn everything_else_on_a_done_card_is_still_refused() {
-    let home = tempfile::tempdir().unwrap();
-    done_task(home.path());
+    let home = ConnectedDemo::new();
+    done_task(&home);
     assert_eq!(
         fail(
-            home.path(),
+            &home,
             &["result", "add", "1", "--summary", "More", "--actor", "ai"]
         ),
         "task_is_done"
@@ -184,7 +178,7 @@ fn everything_else_on_a_done_card_is_still_refused() {
     // A plain summary line is an ordinary result, not a publication record.
     assert_eq!(
         fail(
-            home.path(),
+            &home,
             &[
                 "result",
                 "add",
@@ -200,26 +194,26 @@ fn everything_else_on_a_done_card_is_still_refused() {
         "task_is_done"
     );
     assert_eq!(
-        fail(home.path(), &["edit", "1", "--title", "New"]),
+        fail(&home, &["edit", "1", "--title", "New"]),
         "task_is_done"
     );
     assert_eq!(
         fail(
-            home.path(),
+            &home,
             &["mv", "1", "doing", "--actor", "ai", "--reason", "Back"]
         ),
         "task_is_done"
     );
-    let task = &run(home.path(), &["show", "1"])["task"];
+    let task = &run(&home, &["show", "1"])["task"];
     assert_eq!(task["taskStatus"], "done");
     assert_eq!(task["results"].as_array().unwrap().len(), 1);
 }
 
 #[test]
 fn the_web_api_records_a_publication_on_a_done_card_and_refuses_a_missing_link() {
-    let home = tempfile::tempdir().unwrap();
-    done_task(home.path());
-    let pid = json_ok(home.path(), &["project", "ls", "--json"])["projects"][0]["id"]
+    let home = ConnectedDemo::new();
+    done_task(&home);
+    let pid = home.json_ok(&["project", "ls", "--json"])["projects"][0]["id"]
         .as_str()
         .unwrap()
         .to_string();
@@ -249,6 +243,6 @@ fn the_web_api_records_a_publication_on_a_done_card_and_refuses_a_missing_link()
     let listed = server.get(&path).json();
     assert_eq!(listed["results"].as_array().unwrap().len(), 2);
     server.stop();
-    let out = run(home.path(), &["release", "doc", "--version", "v1"]);
+    let out = run(&home, &["release", "doc", "--version", "v1"]);
     assert_eq!(out["published"], 1);
 }

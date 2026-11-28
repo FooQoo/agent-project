@@ -2,6 +2,10 @@
 //! and the rule that an image a result uses cannot be deleted.
 
 mod common;
+#[path = "support/connected_demo.rs"]
+mod connected_demo;
+
+use connected_demo::ConnectedDemo;
 
 use std::path::{Path, PathBuf};
 
@@ -10,14 +14,10 @@ use agent_project::error::AgpjError;
 use agent_project::file_store::model::AttachmentOwner;
 use agent_project::file_store::{FileStore, ResultInput};
 use chrono::{TimeZone, Utc};
-use common::{demo_project, json_error, json_ok};
 use serde_json::Value;
 
-fn run(home: &Path, rest: &[&str]) -> Value {
-    json_ok(
-        home,
-        &[&["--project", "Demo"][..], rest, &["--json"]].concat(),
-    )
+fn run(home: &ConnectedDemo, rest: &[&str]) -> Value {
+    home.json_ok(&[&["--project", "Demo"][..], rest, &["--json"]].concat())
 }
 
 /// A valid 1x1 PNG whose pixel depends on `n`, so each image has its own bytes.
@@ -75,12 +75,11 @@ fn asset_count(home: &Path) -> usize {
 
 #[test]
 fn several_files_become_one_result_with_ordered_images_and_retry_is_safe() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    let home = ConnectedDemo::new();
     let paths = strings(&files(home.path(), 3));
     let args = add_args(&paths, &[]);
 
-    let first = run(home.path(), &args);
+    let first = run(&home, &args);
     assert_eq!(first["created"], true);
     let ids: Vec<&str> = first["result"]["attachmentIds"]
         .as_array()
@@ -97,38 +96,36 @@ fn several_files_become_one_result_with_ordered_images_and_retry_is_safe() {
         assert_eq!(first["paths"][n], format!("assets/{id}.png").as_str());
     }
 
-    let retry = run(home.path(), &args);
+    let retry = run(&home, &args);
     assert_eq!(retry["created"], false);
     assert_eq!(
         retry["result"]["attachmentIds"],
         first["result"]["attachmentIds"]
     );
     assert_eq!(retry["attachments"].as_array().unwrap().len(), 3);
-    let task = &run(home.path(), &["show", "1"])["task"];
+    let task = &run(&home, &["show", "1"])["task"];
     assert_eq!(task["attachments"].as_array().unwrap().len(), 3);
     assert_eq!(task["results"].as_array().unwrap().len(), 1);
 }
 
 #[test]
 fn the_default_key_depends_on_the_order_and_the_set_of_images() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    let home = ConnectedDemo::new();
     let mut paths = strings(&files(home.path(), 2));
-    let first = run(home.path(), &add_args(&paths, &[]));
+    let first = run(&home, &add_args(&paths, &[]));
     paths.reverse();
-    let reversed = run(home.path(), &add_args(&paths, &[]));
+    let reversed = run(&home, &add_args(&paths, &[]));
     assert_eq!(reversed["created"], true);
     assert_ne!(first["result"]["key"], reversed["result"]["key"]);
-    let one = run(home.path(), &add_args(&paths[..1], &[]));
+    let one = run(&home, &add_args(&paths[..1], &[]));
     assert_eq!(one["created"], true);
 }
 
 #[test]
 fn one_file_keeps_the_single_image_field_that_older_versions_read() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    let home = ConnectedDemo::new();
     let paths = strings(&files(home.path(), 1));
-    let added = run(home.path(), &add_args(&paths, &[]));
+    let added = run(&home, &add_args(&paths, &[]));
     assert!(added["result"]["attachmentId"].is_string());
     assert!(added["result"].get("attachmentIds").is_none());
     assert_eq!(added["attachments"].as_array().unwrap().len(), 1);
@@ -136,12 +133,10 @@ fn one_file_keeps_the_single_image_field_that_older_versions_read() {
 
 #[test]
 fn the_same_key_with_a_different_image_list_is_a_conflict() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    let home = ConnectedDemo::new();
     let paths = strings(&files(home.path(), 2));
-    run(home.path(), &add_args(&paths, &["--key", "k"]));
-    let (_, code) = json_error(
-        home.path(),
+    run(&home, &add_args(&paths, &["--key", "k"]));
+    let (_, code) = home.json_error(
         &[
             &["--project", "Demo"][..],
             &add_args(&paths[..1], &["--key", "k"]),
@@ -153,37 +148,30 @@ fn the_same_key_with_a_different_image_list_is_a_conflict() {
 
 #[test]
 fn more_than_twenty_images_are_refused_and_nothing_is_written() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    let home = ConnectedDemo::new();
     let paths = strings(&files(home.path(), 21));
-    let (_, code) = json_error(
-        home.path(),
-        &[&["--project", "Demo"][..], &add_args(&paths, &[])].concat(),
-    );
+    let (_, code) = home.json_error(&[&["--project", "Demo"][..], &add_args(&paths, &[])].concat());
     assert_eq!(code, "invalid_value");
-    let task = &run(home.path(), &["show", "1"])["task"];
+    let task = &run(&home, &["show", "1"])["task"];
     assert_eq!(task["results"], serde_json::json!([]));
     assert_eq!(task["attachments"], serde_json::json!([]));
     assert_eq!(asset_count(home.path()), 0);
 
     let twenty = strings(&files(home.path(), 20));
-    assert_eq!(run(home.path(), &add_args(&twenty, &[]))["created"], true);
+    assert_eq!(run(&home, &add_args(&twenty, &[]))["created"], true);
 }
 
 #[test]
 fn a_bad_image_in_the_list_records_nothing_and_leaves_no_image_file() {
-    let home = tempfile::tempdir().unwrap();
-    demo_project(home.path());
+    let home = ConnectedDemo::new();
     let mut paths = files(home.path(), 2);
     let bad = home.path().join("bad.png");
     std::fs::write(&bad, b"not an image").unwrap();
     paths.push(bad);
-    let (_, code) = json_error(
-        home.path(),
-        &[&["--project", "Demo"][..], &add_args(&strings(&paths), &[])].concat(),
-    );
+    let (_, code) =
+        home.json_error(&[&["--project", "Demo"][..], &add_args(&strings(&paths), &[])].concat());
     assert_eq!(code, "invalid_value");
-    let task = &run(home.path(), &["show", "1"])["task"];
+    let task = &run(&home, &["show", "1"])["task"];
     assert_eq!(task["results"], serde_json::json!([]));
     assert_eq!(task["attachments"], serde_json::json!([]));
     assert_eq!(asset_count(home.path()), 0);

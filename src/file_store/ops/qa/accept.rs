@@ -237,28 +237,23 @@ impl FileStore {
             if resumed_already {
                 continue;
             }
-            // Bind the resumed run to the current agent's fresh connection so it can be paused
-            // when that connection ends. A default-only project still permits an unconnected run.
-            let needs_connection =
-                crate::file_store::ops::assignment::has_other_live_agents_locked(
-                    shared,
-                    project_dir,
-                )?;
-            let connection = match task.agent_id.as_deref() {
-                Some(agent) => {
-                    match crate::file_store::ops::assignment::fresh_connection_locked(
-                        shared,
-                        project_dir,
-                        agent,
-                        at,
-                    ) {
-                        Err(AgpjError::NotAssignee { .. } | AgpjError::NotConnected) => continue,
-                        Err(error) => return Err(error),
-                        Ok(None) if needs_connection => continue,
-                        Ok(connection) => connection,
-                    }
-                }
-                _ => None,
+            // Resume only when the current agent has a fresh connection that can own the run.
+            let Some(agent) = crate::file_store::ops::assignment::resolve_agent_id_locked(
+                shared,
+                project_dir,
+                task.agent_id.as_deref(),
+            )?
+            else {
+                continue;
+            };
+            let Some(connection) = crate::file_store::ops::assignment::fresh_connection_locked(
+                shared,
+                project_dir,
+                &agent,
+                at,
+            )?
+            else {
+                continue;
             };
             let language = self.history_language(project, &task)?;
             let listed = questions.join(", ");
@@ -274,7 +269,7 @@ impl FileStore {
                 at,
             })?);
             task.agent_status = RunState::Running;
-            task.run_connection_id = connection;
+            task.run_connection_id = Some(connection);
             task.agent_status_changed_at = at;
             task.updated_at = at;
             match save_task(shared, project_dir, &task) {

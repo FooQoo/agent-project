@@ -4,7 +4,9 @@
 
 mod common;
 
-use common::{agpj, demo_project, json_error, json_ok};
+use common::{
+    agpj, agpj_with_connection, connect_default_agent, demo_project, json_error, json_ok,
+};
 use serde_json::{Value, json};
 use std::path::Path;
 
@@ -57,8 +59,10 @@ fn plans_get_stable_ids_when_the_task_is_created_and_survive_a_start() {
     // The conditions are a separate list: plans are not conditions.
     assert_eq!(created["acceptance"].as_array().unwrap().len(), 1);
 
-    let (code, _, err) = agpj(
+    let secret = connect_default_agent(home.path(), "Demo");
+    let (code, _, err) = agpj_with_connection(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",

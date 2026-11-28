@@ -5,7 +5,7 @@ mod common;
 
 use std::path::Path;
 
-use common::{agpj, demo_project, json_error, json_ok};
+use common::{agpj, agpj_with_connection, connect_default_agent, demo_project, json_ok};
 use serde_json::{Value, json};
 
 const TWO: &str = r#"{"questions":[
@@ -25,13 +25,43 @@ const PNG: [u8; 70] = [
 fn msg(home: &Path, args: &[&str]) -> (i32, String, String) {
     let mut all = vec!["--project", "Demo", "message"];
     all.extend_from_slice(args);
-    agpj(home, &all)
+    if uses_agent_connection(args) {
+        let secret = connect_default_agent(home, "Demo");
+        let (code, out, err) = agpj_with_connection(home, &secret, &all);
+        (code, out, err)
+    } else {
+        agpj(home, &all)
+    }
 }
 
 fn msg_json(home: &Path, args: &[&str]) -> Value {
     let mut all = vec!["--project", "Demo", "--json", "message"];
     all.extend_from_slice(args);
-    json_ok(home, &all[..])
+    if uses_agent_connection(args) {
+        let secret = connect_default_agent(home, "Demo");
+        let (code, out, err) = agpj_with_connection(home, &secret, &all);
+        assert_eq!(code, 0, "{args:?} failed: {err}");
+        serde_json::from_str(&out).unwrap_or_else(|_| panic!("not JSON: {out}"))
+    } else {
+        json_ok(home, &all[..])
+    }
+}
+
+fn uses_agent_connection(args: &[&str]) -> bool {
+    args.windows(2).any(|pair| pair == ["--actor", "ai"])
+        || args.iter().any(|arg| matches!(*arg, "link" | "unlink"))
+}
+
+fn json_error(home: &Path, args: &[&str]) -> (i32, String) {
+    if uses_agent_connection(args) {
+        let secret = connect_default_agent(home, "Demo");
+        let (code, _out, err) = agpj_with_connection(home, &secret, &[&["--json"], args].concat());
+        assert_ne!(code, 0, "{args:?} unexpectedly succeeded");
+        let value: Value = serde_json::from_str(&err).unwrap();
+        (code, value["error"]["code"].as_str().unwrap().to_string())
+    } else {
+        common::json_error(home, args)
+    }
 }
 
 fn ask(home: &Path) {

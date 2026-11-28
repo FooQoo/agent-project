@@ -146,8 +146,19 @@ impl FileStore {
                 return Err(AgpjError::TaskIsDraft { id: *id });
             }
             ensure_ai_task_not_done(&task, input.actor)?;
-            super::super::assignment::ensure_session_may_write(shared, &project_dir, &task)?;
+            super::super::assignment::check_session_write_without_touch(
+                shared,
+                &project_dir,
+                None,
+                &task,
+            )?;
             tasks.push(task);
+        }
+
+        // Refresh connection activity only after every target has passed authorization. A
+        // later refusal must leave both the board files and connection metadata untouched.
+        for task in &tasks {
+            super::super::assignment::ensure_session_may_write(shared, &project_dir, task)?;
         }
 
         // Numbers are reserved before the files are written, as task numbers are.

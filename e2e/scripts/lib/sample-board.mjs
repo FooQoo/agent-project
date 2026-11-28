@@ -3,7 +3,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { startPhoneEntrance } from '../../helpers/phone-entrance.mjs';
+import { connectFixtureAgent, fixtureEnv } from '../../helpers/fixture-agent.mjs';
+import { buildPhoneBackend, startPhoneEntrance } from '../../helpers/phone-entrance.mjs';
 
 // Shared disposable sample board for the screenshot scripts. Build web/ and the CLI first.
 export const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -73,9 +74,13 @@ export function markdown(body, checks, completed, priority) {
   return `---\nacceptance:\n${items}\n${priority ? `priority: ${JSON.stringify(priority)}\n` : ''}---\n\n${body}\n`;
 }
 
+export function connectSampleAgent(home, projectName) {
+  connectFixtureAgent(home, projectName, buildPhoneBackend());
+}
+
 export function cli(home, args) {
   const result = spawnSync(binary, [...args, '--json'], {
-    cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' }, encoding: 'utf8',
+    cwd: home, env: fixtureEnv(home, args[0] === '--project' ? args[1] : undefined), encoding: 'utf8',
   });
   if (result.status !== 0) throw new Error(`${args[0]} failed: ${result.stderr || result.stdout}`);
   return JSON.parse(result.stdout);
@@ -105,6 +110,7 @@ export function seed(home, text) {
       '--epic', [0, 1, 7].includes(i) ? 'DESIGN' : 'LAUNCH',
       `--desc=${markdown(text.body, text.checks, done ? 3 : i === 1 ? 2 : 1)}`);
   }
+  connectSampleAgent(home, project);
   for (const id of [2, 3, 7]) run('mv', String(id), 'doing', '--actor', 'ai', '--reason', 'Start sample work');
   run('state', '2', 'running', '--actor', 'ai', '--reason', 'Build the landing page');
   run('history', 'add', '3', `--reason=${text.workNote}`);

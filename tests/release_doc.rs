@@ -6,7 +6,7 @@ mod common;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use common::{agpj, json_error, json_ok};
+use common::{agpj, json_error};
 use serde_json::Value;
 
 const START: &str = "<!-- agpj:generated:start -->";
@@ -16,7 +16,7 @@ fn run(home: &Path, args: &[&str]) -> Value {
     let mut all = vec!["--project", "Demo"];
     all.extend(args);
     all.push("--json");
-    json_ok(home, &all)
+    common::json_ok_connected_fixture(home, &all)
 }
 
 fn demo() -> (tempfile::TempDir, PathBuf) {

@@ -5,6 +5,8 @@
 //! 7420), and the tests run one at a time. Every `agpj serve` child is
 //! stopped when its handle is dropped, and the port is checked to be free again.
 
+mod common;
+
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{Ipv4Addr, SocketAddr, TcpListener, TcpStream};
 use std::path::Path;
@@ -64,7 +66,12 @@ fn run(home: &Path, args: &[&str]) -> Output {
     if command != Some("serve") {
         args.splice(0..0, ["--project", "demo"]);
     }
-    let output = agpj(home).args(folder_args(home, &args)).output().unwrap();
+    let mut cli = agpj(home);
+    if matches!(command, Some("mv" | "state")) {
+        let secret = common::connect_default_agent(home, "demo");
+        cli.env("AGPJ_CONNECTION_SECRET", secret);
+    }
+    let output = cli.args(folder_args(home, &args)).output().unwrap();
     Output {
         code: output.status.code().unwrap(),
         out: String::from_utf8(output.stdout).unwrap(),

@@ -30,6 +30,19 @@ fn agpj(home: &Path, project: &str, args: &[&str]) -> Output {
         .unwrap()
 }
 
+fn agpj_as_default_agent(home: &Path, project: &str, args: &[&str]) -> Output {
+    let secret = common::connect_default_agent(home, project);
+    bin()
+        .env("AGPJ_WATCH", "poll")
+        .env("AGPJ_HOME", home)
+        .env("AGPJ_CONNECTION_SECRET", secret)
+        .env("TZ", "UTC")
+        .args(["--project", project])
+        .args(args)
+        .output()
+        .unwrap()
+}
+
 fn agpj_in(home: &Path, cwd: &Path, args: &[&str]) -> Output {
     bin()
         .env("AGPJ_WATCH", "poll")
@@ -248,12 +261,12 @@ fn two_projects(home: &Path) {
     for (project, title) in [("Alpha", "Alpha secret"), ("Beta", "Beta secret")] {
         ok(&agpj(home, project, &["init"]));
         add_task(home, project, title);
-        ok(&agpj(
+        ok(&agpj_as_default_agent(
             home,
             project,
             &["mv", "1", "doing", "--actor", "ai", "--reason", "Start"],
         ));
-        ok(&agpj(
+        ok(&agpj_as_default_agent(
             home,
             project,
             &[
@@ -279,7 +292,7 @@ fn the_hook_passes_only_the_named_projects_progress_table() {
     ok(&agpj(home.path(), "Beta", &["init"]));
     for (project, title) in [("Alpha", "Alpha secret"), ("Beta", "Beta secret")] {
         add_task(home.path(), project, title);
-        ok(&agpj(
+        ok(&agpj_as_default_agent(
             home.path(),
             project,
             &[
@@ -292,7 +305,7 @@ fn the_hook_passes_only_the_named_projects_progress_table() {
                 &format!("{project} started"),
             ],
         ));
-        ok(&agpj(
+        ok(&agpj_as_default_agent(
             home.path(),
             project,
             &[
