@@ -5,6 +5,7 @@ mod lifecycle;
 pub mod providers;
 pub mod runner;
 mod transitions;
+pub mod worker;
 mod workspace;
 
 pub use lifecycle::{InFlight, ProcessIdentity};
@@ -14,6 +15,7 @@ pub use runner::{
     ReconcileReport, parse_rate_limit_until,
 };
 pub use transitions::StoppedOutcome;
+pub use worker::{CliProviderAdapter, spawn_rap_worker};
 
 use std::num::NonZeroU32;
 use std::path::PathBuf;

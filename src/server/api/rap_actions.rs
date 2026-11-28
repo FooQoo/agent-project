@@ -202,3 +202,19 @@ pub(super) async fn update_settings(
         Err(e) => rap_error(e),
     }
 }
+
+pub(super) async fn run_work_now(
+    State(state): State<Arc<AppState>>,
+    Path(work_id): Path<i64>,
+) -> Response {
+    let work = WorkId(work_id);
+    if let Err(e) = state.rap.store.work(work) {
+        return rap_error(e);
+    }
+    state.rap.enqueue_manual_run(work);
+    (
+        StatusCode::ACCEPTED,
+        Json(serde_json::json!({ "work_id": work.0, "queued": true })),
+    )
+        .into_response()
+}

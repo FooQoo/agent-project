@@ -21,6 +21,7 @@ mod preferences;
 mod projects;
 mod rap;
 mod rap_actions;
+mod rap_bridge;
 mod send;
 mod sessions;
 mod summaries;

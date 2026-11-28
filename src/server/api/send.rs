@@ -49,20 +49,31 @@ pub(super) async fn send_task(
         Ok(id) => id,
         Err(response) => return *response,
     };
+    let pid = project_id.clone();
     let result = with_request_files(&state, &headers, move |store| {
-        store.send_task(
-            &project_id,
-            id,
-            Actor::Human,
-            input.ack,
-            crate::clock::now(),
-        )
+        store.send_task(&pid, id, Actor::Human, input.ack, crate::clock::now())
     })
     .await;
     match result {
         Ok(result) => {
             if result.changed {
                 refresh_index(&state);
+                if let Ok((_, workspace)) = crate::server::resident::resolve_project(
+                    &crate::file_store::FileStore::open(&state.shared),
+                    &project_id,
+                ) {
+                    let provider = super::rap_bridge::preferred_provider(&state);
+                    let _ = super::rap_bridge::enqueue_board_task(
+                        &state,
+                        &project_id,
+                        &workspace,
+                        &result.value.title,
+                        &result.value.description,
+                        result.value.position,
+                        provider,
+                        false,
+                    );
+                }
             }
             json_response(
                 StatusCode::OK,

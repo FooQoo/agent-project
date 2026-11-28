@@ -15,8 +15,9 @@ use tokio_stream::{Stream, StreamExt};
 
 use super::rap_actions::{
     answer_question, approve_plan, authorize_direct, create_change_request, enter_sleep,
-    list_results, revise_result, update_settings, wake_sleep,
+    list_results, revise_result, run_work_now, update_settings, wake_sleep,
 };
+use super::rap_bridge::run_board_task;
 use crate::rap::scheduler::SchedulerSettings;
 use crate::rap::{
     ChangeRequest, CompletionCheck, NewWork, RapError, RapResult, WorkId, WorkItem, WorkKind,
@@ -37,6 +38,11 @@ pub(super) fn routes() -> Router<Arc<AppState>> {
         .route(
             "/api/rap/work/{work_id}/change-requests",
             post(create_change_request),
+        )
+        .route("/api/rap/work/{work_id}/run", post(run_work_now))
+        .route(
+            "/api/projects/{project_id}/tasks/{id}/run",
+            post(run_board_task),
         )
         .route("/api/rap/work/{work_id}/results", get(list_results))
         .route(

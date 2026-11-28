@@ -30,10 +30,18 @@ impl SchedulerStore {
     /// Callers must hold the runtime's singleton lease, start at most one
     /// child, and never retry a failed launch before reconciling.
     pub fn begin_launch(&self, claim: &Claim) -> Result<bool, RapError> {
+        self.begin_launch_inner(claim, true)
+    }
+
+    pub fn begin_manual_launch(&self, claim: &Claim) -> Result<bool, RapError> {
+        self.begin_launch_inner(claim, false)
+    }
+
+    fn begin_launch_inner(&self, claim: &Claim, require_auto_run: bool) -> Result<bool, RapError> {
         self.store.write(|tx| {
             let reservation = tx
                 .query_row(
-                    "SELECT r.path, r.fingerprint, cfg.auto_run AND
+                    "SELECT r.path, r.fingerprint, (NOT ?5 OR cfg.auto_run) AND
                          ((s.phase = 'planning' AND sw.planning_authorized = 1
                            AND w.phase IN ('planning', 'revising')) OR
                           (s.phase = 'execution' AND w.phase = 'executing'
@@ -55,7 +63,8 @@ impl SchedulerStore {
                         claim.attempt_id.0,
                         claim.work_id.0,
                         claim.session_id.0,
-                        claim.epoch
+                        claim.epoch,
+                        require_auto_run
                     ],
                     |row| {
                         Ok((

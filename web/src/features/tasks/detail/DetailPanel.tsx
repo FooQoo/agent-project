@@ -14,19 +14,15 @@ import { DraftBanner } from './DraftBanner';
 import { useFinalizeDraft } from './useFinalizeDraft';
 import { BacklogBanner } from './BacklogBanner';
 import { PreviewAction } from './PreviewAction';
+import { RunTaskButton } from './RunTaskButton';
 import './detail.css';
 
 export interface DetailPanelProps {
-  /** The project the card belongs to. Part keys and delete requests use it. */
   projectId: ProjectId | null;
-  /** The card, as a list shows it. Its text, conditions and history are read as the tabs need them. */
   task: TaskSummary | null;
-  /** Used where the panel only holds a project state (switching, failure, none): the hint sits at the top. */
   variant?: 'card' | 'state';
-  /** Tells the app about the delete confirmation, so the project cannot change under it. */
   operations?: OperationControls;
   onClose: () => void;
-  /** The Open full screen button was pressed: the app opens the preview dialog for the card. */
   onPreview?: (task: TaskSummary) => void;
   /** The epic tab's Open full screen button was pressed. The app opens the epic's preview. */
   onOpenEpic?: (epicId: string) => void;
@@ -272,6 +268,7 @@ function DetailBody({
           </div>
         ) : (
           <div className="detail__toolbar" role="toolbar" aria-label={t('detail.toolbar')}>
+            <RunTaskButton projectId={projectId} task={task} disabled={operationSaving} />
             <PreviewAction onPreview={() => onPreview?.(task)} />
             <DeleteButton
               ref={deleteButton}

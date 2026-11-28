@@ -21,8 +21,6 @@ use crate::file_store::watch::{DocsSink, Watch, WatchMode};
 use crate::lifecycle::LifecycleGuard;
 use crate::paths::{self, ServeInfo, ServeMode};
 
-/// How long an automatic server waits for a stopping server to let go of the
-/// data directory.
 const AUTO_LIFECYCLE_WAIT: Duration = Duration::from_secs(10);
 
 /// How long a session whose wait ended stays counted: `AGPJ_SESSION_GRACE_MS` when set to a
@@ -169,8 +167,6 @@ pub(crate) fn run<F: Future<Output = ()>>(
         state.resident.watch_board(&state.shared, &state.changed);
         let app = api::router(state.clone());
 
-        // A command-line monitor must be up before the board announces itself;
-        // on failure nothing has been written yet, so the run just ends.
         let explicit = monitor.explicit;
         let monitor_ready = match state.monitor.startup(explicit).await {
             Ok(ready) => ready.filter(|_| explicit),
@@ -185,6 +181,8 @@ pub(crate) fn run<F: Future<Output = ()>>(
         state.resident.start(move |project| {
             resident::resolve_project(&crate::file_store::FileStore::open(&files), project)
         });
+        let (rap_stop, rap_rx) = tokio::sync::watch::channel(false);
+        let _rap_worker = crate::rap::scheduler::spawn_rap_worker(state.rap.clone(), rap_rx);
         let pid = std::process::id();
         let auto = Arc::new(AtomicBool::new(launch.auto.is_some()));
         if launch.auto.is_some() {
@@ -220,12 +218,13 @@ pub(crate) fn run<F: Future<Output = ()>>(
             () = shutdown => Ok(Ended::Shutdown),
             () = idle_stop => Ok(Ended::Idle),
         };
+        let _ = rap_stop.send(true);
         state.monitor.shutdown();
         state.resident.shutdown();
         instance::remove_serve_info_of(&serve_path, pid);
         result
     });
-    runtime.shutdown_timeout(Duration::from_secs(3)); // A drop waits on stuck blocking threads.
+    runtime.shutdown_timeout(Duration::from_secs(3));
     drop(lifecycle);
     ended
 }

@@ -56,8 +56,40 @@ impl SchedulerStore {
         now: i64,
         available_providers: &[Provider],
     ) -> Result<Option<Claim>, RapError> {
+        self.claim_matching(None, now, available_providers)
+    }
+
+    /// Reserves one specific authorized work item immediately (for manual direct-run),
+    /// bypassing `auto_run = false` while still enforcing slot limits, workspace exclusion,
+    /// and document integrity.
+    pub fn claim_work_now(
+        &self,
+        work_id: WorkId,
+        now: i64,
+        available_providers: &[Provider],
+    ) -> Result<Option<Claim>, RapError> {
+        self.claim_matching(Some(work_id), now, available_providers)
+    }
+
+    fn claim_matching(
+        &self,
+        target: Option<WorkId>,
+        now: i64,
+        available_providers: &[Provider],
+    ) -> Result<Option<Claim>, RapError> {
         self.store.write(|tx| {
-            if !has_capacity(tx)? {
+            let ok = if target.is_none() {
+                has_capacity(tx)?
+            } else {
+                tx.query_row(
+                    "SELECT max_sessions > (
+                        SELECT COUNT(*) FROM scheduler_dispatches WHERE state != 'released'
+                     ) FROM scheduler_settings WHERE id = 1",
+                    [],
+                    |row| row.get(0),
+                )?
+            };
+            if !ok {
                 return Ok(None);
             }
 
@@ -75,6 +107,9 @@ impl SchedulerStore {
 
             for candidate in candidates {
                 let candidate = candidate?;
+                if target.is_some_and(|id| candidate.work_id != id) {
+                    continue;
+                }
                 let provider = Provider::parse(&candidate.provider)?;
                 if !available_providers.contains(&provider) {
                     continue;

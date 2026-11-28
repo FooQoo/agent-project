@@ -79,7 +79,31 @@ impl<'a> RapRunner<'a> {
         let Some(claim) = self.scheduler.claim_next(now, available_providers)? else {
             return Ok(None);
         };
+        self.launch_claimed(claim, now, true)
+    }
 
+    /// Manually dispatches one specific authorized work item even when `auto_run` is OFF.
+    pub fn dispatch_work_now(
+        &self,
+        work_id: crate::rap::WorkId,
+        now: i64,
+        available_providers: &[Provider],
+    ) -> Result<Option<Claim>, RapError> {
+        let Some(claim) = self
+            .scheduler
+            .claim_work_now(work_id, now, available_providers)?
+        else {
+            return Ok(None);
+        };
+        self.launch_claimed(claim, now, false)
+    }
+
+    fn launch_claimed(
+        &self,
+        claim: Claim,
+        now: i64,
+        require_auto_run: bool,
+    ) -> Result<Option<Claim>, RapError> {
         let (contract_document, is_direct_execution) = match claim.phase {
             SessionPhase::Planning => (None, false),
             SessionPhase::Execution => {
@@ -101,7 +125,12 @@ impl<'a> RapRunner<'a> {
             }
         };
 
-        if !self.scheduler.begin_launch(&claim)? {
+        let launched = if require_auto_run {
+            self.scheduler.begin_launch(&claim)?
+        } else {
+            self.scheduler.begin_manual_launch(&claim)?
+        };
+        if !launched {
             return Ok(None);
         }
 
