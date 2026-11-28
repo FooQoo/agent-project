@@ -161,6 +161,7 @@ pub(in crate::file_store::ops) fn default_agent_id_locked(
         id: id.clone(),
         name,
         role: String::new(),
+        tool: None,
         created_at: stamp(now),
         archived_at: None,
         is_default: true,

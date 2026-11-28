@@ -123,8 +123,12 @@ pub fn agent(ctx: &mut Context, args: &AgentArgs) -> Result<Outcome, AgpjError> 
                     (None, None) => "not connected",
                 };
                 human.push_str(&format!(
-                    "{}  {}  {}  [{}]\n",
-                    agent.id, agent.name, agent.role, state
+                    "{}  {}  {}  {}  [{}]\n",
+                    agent.id,
+                    agent.name,
+                    agent.role,
+                    agent.tool.as_deref().unwrap_or("no tool"),
+                    state
                 ));
             }
             if human.is_empty() {

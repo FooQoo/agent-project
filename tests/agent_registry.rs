@@ -109,7 +109,7 @@ fn a_rename_and_a_role_edit_keep_the_agent_id_on_cards() {
     let fx = fx();
     let agent = fx
         .store
-        .register_agent(&fx.project, "Screen", "Builds the screens", t0())
+        .register_agent(&fx.project, "Screen", "Builds the screens", None, t0())
         .unwrap();
     assert_eq!(agent.id, "A-1");
     let id = fx.doing_task();
@@ -118,7 +118,7 @@ fn a_rename_and_a_role_edit_keep_the_agent_id_on_cards() {
         .unwrap();
     let renamed = fx
         .store
-        .update_agent(&fx.project, "A-1", Some("Screens"), Some("UI work"))
+        .update_agent(&fx.project, "A-1", Some("Screens"), Some("UI work"), None)
         .unwrap();
     assert_eq!(
         (renamed.id.as_str(), renamed.name.as_str()),
@@ -128,12 +128,13 @@ fn a_rename_and_a_role_edit_keep_the_agent_id_on_cards() {
     assert_eq!(task.agent_id.as_deref(), Some("A-1"));
     // The number is never reused, and a live name is unique.
     assert!(matches!(
-        fx.store.register_agent(&fx.project, "Screens", "", t0()),
+        fx.store
+            .register_agent(&fx.project, "Screens", "", None, t0()),
         Err(AgpjError::AgentNameTaken { .. })
     ));
     assert_eq!(
         fx.store
-            .register_agent(&fx.project, "CLI", "", t0())
+            .register_agent(&fx.project, "CLI", "", None, t0())
             .unwrap()
             .id,
         // A-2 went to the default agent, which the first AI task created.
@@ -142,10 +143,86 @@ fn a_rename_and_a_role_edit_keep_the_agent_id_on_cards() {
 }
 
 #[test]
+fn an_agent_has_an_optional_tool_that_is_checked_and_can_change_alone() {
+    let fx = fx();
+    let none = fx
+        .store
+        .register_agent(&fx.project, "Screen", "UI", None, t0())
+        .unwrap();
+    assert_eq!(none.tool, None);
+    for tool in ["codex", "claude-code"] {
+        let agent = fx
+            .store
+            .register_agent(&fx.project, &format!("With {tool}"), "", Some(tool), t0())
+            .unwrap();
+        assert_eq!(agent.tool.as_deref(), Some(tool));
+    }
+    for bad in ["unknown", "Codex", "claude_code", ""] {
+        assert!(matches!(
+            fx.store.register_agent(&fx.project, "Bad", "", Some(bad), t0()),
+            Err(AgpjError::InvalidValue { field, .. }) if field == "tool"
+        ));
+        assert!(matches!(
+            fx.store.update_agent(&fx.project, &none.id, None, None, Some(bad)),
+            Err(AgpjError::InvalidValue { field, .. }) if field == "tool"
+        ));
+    }
+    // Only the tool changes; the name and role stay, and a later edit keeps the tool.
+    let changed = fx
+        .store
+        .update_agent(&fx.project, &none.id, None, None, Some("claude-code"))
+        .unwrap();
+    assert_eq!(
+        (
+            changed.name.as_str(),
+            changed.role.as_str(),
+            changed.tool.as_deref()
+        ),
+        ("Screen", "UI", Some("claude-code"))
+    );
+    let renamed = fx
+        .store
+        .update_agent(&fx.project, &none.id, Some("Screens"), None, None)
+        .unwrap();
+    assert_eq!(renamed.tool.as_deref(), Some("claude-code"));
+    let listed = fx.store.list_agents(&fx.project).unwrap();
+    assert_eq!(listed[0].tool.as_deref(), Some("claude-code"));
+}
+
+#[test]
+fn an_agents_file_written_before_the_tool_field_still_loads() {
+    let fx = fx();
+    fx.store
+        .register_agent(&fx.project, "Screen", "UI", None, t0())
+        .unwrap();
+    let path = fx
+        ._root
+        .path()
+        .join("shared/projects")
+        .join(fx.project.as_str())
+        .join("agents.json");
+    let text = std::fs::read_to_string(&path).unwrap();
+    // A file with no tool has no `tool` key at all, and stays at format version 1.
+    assert!(!text.contains("\"tool\""));
+    assert!(text.contains("\"formatVersion\": 1"));
+    let agents = fx.store.list_agents(&fx.project).unwrap();
+    assert_eq!(agents[0].name, "Screen");
+    assert_eq!(agents[0].tool, None);
+    fx.store
+        .update_agent(&fx.project, "A-1", None, None, Some("codex"))
+        .unwrap();
+    assert!(
+        std::fs::read_to_string(&path)
+            .unwrap()
+            .contains("\"tool\": \"codex\"")
+    );
+}
+
+#[test]
 fn a_connection_runs_a_free_card_and_claims_it() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let secret = fx.connect("A-1", false, t0()).unwrap();
     let id = fx.doing_task();
@@ -161,10 +238,10 @@ fn a_connection_runs_a_free_card_and_claims_it() {
 fn a_claimed_name_a_made_up_secret_and_a_human_claim_grant_nothing() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     fx.store
-        .register_agent(&fx.project, "CLI", "", t0())
+        .register_agent(&fx.project, "CLI", "", None, t0())
         .unwrap();
     let screen = fx.connect("A-1", false, t0()).unwrap();
     let cli = fx.connect("A-2", false, t0()).unwrap();
@@ -189,7 +266,7 @@ fn a_claimed_name_a_made_up_secret_and_a_human_claim_grant_nothing() {
 fn a_second_parent_does_not_take_over_until_the_user_switches() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let first = fx.connect("A-1", false, t0()).unwrap();
     let id = fx.doing_task();
@@ -231,7 +308,7 @@ fn a_second_parent_does_not_take_over_until_the_user_switches() {
 fn a_code_works_once_and_expires() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let code = fx
         .store
@@ -268,7 +345,7 @@ fn a_code_works_once_and_expires() {
 fn ending_the_session_returns_the_running_task_to_waiting() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let secret = fx.connect("A-1", false, t0()).unwrap();
     let id = fx.doing_task();
@@ -288,7 +365,7 @@ fn ending_the_session_returns_the_running_task_to_waiting() {
 fn a_session_that_never_reports_back_counts_as_waiting_after_a_fixed_time() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let secret = fx.connect("A-1", false, t0()).unwrap();
     let id = fx.doing_task();
@@ -315,7 +392,7 @@ fn a_session_that_never_reports_back_counts_as_waiting_after_a_fixed_time() {
 fn activity_keeps_a_running_task_running() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let secret = fx.connect("A-1", false, t0()).unwrap();
     let id = fx.doing_task();
@@ -338,7 +415,7 @@ fn activity_keeps_a_running_task_running() {
 fn an_agent_with_a_doing_card_or_a_connection_cannot_be_deleted() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let secret = fx.connect("A-1", false, t0()).unwrap();
     assert!(matches!(
@@ -347,7 +424,7 @@ fn an_agent_with_a_doing_card_or_a_connection_cannot_be_deleted() {
     ));
     // After the user switches it away and nothing is Doing, an unconnected agent can go.
     fx.store
-        .register_agent(&fx.project, "CLI", "", t0())
+        .register_agent(&fx.project, "CLI", "", None, t0())
         .unwrap();
     fx.store.archive_agent(&fx.project, "A-2", t0()).unwrap();
     let _ = secret;
@@ -380,7 +457,7 @@ fn a_task_json_without_the_new_fields_is_not_read() {
 fn an_unreadable_task_stops_the_deletion_of_an_agent() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let id = fx.doing_task();
     let path = fx
@@ -436,9 +513,11 @@ fn session_end_releases_runs_in_every_project_holding_the_secret_from_an_unbound
     let fx = fx();
     let beta = fx.store.create_project("Beta", t0()).unwrap().id;
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
-    fx.store.register_agent(&beta, "Server", "", t0()).unwrap();
+    fx.store
+        .register_agent(&beta, "Server", "", None, t0())
+        .unwrap();
     let alpha_secret = fx.connect("A-1", false, t0()).unwrap();
     let alpha_task = fx.doing_task();
     fx.run(alpha_task, &alpha_secret, t0()).unwrap();
@@ -546,7 +625,7 @@ fn a_run_state_without_a_connection_is_refused_for_the_default_agent() {
 fn disconnect_frees_the_agent_so_it_can_be_connected_again_and_deleted() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let secret = fx.connect("A-1", false, t0()).unwrap();
     let id = fx.doing_task();
@@ -591,8 +670,12 @@ fn a_session_holds_one_agent_and_disconnect_lets_it_take_another() {
     assert!(run(&["project", "create", "Demo"]).status.success());
     let store = FileStore::open(&home.path().join("shared"));
     let project = store.project_by_name("Demo").unwrap().id;
-    store.register_agent(&project, "Screen", "", t0()).unwrap();
-    store.register_agent(&project, "CLI", "", t0()).unwrap();
+    store
+        .register_agent(&project, "Screen", "", None, t0())
+        .unwrap();
+    store
+        .register_agent(&project, "CLI", "", None, t0())
+        .unwrap();
     let code = |agent: &str| {
         store
             .issue_connect_code(&project, agent, false, Utc::now())
@@ -633,8 +716,12 @@ fn concurrent_connects_of_one_session_let_exactly_one_win() {
     );
     let store = FileStore::open(&home.path().join("shared"));
     let project = store.project_by_name("Race").unwrap().id;
-    store.register_agent(&project, "One", "", t0()).unwrap();
-    store.register_agent(&project, "Two", "", t0()).unwrap();
+    store
+        .register_agent(&project, "One", "", None, t0())
+        .unwrap();
+    store
+        .register_agent(&project, "Two", "", None, t0())
+        .unwrap();
     for _ in 0..4 {
         let codes: Vec<String> = ["A-1", "A-2"]
             .iter()
@@ -687,7 +774,9 @@ fn a_failed_secret_write_leaves_no_active_connection() {
     assert!(run(&["project", "create", "Full"]).status.success());
     let store = FileStore::open(&home.path().join("shared"));
     let project = store.project_by_name("Full").unwrap().id;
-    store.register_agent(&project, "One", "", t0()).unwrap();
+    store
+        .register_agent(&project, "One", "", None, t0())
+        .unwrap();
     let code = store
         .issue_connect_code(&project, "A-1", false, Utc::now())
         .unwrap()
@@ -737,8 +826,12 @@ fn connect_and_disconnect_racing_leave_a_consistent_state() {
     );
     let store = FileStore::open(&home.path().join("shared"));
     let project = store.project_by_name("Flip").unwrap().id;
-    store.register_agent(&project, "One", "", t0()).unwrap();
-    store.register_agent(&project, "Two", "", t0()).unwrap();
+    store
+        .register_agent(&project, "One", "", None, t0())
+        .unwrap();
+    store
+        .register_agent(&project, "Two", "", None, t0())
+        .unwrap();
     let code = |agent: &str| {
         store
             .issue_connect_code(&project, agent, false, Utc::now())
@@ -794,7 +887,7 @@ fn connect_and_disconnect_racing_leave_a_consistent_state() {
 fn a_failed_secret_save_leaves_the_code_valid_and_no_active_connection() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let code = fx
         .store
@@ -920,8 +1013,12 @@ fn a_revoked_secret_lets_the_session_connect_to_another_agent() {
     );
     let store = FileStore::open(&home.path().join("shared"));
     let project = store.project_by_name("Rev").unwrap().id;
-    store.register_agent(&project, "One", "", t0()).unwrap();
-    store.register_agent(&project, "Two", "", t0()).unwrap();
+    store
+        .register_agent(&project, "One", "", None, t0())
+        .unwrap();
+    store
+        .register_agent(&project, "Two", "", None, t0())
+        .unwrap();
     let first = store
         .issue_connect_code(&project, "A-1", false, Utc::now())
         .unwrap();
@@ -976,8 +1073,12 @@ fn a_verification_that_cannot_run_stops_connect_and_changes_nothing() {
     );
     let store = FileStore::open(&home.path().join("shared"));
     let project = store.project_by_name("Io").unwrap().id;
-    store.register_agent(&project, "One", "", t0()).unwrap();
-    store.register_agent(&project, "Two", "", t0()).unwrap();
+    store
+        .register_agent(&project, "One", "", None, t0())
+        .unwrap();
+    store
+        .register_agent(&project, "Two", "", None, t0())
+        .unwrap();
     let first = store
         .issue_connect_code(&project, "A-1", false, Utc::now())
         .unwrap();
@@ -1054,8 +1155,12 @@ fn an_unreadable_secret_file_stops_connect_and_changes_nothing() {
     );
     let store = FileStore::open(&home.path().join("shared"));
     let project = store.project_by_name("Sec").unwrap().id;
-    store.register_agent(&project, "One", "", t0()).unwrap();
-    store.register_agent(&project, "Two", "", t0()).unwrap();
+    store
+        .register_agent(&project, "One", "", None, t0())
+        .unwrap();
+    store
+        .register_agent(&project, "Two", "", None, t0())
+        .unwrap();
     let first = store
         .issue_connect_code(&project, "A-1", false, Utc::now())
         .unwrap();
@@ -1145,7 +1250,7 @@ impl Fx {
 fn a_registered_agents_card_stays_paused_after_the_last_answer_without_a_connection() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let secret = fx.connect("A-1", false, t0()).unwrap();
     let id = fx.paused_on_an_answered_question(&secret);
@@ -1166,7 +1271,7 @@ fn a_registered_agents_card_stays_paused_after_the_last_answer_without_a_connect
 fn a_registered_agents_card_resumes_on_its_connection_after_the_last_answer() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let secret = fx.connect("A-1", false, t0()).unwrap();
     let id = fx.paused_on_an_answered_question(&secret);
@@ -1207,7 +1312,7 @@ fn a_default_agent_card_stays_paused_after_the_last_answer_without_a_connection(
 fn an_agent_edit_with_an_unreadable_connection_registry_is_not_saved() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let path = fx
         ._root
@@ -1220,7 +1325,7 @@ fn an_agent_edit_with_an_unreadable_connection_registry_is_not_saved() {
     std::fs::write(&path, "{").unwrap();
     assert!(
         fx.store
-            .update_agent(&fx.project, "A-1", Some("Renamed"), None)
+            .update_agent(&fx.project, "A-1", Some("Renamed"), None, None)
             .is_err()
     );
     std::fs::remove_file(&path).unwrap();
@@ -1232,10 +1337,10 @@ fn an_agent_edit_with_an_unreadable_connection_registry_is_not_saved() {
 fn a_card_of_an_archived_agent_cannot_enter_doing_until_it_is_reassigned() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     fx.store
-        .register_agent(&fx.project, "CLI", "", t0())
+        .register_agent(&fx.project, "CLI", "", None, t0())
         .unwrap();
     let id = fx
         .store
@@ -1277,7 +1382,7 @@ fn session_end_tries_every_stored_secret_and_releases_the_live_connection() {
     use sha2::{Digest, Sha256};
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     // The first connection is replaced by a switch; the live one runs a card.
     let replaced = fx.connect("A-1", false, t0()).unwrap();
@@ -1328,7 +1433,7 @@ fn session_end_tries_every_stored_secret_and_releases_the_live_connection() {
 fn a_secretless_request_for_the_state_a_connected_card_is_in_changes_nothing() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let secret = fx.connect("A-1", false, t0()).unwrap();
     let id = fx.doing_task();
@@ -1351,7 +1456,7 @@ fn a_secretless_request_for_the_state_a_connected_card_is_in_changes_nothing() {
 fn an_answer_does_not_resume_a_card_on_a_stale_connection() {
     let fx = fx();
     fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
+        .register_agent(&fx.project, "Screen", "", None, t0())
         .unwrap();
     let secret = fx.connect("A-1", false, t0()).unwrap();
     let id = fx.paused_on_an_answered_question(&secret);
@@ -1382,8 +1487,12 @@ fn disconnect_by_an_environment_secret_keeps_the_stored_secret_of_this_session()
     );
     let store = FileStore::open(&home.path().join("shared"));
     let project = store.project_by_name("Own").unwrap().id;
-    store.register_agent(&project, "Screen", "", t0()).unwrap();
-    store.register_agent(&project, "CLI", "", t0()).unwrap();
+    store
+        .register_agent(&project, "Screen", "", None, t0())
+        .unwrap();
+    store
+        .register_agent(&project, "CLI", "", None, t0())
+        .unwrap();
     let issue = |agent: &str| {
         store
             .issue_connect_code(&project, agent, false, Utc::now())

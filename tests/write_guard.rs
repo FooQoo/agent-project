@@ -158,7 +158,7 @@ fn only_the_assigned_agents_connection_may_write_from_doing_onward() {
     let default_agent = fx.store.list_agents(&fx.project).unwrap()[0].id.clone();
     let other = fx
         .store
-        .register_agent(&fx.project, "Screen", "UI", t0())
+        .register_agent(&fx.project, "Screen", "UI", None, t0())
         .unwrap()
         .id;
     let default_secret = fx.connect(&default_agent);
@@ -638,7 +638,7 @@ fn refused_multi_task_question_does_not_touch_connection_or_write_questions() {
     let second = fx.task(Assignee::Ai);
     let other = fx
         .store
-        .register_agent(&fx.project, "Other", "", t0())
+        .register_agent(&fx.project, "Other", "", None, t0())
         .unwrap();
     for id in [first, second] {
         fx.store

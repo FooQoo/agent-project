@@ -27,6 +27,9 @@ pub struct AgentRecord {
     pub id: String,
     pub name: String,
     pub role: String,
+    /// The AI tool that runs this agent's tasks: `codex` or `claude-code`. Unset means none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool: Option<String>,
     #[serde(with = "crate::clock::serde_utc")]
     pub created_at: DateTime<Utc>,
     #[serde(with = "crate::clock::serde_opt_utc")]
@@ -150,6 +153,7 @@ pub struct AgentView {
     pub id: String,
     pub name: String,
     pub role: String,
+    pub tool: Option<String>,
     #[serde(with = "crate::clock::serde_utc")]
     pub created_at: DateTime<Utc>,
     #[serde(with = "crate::clock::serde_opt_utc")]
