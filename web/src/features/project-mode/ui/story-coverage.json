@@ -9,23 +9,8 @@
           "name": "ModeSection",
           "stories": [
             {
-              "id": "projectmode-modesection--sparring",
-              "states": ["sparring selected", "sparring note"],
-              "interaction": true
-            },
-            {
-              "id": "projectmode-modesection--sleep",
-              "states": ["sleep selected", "sleep note"],
-              "interaction": true
-            },
-            {
-              "id": "projectmode-modesection--choose",
-              "states": ["choosing an option asks the parent to save"],
-              "interaction": true
-            },
-            {
               "id": "projectmode-modesection--unknown",
-              "states": ["mode unknown, switch disabled"],
+              "states": ["schedule controls disabled until settings load"],
               "interaction": true
             },
             {
@@ -35,7 +20,7 @@
             },
             {
               "id": "projectmode-modesection--by-schedule",
-              "states": ["asleep by the schedule until the end", "schedule on, times shown"],
+              "states": ["enabled schedule and both times can be edited"],
               "interaction": true
             },
             {
@@ -50,16 +35,7 @@
             },
             {
               "id": "projectmode-modesection--brainstorm",
-              "states": [
-                "brainstorm target named",
-                "neither option selected",
-                "end brainstorm button"
-              ],
-              "interaction": true
-            },
-            {
-              "id": "projectmode-modesection--brainstorm-choose-sleep",
-              "states": ["choosing sleep while brainstorming"],
+              "states": ["brainstorm target named", "end brainstorm button"],
               "interaction": true
             }
           ]

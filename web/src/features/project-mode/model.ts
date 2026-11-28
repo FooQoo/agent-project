@@ -4,10 +4,8 @@
  */
 export type ModeKind = 'sparring' | 'sleep' | 'brainstorm';
 
-/** The modes the settings switch offers: brainstorm is started from its target. */
+/** The modes that do not require a brainstorm target. */
 export type ChoosableMode = 'sparring' | 'sleep';
-
-export const MODE_KINDS: readonly ChoosableMode[] = ['sparring', 'sleep'];
 
 /** The epic or the task a brainstorm is about; a task's `id` is its number as text. */
 export interface BrainstormTarget {
@@ -88,10 +86,6 @@ export function isModeKind(value: unknown): value is ModeKind {
 }
 
 /** A mode the settings switch offers (and the API accepts without a target). */
-export function isChoosableMode(value: unknown): value is ChoosableMode {
-  return typeof value === 'string' && (MODE_KINDS as readonly string[]).includes(value);
-}
-
 /** Checks the shape the server sends. Anything else is null, never a partial value. */
 export function parseProjectMode(value: unknown): ProjectMode | null {
   if (typeof value !== 'object' || value === null) return null;
