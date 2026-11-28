@@ -9,10 +9,12 @@ export function RunTaskButton({
   projectId,
   task,
   disabled,
+  compact = false,
 }: {
   projectId: string | null;
   task: TaskSummary;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   const { i18n } = useTranslation();
   const ja = i18n.language.startsWith('ja');
@@ -74,9 +76,10 @@ export function RunTaskButton({
     <Button
       type="button"
       size="s"
-      className="detail-btn"
+      className={compact ? 'h-6 gap-1 px-2 text-[11px] [&_svg]:size-3' : 'detail-btn'}
       title={reason ?? undefined}
       disabled={disabled || state === 'sending'}
+      onPointerDown={(event) => event.stopPropagation()}
       onClick={() => void runNow()}
     >
       <PlayIcon aria-hidden="true" />
