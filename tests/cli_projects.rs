@@ -2,6 +2,8 @@
 //! command names its project, projects can be created, listed, renamed and
 //! deleted, and nothing destructive happens without a human.
 
+mod common;
+
 use std::ffi::OsString;
 use std::io::{BufRead, Cursor, Read, Write};
 use std::net::TcpListener;
@@ -20,8 +22,14 @@ use tempfile::tempdir;
 // ---- helpers --------------------------------------------------------------
 
 fn agpj(home: &Path, args: &[&str]) -> assert_cmd::assert::Assert {
-    Command::cargo_bin("agpj")
-        .unwrap()
+    let mut command = Command::cargo_bin("agpj").unwrap();
+    command.env_remove("AGPJ_CONNECTION_SECRET");
+    if let Some(secret) = common::fixture_project_arg(args)
+        .and_then(|project| common::try_connect_default_agent(home, project))
+    {
+        command.env("AGPJ_CONNECTION_SECRET", secret);
+    }
+    command
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -646,7 +654,7 @@ fn only_a_confirmed_real_change_notifies_once_and_to_the_data_directory() {
         }
         (code, err, calls)
     };
-    let task = ["--assignee", "ai", "--actor", "human"];
+    let task = ["--assignee", "human", "--actor", "human"];
     let add = |p| [&["--project", p, "add", "x"][..], &task].concat();
 
     // Real changes: one notification each.
@@ -666,22 +674,7 @@ fn only_a_confirmed_real_change_notifies_once_and_to_the_data_directory() {
             "1",
             "doing",
             "--actor",
-            "ai",
-            "--reason",
-            "r"
-        ])
-        .2,
-        1
-    );
-    assert_eq!(
-        calls(&[
-            "--project",
-            "A",
-            "state",
-            "1",
-            "running",
-            "--actor",
-            "ai",
+            "human",
             "--reason",
             "r"
         ])

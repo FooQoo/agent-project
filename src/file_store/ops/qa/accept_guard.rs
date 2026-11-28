@@ -17,11 +17,18 @@ impl FileStore {
         question: &Question,
     ) -> Result<(), AgpjError> {
         let shared = self.shared_dir();
+        let mut tasks = Vec::new();
         // The question's task list is authoritative for ordinary links. Check it first and
         // fail closed if one of those task files is malformed.
         for id in &question.tasks {
             let task = reader::read_task_strict(shared, project, *id)?;
-            super::super::assignment::ensure_session_may_write(shared, project_dir, &task)?;
+            super::super::assignment::check_session_write_without_touch(
+                shared,
+                project_dir,
+                None,
+                &task,
+            )?;
+            tasks.push(task);
         }
         for id in reader::task_ids(project_dir)? {
             if question.tasks.contains(&id) {
@@ -37,8 +44,18 @@ impl FileStore {
             };
             let parsed = parse_task(&text, ParseMode::Stored);
             if parsed.questions.iter().any(|q| q == &question.id) {
-                super::super::assignment::ensure_session_may_write(shared, project_dir, &task)?;
+                super::super::assignment::check_session_write_without_touch(
+                    shared,
+                    project_dir,
+                    None,
+                    &task,
+                )?;
+                tasks.push(task);
             }
+        }
+        // Do not refresh the connection until every linked task passed authorization.
+        for task in &tasks {
+            super::super::assignment::ensure_session_may_write(shared, project_dir, task)?;
         }
         Ok(())
     }

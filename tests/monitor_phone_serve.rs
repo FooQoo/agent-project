@@ -23,7 +23,7 @@ mod harness;
 
 use std::io::BufRead;
 
-use agent_project::file_store::FileStore;
+use agent_project::file_store::{ConnectionOrigin, FileStore};
 use harness::*;
 use serde_json::json;
 use support::home;
@@ -105,4 +105,36 @@ fn serve_the_phone_backend_until_told_to_quit() {
             _ => {}
         }
     }
+}
+
+/// Provision a real connection in an isolated browser fixture before a CLI command runs.
+#[test]
+#[ignore = "started by e2e/helpers/agpj.ts"]
+fn connect_fixture_agent() {
+    let home = std::path::PathBuf::from(std::env::var_os("AGPJ_HOME").unwrap());
+    assert!(home.starts_with(std::env::temp_dir()));
+    let name = std::env::var("AGPJ_E2E_CONNECT_PROJECT").unwrap();
+    let store = FileStore::open(&home.join("shared"));
+    let project = store.project_by_name(&name).unwrap().id;
+    let default = store
+        .list_agents(&project)
+        .unwrap()
+        .into_iter()
+        .find(|agent| agent.is_default)
+        .expect("fixture project has an AI task");
+    let now = chrono::Utc::now();
+    let issued = store
+        .issue_connect_code(&project, &default.id, false, now)
+        .unwrap();
+    let connected = store
+        .exchange_connect_code(
+            &project,
+            &issued.code,
+            ConnectionOrigin::External,
+            "playwright",
+            "browser-fixture",
+            now,
+        )
+        .unwrap();
+    println!("CONNECTION {}", connected.secret);
 }

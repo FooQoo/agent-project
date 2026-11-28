@@ -516,30 +516,10 @@ fn session_end_releases_runs_in_every_project_holding_the_secret_from_an_unbound
 }
 
 #[test]
-fn a_run_state_without_a_connection_acts_as_the_default_agent() {
+fn a_run_state_without_a_connection_is_refused_for_the_default_agent() {
     let fx = fx();
     let id = fx.doing_task();
-    fx.store
-        .set_agent_status(&fx.project, id, RunState::Running, ctx(Actor::Ai), t0())
-        .unwrap();
-    fx.store
-        .set_agent_status(&fx.project, id, RunState::Paused, ctx(Actor::Human), t0())
-        .unwrap();
-    // The default agent is the only live agent, so the session acts as it without connecting.
-    fx.store
-        .set_agent_status_unconnected(&fx.project, id, RunState::Running, ctx(Actor::Ai), t0())
-        .unwrap();
-    fx.store
-        .set_agent_status_unconnected(&fx.project, id, RunState::Paused, ctx(Actor::Ai), t0())
-        .unwrap();
-    assert_eq!(
-        fx.store.task(&fx.project, id).unwrap().agent_status,
-        RunState::Paused
-    );
-    // A second live agent makes the session connection mandatory.
-    fx.store
-        .register_agent(&fx.project, "Screen", "", t0())
-        .unwrap();
+    let before = fx.store.task(&fx.project, id).unwrap();
     let refused = fx.store.set_agent_status_unconnected(
         &fx.project,
         id,
@@ -556,10 +536,10 @@ fn a_run_state_without_a_connection_acts_as_the_default_agent() {
         t0(),
     );
     assert!(matches!(human, Err(AgpjError::HumanOnly { .. })));
-    assert_eq!(
-        fx.store.task(&fx.project, id).unwrap().agent_status,
-        RunState::Paused
-    );
+    let after = fx.store.task(&fx.project, id).unwrap();
+    assert_eq!(after.agent_status, before.agent_status);
+    assert_eq!(after.run_connection_id, before.run_connection_id);
+    assert_eq!(after.history, before.history);
 }
 
 #[test]
@@ -1197,7 +1177,7 @@ fn a_registered_agents_card_resumes_on_its_connection_after_the_last_answer() {
 }
 
 #[test]
-fn a_default_agent_card_resumes_after_the_last_answer_without_a_connection() {
+fn a_default_agent_card_stays_paused_after_the_last_answer_without_a_connection() {
     let fx = fx();
     let id = fx.doing_task();
     fx.store
@@ -1213,8 +1193,14 @@ fn a_default_agent_card_resumes_after_the_last_answer_without_a_connection() {
     qa::answer(&fx.store, &fx.project, "Q-1", Some("a"), None);
     fx.accept_the_answer();
     let task = fx.store.task(&fx.project, id).unwrap();
-    assert_eq!(task.agent_status, RunState::Running);
+    assert_eq!(task.agent_status, RunState::Paused);
     assert_eq!(task.run_connection_id, None);
+    assert!(
+        !task
+            .history
+            .iter()
+            .any(|entry| entry.reason.starts_with("Resumed"))
+    );
 }
 
 #[test]

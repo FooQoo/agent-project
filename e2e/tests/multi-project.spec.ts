@@ -13,6 +13,7 @@ import {
   startServe,
   stopServe,
   agpjBinary,
+  agpjEnv,
   type Serve,
 } from '../helpers/agpj';
 import { spawn, spawnSync } from 'node:child_process';
@@ -636,7 +637,7 @@ test.describe('two projects with the same task numbers', () => {
   test('a person answers on the page; the waiting agent gets the answer, and its hook shows only that project progress', async ({
     page,
   }) => {
-    const env = { ...process.env, AGPJ_HOME: home, TZ: 'UTC' };
+    const env = agpjEnv(home, 'Alpha');
     const snapshot = JSON.parse(
       spawnSync(agpjBinary(), ['--project', 'Alpha', 'snapshot', '--json'], { env, encoding: 'utf8' }).stdout,
     ) as { cursor: string };

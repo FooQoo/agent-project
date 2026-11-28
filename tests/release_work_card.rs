@@ -10,7 +10,7 @@ use agent_project::domain::{Actor, Assignee, ChangeContext, Column, ProjectId};
 use agent_project::file_store::FileStore;
 use agent_project::file_store::history_language::HistoryLanguage;
 use chrono::{DateTime, TimeZone, Utc};
-use common::{Running, agpj, json_ok};
+use common::{Running, agpj};
 
 fn at(day: u32) -> DateTime<Utc> {
     Utc.with_ymd_and_hms(2026, 10, day, 3, 0, 0).unwrap()
@@ -229,7 +229,7 @@ fn cli(home: &std::path::Path, args: &[&str]) -> serde_json::Value {
     let mut all = vec!["--project", "Demo"];
     all.extend(args);
     all.push("--json");
-    json_ok(home, &all)
+    common::json_ok_connected_fixture(home, &all)
 }
 
 #[test]

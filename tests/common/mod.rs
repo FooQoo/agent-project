@@ -8,7 +8,7 @@
 use std::net::SocketAddr;
 use std::path::Path;
 use std::process::Command;
-use std::sync::mpsc;
+use std::sync::{Mutex, OnceLock, mpsc};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
@@ -20,7 +20,9 @@ mod server_thread;
 
 use agent_project::error::AgpjError;
 use agent_project::file_store::watch::WatchMode;
+use agent_project::file_store::{ConnectionOrigin, FileStore};
 use agent_project::server::{ServeConfig, run_until_in};
+use chrono::Utc;
 use serde_json::Value;
 
 /// A valid 1x1 PNG.
@@ -38,22 +40,97 @@ pub const BODY: &str = "## 作業内容\n\nDetails\n\n## 完了条件と確認�
 /// Run the `agpj` binary in `home` with no terminal on standard input.
 /// Returns the exit code, standard output, and standard error.
 pub fn agpj(home: &Path, args: &[&str]) -> (i32, String, String) {
-    let output = Command::new(env!("CARGO_BIN_EXE_agpj"))
+    agpj_inner(home, args, None)
+}
+
+/// Run `agpj` as an explicitly connected test session.
+pub fn agpj_with_connection(home: &Path, secret: &str, args: &[&str]) -> (i32, String, String) {
+    agpj_inner(home, args, Some(secret))
+}
+
+fn agpj_inner(
+    home: &Path,
+    args: &[&str],
+    connection_secret: Option<&str>,
+) -> (i32, String, String) {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
+    command
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
         .env("AGPJ_HOME", home)
         .env("TZ", "UTC")
+        .env_remove("AGPJ_CONNECTION_SECRET")
         .current_dir(home)
         .args(folder_args(home, args))
-        .stdin(std::process::Stdio::null())
-        .output()
-        .unwrap();
+        .stdin(std::process::Stdio::null());
+    if let Some(secret) = connection_secret {
+        command.env("AGPJ_CONNECTION_SECRET", secret);
+    }
+    let output = command.output().unwrap();
     (
         output.status.code().unwrap(),
         String::from_utf8(output.stdout).unwrap(),
         String::from_utf8(output.stderr).unwrap(),
     )
+}
+
+/// Create a real external connection for a project's default agent and return its secret.
+pub fn connect_default_agent(home: &Path, project_name: &str) -> String {
+    try_connect_default_agent(home, project_name).expect("default agent")
+}
+
+/// Used by integration fixtures that run the same CLI before and after creating a card.
+pub fn try_connect_default_agent(home: &Path, project_name: &str) -> Option<String> {
+    let store = FileStore::open(&home.join("shared"));
+    let project_id = store.project_by_name(project_name).ok()?.id;
+    static CONNECTIONS: OnceLock<Mutex<std::collections::HashMap<String, String>>> =
+        OnceLock::new();
+    let key = format!("{}:{project_id}", home.display());
+    let connections = CONNECTIONS.get_or_init(|| Mutex::new(std::collections::HashMap::new()));
+    let mut connections = connections
+        .lock()
+        .unwrap_or_else(|error| error.into_inner());
+    if let Some(secret) = connections.get(&key) {
+        return Some(secret.clone());
+    }
+
+    let agent = store
+        .list_agents(&project_id)
+        .unwrap()
+        .into_iter()
+        .find(|agent| agent.is_default)?;
+    let now = Utc::now();
+    let code = store
+        .issue_connect_code(&project_id, &agent.id, false, now)
+        .unwrap();
+    let secret = store
+        .exchange_connect_code(
+            &project_id,
+            &code.code,
+            ConnectionOrigin::External,
+            "test-agent",
+            &format!("test:{}:{}", project_id.as_str(), std::process::id()),
+            now,
+        )
+        .unwrap()
+        .secret;
+    connections.insert(key, secret.clone());
+    Some(secret)
+}
+
+pub fn fixture_project_arg<'a>(args: &[&'a str]) -> Option<&'a str> {
+    args.windows(2)
+        .find(|pair| pair[0] == "--project")
+        .map(|pair| pair[1])
+}
+
+pub fn json_ok_connected_fixture(home: &Path, args: &[&str]) -> Value {
+    let secret =
+        fixture_project_arg(args).and_then(|project| try_connect_default_agent(home, project));
+    let (code, out, err) = agpj_inner(home, args, secret.as_deref());
+    assert_eq!(code, 0, "{args:?} failed: {err}");
+    serde_json::from_str(&out).unwrap_or_else(|_| panic!("not JSON: {out}"))
 }
 
 /// Run a command that must succeed and parse its JSON output.
