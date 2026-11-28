@@ -36,6 +36,8 @@ export const queryKeys = {
   connection: () => ['connection'] as const,
   /** The devices registered for remote access, read apart from the status. */
   connectionDevices: () => ['connection-devices'] as const,
+  /** The registered agents of a project. */
+  agents: (projectId: ProjectId) => ['agents', projectId] as const,
   /** The resident sessions of a project. */
   residentSessions: (projectId: ProjectId) => ['resident-sessions', projectId] as const,
   /** Whether this browser can take push notifications, as the PC and the browser report it. */

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "owner": "U0",
+  "files": [
+    {
+      "file": "features/agent-connection/AgentList.tsx",
+      "exports": [
+        {
+          "name": "AgentList",
+          "stories": [
+            {
+              "id": "settings-agentlist--desktop",
+              "states": ["agent with no tool", "Claude Code", "Codex", "tool change reported"],
+              "interaction": true
+            },
+            {
+              "id": "settings-agentlist--phone",
+              "states": ["phone width", "long role is cut"],
+              "interaction": false
+            },
+            {
+              "id": "settings-agentlist--register",
+              "states": ["name, role and tool entered", "register reported"],
+              "interaction": true
+            },
+            {
+              "id": "settings-agentlist--saving",
+              "states": ["write in flight", "choices wait"],
+              "interaction": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
