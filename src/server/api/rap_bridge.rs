@@ -92,6 +92,28 @@ fn manual_run_blocker(
     if in_flight.iter().any(|f| f.claim.workspace == canonical) {
         return Some("This workspace is already in use by another RAP work item.".to_owned());
     }
+    // A paused or retry-waiting attempt holds no session slot but keeps its workspace
+    // reservation, and the scheduler silently skips every other work item on that workspace.
+    let reserved_by: Option<i64> = state
+        .rap
+        .store
+        .read(|conn| {
+            use rusqlite::OptionalExtension;
+            Ok(conn
+                .query_row(
+                    "SELECT work_id FROM scheduler_workspaces WHERE path = ?1",
+                    [canonical.to_string_lossy().as_ref()],
+                    |row| row.get(0),
+                )
+                .optional()?)
+        })
+        .ok()
+        .flatten();
+    if let Some(work_id) = reserved_by {
+        return Some(format!(
+            "This workspace is reserved by paused RAP work item {work_id}; finish or cancel it first."
+        ));
+    }
     let provider_str = match provider {
         Provider::Codex => "codex",
         Provider::ClaudeCode => "claude_code",

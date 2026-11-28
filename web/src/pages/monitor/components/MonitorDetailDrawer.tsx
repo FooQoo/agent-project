@@ -44,7 +44,7 @@ export function MonitorDetailDrawer({
       identity={t('monitor.drawerIdentity', { id: task.id })}
       title={task.title}
       label={
-        <div className="flex w-full items-center justify-between gap-2">
+        <div className="-mr-11 flex items-center justify-between gap-2 self-stretch">
           {task.epic ? (
             <span className="mobile-drawer__epic-label" title={task.epic.name}>
               {task.epic.id}
