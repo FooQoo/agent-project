@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { RunTaskButton } from '../../../features/tasks/detail/RunTaskButton';
 import { DetailTabList, detailPanelId, detailTabId } from '../../../shared/ui/detail-tabs';
 import { TaskAcceptanceTab, TaskBodyTab, TaskHistoryTab, TaskResultsTab } from './MonitorTaskTabs';
 import { MonitorEpicContent } from './MonitorEpicContent';
@@ -52,6 +53,7 @@ export function MonitorDrawerPanels({
   return (
     <>
       <div className="monitor-drawer__tabs" ref={tabsRef}>
+        <RunTaskButton projectId={item.projectId} task={task} />
         <DetailTabList
           idBase={idBase}
           tabs={tabs}
