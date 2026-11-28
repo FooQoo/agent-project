@@ -5,6 +5,9 @@ import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { connectFixtureAgent, fixtureEnv, forgetFixtureConnections } from './fixture-agent.mjs';
+
+export { connectFixtureAgent };
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -81,37 +84,12 @@ export function skipGuide(home: string): void {
 }
 
 export function removeHome(home: string): void {
-  fixtureConnections.delete(home);
+  forgetFixtureConnections(home);
   rmSync(home, { recursive: true, force: true });
 }
 
-const fixtureConnections = new Map<string, Map<string, string>>();
-
 export function agpjEnv(home: string, project?: string): NodeJS.ProcessEnv {
-  return {
-    ...process.env,
-    AGPJ_HOME: home,
-    TZ: 'UTC',
-    AGPJ_CONNECTION_SECRET: project ? fixtureConnections.get(home)?.get(project) : undefined,
-  };
-}
-
-/** Give a CLI fixture a project-scoped connection from the real registry. */
-export function connectFixtureAgent(home: string, project: string): void {
-  let connections = fixtureConnections.get(home);
-  if (!connections) fixtureConnections.set(home, connections = new Map());
-  if (connections.has(project)) return;
-  const binary = process.env.AGPJ_E2E_PHONE_BACKEND;
-  if (!binary) throw new Error('AGPJ_E2E_PHONE_BACKEND is required to connect a fixture agent');
-  const result = spawnSync(binary, ['--ignored', '--exact', 'connect_fixture_agent', '--nocapture'], {
-    cwd: home,
-    env: { ...agpjEnv(home), AGPJ_E2E_CONNECT_PROJECT: project },
-    encoding: 'utf8',
-  });
-  if (result.status !== 0) throw new Error(`Connecting fixture agent for ${project} failed: ${result.stderr}`);
-  const secret = result.stdout.match(/^CONNECTION (\S+)$/m)?.[1];
-  if (!secret) throw new Error(`Connecting fixture agent for ${project} did not return a connection`);
-  connections.set(project, secret);
+  return fixtureEnv(home, project);
 }
 
 /**
@@ -383,7 +361,7 @@ function questionMarkdownFor(item: FixtureTask): string {
 export function seedProject(project: string, file: string, home: string = mainHome()): void {
   const folder = workspace(project, home).folder;
   const fixture = JSON.parse(readFileSync(file, 'utf8')) as Fixture;
-  if (fixture.tasks.some((task) => task.assignee === 'ai') && !fixtureConnections.get(home)?.has(project)) {
+  if (fixture.tasks.some((task) => task.assignee === 'ai') && !fixtureEnv(home, project).AGPJ_CONNECTION_SECRET) {
     // This older data fixture writes tasks directly. Let the CLI register its default agent
     // before the fixture replaces the generated card and sets the fixture's task counter.
     const agents = JSON.parse(agpjOk(project, ['agent', 'ls', '--json'], home).stdout).agents as { isDefault: boolean }[];
@@ -491,7 +469,7 @@ function waitForServeToShow(url: string, project: string, file: string, id: stri
 export function removeProject(project: string, home: string = mainHome()): void {
   const result = agpjOnTerminal(project, 'y', ['project', 'rm'], home);
   if (result.code !== 0) throw new Error(`deleting ${project} failed: ${result.stdout}${result.stderr}`);
-  fixtureConnections.get(home)?.delete(project);
+  forgetFixtureConnections(home, project);
 }
 
 /** Leave exactly `Alpha` and `Beta` in `home`, each restored from its backup and shown by the serve at `serveUrl`. */

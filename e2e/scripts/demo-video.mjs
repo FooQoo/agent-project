@@ -6,12 +6,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, expect } from '@playwright/test';
 import { setPreferences } from '../helpers/preferences.mjs';
-import { browserArgs, freezeClock } from './lib/sample-board.mjs';
+import { binary, browserArgs, cli, connectSampleAgent, freezeClock } from './lib/sample-board.mjs';
 
 // Records the English and Japanese demo videos from the real UI.
 // Build web/ and the CLI first. Needs ffmpeg and ffprobe. Only disposable data is used.
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const binary = process.env.AGPJ_E2E_BINARY ?? path.join(repo, 'target/debug/agpj');
 // AGPJ_MEDIA_OUT points the videos at another folder, so a check run does not touch the repository's files.
 const output = process.env.AGPJ_MEDIA_OUT ? path.resolve(process.env.AGPJ_MEDIA_OUT, 'videos') : path.join(repo, 'docs/public/videos');
 const project = 'release-demo';
@@ -67,14 +66,6 @@ function markdown(text, completed) {
   return `---\nacceptance:\n${items}\n---\n\n${text.body}\n`;
 }
 
-function cli(home, args) {
-  const result = spawnSync(binary, [...args, '--json'], {
-    cwd: home, env: { ...process.env, AGPJ_HOME: home, TZ: 'UTC' }, encoding: 'utf8',
-  });
-  if (result.status !== 0) throw new Error(`${args.join(' ')} failed: ${result.stderr || result.stdout}`);
-  return JSON.parse(result.stdout);
-}
-
 function seed(home, text) {
   // The first-run guide is skipped, so the video opens on the board, as the screenshot seed does.
   const internal = path.join(home, 'shared', '.internal');
@@ -88,7 +79,8 @@ function seed(home, text) {
   const e = text.earlier;
   // Earlier work, so the board is not empty: two finished cards and one of yours still to do.
   run('add', e.doneHuman, '--assignee', 'human', '--actor', 'human');
-  run('add', e.doneAi, '--assignee', 'ai', '--actor', 'ai');
+  run('add', e.doneAi, '--assignee', 'ai', '--actor', 'human');
+  connectSampleAgent(home, project);
   run('mv', '2', 'doing', '--actor', 'ai');
   run('add', e.todoHuman, '--assignee', 'human', '--actor', 'human', `--desc=${text.pricingBody}`);
   for (const id of ['1', '2']) run('mv', id, 'done', '--actor', 'human', '--reason', 'Sample work completed');
