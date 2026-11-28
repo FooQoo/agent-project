@@ -17,6 +17,7 @@ export function RunTaskButton({
   const { i18n } = useTranslation();
   const ja = i18n.language.startsWith('ja');
   const [state, setState] = useState<'idle' | 'sending' | 'queued' | 'error'>('idle');
+  const [reason, setReason] = useState<string | null>(null);
   if (
     !projectId ||
     task.assignee !== 'ai' ||
@@ -27,6 +28,7 @@ export function RunTaskButton({
 
   const runNow = async () => {
     setState('sending');
+    setReason(null);
     try {
       const response = await fetch(
         `/api/projects/${encodeURIComponent(projectId)}/tasks/${task.id}/run`,
@@ -41,7 +43,13 @@ export function RunTaskButton({
           body: '{}',
         },
       );
-      setState(response.ok ? 'queued' : 'error');
+      if (response.ok) {
+        setState('queued');
+      } else {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        setReason(body?.error ?? null);
+        setState('error');
+      }
     } catch {
       setState('error');
     }
@@ -54,12 +62,10 @@ export function RunTaskButton({
         : 'Starting…'
       : state === 'queued'
         ? ja
-          ? '実行キュー済み'
-          : 'Queued'
+          ? '実行開始'
+          : 'Started'
         : state === 'error'
-          ? ja
-            ? '再試行'
-            : 'Retry'
+          ? (reason ?? (ja ? '起動不可' : 'Blocked'))
           : ja
             ? '今すぐ実行'
             : 'Run now';
@@ -69,6 +75,7 @@ export function RunTaskButton({
       type="button"
       size="s"
       className="detail-btn"
+      title={reason ?? undefined}
       disabled={disabled || state === 'sending'}
       onClick={() => void runNow()}
     >

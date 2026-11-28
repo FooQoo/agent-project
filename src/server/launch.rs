@@ -163,8 +163,6 @@ pub(crate) fn run<F: Future<Output = ()>>(
         });
         state.monitor.attach(&state);
         super::push_delivery::start(&state, &data_dir, monitor.push_transport.clone());
-        let files = state.shared.clone();
-        state.resident.watch_board(&state.shared, &state.changed);
         let app = api::router(state.clone());
 
         let explicit = monitor.explicit;
@@ -178,9 +176,6 @@ pub(crate) fn run<F: Future<Output = ()>>(
                 )));
             }
         };
-        state.resident.start(move |project| {
-            resident::resolve_project(&crate::file_store::FileStore::open(&files), project)
-        });
         let (rap_stop, rap_rx) = tokio::sync::watch::channel(false);
         let _rap_worker = crate::rap::scheduler::spawn_rap_worker(state.rap.clone(), rap_rx);
         let pid = std::process::id();

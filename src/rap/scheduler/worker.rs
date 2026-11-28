@@ -71,6 +71,14 @@ impl ProviderAdapter for CliProviderAdapter {
             .map_err(|e| AdapterError::Failed(e.to_string()))?;
 
         let pid = child.id();
+        eprintln!(
+            "agpj: rap started work={} attempt={} provider={:?} phase={:?} pid={}",
+            request.claim.work_id.0,
+            request.claim.attempt_id.0,
+            request.claim.provider,
+            request.claim.phase,
+            pid
+        );
         let process = ProcessIdentity {
             pid,
             fingerprint: format!("pid-{pid}"),
@@ -146,6 +154,13 @@ impl ProviderAdapter for CliProviderAdapter {
                     .unwrap_or_else(|e| e.into_inner())
                     .join("\n");
                 live.remove(&claim.attempt_id.0);
+                eprintln!(
+                    "agpj: rap exited work={} attempt={} status={} rate_limited={}",
+                    claim.work_id.0,
+                    claim.attempt_id.0,
+                    status,
+                    rate_limit.is_some()
+                );
                 if let Some(until) = rate_limit {
                     return ProbeState::Stopped {
                         outcome: StoppedOutcome::RateLimited { until },

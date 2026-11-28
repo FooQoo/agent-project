@@ -51,6 +51,13 @@ pub(super) async fn run_board_task(
         Err(error) => return agpj_error_response(&error),
     };
     let provider = preferred_provider(&state);
+    if let Some(reason) = manual_run_blocker(&state, &workspace, provider, now_secs()) {
+        return (
+            StatusCode::CONFLICT,
+            Json(serde_json::json!({ "error": reason })),
+        )
+            .into_response();
+    }
     match enqueue_board_task(
         &state,
         &project_id,
@@ -68,6 +75,48 @@ pub(super) async fn run_board_task(
             .into_response(),
         Err(error) => rap_error(error),
     }
+}
+
+fn manual_run_blocker(
+    state: &AppState,
+    workspace: &Path,
+    provider: Provider,
+    now: i64,
+) -> Option<String> {
+    let in_flight = state.rap.scheduler.in_flight().ok()?;
+    let settings = state.rap.scheduler.settings().ok()?;
+    if in_flight.len() >= settings.max_sessions.get() as usize {
+        return Some("Another RAP session is already running.".to_owned());
+    }
+    let canonical = std::fs::canonicalize(workspace).ok()?;
+    if in_flight.iter().any(|f| f.claim.workspace == canonical) {
+        return Some("This workspace is already in use by another RAP work item.".to_owned());
+    }
+    let provider_str = match provider {
+        Provider::Codex => "codex",
+        Provider::ClaudeCode => "claude_code",
+    };
+    let retry_at: Option<i64> = state
+        .rap
+        .store
+        .read(|conn| {
+            use rusqlite::OptionalExtension;
+            Ok(conn
+                .query_row(
+                    "SELECT retry_at FROM scheduler_provider_wait WHERE provider = ?1",
+                    [provider_str],
+                    |row| row.get(0),
+                )
+                .optional()?)
+        })
+        .ok()
+        .flatten();
+    if let Some(until) = retry_at.filter(|until| *until > now) {
+        return Some(format!(
+            "Provider {provider_str} is rate-limited until unix {until}."
+        ));
+    }
+    None
 }
 
 /// Registers a board task in `rap.db` as an authorized direct-execution work item.

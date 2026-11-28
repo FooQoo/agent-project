@@ -127,6 +127,7 @@ impl Launcher {
     /// Start pushing: tell the launcher where the boards are, and wake the launched session
     /// whenever the board changes, so that it is handed new work at once instead of at its next
     /// look. Call it inside the server's runtime.
+    #[allow(dead_code)]
     pub(crate) fn watch_board(self: &Arc<Self>, shared: &Path, feed: &ChangeFeed) {
         self.attach_board(shared);
         let mut changes = feed.subscribe();
