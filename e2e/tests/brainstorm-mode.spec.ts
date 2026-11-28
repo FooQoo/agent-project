@@ -77,12 +77,9 @@ test('brainstorming starts from an epic, moves to another target, and ends in th
 
   await openHeaderItem(page, 'Settings');
   const dialog = page.getByRole('dialog', { name: 'Settings' });
-  const modes = dialog.getByRole('radiogroup', { name: 'Mode' });
-  await expect(modes.getByRole('radio', { name: 'Sparring' })).not.toBeChecked();
-  await expect(modes.getByRole('radio', { name: 'Sleep' })).not.toBeChecked();
   await expect(dialog.getByText(`Brainstorming #${id}`)).toBeVisible();
   await dialog.getByRole('button', { name: 'End brainstorm' }).click();
-  await expect(modes.getByRole('radio', { name: 'Sparring' })).toBeChecked();
+  await expect(dialog.getByText(`Brainstorming #${id}`)).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(chip(page)).toHaveCount(0);
 });
@@ -98,15 +95,12 @@ test('sleep disables the Brainstorm action and replaces a brainstorm', async ({ 
   await expect(details.getByRole('button', { name: `Brainstorm #${id}` })).toBeDisabled();
   await expect(details.getByText('Brainstorming is unavailable in sleep mode.')).toBeAttached();
 
-  // Back to sparring the action works again; choosing Sleep in the settings then ends the brainstorm.
+  // Back to sparring the action works again. The CLI can put the project to sleep.
   agpjOk(mainProject, ['mode', 'sparring']);
   await expect(details.getByRole('button', { name: `Brainstorm #${id}` })).toBeEnabled({ timeout: 15_000 });
   await details.getByRole('button', { name: `Brainstorm #${id}` }).click();
   await expect(chip(page)).toContainText(`Brainstorm: #${id}`);
-  await openHeaderItem(page, 'Settings');
-  const dialog = page.getByRole('dialog', { name: 'Settings' });
-  await dialog.getByRole('radio', { name: 'Sleep' }).click();
-  await page.keyboard.press('Escape');
-  await expect(chip(page)).toContainText('Sleep');
+  agpjOk(mainProject, ['mode', 'sleep']);
+  await expect(chip(page)).toContainText('Sleep', { timeout: 15_000 });
   await expect(chip(page)).not.toContainText('Brainstorm');
 });

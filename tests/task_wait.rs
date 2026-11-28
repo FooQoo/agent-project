@@ -3,6 +3,8 @@
 #[path = "support/serve_process.rs"]
 mod serve_process;
 
+mod common;
+
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -19,7 +21,14 @@ use tempfile::{TempDir, tempdir};
 use serve_process::ServeProcess;
 
 fn agpj(home: &Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_agpj"))
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
+    command.env_remove("AGPJ_CONNECTION_SECRET");
+    if let Some(secret) = common::fixture_project_arg(args)
+        .and_then(|project| common::try_connect_default_agent(home, project))
+    {
+        command.env("AGPJ_CONNECTION_SECRET", secret);
+    }
+    command
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")

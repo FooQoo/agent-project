@@ -8,7 +8,9 @@ use std::path::Path;
 
 use agent_project::domain::ProjectId;
 use agent_project::file_store::FileStore;
-use common::{agpj, demo_project, json_error, json_ok, png};
+use common::{
+    agpj, agpj_with_connection, connect_default_agent, demo_project, json_error, json_ok, png,
+};
 use serde_json::Value;
 
 fn project_id(home: &Path) -> ProjectId {
@@ -271,8 +273,10 @@ fn an_image_added_from_the_cli_returns_its_asset_path_and_can_be_read_back() {
     let file = home.path().join("shot.png");
     std::fs::write(&file, png()).unwrap();
 
-    let added = json_ok(
+    let secret = connect_default_agent(home.path(), "Demo");
+    let (code, out, err) = agpj_with_connection(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",
@@ -286,6 +290,8 @@ fn an_image_added_from_the_cli_returns_its_asset_path_and_can_be_read_back() {
             "--json",
         ],
     );
+    assert_eq!(code, 0, "{err}");
+    let added: Value = serde_json::from_str(&out).unwrap();
     let id = added["attachment"]["id"].as_str().unwrap().to_string();
     assert_eq!(added["path"], format!("assets/{id}.png").as_str());
 

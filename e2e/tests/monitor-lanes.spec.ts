@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Locator, type Page } from '../helpers/fixtures';
-import { agpj, agpjCatalogOk, projectId, skipGuide, taskBody } from '../helpers/agpj';
+import { agpj, agpjCatalogOk, connectFixtureAgent, projectId, skipGuide, taskBody } from '../helpers/agpj';
 import { startPhoneEntrance, type PhoneEntrance } from '../helpers/monitor';
 
 // The phone monitor's lane view through the phone entrance, driven with a finger: one lane on screen,
@@ -34,6 +34,7 @@ function seed(project: string, cards: Seed[]): void {
     const added = JSON.parse(
       cli(project, ['add', title, `--desc=${taskBody(`${title} body.`)}`, '--assignee', 'ai', '--actor', 'human', '--json', ...(lane === 'backlog' ? ['--backlog'] : [])]),
     ) as { task: { id: number } };
+    connectFixtureAgent(home, project);
     ids.set(`${project}:${title}`, added.task.id);
     if (lane === 'doing' || lane === 'done') cli(project, ['mv', String(added.task.id), 'doing', '--actor', 'ai', '--reason', 'Start']);
     if (lane === 'done') cli(project, ['mv', String(added.task.id), 'done', '--actor', 'ai', '--reason', 'Finish']);

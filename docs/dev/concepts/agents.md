@@ -129,7 +129,7 @@ An agent is a role a person registers (`agents.json`); a connection is the paren
 
 ### The default agent and the write guard {#write-guard}
 
-Every AI task has an agent; only a person's task has none. The first AI task a project creates also creates the default agent (`isDefault: true` in `agents.json`, named "Agent" or "エージェント" by the task's language), and each new AI task, whether it has an epic or not and whatever its kind, gets it. The default agent cannot be deleted, and `assign_task_agent` refuses to take an AI task's agent away. While the default agent is the only live agent, `has_agents` is false: sessions need no connection, and they are treated as the default agent. Once a person registers another agent, every session needs a connection.
+Every AI task has an agent; only a person's task has none. The first AI task a project creates also creates the default agent (`isDefault: true` in `agents.json`, named "Agent" or "エージェント" by the task's language), and each new AI task, whether it has an epic or not and whatever its kind, gets it. The default agent cannot be deleted, and `assign_task_agent` refuses to take an AI task's agent away. `has_agents` reports whether any non-default agent is registered; it does not determine whether a session needs a connection. Every session must connect as the task's assigned agent before starting an AI task or changing it from Doing onward, including when the default agent is the only agent.
 
 Task writes are checked in one place, the save of a task pair (`task_pair` in `src/file_store/ops/save.rs`), under the project lock and against the files as they are on disk:
 

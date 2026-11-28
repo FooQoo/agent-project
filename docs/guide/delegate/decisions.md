@@ -108,7 +108,7 @@ sequenceDiagram
     U->>B: Choose an option and/or write a note
     Note over B: Answer saved, history added to the task
     B-->>A: message ask prints the answers and ends
-    Note over B: Task resumes by itself when no other question is open
+    Note over B: Task resumes when all answers are in and its assigned agent is connected
     A->>B: Re-read the task
     Note over A: Continue only if it is still Doing and Running
 ```

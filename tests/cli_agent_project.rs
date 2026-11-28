@@ -11,6 +11,12 @@ fn invoke(home: &std::path::Path, args: &[&str]) -> assert_cmd::assert::Assert {
 
 fn invoke_for(home: &std::path::Path, project: &str, args: &[&str]) -> assert_cmd::assert::Assert {
     let mut command = Command::cargo_bin("agpj").unwrap();
+    command.env_remove("AGPJ_CONNECTION_SECRET");
+    if let Some(secret) =
+        Some(project).and_then(|project| common::try_connect_default_agent(home, project))
+    {
+        command.env("AGPJ_CONNECTION_SECRET", secret);
+    }
     command
         .env("AGPJ_AUTOSTART", "0")
         .env_remove("CLAUDE_CODE_SESSION_ID")

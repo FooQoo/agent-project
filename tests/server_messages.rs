@@ -5,7 +5,9 @@ mod common;
 
 use std::path::Path;
 
-use common::{Running, agpj, demo_project, json_ok, multipart};
+use common::{
+    Running, agpj_with_connection, connect_default_agent, demo_project, json_ok, multipart,
+};
 use serde_json::{Value, json};
 
 /// A 1x1 PNG.
@@ -26,8 +28,10 @@ fn project_id(home: &Path) -> String {
 
 fn ask(home: &Path) {
     let json = common::decision_json("Which plan?");
-    let (code, _, err) = agpj(
+    let secret = connect_default_agent(home, "Demo");
+    let (code, _, err) = agpj_with_connection(
         home,
+        &secret,
         &[
             "--project",
             "Demo",

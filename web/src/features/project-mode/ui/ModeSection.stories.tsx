@@ -1,17 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, within } from 'storybook/test';
 import { SPARRING, type ProjectMode } from '../model';
 import { ModeSection } from './ModeSection';
 
 const SCHEDULE = { enabled: true, start: '23:00', end: '08:00' };
-const asleep: ProjectMode = { ...SPARRING, mode: 'sleep', since: '2026-11-24T01:00:00Z' };
 
-// The mode switch of the settings dialog, below the language and the theme. The two options have
-// the same size, as the language options do.
+// Sleep settings in the settings dialog.
 const meta = {
   title: 'ProjectMode/ModeSection',
   component: ModeSection,
-  args: { mode: SPARRING, onChoose: fn(), onSaveSchedule: fn(), onFollowSchedule: fn() },
+  args: { mode: SPARRING, onSaveSchedule: fn(), onFollowSchedule: fn() },
   decorators: [
     (Story) => (
       <div style={{ maxWidth: 560, padding: 16 }}>
@@ -23,38 +21,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The default: the agent listens and asks on the board. */
-export const Sparring: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByRole('radio', { name: 'Sparring' })).toBeChecked();
-    await expect(canvas.getByText(/asks you on the board/)).toBeVisible();
-  },
-};
-
-/** Sleep: questions are paused. */
-export const Sleep: Story = {
-  args: { mode: asleep },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByRole('radio', { name: 'Sleep' })).toBeChecked();
-    await expect(canvas.getByText(/Questions to you are paused/)).toBeVisible();
-  },
-};
-
-/** Choosing the other option asks the parent to save it. */
-export const Choose: Story = {
-  play: async ({ canvasElement, args }) => {
-    await userEvent.click(within(canvasElement).getByRole('radio', { name: 'Sleep' }));
-    await expect(args.onChoose).toHaveBeenCalledWith('sleep');
-  },
-};
-
-/** The mode is not known yet, so the switch cannot be used. */
+/** The project settings have yet to load. */
 export const Unknown: Story = {
   args: { mode: null },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByRole('radio', { name: 'Sleep' })).toBeDisabled();
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('checkbox', { name: 'Sleep on a schedule' })).toBeDisabled();
+    await expect(canvas.getByLabelText('From')).toBeDisabled();
+    await expect(canvas.getByLabelText('Until')).toBeDisabled();
   },
 };
 
@@ -66,7 +40,7 @@ export const SaveFailed: Story = {
   },
 };
 
-/** The window decides: asleep until it ends, with the schedule on. */
+/** The saved daily window is enabled and both times can be edited. */
 export const BySchedule: Story = {
   args: {
     mode: {
@@ -77,15 +51,19 @@ export const BySchedule: Story = {
       schedule: SCHEDULE,
     },
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText(/Asleep by the schedule until/)).toBeVisible();
     await expect(canvas.getByLabelText('Sleep on a schedule')).toBeChecked();
     await expect(canvas.getByLabelText('From')).toHaveValue('23:00');
+    await expect(canvas.getByLabelText('Until')).toHaveValue('08:00');
+    fireEvent.change(canvas.getByLabelText('From'), { target: { value: '22:00' } });
+    await expect(args.onSaveSchedule).toHaveBeenCalledWith({ ...SCHEDULE, start: '22:00' });
+    fireEvent.change(canvas.getByLabelText('Until'), { target: { value: '07:30' } });
+    await expect(args.onSaveSchedule).toHaveBeenCalledWith({ ...SCHEDULE, end: '07:30' });
   },
 };
 
-/** A manual mode overrides the window: the switch offers to follow the schedule again. */
+/** A manual mode overrides the window: the settings offer to follow the schedule again. */
 export const ManualOverSchedule: Story = {
   args: { mode: { ...SPARRING, manual: 'sparring', schedule: SCHEDULE } },
   play: async ({ canvasElement, args }) => {
@@ -112,24 +90,13 @@ const brainstorming: ProjectMode = {
   target: { type: 'task', id: '680' },
 };
 
-/** Brainstorm: neither option is selected, the target is named, and End returns to sparring. */
+/** An active brainstorm can still be ended from settings. */
 export const Brainstorm: Story = {
   args: { mode: brainstorming, onEndBrainstorm: fn() },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('radio', { name: 'Sparring' })).not.toBeChecked();
-    await expect(canvas.getByRole('radio', { name: 'Sleep' })).not.toBeChecked();
     await expect(canvas.getByText('Brainstorming #680')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'End brainstorm' }));
     await expect(args.onEndBrainstorm).toHaveBeenCalled();
-  },
-};
-
-/** Choosing Sleep while brainstorming asks the parent to save it, which ends the brainstorm. */
-export const BrainstormChooseSleep: Story = {
-  args: { mode: brainstorming, onEndBrainstorm: fn() },
-  play: async ({ canvasElement, args }) => {
-    await userEvent.click(within(canvasElement).getByRole('radio', { name: 'Sleep' }));
-    await expect(args.onChoose).toHaveBeenCalledWith('sleep');
   },
 };

@@ -7,7 +7,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use common::{agpj, demo_project};
+use common::{agpj, agpj_with_connection, connect_default_agent, demo_project};
 
 /// The text of every `TASK.md` under `home`, joined.
 fn all_task_text(home: &Path) -> String {
@@ -27,8 +27,17 @@ fn all_task_text(home: &Path) -> String {
 }
 
 /// Run `agpj` with `input` on standard input.
-fn agpj_stdin(home: &Path, args: &[&str], input: &str) -> (i32, String, String) {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_agpj"))
+fn agpj_stdin(
+    home: &Path,
+    secret: Option<&str>,
+    args: &[&str],
+    input: &str,
+) -> (i32, String, String) {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
+    if let Some(secret) = secret {
+        command.env("AGPJ_CONNECTION_SECRET", secret);
+    }
+    let mut child = command
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0")
         .env("AGPJ_WATCH", "poll")
@@ -129,9 +138,11 @@ fn a_text_option_without_its_value_fails_instead_of_taking_the_next_flag() {
 fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
     let home = tempfile::tempdir().unwrap();
     demo_project(home.path());
+    let secret = connect_default_agent(home.path(), "Demo");
 
-    let (code, _, err) = agpj(
+    let (code, _, err) = agpj_with_connection(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",
@@ -145,8 +156,9 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
 
     let file = home.path().join("reason.txt");
     std::fs::write(&file, "- file form\n").unwrap();
-    let (code, _, err) = agpj(
+    let (code, _, err) = agpj_with_connection(
         home.path(),
+        &secret,
         &[
             "--project",
             "Demo",
@@ -161,6 +173,7 @@ fn a_reason_with_a_leading_dash_is_recorded_with_equals_a_file_or_stdin() {
 
     let (code, _, err) = agpj_stdin(
         home.path(),
+        Some(&secret),
         &[
             "--project",
             "Demo",
@@ -209,6 +222,7 @@ fn a_lone_dash_still_reads_the_description_from_standard_input() {
     demo_project(home.path());
     let (code, _, err) = agpj_stdin(
         home.path(),
+        None,
         &[
             "--project",
             "Demo",

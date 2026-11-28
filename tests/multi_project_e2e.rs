@@ -23,6 +23,7 @@ use tempfile::tempdir;
 fn bin() -> Command {
     let mut command = Command::new(env!("CARGO_BIN_EXE_agpj"));
     command
+        .env_remove("AGPJ_CONNECTION_SECRET")
         .env("AGPJ_AUTOSTART", "0")
         .env("AGPJ_OPEN_BROWSER", "0");
     command
@@ -44,6 +45,9 @@ fn run(home: &Path, project: Option<&str>, args: &[&str]) -> Output {
         .env("TZ", "UTC");
     if let Some(project) = project {
         command.args(["--project", project]);
+        if let Some(secret) = common::try_connect_default_agent(home, project) {
+            command.env("AGPJ_CONNECTION_SECRET", secret);
+        }
     }
     command
         .args(folder_args(home, args))

@@ -1,6 +1,8 @@
 //! `nextTasks` of the progress table: the ready AI tasks to pick up next. Runs the
 //! real CLI on a temporary data area.
 
+mod common;
+
 use std::fs;
 use std::path::Path;
 
@@ -78,8 +80,15 @@ fn ready(home: &Path, epic: Option<&str>) -> i64 {
     add(home, epic, "ai", "human")
 }
 
+fn agent_write(home: &Path, args: &[&str]) {
+    let secret = common::connect_default_agent(home, "Demo");
+    let args = [&["--project", "Demo"][..], args].concat();
+    let (code, _, err) = common::agpj_with_connection(home, &secret, &args);
+    assert_eq!(code, 0, "{args:?} failed: {err}");
+}
+
 fn doing(home: &Path, id: i64) {
-    agpj(
+    agent_write(
         home,
         &[
             "mv",
@@ -94,7 +103,7 @@ fn doing(home: &Path, id: i64) {
 }
 
 fn running(home: &Path, id: i64) {
-    agpj(
+    agent_write(
         home,
         &[
             "state",
@@ -208,7 +217,7 @@ fn waves(home: &Path, values: &[&str]) {
 }
 
 fn done(home: &Path, id: i64) {
-    agpj(
+    agent_write(
         home,
         &[
             "mv",
